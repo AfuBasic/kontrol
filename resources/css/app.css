@@ -6,4 +6,55 @@
 @theme {
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* ========================================
+       KONTROL COLOR SYSTEM
+       ======================================== */
+
+    /* === PRIMARY (Kontrol Blue → Navy) === */
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #1f6fdb; /* Kontrol Blue */
+    --color-primary-600: #1a5fc2;
+    --color-primary-700: #0a3d91; /* Kontrol Navy */
+    --color-primary-800: #082f6e;
+    --color-primary-900: #061f4a;
+    --color-primary-950: #041230;
+
+    /* === NEUTRALS === */
+    --color-gray-50: #f9fafb; /* Cloud White */
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af; /* Muted Gray */
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937; /* Charcoal */
+    --color-gray-900: #111827;
+    --color-gray-950: #030712;
+
+    /* === SUCCESS === */
+    --color-success-50: #f0fdf4;
+    --color-success-100: #dcfce7;
+    --color-success-500: #16a34a;
+    --color-success-600: #15803d;
+    --color-success-700: #166534;
+
+    /* === WARNING === */
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+
+    /* === ERROR === */
+    --color-error-50: #fef2f2;
+    --color-error-100: #fee2e2;
+    --color-error-500: #dc2626;
+    --color-error-600: #b91c1c;
+    --color-error-700: #991b1b;
 }
