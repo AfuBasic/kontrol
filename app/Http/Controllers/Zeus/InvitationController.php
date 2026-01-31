@@ -62,6 +62,13 @@ class InvitationController extends Controller
                 ->where('user_id', $user->id)
                 ->where('status', 'pending')
                 ->update(['status' => 'accepted']);
+
+            // Activate the estate(s) associated with this user
+            // Assuming for now a user accepts for one estate context in this flow
+            // Ideally we'd pass the estate ID in the invitation link but for now finding the estate via pivot works
+            // if we assume 1:1 for this specific flow or activate all pending ones since this is the first user.
+            // Given the CreateEstateAction flow, there is one estate.
+            $user->estates()->update(['status' => 'active']);
         });
 
         // Log the user in

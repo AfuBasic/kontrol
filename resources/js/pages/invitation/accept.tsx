@@ -32,8 +32,10 @@ export default function AcceptInvitation({ user }: Props) {
                     className="w-full max-w-md"
                 >
                     <div className="mb-8 text-center">
-                        <div className="mx-auto mb-6 h-12 w-32 overflow-hidden">
-                            <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-20" />
+                        <div className="mb-6 flex justify-center">
+                            <div className="h-12 w-auto">
+                                <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-full w-auto object-contain" />
+                            </div>
                         </div>
                         <h1 className="text-2xl font-semibold text-gray-900">Welcome, {user.name}!</h1>
                         <p className="mt-2 text-gray-500">Set up your password to access your estate dashboard.</p>

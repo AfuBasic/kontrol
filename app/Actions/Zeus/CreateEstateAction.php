@@ -6,6 +6,7 @@ use App\Events\Zeus\EstateCreated;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class CreateEstateAction
 {
@@ -20,7 +21,7 @@ class CreateEstateAction
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'address' => $data['address'] ?? null,
-                'status' => 'active',
+                'status' => 'inactive',
             ]);
 
             // 2. Create user with estate email (no password)
@@ -35,6 +36,7 @@ class CreateEstateAction
 
             // 4. Assign admin role scoped to this estate
             setPermissionsTeamId($estate->id);
+            Role::firstOrCreate(['name' => 'admin', 'estate_id' => $estate->id, 'guard_name' => 'web']);
             $user->assignRole('admin');
 
             // 5. Dispatch event for side effects (invitation email)
