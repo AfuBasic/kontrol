@@ -2,15 +2,18 @@ import {
     ArrowLeftStartOnRectangleIcon,
     Bars3Icon,
     BuildingOffice2Icon,
+    ChevronDoubleLeftIcon,
+    ChevronDoubleRightIcon,
     ChevronDownIcon,
     Cog6ToothIcon,
     ShieldCheckIcon,
+    Squares2X2Icon,
     UserCircleIcon,
     UsersIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useState } from 'react';
 
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
@@ -20,6 +23,7 @@ import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentCon
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
 
@@ -35,6 +39,7 @@ type NavItem = {
 };
 
 const primaryNav: NavItem[] = [
+    { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
     { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
@@ -47,6 +52,7 @@ export default function AdminLayout({ children }: Props) {
     const { url } = usePage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const { isCollapsed, toggle } = useSidebarState();
 
     const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
     const userRoles = auth.user?.roles ?? [];
@@ -57,6 +63,9 @@ export default function AdminLayout({ children }: Props) {
     }
 
     function isCurrentPath(href: string) {
+        if (href === DashboardController.url()) {
+            return url === href || url === href + '/';
+        }
         return url.startsWith(href);
     }
 
@@ -73,183 +82,368 @@ export default function AdminLayout({ children }: Props) {
     const visiblePrimaryNav = filterNav(primaryNav);
     const visibleSecondaryNav = filterNav(secondaryNav);
 
+    const sidebarWidth = isCollapsed ? 72 : 240;
+
     return (
         <AnimatedLayout>
-            {/* Blue-tinted page background */}
-            <div className="min-h-screen bg-[#F0F5FF]">
-                {/* Header — White with soft blue glow */}
-                <motion.header
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className="sticky top-0 z-40 bg-white/95 shadow-[0_1px_3px_rgba(31,111,219,0.08),0_4px_12px_rgba(31,111,219,0.04)] backdrop-blur-xl"
-                >
-                    <div className="mx-auto max-w-6xl px-6 lg:px-8">
-                        <div className="flex h-14 items-center justify-between">
-                            {/* Logo */}
-                            <Link href={DashboardController.url()} className="shrink-0">
-                                <div className="h-9 w-40 overflow-hidden">
-                                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-9" />
-                                </div>
-                            </Link>
+            <div className="min-h-screen bg-[#F8FAFC]">
+                {/* Mobile Top Bar */}
+                <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
+                    <button onClick={() => setMobileMenuOpen(true)} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100">
+                        <Bars3Icon className="h-5 w-5" />
+                    </button>
+                    <Link href={DashboardController.url()} className="shrink-0">
+                        <div className="h-8 w-32 overflow-hidden">
+                            <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-8" />
+                        </div>
+                    </Link>
+                    <button
+                        onClick={() => setUserMenuOpen(!userMenuOpen)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-[#1F6FDB] to-[#0A3D91]"
+                    >
+                        <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
+                    </button>
+                </header>
 
-                            {/* Desktop Navigation — Primary blue active indicators */}
-                            <nav className="hidden items-center gap-1 md:flex">
-                                {visiblePrimaryNav.map((item) => (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        className={`group relative px-4 py-2 text-sm font-medium transition-colors ${
-                                            isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-[#475569] hover:text-[#0A3D91]'
-                                        }`}
-                                    >
-                                        {item.name}
-                                        {/* Active indicator — Primary blue underline */}
-                                        <span
-                                            className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-all ${
-                                                isCurrentPath(item.href) ? 'bg-[#1F6FDB]' : 'bg-transparent group-hover:bg-[#1F6FDB]/20'
+                {/* Mobile Drawer Backdrop */}
+                <AnimatePresence>
+                    {mobileMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-50 bg-black/50 md:hidden"
+                            onClick={() => setMobileMenuOpen(false)}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Mobile Drawer */}
+                <AnimatePresence>
+                    {mobileMenuOpen && (
+                        <motion.aside
+                            initial={{ x: -280 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -280 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-white shadow-xl md:hidden"
+                        >
+                            {/* Mobile Drawer Header */}
+                            <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+                                <Link href={DashboardController.url()} className="shrink-0">
+                                    <div className="h-8 w-32 overflow-hidden">
+                                        <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-8" />
+                                    </div>
+                                </Link>
+                                <button
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100"
+                                >
+                                    <XMarkIcon className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Mobile Nav */}
+                            <nav className="flex-1 overflow-y-auto p-3">
+                                <div className="space-y-1">
+                                    {visiblePrimaryNav.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                                isCurrentPath(item.href)
+                                                    ? 'border-l-4 border-[#1F6FDB] bg-blue-50 text-[#1F6FDB]'
+                                                    : 'text-slate-600 hover:bg-slate-100'
                                             }`}
-                                        />
-                                    </Link>
-                                ))}
-
+                                        >
+                                            <item.icon className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-slate-400'}`} />
+                                            {item.name}
+                                        </Link>
+                                    ))}
+                                </div>
                                 {visibleSecondaryNav.length > 0 && (
                                     <>
-                                        <div className="mx-3 h-4 w-px bg-[#E2E8F0]" />
-                                        {visibleSecondaryNav.map((item) => (
-                                            <Link
-                                                key={item.name}
-                                                href={item.href}
-                                                className={`group relative px-4 py-2 text-sm font-medium transition-colors ${
-                                                    isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-[#475569] hover:text-[#0A3D91]'
-                                                }`}
-                                            >
-                                                {item.name}
-                                                <span
-                                                    className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-all ${
-                                                        isCurrentPath(item.href) ? 'bg-[#1F6FDB]' : 'bg-transparent group-hover:bg-[#1F6FDB]/20'
+                                        <div className="my-4 border-t border-slate-200" />
+                                        <div className="space-y-1">
+                                            {visibleSecondaryNav.map((item) => (
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                                        isCurrentPath(item.href)
+                                                            ? 'border-l-4 border-[#1F6FDB] bg-blue-50 text-[#1F6FDB]'
+                                                            : 'text-slate-600 hover:bg-slate-100'
                                                     }`}
-                                                />
-                                            </Link>
-                                        ))}
+                                                >
+                                                    <item.icon
+                                                        className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-slate-400'}`}
+                                                    />
+                                                    {item.name}
+                                                </Link>
+                                            ))}
+                                        </div>
                                     </>
                                 )}
                             </nav>
 
-                            {/* User Menu — Blue gradient avatar */}
-                            <div className="flex items-center gap-2">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-2 rounded-full p-1 text-sm transition-all hover:bg-[#1F6FDB]/5"
-                                    >
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-[#1F6FDB] to-[#0A3D91] shadow-sm ring-2 ring-white">
-                                            <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
-                                        </div>
-                                        <ChevronDownIcon
-                                            className={`hidden h-4 w-4 text-[#64748B] transition-transform sm:block ${userMenuOpen ? 'rotate-180' : ''}`}
-                                        />
-                                    </button>
+                            {/* Mobile User Section */}
+                            <div className="border-t border-slate-200 p-3">
+                                <Link
+                                    href={ProfileController.edit.url()}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100"
+                                >
+                                    <UserCircleIcon className="h-5 w-5 text-slate-400" />
+                                    Profile
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100"
+                                >
+                                    <ArrowLeftStartOnRectangleIcon className="h-5 w-5 text-slate-400" />
+                                    Sign out
+                                </button>
+                            </div>
+                        </motion.aside>
+                    )}
+                </AnimatePresence>
 
+                {/* Desktop Layout */}
+                <div className="hidden md:flex">
+                    {/* Desktop Sidebar */}
+                    <motion.aside
+                        initial={false}
+                        animate={{ width: sidebarWidth }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        className="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white"
+                    >
+                        {/* Sidebar Header */}
+                        <div className="flex h-14 items-center border-b border-slate-200 px-4">
+                            <Link href={DashboardController.url()} className="shrink-0 overflow-hidden">
+                                <AnimatePresence mode="wait">
+                                    {isCollapsed ? (
+                                        <motion.div
+                                            key="collapsed"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#1F6FDB]"
+                                        >
+                                            <span className="text-lg font-bold text-white">K</span>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="expanded"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="h-8 w-32 overflow-hidden"
+                                        >
+                                            <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-8" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </Link>
+                        </div>
+
+                        {/* Sidebar Nav */}
+                        <nav className="flex-1 overflow-y-auto p-3">
+                            <div className="space-y-1">
+                                {visiblePrimaryNav.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        title={isCollapsed ? item.name : undefined}
+                                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                                            isCurrentPath(item.href) ? 'bg-blue-50 text-[#1F6FDB]' : 'text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        {/* Active indicator */}
+                                        {isCurrentPath(item.href) && (
+                                            <motion.div
+                                                layoutId="activeIndicator"
+                                                className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
+                                            />
+                                        )}
+                                        <item.icon
+                                            className={`h-5 w-5 shrink-0 ${
+                                                isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-slate-400 group-hover:text-slate-600'
+                                            }`}
+                                        />
+                                        <AnimatePresence>
+                                            {!isCollapsed && (
+                                                <motion.span
+                                                    initial={{ opacity: 0, width: 0 }}
+                                                    animate={{ opacity: 1, width: 'auto' }}
+                                                    exit={{ opacity: 0, width: 0 }}
+                                                    className="overflow-hidden whitespace-nowrap"
+                                                >
+                                                    {item.name}
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                        {/* Tooltip for collapsed state */}
+                                        {isCollapsed && (
+                                            <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-slate-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
+                                                {item.name}
+                                            </div>
+                                        )}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {visibleSecondaryNav.length > 0 && (
+                                <>
+                                    <div className="my-4 border-t border-slate-200" />
+                                    <div className="space-y-1">
+                                        {visibleSecondaryNav.map((item) => (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                title={isCollapsed ? item.name : undefined}
+                                                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                                                    isCurrentPath(item.href) ? 'bg-blue-50 text-[#1F6FDB]' : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                {isCurrentPath(item.href) && (
+                                                    <motion.div
+                                                        layoutId="activeIndicatorSecondary"
+                                                        className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
+                                                    />
+                                                )}
+                                                <item.icon
+                                                    className={`h-5 w-5 shrink-0 ${
+                                                        isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-slate-400 group-hover:text-slate-600'
+                                                    }`}
+                                                />
+                                                <AnimatePresence>
+                                                    {!isCollapsed && (
+                                                        <motion.span
+                                                            initial={{ opacity: 0, width: 0 }}
+                                                            animate={{ opacity: 1, width: 'auto' }}
+                                                            exit={{ opacity: 0, width: 0 }}
+                                                            className="overflow-hidden whitespace-nowrap"
+                                                        >
+                                                            {item.name}
+                                                        </motion.span>
+                                                    )}
+                                                </AnimatePresence>
+                                                {isCollapsed && (
+                                                    <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-slate-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
+                                                        {item.name}
+                                                    </div>
+                                                )}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </nav>
+
+                        {/* Sidebar Footer */}
+                        <div className="border-t border-slate-200 p-3">
+                            {/* Collapse Toggle */}
+                            <button
+                                onClick={toggle}
+                                className="mb-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                            >
+                                {isCollapsed ? (
+                                    <ChevronDoubleRightIcon className="h-5 w-5 shrink-0" />
+                                ) : (
+                                    <>
+                                        <ChevronDoubleLeftIcon className="h-5 w-5 shrink-0" />
+                                        <span>Collapse</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* User Menu */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-slate-100"
+                                >
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#1F6FDB] to-[#0A3D91]">
+                                        <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <AnimatePresence>
+                                        {!isCollapsed && (
+                                            <motion.div
+                                                initial={{ opacity: 0, width: 0 }}
+                                                animate={{ opacity: 1, width: 'auto' }}
+                                                exit={{ opacity: 0, width: 0 }}
+                                                className="flex flex-1 items-center justify-between overflow-hidden"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-left text-sm font-medium text-slate-700">{auth.user?.name}</p>
+                                                </div>
+                                                <ChevronDownIcon
+                                                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </button>
+
+                                {/* User Dropdown */}
+                                <AnimatePresence>
                                     {userMenuOpen && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
                                             <motion.div
-                                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                transition={{ duration: 0.15, ease: 'easeOut' }}
-                                                className="absolute right-0 z-20 mt-2 w-60 origin-top-right rounded-xl border border-[#E2E8F0] bg-white p-1.5 shadow-lg shadow-[#1F6FDB]/5"
+                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute bottom-full left-0 z-20 mb-2 w-56 origin-bottom-left rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
                                             >
-                                                <div className="rounded-lg bg-[#F8FAFC] px-3 py-3">
-                                                    <p className="text-sm font-medium text-[#1E293B]">{auth.user?.name}</p>
-                                                    <p className="mt-0.5 truncate text-xs text-[#64748B]">{auth.user?.email}</p>
+                                                <div className="rounded-lg bg-slate-50 px-3 py-2">
+                                                    <p className="text-sm font-medium text-slate-900">{auth.user?.name}</p>
+                                                    <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
                                                 </div>
                                                 <div className="mt-1.5 space-y-0.5">
                                                     <Link
                                                         href={ProfileController.edit.url()}
                                                         onClick={() => setUserMenuOpen(false)}
-                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#475569] transition-colors hover:bg-[#F8FAFC] hover:text-[#1F6FDB]"
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#1F6FDB]"
                                                     >
-                                                        <UserCircleIcon className="h-4 w-4 text-[#94A3B8]" />
+                                                        <UserCircleIcon className="h-4 w-4 text-slate-400" />
                                                         Profile
                                                     </Link>
                                                     <button
                                                         onClick={handleLogout}
-                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#475569] transition-colors hover:bg-[#F8FAFC] hover:text-[#1F6FDB]"
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-[#1F6FDB]"
                                                     >
-                                                        <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#94A3B8]" />
+                                                        <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-slate-400" />
                                                         Sign out
                                                     </button>
                                                 </div>
                                             </motion.div>
                                         </>
                                     )}
-                                </div>
-
-                                {/* Mobile menu button */}
-                                <button
-                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    className="rounded-lg p-2 text-[#64748B] transition-colors hover:bg-[#1F6FDB]/5 hover:text-[#0A3D91] md:hidden"
-                                >
-                                    {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
-                                </button>
+                                </AnimatePresence>
                             </div>
                         </div>
-                    </div>
+                    </motion.aside>
 
-                    {/* Mobile Navigation — Blue accents */}
-                    {mobileMenuOpen && (
-                        <motion.nav
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="border-t border-[#E2E8F0] bg-white px-4 py-4 md:hidden"
-                        >
-                            <div className="space-y-1">
-                                {visiblePrimaryNav.map((item) => (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                                            isCurrentPath(item.href)
-                                                ? 'bg-[#1F6FDB] text-white'
-                                                : 'text-[#475569] hover:bg-[#F0F5FF] hover:text-[#1F6FDB]'
-                                        }`}
-                                    >
-                                        <item.icon className="h-5 w-5" />
-                                        {item.name}
-                                    </Link>
-                                ))}
-                            </div>
-                            {visibleSecondaryNav.length > 0 && (
-                                <>
-                                    <div className="my-3 border-t border-[#E2E8F0]" />
-                                    <div className="space-y-1">
-                                        {visibleSecondaryNav.map((item) => (
-                                            <Link
-                                                key={item.name}
-                                                href={item.href}
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                                                    isCurrentPath(item.href)
-                                                        ? 'bg-[#1F6FDB] text-white'
-                                                        : 'text-[#475569] hover:bg-[#F0F5FF] hover:text-[#1F6FDB]'
-                                                }`}
-                                            >
-                                                <item.icon className="h-5 w-5" />
-                                                {item.name}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </motion.nav>
-                    )}
-                </motion.header>
+                    {/* Main Content Area */}
+                    <motion.main
+                        initial={false}
+                        animate={{ marginLeft: sidebarWidth }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        className="min-h-screen flex-1 p-6 lg:p-8"
+                    >
+                        <div className="mx-auto max-w-5xl">{children}</div>
+                    </motion.main>
+                </div>
 
-                {/* Main Content — Free-flowing on blue-tinted background */}
-                <main className="mx-auto max-w-5xl px-6 py-10 lg:px-8">{children}</main>
+                {/* Mobile Content */}
+                <main className="p-4 md:hidden">
+                    <div className="mx-auto max-w-5xl">{children}</div>
+                </main>
             </div>
         </AnimatedLayout>
     );
