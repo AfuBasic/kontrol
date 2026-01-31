@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: Props) {
 
     function canAccess(permission?: string): boolean {
         if (!permission) return true;
-        if (isAdmin) return true; // Admins have access to everything
+        if (isAdmin) return true;
         return userPermissions.includes(permission);
     }
 
@@ -75,77 +75,79 @@ export default function AdminLayout({ children }: Props) {
 
     return (
         <AnimatedLayout>
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
+            {/* Blue-tinted page background */}
+            <div className="min-h-screen bg-[#F0F5FF]">
+                {/* Header — White with soft blue glow */}
                 <motion.header
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className="sticky top-0 z-40 border-b border-gray-200 bg-white"
+                    className="sticky top-0 z-40 bg-white/95 shadow-[0_1px_3px_rgba(31,111,219,0.08),0_4px_12px_rgba(31,111,219,0.04)] backdrop-blur-xl"
                 >
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="flex h-16 items-center justify-between">
-                            {/* Logo & Primary Nav */}
-                            <div className="flex items-center gap-8">
-                                <Link href={DashboardController.url()} className="shrink-0">
-                                    <div className="h-10 w-44 overflow-hidden">
-                                        <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-10" />
-                                    </div>
-                                </Link>
+                    <div className="mx-auto max-w-6xl px-6 lg:px-8">
+                        <div className="flex h-14 items-center justify-between">
+                            {/* Logo */}
+                            <Link href={DashboardController.url()} className="shrink-0">
+                                <div className="h-9 w-40 overflow-hidden">
+                                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-9" />
+                                </div>
+                            </Link>
 
-                                {/* Desktop Navigation */}
-                                <nav className="hidden items-center gap-1 md:flex">
-                                    {visiblePrimaryNav.map((item) => (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                isCurrentPath(item.href)
-                                                    ? 'bg-gray-900 text-white'
-                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            {/* Desktop Navigation — Primary blue active indicators */}
+                            <nav className="hidden items-center gap-1 md:flex">
+                                {visiblePrimaryNav.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`group relative px-4 py-2 text-sm font-medium transition-colors ${
+                                            isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-[#475569] hover:text-[#0A3D91]'
+                                        }`}
+                                    >
+                                        {item.name}
+                                        {/* Active indicator — Primary blue underline */}
+                                        <span
+                                            className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-all ${
+                                                isCurrentPath(item.href) ? 'bg-[#1F6FDB]' : 'bg-transparent group-hover:bg-[#1F6FDB]/20'
                                             }`}
-                                        >
-                                            <item.icon className="h-4 w-4" />
-                                            {item.name}
-                                        </Link>
-                                    ))}
+                                        />
+                                    </Link>
+                                ))}
 
-                                    {visibleSecondaryNav.length > 0 && (
-                                        <>
-                                            <div className="mx-2 h-5 w-px bg-gray-200" />
-                                            {visibleSecondaryNav.map((item) => (
-                                                <Link
-                                                    key={item.name}
-                                                    href={item.href}
-                                                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                        isCurrentPath(item.href)
-                                                            ? 'bg-gray-900 text-white'
-                                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                {visibleSecondaryNav.length > 0 && (
+                                    <>
+                                        <div className="mx-3 h-4 w-px bg-[#E2E8F0]" />
+                                        {visibleSecondaryNav.map((item) => (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                className={`group relative px-4 py-2 text-sm font-medium transition-colors ${
+                                                    isCurrentPath(item.href) ? 'text-[#1F6FDB]' : 'text-[#475569] hover:text-[#0A3D91]'
+                                                }`}
+                                            >
+                                                {item.name}
+                                                <span
+                                                    className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-all ${
+                                                        isCurrentPath(item.href) ? 'bg-[#1F6FDB]' : 'bg-transparent group-hover:bg-[#1F6FDB]/20'
                                                     }`}
-                                                >
-                                                    <item.icon className="h-4 w-4" />
-                                                    {item.name}
-                                                </Link>
-                                            ))}
-                                        </>
-                                    )}
-                                </nav>
-                            </div>
+                                                />
+                                            </Link>
+                                        ))}
+                                    </>
+                                )}
+                            </nav>
 
-                            {/* User Menu */}
-                            <div className="flex items-center gap-3">
-                                {/* User dropdown */}
+                            {/* User Menu — Blue gradient avatar */}
+                            <div className="flex items-center gap-2">
                                 <div className="relative">
                                     <button
                                         onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                                        className="flex items-center gap-2 rounded-full p-1 text-sm transition-all hover:bg-[#1F6FDB]/5"
                                     >
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                                            <UserCircleIcon className="h-5 w-5 text-gray-600" />
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-[#1F6FDB] to-[#0A3D91] shadow-sm ring-2 ring-white">
+                                            <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                                         </div>
-                                        <span className="hidden sm:block">{auth.user?.name}</span>
                                         <ChevronDownIcon
-                                            className={`h-4 w-4 text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                            className={`hidden h-4 w-4 text-[#64748B] transition-transform sm:block ${userMenuOpen ? 'rotate-180' : ''}`}
                                         />
                                     </button>
 
@@ -153,30 +155,32 @@ export default function AdminLayout({ children }: Props) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
                                             <motion.div
-                                                initial={{ opacity: 0, y: -8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.15 }}
-                                                className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                transition={{ duration: 0.15, ease: 'easeOut' }}
+                                                className="absolute right-0 z-20 mt-2 w-60 origin-top-right rounded-xl border border-[#E2E8F0] bg-white p-1.5 shadow-lg shadow-[#1F6FDB]/5"
                                             >
-                                                <div className="border-b border-gray-100 px-4 py-3">
-                                                    <p className="text-sm font-medium text-gray-900">{auth.user?.name}</p>
-                                                    <p className="truncate text-xs text-gray-500">{auth.user?.email}</p>
+                                                <div className="rounded-lg bg-[#F8FAFC] px-3 py-3">
+                                                    <p className="text-sm font-medium text-[#1E293B]">{auth.user?.name}</p>
+                                                    <p className="mt-0.5 truncate text-xs text-[#64748B]">{auth.user?.email}</p>
                                                 </div>
-                                                <Link
-                                                    href={ProfileController.edit.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    <UserCircleIcon className="h-4 w-4" />
-                                                    Profile
-                                                </Link>
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    <ArrowLeftStartOnRectangleIcon className="h-4 w-4" />
-                                                    Sign out
-                                                </button>
+                                                <div className="mt-1.5 space-y-0.5">
+                                                    <Link
+                                                        href={ProfileController.edit.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#475569] transition-colors hover:bg-[#F8FAFC] hover:text-[#1F6FDB]"
+                                                    >
+                                                        <UserCircleIcon className="h-4 w-4 text-[#94A3B8]" />
+                                                        Profile
+                                                    </Link>
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#475569] transition-colors hover:bg-[#F8FAFC] hover:text-[#1F6FDB]"
+                                                    >
+                                                        <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#94A3B8]" />
+                                                        Sign out
+                                                    </button>
+                                                </div>
                                             </motion.div>
                                         </>
                                     )}
@@ -185,20 +189,21 @@ export default function AdminLayout({ children }: Props) {
                                 {/* Mobile menu button */}
                                 <button
                                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden"
+                                    className="rounded-lg p-2 text-[#64748B] transition-colors hover:bg-[#1F6FDB]/5 hover:text-[#0A3D91] md:hidden"
                                 >
-                                    {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                                    {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Mobile Navigation */}
+                    {/* Mobile Navigation — Blue accents */}
                     {mobileMenuOpen && (
                         <motion.nav
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
-                            className="border-t border-gray-200 px-4 py-3 md:hidden"
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            className="border-t border-[#E2E8F0] bg-white px-4 py-4 md:hidden"
                         >
                             <div className="space-y-1">
                                 {visiblePrimaryNav.map((item) => (
@@ -206,8 +211,10 @@ export default function AdminLayout({ children }: Props) {
                                         key={item.name}
                                         href={item.href}
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                                            isCurrentPath(item.href) ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
+                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                            isCurrentPath(item.href)
+                                                ? 'bg-[#1F6FDB] text-white'
+                                                : 'text-[#475569] hover:bg-[#F0F5FF] hover:text-[#1F6FDB]'
                                         }`}
                                     >
                                         <item.icon className="h-5 w-5" />
@@ -217,15 +224,17 @@ export default function AdminLayout({ children }: Props) {
                             </div>
                             {visibleSecondaryNav.length > 0 && (
                                 <>
-                                    <div className="my-3 border-t border-gray-200" />
+                                    <div className="my-3 border-t border-[#E2E8F0]" />
                                     <div className="space-y-1">
                                         {visibleSecondaryNav.map((item) => (
                                             <Link
                                                 key={item.name}
                                                 href={item.href}
                                                 onClick={() => setMobileMenuOpen(false)}
-                                                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                                                    isCurrentPath(item.href) ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
+                                                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                                    isCurrentPath(item.href)
+                                                        ? 'bg-[#1F6FDB] text-white'
+                                                        : 'text-[#475569] hover:bg-[#F0F5FF] hover:text-[#1F6FDB]'
                                                 }`}
                                             >
                                                 <item.icon className="h-5 w-5" />
@@ -239,8 +248,8 @@ export default function AdminLayout({ children }: Props) {
                     )}
                 </motion.header>
 
-                {/* Main Content */}
-                <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+                {/* Main Content — Free-flowing on blue-tinted background */}
+                <main className="mx-auto max-w-5xl px-6 py-10 lg:px-8">{children}</main>
             </div>
         </AnimatedLayout>
     );
