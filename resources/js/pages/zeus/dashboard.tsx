@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
@@ -80,6 +80,22 @@ export default function Dashboard({ stats, estates, filters }: Props) {
         router.get('/zeus/dashboard', {}, { preserveState: true });
     }
 
+    function handleToggleStatus(estateId: number) {
+        router.post(`/zeus/estates/${estateId}/toggle-status`, {}, { preserveState: true });
+    }
+
+    function handleResetPassword(estateId: number) {
+        if (confirm('Send a password reset link to the estate admin?')) {
+            router.post(`/zeus/estates/${estateId}/reset-password`, {}, { preserveState: true });
+        }
+    }
+
+    function handleDelete(estateId: number, estateName: string) {
+        if (confirm(`Are you sure you want to delete "${estateName}"? This action cannot be undone.`)) {
+            router.delete(`/zeus/estates/${estateId}`, { preserveState: true });
+        }
+    }
+
     const hasFilters = filters.search || filters.status;
 
     return (
@@ -97,8 +113,8 @@ export default function Dashboard({ stats, estates, filters }: Props) {
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-16 items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-24 overflow-hidden">
-                                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-12" />
+                                <div className="h-8 w-auto">
+                                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-full w-auto object-contain" />
                                 </div>
                                 <span className="text-lg font-semibold text-gray-900">Zeus</span>
                             </div>
@@ -119,10 +135,18 @@ export default function Dashboard({ stats, estates, filters }: Props) {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                        className="mb-8"
+                        className="mb-8 flex items-center justify-between"
                     >
-                        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-                        <p className="mt-1 text-gray-500">Overview of all estates on the platform.</p>
+                        <div>
+                            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+                            <p className="mt-1 text-gray-500">Overview of all estates on the platform.</p>
+                        </div>
+                        <Link
+                            href="/zeus/estates/create"
+                            className="rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                        >
+                            Create Estate
+                        </Link>
                     </motion.div>
 
                     {/* Stats Cards */}
@@ -203,12 +227,13 @@ export default function Dashboard({ stats, estates, filters }: Props) {
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Address</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Created</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
                                     {estates.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                                                 {hasFilters ? 'No estates match your filters.' : 'No estates found.'}
                                             </td>
                                         </tr>
@@ -230,6 +255,31 @@ export default function Dashboard({ stats, estates, filters }: Props) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">{formatDate(estate.created_at)}</td>
+                                                <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Link href={`/zeus/estates/${estate.id}/edit`} className="text-gray-600 hover:text-gray-900">
+                                                            Edit
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleToggleStatus(estate.id)}
+                                                            className="text-gray-600 hover:text-gray-900"
+                                                        >
+                                                            {estate.status === 'active' ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleResetPassword(estate.id)}
+                                                            className="text-gray-600 hover:text-gray-900"
+                                                        >
+                                                            Reset
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(estate.id, estate.name)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))
                                     )}
