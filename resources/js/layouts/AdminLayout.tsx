@@ -219,7 +219,7 @@ export default function AdminLayout({ children }: Props) {
                     {/* Sidebar Header */}
                     <div className="flex h-14 items-center border-b border-white/10 px-4">
                         <Link href={DashboardController.url()} className="shrink-0 overflow-hidden">
-                            <AnimatePresence mode="wait">
+                            <AnimatePresence mode="wait" initial={false}>
                                 {isCollapsed ? (
                                     <motion.img
                                         key="collapsed"
@@ -269,7 +269,7 @@ export default function AdminLayout({ children }: Props) {
                                     <item.icon
                                         className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
                                     />
-                                    <AnimatePresence>
+                                    <AnimatePresence initial={false}>
                                         {!isCollapsed && (
                                             <motion.span
                                                 initial={{ opacity: 0, width: 0 }}
@@ -317,7 +317,7 @@ export default function AdminLayout({ children }: Props) {
                                                     isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'
                                                 }`}
                                             />
-                                            <AnimatePresence>
+                                            <AnimatePresence initial={false}>
                                                 {!isCollapsed && (
                                                     <motion.span
                                                         initial={{ opacity: 0, width: 0 }}
