@@ -3,7 +3,9 @@
 namespace App\Services\Zeus;
 
 use App\Models\Estate;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class EstateService
 {
@@ -40,8 +42,23 @@ class EstateService
         }
 
         return $query
+            ->with(['users' => function ($q) {
+                // Eager load users who have the 'admin' role.
+                // We don't rely on the global scope here because it might filter out roles from other teams.
+                $q->whereHas('roles', function ($q) {
+                    $q->where('name', 'admin');
+                });
+            }])
             ->orderByDesc('created_at')
             ->paginate($perPage)
+            ->through(function (Estate $estate) {
+                // Check if any user is an accepted admin for this specific estate.
+                // We manually check model_has_roles to bypass Spatie's global team scope.
+                $estate->admin_accepted = $estate->hasAcceptedAdmin();
+                unset($estate->users); 
+
+                return $estate;
+            })
             ->withQueryString();
     }
 }

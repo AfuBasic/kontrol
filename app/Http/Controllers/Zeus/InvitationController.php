@@ -68,7 +68,7 @@ class InvitationController extends Controller
             // Ideally we'd pass the estate ID in the invitation link but for now finding the estate via pivot works
             // if we assume 1:1 for this specific flow or activate all pending ones since this is the first user.
             // Given the CreateEstateAction flow, there is one estate.
-            $user->estates()->update(['status' => 'active']);
+            $user->estates()->update(['estates.status' => 'active']);
         });
 
         // Log the user in

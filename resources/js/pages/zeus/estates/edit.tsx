@@ -9,6 +9,7 @@ interface Props {
         email: string;
         address: string | null;
         status: 'active' | 'inactive';
+        admin_accepted: boolean;
     };
 }
 
@@ -74,9 +75,15 @@ export default function EditEstate({ estate }: Props) {
                                 id="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className={`mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none ${
+                                    estate.admin_accepted ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''
+                                }`}
                                 placeholder="admin@estate.com"
+                                disabled={estate.admin_accepted}
                             />
+                            {estate.admin_accepted && (
+                                <p className="mt-1 text-xs text-gray-500">Email cannot be changed after the admin has accepted the invitation.</p>
+                            )}
                             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
 
@@ -105,11 +112,17 @@ export default function EditEstate({ estate }: Props) {
                                 id="status"
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className={`mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none ${
+                                    !estate.admin_accepted ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''
+                                }`}
+                                disabled={!estate.admin_accepted}
                             >
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
+                            {!estate.admin_accepted && (
+                                <p className="mt-1 text-xs text-gray-500">Estate cannot be activated until the admin accepts the invitation.</p>
+                            )}
                             {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
                         </div>
                     </div>

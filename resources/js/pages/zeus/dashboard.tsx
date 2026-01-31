@@ -9,6 +9,7 @@ interface Estate {
     email: string;
     address: string | null;
     status: 'active' | 'inactive';
+    admin_accepted: boolean;
     created_at: string;
 }
 
@@ -228,9 +229,14 @@ export default function Dashboard({ stats, estates, filters }: Props) {
                                                 <Link href={`/zeus/estates/${estate.id}/edit`} className="text-gray-600 hover:text-gray-900">
                                                     Edit
                                                 </Link>
-                                                <button onClick={() => handleToggleStatus(estate.id)} className="text-gray-600 hover:text-gray-900">
-                                                    {estate.status === 'active' ? 'Deactivate' : 'Activate'}
-                                                </button>
+                                                {estate.admin_accepted && (
+                                                    <button
+                                                        onClick={() => handleToggleStatus(estate.id)}
+                                                        className="text-gray-600 hover:text-gray-900"
+                                                    >
+                                                        {estate.status === 'active' ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                )}
                                                 <button onClick={() => handleResetPassword(estate.id)} className="text-gray-600 hover:text-gray-900">
                                                     Reset
                                                 </button>

@@ -34,7 +34,10 @@ class EstateController extends Controller
     public function edit(Estate $estate): Response
     {
         return Inertia::render('zeus/estates/edit', [
-            'estate' => $estate->only(['id', 'name', 'email', 'address', 'status']),
+            'estate' => array_merge(
+                $estate->only(['id', 'name', 'email', 'address', 'status']),
+                ['admin_accepted' => $estate->hasAcceptedAdmin()]
+            ),
         ]);
     }
 

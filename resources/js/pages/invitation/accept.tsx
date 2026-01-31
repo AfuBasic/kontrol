@@ -17,7 +17,7 @@ export default function AcceptInvitation({ user }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(`/invitation/${user.id}`);
+        post(`/invitation/${user.id}${window.location.search}`);
     }
 
     return (
