@@ -27,6 +27,12 @@ class EnsureUserHasRole
             return redirect('/login');
         }
 
+        // Set the team context for Spatie Permission (use user's first accepted estate)
+        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
+        if ($estate) {
+            setPermissionsTeamId($estate->id);
+        }
+
         // Check if user has any of the allowed roles
         foreach ($roles as $role) {
             if ($user->hasRole($role)) {

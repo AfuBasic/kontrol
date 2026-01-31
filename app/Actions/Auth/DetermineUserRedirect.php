@@ -11,6 +11,12 @@ class DetermineUserRedirect
      */
     public function execute(User $user): string
     {
+        // Set the team context for Spatie Permission (use user's first accepted estate)
+        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
+        if ($estate) {
+            setPermissionsTeamId($estate->id);
+        }
+
         // Check for global roles first (security, resident)
         if ($user->hasRole('security')) {
             return '/security/dashboard';
