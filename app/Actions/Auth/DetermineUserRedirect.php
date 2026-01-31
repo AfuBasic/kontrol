@@ -27,6 +27,6 @@ class DetermineUserRedirect
         }
 
         // Default to admin module for any other role (including estate-scoped 'admin')
-        return '/admin/dashboard';
+        return '/admin/estate';
     }
 }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // Allow admins to bypass all permission checks
+        Gate::before(function ($user, $_ability) {
+            if ($user && $user->hasRole('admin')) {
+                return true;
+            }
+        });
     }
 
     protected function configureDefaults(): void
