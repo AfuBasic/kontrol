@@ -12,25 +12,19 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { type ReactNode, useState } from 'react';
+
+import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
+import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
+import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
+import type { SharedData } from '@/types';
 
 interface Props {
     children: ReactNode;
-}
-
-interface Permission {
-    name: string;
-}
-
-interface PageProps {
-    auth: {
-        user: {
-            name: string;
-            email: string;
-            permissions?: Permission[];
-            roles?: string[];
-        };
-    };
 }
 
 type NavItem = {
@@ -41,25 +35,25 @@ type NavItem = {
 };
 
 const primaryNav: NavItem[] = [
-    { name: 'Estate Board', href: '/admin/estate', icon: BuildingOffice2Icon },
-    { name: 'Residents', href: '/admin/residents', icon: UsersIcon, permission: 'residents.view' },
-    { name: 'Security', href: '/admin/security', icon: ShieldCheckIcon, permission: 'security.view' },
+    { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon },
+    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
+    { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
 ];
 
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon, permission: 'settings.view' }];
+const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
 
 export default function AdminLayout({ children }: Props) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth } = usePage<SharedData>().props;
     const { url } = usePage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-    const userPermissions = auth?.user?.permissions?.map((p) => p.name) ?? [];
-    const userRoles = auth?.user?.roles ?? [];
+    const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
+    const userRoles = auth.user?.roles ?? [];
     const isAdmin = userRoles.includes('admin');
 
     function handleLogout() {
-        router.post('/logout');
+        router.post(LoginController.destroy.url());
     }
 
     function isCurrentPath(href: string) {
@@ -93,7 +87,7 @@ export default function AdminLayout({ children }: Props) {
                         <div className="flex h-16 items-center justify-between">
                             {/* Logo & Primary Nav */}
                             <div className="flex items-center gap-8">
-                                <Link href="/admin/dashboard" className="shrink-0">
+                                <Link href={DashboardController.url()} className="shrink-0">
                                     <div className="h-10 w-44 overflow-hidden">
                                         <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-10" />
                                     </div>
@@ -149,7 +143,7 @@ export default function AdminLayout({ children }: Props) {
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
                                             <UserCircleIcon className="h-5 w-5 text-gray-600" />
                                         </div>
-                                        <span className="hidden sm:block">{auth?.user?.name}</span>
+                                        <span className="hidden sm:block">{auth.user?.name}</span>
                                         <ChevronDownIcon
                                             className={`h-4 w-4 text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
                                         />
@@ -165,11 +159,11 @@ export default function AdminLayout({ children }: Props) {
                                                 className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
                                             >
                                                 <div className="border-b border-gray-100 px-4 py-3">
-                                                    <p className="text-sm font-medium text-gray-900">{auth?.user?.name}</p>
-                                                    <p className="truncate text-xs text-gray-500">{auth?.user?.email}</p>
+                                                    <p className="text-sm font-medium text-gray-900">{auth.user?.name}</p>
+                                                    <p className="truncate text-xs text-gray-500">{auth.user?.email}</p>
                                                 </div>
                                                 <Link
-                                                    href="/admin/profile"
+                                                    href={ProfileController.edit.url()}
                                                     onClick={() => setUserMenuOpen(false)}
                                                     className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                                 >
