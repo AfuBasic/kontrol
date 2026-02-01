@@ -45,7 +45,7 @@ class CreateResidentAction
             ]);
 
             // 5. Dispatch event for side effects (invitation email)
-            event(new ResidentCreated($user, $estate));
+            event(new ResidentCreated($user, $estate, false));
 
             return $user;
         });
