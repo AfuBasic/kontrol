@@ -5,7 +5,6 @@ namespace App\Services\Zeus;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class EstateService
 {
@@ -55,7 +54,7 @@ class EstateService
                 // Check if any user is an accepted admin for this specific estate.
                 // We manually check model_has_roles to bypass Spatie's global team scope.
                 $estate->admin_accepted = $estate->hasAcceptedAdmin();
-                unset($estate->users); 
+                unset($estate->users);
 
                 return $estate;
             })

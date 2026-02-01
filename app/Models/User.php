@@ -3,8 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -59,10 +61,54 @@ class User extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne<UserProfile, $this>
+     * @return HasOne<UserProfile, $this>
      */
-    public function profile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Scope: Users belonging to a specific estate.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeForEstate(Builder $query, int $estateId): Builder
+    {
+        return $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId));
+    }
+
+    /**
+     * Scope: Users with a specific role scoped to an estate.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeWithRole(Builder $query, string $roleName, int $estateId): Builder
+    {
+        return $query->whereHas('roles', fn ($q) => $q->where('name', $roleName)->where('roles.estate_id', $estateId));
+    }
+
+    /**
+     * Scope: Users with pending invitation status.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopePendingInvitation(Builder $query): Builder
+    {
+        return $query->whereNull('password');
+    }
+
+    /**
+     * Scope: Users who have accepted their invitation.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeAcceptedInvitation(Builder $query): Builder
+    {
+        return $query->whereNotNull('password');
     }
 }

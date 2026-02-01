@@ -24,9 +24,9 @@ class UpdateEstateAction
             // Since this is a "fix typo" scenario, we assume the user attached is the one we want to update.
             // We should only update the user if they haven't accepted yet (which matches logic above).
             foreach ($estate->users as $user) {
-                 if ($user->email === $estate->email) {
-                     $user->update(['email' => $data['email']]);
-                 }
+                if ($user->email === $estate->email) {
+                    $user->update(['email' => $data['email']]);
+                }
             }
         }
 
