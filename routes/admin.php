@@ -51,4 +51,9 @@ Route::middleware('role:admin')->group(function (): void {
 
     // Permission management
     Route::resource('permissions', PermissionController::class)->except(['show']);
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('admin.notifications.index');
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('admin.notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('admin.notifications.read-all');
 });

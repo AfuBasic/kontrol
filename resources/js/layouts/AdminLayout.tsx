@@ -24,6 +24,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileContr
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
@@ -550,12 +551,13 @@ export default function AdminLayout({ children }: Props) {
                                             </div>
 
                                             <div className="border-t border-slate-100 p-2">
-                                                <a
-                                                    href="#"
+                                                <Link
+                                                    href={NotificationController.index.url()}
+                                                    onClick={() => setNotificationOpen(false)}
                                                     className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
                                                 >
                                                     View all notifications
-                                                </a>
+                                                </Link>
                                             </div>
                                         </motion.div>
                                     </>
