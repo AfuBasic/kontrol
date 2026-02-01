@@ -42,19 +42,20 @@ type NavItem = {
     href: string;
     icon: React.ComponentType<{ className?: string }>;
     permission?: string;
+    role?: string;
     comingSoon?: boolean;
 };
 
 const primaryNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon },
+    { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon, permission: 'estate_board.view' },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
 
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon }];
+const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
 export default function AdminLayout({ children }: Props) {
     const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;
@@ -182,14 +183,20 @@ export default function AdminLayout({ children }: Props) {
         return url.startsWith(href);
     }
 
-    function canAccess(permission?: string): boolean {
-        if (!permission) return true;
+    function canAccess(item: NavItem): boolean {
+        // specific role check
+        if (item.role && !userRoles.includes(item.role)) {
+            return false;
+        }
+
+        // permission check
+        if (!item.permission) return true;
         if (isAdmin) return true;
-        return userPermissions.includes(permission);
+        return userPermissions.includes(item.permission);
     }
 
     function filterNav(items: NavItem[]): NavItem[] {
-        return items.filter((item) => canAccess(item.permission));
+        return items.filter((item) => canAccess(item));
     }
 
     const visiblePrimaryNav = filterNav(primaryNav);

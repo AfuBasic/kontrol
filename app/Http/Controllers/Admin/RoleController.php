@@ -59,7 +59,7 @@ class RoleController extends Controller
     {
         $action->execute($role, $request->validated());
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role updated successfully.');
     }
 
@@ -67,7 +67,7 @@ class RoleController extends Controller
     {
         $action->execute($role);
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role deleted successfully.');
     }
 }
