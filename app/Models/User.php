@@ -87,7 +87,10 @@ class User extends Authenticatable
      */
     public function scopeWithRole(Builder $query, string $roleName, int $estateId): Builder
     {
-        return $query->whereHas('roles', fn ($q) => $q->where('name', $roleName)->where('roles.estate_id', $estateId));
+        return $query->whereHas('roles', function ($q) use ($roleName, $estateId) {
+            $q->where('name', $roleName)
+                ->where('model_has_roles.estate_id', $estateId);
+        });
     }
 
     /**

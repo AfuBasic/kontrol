@@ -12,6 +12,12 @@ export type User = {
     roles?: string[];
     created_at: string;
     updated_at: string;
+    notifications?: {
+        id: string;
+        data: Record<string, unknown>;
+        created_at_human: string;
+    }[];
+    unread_notifications_count?: number;
     [key: string]: unknown;
 };
 

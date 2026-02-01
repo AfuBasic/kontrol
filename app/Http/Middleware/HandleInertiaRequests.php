@@ -60,6 +60,12 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'permissions' => $permissions,
                     'roles' => $roles,
+                    'unread_notifications_count' => $user->unreadNotifications()->count(),
+                    'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
+                        'id' => $n->id,
+                        'data' => $n->data,
+                        'created_at_human' => $n->created_at->diffForHumans(),
+                    ]),
                 ] : null,
             ],
             'flash' => [

@@ -1,6 +1,7 @@
 import {
     ArrowLeftStartOnRectangleIcon,
     Bars3Icon,
+    BellIcon,
     BuildingOffice2Icon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
@@ -55,6 +56,7 @@ export default function AdminLayout({ children }: Props) {
     const { url } = usePage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
 
     const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
@@ -483,6 +485,82 @@ export default function AdminLayout({ children }: Props) {
                         <div className="flex items-center gap-3">
                             <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
                             <span className="text-sm font-medium text-slate-500">Admin Panel</span>
+                        </div>
+                        {/* Notification Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setNotificationOpen(!notificationOpen)}
+                                className={`relative rounded-full p-1.5 transition-colors ${
+                                    notificationOpen ? 'bg-slate-100 text-slate-600' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-500'
+                                }`}
+                            >
+                                <span className="sr-only">View notifications</span>
+                                <BellIcon className="h-6 w-6" aria-hidden="true" />
+                                {auth.user?.unread_notifications_count ? (
+                                    <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                                    </span>
+                                ) : null}
+                            </button>
+
+                            <AnimatePresence>
+                                {notificationOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setNotificationOpen(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute top-full right-0 z-20 mt-2 w-80 origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none sm:w-96"
+                                        >
+                                            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                                                <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
+                                                {auth.user?.unread_notifications_count ? (
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                                        {auth.user.unread_notifications_count} new
+                                                    </span>
+                                                ) : null}
+                                            </div>
+
+                                            <div className="max-h-[28rem] overflow-y-auto">
+                                                {auth.user?.notifications && auth.user.notifications.length > 0 ? (
+                                                    <div className="divide-y divide-slate-100">
+                                                        {auth.user.notifications.map((notification) => (
+                                                            <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-medium text-slate-900">
+                                                                        {/* @ts-ignore - dynamic data content */}
+                                                                        {notification.data.message || 'New notification'}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>
+                                                                </div>
+                                                                <div className="flex h-2 w-2 shrink-0 translate-y-1.5 rounded-full bg-blue-600"></div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="py-12 text-center">
+                                                        <BellIcon className="mx-auto h-10 w-10 text-slate-300" />
+                                                        <p className="mt-2 text-sm font-medium text-slate-900">No notifications</p>
+                                                        <p className="mt-1 text-xs text-slate-500">You're all caught up!</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="border-t border-slate-100 p-2">
+                                                <a
+                                                    href="#"
+                                                    className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                                                >
+                                                    View all notifications
+                                                </a>
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                     {/* Content Body */}

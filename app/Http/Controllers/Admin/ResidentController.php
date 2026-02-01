@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Services\Admin\ResidentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -85,7 +84,7 @@ class ResidentController extends Controller
     /**
      * Update the specified resident.
      */
-    public function update(Request $request, User $resident): RedirectResponse
+    public function update(Request $request, User $resident, \App\Actions\Admin\UpdateResidentAction $action): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -94,18 +93,7 @@ class ResidentController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
         ]);
 
-        DB::transaction(function () use ($resident, $validated) {
-            $resident->update(['name' => $validated['name']]);
-
-            $resident->profile()->updateOrCreate(
-                ['user_id' => $resident->id],
-                [
-                    'phone' => $validated['phone'] ?? null,
-                    'unit_number' => $validated['unit_number'] ?? null,
-                    'address' => $validated['address'] ?? null,
-                ]
-            );
-        });
+        $action->execute($resident, $validated);
 
         return redirect()
             ->route('residents.index')

@@ -27,10 +27,14 @@ class CreateResidentAction
             // 2. Attach user to estate with pending status
             $estate->users()->attach($user->id, ['status' => 'pending']);
 
-            // 3. Create/assign resident role scoped to this estate
+            // 3. Assign global resident role scoped to this estate
+            $role = Role::where('name', 'resident')
+                ->where('guard_name', 'web')
+                ->whereNull('estate_id')
+                ->firstOrFail();
+
             setPermissionsTeamId($estate->id);
-            Role::firstOrCreate(['name' => 'resident', 'estate_id' => $estate->id, 'guard_name' => 'web']);
-            $user->assignRole('resident');
+            $user->assignRole($role);
 
             // 4. Create user profile with additional data
             UserProfile::create([
