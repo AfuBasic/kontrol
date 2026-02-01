@@ -64,7 +64,7 @@
 
         <div class="inline-flex items-center gap-3 px-5 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
             <span class="relative flex h-3 w-3">
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-error-300"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
             </span>
             <span class="text-white font-medium">Error 403</span>
         </div>
