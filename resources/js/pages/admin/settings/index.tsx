@@ -156,7 +156,14 @@ export default function Settings({ settings }: Props) {
                                     onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
                                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">Longest allowed code validity (must be ≥ minimum)</p>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Longest allowed code validity (must be ≥ minimum)
+                                    {data.access_code_max_lifespan_minutes > 0 && (
+                                        <span className="ml-1 font-medium text-primary-600">
+                                            {formatDuration(data.access_code_max_lifespan_minutes)}
+                                        </span>
+                                    )}
+                                </p>
                                 {errors.access_code_max_lifespan_minutes && (
                                     <p className="mt-1 text-sm text-red-600">{errors.access_code_max_lifespan_minutes}</p>
                                 )}
@@ -177,7 +184,14 @@ export default function Settings({ settings }: Props) {
                                 onChange={(e) => setData('access_code_grace_period_minutes', parseInt(e.target.value) || 0)}
                                 className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                             />
-                            <p className="mt-1 text-xs text-gray-500">Buffer time after expiry to account for real-world delays (0-60 minutes)</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Buffer time after expiry to account for real-world delays (0-60 minutes)
+                                {data.access_code_grace_period_minutes > 0 && (
+                                    <span className="ml-1 font-medium text-primary-600">
+                                        {formatDuration(data.access_code_grace_period_minutes)}
+                                    </span>
+                                )}
+                            </p>
                             {errors.access_code_grace_period_minutes && (
                                 <p className="mt-1 text-sm text-red-600">{errors.access_code_grace_period_minutes}</p>
                             )}

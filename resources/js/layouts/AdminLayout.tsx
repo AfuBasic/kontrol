@@ -89,7 +89,6 @@ export default function AdminLayout({ children }: Props) {
     // Real-time notifications - estate channel
     useEffect(() => {
         if (auth.user?.current_estate_id) {
-            console.log('Subscribing to channel:', `estates.${auth.user.current_estate_id}`);
             const channel = window.Echo.private(`estates.${auth.user.current_estate_id}`);
 
             channel.on('error', (error: any) => {
@@ -97,8 +96,6 @@ export default function AdminLayout({ children }: Props) {
             });
 
             channel.listen('.resident.created', (e: any) => {
-                console.log('Event received:', e);
-
                 // Show toast
                 setToastMessage(e.message);
                 setToastType(e.type || 'info');
@@ -132,12 +129,9 @@ export default function AdminLayout({ children }: Props) {
     // Real-time notifications - user's private notification channel
     useEffect(() => {
         if (auth.user?.id) {
-            console.log('Subscribing to user notification channel:', `App.Models.User.${auth.user.id}`);
             const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
             userChannel.notification((notification: any) => {
-                console.log('Notification received:', notification);
-
                 // Show toast
                 setToastMessage(notification.message);
                 setToastType(notification.type || 'info');
@@ -277,13 +271,17 @@ export default function AdminLayout({ children }: Props) {
                                         {unreadCount > 0 && (
                                             <button
                                                 onClick={() => {
-                                                    router.post(NotificationController.markAllAsRead.url(), {}, {
-                                                        preserveScroll: true,
-                                                        onSuccess: () => {
-                                                            setUnreadCount(0);
-                                                            setNotifications([]);
+                                                    router.post(
+                                                        NotificationController.markAllAsRead.url(),
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                            onSuccess: () => {
+                                                                setUnreadCount(0);
+                                                                setNotifications([]);
+                                                            },
                                                         },
-                                                    });
+                                                    );
                                                 }}
                                                 className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                                             >
@@ -748,13 +746,17 @@ export default function AdminLayout({ children }: Props) {
                                                 {unreadCount > 0 && (
                                                     <button
                                                         onClick={() => {
-                                                            router.post(NotificationController.markAllAsRead.url(), {}, {
-                                                                preserveScroll: true,
-                                                                onSuccess: () => {
-                                                                    setUnreadCount(0);
-                                                                    setNotifications([]);
+                                                            router.post(
+                                                                NotificationController.markAllAsRead.url(),
+                                                                {},
+                                                                {
+                                                                    preserveScroll: true,
+                                                                    onSuccess: () => {
+                                                                        setUnreadCount(0);
+                                                                        setNotifications([]);
+                                                                    },
                                                                 },
-                                                            });
+                                                            );
                                                         }}
                                                         className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                                                     >
