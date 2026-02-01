@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
     backUrl?: string; // If provided, shows "Back to Dashboard" button
 }
 
-export default function ZeusLayout({ children, title, backUrl }: Props) {
+export default function ZeusLayout({ children, backUrl }: Props) {
     function handleLogout() {
         router.post('/zeus/logout');
     }

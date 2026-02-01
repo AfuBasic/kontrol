@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import ConfirmationModal from '@/Components/ConfirmationModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 type SecurityPerson = {
     id: number;
@@ -82,7 +82,7 @@ export default function SecurityActions({ security }: Props) {
                     confirmLabel: 'Delete Personnel',
                     type: 'danger' as const,
                 };
-            case 'suspend':
+            case 'suspend': {
                 const isSuspended = !!security.suspended_at;
                 return {
                     title: isSuspended ? 'Activate Personnel' : 'Suspend Personnel',
@@ -92,6 +92,7 @@ export default function SecurityActions({ security }: Props) {
                     confirmLabel: isSuspended ? 'Activate Personnel' : 'Suspend Personnel',
                     type: isSuspended ? 'info' : ('warning' as const),
                 };
+            }
             case 'reset':
                 return {
                     title: 'Reset Password',

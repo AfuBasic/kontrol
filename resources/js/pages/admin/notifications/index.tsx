@@ -1,4 +1,4 @@
-import { BellIcon, CheckCircleIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { BellIcon, CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 

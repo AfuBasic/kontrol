@@ -1,6 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
 
 interface Props {

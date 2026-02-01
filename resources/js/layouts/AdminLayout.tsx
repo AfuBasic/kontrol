@@ -26,6 +26,7 @@ import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentCon
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
@@ -50,7 +51,7 @@ const primaryNav: NavItem[] = [
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },
-    { name: 'Users', href: '#', icon: UserCircleIcon, permission: 'users.view', comingSoon: true },
+    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon }];
@@ -93,10 +94,11 @@ export default function AdminLayout({ children }: Props) {
         if (auth.user?.current_estate_id) {
             const channel = window.Echo.private(`estates.${auth.user.current_estate_id}`);
 
-            channel.on('error', (error: any) => {
+            channel.on('error', (error: unknown) => {
                 console.error('Echo connection error:', error);
             });
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             channel.listen('.resident.created', (e: any) => {
                 // Show toast
                 setToastMessage(e.message);
@@ -133,6 +135,7 @@ export default function AdminLayout({ children }: Props) {
         if (auth.user?.id) {
             const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             userChannel.notification((notification: any) => {
                 // Show toast
                 setToastMessage(notification.message);
@@ -252,7 +255,7 @@ export default function AdminLayout({ children }: Props) {
                                                     <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
                                                         <div className="flex-1">
                                                             <p className="text-sm font-medium text-slate-900">
-                                                                {/* @ts-ignore */}
+                                                                {/* @ts-expect-error - dynamic data content */}
                                                                 {notification.data.message || 'New notification'}
                                                             </p>
                                                             <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>
@@ -726,7 +729,7 @@ export default function AdminLayout({ children }: Props) {
                                                             <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
                                                                 <div className="flex-1">
                                                                     <p className="text-sm font-medium text-slate-900">
-                                                                        {/* @ts-ignore - dynamic data content */}
+                                                                        {/* @ts-expect-error - dynamic data content */}
                                                                         {notification.data.message || 'New notification'}
                                                                     </p>
                                                                     <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>

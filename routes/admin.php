@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,4 +58,7 @@ Route::middleware('role:admin')->group(function (): void {
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('admin.notifications.index');
     Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('admin.notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('admin.notifications.read-all');
+
+    // Admin User management (manage other admins)
+    Route::resource('users', UserController::class)->except(['show']);
 });

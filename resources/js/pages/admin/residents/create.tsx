@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import AdminLayout from '@/layouts/AdminLayout';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import AdminLayout from '@/layouts/AdminLayout';
 
 export default function CreateResident() {
     const { data, setData, post, processing, errors } = useForm({

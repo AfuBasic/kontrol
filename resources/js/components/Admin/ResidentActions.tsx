@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import ConfirmationModal from '@/Components/ConfirmationModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 type Resident = {
     id: number;
@@ -82,7 +82,7 @@ export default function ResidentActions({ resident }: Props) {
                     confirmLabel: 'Delete Resident',
                     type: 'danger' as const,
                 };
-            case 'suspend':
+            case 'suspend': {
                 const isSuspended = !!resident.suspended_at;
                 return {
                     title: isSuspended ? 'Activate Resident' : 'Suspend Resident',
@@ -92,6 +92,7 @@ export default function ResidentActions({ resident }: Props) {
                     confirmLabel: isSuspended ? 'Activate Resident' : 'Suspend Resident',
                     type: isSuspended ? 'success' : ('warning' as const), // ModalType probably doesn't support success, let's stick to warning/info or fix types
                 };
+            }
             case 'reset':
                 return {
                     title: 'Reset Password',

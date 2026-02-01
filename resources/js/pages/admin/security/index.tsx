@@ -1,11 +1,11 @@
+import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import AdminLayout from '@/layouts/AdminLayout';
 import { index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import SecurityActions from '@/Components/Admin/SecurityActions';
+import SecurityActions from '@/components/Admin/SecurityActions';
 import { useDebounce } from '@/hooks/useDebounce';
+import AdminLayout from '@/layouts/AdminLayout';
 
 type SecurityPerson = {
     id: number;
@@ -46,7 +46,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
         if (debouncedSearch !== (filters.search || '')) {
             router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, replace: true });
         }
-    }, [debouncedSearch]);
+    }, [debouncedSearch, filters.search, status]);
 
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;

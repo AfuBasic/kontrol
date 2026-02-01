@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import AdminLayout from '@/layouts/AdminLayout';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import AdminLayout from '@/layouts/AdminLayout';
 
 type Settings = {
     access_codes_enabled: boolean;

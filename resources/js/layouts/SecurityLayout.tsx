@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 
 interface Props {

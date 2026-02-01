@@ -4,7 +4,7 @@ import Pusher from 'pusher-js';
 declare global {
     interface Window {
         Pusher: typeof Pusher;
-        Echo: Echo<any>;
+        Echo: Echo<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
     }
 }
 
