@@ -87,7 +87,7 @@ class User extends Authenticatable
      * @param  Builder<User>  $query
      * @return Builder<User>
      */
-    public function scopeWithRole(Builder $query, string $roleName, int $estateId): Builder
+    public function scopeWithRole(Builder $query, string $roleName, ?int $estateId): Builder
     {
         return $query->whereHas('roles', function ($q) use ($roleName, $estateId) {
             $q->where('name', $roleName)

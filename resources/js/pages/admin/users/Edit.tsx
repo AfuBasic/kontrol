@@ -8,10 +8,12 @@ type Props = {
         id: number;
         name: string;
         email: string;
+        role?: string;
     };
+    roles: Array<{ name: string; guard_name: string }>;
 };
 
-export default function Edit({ user }: Props) {
+export default function Edit({ user, roles }: Props) {
     return (
         <AdminLayout>
             <Head title="Edit Admin" />
@@ -23,6 +25,7 @@ export default function Edit({ user }: Props) {
                 method="put"
                 submitText="Save Changes"
                 cancelUrl={index.url()}
+                roles={roles}
             />
         </AdminLayout>
     );

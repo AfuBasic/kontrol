@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\Admin\AdminInvitationMail;
 use App\Models\User;
+use App\Services\Admin\RoleService;
+use App\Services\Admin\UserService;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
@@ -16,33 +20,26 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(
+        protected RoleService $roleService,
+        protected UserService $userService
+    ) {}
+
     /**
      * Display a listing of the admins.
      */
     public function index(Request $request): Response
     {
-        $estateId = auth()->user()->current_estate_id;
+        $estateId = $this->userService->getCurrentEstateId();
 
-        $users = User::withRole('admin', $estateId)
-            ->with(['estates' => function ($query) use ($estateId) {
-                $query->where('estates.id', $estateId);
-            }])
-            ->when($request->search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString()
+        $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
             ->through(fn ($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'status' => $user->estates->first()->pivot->status ?? 'unknown',
                 'created_at' => $user->created_at->format('M d, Y'),
-                'roles' => $user->roles->pluck('name'),
+                'roles' => $user->roles->where('pivot.estate_id', $estateId)->pluck('name'),
             ]);
 
         return Inertia::render('admin/users/Index', [
@@ -56,7 +53,11 @@ class UserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('admin/users/Create');
+        $roles = $this->roleService->getManageableRoles();
+
+        return Inertia::render('admin/users/Create', [
+            'roles' => $roles,
+        ]);
     }
 
     /**
@@ -64,8 +65,8 @@ class UserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $estateId = auth()->user()->current_estate_id;
-        $estate = auth()->user()->estates()->where('estates.id', $estateId)->first();
+        $estateId = $this->userService->getCurrentEstateId();
+        $estate = $this->userService->getCurrentEstate();
 
         // Validate request
         $validated = $request->validate([
@@ -78,7 +79,7 @@ class UserController extends Controller
                 // Detailed uniqueness check could be added here if needed to avoid duplicates across system
                 // But for now, we'll handle existing users in logic below
             ],
-            // 'roles' => 'array' // If we want to assign specific roles later
+            'role' => 'required|string|exists:roles,name',
         ]);
 
         DB::transaction(function () use ($validated, $estateId, $estate) {
@@ -101,8 +102,11 @@ class UserController extends Controller
 
             // Assign Admin Role scoped to this estate
             setPermissionsTeamId($estateId);
-            if (! $user->hasRole('admin')) {
-                $user->assignRole('admin');
+            
+            // Check if user has any role for this estate, if not assign the selected one
+            // Or should we sync? For a new invite, we assign.
+            if (! $user->hasRole($validated['role'])) {
+                $user->assignRole($validated['role']);
             }
 
             // Send Invitation Email
@@ -121,12 +125,21 @@ class UserController extends Controller
      */
     public function edit(User $admin): Response
     {
+        $estateId = $this->userService->getCurrentEstateId();
+        $roles = $this->roleService->getManageableRoles();
+        
+        // Load roles for the user in the context of this estate
+        setPermissionsTeamId($estateId);
+        $currentRole = $admin->roles->first()?->name;
+
         return Inertia::render('admin/users/Edit', [
             'user' => [
                 'id' => $admin->id,
                 'name' => $admin->name,
                 'email' => $admin->email,
+                'role' => $currentRole,
             ],
+            'roles' => $roles,
         ]);
     }
 
@@ -144,9 +157,20 @@ class UserController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($admin->id),
             ],
+            'role' => 'required|string|exists:roles,name',
         ]);
 
-        $admin->update($validated);
+        $admin->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        $estateId = $this->userService->getCurrentEstateId();
+        setPermissionsTeamId($estateId);
+
+        if (isset($validated['role'])) {
+            $admin->syncRoles([$validated['role']]);
+        }
 
         return back()->with('success', 'Admin updated successfully.');
     }
@@ -156,10 +180,10 @@ class UserController extends Controller
      */
     public function destroy(User $admin): RedirectResponse
     {
-        $estateId = auth()->user()->current_estate_id;
+        $estateId = $this->userService->getCurrentEstateId();
 
         // Prevent deleting yourself
-        if ($admin->id === auth()->id()) {
+        if ($admin->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
 
