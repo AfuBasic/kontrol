@@ -96,47 +96,38 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
             <Head title="Activity Feed" />
 
             <div className="min-h-screen bg-[#F8FAFC] pb-32">
-                {/* 1. GORGEOUS FLOATING SEARCH */}
-                <div className="sticky top-6 z-50 mx-auto max-w-2xl px-4">
-                    <motion.div
-                        initial={{ y: -20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        className="group flex items-center gap-3 rounded-[32px] border border-white/40 bg-white/70 p-2 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur-xl transition-all hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)]"
-                    >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 group-focus-within:text-blue-500">
-                            <MagnifyingGlassIcon className="h-5 w-5" />
+                {/* 1. STICKY SEARCH BAR */}
+                <div className="sticky top-6 z-50 mx-auto max-w-2xl px-4 pb-6">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
                         </div>
                         <input
                             type="text"
                             placeholder="Search activities, users, or subjects..."
-                            className="w-full border-none bg-transparent px-0 text-sm font-medium text-slate-600 placeholder:text-slate-400 focus:ring-0"
+                            className="block w-full rounded-2xl border border-gray-100 bg-white/95 py-4 pr-4 pl-12 text-base text-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <div className="flex items-center gap-1 pr-2">
-                            <button className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100/50 hover:text-slate-600">
-                                <FunnelIcon className="h-4 w-4" />
-                            </button>
-                            <button className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100/50 hover:text-slate-600">
-                                <PlusCircleIcon className="h-4 w-4" />
-                            </button>
-                        </div>
                     </motion.div>
                 </div>
 
-                <div className="mx-auto mt-20 max-w-4xl px-4 sm:px-6">
+                <div className="mx-auto mt-12 max-w-4xl px-4 sm:px-6">
                     <div className="relative">
                         {/* 2. THE RAIL: Soft Blue Connector */}
-                        <div className="absolute top-0 bottom-0 left-8 w-[3px] rounded-full bg-blue-100/60 sm:left-32" />
+                        <div className="absolute top-0 bottom-0 left-8 w-[4px] rounded-full bg-blue-100/60 sm:left-32" />
 
                         <div className="space-y-20">
                             {Object.entries(grouped).map(([date, items]) => (
                                 <section key={date} className="relative">
-                                    {/* 3. DATE MARKER (Left alignment) */}
-                                    <div className="relative z-10 mb-12 flex items-center sm:block">
-                                        <div className="absolute left-8 h-4 w-4 -translate-x-1/2 rounded-full border-4 border-white bg-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.5)] sm:left-32" />
-                                        <div className="ml-16 sm:ml-0 sm:pr-12 sm:text-right">
-                                            <div className="inline-block rounded-[14px] bg-white px-5 py-2.5 text-sm font-bold text-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100">
+                                    {/* 3. DATE MARKER (Better alignment by the rail) */}
+                                    <div className="relative z-10 mb-12 flex items-center">
+                                        {/* Glow Node */}
+                                        <div className="absolute left-8 h-5 w-5 -translate-x-1/2 rounded-full border-4 border-white bg-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.6)] sm:left-32" />
+
+                                        {/* Date Label - Sitting properly next to the node */}
+                                        <div className="ml-16 sm:absolute sm:left-32 sm:ml-0 sm:-translate-x-[calc(100%+24px)]">
+                                            <div className="inline-block rounded-[16px] bg-white px-5 py-2 text-sm font-black tracking-widest whitespace-nowrap text-[#1E293B] uppercase shadow-[0_4px_20px_rgba(0,0,0,0.04)] ring-1 ring-slate-100">
                                                 {getDateLabel(date)}
                                             </div>
                                         </div>
@@ -172,7 +163,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                                                     <div className="relative rounded-[24px] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.03)] ring-1 ring-slate-100/50 transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] hover:ring-blue-100">
                                                         <div className="flex items-start gap-5">
                                                             {/* User Avatar Placeholder */}
-                                                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner">
+                                                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-200 shadow-inner">
                                                                 <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-400">
                                                                     {act.causer?.name.charAt(0)}
                                                                 </div>
@@ -203,7 +194,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                                                                 {Object.keys(act.properties).length > 0 && (
                                                                     <div className="mt-6 border-t border-slate-50 pt-5">
                                                                         <details className="group/details">
-                                                                            <summary className="flex cursor-pointer items-center gap-2 text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase transition-colors hover:text-blue-500">
+                                                                            <summary className="flex cursor-pointer items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-blue-500">
                                                                                 <ChevronDownIcon className="h-3 w-3 transition-transform group-open/details:rotate-180" />
                                                                                 Environmental Data
                                                                             </summary>
@@ -237,7 +228,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                                 !nextPageUrl &&
                                 activities.length > 0 && (
                                     <div className="flex flex-col items-center gap-6 py-20">
-                                        <div className="h-10 w-[2px] bg-gradient-to-b from-blue-100 to-transparent" />
+                                        <div className="h-10 w-[2px] bg-linear-to-b from-blue-100 to-transparent" />
                                         <span className="text-[10px] font-black tracking-[0.4em] text-slate-300 uppercase">Archive Ends</span>
                                     </div>
                                 )
