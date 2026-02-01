@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\Admin\ResidentAcceptedInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,27 @@ class InvitationController extends Controller
             // if we assume 1:1 for this specific flow or activate all pending ones since this is the first user.
             // Given the CreateEstateAction flow, there is one estate.
             $user->estates()->update(['estates.status' => 'active']);
+
+            // Notify Estate Admins if the accepting user is a resident or security personnel
+            $estate = $user->estates()->first();
+
+            if ($estate) {
+                // Set the team/estate context for the permission check
+                setPermissionsTeamId($estate->id);
+
+                // Reload roles to ensure the new team context is respected
+                $user->unsetRelation('roles');
+
+                if ($user->hasRole(['resident', 'security'])) {
+                    DB::afterCommit(function () use ($user, $estate) {
+                        User::withRole('admin', $estate->id)
+                            ->get()
+                            ->each(function ($admin) use ($user) {
+                                $admin->notify(new ResidentAcceptedInvitation($user));
+                            });
+                    });
+                }
+            }
         });
 
         // Log the user in
