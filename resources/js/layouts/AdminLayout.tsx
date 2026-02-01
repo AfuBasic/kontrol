@@ -103,12 +103,82 @@ export default function AdminLayout({ children }: Props) {
                 <Link href={DashboardController.url()} className="shrink-0">
                     <span className="text-lg font-bold text-white">Kontrol</span>
                 </Link>
-                <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 ring-2 ring-white/30"
-                >
-                    <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setNotificationOpen(!notificationOpen)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                        <span className="sr-only">View notifications</span>
+                        <BellIcon className="h-6 w-6" />
+                        {auth.user?.unread_notifications_count ? (
+                            <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                            </span>
+                        ) : null}
+                    </button>
+
+                    {/* Mobile Notification Dropdown */}
+                    <AnimatePresence>
+                        {notificationOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm md:hidden"
+                                    onClick={() => setNotificationOpen(false)}
+                                />
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="absolute top-full right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
+                                >
+                                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                                        <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
+                                        {auth.user?.unread_notifications_count ? (
+                                            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                                {auth.user.unread_notifications_count} new
+                                            </span>
+                                        ) : null}
+                                    </div>
+
+                                    <div className="max-h-[20rem] overflow-y-auto">
+                                        {auth.user?.notifications && auth.user.notifications.length > 0 ? (
+                                            <div className="divide-y divide-slate-100">
+                                                {auth.user.notifications.map((notification) => (
+                                                    <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-slate-900">
+                                                                {/* @ts-ignore */}
+                                                                {notification.data.message || 'New notification'}
+                                                            </p>
+                                                            <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>
+                                                        </div>
+                                                        <div className="flex h-2 w-2 shrink-0 translate-y-1.5 rounded-full bg-blue-600"></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 text-center">
+                                                <BellIcon className="mx-auto h-8 w-8 text-slate-300" />
+                                                <p className="mt-2 text-sm font-medium text-slate-900">No notifications</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="border-t border-slate-100 p-2">
+                                        <Link
+                                            href={NotificationController.index.url()}
+                                            onClick={() => setNotificationOpen(false)}
+                                            className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                                        >
+                                            View all notifications
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                </div>
             </header>
 
             {/* Mobile Drawer Backdrop */}

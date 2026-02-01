@@ -28,10 +28,10 @@ class NotificationController extends Controller
                 // Let's implement searching the `data` column as text.
                 $query->where('data', 'like', "%{$search}%");
             })
-            ->when($request->filter === 'unread', function ($query) {
+            ->when($request->type === 'unread', function ($query) {
                 $query->whereNull('read_at');
             })
-            ->when($request->filter === 'read', function ($query) {
+            ->when($request->type === 'read', function ($query) {
                 $query->whereNotNull('read_at');
             })
             ->latest()
@@ -40,7 +40,7 @@ class NotificationController extends Controller
 
         return Inertia::render('admin/notifications/index', [
             'notifications' => $notifications,
-            'filters' => $request->only(['search', 'filter']),
+            'filters' => $request->only(['search', 'type']),
         ]);
     }
 
