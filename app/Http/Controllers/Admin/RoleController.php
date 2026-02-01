@@ -38,7 +38,7 @@ class RoleController extends Controller
     {
         $action->execute($request->validated());
 
-        return redirect()->route('admin.roles.index')
+        return redirect()->route('roles.index')
             ->with('success', 'Role created successfully.');
     }
 

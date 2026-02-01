@@ -16,10 +16,10 @@ class RoleService
      */
     public function getManageableRoles(): Collection
     {
-        $user = Auth::user();
         $estateId = $this->getCurrentEstateId();
 
         return Role::query()
+            ->with('permissions')
             ->where('estate_id', $estateId)
             ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
             ->orderBy('name')

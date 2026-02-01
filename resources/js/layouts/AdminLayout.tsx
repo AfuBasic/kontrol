@@ -23,6 +23,7 @@ import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBo
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
@@ -48,10 +49,11 @@ const primaryNav: NavItem[] = [
     { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
-    { name: 'Roles', href: '#', icon: UserGroupIcon, comingSoon: true },
+    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },
+    { name: 'Users', href: '#', icon: UserCircleIcon, permission: 'users.view', comingSoon: true },
 ];
 
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
+const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon }];
 
 export default function AdminLayout({ children }: Props) {
     const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;

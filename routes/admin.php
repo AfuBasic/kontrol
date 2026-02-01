@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardController;
-use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
@@ -41,21 +40,18 @@ Route::middleware('role:admin')->group(function (): void {
         Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
     });
 
-    // Settings
-    Route::middleware('permission:settings.view')->group(function (): void {
-        Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
-    });
+    // Settings (admin-only, no additional permission needed)
+    Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
 
     // Profile (own profile, no additional permission needed)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
 
     // Role management
-    Route::resource('roles', RoleController::class)->except(['show']);
-
-    // Permission management
-    Route::resource('permissions', PermissionController::class)->except(['show']);
+    Route::middleware('permission:roles.view')->group(function (): void {
+        Route::resource('roles', RoleController::class)->except(['show']);
+    });
 
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('admin.notifications.index');
