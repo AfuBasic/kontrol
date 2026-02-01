@@ -189,23 +189,6 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                                                                         </span>
                                                                     </div>
                                                                 </div>
-
-                                                                {/* Properties Drawer */}
-                                                                {Object.keys(act.properties).length > 0 && (
-                                                                    <div className="mt-6 border-t border-slate-50 pt-5">
-                                                                        <details className="group/details">
-                                                                            <summary className="flex cursor-pointer items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-blue-500">
-                                                                                <ChevronDownIcon className="h-3 w-3 transition-transform group-open/details:rotate-180" />
-                                                                                Environmental Data
-                                                                            </summary>
-                                                                            <div className="mt-4 overflow-hidden rounded-2xl bg-slate-50/50 p-4 ring-1 ring-slate-100">
-                                                                                <pre className="overflow-x-auto font-mono text-[10px] leading-relaxed text-slate-500">
-                                                                                    {JSON.stringify(act.properties, null, 2)}
-                                                                                </pre>
-                                                                            </div>
-                                                                        </details>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
