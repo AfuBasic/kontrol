@@ -9,6 +9,7 @@ import {
     ShieldCheckIcon,
     Squares2X2Icon,
     UserCircleIcon,
+    UserGroupIcon,
     UsersIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -36,6 +37,7 @@ type NavItem = {
     href: string;
     icon: React.ComponentType<{ className?: string }>;
     permission?: string;
+    comingSoon?: boolean;
 };
 
 const primaryNav: NavItem[] = [
@@ -43,6 +45,7 @@ const primaryNav: NavItem[] = [
     { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
+    { name: 'Roles', href: '#', icon: UserGroupIcon, comingSoon: true },
 ];
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
@@ -127,7 +130,7 @@ export default function AdminLayout({ children }: Props) {
                         animate={{ x: 0 }}
                         exit={{ x: -280 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-linear-to-b from-[#1F6FDB] to-[#0A3D91] shadow-xl md:hidden"
+                        className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] shadow-xl md:hidden"
                     >
                         {/* Mobile Drawer Header */}
                         <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
@@ -145,21 +148,34 @@ export default function AdminLayout({ children }: Props) {
                         {/* Mobile Nav */}
                         <nav className="flex-1 overflow-y-auto p-3">
                             <div className="space-y-1">
-                                {visiblePrimaryNav.map((item) => (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                                            isCurrentPath(item.href)
-                                                ? 'bg-white/20 text-white shadow-sm'
-                                                : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                        }`}
-                                    >
-                                        <item.icon className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60'}`} />
-                                        {item.name}
-                                    </Link>
-                                ))}
+                                {visiblePrimaryNav.map((item) =>
+                                    item.comingSoon ? (
+                                        <div
+                                            key={item.name}
+                                            className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/40"
+                                        >
+                                            <item.icon className="h-5 w-5 text-white/30" />
+                                            <span>{item.name}</span>
+                                            <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
+                                                Soon
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                                                isCurrentPath(item.href)
+                                                    ? 'bg-white/20 text-white shadow-sm'
+                                                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            <item.icon className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60'}`} />
+                                            {item.name}
+                                        </Link>
+                                    ),
+                                )}
                             </div>
                             {visibleSecondaryNav.length > 0 && (
                                 <>
@@ -214,7 +230,7 @@ export default function AdminLayout({ children }: Props) {
                     initial={false}
                     animate={{ width: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="fixed inset-y-0 left-0 z-40 flex flex-col bg-linear-to-b from-[#1F6FDB] to-[#0A3D91]"
+                    className="fixed inset-y-0 left-0 z-40 flex flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A]"
                 >
                     {/* Sidebar Header */}
                     <div className="flex h-14 items-center border-b border-white/10 px-4">
@@ -248,47 +264,78 @@ export default function AdminLayout({ children }: Props) {
                     {/* Sidebar Nav */}
                     <nav className="flex-1 overflow-y-auto p-3">
                         <div className="space-y-1">
-                            {visiblePrimaryNav.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    title={isCollapsed ? item.name : undefined}
-                                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
-                                        isCurrentPath(item.href)
-                                            ? 'bg-white/20 text-white shadow-sm'
-                                            : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                >
-                                    {/* Active indicator */}
-                                    {isCurrentPath(item.href) && (
-                                        <motion.div
-                                            layoutId="activeIndicator"
-                                            className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
-                                        />
-                                    )}
-                                    <item.icon
-                                        className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
-                                    />
-                                    <AnimatePresence initial={false}>
-                                        {!isCollapsed && (
-                                            <motion.span
-                                                initial={{ opacity: 0, width: 0 }}
-                                                animate={{ opacity: 1, width: 'auto' }}
-                                                exit={{ opacity: 0, width: 0 }}
-                                                className="overflow-hidden whitespace-nowrap"
-                                            >
-                                                {item.name}
-                                            </motion.span>
+                            {visiblePrimaryNav.map((item) =>
+                                item.comingSoon ? (
+                                    <div
+                                        key={item.name}
+                                        title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
+                                        className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
+                                    >
+                                        <item.icon className="h-5 w-5 shrink-0 text-white/30" />
+                                        <AnimatePresence initial={false}>
+                                            {!isCollapsed && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, width: 0 }}
+                                                    animate={{ opacity: 1, width: 'auto' }}
+                                                    exit={{ opacity: 0, width: 0 }}
+                                                    className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap"
+                                                >
+                                                    <span>{item.name}</span>
+                                                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
+                                                        Soon
+                                                    </span>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                        {/* Tooltip for collapsed state */}
+                                        {isCollapsed && (
+                                            <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
+                                                {item.name} (Soon)
+                                            </div>
                                         )}
-                                    </AnimatePresence>
-                                    {/* Tooltip for collapsed state */}
-                                    {isCollapsed && (
-                                        <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
-                                            {item.name}
-                                        </div>
-                                    )}
-                                </Link>
-                            ))}
+                                    </div>
+                                ) : (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        title={isCollapsed ? item.name : undefined}
+                                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
+                                            isCurrentPath(item.href)
+                                                ? 'bg-white/20 text-white shadow-sm'
+                                                : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                    >
+                                        {/* Active indicator */}
+                                        {isCurrentPath(item.href) && (
+                                            <motion.div
+                                                layoutId="activeIndicator"
+                                                className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
+                                            />
+                                        )}
+                                        <item.icon
+                                            className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
+                                        />
+                                        <AnimatePresence initial={false}>
+                                            {!isCollapsed && (
+                                                <motion.span
+                                                    initial={{ opacity: 0, width: 0 }}
+                                                    animate={{ opacity: 1, width: 'auto' }}
+                                                    exit={{ opacity: 0, width: 0 }}
+                                                    className="overflow-hidden whitespace-nowrap"
+                                                >
+                                                    {item.name}
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                        {/* Tooltip for collapsed state */}
+                                        {isCollapsed && (
+                                            <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
+                                                {item.name}
+                                            </div>
+                                        )}
+                                    </Link>
+                                ),
+                            )}
                         </div>
 
                         {visibleSecondaryNav.length > 0 && (

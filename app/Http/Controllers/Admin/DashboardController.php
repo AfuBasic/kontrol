@@ -10,6 +10,7 @@ class DashboardController extends Controller
 {
     public function __invoke(): Response
     {
+        abort(503);
         return Inertia::render('admin/dashboard');
     }
 }
