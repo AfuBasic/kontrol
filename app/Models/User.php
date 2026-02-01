@@ -57,4 +57,12 @@ class User extends Authenticatable
             ->withPivot('status')
             ->withTimestamps();
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<UserProfile, $this>
+     */
+    public function profile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
 }
