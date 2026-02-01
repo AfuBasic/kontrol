@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'suspended_at',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -113,5 +115,27 @@ class User extends Authenticatable
     public function scopeAcceptedInvitation(Builder $query): Builder
     {
         return $query->whereNotNull('password');
+    }
+
+    /**
+     * Scope: Users who are suspended.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeSuspended(Builder $query): Builder
+    {
+        return $query->whereNotNull('suspended_at');
+    }
+
+    /**
+     * Scope: Users who are active (not suspended).
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNull('suspended_at');
     }
 }

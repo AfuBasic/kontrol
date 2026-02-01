@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/layouts/AdminLayout';
 import { index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import ResidentActions from '@/Components/Admin/ResidentActions';
 
 type Resident = {
     id: number;
@@ -10,6 +11,7 @@ type Resident = {
     phone: string | null;
     unit_number: string | null;
     status: 'pending' | 'accepted';
+    suspended_at: string | null;
     created_at: string;
 };
 
@@ -106,9 +108,7 @@ export default function Residents({ residents }: Props) {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                                                <Link href={`${index.url()}/${resident.id}/edit`} className="text-primary-600 hover:text-primary-900">
-                                                    Edit
-                                                </Link>
+                                                <ResidentActions resident={resident} />
                                             </td>
                                         </tr>
                                     ))}

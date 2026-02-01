@@ -24,6 +24,12 @@ class AuthenticateUser
             ]);
         }
 
+        if ($user->suspended_at) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been suspended. Please contact the administrator.'],
+            ]);
+        }
+
         // Check if user has accepted their invitation (has at least one accepted estate membership)
         $hasAcceptedMembership = $user->estates()
             ->wherePivot('status', 'accepted')

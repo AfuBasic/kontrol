@@ -30,6 +30,8 @@ Route::middleware('role:admin')->group(function (): void {
     // Residents management
     Route::middleware('permission:residents.view')->group(function (): void {
         Route::resource('residents', ResidentController::class)->except(['show']);
+        Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
+        Route::post('residents/{resident}/reset-password', [ResidentController::class, 'resetPassword'])->name('residents.reset-password');
     });
 
     // Security Personnel management

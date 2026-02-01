@@ -30,7 +30,7 @@
         .animate-progress { animation: progress 3s ease-in-out infinite; }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center px-4 overflow-hidden">
+<body class="min-h-screen bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center px-4 overflow-hidden">
     <!-- Animated gear decorations -->
     <div class="absolute inset-0 overflow-hidden opacity-10">
         <svg class="absolute -top-20 -left-20 w-80 h-80 text-white animate-spin-slow" viewBox="0 0 24 24" fill="currentColor">

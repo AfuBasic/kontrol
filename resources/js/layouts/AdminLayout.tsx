@@ -141,7 +141,7 @@ export default function AdminLayout({ children }: Props) {
                                         ) : null}
                                     </div>
 
-                                    <div className="max-h-[20rem] overflow-y-auto">
+                                    <div className="max-h-80 overflow-y-auto">
                                         {auth.user?.notifications && auth.user.notifications.length > 0 ? (
                                             <div className="divide-y divide-slate-100">
                                                 {auth.user.notifications.map((notification) => (
@@ -595,7 +595,7 @@ export default function AdminLayout({ children }: Props) {
                                                 ) : null}
                                             </div>
 
-                                            <div className="max-h-[28rem] overflow-y-auto">
+                                            <div className="max-h-112 overflow-y-auto">
                                                 {auth.user?.notifications && auth.user.notifications.length > 0 ? (
                                                     <div className="divide-y divide-slate-100">
                                                         {auth.user.notifications.map((notification) => (

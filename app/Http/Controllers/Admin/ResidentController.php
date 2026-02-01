@@ -32,6 +32,7 @@ class ResidentController extends Controller
                 'phone' => $user->profile?->phone,
                 'unit_number' => $user->profile?->unit_number,
                 'status' => $user->estates->first()?->pivot?->status ?? 'pending',
+                'suspended_at' => $user->suspended_at,
                 'created_at' => $user->created_at->format('M d, Y'),
             ]);
 
@@ -110,5 +111,40 @@ class ResidentController extends Controller
         return redirect()
             ->route('residents.index')
             ->with('success', 'Resident removed successfully.');
+    }
+
+    /**
+     * Toggle the suspension status of the specified resident.
+     */
+    public function suspend(User $resident): RedirectResponse
+    {
+        $resident->update([
+            'suspended_at' => $resident->suspended_at ? null : now(),
+        ]);
+
+        $message = $resident->suspended_at
+            ? 'Resident suspended successfully.'
+            : 'Resident activated successfully.';
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Reset the password and resend invitation for the specified resident.
+     */
+    public function resetPassword(User $resident): RedirectResponse
+    {
+        $estate = $this->residentService->getCurrentEstate();
+
+        // 1. Reset password
+        $resident->update(['password' => null]);
+
+        // 2. Set status to pending for the current estate
+        $resident->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
+
+        // 3. Resend invitation email
+        event(new \App\Events\Admin\ResidentCreated($resident, $estate));
+
+        return back()->with('success', 'Resident password reset and invitation resent.');
     }
 }
