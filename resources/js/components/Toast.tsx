@@ -35,26 +35,28 @@ export default function Toast({ show, message, type = 'success', onClose }: Toas
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+                    <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl border border-gray-100 bg-white/90 shadow-2xl ring-1 ring-black/5 backdrop-blur-sm">
                         <div className="p-4">
                             <div className="flex items-start">
                                 <div className="shrink-0">
                                     {type === 'success' ? (
-                                        <CheckCircleIcon className="h-6 w-6 text-green-400" aria-hidden="true" />
+                                        <CheckCircleIcon className="h-6 w-6 text-green-500" aria-hidden="true" />
                                     ) : type === 'error' ? (
-                                        <XCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
+                                        <XCircleIcon className="h-6 w-6 text-red-500" aria-hidden="true" />
                                     ) : (
-                                        <InformationCircleIcon className="h-6 w-6 text-blue-400" aria-hidden="true" />
+                                        <InformationCircleIcon className="h-6 w-6 text-blue-500" aria-hidden="true" />
                                     )}
                                 </div>
                                 <div className="ml-3 w-0 flex-1 pt-0.5">
-                                    <p className="text-sm font-medium text-gray-900">{type === 'success' ? 'Success' : 'Error'}</p>
-                                    <p className="mt-1 text-sm text-gray-500">{message}</p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Notification'}
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-600">{message}</p>
                                 </div>
                                 <div className="ml-4 flex shrink-0">
                                     <button
                                         type="button"
-                                        className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                                        className="inline-flex rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
                                         onClick={onClose}
                                     >
                                         <span className="sr-only">Close</span>

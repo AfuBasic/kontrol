@@ -20,12 +20,13 @@ import { type ReactNode, useEffect, useState } from 'react';
 
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
@@ -51,8 +52,6 @@ const primaryNav: NavItem[] = [
 ];
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
-
-import Toast from '@/components/Toast'; // Added import
 
 export default function AdminLayout({ children }: Props) {
     const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;
@@ -87,7 +86,7 @@ export default function AdminLayout({ children }: Props) {
         }
     }, [flash]);
 
-    // Real-time notifications
+    // Real-time notifications - estate channel
     useEffect(() => {
         if (auth.user?.current_estate_id) {
             console.log('Subscribing to channel:', `estates.${auth.user.current_estate_id}`);
@@ -99,6 +98,12 @@ export default function AdminLayout({ children }: Props) {
 
             channel.listen('.resident.created', (e: any) => {
                 console.log('Event received:', e);
+
+                // Show toast
+                setToastMessage(e.message);
+                setToastType(e.type || 'info');
+                setShowToast(true);
+
                 // Instantly update badge and list locally
                 setUnreadCount((prev) => prev + 1);
                 setNotifications((prev) => [
@@ -123,6 +128,45 @@ export default function AdminLayout({ children }: Props) {
             }
         };
     }, [auth.user?.current_estate_id]);
+
+    // Real-time notifications - user's private notification channel
+    useEffect(() => {
+        if (auth.user?.id) {
+            console.log('Subscribing to user notification channel:', `App.Models.User.${auth.user.id}`);
+            const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+
+            userChannel.notification((notification: any) => {
+                console.log('Notification received:', notification);
+
+                // Show toast
+                setToastMessage(notification.message);
+                setToastType(notification.type || 'info');
+                setShowToast(true);
+
+                // Instantly update badge and list locally
+                setUnreadCount((prev) => prev + 1);
+                setNotifications((prev) => [
+                    {
+                        id: notification.id || `temp-${Date.now()}`,
+                        data: {
+                            message: notification.message,
+                        },
+                        created_at_human: 'Just now',
+                    },
+                    ...prev,
+                ]);
+
+                // Reload notifications to ensure consistency with backend
+                router.reload({ only: ['auth'] });
+            });
+        }
+
+        return () => {
+            if (auth.user?.id) {
+                window.Echo.leave(`App.Models.User.${auth.user.id}`);
+            }
+        };
+    }, [auth.user?.id]);
 
     const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
     const userRoles = auth.user?.roles ?? [];
@@ -230,6 +274,22 @@ export default function AdminLayout({ children }: Props) {
                                     </div>
 
                                     <div className="border-t border-slate-100 p-2">
+                                        {unreadCount > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    router.post(NotificationController.markAllAsRead.url(), {}, {
+                                                        preserveScroll: true,
+                                                        onSuccess: () => {
+                                                            setUnreadCount(0);
+                                                            setNotifications([]);
+                                                        },
+                                                    });
+                                                }}
+                                                className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                            >
+                                                Mark all as read
+                                            </button>
+                                        )}
                                         <Link
                                             href={NotificationController.index.url()}
                                             onClick={() => setNotificationOpen(false)}
@@ -685,6 +745,22 @@ export default function AdminLayout({ children }: Props) {
                                             </div>
 
                                             <div className="border-t border-slate-100 p-2">
+                                                {unreadCount > 0 && (
+                                                    <button
+                                                        onClick={() => {
+                                                            router.post(NotificationController.markAllAsRead.url(), {}, {
+                                                                preserveScroll: true,
+                                                                onSuccess: () => {
+                                                                    setUnreadCount(0);
+                                                                    setNotifications([]);
+                                                                },
+                                                            });
+                                                        }}
+                                                        className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                                    >
+                                                        Mark all as read
+                                                    </button>
+                                                )}
                                                 <Link
                                                     href={NotificationController.index.url()}
                                                     onClick={() => setNotificationOpen(false)}

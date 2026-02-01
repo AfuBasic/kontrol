@@ -136,7 +136,7 @@ export default function Residents({ residents, filters }: Props) {
                 {hasResidents ? (
                     <>
                         {/* Table */}
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto lg:overflow-visible">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>

@@ -37,6 +37,8 @@ Route::middleware('role:admin')->group(function (): void {
     // Security Personnel management
     Route::middleware('permission:security.view')->group(function (): void {
         Route::resource('security', SecurityPersonnelController::class)->except(['show']);
+        Route::patch('security/{security}/suspend', [SecurityPersonnelController::class, 'suspend'])->name('security.suspend');
+        Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
     });
 
     // Settings
