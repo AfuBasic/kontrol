@@ -22,6 +22,7 @@ class RoleController extends Controller
 
     public function index(): Response
     {
+        $this->authorize('roles.view');
         return Inertia::render('admin/roles/index', [
             'roles' => $this->roleService->getManageableRoles(),
         ]);
@@ -29,6 +30,7 @@ class RoleController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('roles.create');
         return Inertia::render('admin/roles/create', [
             'permissions' => $this->roleService->getAvailablePermissions(),
         ]);
@@ -36,6 +38,7 @@ class RoleController extends Controller
 
     public function store(StoreRoleRequest $request, CreateRoleAction $action): RedirectResponse
     {
+        $this->authorize('roles.create');
         $action->execute($request->validated());
 
         return redirect()->route('roles.index')
@@ -44,6 +47,7 @@ class RoleController extends Controller
 
     public function edit(Role $role): Response
     {
+        $this->authorize('roles.edit');
         // Ensure the role is manageable
         if ($this->roleService->isReservedRole($role->name)) {
             abort(403, 'This role cannot be edited.');
@@ -57,6 +61,7 @@ class RoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role, UpdateRoleAction $action): RedirectResponse
     {
+        $this->authorize('roles.edit');
         $action->execute($role, $request->validated());
 
         return redirect()->route('roles.index')
@@ -65,6 +70,7 @@ class RoleController extends Controller
 
     public function destroy(Role $role, DeleteRoleAction $action): RedirectResponse
     {
+        $this->authorize('roles.delete');
         $action->execute($role);
 
         return redirect()->route('roles.index')

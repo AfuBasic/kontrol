@@ -15,8 +15,5 @@ Broadcast::channel('estates.{id}', function ($user, $id) {
         return false;
     }
     
-    // Set team context for role check
-    setPermissionsTeamId($id);
-    
-    return $user->hasRole('admin');
+    return true;
 });

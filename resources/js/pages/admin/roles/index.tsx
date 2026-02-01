@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { destroy, index } from '@/actions/App/Http/Controllers/Admin/RoleController';
+import { usePermission } from '@/hooks/usePermission';
 import AdminLayout from '@/layouts/AdminLayout';
 
 type Permission = {
@@ -24,16 +25,13 @@ type Props = {
 };
 
 export default function Roles({ roles }: Props) {
+    const { can } = usePermission();
     const [search, setSearch] = useState('');
 
     const filteredRoles = useMemo(() => {
         if (!search.trim()) return roles;
         const query = search.toLowerCase();
-        return roles.filter(
-            (role) =>
-                role.name.toLowerCase().includes(query) ||
-                role.permissions?.some((p) => p.name.toLowerCase().includes(query)),
-        );
+        return roles.filter((role) => role.name.toLowerCase().includes(query) || role.permissions?.some((p) => p.name.toLowerCase().includes(query)));
     }, [roles, search]);
 
     const hasRoles = roles.length > 0;
@@ -72,15 +70,17 @@ export default function Roles({ roles }: Props) {
                     <h1 className="text-2xl font-semibold text-gray-900">Roles</h1>
                     <p className="mt-1 text-gray-500">Manage custom roles and their permissions for your estate.</p>
                 </div>
-                <Link
-                    href={index.url() + '/create'}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Create Role
-                </Link>
+                {can('roles.create') && (
+                    <Link
+                        href={index.url() + '/create'}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Create Role
+                    </Link>
+                )}
             </motion.div>
 
             {/* Search */}
@@ -126,32 +126,36 @@ export default function Roles({ roles }: Props) {
                                 >
                                     {/* Actions Menu */}
                                     <Menu as="div" className="absolute top-4 right-4">
-                                        <MenuButton className="flex items-center rounded-lg p-1.5 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100">
+                                        <MenuButton className="flex items-center rounded-lg p-1.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-600">
                                             <EllipsisVerticalIcon className="h-5 w-5" />
                                         </MenuButton>
                                         <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                                            <MenuItem>
-                                                {({ active }) => (
-                                                    <Link
-                                                        href={index.url() + `/${role.id}/edit`}
-                                                        className={`${active ? 'bg-gray-50' : ''} flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700`}
-                                                    >
-                                                        <PencilIcon className="h-4 w-4" />
-                                                        Edit Role
-                                                    </Link>
-                                                )}
-                                            </MenuItem>
-                                            <MenuItem>
-                                                {({ active }) => (
-                                                    <button
-                                                        onClick={() => handleDelete(role)}
-                                                        className={`${active ? 'bg-gray-50' : ''} flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600`}
-                                                    >
-                                                        <TrashIcon className="h-4 w-4" />
-                                                        Delete Role
-                                                    </button>
-                                                )}
-                                            </MenuItem>
+                                            {can('roles.edit') && (
+                                                <MenuItem>
+                                                    {({ active }) => (
+                                                        <Link
+                                                            href={index.url() + `/${role.id}/edit`}
+                                                            className={`${active ? 'bg-gray-50' : ''} flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700`}
+                                                        >
+                                                            <PencilIcon className="h-4 w-4" />
+                                                            Edit Role
+                                                        </Link>
+                                                    )}
+                                                </MenuItem>
+                                            )}
+                                            {can('roles.delete') && (
+                                                <MenuItem>
+                                                    {({ active }) => (
+                                                        <button
+                                                            onClick={() => handleDelete(role)}
+                                                            className={`${active ? 'bg-gray-50' : ''} flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600`}
+                                                        >
+                                                            <TrashIcon className="h-4 w-4" />
+                                                            Delete Role
+                                                        </button>
+                                                    )}
+                                                </MenuItem>
+                                            )}
                                         </MenuItems>
                                     </Menu>
 
@@ -187,12 +191,14 @@ export default function Roles({ roles }: Props) {
                                     </div>
 
                                     {/* Edit Link */}
-                                    <Link
-                                        href={index.url() + `/${role.id}/edit`}
-                                        className="mt-4 block text-center text-sm font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        Edit permissions
-                                    </Link>
+                                    {can('roles.edit') && (
+                                        <Link
+                                            href={index.url() + `/${role.id}/edit`}
+                                            className="mt-4 block text-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                                        >
+                                            Edit permissions
+                                        </Link>
+                                    )}
                                 </div>
                             );
                         })}
@@ -228,15 +234,17 @@ export default function Roles({ roles }: Props) {
                     <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">
                         Create custom roles to define specific permissions for different user types in your estate.
                     </p>
-                    <Link
-                        href={index.url() + '/create'}
-                        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Create Role
-                    </Link>
+                    {can('roles.create') && (
+                        <Link
+                            href={index.url() + '/create'}
+                            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Create Role
+                        </Link>
+                    )}
                 </motion.div>
             )}
         </AdminLayout>

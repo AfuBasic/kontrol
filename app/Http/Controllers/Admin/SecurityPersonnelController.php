@@ -25,6 +25,8 @@ class SecurityPersonnelController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('security.view');
+
         $filters = $request->only(['search', 'status']);
 
         $security = $this->securityService
@@ -51,6 +53,7 @@ class SecurityPersonnelController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('security.create');
         return Inertia::render('admin/security/create');
     }
 
@@ -59,6 +62,7 @@ class SecurityPersonnelController extends Controller
      */
     public function store(StoreSecurityRequest $request, CreateSecurityAction $action): RedirectResponse
     {
+        $this->authorize('security.create');
         $estate = $this->securityService->getCurrentEstate();
 
         $action->execute($request->validated(), $estate);
@@ -73,6 +77,7 @@ class SecurityPersonnelController extends Controller
      */
     public function edit(User $security): Response
     {
+        $this->authorize('security.edit');
         $security->load('profile');
 
         return Inertia::render('admin/security/edit', [
@@ -91,6 +96,7 @@ class SecurityPersonnelController extends Controller
      */
     public function update(Request $request, User $security, UpdateSecurityAction $action): RedirectResponse
     {
+        $this->authorize('security.edit');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -109,6 +115,7 @@ class SecurityPersonnelController extends Controller
      */
     public function destroy(User $security): RedirectResponse
     {
+        $this->authorize('security.delete');
         $security->delete();
 
         return redirect()
@@ -121,6 +128,7 @@ class SecurityPersonnelController extends Controller
      */
     public function suspend(User $security): RedirectResponse
     {
+        $this->authorize('security.suspend');
         $security->update([
             'suspended_at' => $security->suspended_at ? null : now(),
         ]);
@@ -137,6 +145,7 @@ class SecurityPersonnelController extends Controller
      */
     public function resetPassword(User $security): RedirectResponse
     {
+        $this->authorize('security.reset-password');
         $estate = $this->securityService->getCurrentEstate();
 
         // 1. Reset password

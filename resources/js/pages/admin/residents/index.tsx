@@ -6,6 +6,7 @@ import { index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ResidentActions from '@/components/Admin/ResidentActions';
 
 import { useDebounce } from '@/hooks/useDebounce';
+import { usePermission } from '@/hooks/usePermission';
 import AdminLayout from '@/layouts/AdminLayout';
 
 type Resident = {
@@ -37,6 +38,7 @@ type Props = {
 };
 
 export default function Residents({ residents, filters }: Props) {
+    const { can } = usePermission();
     const hasResidents = residents.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -70,15 +72,17 @@ export default function Residents({ residents, filters }: Props) {
                     <h1 className="text-2xl font-semibold text-gray-900">Residents</h1>
                     <p className="mt-1 text-gray-500">Manage residents in your estate.</p>
                 </div>
-                <Link
-                    href={index.url() + '/create'}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Resident
-                </Link>
+                {can('residents.create') && (
+                    <Link
+                        href={index.url() + '/create'}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Resident
+                    </Link>
+                )}
             </motion.div>
 
             {/* Filters */}
@@ -232,7 +236,7 @@ export default function Residents({ residents, filters }: Props) {
                                 ? 'Try adjusting your search or filters to find what you are looking for.'
                                 : "Get started by adding your first resident. They'll receive an invitation email to set up their account."}
                         </p>
-                        {!(search || status) && (
+                        {!(search || status) && can('residents.create') && (
                             <Link
                                 href={index.url() + '/create'}
                                 className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"

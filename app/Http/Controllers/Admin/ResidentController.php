@@ -24,6 +24,8 @@ class ResidentController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('residents.view');
+
         $filters = $request->only(['search', 'status']);
 
         $residents = $this->residentService
@@ -50,6 +52,7 @@ class ResidentController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('residents.create');
         return Inertia::render('admin/residents/create');
     }
 
@@ -58,6 +61,7 @@ class ResidentController extends Controller
      */
     public function store(StoreResidentRequest $request, CreateResidentAction $action): RedirectResponse
     {
+        $this->authorize('residents.create');
         $estate = $this->residentService->getCurrentEstate();
 
         $action->execute($request->validated(), $estate);
@@ -72,6 +76,7 @@ class ResidentController extends Controller
      */
     public function edit(User $resident): Response
     {
+        $this->authorize('residents.edit');
         $resident->load('profile');
 
         return Inertia::render('admin/residents/edit', [
@@ -91,6 +96,7 @@ class ResidentController extends Controller
      */
     public function update(Request $request, User $resident, \App\Actions\Admin\UpdateResidentAction $action): RedirectResponse
     {
+        $this->authorize('residents.edit');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -110,6 +116,7 @@ class ResidentController extends Controller
      */
     public function destroy(User $resident): RedirectResponse
     {
+        $this->authorize('residents.delete');
         $resident->delete();
 
         return redirect()
@@ -122,6 +129,7 @@ class ResidentController extends Controller
      */
     public function suspend(User $resident): RedirectResponse
     {
+        $this->authorize('residents.suspend');
         $resident->update([
             'suspended_at' => $resident->suspended_at ? null : now(),
         ]);
@@ -138,6 +146,7 @@ class ResidentController extends Controller
      */
     public function resetPassword(User $resident): RedirectResponse
     {
+        $this->authorize('residents.reset-password');
         $estate = $this->residentService->getCurrentEstate();
 
         // 1. Reset password

@@ -4,6 +4,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
 import { destroy, edit } from '@/actions/App/Http/Controllers/Admin/UserController';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { usePermission } from '@/hooks/usePermission';
 
 type User = {
     id: number;
@@ -15,6 +16,7 @@ import type { SharedData } from '@/types';
 
 export default function UserActions({ user }: { user: User }) {
     const { auth } = usePage<SharedData>().props;
+    const { can } = usePermission();
     const [confirmingDeletion, setConfirmingDeletion] = useState(false);
     const isSelf = user.id === auth.user?.id;
 
@@ -46,34 +48,38 @@ export default function UserActions({ user }: { user: User }) {
                 >
                     <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                         <div className="p-1">
-                            <Menu.Item>
-                                {({ active }) => (
-                                    <Link
-                                        href={edit.url({ user: user.id })}
-                                        className={`${
-                                            active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
-                                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                                    >
-                                        <PencilSquareIcon className="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
-                                        Edit
-                                    </Link>
-                                )}
-                            </Menu.Item>
+                            {can('users.edit') && (
+                                <Menu.Item>
+                                    {({ active }) => (
+                                        <Link
+                                            href={edit.url({ user: user.id })}
+                                            className={`${
+                                                active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
+                                            } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                                        >
+                                            <PencilSquareIcon className="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
+                                            Edit
+                                        </Link>
+                                    )}
+                                </Menu.Item>
+                            )}
                         </div>
                         <div className="p-1">
-                            <Menu.Item>
-                                {({ active }) => (
-                                    <button
-                                        onClick={() => setConfirmingDeletion(true)}
-                                        className={`${
-                                            active ? 'bg-red-50 text-red-900' : 'text-red-700'
-                                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                                    >
-                                        <TrashIcon className="mr-2 h-4 w-4 text-red-400 group-hover:text-red-500" aria-hidden="true" />
-                                        Remove Admin
-                                    </button>
-                                )}
-                            </Menu.Item>
+                            {can('users.delete') && (
+                                <Menu.Item>
+                                    {({ active }) => (
+                                        <button
+                                            onClick={() => setConfirmingDeletion(true)}
+                                            className={`${
+                                                active ? 'bg-red-50 text-red-900' : 'text-red-700'
+                                            } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                                        >
+                                            <TrashIcon className="mr-2 h-4 w-4 text-red-400 group-hover:text-red-500" aria-hidden="true" />
+                                            Remove Admin
+                                        </button>
+                                    )}
+                                </Menu.Item>
+                            )}
                         </div>
                     </Menu.Items>
                 </Transition>

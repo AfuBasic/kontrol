@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SecurityActions from '@/components/Admin/SecurityActions';
 import { useDebounce } from '@/hooks/useDebounce';
+import { usePermission } from '@/hooks/usePermission';
 import AdminLayout from '@/layouts/AdminLayout';
 
 type SecurityPerson = {
@@ -36,6 +37,7 @@ type Props = {
 };
 
 export default function SecurityPersonnel({ security, filters }: Props) {
+    const { can } = usePermission();
     const hasSecurity = security.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -69,15 +71,17 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                     <h1 className="text-2xl font-semibold text-gray-900">Security Personnel</h1>
                     <p className="mt-1 text-gray-500">Manage security staff for your estate.</p>
                 </div>
-                <Link
-                    href={index.url() + '/create'}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Security
-                </Link>
+                {can('security.create') && (
+                    <Link
+                        href={index.url() + '/create'}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Security
+                    </Link>
+                )}
             </motion.div>
 
             {/* Filters */}
@@ -231,7 +235,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                 ? 'Try adjusting your search or filters to find what you are looking for.'
                                 : "Get started by adding your first security personnel. They'll receive an invitation email to set up their account."}
                         </p>
-                        {!(search || status) && (
+                        {!(search || status) && can('security.create') && (
                             <Link
                                 href={index.url() + '/create'}
                                 className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"

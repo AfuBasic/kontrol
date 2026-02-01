@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { usePermission } from '@/hooks/usePermission';
 
 type Resident = {
     id: number;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ResidentActions({ resident }: Props) {
+    const { can } = usePermission();
     const [isOpen, setIsOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -131,53 +133,61 @@ export default function ResidentActions({ resident }: Props) {
                     >
                         <div className="space-y-0.5">
                             {/* Edit */}
-                            <Link
-                                href={edit.url({ resident: resident.id })}
-                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
-                            >
-                                <PencilIcon className="h-4 w-4" />
-                                Edit
-                            </Link>
+                            {can('residents.edit') && (
+                                <Link
+                                    href={edit.url({ resident: resident.id })}
+                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
+                                >
+                                    <PencilIcon className="h-4 w-4" />
+                                    Edit
+                                </Link>
+                            )}
 
                             {/* Suspend / Activate */}
-                            <button
-                                onClick={() => openModal('suspend')}
-                                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-gray-50 ${
-                                    resident.suspended_at ? 'text-green-600' : 'text-orange-600'
-                                }`}
-                            >
-                                {resident.suspended_at ? (
-                                    <>
-                                        <CheckCircleIcon className="h-4 w-4" />
-                                        Activate
-                                    </>
-                                ) : (
-                                    <>
-                                        <NoSymbolIcon className="h-4 w-4" />
-                                        Suspend
-                                    </>
-                                )}
-                            </button>
+                            {can('residents.suspend') && (
+                                <button
+                                    onClick={() => openModal('suspend')}
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-gray-50 ${
+                                        resident.suspended_at ? 'text-green-600' : 'text-orange-600'
+                                    }`}
+                                >
+                                    {resident.suspended_at ? (
+                                        <>
+                                            <CheckCircleIcon className="h-4 w-4" />
+                                            Activate
+                                        </>
+                                    ) : (
+                                        <>
+                                            <NoSymbolIcon className="h-4 w-4" />
+                                            Suspend
+                                        </>
+                                    )}
+                                </button>
+                            )}
 
                             {/* Reset Password */}
-                            <button
-                                onClick={() => openModal('reset')}
-                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
-                            >
-                                <ArrowPathIcon className="h-4 w-4" />
-                                Reset Password
-                            </button>
+                            {can('residents.reset-password') && (
+                                <button
+                                    onClick={() => openModal('reset')}
+                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
+                                >
+                                    <ArrowPathIcon className="h-4 w-4" />
+                                    Reset Password
+                                </button>
+                            )}
 
                             <hr className="my-1 border-gray-100" />
 
                             {/* Delete */}
-                            <button
-                                onClick={() => openModal('delete')}
-                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
-                            >
-                                <TrashIcon className="h-4 w-4" />
-                                Delete
-                            </button>
+                            {can('residents.delete') && (
+                                <button
+                                    onClick={() => openModal('delete')}
+                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                                >
+                                    <TrashIcon className="h-4 w-4" />
+                                    Delete
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 )}

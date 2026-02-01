@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/UserController';
 import { useDebounce } from '@/hooks/useDebounce';
+import { usePermission } from '@/hooks/usePermission';
 import AdminLayout from '@/layouts/AdminLayout';
 import UserActions from './UserActions';
 
@@ -33,6 +34,7 @@ type Props = {
 };
 
 export default function Users({ users, filters }: Props) {
+    const { can } = usePermission();
     const hasUsers = users.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -59,15 +61,17 @@ export default function Users({ users, filters }: Props) {
                     <h1 className="text-2xl font-semibold text-gray-900">Administrators</h1>
                     <p className="mt-1 text-gray-500">Manage other administrators for your estate.</p>
                 </div>
-                <Link
-                    href={index.url() + '/create'}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Invite Admin
-                </Link>
+                {can('users.create') && (
+                    <Link
+                        href={index.url() + '/create'}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Invite Admin
+                    </Link>
+                )}
             </motion.div>
 
             {/* Filters */}

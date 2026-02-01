@@ -34,6 +34,8 @@ class UserController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('users.view');
+
         $estateId = $this->userService->getCurrentEstateId();
 
         $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
@@ -57,6 +59,8 @@ class UserController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('users.create');
+
         $roles = $this->roleService->getManageableRoles();
 
         return Inertia::render('admin/users/Create', [
@@ -72,6 +76,8 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request, CreateUserAction $action): RedirectResponse
     {
+        $this->authorize('users.create');
+
         $estate = $this->userService->getCurrentEstate();
 
         $action->execute($request->validated(), $estate);
@@ -85,6 +91,8 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        $this->authorize('users.edit');
+
         $estateId = $this->userService->getCurrentEstateId();
         $roles = $this->roleService->getManageableRoles();
         
@@ -108,6 +116,8 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user, UpdateUserAction $action): RedirectResponse
     {
+        $this->authorize('users.edit');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
@@ -130,6 +140,8 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        $this->authorize('users.delete');
+
         $estateId = $this->userService->getCurrentEstateId();
 
         // Prevent deleting yourself
@@ -162,6 +174,8 @@ class UserController extends Controller
      */
     public function resetPassword(User $user): RedirectResponse
     {
+        $this->authorize('users.edit');
+
         $estate = $this->userService->getCurrentEstate();
 
         // 1. Reset password
