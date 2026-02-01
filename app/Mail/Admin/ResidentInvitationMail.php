@@ -24,10 +24,15 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
         public bool $isPasswordReset = false,
     ) {
         // Generate signed URL that expires in 72 hours
+        $parameters = ['user' => $user->id];
+        if ($this->isPasswordReset) {
+            $parameters['password_reset'] = 1;
+        }
+        
         $this->invitationUrl = URL::temporarySignedRoute(
             'invitation.accept',
             now()->addHours(72),
-            ['user' => $user->id]
+            $parameters
         );
     }
 

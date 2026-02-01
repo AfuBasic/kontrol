@@ -12,6 +12,7 @@ export type User = {
     roles?: string[];
     created_at: string;
     updated_at: string;
+    current_estate_id?: number;
     notifications?: {
         id: string;
         data: Record<string, unknown>;

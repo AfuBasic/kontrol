@@ -52,7 +52,7 @@ class InvitationController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        DB::transaction(function () use ($user, $validated) {
+        DB::transaction(function () use ($user, $validated, $request) {
             // Set the user's password
             $user->update([
                 'password' => Hash::make($validated['password']),
@@ -73,6 +73,7 @@ class InvitationController extends Controller
 
             // Notify Estate Admins if the accepting user is a resident or security personnel
             $estate = $user->estates()->first();
+            $isPasswordReset = $request->boolean('password_reset');
 
             if ($estate) {
                 // Set the team/estate context for the permission check
@@ -82,11 +83,11 @@ class InvitationController extends Controller
                 $user->unsetRelation('roles');
 
                 if ($user->hasRole(['resident', 'security'])) {
-                    DB::afterCommit(function () use ($user, $estate) {
+                    DB::afterCommit(function () use ($user, $estate, $isPasswordReset) {
                         User::withRole('admin', $estate->id)
                             ->get()
-                            ->each(function ($admin) use ($user) {
-                                $admin->notify(new ResidentAcceptedInvitation($user));
+                            ->each(function ($admin) use ($user, $isPasswordReset) {
+                                $admin->notify(new ResidentAcceptedInvitation($user, $isPasswordReset));
                             });
                     });
                 }

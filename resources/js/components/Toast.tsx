@@ -1,11 +1,11 @@
 import { Transition } from '@headlessui/react';
-import { CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, InformationCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Fragment, useEffect, useState } from 'react';
 
 interface ToastProps {
     show: boolean;
     message: string;
-    type?: 'success' | 'error';
+    type?: 'success' | 'error' | 'info';
     onClose: () => void;
 }
 
@@ -41,8 +41,10 @@ export default function Toast({ show, message, type = 'success', onClose }: Toas
                                 <div className="shrink-0">
                                     {type === 'success' ? (
                                         <CheckCircleIcon className="h-6 w-6 text-green-400" aria-hidden="true" />
-                                    ) : (
+                                    ) : type === 'error' ? (
                                         <XCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
+                                    ) : (
+                                        <InformationCircleIcon className="h-6 w-6 text-blue-400" aria-hidden="true" />
                                     )}
                                 </div>
                                 <div className="ml-3 w-0 flex-1 pt-0.5">

@@ -11,8 +11,10 @@ class ResidentAcceptedInvitation extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public User $resident)
-    {
+    public function __construct(
+        public User $resident,
+        public bool $isPasswordReset = false,
+    ) {
         //
     }
 
@@ -33,8 +35,12 @@ class ResidentAcceptedInvitation extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $message = $this->isPasswordReset
+            ? "Resident {$this->resident->name} has reset their password."
+            : "Resident {$this->resident->name} has accepted the invitation.";
+
         return [
-            'message' => "Resident {$this->resident->name} has accepted the invitation.",
+            'message' => $message,
             'action_url' => route('residents.index'),
             'type' => 'success',
         ];

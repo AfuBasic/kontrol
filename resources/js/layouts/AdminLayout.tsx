@@ -61,13 +61,68 @@ export default function AdminLayout({ children }: Props) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const { isCollapsed, toggle } = useSidebarState();
 
+    // Local state for instant updates
+    const [unreadCount, setUnreadCount] = useState(auth.user?.unread_notifications_count || 0);
+    const [notifications, setNotifications] = useState(auth.user?.notifications || []);
+
+    // Sync local state with props when page reloads/updates
     useEffect(() => {
-        if (flash?.success || flash?.error) {
+        setUnreadCount(auth.user?.unread_notifications_count || 0);
+        setNotifications(auth.user?.notifications || []);
+    }, [auth.user?.unread_notifications_count, auth.user?.notifications]);
+
+    useEffect(() => {
+        if (flash?.success) {
+            setToastMessage(flash.success);
+            setToastType('success');
+            setShowToast(true);
+        } else if (flash?.error) {
+            setToastMessage(flash.error);
+            setToastType('error');
             setShowToast(true);
         }
     }, [flash]);
+
+    // Real-time notifications
+    useEffect(() => {
+        if (auth.user?.current_estate_id) {
+            console.log('Subscribing to channel:', `estates.${auth.user.current_estate_id}`);
+            const channel = window.Echo.private(`estates.${auth.user.current_estate_id}`);
+
+            channel.on('error', (error: any) => {
+                console.error('Echo connection error:', error);
+            });
+
+            channel.listen('.resident.created', (e: any) => {
+                console.log('Event received:', e);
+                // Instantly update badge and list locally
+                setUnreadCount((prev) => prev + 1);
+                setNotifications((prev) => [
+                    {
+                        id: `temp-${Date.now()}`,
+                        data: {
+                            message: e.message,
+                        },
+                        created_at_human: 'Just now',
+                    },
+                    ...prev,
+                ]);
+
+                // Reload notifications to ensure consistency with backend
+                router.reload({ only: ['auth'] });
+            });
+        }
+
+        return () => {
+            if (auth.user?.current_estate_id) {
+                window.Echo.leave(`estates.${auth.user.current_estate_id}`);
+            }
+        };
+    }, [auth.user?.current_estate_id]);
 
     const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
     const userRoles = auth.user?.roles ?? [];
@@ -119,7 +174,7 @@ export default function AdminLayout({ children }: Props) {
                     >
                         <span className="sr-only">View notifications</span>
                         <BellIcon className="h-6 w-6" />
-                        {auth.user?.unread_notifications_count ? (
+                        {unreadCount ? (
                             <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
@@ -143,17 +198,17 @@ export default function AdminLayout({ children }: Props) {
                                 >
                                     <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                                         <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
-                                        {auth.user?.unread_notifications_count ? (
+                                        {unreadCount ? (
                                             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                {auth.user.unread_notifications_count} new
+                                                {unreadCount} new
                                             </span>
                                         ) : null}
                                     </div>
 
                                     <div className="max-h-80 overflow-y-auto">
-                                        {auth.user?.notifications && auth.user.notifications.length > 0 ? (
+                                        {notifications && notifications.length > 0 ? (
                                             <div className="divide-y divide-slate-100">
-                                                {auth.user.notifications.map((notification) => (
+                                                {notifications.map((notification) => (
                                                     <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
                                                         <div className="flex-1">
                                                             <p className="text-sm font-medium text-slate-900">
@@ -576,7 +631,7 @@ export default function AdminLayout({ children }: Props) {
                             >
                                 <span className="sr-only">View notifications</span>
                                 <BellIcon className="h-6 w-6" aria-hidden="true" />
-                                {auth.user?.unread_notifications_count ? (
+                                {unreadCount ? (
                                     <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
                                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                                         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
@@ -597,17 +652,17 @@ export default function AdminLayout({ children }: Props) {
                                         >
                                             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                                                 <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
-                                                {auth.user?.unread_notifications_count ? (
+                                                {unreadCount ? (
                                                     <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                        {auth.user.unread_notifications_count} new
+                                                        {unreadCount} new
                                                     </span>
                                                 ) : null}
                                             </div>
 
                                             <div className="max-h-112 overflow-y-auto">
-                                                {auth.user?.notifications && auth.user.notifications.length > 0 ? (
+                                                {notifications && notifications.length > 0 ? (
                                                     <div className="divide-y divide-slate-100">
-                                                        {auth.user.notifications.map((notification) => (
+                                                        {notifications.map((notification) => (
                                                             <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
                                                                 <div className="flex-1">
                                                                     <p className="text-sm font-medium text-slate-900">
@@ -656,12 +711,7 @@ export default function AdminLayout({ children }: Props) {
             </main>
 
             {/* Flash Messages */}
-            <Toast
-                show={showToast}
-                message={flash?.success || flash?.error || ''}
-                type={flash?.error ? 'error' : 'success'}
-                onClose={() => setShowToast(false)}
-            />
+            <Toast show={showToast} message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />
         </div>
     );
 }
