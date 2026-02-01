@@ -21,7 +21,7 @@ export default function Edit({ user, roles }: Props) {
                 user={user}
                 title="Edit Administrator"
                 description="Update the details of this administrator."
-                submitUrl={update.url({ user: user.id })}
+                submitUrl={user?.id ? update.url({ user: user.id }) : ''}
                 method="put"
                 submitText="Save Changes"
                 cancelUrl={index.url()}

@@ -123,20 +123,20 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified admin.
      */
-    public function edit(User $admin): Response
+    public function edit(User $user): Response
     {
         $estateId = $this->userService->getCurrentEstateId();
         $roles = $this->roleService->getManageableRoles();
         
         // Load roles for the user in the context of this estate
         setPermissionsTeamId($estateId);
-        $currentRole = $admin->roles->first()?->name;
+        $currentRole = $user->roles->first()?->name;
 
         return Inertia::render('admin/users/Edit', [
             'user' => [
-                'id' => $admin->id,
-                'name' => $admin->name,
-                'email' => $admin->email,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
                 'role' => $currentRole,
             ],
             'roles' => $roles,
@@ -146,7 +146,7 @@ class UserController extends Controller
     /**
      * Update the specified admin in storage.
      */
-    public function update(Request $request, User $admin): RedirectResponse
+    public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -155,12 +155,12 @@ class UserController extends Controller
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('users')->ignore($admin->id),
+                Rule::unique('users')->ignore($user->id),
             ],
             'role' => 'required|string|exists:roles,name',
         ]);
 
-        $admin->update([
+        $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
         ]);
@@ -169,7 +169,7 @@ class UserController extends Controller
         setPermissionsTeamId($estateId);
 
         if (isset($validated['role'])) {
-            $admin->syncRoles([$validated['role']]);
+            $user->syncRoles([$validated['role']]);
         }
 
         return back()->with('success', 'Admin updated successfully.');
@@ -178,30 +178,30 @@ class UserController extends Controller
     /**
      * Remove the specified admin from storage (or detach from estate).
      */
-    public function destroy(User $admin): RedirectResponse
+    public function destroy(User $user): RedirectResponse
     {
         $estateId = $this->userService->getCurrentEstateId();
 
         // Prevent deleting yourself
-        if ($admin->id === Auth::id()) {
+        if ($user->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
 
-        DB::transaction(function () use ($admin, $estateId) {
+        DB::transaction(function () use ($user, $estateId) {
             // Detach role for this estate
             setPermissionsTeamId($estateId);
-            if ($admin->hasRole('admin')) {
-                $admin->removeRole('admin');
+            if ($user->hasRole('admin')) {
+                $user->removeRole('admin');
             }
 
             // Detach from estate key membership
-            $admin->estates()->detach($estateId);
+            $user->estates()->detach($estateId);
 
             // If user has no other estates and no password (invite pending), maybe delete entirely?
             // For now, let's keep it safe and just detach.
             // But if they are purely a new invite for this estate, might be cleaner to delete.
-            if ($admin->estates()->count() === 0 && $admin->password === null) {
-                $admin->delete();
+            if ($user->estates()->count() === 0 && $user->password === null) {
+                $user->delete();
             }
         });
 

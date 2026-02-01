@@ -97,9 +97,22 @@ class InvitationController extends Controller
         // Log the user in
         Auth::login($user);
 
-        // Redirect to their estate dashboard
-        // TODO: Replace with actual estate dashboard route
-        return redirect()->intended('/dashboard');
+        // Redirect based on role
+        if ($estate = $user->estates()->first()) {
+            setPermissionsTeamId($estate->id);
+            // Reload roles to ensure proper scope
+            $user->unsetRelation('roles');
+        }
+
+        if ($user->hasRole('security')) {
+            return redirect()->route('security.dashboard');
+        }
+
+        if ($user->hasRole('resident')) {
+            return redirect()->route('resident.dashboard');
+        }
+
+        return redirect()->route('admin.dashboard');
     }
 
     public function invalid(): Response

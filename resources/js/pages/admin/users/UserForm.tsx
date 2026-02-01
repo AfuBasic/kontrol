@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Link, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
+import { type FormEventHandler, useEffect } from 'react';
 
 type Props = {
     user?: {
@@ -23,6 +23,15 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
         email: user?.email || '',
         role: user?.role || '',
     });
+
+    // Sync form data when user prop changes (e.g. re-navigation)
+    useEffect(() => {
+        setData({
+            name: user?.name || '',
+            email: user?.email || '',
+            role: user?.role || '',
+        });
+    }, [user]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -74,6 +83,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                 id="email"
                                 type="email"
                                 value={data.email}
+                                disabled={!!data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                 placeholder="e.g. jane@example.com"
