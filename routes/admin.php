@@ -42,9 +42,10 @@ Route::middleware('role:admin')->group(function (): void {
     });
 
     // Settings
-    Route::get('/settings', SettingsController::class)
-        ->name('admin.settings')
-        ->middleware('permission:settings.view');
+    Route::middleware('permission:settings.view')->group(function (): void {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+    });
 
     // Profile (own profile, no additional permission needed)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');

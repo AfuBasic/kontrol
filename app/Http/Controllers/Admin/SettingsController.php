@@ -3,13 +3,57 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateEstateSettingsRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SettingsController extends Controller
 {
-    public function __invoke(): Response
+    public function index(): Response
     {
-        return Inertia::render('admin/settings/index');
+        $estate = $this->getCurrentEstate();
+        $settings = $estate->settings;
+
+        // Create settings with defaults if they don't exist
+        if (! $settings) {
+            $settings = $estate->settings()->create([]);
+        }
+
+        return Inertia::render('admin/settings/index', [
+            'settings' => [
+                'access_codes_enabled' => $settings->access_codes_enabled,
+                'access_code_min_lifespan_minutes' => $settings->access_code_min_lifespan_minutes,
+                'access_code_max_lifespan_minutes' => $settings->access_code_max_lifespan_minutes,
+                'access_code_single_use' => $settings->access_code_single_use,
+                'access_code_auto_expire_unused' => $settings->access_code_auto_expire_unused,
+                'access_code_grace_period_minutes' => $settings->access_code_grace_period_minutes,
+                'access_code_daily_limit_per_resident' => $settings->access_code_daily_limit_per_resident,
+                'access_code_require_confirmation' => $settings->access_code_require_confirmation,
+            ],
+        ]);
+    }
+
+    public function update(UpdateEstateSettingsRequest $request): RedirectResponse
+    {
+        $estate = $this->getCurrentEstate();
+        $settings = $estate->settings;
+
+        if (! $settings) {
+            $settings = $estate->settings()->create([]);
+        }
+
+        $settings->update($request->validated());
+
+        return back()->with('success', 'Settings updated successfully.');
+    }
+
+    protected function getCurrentEstate()
+    {
+        return Auth::user()
+            ->estates()
+            ->wherePivot('status', 'accepted')
+            ->firstOrFail();
     }
 }

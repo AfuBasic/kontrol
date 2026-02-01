@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
 class Estate extends Model
@@ -46,5 +47,13 @@ class Estate extends Model
             ->where('model_has_roles.estate_id', $this->id)
             ->where('roles.name', 'admin')
             ->exists();
+    }
+
+    /**
+     * @return HasOne<EstateSettings, $this>
+     */
+    public function settings(): HasOne
+    {
+        return $this->hasOne(EstateSettings::class);
     }
 }

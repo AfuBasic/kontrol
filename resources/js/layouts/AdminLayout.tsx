@@ -51,7 +51,7 @@ const primaryNav: NavItem[] = [
     { name: 'Roles', href: '#', icon: UserGroupIcon, comingSoon: true },
 ];
 
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
+const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
 
 export default function AdminLayout({ children }: Props) {
     const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;

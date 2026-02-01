@@ -1,8 +1,62 @@
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/layouts/AdminLayout';
+import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
-export default function Settings() {
+type Settings = {
+    access_codes_enabled: boolean;
+    access_code_min_lifespan_minutes: number;
+    access_code_max_lifespan_minutes: number;
+    access_code_single_use: boolean;
+    access_code_auto_expire_unused: boolean;
+    access_code_grace_period_minutes: number;
+    access_code_daily_limit_per_resident: number | null;
+    access_code_require_confirmation: boolean;
+};
+
+type Props = {
+    settings: Settings;
+};
+
+function formatDuration(minutes: number): string {
+    if (minutes < 1) return '';
+
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    const mins = minutes % 60;
+
+    const parts: string[] = [];
+
+    if (days > 0) {
+        parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+    }
+    if (hours > 0) {
+        parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    }
+    if (mins > 0 && days === 0) {
+        parts.push(`${mins} ${mins === 1 ? 'minute' : 'minutes'}`);
+    }
+
+    return parts.length > 0 ? `= ${parts.join(', ')}` : '';
+}
+
+export default function Settings({ settings }: Props) {
+    const { data, setData, put, processing, errors } = useForm({
+        access_codes_enabled: settings.access_codes_enabled,
+        access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
+        access_code_max_lifespan_minutes: settings.access_code_max_lifespan_minutes,
+        access_code_single_use: settings.access_code_single_use,
+        access_code_auto_expire_unused: settings.access_code_auto_expire_unused,
+        access_code_grace_period_minutes: settings.access_code_grace_period_minutes,
+        access_code_daily_limit_per_resident: settings.access_code_daily_limit_per_resident,
+        access_code_require_confirmation: settings.access_code_require_confirmation,
+    });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        put(update.url());
+    }
+
     return (
         <AdminLayout>
             <Head title="Settings" />
@@ -14,32 +68,222 @@ export default function Settings() {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
                 className="mb-8"
             >
-                <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-                <p className="mt-1 text-gray-500">Configure your estate settings.</p>
+                <h1 className="text-2xl font-semibold text-gray-900">Estate Settings</h1>
+                <p className="mt-1 text-gray-500">Configure access code behavior and estate-wide preferences.</p>
             </motion.div>
 
-            {/* Content Placeholder */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                className="rounded-xl border border-gray-200 bg-white p-6"
-            >
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="mb-4 rounded-full bg-gray-100 p-3">
-                        <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+            <form onSubmit={handleSubmit}>
+                {/* Access Code System Toggle */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
+                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
+                >
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h2 className="text-lg font-medium text-gray-900">Access Code System</h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Master toggle for the access code feature. When disabled, no new codes can be generated and existing codes are temporarily invalid.
+                            </p>
+                        </div>
+                        <label className="relative inline-flex cursor-pointer items-center">
+                            <input
+                                type="checkbox"
+                                checked={data.access_codes_enabled}
+                                onChange={(e) => setData('access_codes_enabled', e.target.checked)}
+                                className="peer sr-only"
                             />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
+                            <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-100"></div>
+                        </label>
                     </div>
-                    <p className="text-gray-500">Estate settings coming soon.</p>
-                    <p className="mt-1 text-sm text-gray-400">Access code rules and system preferences will be configurable here.</p>
-                </div>
-            </motion.div>
+                    {!data.access_codes_enabled && (
+                        <div className="mt-4 rounded-lg bg-amber-50 p-3">
+                            <p className="text-sm text-amber-800">
+                                <span className="font-medium">Warning:</span> Access codes are currently disabled. Residents cannot generate new codes and existing codes will not work.
+                            </p>
+                        </div>
+                    )}
+                </motion.div>
+
+                {/* Access Code Configuration */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
+                >
+                    <h2 className="mb-6 text-lg font-medium text-gray-900">Access Code Configuration</h2>
+
+                    <div className="space-y-6">
+                        {/* Lifespan Range */}
+                        <div className="grid gap-6 sm:grid-cols-2">
+                            <div>
+                                <label htmlFor="min_lifespan" className="block text-sm font-medium text-gray-700">
+                                    Minimum Lifespan (minutes)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="min_lifespan"
+                                    min="1"
+                                    max="10080"
+                                    value={data.access_code_min_lifespan_minutes}
+                                    onChange={(e) => setData('access_code_min_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Shortest allowed code validity (1 min to 7 days)
+                                    {data.access_code_min_lifespan_minutes > 0 && (
+                                        <span className="ml-1 font-medium text-primary-600">
+                                            {formatDuration(data.access_code_min_lifespan_minutes)}
+                                        </span>
+                                    )}
+                                </p>
+                                {errors.access_code_min_lifespan_minutes && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.access_code_min_lifespan_minutes}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label htmlFor="max_lifespan" className="block text-sm font-medium text-gray-700">
+                                    Maximum Lifespan (minutes)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="max_lifespan"
+                                    min="1"
+                                    max="10080"
+                                    value={data.access_code_max_lifespan_minutes}
+                                    onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">Longest allowed code validity (must be ≥ minimum)</p>
+                                {errors.access_code_max_lifespan_minutes && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.access_code_max_lifespan_minutes}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Grace Period */}
+                        <div>
+                            <label htmlFor="grace_period" className="block text-sm font-medium text-gray-700">
+                                Grace Period (minutes)
+                            </label>
+                            <input
+                                type="number"
+                                id="grace_period"
+                                min="0"
+                                max="60"
+                                value={data.access_code_grace_period_minutes}
+                                onChange={(e) => setData('access_code_grace_period_minutes', parseInt(e.target.value) || 0)}
+                                className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">Buffer time after expiry to account for real-world delays (0-60 minutes)</p>
+                            {errors.access_code_grace_period_minutes && (
+                                <p className="mt-1 text-sm text-red-600">{errors.access_code_grace_period_minutes}</p>
+                            )}
+                        </div>
+
+                        {/* Daily Limit */}
+                        <div>
+                            <label htmlFor="daily_limit" className="block text-sm font-medium text-gray-700">
+                                Daily Limit per Resident
+                            </label>
+                            <input
+                                type="number"
+                                id="daily_limit"
+                                min="1"
+                                max="100"
+                                value={data.access_code_daily_limit_per_resident ?? ''}
+                                onChange={(e) =>
+                                    setData('access_code_daily_limit_per_resident', e.target.value ? parseInt(e.target.value) : null)
+                                }
+                                placeholder="Unlimited"
+                                className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">Maximum codes a resident can generate per day. Leave empty for unlimited.</p>
+                            {errors.access_code_daily_limit_per_resident && (
+                                <p className="mt-1 text-sm text-red-600">{errors.access_code_daily_limit_per_resident}</p>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Access Code Behavior */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
+                >
+                    <h2 className="mb-6 text-lg font-medium text-gray-900">Access Code Behavior</h2>
+
+                    <div className="space-y-4">
+                        {/* Single Use */}
+                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                            <input
+                                type="checkbox"
+                                checked={data.access_code_single_use}
+                                onChange={(e) => setData('access_code_single_use', e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <div>
+                                <span className="block text-sm font-medium text-gray-900">Single-use codes</span>
+                                <span className="block text-sm text-gray-500">
+                                    When enabled, an access code becomes invalid after first successful use
+                                </span>
+                            </div>
+                        </label>
+
+                        {/* Auto Expire */}
+                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                            <input
+                                type="checkbox"
+                                checked={data.access_code_auto_expire_unused}
+                                onChange={(e) => setData('access_code_auto_expire_unused', e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <div>
+                                <span className="block text-sm font-medium text-gray-900">Auto-expire unused codes</span>
+                                <span className="block text-sm text-gray-500">
+                                    Automatically invalidate codes that are never used after their expiry time
+                                </span>
+                            </div>
+                        </label>
+
+                        {/* Require Confirmation */}
+                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                            <input
+                                type="checkbox"
+                                checked={data.access_code_require_confirmation}
+                                onChange={(e) => setData('access_code_require_confirmation', e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <div>
+                                <span className="block text-sm font-medium text-gray-900">Require resident confirmation</span>
+                                <span className="block text-sm text-gray-500">
+                                    Valid codes still require resident approval before granting entry (higher security)
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </motion.div>
+
+                {/* Save Button */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                    className="flex justify-end"
+                >
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                    >
+                        {processing ? 'Saving...' : 'Save Settings'}
+                    </button>
+                </motion.div>
+            </form>
         </AdminLayout>
     );
 }
