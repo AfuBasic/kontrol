@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
@@ -52,13 +52,22 @@ const primaryNav: NavItem[] = [
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.url(), icon: Cog6ToothIcon, permission: 'settings.view' }];
 
+import Toast from '@/components/Toast'; // Added import
+
 export default function AdminLayout({ children }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;
     const { url } = usePage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [showToast, setShowToast] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
+
+    useEffect(() => {
+        if (flash?.success || flash?.error) {
+            setShowToast(true);
+        }
+    }, [flash]);
 
     const userPermissions = auth.user?.permissions?.map((p) => p.name) ?? [];
     const userRoles = auth.user?.roles ?? [];
@@ -645,6 +654,14 @@ export default function AdminLayout({ children }: Props) {
             <main className="p-4 md:hidden">
                 <AnimatedLayout>{children}</AnimatedLayout>
             </main>
+
+            {/* Flash Messages */}
+            <Toast
+                show={showToast}
+                message={flash?.success || flash?.error || ''}
+                type={flash?.error ? 'error' : 'success'}
+                onClose={() => setShowToast(false)}
+            />
         </div>
     );
 }

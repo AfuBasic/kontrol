@@ -14,7 +14,7 @@ class ResidentService
      *
      * @return LengthAwarePaginator<User>
      */
-    public function getPaginatedResidents(int $perPage = 15): LengthAwarePaginator
+    public function getPaginatedResidents(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $estate = $this->getCurrentEstate();
 
@@ -22,8 +22,26 @@ class ResidentService
             ->forEstate($estate->id)
             ->withRole('resident', $estate->id)
             ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+                if ($status === 'suspended') {
+                    $query->whereNotNull('suspended_at');
+                } elseif ($status === 'active') {
+                    $query->whereNull('suspended_at')
+                          ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'accepted'));
+                } elseif ($status === 'pending') {
+                    $query->whereNull('suspended_at')
+                          ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'pending'));
+                }
+            })
             ->orderBy('name')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     /**

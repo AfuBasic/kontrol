@@ -15,5 +15,6 @@ class ResidentCreated
     public function __construct(
         public User $user,
         public Estate $estate,
+        public bool $isPasswordReset = false,
     ) {}
 }

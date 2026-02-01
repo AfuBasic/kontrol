@@ -1,8 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react'; // Added request
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '@/layouts/AdminLayout';
 import { index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ResidentActions from '@/Components/Admin/ResidentActions';
+
+import { useDebounce } from '@/hooks/useDebounce';
 
 type Resident = {
     id: number;
@@ -26,10 +30,30 @@ type PaginatedResidents = {
 
 type Props = {
     residents: PaginatedResidents;
+    filters: {
+        search?: string;
+        status?: string;
+    };
 };
 
-export default function Residents({ residents }: Props) {
+export default function Residents({ residents, filters }: Props) {
     const hasResidents = residents.data.length > 0;
+    const [search, setSearch] = useState(filters.search || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const debouncedSearch = useDebounce(search, 300);
+
+    // Debounce search
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || '')) {
+            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, replace: true });
+        }
+    }, [debouncedSearch]);
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = e.target.value;
+        setStatus(newStatus);
+        router.get(index.url(), { search, status: newStatus }, { preserveState: true, replace: true });
+    };
 
     return (
         <AdminLayout>
@@ -55,6 +79,51 @@ export default function Residents({ residents }: Props) {
                     </svg>
                     Add Resident
                 </Link>
+            </motion.div>
+
+            {/* Filters */}
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
+                className="mb-6 flex flex-col gap-4 sm:flex-row"
+            >
+                <div className="relative flex-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </div>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                        placeholder="Search residents by name or email..."
+                    />
+                </div>
+                <div className="w-full sm:w-48">
+                    <div className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <FunnelIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                        </div>
+                        <select
+                            value={status}
+                            onChange={handleStatusChange}
+                            className="block w-full appearance-none rounded-lg border border-gray-300 bg-white py-2.5 pr-8 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                        >
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="pending">Pending</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </motion.div>
 
             {/* Content */}
@@ -99,12 +168,14 @@ export default function Residents({ residents }: Props) {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                                        resident.status === 'accepted'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                        resident.suspended_at
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : resident.status === 'accepted'
+                                                              ? 'bg-green-100 text-green-800'
+                                                              : 'bg-yellow-100 text-yellow-800'
                                                     }`}
                                                 >
-                                                    {resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    {resident.suspended_at ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
@@ -155,19 +226,23 @@ export default function Residents({ residents }: Props) {
                                 />
                             </svg>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900">No residents yet</h3>
+                        <h3 className="text-lg font-medium text-gray-900">No residents found</h3>
                         <p className="mt-1 max-w-sm text-sm text-gray-500">
-                            Get started by adding your first resident. They'll receive an invitation email to set up their account.
+                            {search || status
+                                ? 'Try adjusting your search or filters to find what you are looking for.'
+                                : "Get started by adding your first resident. They'll receive an invitation email to set up their account."}
                         </p>
-                        <Link
-                            href={index.url() + '/create'}
-                            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                        >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                            Add Resident
-                        </Link>
+                        {!(search || status) && (
+                            <Link
+                                href={index.url() + '/create'}
+                                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                            >
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Add Resident
+                            </Link>
+                        )}
                     </div>
                 )}
             </motion.div>

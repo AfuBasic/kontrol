@@ -12,7 +12,7 @@ class SendResidentInvitationEmail implements ShouldQueue
     public function handle(ResidentCreated $event): void
     {
         Mail::to($event->user->email)->send(
-            new ResidentInvitationMail($event->user, $event->estate)
+            new ResidentInvitationMail($event->user, $event->estate, $event->isPasswordReset)
         );
     }
 }

@@ -21,6 +21,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public Estate $estate,
+        public bool $isPasswordReset = false,
     ) {
         // Generate signed URL that expires in 72 hours
         $this->invitationUrl = URL::temporarySignedRoute(
@@ -32,8 +33,12 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        $subject = $this->isPasswordReset
+            ? "Password Reset Request for {$this->estate->name}"
+            : "You've been invited to join {$this->estate->name}";
+
         return new Envelope(
-            subject: "You've been invited to join {$this->estate->name}",
+            subject: $subject,
         );
     }
 
@@ -45,6 +50,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
                 'estateName' => $this->estate->name,
                 'userName' => $this->user->name,
                 'invitationUrl' => $this->invitationUrl,
+                'isPasswordReset' => $this->isPasswordReset,
             ],
         );
     }

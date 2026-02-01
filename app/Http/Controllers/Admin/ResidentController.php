@@ -21,10 +21,12 @@ class ResidentController extends Controller
     /**
      * Display a listing of residents.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = $request->only(['search', 'status']);
+
         $residents = $this->residentService
-            ->getPaginatedResidents()
+            ->getPaginatedResidents(15, $filters)
             ->through(fn ($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -38,6 +40,7 @@ class ResidentController extends Controller
 
         return Inertia::render('admin/residents/index', [
             'residents' => $residents,
+            'filters' => $filters,
         ]);
     }
 
@@ -143,7 +146,7 @@ class ResidentController extends Controller
         $resident->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
 
         // 3. Resend invitation email
-        event(new \App\Events\Admin\ResidentCreated($resident, $estate));
+        event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
 
         return back()->with('success', 'Resident password reset and invitation resent.');
     }
