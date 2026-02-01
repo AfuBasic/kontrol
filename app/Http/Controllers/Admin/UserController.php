@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\CreateUserAction;
+use App\Actions\Admin\UpdateUserAction;
+use App\Events\Admin\UserCreated;
+use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Controllers\Controller;
 use App\Mail\Admin\AdminInvitationMail;
 use App\Models\User;
@@ -63,58 +67,14 @@ class UserController extends Controller
     /**
      * Store a newly created admin in storage.
      */
-    public function store(Request $request): RedirectResponse
+    /**
+     * Store a newly created admin in storage.
+     */
+    public function store(StoreUserRequest $request, CreateUserAction $action): RedirectResponse
     {
-        $estateId = $this->userService->getCurrentEstateId();
         $estate = $this->userService->getCurrentEstate();
 
-        // Validate request
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                // Detailed uniqueness check could be added here if needed to avoid duplicates across system
-                // But for now, we'll handle existing users in logic below
-            ],
-            'role' => 'required|string|exists:roles,name',
-        ]);
-
-        DB::transaction(function () use ($validated, $estateId, $estate) {
-            // Check if user already exists
-            $user = User::where('email', $validated['email'])->first();
-
-            if (! $user) {
-                // Create new user
-                $user = User::create([
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'password' => null, // Password will be set on invite acceptance
-                ]);
-            }
-
-            // Assign to Estate
-            if (! $user->estates()->where('estates.id', $estateId)->exists()) {
-                $user->estates()->attach($estateId, ['status' => 'pending']);
-            }
-
-            // Assign Admin Role scoped to this estate
-            setPermissionsTeamId($estateId);
-            
-            // Check if user has any role for this estate, if not assign the selected one
-            // Or should we sync? For a new invite, we assign.
-            if (! $user->hasRole($validated['role'])) {
-                $user->assignRole($validated['role']);
-            }
-
-            // Send Invitation Email
-            // Only send if password is not set (i.e. they are pending invite)
-            if ($user->password === null) {
-                Mail::to($user->email)->send(new AdminInvitationMail($user, $estate));
-            }
-        });
+        $action->execute($request->validated(), $estate);
 
         return redirect()->route('users.index')
             ->with('success', 'Admin invited successfully.');
@@ -146,7 +106,7 @@ class UserController extends Controller
     /**
      * Update the specified admin in storage.
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user, UpdateUserAction $action): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -160,17 +120,7 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ]);
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-        ]);
-
-        $estateId = $this->userService->getCurrentEstateId();
-        setPermissionsTeamId($estateId);
-
-        if (isset($validated['role'])) {
-            $user->syncRoles([$validated['role']]);
-        }
+        $action->execute($user, $validated);
 
         return back()->with('success', 'Admin updated successfully.');
     }
@@ -188,11 +138,9 @@ class UserController extends Controller
         }
 
         DB::transaction(function () use ($user, $estateId) {
-            // Detach role for this estate
+            // Detach all roles for this estate
             setPermissionsTeamId($estateId);
-            if ($user->hasRole('admin')) {
-                $user->removeRole('admin');
-            }
+            $user->syncRoles([]);
 
             // Detach from estate key membership
             $user->estates()->detach($estateId);
@@ -207,5 +155,24 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'Admin removed successfully.');
+    }
+
+    /**
+     * Reset the password and resend invitation for the specified admin.
+     */
+    public function resetPassword(User $user): RedirectResponse
+    {
+        $estate = $this->userService->getCurrentEstate();
+
+        // 1. Reset password
+        $user->update(['password' => null]);
+
+        // 2. Set status to pending for the current estate
+        $user->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
+
+        // 3. Resend invitation email
+        event(new UserCreated($user, $estate));
+
+        return back()->with('success', 'Admin password reset and invitation resent.');
     }
 }

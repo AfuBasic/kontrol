@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('role:admin')->group(function (): void {
+Route::middleware('auth')->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('admin.dashboard');
 
@@ -41,11 +41,13 @@ Route::middleware('role:admin')->group(function (): void {
         Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
     });
 
-    // Settings (admin-only, no additional permission needed)
-    Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
-    Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+    // Settings (admin-only)
+    Route::middleware('role:admin')->group(function (): void {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+    });
 
-    // Profile (own profile, no additional permission needed)
+    // Profile (own profile)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
 
@@ -60,5 +62,7 @@ Route::middleware('role:admin')->group(function (): void {
     Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('admin.notifications.read-all');
 
     // Admin User management (manage other admins)
-    Route::resource('users', UserController::class)->except(['show']);
+    Route::middleware('role:admin')->group(function (): void {
+        Route::resource('users', UserController::class)->except(['show']);
+    });
 });

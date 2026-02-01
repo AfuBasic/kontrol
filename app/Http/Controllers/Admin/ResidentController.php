@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateResidentAction;
+use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
 use App\Models\User;
@@ -146,7 +147,7 @@ class ResidentController extends Controller
         $resident->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
 
         // 3. Resend invitation email
-        event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
+        event(new ResidentCreated($resident, $estate, true));
 
         return back()->with('success', 'Resident password reset and invitation resent.');
     }

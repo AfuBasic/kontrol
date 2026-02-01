@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\UpdateSecurityAction;
+use App\Events\Admin\SecurityCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
@@ -145,7 +146,7 @@ class SecurityPersonnelController extends Controller
         $security->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
 
         // 3. Resend invitation email
-        event(new \App\Events\Admin\SecurityCreated($security, $estate, true));
+        event(new SecurityCreated($security, $estate, true));
 
         return back()->with('success', 'Security personnel password reset and invitation resent.');
     }

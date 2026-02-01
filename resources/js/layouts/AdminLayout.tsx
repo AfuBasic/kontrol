@@ -645,6 +645,9 @@ export default function AdminLayout({ children }: Props) {
                                             <div className="rounded-lg bg-[#F0F5FF] px-3 py-2">
                                                 <p className="text-sm font-medium text-[#0A3D91]">{auth.user?.name}</p>
                                                 <p className="truncate text-xs text-[#1F6FDB]">{auth.user?.email}</p>
+                                                <p className="mt-1 truncate text-xs font-medium text-[#1F6FDB]/70 capitalize">
+                                                    {auth.user?.roles?.[0]?.replace('_', ' ') ?? 'User'}
+                                                </p>
                                             </div>
                                             <div className="mt-1.5 space-y-0.5">
                                                 <Link
