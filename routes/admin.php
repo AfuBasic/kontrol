@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -45,6 +46,9 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+        
+        // Activity Log
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log.index');
     });
 
     // Profile (own profile)

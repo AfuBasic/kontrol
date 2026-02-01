@@ -13,6 +13,7 @@ import {
     UserGroupIcon,
     UsersIcon,
     XMarkIcon,
+    ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -32,6 +33,7 @@ import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
+import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 
 interface Props {
     children: ReactNode;
@@ -665,6 +667,16 @@ export default function AdminLayout({ children }: Props) {
                                                     <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
                                                     Profile
                                                 </Link>
+                                                {isAdmin && (
+                                                    <Link
+                                                        href={ActivityLogController.index.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                                    >
+                                                        <ClipboardDocumentListIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                        Activity Log
+                                                    </Link>
+                                                )}
                                                 <button
                                                     onClick={handleLogout}
                                                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"

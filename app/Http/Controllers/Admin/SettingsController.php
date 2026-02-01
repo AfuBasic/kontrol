@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\UpdateEstateSettingsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateEstateSettingsRequest;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +36,7 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function update(UpdateEstateSettingsRequest $request): RedirectResponse
+    public function update(UpdateEstateSettingsRequest $request, UpdateEstateSettingsAction $action): RedirectResponse
     {
         $estate = $this->getCurrentEstate();
         $settings = $estate->settings;
@@ -44,7 +45,7 @@ class SettingsController extends Controller
             $settings = $estate->settings()->create([]);
         }
 
-        $settings->update($request->validated());
+        $action->execute($settings, $request->validated());
 
         return back()->with('success', 'Settings updated successfully.');
     }

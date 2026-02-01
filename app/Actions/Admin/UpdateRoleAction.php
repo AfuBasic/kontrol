@@ -3,6 +3,7 @@
 namespace App\Actions\Admin;
 
 use App\Services\Admin\RoleService;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -30,6 +31,12 @@ class UpdateRoleAction
         if (isset($data['permissions'])) {
             $role->syncPermissions($data['permissions']);
         }
+
+        activity()
+            ->performedOn($role)
+            ->causedBy(Auth::user())
+            ->withProperties(['estate_id' => $role->estate_id])
+            ->log('updated role ' . $role->name);
 
         return $role->fresh();
     }

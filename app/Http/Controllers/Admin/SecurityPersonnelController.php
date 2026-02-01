@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateSecurityAction;
+use App\Actions\Admin\DeleteSecurityAction;
+use App\Actions\Admin\ResetSecurityPasswordAction;
+use App\Actions\Admin\SuspendSecurityAction;
 use App\Actions\Admin\UpdateSecurityAction;
 use App\Events\Admin\SecurityCreated;
 use App\Http\Controllers\Controller;
@@ -103,7 +106,8 @@ class SecurityPersonnelController extends Controller
             'badge_number' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $action->execute($security, $validated);
+        $estate = $this->securityService->getCurrentEstate();
+        $action->execute($security, $validated, $estate);
 
         return redirect()
             ->route('security.index')
@@ -113,10 +117,12 @@ class SecurityPersonnelController extends Controller
     /**
      * Remove the specified security personnel.
      */
-    public function destroy(User $security): RedirectResponse
+    public function destroy(User $security, DeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
-        $security->delete();
+        $estate = $this->securityService->getCurrentEstate();
+        
+        $action->execute($security, $estate);
 
         return redirect()
             ->route('security.index')
@@ -126,12 +132,12 @@ class SecurityPersonnelController extends Controller
     /**
      * Toggle the suspension status of the specified security personnel.
      */
-    public function suspend(User $security): RedirectResponse
+    public function suspend(User $security, SuspendSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.suspend');
-        $security->update([
-            'suspended_at' => $security->suspended_at ? null : now(),
-        ]);
+        $estate = $this->securityService->getCurrentEstate();
+        
+        $action->execute($security, $estate);
 
         $message = $security->suspended_at
             ? 'Security personnel suspended successfully.'
@@ -143,19 +149,12 @@ class SecurityPersonnelController extends Controller
     /**
      * Reset the password and resend invitation for the specified security personnel.
      */
-    public function resetPassword(User $security): RedirectResponse
+    public function resetPassword(User $security, ResetSecurityPasswordAction $action): RedirectResponse
     {
         $this->authorize('security.reset-password');
         $estate = $this->securityService->getCurrentEstate();
 
-        // 1. Reset password
-        $security->update(['password' => null]);
-
-        // 2. Set status to pending for the current estate
-        $security->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
-
-        // 3. Resend invitation email
-        event(new SecurityCreated($security, $estate, true));
+        $action->execute($security, $estate);
 
         return back()->with('success', 'Security personnel password reset and invitation resent.');
     }

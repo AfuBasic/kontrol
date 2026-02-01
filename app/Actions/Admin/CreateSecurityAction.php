@@ -6,6 +6,7 @@ use App\Events\Admin\SecurityCreated;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -45,6 +46,12 @@ class CreateSecurityAction
 
             // 5. Dispatch event for side effects (invitation email)
             event(new SecurityCreated($user, $estate, false));
+
+            activity()
+                ->performedOn($user)
+                ->causedBy(Auth::user())
+                ->withProperties(['estate_id' => $estate->id])
+                ->log('invited security personnel ' . $user->email);
 
             return $user;
         });

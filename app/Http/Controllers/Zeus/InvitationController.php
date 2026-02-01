@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Zeus;
 
+use App\Actions\Zeus\AcceptInvitationAction;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Notifications\Admin\ResidentAcceptedInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,7 +34,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function store(Request $request, User $user): RedirectResponse
+    public function store(Request $request, User $user, AcceptInvitationAction $action): RedirectResponse
     {
         // Validate signed URL
         if (! $request->hasValidSignature()) {
@@ -52,47 +50,9 @@ class InvitationController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        DB::transaction(function () use ($user, $validated, $request) {
-            // Set the user's password
-            $user->update([
-                'password' => Hash::make($validated['password']),
-            ]);
-
-            // Update pivot status to accepted
-            DB::table('estate_users_membership')
-                ->where('user_id', $user->id)
-                ->where('status', 'pending')
-                ->update(['status' => 'accepted']);
-
-            // Activate the estate(s) associated with this user
-            // Assuming for now a user accepts for one estate context in this flow
-            // Ideally we'd pass the estate ID in the invitation link but for now finding the estate via pivot works
-            // if we assume 1:1 for this specific flow or activate all pending ones since this is the first user.
-            // Given the CreateEstateAction flow, there is one estate.
-            $user->estates()->update(['estates.status' => 'active']);
-
-            // Notify Estate Admins if the accepting user is a resident or security personnel
-            $estate = $user->estates()->first();
-            $isPasswordReset = $request->boolean('password_reset');
-
-            if ($estate) {
-                // Set the team/estate context for the permission check
-                setPermissionsTeamId($estate->id);
-
-                // Reload roles to ensure the new team context is respected
-                $user->unsetRelation('roles');
-
-                if ($user->hasRole(['resident', 'security'])) {
-                    DB::afterCommit(function () use ($user, $estate, $isPasswordReset) {
-                        User::withRole('admin', $estate->id)
-                            ->get()
-                            ->each(function ($admin) use ($user, $isPasswordReset) {
-                                $admin->notify(new ResidentAcceptedInvitation($user, $isPasswordReset));
-                            });
-                    });
-                }
-            }
-        });
+        $action->execute($user, array_merge($validated, [
+            'password_reset' => $request->boolean('password_reset'),
+        ]));
 
         // Log the user in
         Auth::login($user);

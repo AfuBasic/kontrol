@@ -7,6 +7,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
@@ -46,6 +47,12 @@ class CreateResidentAction
 
             // 5. Dispatch event for side effects (invitation email)
             event(new ResidentCreated($user, $estate, false));
+
+            activity()
+                ->performedOn($user)
+                ->causedBy(Auth::user())
+                ->withProperties(['estate_id' => $estate->id])
+                ->log('invited resident ' . $user->email);
 
             return $user;
         });

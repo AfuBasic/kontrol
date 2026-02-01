@@ -43,6 +43,18 @@ class AuthenticateUser
 
         Auth::login($user, $remember);
 
+        // Try to get estate context if available
+        $estateId = $user->estates->first()?->id;
+
+        $logger = activity()
+            ->performedOn($user)
+            ->causedBy($user);
+
+        if ($estateId) {
+            $logger->withProperties(['estate_id' => $estateId])->save();
+        }
+        $logger->log('logged in');
+
         return $user;
     }
 }

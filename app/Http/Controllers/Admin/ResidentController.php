@@ -94,7 +94,11 @@ class ResidentController extends Controller
     /**
      * Update the specified resident.
      */
-    public function update(Request $request, User $resident, \App\Actions\Admin\UpdateResidentAction $action): RedirectResponse
+    public function update(
+        Request $request, 
+        User $resident, 
+        \App\Actions\Admin\UpdateResidentAction $action
+    ): RedirectResponse
     {
         $this->authorize('residents.edit');
         $validated = $request->validate([
@@ -104,7 +108,8 @@ class ResidentController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $action->execute($resident, $validated);
+        $estate = $this->residentService->getCurrentEstate();
+        $action->execute($resident, $validated, $estate);
 
         return redirect()
             ->route('residents.index')
@@ -114,10 +119,12 @@ class ResidentController extends Controller
     /**
      * Remove the specified resident.
      */
-    public function destroy(User $resident): RedirectResponse
+    public function destroy(User $resident, \App\Actions\Admin\DeleteResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.delete');
-        $resident->delete();
+        $estate = $this->residentService->getCurrentEstate();
+        
+        $action->execute($resident, $estate);
 
         return redirect()
             ->route('residents.index')
@@ -127,12 +134,12 @@ class ResidentController extends Controller
     /**
      * Toggle the suspension status of the specified resident.
      */
-    public function suspend(User $resident): RedirectResponse
+    public function suspend(User $resident, \App\Actions\Admin\SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.suspend');
-        $resident->update([
-            'suspended_at' => $resident->suspended_at ? null : now(),
-        ]);
+        $estate = $this->residentService->getCurrentEstate();
+        
+        $action->execute($resident, $estate);
 
         $message = $resident->suspended_at
             ? 'Resident suspended successfully.'
@@ -144,19 +151,12 @@ class ResidentController extends Controller
     /**
      * Reset the password and resend invitation for the specified resident.
      */
-    public function resetPassword(User $resident): RedirectResponse
+    public function resetPassword(User $resident, \App\Actions\Admin\ResetResidentPasswordAction $action): RedirectResponse
     {
         $this->authorize('residents.reset-password');
         $estate = $this->residentService->getCurrentEstate();
 
-        // 1. Reset password
-        $resident->update(['password' => null]);
-
-        // 2. Set status to pending for the current estate
-        $resident->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
-
-        // 3. Resend invitation email
-        event(new ResidentCreated($resident, $estate, true));
+        $action->execute($resident, $estate);
 
         return back()->with('success', 'Resident password reset and invitation resent.');
     }

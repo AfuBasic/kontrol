@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class EstateSettings extends Model
 {
+
     protected $fillable = [
         'estate_id',
         'access_codes_enabled',

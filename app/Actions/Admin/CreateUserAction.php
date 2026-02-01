@@ -5,6 +5,7 @@ namespace App\Actions\Admin;
 use App\Events\Admin\UserCreated;
 use App\Models\Estate;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CreateUserAction
@@ -42,6 +43,12 @@ class CreateUserAction
                     event(new UserCreated($user, $estate));
                 });
             }
+
+            activity()
+                ->performedOn($user)
+                ->causedBy(Auth::user())
+                ->withProperties(['estate_id' => $estate->id])
+                ->log('invited admin ' . $user->email);
 
             return $user;
         });

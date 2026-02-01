@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateUserAction;
+use App\Actions\Admin\DeleteUserAction;
+use App\Actions\Admin\ResetUserPasswordAction;
 use App\Actions\Admin\UpdateUserAction;
 use App\Events\Admin\UserCreated;
 use App\Http\Requests\Admin\StoreUserRequest;
@@ -130,7 +132,8 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ]);
 
-        $action->execute($user, $validated);
+        $estate = $this->userService->getCurrentEstate();
+        $action->execute($user, $validated, $estate);
 
         return back()->with('success', 'Admin updated successfully.');
     }
@@ -138,32 +141,18 @@ class UserController extends Controller
     /**
      * Remove the specified admin from storage (or detach from estate).
      */
-    public function destroy(User $user): RedirectResponse
+    public function destroy(User $user, DeleteUserAction $action): RedirectResponse
     {
         $this->authorize('users.delete');
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estate = $this->userService->getCurrentEstate();
 
         // Prevent deleting yourself
         if ($user->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
 
-        DB::transaction(function () use ($user, $estateId) {
-            // Detach all roles for this estate
-            setPermissionsTeamId($estateId);
-            $user->syncRoles([]);
-
-            // Detach from estate key membership
-            $user->estates()->detach($estateId);
-
-            // If user has no other estates and no password (invite pending), maybe delete entirely?
-            // For now, let's keep it safe and just detach.
-            // But if they are purely a new invite for this estate, might be cleaner to delete.
-            if ($user->estates()->count() === 0 && $user->password === null) {
-                $user->delete();
-            }
-        });
+        $action->execute($user, $estate);
 
         return redirect()->route('users.index')
             ->with('success', 'Admin removed successfully.');
@@ -172,20 +161,13 @@ class UserController extends Controller
     /**
      * Reset the password and resend invitation for the specified admin.
      */
-    public function resetPassword(User $user): RedirectResponse
+    public function resetPassword(User $user, ResetUserPasswordAction $action): RedirectResponse
     {
         $this->authorize('users.edit');
 
         $estate = $this->userService->getCurrentEstate();
 
-        // 1. Reset password
-        $user->update(['password' => null]);
-
-        // 2. Set status to pending for the current estate
-        $user->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
-
-        // 3. Resend invitation email
-        event(new UserCreated($user, $estate));
+        $action->execute($user, $estate);
 
         return back()->with('success', 'Admin password reset and invitation resent.');
     }
