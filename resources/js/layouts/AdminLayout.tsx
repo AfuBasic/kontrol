@@ -50,7 +50,7 @@ type NavItem = {
 
 const primaryNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Estate Board', href: EstateBoardController.url(), icon: BuildingOffice2Icon, permission: 'estate_board.view' },
+    { name: 'Estate Board', href: EstateBoardController.index.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },

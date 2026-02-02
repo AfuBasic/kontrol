@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResidentController;
@@ -25,8 +26,27 @@ Route::middleware('auth')->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('admin.dashboard');
 
-    // Estate Board (default landing page)
-    Route::get('/estate', EstateBoardController::class)->name('admin.estate');
+    // Estate Board
+    Route::prefix('estate-board')->name('admin.estate-board.')->group(function (): void {
+        Route::get('/', [EstateBoardController::class, 'index'])->name('index');
+        Route::get('/manage', [EstateBoardController::class, 'manage'])->name('manage');
+        Route::get('/create', [EstateBoardController::class, 'create'])->name('create');
+        Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
+        Route::get('/{post}/edit', [EstateBoardController::class, 'edit'])->name('edit');
+
+        // Rate-limited mutation routes for posts
+        Route::middleware('throttle:estate-board-posts')->group(function (): void {
+            Route::post('/', [EstateBoardController::class, 'store'])->name('store');
+            Route::put('/{post}', [EstateBoardController::class, 'update'])->name('update');
+            Route::delete('/{post}', [EstateBoardController::class, 'destroy'])->name('destroy');
+        });
+
+        // Rate-limited comment routes
+        Route::middleware('throttle:estate-board-comments')->group(function (): void {
+            Route::post('/{post}/comments', [EstateBoardCommentController::class, 'store'])->name('comments.store');
+            Route::delete('/comments/{comment}', [EstateBoardCommentController::class, 'destroy'])->name('comments.destroy');
+        });
+    });
 
     // Residents management
     Route::middleware('permission:residents.view')->group(function (): void {
@@ -46,7 +66,7 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
-        
+
         // Activity Log
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log.index');
     });
