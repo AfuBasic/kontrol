@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,6 +25,7 @@ class EstateBoardPost extends Model
         'title',
         'body',
         'status',
+        'audience',
         'published_at',
     ];
 
@@ -42,6 +44,7 @@ class EstateBoardPost extends Model
     {
         return [
             'status' => EstateBoardPostStatus::class,
+            'audience' => EstateBoardPostAudience::class,
             'published_at' => 'datetime',
         ];
     }
@@ -101,10 +104,22 @@ class EstateBoardPost extends Model
         return $query->where('estate_id', $estateId);
     }
 
+    /**
+     * Scope: Posts visible to a specific audience.
+     *
+     * @param  Builder<EstateBoardPost>  $query
+     * @param  array<EstateBoardPostAudience>  $audiences
+     * @return Builder<EstateBoardPost>
+     */
+    public function scopeForAudience(Builder $query, array $audiences): Builder
+    {
+        return $query->whereIn('audience', $audiences);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['title', 'body', 'status'])
+            ->logOnly(['title', 'body', 'status', 'audience'])
             ->logOnlyDirty();
     }
 }

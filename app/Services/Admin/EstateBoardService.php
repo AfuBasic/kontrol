@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Enums\EstateBoardPostAudience;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
@@ -13,13 +14,15 @@ class EstateBoardService
     /**
      * Get the feed of published posts for an estate using cursor pagination.
      *
+     * @param  array<EstateBoardPostAudience>|null  $audiences  Filter by audience (null = all audiences for admins)
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null): CursorPaginator
     {
         return EstateBoardPost::query()
             ->forEstate($estateId)
             ->published()
+            ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
             ->with([
                 'author:id,name,email',
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
@@ -31,11 +34,14 @@ class EstateBoardService
 
     /**
      * Get a single post with its details.
+     *
+     * @param  array<EstateBoardPostAudience>|null  $audiences  Filter by audience (null = all audiences for admins)
      */
-    public function getPost(int $postId, int $estateId): ?EstateBoardPost
+    public function getPost(int $postId, int $estateId, ?array $audiences = null): ?EstateBoardPost
     {
         return EstateBoardPost::query()
             ->forEstate($estateId)
+            ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
             ->with([
                 'author:id,name,email',
                 'media',

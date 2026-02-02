@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\EstateBoard;
 
+use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -22,6 +23,7 @@ class UpdatePostRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:255'],
             'body' => ['required', 'string', 'min:10', 'max:10000'],
             'status' => ['required', Rule::enum(EstateBoardPostStatus::class)],
+            'audience' => ['required', Rule::enum(EstateBoardPostAudience::class)],
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_media_ids' => ['nullable', 'array'],

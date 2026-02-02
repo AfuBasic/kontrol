@@ -31,6 +31,9 @@ class UpdateEstateSettingsRequest extends FormRequest
             'access_code_grace_period_minutes' => ['required', 'integer', 'min:0', 'max:60'],
             'access_code_daily_limit_per_resident' => ['nullable', 'integer', 'min:1', 'max:100'],
             'access_code_require_confirmation' => ['required', 'boolean'],
+            'contacts' => ['nullable', 'array', 'max:20'],
+            'contacts.*.name' => ['required', 'string', 'max:100'],
+            'contacts.*.value' => ['required', 'string', 'max:50'],
         ];
     }
 

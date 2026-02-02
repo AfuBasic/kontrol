@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->text('body');
             $table->enum('status', ['draft', 'published'])->default('draft');
+            $table->enum('audience', ['all', 'residents', 'security'])->default('all');
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
 

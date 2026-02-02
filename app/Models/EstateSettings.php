@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cache;
 
 class EstateSettings extends Model
 {
-
     protected $fillable = [
         'estate_id',
         'access_codes_enabled',
@@ -19,6 +18,7 @@ class EstateSettings extends Model
         'access_code_grace_period_minutes',
         'access_code_daily_limit_per_resident',
         'access_code_require_confirmation',
+        'contacts',
     ];
 
     /**
@@ -31,6 +31,7 @@ class EstateSettings extends Model
             'access_code_single_use' => 'boolean',
             'access_code_auto_expire_unused' => 'boolean',
             'access_code_require_confirmation' => 'boolean',
+            'contacts' => 'array',
         ];
     }
 

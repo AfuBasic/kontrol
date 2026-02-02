@@ -1,5 +1,7 @@
 export type PostStatus = 'draft' | 'published';
 
+export type PostAudience = 'all' | 'residents' | 'security';
+
 export type PostMedia = {
     id: number;
     url: string;
@@ -21,6 +23,7 @@ export type EstateBoardPost = {
     title: string | null;
     body: string;
     status: PostStatus;
+    audience: PostAudience;
     published_at: string | null;
     created_at: string;
     updated_at: string;

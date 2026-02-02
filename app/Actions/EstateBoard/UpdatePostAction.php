@@ -2,6 +2,7 @@
 
 namespace App\Actions\EstateBoard;
 
+use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
@@ -18,19 +19,21 @@ class UpdatePostAction
     ) {}
 
     /**
-     * @param  array{title?: string|null, body: string, status: string, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
+     * @param  array{title?: string|null, body: string, status: string, audience: string, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
      */
     public function execute(EstateBoardPost $post, array $data, Estate $estate): EstateBoardPost
     {
         return DB::transaction(function () use ($post, $data, $estate) {
             $user = Auth::user();
             $status = EstateBoardPostStatus::from($data['status']);
+            $audience = EstateBoardPostAudience::from($data['audience']);
             $wasPublished = $post->status === EstateBoardPostStatus::Published;
 
             $post->update([
                 'title' => $data['title'] ?? null,
                 'body' => $data['body'],
                 'status' => $status,
+                'audience' => $audience,
                 'published_at' => $status === EstateBoardPostStatus::Published && ! $wasPublished
                     ? now()
                     : $post->published_at,
