@@ -19,6 +19,7 @@ class AccessCode extends Model
         'estate_id',
         'user_id',
         'code',
+        'type', // single_use, long_lived
         'visitor_name',
         'visitor_phone',
         'purpose',
@@ -105,7 +106,7 @@ class AccessCode extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', AccessCodeStatus::Active)
-            ->where('expires_at', '>', now());
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()));
     }
 
     /**
@@ -115,16 +116,24 @@ class AccessCode extends Model
     public function scopeExpiredButNotMarked(Builder $query): Builder
     {
         return $query->where('status', AccessCodeStatus::Active)
+            ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now());
     }
 
     public function isActive(): bool
     {
+        // If expired_at is null, means it never expires (long_lived)
+        if ($this->expires_at === null) {
+            return $this->status === AccessCodeStatus::Active;
+        }
         return $this->status === AccessCodeStatus::Active && $this->expires_at->isFuture();
     }
 
     public function isExpired(): bool
     {
+        if ($this->expires_at === null) {
+            return false;
+        }
         return $this->expires_at->isPast();
     }
 
@@ -149,6 +158,10 @@ class AccessCode extends Model
     {
         if (! $this->isActive()) {
             return 'Expired';
+        }
+
+        if ($this->expires_at === null) {
+            return 'Never expires';
         }
 
         return $this->expires_at->diffForHumans(['parts' => 2, 'short' => true]);

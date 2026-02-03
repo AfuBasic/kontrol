@@ -1,21 +1,25 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import type { DurationOption } from '@/types/access-code';
 import ResidentLayout from '@/layouts/ResidentLayout';
 
 type Props = {
-    durationOptions: DurationOption[];
+    durationOptions: { minutes: number; label: string }[];
+    durationConstraints: { min: number; max: number };
 };
 
-export default function CreateCode({ durationOptions }: Props) {
-    const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[1]?.minutes || 240);
+export default function CreateCode({ durationOptions, durationConstraints }: Props) {
+    const [selectedDuration, setSelectedDuration] = useState<number | 'custom'>(durationOptions[0]?.minutes || 60);
+    const [customDuration, setCustomDuration] = useState<string>('');
+    const [accessType, setAccessType] = useState<'single_use' | 'long_lived'>('single_use');
 
     const { data, setData, post, processing, errors } = useForm({
         visitor_name: '',
         visitor_phone: '',
         purpose: '',
-        duration_minutes: selectedDuration,
+        type: 'single_use',
+        duration_minutes: durationOptions[0]?.minutes || 60,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -23,9 +27,18 @@ export default function CreateCode({ durationOptions }: Props) {
         post('/resident/visitors');
     }
 
-    function handleDurationChange(minutes: number) {
+    function handleDurationChange(minutes: number | 'custom') {
         setSelectedDuration(minutes);
-        setData('duration_minutes', minutes);
+        if (typeof minutes === 'number') {
+            setData('duration_minutes', minutes);
+        } else {
+            // If switching to custom, don't update data yet until input
+            // or maybe set it to customDuration if it exists, but custom logic handles the input change.
+            // Just keeping selection state is enough here.
+            if (customDuration) {
+                setData('duration_minutes', parseInt(customDuration) || 0);
+            }
+        }
     }
 
     return (
@@ -45,8 +58,49 @@ export default function CreateCode({ durationOptions }: Props) {
             </motion.div>
 
             <form onSubmit={handleSubmit}>
+                {/* Access Type Toggle */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.05 }}
+                    className="mb-6"
+                >
+                    <label className="mb-3 block text-sm font-medium text-gray-700">Access Type</label>
+                    <div className="grid grid-cols-2 gap-3 rounded-xl bg-gray-100 p-1">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setAccessType('single_use');
+                                setData('type', 'single_use');
+                            }}
+                            className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
+                                accessType === 'single_use' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                            }`}
+                        >
+                            Single Visit
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setAccessType('long_lived');
+                                setData('type', 'long_lived');
+                            }}
+                            className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
+                                accessType === 'long_lived' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                            }`}
+                        >
+                            Long-lived
+                        </button>
+                    </div>
+                </motion.div>
+
                 {/* Visitor Name */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="mb-6"
+                >
                     <label htmlFor="visitor_name" className="mb-2 block text-sm font-medium text-gray-700">
                         Who&apos;s visiting? <span className="text-gray-400">(optional)</span>
                     </label>
@@ -62,7 +116,12 @@ export default function CreateCode({ durationOptions }: Props) {
                 </motion.div>
 
                 {/* Phone Number */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="mb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.15 }}
+                    className="mb-6"
+                >
                     <label htmlFor="visitor_phone" className="mb-2 block text-sm font-medium text-gray-700">
                         Visitor&apos;s phone <span className="text-gray-400">(optional)</span>
                     </label>
@@ -78,7 +137,12 @@ export default function CreateCode({ durationOptions }: Props) {
                 </motion.div>
 
                 {/* Purpose */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }} className="mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className="mb-8"
+                >
                     <label htmlFor="purpose" className="mb-2 block text-sm font-medium text-gray-700">
                         Purpose of visit <span className="text-gray-400">(optional)</span>
                     </label>
@@ -93,34 +157,79 @@ export default function CreateCode({ durationOptions }: Props) {
                     {errors.purpose && <p className="mt-2 text-sm text-red-600">{errors.purpose}</p>}
                 </motion.div>
 
-                {/* Duration Selection */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="mb-8">
-                    <label className="mb-3 block text-sm font-medium text-gray-700">How long should this code work?</label>
-                    <div className="grid grid-cols-2 gap-3">
-                        {durationOptions.map((option) => (
-                            <button
-                                key={option.minutes}
-                                type="button"
-                                onClick={() => handleDurationChange(option.minutes)}
-                                className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
-                                    selectedDuration === option.minutes
-                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                    {errors.duration_minutes && <p className="mt-2 text-sm text-red-600">{errors.duration_minutes}</p>}
-                </motion.div>
+                {/* Duration Selection (Only for Single Use) */}
+                <AnimatePresence>
+                    {accessType === 'single_use' && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mb-8 overflow-hidden"
+                        >
+                            <label className="mb-3 block text-sm font-medium text-gray-700">How long should this code work?</label>
+                            <div className="mb-4 grid grid-cols-2 gap-3">
+                                {durationOptions.map((option) => (
+                                    <button
+                                        key={option.minutes}
+                                        type="button"
+                                        onClick={() => handleDurationChange(option.minutes)}
+                                        className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
+                                            selectedDuration === option.minutes
+                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => handleDurationChange('custom')}
+                                    className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
+                                        selectedDuration === 'custom'
+                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Custom
+                                </button>
+                            </div>
+
+                            {selectedDuration === 'custom' && (
+                                <motion.div initial={{ opacity: 0, marginTop: -10 }} animate={{ opacity: 1, marginTop: 0 }} className="mb-4">
+                                    <label className="mb-1 block text-xs text-gray-500">
+                                        Enter duration in minutes ({durationConstraints.min} - {durationConstraints.max})
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={customDuration}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setCustomDuration(val);
+                                            const minutes = parseInt(val);
+                                            if (!isNaN(minutes)) {
+                                                setData('duration_minutes', minutes);
+                                            }
+                                        }}
+                                        min={durationConstraints.min}
+                                        max={durationConstraints.max}
+                                        className="block w-full rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                                        placeholder="Minutes"
+                                    />
+                                </motion.div>
+                            )}
+
+                            {errors.duration_minutes && <p className="mb-6 text-sm text-red-600">{errors.duration_minutes}</p>}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Submit Button */}
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.25 }}>
                     <button
                         type="submit"
                         disabled={processing}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {processing ? (
                             <>

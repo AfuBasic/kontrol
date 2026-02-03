@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import type { AccessCode } from '@/types/access-code';
 import ResidentLayout from '@/layouts/ResidentLayout';
+import resident from '@/routes/resident';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 type Props = {
     activeCodes: AccessCode[];
@@ -24,7 +26,7 @@ function getStatusBadge(status: AccessCode['status']) {
     }
 }
 
-function CodeCard({ code, showActions = false }: { code: AccessCode; showActions?: boolean }) {
+function CodeCard({ code, showActions = false, onRevoke }: { code: AccessCode; showActions?: boolean; onRevoke?: (code: AccessCode) => void }) {
     const [showMenu, setShowMenu] = useState(false);
     const [copying, setCopying] = useState(false);
 
@@ -47,14 +49,17 @@ function CodeCard({ code, showActions = false }: { code: AccessCode; showActions
     }
 
     function handleRevoke() {
-        if (confirm('Are you sure you want to revoke this access code?')) {
-            router.delete(`/resident/visitors/${code.id}`);
+        if (onRevoke) {
+            onRevoke(code);
         }
         setShowMenu(false);
     }
 
     return (
-        <motion.div layout className="relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-gray-200 hover:shadow-md">
+        <motion.div
+            layout
+            className="relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-gray-200 hover:shadow-md"
+        >
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div
@@ -74,13 +79,27 @@ function CodeCard({ code, showActions = false }: { code: AccessCode; showActions
                             </svg>
                         )}
                     </div>
-                    <div>
-                        <p className="font-medium text-gray-900">{code.visitor_name || 'Visitor'}</p>
-                        <div className="flex items-center gap-2">
-                            <p className="font-mono text-lg font-semibold tracking-wider text-gray-700">{code.code}</p>
-                            {getStatusBadge(code.status)}
+                    <Link href={resident.visitors.show.url(code.id)} className="group">
+                        <div>
+                            <p className="font-medium text-gray-900 transition-colors group-hover:text-indigo-600">
+                                {code.visitor_name || 'Visitor'}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <p className="font-mono text-lg font-semibold tracking-wider text-gray-700 transition-colors group-hover:text-indigo-600">
+                                    {code.code}
+                                </p>
+                                {getStatusBadge(code.status)}
+                                {code.type === 'long_lived' && (
+                                    <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                        Long-lived
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                 </div>
                 {showActions && code.status === 'active' && (
                     <div className="relative">
@@ -181,23 +200,13 @@ function CodeCard({ code, showActions = false }: { code: AccessCode; showActions
                         )}
                     </button>
                     <button
-                        onClick={() => {
-                            if (navigator.share) {
-                                navigator.share({
-                                    title: 'Access Code',
-                                    text: `Your access code is: ${code.code}`,
-                                });
-                            }
-                        }}
-                        className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98]"
+                        onClick={handleRevoke}
+                        className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-[0.98]"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
+                        Revoke
                     </button>
                 </div>
             )}
@@ -207,8 +216,32 @@ function CodeCard({ code, showActions = false }: { code: AccessCode; showActions
 
 export default function Visitors({ activeCodes, historyCodes }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('active');
+    const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+    const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
+    const [revoking, setRevoking] = useState(false);
 
     const currentCodes = activeTab === 'active' ? activeCodes : historyCodes;
+
+    const openRevokeModal = (code: AccessCode) => {
+        setCodeToRevoke(code);
+        setRevokeModalOpen(true);
+    };
+
+    const handleConfirmRevoke = () => {
+        if (!codeToRevoke) return;
+
+        setRevoking(true);
+        router.delete(resident.visitors.destroy.url(codeToRevoke.id), {
+            onSuccess: () => {
+                setRevokeModalOpen(false);
+                setCodeToRevoke(null);
+                setRevoking(false);
+            },
+            onError: () => {
+                setRevoking(false);
+            },
+        });
+    };
 
     return (
         <ResidentLayout>
@@ -257,7 +290,7 @@ export default function Visitors({ activeCodes, historyCodes }: Props) {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.05 }}
                                 >
-                                    <CodeCard code={code} showActions={activeTab === 'active'} />
+                                    <CodeCard code={code} showActions={activeTab === 'active'} onRevoke={openRevokeModal} />
                                 </motion.div>
                             ))}
                         </motion.div>
@@ -278,9 +311,7 @@ export default function Visitors({ activeCodes, historyCodes }: Props) {
                                     />
                                 </svg>
                             </div>
-                            <h3 className="mb-1 font-medium text-gray-900">
-                                {activeTab === 'active' ? 'No active codes' : 'No history yet'}
-                            </h3>
+                            <h3 className="mb-1 font-medium text-gray-900">{activeTab === 'active' ? 'No active codes' : 'No history yet'}</h3>
                             <p className="mb-5 text-sm text-gray-500">
                                 {activeTab === 'active' ? 'Create a code for your next visitor' : 'Your visitor history will appear here'}
                             </p>
@@ -301,7 +332,12 @@ export default function Visitors({ activeCodes, historyCodes }: Props) {
             </motion.div>
 
             {/* Floating Action Button */}
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3, delay: 0.3 }} className="fixed right-4 bottom-24 z-30">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="fixed right-4 bottom-24 z-30"
+            >
                 <Link
                     href="/resident/visitors/create"
                     className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition-transform hover:scale-105 active:scale-95"
@@ -311,6 +347,19 @@ export default function Visitors({ activeCodes, historyCodes }: Props) {
                     </svg>
                 </Link>
             </motion.div>
+
+            <ConfirmationModal
+                isOpen={revokeModalOpen}
+                onClose={() => setRevokeModalOpen(false)}
+                onConfirm={handleConfirmRevoke}
+                title="Revoke Access Code"
+                message={`Are you sure you want to revoke the access code for ${
+                    codeToRevoke?.visitor_name || 'this visitor'
+                }? This action cannot be undone.`}
+                confirmLabel="Revoke Code"
+                type="danger"
+                isLoading={revoking}
+            />
         </ResidentLayout>
     );
 }

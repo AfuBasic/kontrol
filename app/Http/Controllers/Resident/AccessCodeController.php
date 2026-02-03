@@ -56,6 +56,7 @@ class AccessCodeController extends Controller
     {
         return Inertia::render('resident/visitors/create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
+            'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
         ]);
     }
 
@@ -68,7 +69,8 @@ class AccessCodeController extends Controller
             'visitor_name' => ['nullable', 'string', 'max:255'],
             'visitor_phone' => ['nullable', 'string', 'max:20'],
             'purpose' => ['nullable', 'string', 'max:255'],
-            'duration_minutes' => ['required', 'integer', 'min:30', 'max:10080'],
+            'type' => ['required', 'string', 'in:single_use,long_lived'],
+            'duration_minutes' => ['nullable', 'integer', 'required_if:type,single_use'], // We can allow bypassing min/max here if we trust the service to clamp it, or replicate validation. Let's trust service for now or add min/max rules dynamically if needed, but simple integer check is safe enough for logic.
         ]);
 
         $accessCode = $this->accessCodeService->createCode($validated);

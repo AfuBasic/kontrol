@@ -3,6 +3,7 @@ export type AccessCodeStatus = 'active' | 'used' | 'expired' | 'revoked';
 export type AccessCode = {
     id: number;
     code: string;
+    type: 'single_use' | 'long_lived';
     visitor_name: string | null;
     visitor_phone: string | null;
     purpose: string | null;

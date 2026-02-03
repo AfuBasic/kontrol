@@ -38,7 +38,6 @@ export default function CodeShow({ accessCode }: Props) {
             });
         }
     }
-
     function revokeCode() {
         if (confirm('Are you sure you want to revoke this code? It will no longer be valid.')) {
             router.delete(resident.visitors.destroy.url(accessCode.id));
@@ -96,7 +95,7 @@ export default function CodeShow({ accessCode }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
-                    className="mb-8 space-y-1 text-sm text-gray-500"
+                    className="mb-8 space-y-2 text-sm text-gray-500"
                 >
                     {accessCode.visitor_name && (
                         <p>
@@ -104,14 +103,28 @@ export default function CodeShow({ accessCode }: Props) {
                         </p>
                     )}
                     <p>
+                        Type: <span className="font-medium text-gray-900">{accessCode.type === 'long_lived' ? 'Long-lived' : 'Single Use'}</span>
+                    </p>
+                    <p>
                         {accessCode.status === 'active' ? (
                             <>
                                 Expires: <span className="font-medium text-amber-600">{accessCode.time_remaining}</span>
                             </>
+                        ) : accessCode.status === 'used' ? (
+                            <>
+                                Arrived: <span className="font-medium text-blue-600">{new Date(accessCode.used_at!).toLocaleString()}</span>
+                            </>
+                        ) : accessCode.status === 'revoked' ? (
+                            <>
+                                Revoked: <span className="font-medium text-red-600">{new Date(accessCode.revoked_at!).toLocaleString()}</span>
+                            </>
                         ) : (
-                            <span>Created: {new Date(accessCode.created_at).toLocaleDateString()}</span>
+                            <span>Expired: {new Date(accessCode.expires_at).toLocaleDateString()}</span>
                         )}
                     </p>
+                    {accessCode.status !== 'active' && (
+                        <p className="text-xs text-gray-400">Created: {new Date(accessCode.created_at).toLocaleDateString()}</p>
+                    )}
                 </motion.div>
 
                 {/* Action Buttons */}

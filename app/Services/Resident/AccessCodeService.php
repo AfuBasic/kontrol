@@ -5,6 +5,7 @@ namespace App\Services\Resident;
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\Estate;
+use App\Models\EstateSettings;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -36,15 +37,33 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->getCurrentEstate();
 
+        $type = $data['type'] ?? 'single_use';
+        $expiresAt = null;
+
+        if ($type === 'single_use') {
+             $minutes = $data['duration_minutes'] ?? 60; // Default fallback
+             
+             // Enforce Estate Settings Constraints
+             $settings = EstateSettings::forEstate($estate->id);
+             $min = $settings->access_code_min_lifespan_minutes;
+             $max = $settings->access_code_max_lifespan_minutes;
+             
+             if ($minutes < $min) $minutes = $min;
+             if ($minutes > $max) $minutes = $max;
+
+             $expiresAt = now()->addMinutes($minutes);
+        }
+
         return AccessCode::create([
             'estate_id' => $estate->id,
             'user_id' => $user->id,
             'code' => AccessCode::generateCode(),
+            'type' => $type,
             'visitor_name' => $data['visitor_name'] ?? null,
             'visitor_phone' => $data['visitor_phone'] ?? null,
             'purpose' => $data['purpose'] ?? null,
             'status' => AccessCodeStatus::Active,
-            'expires_at' => now()->addMinutes($data['duration_minutes']),
+            'expires_at' => $expiresAt,
             'notes' => $data['notes'] ?? null,
         ]);
     }
@@ -234,12 +253,80 @@ class AccessCodeService
      */
     public function getDurationOptions(): array
     {
+        $estate = $this->getCurrentEstate();
+        $settings = EstateSettings::forEstate($estate->id);
+
+        $min = $settings->access_code_min_lifespan_minutes;
+        $max = $settings->access_code_max_lifespan_minutes;
+
+        // Base options to consider (sensible defaults)
+        $standardDurations = [30, 60, 120, 240, 480, 720, 1440, 2880, 4320, 10080];
+        
+        $options = [];
+
+        // 1. First option: Minimum
+        $options[] = $min;
+
+        // 2. Middle options: Filter standard durations that are > min and < max
+        $middleOptions = array_filter($standardDurations, fn($d) => $d > $min && $d < $max);
+        
+        // Pick a few representative ones if too many, or just use them
+        // For simplicity and randomness as requested, let's pick up to 3 random ones if there are many,
+        // but sorting them makes more UX sense than random.
+        // User asked for "randomly choose other options", lets pick 3 random ones from the valid range if available.
+        if (count($middleOptions) > 3) {
+             $middleKeys = array_rand($middleOptions, 3);
+             $middleOptions = array_intersect_key($middleOptions, array_flip((array)$middleKeys));
+        }
+        
+        $options = array_merge($options, $middleOptions);
+
+        // 3. Last option: Maximum (if different from min)
+        if ($max > $min && !in_array($max, $options)) {
+             $options[] = $max;
+        }
+
+        // Sort unique values
+        $options = array_values(array_unique($options));
+        sort($options);
+
+        // Format for frontend
+        return array_map(fn($minutes) => [
+            'minutes' => $minutes,
+            'label' => $this->formatDuration($minutes),
+        ], $options);
+    }
+    
+    private function formatDuration(int $minutes): string
+    {
+        if ($minutes < 60) {
+            return "{$minutes} minutes";
+        }
+        
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+        
+        if ($hours < 24) {
+             return $remainingMinutes > 0 
+                ? "{$hours} hr {$remainingMinutes} min" 
+                : "{$hours} " . ($hours == 1 ? "hour" : "hours");
+        }
+        
+        $days = floor($hours / 24);
+        return "{$days} " . ($days == 1 ? "day" : "days");
+    }
+
+    /**
+     * Get duration constraints for custom input.
+     */
+    public function getDurationConstraints(): array
+    {
+        $estate = $this->getCurrentEstate();
+        $settings = EstateSettings::forEstate($estate->id);
+
         return [
-            ['minutes' => 60, 'label' => '1 hour'],
-            ['minutes' => 240, 'label' => '4 hours'],
-            ['minutes' => 1440, 'label' => '1 day'],
-            ['minutes' => 4320, 'label' => '3 days'],
-            ['minutes' => 10080, 'label' => '1 week'],
+            'min' => $settings->access_code_min_lifespan_minutes,
+            'max' => $settings->access_code_max_lifespan_minutes,
         ];
     }
 }
