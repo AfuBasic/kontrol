@@ -43,12 +43,6 @@ class AcceptInvitationAction
                             ->each(fn ($admin) => $admin->notify(new ResidentAcceptedInvitation($user, $isPasswordReset)));
                     });
                 }
-
-                activity()
-                    ->performedOn($user)
-                    ->causedBy($user)
-                    ->withProperties(['estate_id' => $estate->id])
-                    ->log('accepted invitation');
             }
         });
     }
