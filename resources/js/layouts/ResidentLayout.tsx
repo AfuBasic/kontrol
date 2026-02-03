@@ -6,6 +6,7 @@ import InstallPWABanner from '@/components/InstallPWABanner';
 import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
+import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 
 interface Props {
     children: ReactNode;
@@ -39,6 +40,26 @@ const navItems = [
         href: ActivityController.url(),
         icon: (active: boolean) => <Activity className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
+    {
+        name: 'Feed',
+        href: EstateBoardController.index.url(),
+        icon: (active: boolean) => (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`}
+            >
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z"
+                />
+            </svg>
+        ),
+    },
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
@@ -70,9 +91,7 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
             >
                 <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-4">
                     <Link href="/resident/home" className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-sm">
-                            <Shield className="h-5 w-5 text-white" strokeWidth={2} />
-                        </div>
+                        <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                         <span className="text-lg font-semibold text-gray-900">Kontrol</span>
                     </Link>
 
@@ -80,7 +99,7 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                     <div className="relative">
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-medium text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-sm font-medium text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
                         >
                             {initials}
                         </button>
