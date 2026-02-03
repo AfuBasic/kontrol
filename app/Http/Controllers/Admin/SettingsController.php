@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\Admin\UpdateEstateSettingsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateEstateSettingsRequest;
+use App\Services\Admin\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,9 +13,13 @@ use Inertia\Response;
 
 class SettingsController extends Controller
 {
+    public function __construct(
+        protected UserService $userService
+    ) {}
+    
     public function index(): Response
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         $settings = $estate->settings;
 
         // Create settings with defaults if they don't exist
@@ -39,7 +44,7 @@ class SettingsController extends Controller
 
     public function update(UpdateEstateSettingsRequest $request, UpdateEstateSettingsAction $action): RedirectResponse
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         $settings = $estate->settings;
 
         if (! $settings) {
@@ -49,13 +54,5 @@ class SettingsController extends Controller
         $action->execute($settings, $request->validated());
 
         return back()->with('success', 'Settings updated successfully.');
-    }
-
-    protected function getCurrentEstate()
-    {
-        return Auth::user()
-            ->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
     }
 }
