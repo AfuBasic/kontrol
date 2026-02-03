@@ -104,6 +104,32 @@ class AccessCodeController extends Controller
     }
 
     /**
+     * Display the specified access code.
+     */
+    public function show(AccessCode $accessCode): Response
+    {
+        $userCode = $this->accessCodeService->getCode($accessCode->id);
+
+        abort_if(! $userCode, 404);
+
+        return Inertia::render('resident/visitors/show', [
+            'accessCode' => [
+                'id' => $userCode->id,
+                'code' => $userCode->code,
+                'visitor_name' => $userCode->visitor_name,
+                'visitor_phone' => $userCode->visitor_phone,
+                'purpose' => $userCode->purpose,
+                'status' => $userCode->status->value,
+                'expires_at' => $userCode->expires_at->toISOString(),
+                'time_remaining' => $userCode->time_remaining,
+                'created_at' => $userCode->created_at->toISOString(),
+                'used_at' => $userCode->used_at?->toISOString(),
+                'revoked_at' => $userCode->revoked_at?->toISOString(),
+            ],
+        ]);
+    }
+
+    /**
      * Revoke the specified access code.
      */
     public function destroy(AccessCode $accessCode): RedirectResponse

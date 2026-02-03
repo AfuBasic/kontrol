@@ -5,6 +5,7 @@ use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\HomeController;
+use App\Http\Controllers\Resident\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,6 +25,11 @@ Route::middleware('role:resident')->group(function (): void {
     // New consumer-style home
     Route::get('/home', HomeController::class)->name('resident.home');
 
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('resident.profile');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('resident.profile.update');
+    Route::put('/password', [\App\Http\Controllers\Resident\PasswordController::class, 'update'])->name('resident.password.update');
+
     // Activity feed
     Route::get('/activity', ActivityController::class)->name('resident.activity');
 
@@ -33,6 +39,7 @@ Route::middleware('role:resident')->group(function (): void {
         Route::get('/create', [AccessCodeController::class, 'create'])->name('create');
         Route::post('/', [AccessCodeController::class, 'store'])->name('store');
         Route::get('/{accessCode}/success', [AccessCodeController::class, 'success'])->name('success');
+        Route::get('/{accessCode}', [AccessCodeController::class, 'show'])->name('show');
         Route::delete('/{accessCode}', [AccessCodeController::class, 'destroy'])->name('destroy');
     });
 
