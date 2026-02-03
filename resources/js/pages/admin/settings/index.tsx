@@ -14,7 +14,6 @@ type Settings = {
     access_code_min_lifespan_minutes: number;
     access_code_max_lifespan_minutes: number;
     access_code_single_use: boolean;
-    access_code_auto_expire_unused: boolean;
     access_code_grace_period_minutes: number;
     access_code_daily_limit_per_resident: number | null;
     access_code_require_confirmation: boolean;
@@ -53,7 +52,6 @@ export default function Settings({ settings }: Props) {
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
         access_code_max_lifespan_minutes: settings.access_code_max_lifespan_minutes,
         access_code_single_use: settings.access_code_single_use,
-        access_code_auto_expire_unused: settings.access_code_auto_expire_unused,
         access_code_grace_period_minutes: settings.access_code_grace_period_minutes,
         access_code_daily_limit_per_resident: settings.access_code_daily_limit_per_resident,
         access_code_require_confirmation: settings.access_code_require_confirmation,
@@ -109,7 +107,8 @@ export default function Settings({ settings }: Props) {
                         <div>
                             <h2 className="text-lg font-medium text-gray-900">Access Code System</h2>
                             <p className="mt-1 text-sm text-gray-500">
-                                Master toggle for the access code feature. When disabled, no new codes can be generated and existing codes are temporarily invalid.
+                                Master toggle for the access code feature. When disabled, no new codes can be generated and existing codes are
+                                temporarily invalid.
                             </p>
                         </div>
                         <label className="relative inline-flex cursor-pointer items-center">
@@ -119,13 +118,14 @@ export default function Settings({ settings }: Props) {
                                 onChange={(e) => setData('access_codes_enabled', e.target.checked)}
                                 className="peer sr-only"
                             />
-                            <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-100"></div>
+                            <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:ring-4 peer-focus:ring-primary-100 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                         </label>
                     </div>
                     {!data.access_codes_enabled && (
                         <div className="mt-4 rounded-lg bg-amber-50 p-3">
                             <p className="text-sm text-amber-800">
-                                <span className="font-medium">Warning:</span> Access codes are currently disabled. Residents cannot generate new codes and existing codes will not work.
+                                <span className="font-medium">Warning:</span> Access codes are currently disabled. Residents cannot generate new codes
+                                and existing codes will not work.
                             </p>
                         </div>
                     )}
@@ -212,9 +212,7 @@ export default function Settings({ settings }: Props) {
                             <p className="mt-1 text-xs text-gray-500">
                                 Buffer time after expiry to account for real-world delays (0-60 minutes)
                                 {data.access_code_grace_period_minutes > 0 && (
-                                    <span className="ml-1 font-medium text-primary-600">
-                                        {formatDuration(data.access_code_grace_period_minutes)}
-                                    </span>
+                                    <span className="ml-1 font-medium text-primary-600">{formatDuration(data.access_code_grace_period_minutes)}</span>
                                 )}
                             </p>
                             {errors.access_code_grace_period_minutes && (
@@ -233,9 +231,7 @@ export default function Settings({ settings }: Props) {
                                 min="1"
                                 max="100"
                                 value={data.access_code_daily_limit_per_resident ?? ''}
-                                onChange={(e) =>
-                                    setData('access_code_daily_limit_per_resident', e.target.value ? parseInt(e.target.value) : null)
-                                }
+                                onChange={(e) => setData('access_code_daily_limit_per_resident', e.target.value ? parseInt(e.target.value) : null)}
                                 placeholder="Unlimited"
                                 className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                             />
@@ -269,22 +265,6 @@ export default function Settings({ settings }: Props) {
                                 <span className="block text-sm font-medium text-gray-900">Single-use codes</span>
                                 <span className="block text-sm text-gray-500">
                                     When enabled, an access code becomes invalid after first successful use
-                                </span>
-                            </div>
-                        </label>
-
-                        {/* Auto Expire */}
-                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
-                            <input
-                                type="checkbox"
-                                checked={data.access_code_auto_expire_unused}
-                                onChange={(e) => setData('access_code_auto_expire_unused', e.target.checked)}
-                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <div>
-                                <span className="block text-sm font-medium text-gray-900">Auto-expire unused codes</span>
-                                <span className="block text-sm text-gray-500">
-                                    Automatically invalidate codes that are never used after their expiry time
                                 </span>
                             </div>
                         </label>
@@ -349,9 +329,7 @@ export default function Settings({ settings }: Props) {
                                             className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                         />
                                         {errors[`contacts.${index}.name` as keyof typeof errors] && (
-                                            <p className="mt-1 text-sm text-red-600">
-                                                {errors[`contacts.${index}.name` as keyof typeof errors]}
-                                            </p>
+                                            <p className="mt-1 text-sm text-red-600">{errors[`contacts.${index}.name` as keyof typeof errors]}</p>
                                         )}
                                     </div>
                                     <div className="flex-1">
@@ -363,9 +341,7 @@ export default function Settings({ settings }: Props) {
                                             className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                         />
                                         {errors[`contacts.${index}.value` as keyof typeof errors] && (
-                                            <p className="mt-1 text-sm text-red-600">
-                                                {errors[`contacts.${index}.value` as keyof typeof errors]}
-                                            </p>
+                                            <p className="mt-1 text-sm text-red-600">{errors[`contacts.${index}.value` as keyof typeof errors]}</p>
                                         )}
                                     </div>
                                     <button

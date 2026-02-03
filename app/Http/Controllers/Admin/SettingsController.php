@@ -33,7 +33,6 @@ class SettingsController extends Controller
                 'access_code_min_lifespan_minutes' => $settings->access_code_min_lifespan_minutes,
                 'access_code_max_lifespan_minutes' => $settings->access_code_max_lifespan_minutes,
                 'access_code_single_use' => $settings->access_code_single_use,
-                'access_code_auto_expire_unused' => $settings->access_code_auto_expire_unused,
                 'access_code_grace_period_minutes' => $settings->access_code_grace_period_minutes,
                 'access_code_daily_limit_per_resident' => $settings->access_code_daily_limit_per_resident,
                 'access_code_require_confirmation' => $settings->access_code_require_confirmation,

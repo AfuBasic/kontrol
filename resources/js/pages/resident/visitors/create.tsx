@@ -58,6 +58,24 @@ export default function CreateCode({ durationOptions, durationConstraints }: Pro
             </motion.div>
 
             <form onSubmit={handleSubmit}>
+                {/* Global Errors */}
+                {(errors as any).daily_limit && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mb-6 overflow-hidden rounded-xl bg-red-50 p-4"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100">
+                                <svg className="h-3 w-3 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <p className="text-sm font-medium text-red-800">{(errors as any).daily_limit}</p>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* Access Type Toggle */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}

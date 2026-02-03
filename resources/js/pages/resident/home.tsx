@@ -91,7 +91,7 @@ export default function Home({ stats, activeCodes, recentActivity, estateName }:
                         </svg>
                     </div>
                     <h2 className="mb-1 text-xl font-semibold">Create Access Code</h2>
-                    <p className="mb-5 text-sm text-white/80">Generate a one-time code for your visitor</p>
+                    <p className="mb-5 text-sm text-white/80">Generate a one-time/long-term code for your visitor</p>
                     <Link
                         href="/resident/visitors/create"
                         className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-600 shadow-sm transition-all hover:bg-white/90 active:scale-[0.98]"
@@ -106,10 +106,17 @@ export default function Home({ stats, activeCodes, recentActivity, estateName }:
 
             {/* Active Codes Section */}
             {activeCodes.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="mb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="mb-8"
+                >
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900">Active Codes</h3>
-                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{activeCodes.length} active</span>
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                            {activeCodes.length} active
+                        </span>
                     </div>
                     <div className="space-y-3">
                         {activeCodes.slice(0, 3).map((code, index) => (

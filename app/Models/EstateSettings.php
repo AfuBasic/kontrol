@@ -14,7 +14,6 @@ class EstateSettings extends Model
         'access_code_min_lifespan_minutes',
         'access_code_max_lifespan_minutes',
         'access_code_single_use',
-        'access_code_auto_expire_unused',
         'access_code_grace_period_minutes',
         'access_code_daily_limit_per_resident',
         'access_code_require_confirmation',
@@ -29,7 +28,6 @@ class EstateSettings extends Model
         return [
             'access_codes_enabled' => 'boolean',
             'access_code_single_use' => 'boolean',
-            'access_code_auto_expire_unused' => 'boolean',
             'access_code_require_confirmation' => 'boolean',
             'contacts' => 'array',
         ];

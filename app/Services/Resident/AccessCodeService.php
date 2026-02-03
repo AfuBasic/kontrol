@@ -11,6 +11,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
+use Illuminate\Validation\ValidationException;
+
 class AccessCodeService
 {
     /**
@@ -54,6 +56,14 @@ class AccessCodeService
              $expiresAt = now()->addMinutes($minutes);
         }
 
+        // Enforce Daily Limit
+        $usage = $this->getDailyUsageAndLimit();
+        if ($usage['used'] >= $usage['limit']) {
+            throw ValidationException::withMessages([
+                'daily_limit' => ['You have reached your daily access code limit of ' . $usage['limit'] . ' codes.'],
+            ]);
+        }
+        
         return AccessCode::create([
             'estate_id' => $estate->id,
             'user_id' => $user->id,
@@ -243,6 +253,32 @@ class AccessCodeService
             'active_codes' => $activeCodes,
             'codes_today' => $codesToday,
             'visitors_today' => $visitorsToday,
+        ];
+    }
+
+    /**
+     * Get daily code generation usage and limit.
+     *
+     * @return array{used: int, limit: int}
+     */
+    public function getDailyUsageAndLimit(): array
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $estate = $this->getCurrentEstate();
+        $settings = EstateSettings::forEstate($estate->id);
+
+        $today = Carbon::today();
+
+        $used = AccessCode::query()
+            ->forEstate($estate->id)
+            ->forUser($user->id)
+            ->whereDate('created_at', $today)
+            ->count();
+
+        return [
+            'used' => $used,
+            'limit' => $settings->access_code_daily_limit_per_resident,
         ];
     }
 

@@ -9,9 +9,50 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 type Props = {
     activeCodes: AccessCode[];
     historyCodes: AccessCode[];
+    dailyUsage: {
+        used: number;
+        limit: number;
+    };
 };
 
 type Tab = 'active' | 'history';
+
+function DailyLimitCard({ used, limit }: { used: number; limit: number }) {
+    const percentage = Math.min((used / limit) * 100, 100);
+    const isNearLimit = percentage >= 80;
+    const isAtLimit = used >= limit;
+
+    return (
+        <div className="mb-6 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-gray-100">
+            <div className="mb-3 flex items-center justify-between">
+                <div>
+                    <h3 className="font-semibold text-gray-900">Daily Generation Limit</h3>
+                    <p className="text-xs text-gray-500">
+                        You have generated <span className="font-medium text-gray-900">{used}</span> of{' '}
+                        <span className="font-medium text-gray-900">{limit}</span> codes today
+                    </p>
+                </div>
+                <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full ${isAtLimit ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}
+                >
+                    <span className="text-sm font-bold">{limit - used}</span>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${percentage}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    className={`absolute inset-y-0 left-0 rounded-full ${isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                />
+            </div>
+
+            {isAtLimit && <p className="mt-2 text-xs font-medium text-red-600">You have reached your daily limit. Please try again tomorrow.</p>}
+        </div>
+    );
+}
 
 function getStatusBadge(status: AccessCode['status']) {
     switch (status) {
@@ -214,7 +255,7 @@ function CodeCard({ code, showActions = false, onRevoke }: { code: AccessCode; s
     );
 }
 
-export default function Visitors({ activeCodes, historyCodes }: Props) {
+export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('active');
     const [revokeModalOpen, setRevokeModalOpen] = useState(false);
     const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
@@ -251,6 +292,11 @@ export default function Visitors({ activeCodes, historyCodes }: Props) {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6">
                 <h1 className="text-2xl font-semibold text-gray-900">Visitors</h1>
                 <p className="mt-1 text-gray-500">Manage your access codes</p>
+            </motion.div>
+
+            {/* Daily Limit Card */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.02 }}>
+                <DailyLimitCard used={dailyUsage.used} limit={dailyUsage.limit} />
             </motion.div>
 
             {/* Tabs */}

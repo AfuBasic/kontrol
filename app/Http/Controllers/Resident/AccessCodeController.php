@@ -46,6 +46,7 @@ class AccessCodeController extends Controller
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),
+            'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
         ]);
     }
 
