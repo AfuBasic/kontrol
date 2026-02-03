@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateResidentAction;
+use App\Actions\Admin\DeleteResidentAction;
+use App\Actions\Admin\ResetResidentPasswordAction;
+use App\Actions\Admin\SuspendResidentAction;
+use App\Actions\Admin\UpdateResidentAction;
 use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
@@ -97,7 +101,7 @@ class ResidentController extends Controller
     public function update(
         Request $request, 
         User $resident, 
-        \App\Actions\Admin\UpdateResidentAction $action
+        UpdateResidentAction $action
     ): RedirectResponse
     {
         $this->authorize('residents.edit');
@@ -119,7 +123,7 @@ class ResidentController extends Controller
     /**
      * Remove the specified resident.
      */
-    public function destroy(User $resident, \App\Actions\Admin\DeleteResidentAction $action): RedirectResponse
+    public function destroy(User $resident, DeleteResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.delete');
         $estate = $this->residentService->getCurrentEstate();
@@ -134,7 +138,7 @@ class ResidentController extends Controller
     /**
      * Toggle the suspension status of the specified resident.
      */
-    public function suspend(User $resident, \App\Actions\Admin\SuspendResidentAction $action): RedirectResponse
+    public function suspend(User $resident, SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.suspend');
         $estate = $this->residentService->getCurrentEstate();
@@ -151,7 +155,7 @@ class ResidentController extends Controller
     /**
      * Reset the password and resend invitation for the specified resident.
      */
-    public function resetPassword(User $resident, \App\Actions\Admin\ResetResidentPasswordAction $action): RedirectResponse
+    public function resetPassword(User $resident, ResetResidentPasswordAction $action): RedirectResponse
     {
         $this->authorize('residents.reset-password');
         $estate = $this->residentService->getCurrentEstate();

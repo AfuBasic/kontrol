@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
 use App\Services\Admin\SecurityService;
+use App\Services\Admin\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,6 +22,7 @@ class SecurityPersonnelController extends Controller
 {
     public function __construct(
         protected SecurityService $securityService,
+        protected UserService $userService
     ) {}
 
     /**
@@ -66,7 +68,7 @@ class SecurityPersonnelController extends Controller
     public function store(StoreSecurityRequest $request, CreateSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.create');
-        $estate = $this->securityService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
 
         $action->execute($request->validated(), $estate);
 
@@ -106,7 +108,7 @@ class SecurityPersonnelController extends Controller
             'badge_number' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $estate = $this->securityService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         $action->execute($security, $validated, $estate);
 
         return redirect()
@@ -120,7 +122,7 @@ class SecurityPersonnelController extends Controller
     public function destroy(User $security, DeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
-        $estate = $this->securityService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         
         $action->execute($security, $estate);
 
@@ -135,7 +137,7 @@ class SecurityPersonnelController extends Controller
     public function suspend(User $security, SuspendSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.suspend');
-        $estate = $this->securityService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         
         $action->execute($security, $estate);
 
@@ -152,7 +154,7 @@ class SecurityPersonnelController extends Controller
     public function resetPassword(User $security, ResetSecurityPasswordAction $action): RedirectResponse
     {
         $this->authorize('security.reset-password');
-        $estate = $this->securityService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
 
         $action->execute($security, $estate);
 

@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class SecurityService
 {
+
+    public function __construct(protected UserService $userService)
+    {
+    }
     /**
      * Get paginated security personnel for the current estate.
      *
@@ -16,7 +20,7 @@ class SecurityService
      */
     public function getPaginatedSecurity(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
 
         return User::query()
             ->forEstate($estate->id)
@@ -49,24 +53,12 @@ class SecurityService
      */
     public function getSecurity(int $id): ?User
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
 
         return User::query()
             ->forEstate($estate->id)
             ->withRole('security', $estate->id)
             ->with('profile')
             ->find($id);
-    }
-
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
     }
 }
