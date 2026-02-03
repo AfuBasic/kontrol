@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
+import InstallPWABanner from '@/components/InstallPWABanner';
 
 interface Props {
     children: ReactNode;
@@ -62,6 +63,9 @@ export default function SecurityLayout({ children }: Props) {
 
                 {/* Main Content */}
                 <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+
+                {/* PWA Install Banner */}
+                <InstallPWABanner />
             </div>
         </AnimatedLayout>
     );

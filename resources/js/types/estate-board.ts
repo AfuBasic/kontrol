@@ -30,6 +30,7 @@ export type EstateBoardPost = {
     author: PostAuthor;
     media: PostMedia[];
     comments_count: number;
+    media_count?: number;
 };
 
 export type CommentAuthor = {
@@ -46,6 +47,7 @@ export type EstateBoardComment = {
     replies?: EstateBoardComment[];
     replies_count?: number;
     parent_id: number | null;
+    can_delete?: boolean;
 };
 
 export type CursorPaginatedPosts = {

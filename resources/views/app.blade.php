@@ -9,6 +9,8 @@
 
         <link rel="icon" href="/assets/images/icon.png" type="image/png">
         <link rel="apple-touch-icon" href="/assets/images/icon.png">
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#4f46e5">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -19,5 +21,13 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+            }
+        </script>
     </body>
 </html>
