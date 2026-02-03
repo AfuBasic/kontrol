@@ -37,6 +37,12 @@ function getAudienceLabel(audience: PostAudience) {
     }
 }
 
+// Extract plain text from HTML for search functionality
+function extractTextFromHtml(html: string): string {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+}
+
 function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -72,7 +78,10 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                     {post.title ? (
                         <h3 className="line-clamp-1 font-semibold text-gray-900 transition-colors group-hover:text-primary-600">{post.title}</h3>
                     ) : null}
-                    <p className={`line-clamp-2 text-gray-600 ${post.title ? 'mt-1 text-sm' : 'font-medium'}`}>{post.body}</p>
+                    <div
+                        className={`prose prose-sm prose-gray line-clamp-2 max-w-none ${post.title ? 'mt-1' : 'font-medium'}`}
+                        dangerouslySetInnerHTML={{ __html: post.body }}
+                    />
                 </Link>
             </div>
 
@@ -162,7 +171,7 @@ export default function ManagePosts({ posts }: Props) {
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 const matchesTitle = post.title?.toLowerCase().includes(query);
-                const matchesBody = post.body.toLowerCase().includes(query);
+                const matchesBody = extractTextFromHtml(post.body).toLowerCase().includes(query);
                 if (!matchesTitle && !matchesBody) return false;
             }
 

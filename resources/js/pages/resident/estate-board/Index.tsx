@@ -68,7 +68,10 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
             {/* Post Content */}
             <Link href={show.url({ post: post.hashid })}>
                 {post.title && <h2 className="mb-2 text-lg font-semibold text-gray-900 hover:text-primary-600">{post.title}</h2>}
-                <p className="line-clamp-3 text-gray-600">{post.body}</p>
+                <div
+                    className="prose prose-sm prose-gray line-clamp-3 max-w-none"
+                    dangerouslySetInnerHTML={{ __html: post.body }}
+                />
             </Link>
 
             {/* Media Preview */}

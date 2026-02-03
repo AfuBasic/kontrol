@@ -204,9 +204,10 @@ export default function EstateBoardShow({ post, comments }: Props) {
 
                 {/* Post Content */}
                 {post.title && <h1 className="mb-4 text-2xl font-semibold text-gray-900">{post.title}</h1>}
-                <div className="prose prose-gray max-w-none">
-                    <p className="whitespace-pre-wrap">{post.body}</p>
-                </div>
+                <div
+                    className="prose prose-gray max-w-none"
+                    dangerouslySetInnerHTML={{ __html: post.body }}
+                />
 
                 {/* Media */}
                 {post.media && post.media.length > 0 && (
