@@ -51,9 +51,16 @@ function getAudienceConfig(audience: PostAudience) {
     }
 }
 
+// Strip HTML tags for plain text preview
+function stripHtml(html: string): string {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+}
+
 function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }) {
     const hasMedia = post.media && post.media.length > 0;
     const audienceConfig = getAudienceConfig(post.audience);
+    const plainTextBody = stripHtml(post.body);
 
     return (
         <motion.article
@@ -138,7 +145,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                         </h2>
                     )}
                     <p className={`line-clamp-3 leading-relaxed text-gray-600 ${!post.title ? 'text-base' : 'text-sm'}`}>
-                        {post.body}
+                        {plainTextBody}
                     </p>
                 </Link>
 
