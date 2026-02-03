@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class EstateBoardService
 {
+    
     /**
      * Get the feed of published posts for an estate using cursor pagination.
      *
@@ -83,25 +84,5 @@ class EstateBoardService
             ->withCount(['comments', 'media'])
             ->orderByDesc('created_at')
             ->cursorPaginate($perPage);
-    }
-
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-    }
-
-    /**
-     * Get the current estate ID.
-     */
-    public function getCurrentEstateId(): int
-    {
-        return $this->getCurrentEstate()->id;
     }
 }

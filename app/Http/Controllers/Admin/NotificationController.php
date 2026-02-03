@@ -17,15 +17,6 @@ class NotificationController extends Controller
         $notifications = $request->user()
             ->notifications()
             ->when($request->search, function ($query, $search) {
-                // Determine if we are searching data JSON or just notification types?
-                // data is JSON, so we can search it if supported by DB or filter collection if small scale.
-                // For SQL compatibility with JSON, we'll try a basic `where` on the data column if possible,
-                // but standard text search on JSON can be tricky.
-                // Let's assume basic search on the 'data' column cast to string or similar for now,
-                // OR filter collection since notifications are usually few for one user (pagination happens after).
-                // Better: rely on simple filtering for now or search `data->message` if known structure.
-                // Given the dynamic nature, we'll search the full boolean text if possible, or just skip complex JSON search for MVP efficiency.
-                // Let's implement searching the `data` column as text.
                 $query->where('data', 'like', "%{$search}%");
             })
             ->when($request->type === 'unread', function ($query) {
