@@ -36,36 +36,31 @@ class DashboardService
         $estate = $this->getCurrentEstate();
         $estateId = $estate->id;
 
-        // Get resident count
-        $totalResidents = User::query()
+        // Optimized resident stats
+        $residentStats = User::query()
             ->forEstate($estateId)
             ->withRole('resident', $estateId)
-            ->count();
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when suspended_at is null then 1 else 0 end) as active')
+            ->toBase()
+            ->first();
 
-        $activeResidents = User::query()
-            ->forEstate($estateId)
-            ->withRole('resident', $estateId)
-            ->active()
-            ->count();
-
-        // Get security personnel count
-        $totalSecurity = User::query()
+        // Optimized security personnel stats
+        $securityStats = User::query()
             ->forEstate($estateId)
             ->withRole('security', $estateId)
-            ->count();
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when suspended_at is null then 1 else 0 end) as active')
+            ->toBase()
+            ->first();
 
-        $activeSecurity = User::query()
-            ->forEstate($estateId)
-            ->withRole('security', $estateId)
-            ->active()
-            ->count();
-
-        // Get posts stats
-        $totalPosts = EstateBoardPost::forEstate($estateId)->count();
-        $publishedPosts = EstateBoardPost::forEstate($estateId)->published()->count();
-        $draftPosts = EstateBoardPost::forEstate($estateId)
-            ->where('status', EstateBoardPostStatus::Draft)
-            ->count();
+        // Optimized posts stats
+        $postStats = EstateBoardPost::forEstate($estateId)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("sum(case when status = ? and published_at is not null then 1 else 0 end) as published", [EstateBoardPostStatus::Published->value])
+            ->selectRaw("sum(case when status = ? then 1 else 0 end) as draft", [EstateBoardPostStatus::Draft->value])
+            ->toBase()
+            ->first();
 
         // Get comments count
         $totalComments = EstateBoardComment::where('estate_id', $estateId)->count();
@@ -75,51 +70,47 @@ class DashboardService
         $thirtyDaysAgo = $now->copy()->subDays(30);
         $sixtyDaysAgo = $now->copy()->subDays(60);
 
-        $newResidentsThisPeriod = User::query()
+        // Optimized resident trends
+        $residentTrends = User::query()
             ->forEstate($estateId)
             ->withRole('resident', $estateId)
-            ->where('created_at', '>=', $thirtyDaysAgo)
-            ->count();
+            ->selectRaw("sum(case when created_at >= ? then 1 else 0 end) as new_this_period", [$thirtyDaysAgo])
+            ->selectRaw("sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period", [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->toBase()
+            ->first();
 
-        $newResidentsLastPeriod = User::query()
-            ->forEstate($estateId)
-            ->withRole('resident', $estateId)
-            ->whereBetween('created_at', [$sixtyDaysAgo, $thirtyDaysAgo])
-            ->count();
+        $residentsTrend = $residentTrends->new_last_period > 0
+            ? round((($residentTrends->new_this_period - $residentTrends->new_last_period) / $residentTrends->new_last_period) * 100, 1)
+            : ($residentTrends->new_this_period > 0 ? 100 : 0);
 
-        $residentsTrend = $newResidentsLastPeriod > 0
-            ? round((($newResidentsThisPeriod - $newResidentsLastPeriod) / $newResidentsLastPeriod) * 100, 1)
-            : ($newResidentsThisPeriod > 0 ? 100 : 0);
+        // Optimized posts trends
+        $postsTrends = EstateBoardPost::forEstate($estateId)
+            ->selectRaw("sum(case when created_at >= ? then 1 else 0 end) as new_this_period", [$thirtyDaysAgo])
+            ->selectRaw("sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period", [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->toBase()
+            ->first();
 
-        $newPostsThisPeriod = EstateBoardPost::forEstate($estateId)
-            ->where('created_at', '>=', $thirtyDaysAgo)
-            ->count();
-
-        $newPostsLastPeriod = EstateBoardPost::forEstate($estateId)
-            ->whereBetween('created_at', [$sixtyDaysAgo, $thirtyDaysAgo])
-            ->count();
-
-        $postsTrend = $newPostsLastPeriod > 0
-            ? round((($newPostsThisPeriod - $newPostsLastPeriod) / $newPostsLastPeriod) * 100, 1)
-            : ($newPostsThisPeriod > 0 ? 100 : 0);
+        $postsTrend = $postsTrends->new_last_period > 0
+            ? round((($postsTrends->new_this_period - $postsTrends->new_last_period) / $postsTrends->new_last_period) * 100, 1)
+            : ($postsTrends->new_this_period > 0 ? 100 : 0);
 
         return [
             'residents' => [
-                'total' => $totalResidents,
-                'active' => $activeResidents,
+                'total' => $residentStats->total,
+                'active' => $residentStats->active,
                 'trend' => $residentsTrend,
-                'new_this_month' => $newResidentsThisPeriod,
+                'new_this_month' => $residentTrends->new_this_period,
             ],
             'security' => [
-                'total' => $totalSecurity,
-                'active' => $activeSecurity,
+                'total' => $securityStats->total,
+                'active' => $securityStats->active,
             ],
             'posts' => [
-                'total' => $totalPosts,
-                'published' => $publishedPosts,
-                'draft' => $draftPosts,
+                'total' => $postStats->total,
+                'published' => $postStats->published,
+                'draft' => $postStats->draft,
                 'trend' => $postsTrend,
-                'new_this_month' => $newPostsThisPeriod,
+                'new_this_month' => $postsTrends->new_this_period,
             ],
             'comments' => [
                 'total' => $totalComments,
@@ -141,24 +132,33 @@ class DashboardService
         $estate = $this->getCurrentEstate();
         $estateId = $estate->id;
 
+        $startDate = Carbon::now()->subDays(6)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        // Get posts grouped by date
+        $postsData = EstateBoardPost::forEstate($estateId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('DATE(created_at) as date, count(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        // Get comments grouped by date
+        $commentsData = EstateBoardComment::where('estate_id', $estateId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('DATE(created_at) as date, count(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $dateStr = $date->format('Y-m-d');
 
-            $postsCount = EstateBoardPost::forEstate($estateId)
-                ->whereDate('created_at', $dateStr)
-                ->count();
-
-            $commentsCount = EstateBoardComment::where('estate_id', $estateId)
-                ->whereDate('created_at', $dateStr)
-                ->count();
-
             $data[] = [
                 'date' => $date->format('M j'),
                 'day' => $date->format('D'),
-                'posts' => $postsCount,
-                'comments' => $commentsCount,
+                'posts' => $postsData->get($dateStr, 0),
+                'comments' => $commentsData->get($dateStr, 0),
             ];
         }
 
