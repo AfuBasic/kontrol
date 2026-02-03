@@ -9,12 +9,14 @@ use App\Http\Requests\EstateBoard\StoreCommentRequest;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Services\Admin\EstateBoardService;
+use App\Services\Admin\UserService;
 use Illuminate\Http\RedirectResponse;
 
 class EstateBoardCommentController extends Controller
 {
     public function __construct(
-        protected EstateBoardService $boardService
+        protected EstateBoardService $boardService,
+        protected UserService $userService
     ) {}
 
     /**
@@ -24,7 +26,7 @@ class EstateBoardCommentController extends Controller
     {
         $this->authorize('create', [EstateBoardComment::class, $post]);
 
-        $estate = $this->boardService->getCurrentEstate();
+        $estate = $this->userService->getCurrentEstate();
         $action->execute($request->validated(), $post, $estate);
 
         return back()->with('success', 'Comment added.');
