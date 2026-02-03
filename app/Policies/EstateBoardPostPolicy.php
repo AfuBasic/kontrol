@@ -42,7 +42,7 @@ class EstateBoardPostPolicy
 
         setPermissionsTeamId($estate->id);
 
-        return $user->hasRole('admin') || $user->hasPermissionTo('board.create');
+        return $user->hasRole('admin') || $user->hasPermissionTo('estate-board.create');
     }
 
     /**
@@ -54,7 +54,7 @@ class EstateBoardPostPolicy
 
         return $post->user_id === $user->id
             || $user->hasRole('admin')
-            || $user->hasPermissionTo('board.edit');
+            || $user->hasPermissionTo('estate-board.edit');
     }
 
     /**
@@ -66,6 +66,6 @@ class EstateBoardPostPolicy
 
         return $post->user_id === $user->id
             || $user->hasRole('admin')
-            || $user->hasPermissionTo('board.delete');
+            || $user->hasPermissionTo('estate-board.delete');
     }
 }
