@@ -36,7 +36,7 @@ return [
 
         'estate_board_posts' => [
             'salt' => env('HASHIDS_SALT', env('APP_KEY')).'estate_board_posts',
-            'length' => 8,
+            'length' => 124,
             'alphabet' => 'abcdefghijklmnopqrstuvwxyz1234567890',
         ],
 
