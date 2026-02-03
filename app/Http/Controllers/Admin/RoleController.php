@@ -48,6 +48,7 @@ class RoleController extends Controller
     public function edit(Role $role): Response
     {
         $this->authorize('roles.edit');
+        
         // Ensure the role is manageable
         if ($this->roleService->isReservedRole($role->name)) {
             abort(403, 'This role cannot be edited.');
