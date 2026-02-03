@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
+import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { index, show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
@@ -18,6 +18,7 @@ type FormData = {
     audience: PostAudience;
     images: File[];
     remove_media_ids: number[];
+    _method?: string;
 };
 
 const audienceOptions: { value: PostAudience; label: string; description: string; icon: typeof Globe }[] = [
@@ -32,14 +33,17 @@ export default function EditPost({ post }: Props) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [existingMedia, setExistingMedia] = useState(post.media || []);
 
-    const { data, setData, post: submitForm, processing, errors } = useForm<FormData>({
+    const form = useForm<FormData>({
         title: post.title || '',
         body: post.body,
         status: post.status,
         audience: post.audience,
         images: [],
         remove_media_ids: [],
+        _method: 'PUT',
     });
+
+    const { data, setData, processing, errors, post: submitForm } = form;
 
     function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files || []);
@@ -79,8 +83,7 @@ export default function EditPost({ post }: Props) {
         e.preventDefault();
         submitForm(update.url({ post: post.hashid }), {
             forceFormData: true,
-            _method: 'PUT',
-        } as any);
+        });
     }
 
     function handleDelete() {
@@ -125,10 +128,7 @@ export default function EditPost({ post }: Props) {
                 {showDeleteConfirm ? (
                     <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-600">Delete this post?</span>
-                        <button
-                            onClick={handleDelete}
-                            className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-                        >
+                        <button onClick={handleDelete} className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700">
                             Yes, delete
                         </button>
                         <button
@@ -191,7 +191,7 @@ export default function EditPost({ post }: Props) {
 
                     {/* Audience */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="mb-3 block text-sm font-medium text-gray-700">
                             This post is for <span className="text-red-500">*</span>
                         </label>
                         <div className="grid gap-3 sm:grid-cols-3">
@@ -240,7 +240,7 @@ export default function EditPost({ post }: Props) {
                     {/* Existing Images */}
                     {existingMedia.length > 0 && (
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">Current Images</label>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
                                 {existingMedia.map((media) => (
                                     <div key={media.id} className="group relative">
@@ -304,29 +304,79 @@ export default function EditPost({ post }: Props) {
 
                     {/* Status */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">Status</label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2">
+                        <label className="mb-3 block text-sm font-medium text-gray-700">Status</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <label
+                                className={`relative flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
+                                    data.status === 'published'
+                                        ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
                                 <input
                                     type="radio"
                                     name="status"
                                     value="published"
                                     checked={data.status === 'published'}
                                     onChange={() => setData('status', 'published')}
-                                    className="h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    className="sr-only"
                                 />
-                                <span className="text-sm text-gray-700">Published</span>
+                                <div
+                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                                        data.status === 'published' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
+                                    }`}
+                                >
+                                    <Eye className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p
+                                        className={`text-sm font-semibold ${
+                                            data.status === 'published' ? 'text-green-900' : 'text-gray-900'
+                                        }`}
+                                    >
+                                        Published
+                                    </p>
+                                    <p className="text-xs text-gray-500">Visible to your audience</p>
+                                </div>
+                                {data.status === 'published' && (
+                                    <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-green-500" />
+                                )}
                             </label>
-                            <label className="flex items-center gap-2">
+                            <label
+                                className={`relative flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
+                                    data.status === 'draft'
+                                        ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
                                 <input
                                     type="radio"
                                     name="status"
                                     value="draft"
                                     checked={data.status === 'draft'}
                                     onChange={() => setData('status', 'draft')}
-                                    className="h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    className="sr-only"
                                 />
-                                <span className="text-sm text-gray-700">Draft</span>
+                                <div
+                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                                        data.status === 'draft' ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'
+                                    }`}
+                                >
+                                    <FileEdit className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p
+                                        className={`text-sm font-semibold ${
+                                            data.status === 'draft' ? 'text-amber-900' : 'text-gray-900'
+                                        }`}
+                                    >
+                                        Draft
+                                    </p>
+                                    <p className="text-xs text-gray-500">Only you can see this</p>
+                                </div>
+                                {data.status === 'draft' && (
+                                    <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500" />
+                                )}
                             </label>
                         </div>
                         {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}

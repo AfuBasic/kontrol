@@ -30,6 +30,13 @@ class EstateBoardPost extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<string>
+     */
+    protected $appends = ['hashid'];
+
+    /**
      * Get the hashid connection name for this model.
      */
     public static function hashidConnection(): string

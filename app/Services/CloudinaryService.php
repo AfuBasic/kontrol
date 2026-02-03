@@ -58,24 +58,29 @@ class CloudinaryService
 
         $uploadPath = "{$folder}/estate-{$estate->id}";
 
-        $result = Cloudinary::upload($file->getRealPath(), [
-            'folder' => $uploadPath,
-            'resource_type' => 'image',
-            'transformation' => [
-                'quality' => 'auto',
-                'fetch_format' => 'auto',
-            ],
-        ]);
+        try {
+            $response = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                'folder' => $uploadPath,
+                'resource_type' => 'image',
+            ]);
 
-        return [
-            'url' => $result->getSecurePath(),
-            'path' => $result->getPublicId(),
-            'width' => $result->getWidth(),
-            'height' => $result->getHeight(),
-            'size_bytes' => $result->getSize(),
-            'hash' => $hash,
-            'is_duplicate' => false,
-        ];
+            return [
+                'url' => $response['secure_url'],
+                'path' => $response['public_id'],
+                'width' => $response['width'] ?? null,
+                'height' => $response['height'] ?? null,
+                'size_bytes' => $response['bytes'] ?? $file->getSize(),
+                'hash' => $hash,
+                'is_duplicate' => false,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Cloudinary upload failed', [
+                'estate_id' => $estate->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException('Failed to upload image: '.$e->getMessage());
+        }
     }
 
     /**
@@ -84,7 +89,7 @@ class CloudinaryService
     public function deleteImage(string $publicId): bool
     {
         try {
-            Cloudinary::destroy($publicId);
+            Cloudinary::uploadApi()->destroy($publicId);
 
             return true;
         } catch (\Exception $e) {
@@ -102,14 +107,10 @@ class CloudinaryService
      */
     public function getThumbnailUrl(string $publicId, int $width = 200, int $height = 200): string
     {
-        return cloudinary_url($publicId, [
-            'transformation' => [
-                'width' => $width,
-                'height' => $height,
-                'crop' => 'fill',
-                'quality' => 'auto',
-            ],
-        ]);
+        $cloudName = config('filesystems.disks.cloudinary.cloud_name')
+            ?? parse_url(config('filesystems.disks.cloudinary.url'), PHP_URL_HOST);
+
+        return "https://res.cloudinary.com/{$cloudName}/image/upload/w_{$width},h_{$height},c_fill,q_auto/{$publicId}";
     }
 
     /**

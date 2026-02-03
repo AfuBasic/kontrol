@@ -19,7 +19,7 @@ export type PostAuthor = {
 
 export type EstateBoardPost = {
     id: number;
-    hashid: string;
+    hashid: any;
     title: string | null;
     body: string;
     status: PostStatus;
