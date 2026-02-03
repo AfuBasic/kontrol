@@ -19,14 +19,14 @@ class DetermineUserRedirect
 
         // Check for global roles first (security, resident)
         if ($user->hasRole('security')) {
-            return '/security/dashboard';
+            return route('security.dashboard');
         }
 
         if ($user->hasRole('resident')) {
-            return '/resident/dashboard';
+            return route('resident.dashboard');
         }
 
         // Default to admin module for any other role (including estate-scoped 'admin')
-        return '/admin/estate';
+        return route('admin.dashboard');
     }
 }

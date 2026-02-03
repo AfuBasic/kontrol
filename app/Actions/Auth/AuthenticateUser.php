@@ -23,7 +23,8 @@ class AuthenticateUser
                 'email' => ['The provided credentials do not match our records.'],
             ]);
         }
-
+        
+        //If user is suspended, inform them
         if ($user->suspended_at) {
             throw ValidationException::withMessages([
                 'email' => ['Your account has been suspended. Please contact the administrator.'],
@@ -51,7 +52,7 @@ class AuthenticateUser
             ->causedBy($user);
 
         if ($estateId) {
-            $logger->withProperties(['estate_id' => $estateId])->save();
+            $logger->withProperties(['estate_id' => $estateId]);
         }
         $logger->log('logged in');
 
