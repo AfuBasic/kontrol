@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Api\ContentEnhanceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
         Route::get('/manage', [EstateBoardController::class, 'manage'])->name('manage');
         Route::get('/create', [EstateBoardController::class, 'create'])->name('create');
+        Route::post('/enhance-content', ContentEnhanceController::class)->name('enhance-content');
         Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
         Route::get('/{post}/edit', [EstateBoardController::class, 'edit'])->name('edit');
 

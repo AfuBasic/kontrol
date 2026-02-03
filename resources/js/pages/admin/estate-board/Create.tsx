@@ -4,6 +4,7 @@ import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from '
 import { useRef, useState } from 'react';
 
 import { index, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import MarkdownEditor from '@/components/MarkdownEditor';
 import AdminLayout from '@/layouts/AdminLayout';
 import type { PostAudience, PostStatus } from '@/types';
 
@@ -120,19 +121,20 @@ export default function CreatePost() {
 
                     {/* Body */}
                     <div className="mb-6">
-                        <label htmlFor="body" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="body" className="mb-1 block text-sm font-medium text-gray-700">
                             Content <span className="text-red-500">*</span>
                         </label>
-                        <textarea
+                        <MarkdownEditor
                             id="body"
                             value={data.body}
-                            onChange={(e) => setData('body', e.target.value)}
+                            onChange={(value) => setData('body', value)}
                             placeholder="Write your announcement..."
-                            rows={6}
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            title={data.title}
+                            error={errors.body}
                         />
-                        {errors.body && <p className="mt-1 text-sm text-red-600">{errors.body}</p>}
-                        <p className="mt-1 text-xs text-gray-500">Minimum 10 characters</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Use the toolbar for formatting. AI enhancement available after 20 characters.
+                        </p>
                     </div>
 
                     {/* Audience */}

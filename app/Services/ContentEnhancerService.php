@@ -7,7 +7,7 @@ use Prism\Prism\Prism;
 
 class ContentEnhancerService
 {
-    protected const MODEL = 'claude-sonnet-4-20250514';
+    protected const MODEL = 'claude-sonnet-4-5-20250929';
 
     /**
      * Enhance estate board post content for clarity and engagement.
