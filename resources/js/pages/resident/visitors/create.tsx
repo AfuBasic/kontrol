@@ -42,7 +42,7 @@ export default function CreateCode({ durationOptions, durationConstraints }: Pro
     }
 
     return (
-        <ResidentLayout hideNav>
+        <ResidentLayout>
             <Head title="Create Access Code" />
 
             {/* Header with Back Button */}
