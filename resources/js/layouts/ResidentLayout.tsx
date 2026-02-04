@@ -1,16 +1,18 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type ReactNode, useState } from 'react';
 import { Home, Users, Activity, User, LogOut, Shield, Phone } from 'lucide-react';
-import InstallPWABanner from '@/components/InstallPWABanner';
-import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
+import { type ReactNode, useEffect, useState } from 'react';
+import '@/echo';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
+import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
 import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
-import PullToRefresh from '@/components/PullToRefresh';
 import ContactModal from '@/components/ContactModal';
+import InstallPWABanner from '@/components/InstallPWABanner';
+import PullToRefresh from '@/components/PullToRefresh';
+import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 
 interface Props {
     children: ReactNode;
@@ -76,6 +78,28 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
     const { auth } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
+
+    // Listen for real-time notifications
+    useEffect(() => {
+        if (!auth?.user?.id) return;
+
+        const channel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+
+        channel.listen('.visitor.arrived', (event: { notification: unknown; unread_count: number }) => {
+            setUnreadCount(event.unread_count);
+        });
+
+        return () => {
+            channel.stopListening('.visitor.arrived');
+            window.Echo.leave(`App.Models.User.${auth.user.id}`);
+        };
+    }, [auth?.user?.id]);
+
+    // Sync unread count when props change (e.g., after page navigation)
+    useEffect(() => {
+        setUnreadCount(auth?.user?.unread_notifications_count ?? 0);
+    }, [auth?.user?.unread_notifications_count]);
 
     // Get initials for avatar
     const initials =
@@ -142,11 +166,9 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                                             >
                                                 {item.icon(isActive)}
 
-                                                {item.name === 'Activity' && (auth.user.unread_notifications_count ?? 0) > 0 && (
+                                                {item.name === 'Activity' && unreadCount > 0 && (
                                                     <span className="absolute top-1 right-[18%] flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
-                                                        {(auth.user.unread_notifications_count ?? 0) > 99
-                                                            ? '99+'
-                                                            : auth.user.unread_notifications_count}
+                                                        {unreadCount > 99 ? '99+' : unreadCount}
                                                     </span>
                                                 )}
                                             </div>
@@ -164,6 +186,9 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                 )}
                 {/* PWA Install Banner */}
                 <InstallPWABanner />
+
+                {/* Push Notification Prompt */}
+                <PushNotificationPrompt />
             </div>
         </PullToRefresh>
     );

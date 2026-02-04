@@ -3,6 +3,7 @@
 namespace App\Actions\Security;
 
 use App\Enums\AccessCodeStatus;
+use App\Events\Resident\VisitorArrivedBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
@@ -53,11 +54,11 @@ class ValidateAccessCodeAction
         // Check expiration with grace period
         // If expires_at is present AND currently past (expires_at + grace_period), then it's expired.
         if ($accessCode->status === AccessCodeStatus::Expired) {
-             return $this->denied('Code has expired', 'expired', $accessCode);
+            return $this->denied('Code has expired', 'expired', $accessCode);
         }
-        
+
         if ($accessCode->expires_at && now()->greaterThan($accessCode->expires_at->copy()->addMinutes($gracePeriod))) {
-             return $this->denied('Code has expired', 'expired', $accessCode);
+            return $this->denied('Code has expired', 'expired', $accessCode);
         }
 
         if ($accessCode->status !== AccessCodeStatus::Active) {
@@ -75,11 +76,11 @@ class ValidateAccessCodeAction
                 'verified_by' => $verifiedBy->id,
                 'used_at' => now(),
             ]);
-            
+
             activity()
-               ->performedOn($accessCode)
-               ->causedBy($verifiedBy)
-               ->log('Access code used');
+                ->performedOn($accessCode)
+                ->causedBy($verifiedBy)
+                ->log('Access code used');
         }
 
         // Create Access Log
@@ -98,6 +99,9 @@ class ValidateAccessCodeAction
 
         // Notify Resident
         $accessCode->user->notify(new VisitorArrivedNotification($accessCode));
+
+        // Broadcast real-time notification
+        VisitorArrivedBroadcast::dispatch($accessCode->user, $accessCode);
 
         return $this->granted($accessCode);
     }

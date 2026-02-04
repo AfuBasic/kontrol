@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-type PermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
+type PermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
 
 interface PushSubscriptionState {
     permission: PermissionState;
@@ -44,7 +44,7 @@ async function subscribeToPush(registration: ServiceWorkerRegistration): Promise
 
     const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey,
+        applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
     });
 
     return subscription;
@@ -82,7 +82,7 @@ async function removeSubscriptionFromServer(subscription: PushSubscription): Pro
 
 export function usePushNotifications() {
     const [state, setState] = useState<PushSubscriptionState>({
-        permission: 'prompt',
+        permission: 'default',
         isSubscribed: false,
         isLoading: true,
         error: null,
