@@ -5,6 +5,8 @@ import type { AccessCode } from '@/types/access-code';
 import ResidentLayout from '@/layouts/ResidentLayout';
 import resident from '@/routes/resident';
 
+import { shareAccessCode } from '@/utils/share';
+
 type Props = {
     accessCode: AccessCode;
 };
@@ -27,15 +29,6 @@ export default function CodeShow({ accessCode }: Props) {
             document.body.removeChild(textArea);
             setCopied(true);
             setTimeout(() => setCopied(false), 3000);
-        }
-    }
-
-    function shareCode() {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Access Code',
-                text: `Your access code is: ${accessCode.code}${accessCode.visitor_name ? ` (for ${accessCode.visitor_name})` : ''}. Valid for ${accessCode.time_remaining}.`,
-            });
         }
     }
     function revokeCode() {
@@ -147,7 +140,7 @@ export default function CodeShow({ accessCode }: Props) {
                                 {copied ? 'Copied!' : 'Copy'}
                             </button>
                             <button
-                                onClick={shareCode}
+                                onClick={() => shareAccessCode(accessCode)}
                                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-5 py-3.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98]"
                             >
                                 Share

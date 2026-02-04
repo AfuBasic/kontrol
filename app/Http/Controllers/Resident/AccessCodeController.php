@@ -24,6 +24,7 @@ class AccessCodeController extends Controller
         return Inertia::render('resident/visitors/index', [
             'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [
                 'id' => $code->id,
+                'type' => $code->type,
                 'code' => $code->code,
                 'visitor_name' => $code->visitor_name,
                 'visitor_phone' => $code->visitor_phone,
@@ -35,6 +36,7 @@ class AccessCodeController extends Controller
             ]),
             'historyCodes' => $this->accessCodeService->getCodeHistory()->map(fn ($code) => [
                 'id' => $code->id,
+                'type' => $code->type,
                 'code' => $code->code,
                 'visitor_name' => $code->visitor_name,
                 'visitor_phone' => $code->visitor_phone,
@@ -94,6 +96,7 @@ class AccessCodeController extends Controller
         return Inertia::render('resident/visitors/success', [
             'accessCode' => [
                 'id' => $userCode->id,
+                'type' => $userCode->type,
                 'code' => $userCode->code,
                 'visitor_name' => $userCode->visitor_name,
                 'visitor_phone' => $userCode->visitor_phone,
@@ -118,6 +121,7 @@ class AccessCodeController extends Controller
         return Inertia::render('resident/visitors/show', [
             'accessCode' => [
                 'id' => $userCode->id,
+                'type' => $userCode->type,
                 'code' => $userCode->code,
                 'visitor_name' => $userCode->visitor_name,
                 'visitor_phone' => $userCode->visitor_phone,
