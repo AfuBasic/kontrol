@@ -15,7 +15,7 @@ type Props = {
     };
 };
 
-type Tab = 'active' | 'history';
+type Tab = 'active' | 'long_lived' | 'history';
 
 function DailyLimitCard({ used, limit }: { used: number; limit: number | null }) {
     const isUnlimited = limit === null;
@@ -272,7 +272,10 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
     const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
     const [revoking, setRevoking] = useState(false);
 
-    const currentCodes = activeTab === 'active' ? activeCodes : historyCodes;
+    const oneTimeCodes = activeCodes.filter((code) => code.type === 'single_use');
+    const longLivedCodes = activeCodes.filter((code) => code.type === 'long_lived');
+
+    const currentCodes = activeTab === 'active' ? oneTimeCodes : activeTab === 'long_lived' ? longLivedCodes : historyCodes;
 
     const openRevokeModal = (code: AccessCode) => {
         setCodeToRevoke(code);
@@ -312,26 +315,40 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
 
             {/* Tabs */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="mb-6">
-                <div className="inline-flex rounded-xl bg-gray-100 p-1">
-                    <button
-                        onClick={() => setActiveTab('active')}
-                        className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === 'active' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        Active
-                        {activeCodes.length > 0 && (
-                            <span className="ml-1.5 rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs text-white">{activeCodes.length}</span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('history')}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === 'history' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        History
-                    </button>
+                <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                    {[
+                        { id: 'active' as const, label: 'Active', count: oneTimeCodes.length },
+                        { id: 'long_lived' as const, label: 'Long Term', count: longLivedCodes.length },
+                        { id: 'history' as const, label: 'History' },
+                    ].map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                                activeTab === tab.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            {activeTab === tab.id && (
+                                <motion.div
+                                    layoutId="activeTab"
+                                    className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-black/5"
+                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                                {tab.label}
+                                {tab.count !== undefined && tab.count > 0 && (
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-colors ${
+                                            activeTab === tab.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-600'
+                                        }`}
+                                    >
+                                        {tab.count}
+                                    </span>
+                                )}
+                            </span>
+                        </button>
+                    ))}
                 </div>
             </motion.div>
 
@@ -347,7 +364,11 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.05 }}
                                 >
-                                    <CodeCard code={code} showActions={activeTab === 'active'} onRevoke={openRevokeModal} />
+                                    <CodeCard
+                                        code={code}
+                                        showActions={activeTab !== 'history' && code.status === 'active'}
+                                        onRevoke={openRevokeModal}
+                                    />
                                 </motion.div>
                             ))}
                         </motion.div>
