@@ -8,10 +8,13 @@ use App\Events\EstateBoard\NewPostBroadcast;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostMedia;
+use App\Models\User;
+use App\Notifications\EstateBoard\NewPostNotification;
 use App\Services\CloudinaryService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class CreatePostAction
 {
@@ -54,6 +57,21 @@ class CreatePostAction
             // Broadcast to relevant users if published
             if ($status === EstateBoardPostStatus::Published) {
                 NewPostBroadcast::dispatch($post);
+                
+                // Send Database Notification
+                $query = User::forEstate($estate->id)->active();
+
+                if ($audience === EstateBoardPostAudience::Residents) {
+                     // Residents have global role, Admins have estate role
+                     $query->role('resident');
+                } elseif ($audience === EstateBoardPostAudience::Security) {
+                     // Security have global role
+                     $query->role('security');
+                }
+                
+                $users = $query->where('id', '!=', $user->id)->get();
+                
+                Notification::send($users, new NewPostNotification($post));
             }
 
             return $post;

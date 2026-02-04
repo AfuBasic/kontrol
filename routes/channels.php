@@ -19,25 +19,21 @@ Broadcast::channel('estates.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('estates.{id}.residents', function ($user, $id) {
-    // Check if user is a resident of this estate
+    // Check if user belongs to the estate
     if (! $user->estates()->where('estates.id', $id)->exists()) {
         return false;
     }
 
-    // Set team context for Spatie Permission
-    setPermissionsTeamId($id);
-
-    return $user->hasRole('resident');
+    // Resident is a global role, check it directly
+    return $user->hasRole('resident') || $user->hasRole('admin');
 });
 
 Broadcast::channel('estates.{id}.security', function ($user, $id) {
-    // Check if user is security for this estate
+    // Check if user belongs to the estate
     if (! $user->estates()->where('estates.id', $id)->exists()) {
         return false;
     }
 
-    // Set team context for Spatie Permission
-    setPermissionsTeamId($id);
-
+    // Security is a global role, check it directly
     return $user->hasRole('security');
 });
