@@ -7,6 +7,7 @@ use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Models\User;
+use App\Notifications\VisitorArrivedNotification;
 
 class ValidateAccessCodeAction
 {
@@ -94,6 +95,9 @@ class ValidateAccessCodeAction
                 'original_type' => $accessCode->type,
             ],
         ]);
+
+        // Notify Resident
+        $accessCode->user->notify(new VisitorArrivedNotification($accessCode));
 
         return $this->granted($accessCode);
     }
