@@ -2,12 +2,13 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
-import InstallPWABanner from '@/components/InstallPWABanner';
-import PullToRefresh from '@/components/PullToRefresh';
-import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
+import '@/echo';
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
+import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import InstallPWABanner from '@/components/InstallPWABanner';
+import PullToRefresh from '@/components/PullToRefresh';
 
 interface Props {
     children: ReactNode;
@@ -23,6 +24,7 @@ interface PageProps {
         };
     };
     estateName?: string;
+    current_estate_id?: number;
     unreadCount?: number;
     flash?: {
         success?: string;
@@ -60,11 +62,38 @@ const navItems = [
 
 export default function SecurityLayout({ children, hideNav = false }: Props) {
     const page = usePage<PageProps>();
-    const { auth, estateName, unreadCount = 0, flash } = page.props;
+    const { auth, estateName, current_estate_id, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
+    const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+
+    // Sync unread count when props change
+    useEffect(() => {
+        setUnreadCount(initialUnreadCount);
+    }, [initialUnreadCount]);
+
+    // Listen for real-time new posts
+    useEffect(() => {
+        if (!current_estate_id) return;
+
+        const channel = window.Echo.private(`estates.${current_estate_id}.security`);
+
+        channel.listen('.post.created', (event: { post: unknown; message: string }) => {
+            setToastMessage(event.message);
+            setToastType('success');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 4000);
+            // Increment unread count for new posts
+            setUnreadCount((prev) => prev + 1);
+        });
+
+        return () => {
+            channel.stopListening('.post.created');
+            window.Echo.leave(`estates.${current_estate_id}.security`);
+        };
+    }, [current_estate_id]);
 
     useEffect(() => {
         if (flash?.success) {
@@ -129,18 +158,14 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                         className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white/95 backdrop-blur-xl"
                     >
                         <div className="mx-auto max-w-lg">
-                            <div className="grid grid-cols-4 items-center justify-between py-2 px-2">
+                            <div className="grid grid-cols-4 items-center justify-between px-2 py-2">
                                 {navItems.map((item) => {
                                     const active = isActive(item);
                                     const Icon = item.icon;
                                     const hasNotifications = item.name === 'Alerts' && unreadCount > 0;
 
                                     return (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            className="group relative flex flex-col items-center gap-1 py-2"
-                                        >
+                                        <Link key={item.name} href={item.href} className="group relative flex flex-col items-center gap-1 py-2">
                                             <div
                                                 className={`relative rounded-2xl p-2.5 transition-all duration-200 ${
                                                     active
@@ -160,7 +185,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                                                 )}
                                             </div>
                                             <span
-                                                className={`text-[10px] font-medium leading-tight transition-colors ${
+                                                className={`text-[10px] leading-tight font-medium transition-colors ${
                                                     active ? 'text-primary-600' : 'text-slate-500'
                                                 }`}
                                             >
@@ -181,13 +206,11 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 50 }}
-                            className="fixed bottom-28 left-4 right-4 z-50 mx-auto max-w-md"
+                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md"
                         >
                             <div
                                 className={`rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg ${
-                                    toastType === 'success'
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-red-500 text-white'
+                                    toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                                 }`}
                             >
                                 {toastMessage}

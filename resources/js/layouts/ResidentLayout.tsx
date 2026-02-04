@@ -28,6 +28,7 @@ interface PageProps {
             unread_notifications_count?: number;
         };
     };
+    current_estate_id?: number;
     [key: string]: unknown;
 }
 
@@ -75,12 +76,14 @@ const navItems = [
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, current_estate_id } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
-    // Listen for real-time notifications
+    // Listen for real-time visitor notifications
     useEffect(() => {
         if (!auth?.user?.id) return;
 
@@ -95,6 +98,24 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
             window.Echo.leave(`App.Models.User.${auth.user.id}`);
         };
     }, [auth?.user?.id]);
+
+    // Listen for real-time new posts
+    useEffect(() => {
+        if (!current_estate_id) return;
+
+        const channel = window.Echo.private(`estates.${current_estate_id}.residents`);
+
+        channel.listen('.post.created', (event: { post: unknown; message: string }) => {
+            setToastMessage(event.message);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 4000);
+        });
+
+        return () => {
+            channel.stopListening('.post.created');
+            window.Echo.leave(`estates.${current_estate_id}.residents`);
+        };
+    }, [current_estate_id]);
 
     // Sync unread count when props change (e.g., after page navigation)
     useEffect(() => {
@@ -189,6 +210,22 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
 
                 {/* Push Notification Prompt */}
                 <PushNotificationPrompt />
+
+                {/* Toast Notification for New Posts */}
+                <AnimatePresence>
+                    {showToast && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 50 }}
+                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md"
+                        >
+                            <div className="rounded-2xl bg-indigo-600 px-4 py-3 text-center text-sm font-medium text-white shadow-lg">
+                                {toastMessage}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </PullToRefresh>
     );

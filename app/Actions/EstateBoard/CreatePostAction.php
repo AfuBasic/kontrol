@@ -4,6 +4,7 @@ namespace App\Actions\EstateBoard;
 
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
+use App\Events\EstateBoard\NewPostBroadcast;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostMedia;
@@ -48,7 +49,14 @@ class CreatePostAction
                 ->withProperties(['estate_id' => $estate->id])
                 ->log('created board post: '.($post->title ?: 'Untitled'));
 
-            return $post->load(['author', 'media']);
+            $post->load(['author', 'media']);
+
+            // Broadcast to relevant users if published
+            if ($status === EstateBoardPostStatus::Published) {
+                NewPostBroadcast::dispatch($post);
+            }
+
+            return $post;
         });
     }
 
