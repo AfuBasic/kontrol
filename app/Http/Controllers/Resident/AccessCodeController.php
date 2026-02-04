@@ -19,10 +19,17 @@ class AccessCodeController extends Controller
     /**
      * Display a listing of access codes.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $searchActive = $request->input('search_active');
+        $searchHistory = $request->input('search_history');
+
         return Inertia::render('resident/visitors/index', [
-            'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [
+            'filters' => [
+                'search_active' => $searchActive,
+                'search_history' => $searchHistory,
+            ],
+            'activeCodes' => $this->accessCodeService->getActiveCodes($searchActive)->map(fn ($code) => [
                 'id' => $code->id,
                 'type' => $code->type,
                 'code' => $code->code,
@@ -34,7 +41,7 @@ class AccessCodeController extends Controller
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),
-            'historyCodes' => $this->accessCodeService->getCodeHistory()->map(fn ($code) => [
+            'historyCodes' => $this->accessCodeService->getCodeHistory(20, $searchHistory)->map(fn ($code) => [
                 'id' => $code->id,
                 'type' => $code->type,
                 'code' => $code->code,

@@ -83,7 +83,7 @@ class AccessCodeService
      *
      * @return Collection<int, AccessCode>
      */
-    public function getActiveCodes(): Collection
+    public function getActiveCodes(?string $search = null): Collection
     {
         /** @var User $user */
         $user = Auth::user();
@@ -93,6 +93,7 @@ class AccessCodeService
             ->forEstate($estate->id)
             ->forUser($user->id)
             ->active()
+            ->search($search)
             ->orderBy('expires_at')
             ->get();
     }
@@ -102,19 +103,24 @@ class AccessCodeService
      *
      * @return Collection<int, AccessCode>
      */
-    public function getCodeHistory(int $limit = 20): Collection
+    public function getCodeHistory(int $limit = 20, ?string $search = null): Collection
     {
         /** @var User $user */
         $user = Auth::user();
         $estate = $this->getCurrentEstate();
 
-        return AccessCode::query()
+        $query = AccessCode::query()
             ->forEstate($estate->id)
             ->forUser($user->id)
             ->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
-            ->orderByDesc('created_at')
-            ->limit($limit)
-            ->get();
+            ->search($search)
+            ->orderByDesc('created_at');
+
+        if (! $search) {
+             $query->limit($limit);
+        }
+
+        return $query->get();
     }
 
     /**

@@ -103,6 +103,24 @@ class AccessCode extends Model
      * @param  Builder<AccessCode>  $query
      * @return Builder<AccessCode>
      */
+    public function scopeSearch(Builder $query, ?string $term = null): Builder
+    {
+        if (! $term) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($term) {
+            $q->where('code', 'like', "%{$term}%")
+                ->orWhere('visitor_name', 'like', "%{$term}%")
+                ->orWhere('visitor_phone', 'like', "%{$term}%")
+                ->orWhere('purpose', 'like', "%{$term}%");
+        });
+    }
+
+    /**
+     * @param  Builder<AccessCode>  $query
+     * @return Builder<AccessCode>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', AccessCodeStatus::Active)
