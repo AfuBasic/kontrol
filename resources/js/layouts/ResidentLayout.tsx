@@ -125,15 +125,19 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                         className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white/95 backdrop-blur-lg"
                     >
                         <div className="mx-auto max-w-lg">
-                            <div className="flex items-center justify-around py-2">
+                            <div className="grid grid-cols-5 items-center justify-between py-2">
                                 {navItems.map((item) => {
                                     const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
                                     return (
-                                        <Link key={item.name} href={item.href} className="group flex flex-col items-center gap-1 px-6 py-2">
-                                            <div className={`rounded-xl p-2 transition-all ${isActive ? 'bg-indigo-50' : 'group-hover:bg-gray-50'}`}>
+                                        <Link key={item.name} href={item.href} className="group flex flex-col items-center gap-1 py-1">
+                                            <div
+                                                className={`rounded-xl p-1.5 transition-all ${isActive ? 'bg-indigo-50' : 'group-hover:bg-gray-50'}`}
+                                            >
                                                 {item.icon(isActive)}
                                             </div>
-                                            <span className={`text-xs font-medium ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}>
+                                            <span
+                                                className={`text-[10px] leading-tight font-medium ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}
+                                            >
                                                 {item.name}
                                             </span>
                                         </Link>
