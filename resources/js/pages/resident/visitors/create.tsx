@@ -84,31 +84,31 @@ export default function CreateCode({ durationOptions, durationConstraints }: Pro
                     className="mb-6"
                 >
                     <label className="mb-3 block text-sm font-medium text-gray-700">Access Type</label>
-                    <div className="grid grid-cols-2 gap-3 rounded-xl bg-gray-100 p-1">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setAccessType('single_use');
-                                setData('type', 'single_use');
-                            }}
-                            className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
-                                accessType === 'single_use' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
-                            }`}
-                        >
-                            Single Visit
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setAccessType('long_lived');
-                                setData('type', 'long_lived');
-                            }}
-                            className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
-                                accessType === 'long_lived' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
-                            }`}
-                        >
-                            Long-lived
-                        </button>
+                    <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                        {(['single_use', 'long_lived'] as const).map((type) => (
+                            <button
+                                key={type}
+                                type="button"
+                                onClick={() => {
+                                    setAccessType(type);
+                                    setData('type', type);
+                                }}
+                                className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                                    accessType === type ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                {accessType === type && (
+                                    <motion.div
+                                        layoutId="accessTypeTab"
+                                        className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-black/5"
+                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                    {type === 'single_use' ? 'Single Visit' : 'Long-lived'}
+                                </span>
+                            </button>
+                        ))}
                     </div>
                 </motion.div>
 

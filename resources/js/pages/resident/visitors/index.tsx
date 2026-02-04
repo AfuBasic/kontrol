@@ -315,7 +315,7 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
 
             {/* Tabs */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="mb-6">
-                <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
                     {[
                         { id: 'active' as const, label: 'Active', count: oneTimeCodes.length },
                         { id: 'long_lived' as const, label: 'Long Term', count: longLivedCodes.length },
@@ -324,7 +324,7 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                            className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                                 activeTab === tab.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
                             }`}
                         >
@@ -356,7 +356,14 @@ export default function Visitors({ activeCodes, historyCodes, dailyUsage }: Prop
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
                 <AnimatePresence mode="wait">
                     {currentCodes.length > 0 ? (
-                        <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-3"
+                        >
                             {currentCodes.map((code, index) => (
                                 <motion.div
                                     key={code.id}
