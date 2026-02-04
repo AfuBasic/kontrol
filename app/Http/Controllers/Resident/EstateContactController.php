@@ -31,4 +31,24 @@ class EstateContactController extends Controller
             'estateName' => $estate->name,
         ]);
     }
+
+    /**
+     * Get estate contacts as JSON.
+     */
+    public function apiIndex(): \Illuminate\Http\JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $estate = $user->estates()
+            ->wherePivot('status', 'accepted')
+            ->firstOrFail();
+
+        $settings = EstateSettings::forEstate($estate->id);
+
+        return response()->json([
+            'contacts' => $settings->contacts ?? [],
+            'estateName' => $estate->name,
+        ]);
+    }
 }

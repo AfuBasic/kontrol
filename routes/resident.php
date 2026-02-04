@@ -37,6 +37,7 @@ Route::middleware('role:resident')->group(function (): void {
 
     // Estate Contacts
     Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');
+    Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
 
     // Access Codes (Visitors)
     Route::prefix('visitors')->name('resident.visitors.')->group(function (): void {

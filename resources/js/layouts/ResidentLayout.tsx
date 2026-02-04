@@ -8,6 +8,7 @@ import AccessCodeController from '@/actions/App/Http/Controllers/Resident/Access
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import PullToRefresh from '@/components/PullToRefresh';
+import ContactModal from '@/components/ContactModal';
 
 interface Props {
     children: ReactNode;
@@ -61,16 +62,17 @@ const navItems = [
             </svg>
         ),
     },
+    {
+        name: 'Profile',
+        href: '/resident/profile',
+        icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
+    },
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
     const { auth } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-    function handleLogout() {
-        router.post('/logout');
-    }
+    const [contactModalOpen, setContactModalOpen] = useState(false);
 
     // Get initials for avatar
     const initials =
@@ -97,60 +99,19 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                             <span className="text-lg font-semibold text-gray-900">Kontrol</span>
                         </Link>
 
-                        {/* Profile Avatar */}
+                        {/* Contact Support Button */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-sm font-medium text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                                onClick={() => setContactModalOpen(true)}
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"
                             >
-                                {initials}
+                                <Phone className="h-5 w-5" strokeWidth={2} />
                             </button>
-
-                            <AnimatePresence>
-                                {showProfileMenu && (
-                                    <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-2xl border border-gray-100 bg-white p-2 shadow-xl"
-                                        >
-                                            <div className="border-b border-gray-100 px-3 py-3">
-                                                <p className="text-sm font-medium text-gray-900">{auth?.user?.name}</p>
-                                                <p className="text-xs text-gray-500">{auth?.user?.email}</p>
-                                            </div>
-                                            <div className="py-1">
-                                                <Link
-                                                    href="/resident/contacts"
-                                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                >
-                                                    <Phone className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
-                                                    Estate Contacts
-                                                </Link>
-                                                <Link
-                                                    href="/resident/profile"
-                                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                                >
-                                                    <User className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
-                                                    Profile
-                                                </Link>
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
-                                                >
-                                                    <LogOut className="h-5 w-5" strokeWidth={1.5} />
-                                                    Sign out
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
                         </div>
                     </div>
                 </motion.header>
+
+                <ContactModal isOpen={contactModalOpen} onClose={() => setContactModalOpen(false)} />
 
                 {/* Main Content */}
                 <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-28">{children}</main>
