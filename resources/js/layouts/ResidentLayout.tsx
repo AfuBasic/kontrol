@@ -7,6 +7,8 @@ import HomeController from '@/actions/App/Http/Controllers/Resident/HomeControll
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
+import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import PullToRefresh from '@/components/PullToRefresh';
 import ContactModal from '@/components/ContactModal';
 
@@ -64,7 +66,7 @@ const navItems = [
     },
     {
         name: 'Profile',
-        href: '/resident/profile',
+        href: ProfileController.edit.url(),
         icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
 ];
@@ -83,6 +85,10 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
             .slice(0, 2)
             .toUpperCase() || '?';
 
+    function handleLogout() {
+        router.post(LoginController.destroy.url());
+    }
+
     return (
         <PullToRefresh>
             <div className="flex min-h-screen flex-col bg-gray-50/50">
@@ -94,7 +100,7 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                     className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
                 >
                     <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-4">
-                        <Link href="/resident/home" className="flex items-center gap-2.5">
+                        <Link href={HomeController.url()} className="flex cursor-pointer items-center gap-2.5">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                             <span className="text-lg font-semibold text-gray-900">Kontrol</span>
                         </Link>

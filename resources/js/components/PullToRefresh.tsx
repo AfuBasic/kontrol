@@ -100,7 +100,7 @@ export default function PullToRefresh({ children, onRefresh }: Props) {
     return (
         <div ref={containerRef} className="relative min-h-screen">
             {/* Refresh Indicator */}
-            <motion.div style={{ y, opacity, scale }} className="fixed top-0 left-0 z-50 flex w-full justify-center pt-8">
+            <motion.div style={{ y, opacity, scale }} className="fixed -top-10 left-0 z-50 flex w-full justify-center pt-8">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-gray-100">
                     <motion.div style={{ rotate }} animate={isRefreshing ? { rotate: 360 } : {}}>
                         <Loader2 className={`h-6 w-6 text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`} />
