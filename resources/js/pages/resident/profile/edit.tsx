@@ -4,6 +4,7 @@ import { FormEventHandler } from 'react';
 import { Transition } from '@headlessui/react';
 import { motion } from 'framer-motion';
 import resident from '@/routes/resident';
+import PushNotificationToggle from '@/components/PushNotificationToggle';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -136,11 +137,14 @@ export default function Edit({ mustVerifyEmail, status }: Props) {
             >
                 <div className="p-6 sm:p-8">
                     <header className="mb-6">
-                        <h2 className="text-lg font-medium text-gray-900">Connected Services</h2>
-                        <p className="mt-1 text-sm text-gray-600">Connect external accounts for easier access and notifications.</p>
+                        <h2 className="text-lg font-medium text-gray-900">Notifications</h2>
+                        <p className="mt-1 text-sm text-gray-600">Configure how you receive alerts about visitor arrivals.</p>
                     </header>
 
-                    <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+                    <div className="space-y-4">
+                        <PushNotificationToggle />
+
+                        <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
                         <div className="flex items-center gap-4">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500">
                                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -155,6 +159,7 @@ export default function Edit({ mustVerifyEmail, status }: Props) {
                         <button disabled className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-400">
                             Coming Soon
                         </button>
+                        </div>
                     </div>
                 </div>
             </motion.div>

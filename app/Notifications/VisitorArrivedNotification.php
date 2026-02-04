@@ -6,6 +6,8 @@ use App\Models\AccessCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class VisitorArrivedNotification extends Notification implements ShouldQueue
 {
@@ -20,7 +22,38 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        // Add WebPush channel if user has push subscriptions
+        if ($notifiable->pushSubscriptions()->exists()) {
+            $channels[] = WebPushChannel::class;
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Get the web push notification representation.
+     */
+    public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
+    {
+        $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
+
+        return (new WebPushMessage)
+            ->title('Visitor Arrived')
+            ->body("{$visitorName} has arrived at the gate.")
+            ->icon('/assets/images/icon.png')
+            ->badge('/assets/images/icon.png')
+            ->tag('visitor-arrived-'.$this->accessCode->id)
+            ->data([
+                'url' => '/resident',
+                'access_code_id' => $this->accessCode->id,
+                'visitor_name' => $this->accessCode->visitor_name,
+            ])
+            ->options([
+                'TTL' => 300, // Time to live in seconds (5 minutes)
+                'urgency' => 'high',
+            ]);
     }
 
     /**
@@ -29,7 +62,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
-        
+
         return [
             'title' => 'Visitor Arrived',
             'message' => "{$visitorName} has arrived at the gate.",
