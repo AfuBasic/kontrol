@@ -26,19 +26,15 @@ class EstateService
     public function getPaginatedEstates(?string $search = null, ?string $status = null, int $perPage = 10): LengthAwarePaginator
     {
         $query = Estate::query()
-            ->select(['id', 'name', 'email', 'address', 'status', 'created_at']);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status) {
-            $query->where('status', $status);
-        }
+            ->select(['id', 'name', 'email', 'address', 'status', 'created_at'])
+            ->when($search, function ($q, $search) {
+                $q->where(function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, fn ($q, $status) => $q->where('status', $status));
 
         return $query
             ->with(['users' => function ($q) {
