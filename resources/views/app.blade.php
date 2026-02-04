@@ -20,8 +20,48 @@
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead
+
+    <style>
+        #pwa-splash { display: none; }
+        @media (display-mode: standalone) {
+            #pwa-splash {
+                display: flex;
+                position: fixed;
+                inset: 0;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #ffffff;
+                z-index: 99999;
+                justify-content: center;
+                align-items: center;
+                transition: opacity 0.5s ease-out;
+            }
+        }
+        @media (prefers-color-scheme: dark) and (display-mode: standalone) {
+            #pwa-splash { background: #111827; }
+        }
+    </style>
     </head>
     <body class="font-sans antialiased">
+        <div id="pwa-splash">
+            <img src="/assets/images/icon.png" alt="Kontrol" style="width: 120px; height: 120px; border-radius: 20px;">
+        </div>
+        <script>
+            // Remove splash screen after load
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        const splash = document.getElementById('pwa-splash');
+                        if (splash) {
+                            splash.style.opacity = '0';
+                            setTimeout(() => splash.remove(), 500);
+                        }
+                    }, 1000); // 1s visual delay to show brand
+                });
+            }
+        </script>
         @inertia
 
         <script>
