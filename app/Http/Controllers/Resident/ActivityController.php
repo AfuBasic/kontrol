@@ -17,11 +17,15 @@ class ActivityController extends Controller
     public function __invoke(): Response
     {
         $user = Auth::user();
+
+        // Capture count before marking as read so we can show it on the tab
+        $unreadCount = $user->unreadNotifications()->count();
         
         // Mark all notifications as read when visiting the feed
         $user->unreadNotifications->markAsRead();
 
         return Inertia::render('resident/activity', [
+            'unreadCount' => $unreadCount,
             'activities' => $this->accessCodeService->getRecentActivity(50),
             'notifications' => $user->notifications()->take(20)->get()->map(function ($notification) {
                 return [

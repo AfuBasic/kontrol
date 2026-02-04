@@ -23,6 +23,7 @@ interface PageProps {
             id: number;
             name: string;
             email: string;
+            unread_notifications_count?: number;
         };
     };
     [key: string]: unknown;
@@ -135,11 +136,19 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                                 {navItems.map((item) => {
                                     const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
                                     return (
-                                        <Link key={item.name} href={item.href} className="group flex flex-col items-center gap-1 py-1">
+                                        <Link key={item.name} href={item.href} className="group relative flex flex-col items-center gap-1 py-1">
                                             <div
                                                 className={`rounded-xl p-1.5 transition-all ${isActive ? 'bg-indigo-50' : 'group-hover:bg-gray-50'}`}
                                             >
                                                 {item.icon(isActive)}
+
+                                                {item.name === 'Activity' && (auth.user.unread_notifications_count ?? 0) > 0 && (
+                                                    <span className="absolute top-1 right-[18%] flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                                                        {(auth.user.unread_notifications_count ?? 0) > 99
+                                                            ? '99+'
+                                                            : auth.user.unread_notifications_count}
+                                                    </span>
+                                                )}
                                             </div>
                                             <span
                                                 className={`text-[10px] leading-tight font-medium ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}

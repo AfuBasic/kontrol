@@ -6,6 +6,7 @@ import ResidentLayout from '@/layouts/ResidentLayout';
 
 type Props = {
     activities: ActivityItem[];
+    unreadCount?: number;
 };
 
 function getActivityIcon(type: ActivityItem['type']) {
@@ -73,7 +74,7 @@ function groupActivitiesByDate(activities: ActivityItem[]): Record<string, Activ
     return groups;
 }
 
-export default function Activity({ activities, notifications = [] }: Props & { notifications?: any[] }) {
+export default function Activity({ activities, notifications = [], unreadCount = 0 }: Props & { notifications?: any[] }) {
     const groupedActivities = groupActivitiesByDate(activities);
     const dateLabels = Object.keys(groupedActivities);
     const [activeTab, setActiveTab] = useState<'feed' | 'notifications'>('feed');
@@ -99,11 +100,16 @@ export default function Activity({ activities, notifications = [] }: Props & { n
                     </button>
                     <button
                         onClick={() => setActiveTab('notifications')}
-                        className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
                             activeTab === 'notifications' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                         }`}
                     >
                         Notifications
+                        {unreadCount > 0 && (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
                     </button>
                 </div>
             </motion.div>
