@@ -10,7 +10,9 @@
         <link rel="icon" href="/assets/images/icon.png" type="image/png">
         <link rel="apple-touch-icon" href="/assets/images/icon.png">
         <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#4f46e5">
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111827">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

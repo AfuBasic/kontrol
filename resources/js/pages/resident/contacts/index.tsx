@@ -135,7 +135,7 @@ export default function Contacts({ contacts, estateName }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 px-6 py-10 shadow-xl sm:px-10"
+                className="relative mb-8 overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 to-purple-700 px-6 py-10 shadow-xl sm:px-10"
             >
                 {/* Decorative circles */}
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>

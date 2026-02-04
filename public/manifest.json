@@ -1,11 +1,11 @@
 {
     "name": "Kontrol",
     "short_name": "Kontrol",
-    "description": "Estate management made simple",
+    "description": "Estate access management made simple",
     "start_url": "/login",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#4f46e5",
+    "theme_color": "#ffffff",
     "orientation": "portrait-primary",
     "icons": [
         {
