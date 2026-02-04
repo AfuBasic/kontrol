@@ -69,8 +69,16 @@ class ValidateAccessCodeAction
         if ($shouldMarkUsed) {
             $accessCode->markAsUsed($verifiedBy);
         } else {
-            // For long-lived codes, just update verification info
-            $accessCode->update(['verified_by' => $verifiedBy->id]);
+            // For long-lived codes, just update verification info and last used timestamp
+            $accessCode->updateQuietly([
+                'verified_by' => $verifiedBy->id,
+                'used_at' => now(),
+            ]);
+            
+            activity()
+               ->performedOn($accessCode)
+               ->causedBy($verifiedBy)
+               ->log('Access code used');
         }
 
         // Create Access Log

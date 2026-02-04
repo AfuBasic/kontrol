@@ -47,7 +47,7 @@ class AccessCode extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'used_at', 'revoked_at'])
+            ->logOnly(['status', 'used_at', 'revoked_at', 'verified_by'])
             ->logOnlyDirty()
             ->setDescriptionForEvent(function (string $eventName) {
                 if ($eventName === 'updated') {
@@ -58,6 +58,10 @@ class AccessCode extends Model
                             AccessCodeStatus::Expired => 'Access code expired',
                             default => 'Access code updated',
                         };
+                    }
+                    
+                    if ($this->wasChanged('verified_by')) {
+                        return 'Access code used';
                     }
                 }
                 

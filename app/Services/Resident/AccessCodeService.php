@@ -102,7 +102,14 @@ class AccessCodeService
         $query = AccessCode::query()
             ->forEstate($estate->id)
             ->forUser($user->id)
-            ->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
+            ->where(function ($q) {
+                $q->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
+                  ->orWhere(fn ($sq) => $sq->where('status', AccessCodeStatus::Active)
+                                         ->whereNotNull('expires_at')
+                                         ->where('expires_at', '<=', now()))
+                  ->orWhere(fn ($sq) => $sq->where('type', 'long_lived')
+                                         ->whereNotNull('used_at'));
+            })
             ->search($search)
             ->orderByDesc('created_at');
 
