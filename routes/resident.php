@@ -4,7 +4,9 @@ use App\Http\Controllers\Resident\AccessCodeController;
 use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
+use App\Http\Controllers\Resident\EstateContactController;
 use App\Http\Controllers\Resident\HomeController;
+use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,10 +30,13 @@ Route::middleware('role:resident')->group(function (): void {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('resident.profile');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('resident.profile.update');
-    Route::put('/password', [\App\Http\Controllers\Resident\PasswordController::class, 'update'])->name('resident.password.update');
+    Route::put('/password', [PasswordController::class, 'update'])->name('resident.password.update');
 
     // Activity feed
     Route::get('/activity', ActivityController::class)->name('resident.activity');
+
+    // Estate Contacts
+    Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');
 
     // Access Codes (Visitors)
     Route::prefix('visitors')->name('resident.visitors.')->group(function (): void {

@@ -1,7 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useState } from 'react';
-import { Home, Users, Activity, User, LogOut, Shield } from 'lucide-react';
+import { Home, Users, Activity, User, LogOut, Shield, Phone } from 'lucide-react';
 import InstallPWABanner from '@/components/InstallPWABanner';
 import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
@@ -120,6 +120,13 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                                             <p className="text-xs text-gray-500">{auth?.user?.email}</p>
                                         </div>
                                         <div className="py-1">
+                                            <Link
+                                                href="/resident/contacts"
+                                                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                            >
+                                                <Phone className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
+                                                Estate Contacts
+                                            </Link>
                                             <Link
                                                 href="/resident/profile"
                                                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
