@@ -120,7 +120,10 @@ export default function CreateCode({ durationOptions, durationConstraints }: Pro
                     className="mb-6"
                 >
                     <label htmlFor="visitor_name" className="mb-2 block text-sm font-medium text-gray-700">
-                        Who&apos;s visiting? <span className="text-gray-400">(optional)</span>
+                        Who&apos;s visiting?{' '}
+                        <span className={accessType === 'long_lived' ? 'text-red-500' : 'text-gray-400'}>
+                            {accessType === 'long_lived' ? '(required)' : '(optional)'}
+                        </span>
                     </label>
                     <input
                         type="text"

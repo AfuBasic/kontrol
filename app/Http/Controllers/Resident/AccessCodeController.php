@@ -29,7 +29,7 @@ class AccessCodeController extends Controller
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
                 'status' => $code->status->value,
-                'expires_at' => $code->expires_at->toISOString(),
+                'expires_at' => $code->expires_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),
@@ -40,7 +40,7 @@ class AccessCodeController extends Controller
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
                 'status' => $code->status->value,
-                'expires_at' => $code->expires_at->toISOString(),
+                'expires_at' => $code->expires_at?->toISOString(),
                 'used_at' => $code->used_at?->toISOString(),
                 'revoked_at' => $code->revoked_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
@@ -67,10 +67,10 @@ class AccessCodeController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'visitor_name' => ['nullable', 'string', 'max:255'],
+            'type' => ['required', 'string', 'in:single_use,long_lived'],
+            'visitor_name' => ['nullable', 'string', 'max:255', 'required_if:type,long_lived'],
             'visitor_phone' => ['nullable', 'string', 'max:20'],
             'purpose' => ['nullable', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:single_use,long_lived'],
             'duration_minutes' => ['nullable', 'integer', 'required_if:type,single_use'], // We can allow bypassing min/max here if we trust the service to clamp it, or replicate validation. Let's trust service for now or add min/max rules dynamically if needed, but simple integer check is safe enough for logic.
         ]);
 
@@ -99,7 +99,7 @@ class AccessCodeController extends Controller
                 'visitor_phone' => $userCode->visitor_phone,
                 'purpose' => $userCode->purpose,
                 'status' => $userCode->status->value,
-                'expires_at' => $userCode->expires_at->toISOString(),
+                'expires_at' => $userCode->expires_at?->toISOString(),
                 'time_remaining' => $userCode->time_remaining,
                 'created_at' => $userCode->created_at->toISOString(),
             ],
@@ -123,7 +123,7 @@ class AccessCodeController extends Controller
                 'visitor_phone' => $userCode->visitor_phone,
                 'purpose' => $userCode->purpose,
                 'status' => $userCode->status->value,
-                'expires_at' => $userCode->expires_at->toISOString(),
+                'expires_at' => $userCode->expires_at?->toISOString(),
                 'time_remaining' => $userCode->time_remaining,
                 'created_at' => $userCode->created_at->toISOString(),
                 'used_at' => $userCode->used_at?->toISOString(),
