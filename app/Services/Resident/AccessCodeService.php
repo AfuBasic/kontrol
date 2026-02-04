@@ -13,20 +13,13 @@ use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Validation\ValidationException;
 
+use App\Services\EstateContextService;
+
 class AccessCodeService
 {
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        /** @var User $user */
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-    }
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
 
     /**
      * Create a new access code for a visitor.
@@ -35,9 +28,8 @@ class AccessCodeService
      */
     public function createCode(array $data): AccessCode
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $type = $data['type'] ?? 'single_use';
         $expiresAt = null;
@@ -85,9 +77,8 @@ class AccessCodeService
      */
     public function getActiveCodes(?string $search = null): Collection
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return AccessCode::query()
             ->forEstate($estate->id)
@@ -105,9 +96,8 @@ class AccessCodeService
      */
     public function getCodeHistory(int $limit = 20, ?string $search = null): Collection
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $query = AccessCode::query()
             ->forEstate($estate->id)
@@ -130,9 +120,8 @@ class AccessCodeService
      */
     public function getAllCodes(): Collection
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return AccessCode::query()
             ->forEstate($estate->id)
@@ -146,9 +135,8 @@ class AccessCodeService
      */
     public function getCode(int $id): ?AccessCode
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return AccessCode::query()
             ->forEstate($estate->id)
@@ -171,9 +159,8 @@ class AccessCodeService
      */
     public function getRecentActivity(int $limit = 10): Collection
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $codes = AccessCode::query()
             ->forEstate($estate->id)
@@ -230,9 +217,8 @@ class AccessCodeService
      */
     public function getHomeStats(): array
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $today = Carbon::today();
 
@@ -269,9 +255,8 @@ class AccessCodeService
      */
     public function getDailyUsageAndLimit(): array
     {
-        /** @var User $user */
         $user = Auth::user();
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         $today = Carbon::today();
@@ -295,7 +280,7 @@ class AccessCodeService
      */
     public function getDurationOptions(): array
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         $min = $settings->access_code_min_lifespan_minutes;
@@ -363,7 +348,7 @@ class AccessCodeService
      */
     public function getDurationConstraints(): array
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         return [

@@ -7,8 +7,14 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
+use App\Services\EstateContextService;
+
 class ResidentService
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
+
     /**
      * Get paginated residents for the current estate.
      *
@@ -16,7 +22,7 @@ class ResidentService
      */
     public function getPaginatedResidents(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return User::query()
             ->forEstate($estate->id)
@@ -49,32 +55,12 @@ class ResidentService
      */
     public function getResident(int $id): ?User
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return User::query()
             ->forEstate($estate->id)
             ->withRole('resident', $estate->id)
             ->with('profile')
             ->find($id);
-    }
-
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-    }
-
-    /**
-     * Get the current estate ID.
-     */
-    public function getCurrentEstateId(): ?int
-    {
-        return $this->getCurrentEstate()?->id;
     }
 }

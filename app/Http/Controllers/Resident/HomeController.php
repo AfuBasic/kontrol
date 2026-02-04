@@ -7,15 +7,18 @@ use App\Services\Resident\AccessCodeService;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\EstateContextService;
+
 class HomeController extends Controller
 {
     public function __construct(
         protected AccessCodeService $accessCodeService,
+        protected EstateContextService $estateContext,
     ) {}
 
     public function __invoke(): Response
     {
-        $estate = $this->accessCodeService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return Inertia::render('resident/home', [
             'stats' => $this->accessCodeService->getHomeStats(),

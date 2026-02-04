@@ -10,13 +10,15 @@ use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Services\Admin\EstateBoardService;
 use App\Services\Admin\UserService;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 
 class EstateBoardCommentController extends Controller
 {
     public function __construct(
         protected EstateBoardService $boardService,
-        protected UserService $userService
+        protected UserService $userService,
+        protected EstateContextService $estateContext
     ) {}
 
     /**
@@ -26,7 +28,7 @@ class EstateBoardCommentController extends Controller
     {
         $this->authorize('create', [EstateBoardComment::class, $post]);
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($request->validated(), $post, $estate);
 
         return back()->with('success', 'Comment added.');

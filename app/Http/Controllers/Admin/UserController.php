@@ -13,6 +13,7 @@ use App\Mail\Admin\AdminInvitationMail;
 use App\Models\User;
 use App\Services\Admin\RoleService;
 use App\Services\Admin\UserService;
+use App\Services\EstateContextService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,8 @@ class UserController extends Controller
 {
     public function __construct(
         protected RoleService $roleService,
-        protected UserService $userService
+        protected UserService $userService,
+        protected EstateContextService $estateContext
     ) {}
 
     /**
@@ -38,7 +40,7 @@ class UserController extends Controller
     {
         $this->authorize('users.view');
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
 
         $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
             ->through(fn ($user) => [
@@ -80,7 +82,7 @@ class UserController extends Controller
     {
         $this->authorize('users.create');
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $action->execute($request->validated(), $estate);
 
@@ -95,7 +97,7 @@ class UserController extends Controller
     {
         $this->authorize('users.edit');
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $roles = $this->roleService->getManageableRoles();
         
         // Load roles for the user in the context of this estate
@@ -132,7 +134,7 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ]);
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($user, $validated, $estate);
 
         return back()->with('success', 'Admin updated successfully.');
@@ -145,7 +147,7 @@ class UserController extends Controller
     {
         $this->authorize('users.delete');
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         // Prevent deleting yourself
         if ($user->id === Auth::id()) {
@@ -165,7 +167,7 @@ class UserController extends Controller
     {
         $this->authorize('users.edit');
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $action->execute($user, $estate);
 

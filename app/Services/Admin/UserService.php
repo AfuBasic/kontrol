@@ -8,8 +8,14 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
+use App\Services\EstateContextService;
+
 class UserService
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
+
     /**
      * Get paginated users for the current estate, excluding reserved roles.
      *
@@ -17,7 +23,7 @@ class UserService
      */
     public function getPaginatedUsers(int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
-        $estateId = $this->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
 
         return User::forEstate($estateId)
             ->whereDoesntHave('roles', function ($query) use ($estateId) {
@@ -36,25 +42,5 @@ class UserService
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
-    }
-
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-    }
-
-    /**
-     * Get the current estate ID.
-     */
-    public function getCurrentEstateId(): int
-    {
-        return $this->getCurrentEstate()->id;
     }
 }

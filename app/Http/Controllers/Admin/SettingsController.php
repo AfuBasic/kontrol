@@ -6,6 +6,7 @@ use App\Actions\Admin\UpdateEstateSettingsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateEstateSettingsRequest;
 use App\Services\Admin\UserService;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,12 +15,13 @@ use Inertia\Response;
 class SettingsController extends Controller
 {
     public function __construct(
-        protected UserService $userService
+        protected UserService $userService,
+        protected EstateContextService $estateContext
     ) {}
     
     public function index(): Response
     {
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $settings = $estate->settings;
 
         // Create settings with defaults if they don't exist
@@ -43,7 +45,7 @@ class SettingsController extends Controller
 
     public function update(UpdateEstateSettingsRequest $request, UpdateEstateSettingsAction $action): RedirectResponse
     {
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $settings = $estate->settings;
 
         if (! $settings) {

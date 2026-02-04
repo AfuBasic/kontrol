@@ -7,12 +7,13 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
+use App\Services\EstateContextService;
+
 class SecurityService
 {
-
-    public function __construct(protected UserService $userService)
-    {
-    }
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
     /**
      * Get paginated security personnel for the current estate.
      *
@@ -20,7 +21,7 @@ class SecurityService
      */
     public function getPaginatedSecurity(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return User::query()
             ->forEstate($estate->id)
@@ -53,7 +54,7 @@ class SecurityService
      */
     public function getSecurity(int $id): ?User
     {
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return User::query()
             ->forEstate($estate->id)

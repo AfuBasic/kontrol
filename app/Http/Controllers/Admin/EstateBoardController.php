@@ -11,6 +11,7 @@ use App\Http\Requests\EstateBoard\UpdatePostRequest;
 use App\Models\EstateBoardPost;
 use App\Services\Admin\EstateBoardService;
 use App\Services\Admin\UserService;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +20,8 @@ class EstateBoardController extends Controller
 {
     public function __construct(
         protected EstateBoardService $boardService,
-        protected UserService $userService
+        protected UserService $userService,
+        protected EstateContextService $estateContext
     ) {}
 
     /**
@@ -29,7 +31,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('viewAny', EstateBoardPost::class);
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId);
 
         return Inertia::render('admin/estate-board/Index', [
@@ -44,7 +46,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getAdminPosts($estateId);
 
         return Inertia::render('admin/estate-board/Manage', [
@@ -69,7 +71,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($request->validated(), $estate);
 
         return redirect()
@@ -84,7 +86,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('view', $post);
 
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $postData = $this->boardService->getPost($post->id, $estateId);
         $comments = $this->boardService->getComments($post->id, $estateId);
 
@@ -115,7 +117,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('update', $post);
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($post, $request->validated(), $estate);
 
         return redirect()
@@ -130,7 +132,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('delete', $post);
 
-        $estate = $this->userService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($post, $estate);
 
         return redirect()

@@ -138,4 +138,22 @@ class User extends Authenticatable
     {
         return $query->whereNull('suspended_at');
     }
+
+    /**
+     * Get the current active estate for the user.
+     */
+    public function getCurrentEstate(): Estate
+    {
+        return $this->estates()
+            ->wherePivot('status', 'accepted')
+            ->firstOrFail();
+    }
+
+    /**
+     * Get the ID of the current active estate.
+     */
+    public function getCurrentEstateId(): int
+    {
+        return $this->getCurrentEstate()->id;
+    }
 }
