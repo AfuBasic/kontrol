@@ -11,20 +11,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
+use App\Services\EstateContextService;
 
 class DashboardService
 {
-    /**
-     * Get the current user's active estate.
-     */
-    public function getCurrentEstate(): Estate
-    {
-        $user = Auth::user();
-
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-    }
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
 
     /**
      * Get overview statistics for the dashboard.
@@ -33,7 +26,7 @@ class DashboardService
      */
     public function getOverviewStats(): array
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $estateId = $estate->id;
 
         // Optimized resident stats
@@ -129,7 +122,7 @@ class DashboardService
      */
     public function getActivityChartData(): array
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $estateId = $estate->id;
 
         $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -172,7 +165,7 @@ class DashboardService
      */
     public function getRecentActivity(int $limit = 10): Collection
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return Activity::query()
             ->where('properties->estate_id', $estate->id)
@@ -205,7 +198,7 @@ class DashboardService
      */
     public function getRecentPosts(int $limit = 5): Collection
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         return EstateBoardPost::forEstate($estate->id)
             ->published()
@@ -237,7 +230,7 @@ class DashboardService
      */
     public function getTodayStats(): array
     {
-        $estate = $this->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $estateId = $estate->id;
         $today = Carbon::today();
 

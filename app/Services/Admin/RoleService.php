@@ -8,15 +8,20 @@ use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
+use App\Services\EstateContextService;
+
 class RoleService
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
     /**
      * Get roles that can be managed by the current user.
      * Excludes reserved system roles.
      */
     public function getManageableRoles(): Collection
     {
-        $estateId = $this->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
 
         return Role::query()
             ->with('permissions')
@@ -50,22 +55,5 @@ class RoleService
         return in_array(strtolower($name), array_map('strtolower', RoleSeeder::GLOBAL_ROLES));
     }
 
-    /**
-     * Get the current user's active estate ID.
-     */
-    protected function getCurrentEstateId(): ?int
-    {
-        $user = Auth::user();
 
-        if (! $user) {
-            return null;
-        }
-
-        // Get the first accepted estate for the user
-        $estate = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->first();
-
-        return $estate?->id;
-    }
 }

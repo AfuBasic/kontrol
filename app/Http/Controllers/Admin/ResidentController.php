@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
 use App\Models\User;
 use App\Services\Admin\ResidentService;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,6 +22,7 @@ class ResidentController extends Controller
 {
     public function __construct(
         protected ResidentService $residentService,
+        protected EstateContextService $estateContext
     ) {}
 
     /**
@@ -66,7 +68,7 @@ class ResidentController extends Controller
     public function store(StoreResidentRequest $request, CreateResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.create');
-        $estate = $this->residentService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $action->execute($request->validated(), $estate);
 
@@ -112,7 +114,7 @@ class ResidentController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $estate = $this->residentService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         $action->execute($resident, $validated, $estate);
 
         return redirect()
@@ -126,7 +128,7 @@ class ResidentController extends Controller
     public function destroy(User $resident, DeleteResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.delete');
-        $estate = $this->residentService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         
         $action->execute($resident, $estate);
 
@@ -141,7 +143,7 @@ class ResidentController extends Controller
     public function suspend(User $resident, SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.suspend');
-        $estate = $this->residentService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
         
         $action->execute($resident, $estate);
 
@@ -158,7 +160,7 @@ class ResidentController extends Controller
     public function resetPassword(User $resident, ResetResidentPasswordAction $action): RedirectResponse
     {
         $this->authorize('residents.reset-password');
-        $estate = $this->residentService->getCurrentEstate();
+        $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
 

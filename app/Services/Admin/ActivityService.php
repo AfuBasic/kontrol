@@ -3,20 +3,20 @@
 namespace App\Services\Admin;
 
 use App\Models\Activity;
+use App\Services\EstateContextService;
 
 class ActivityService
 {
     /**
      * Create a new class instance.
      */
-    public function __construct(protected UserService $userService)
-    {
-        //
-    }
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
 
     public function getCursorPaginatedActivities()
     {
-        $estateId = $this->userService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         
         $query = Activity::query()
             ->with(['causer', 'subject'])

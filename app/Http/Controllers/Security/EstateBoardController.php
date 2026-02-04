@@ -6,13 +6,15 @@ use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
 use App\Models\EstateBoardPost;
 use App\Services\Admin\EstateBoardService;
+use App\Services\EstateContextService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EstateBoardController extends Controller
 {
     public function __construct(
-        protected EstateBoardService $boardService
+        protected EstateBoardService $boardService,
+        protected EstateContextService $estateContext
     ) {}
 
     /**
@@ -32,7 +34,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('viewAny', EstateBoardPost::class);
 
-        $estateId = $this->boardService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences);
 
         return Inertia::render('security/estate-board/Index', [
@@ -47,7 +49,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('view', $post);
 
-        $estateId = $this->boardService->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
         $postData = $this->boardService->getPost($post->id, $estateId, $this->allowedAudiences);
 
         abort_if($postData === null, 404);

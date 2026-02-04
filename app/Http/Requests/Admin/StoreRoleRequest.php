@@ -6,6 +6,7 @@ use App\Rules\NotReservedRoleName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\EstateContextService;
 
 class StoreRoleRequest extends FormRequest
 {
@@ -19,7 +20,7 @@ class StoreRoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        $estateId = $this->getCurrentEstateId();
+        $estateId = resolve(EstateContextService::class)->getEstateId();
 
         return [
             'name' => [
@@ -46,18 +47,5 @@ class StoreRoleRequest extends FormRequest
         ];
     }
 
-    protected function getCurrentEstateId(): ?int
-    {
-        $user = Auth::user();
 
-        if (! $user) {
-            return null;
-        }
-
-        $estate = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->first();
-
-        return $estate?->id;
-    }
 }

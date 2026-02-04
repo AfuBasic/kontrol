@@ -4,9 +4,13 @@ namespace App\Actions\Admin;
 
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use App\Services\EstateContextService;
 
 class CreateRoleAction
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
     /**
      * Create a new role for the current estate.
      *
@@ -14,7 +18,7 @@ class CreateRoleAction
      */
     public function execute(array $data): Role
     {
-        $estateId = $this->getCurrentEstateId();
+        $estateId = $this->estateContext->getEstateId();
 
         $role = Role::create([
             'name' => $data['name'],
@@ -35,18 +39,5 @@ class CreateRoleAction
         return $role;
     }
 
-    protected function getCurrentEstateId(): ?int
-    {
-        $user = Auth::user();
 
-        if (! $user) {
-            return null;
-        }
-
-        $estate = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->first();
-
-        return $estate?->id;
-    }
 }
