@@ -7,24 +7,22 @@ use App\Models\EstateSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\EstateContextService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EstateContactController extends Controller
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
+
     /**
      * Display the estate contacts page.
      */
     public function index(): Response
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        // precise logic: get the first accepted estate, similar to AccessCodeService
-        $estate = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-
+        $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         return Inertia::render('resident/contacts/index', [
@@ -38,13 +36,7 @@ class EstateContactController extends Controller
      */
     public function apiIndex(): JsonResponse
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $estate = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
-
+        $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         return response()->json([

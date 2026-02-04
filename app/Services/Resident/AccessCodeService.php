@@ -162,50 +162,51 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
-        $codes = AccessCode::query()
+        // Get IDs of codes belonging to this user/estate to filter activities
+        $codeIds = AccessCode::query()
             ->forEstate($estate->id)
             ->forUser($user->id)
-            ->orderByDesc('updated_at')
+            ->pluck('id');
+
+        $activities = \Spatie\Activitylog\Models\Activity::query()
+            ->where('subject_type', AccessCode::class)
+            ->whereIn('subject_id', $codeIds)
+            ->with(['subject']) // Eager load the code
+            ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
 
-        return $codes->map(function (AccessCode $code) {
-            $type = match ($code->status) {
-                AccessCodeStatus::Active => 'created',
-                AccessCodeStatus::Used => 'used',
-                AccessCodeStatus::Expired => 'expired',
-                AccessCodeStatus::Revoked => 'revoked',
+        return $activities->map(function ($activity) {
+            /** @var AccessCode|null $code */
+            $code = $activity->subject;
+            
+            // Fallback if code was deleted or not loaded
+            $codeStr = $code?->code ?? $activity->properties['attributes']['code'] ?? 'Unknown';
+            $visitorName = $code?->visitor_name ?? $activity->properties['attributes']['visitor_name'] ?? null;
+
+            $type = match ($activity->description) {
+                'Access code created' => 'created',
+                'Access code used' => 'used',
+                'Access code expired' => 'expired',
+                'Access code revoked' => 'revoked',
+                default => 'info',
             };
 
-            $message = match ($code->status) {
-                AccessCodeStatus::Active => 'Access code created',
-                AccessCodeStatus::Used => 'Visitor arrived',
-                AccessCodeStatus::Expired => 'Access code expired',
-                AccessCodeStatus::Revoked => 'Access code revoked',
-            };
-
-            if ($code->visitor_name) {
-                $message = match ($code->status) {
-                    AccessCodeStatus::Active => "Code created for {$code->visitor_name}",
-                    AccessCodeStatus::Used => "{$code->visitor_name} arrived",
-                    AccessCodeStatus::Expired => "Code for {$code->visitor_name} expired",
-                    AccessCodeStatus::Revoked => "Code for {$code->visitor_name} revoked",
-                };
-            }
-
-            $timestamp = match ($code->status) {
-                AccessCodeStatus::Used => $code->used_at,
-                AccessCodeStatus::Revoked => $code->revoked_at,
-                default => $code->created_at,
+            $message = match ($activity->description) {
+                'Access code created' => $visitorName ? "Code created for {$visitorName}" : "Access code created",
+                'Access code used' => $visitorName ? "{$visitorName} arrived" : "Visitor arrived",
+                'Access code expired' => $visitorName ? "Code for {$visitorName} expired" : "Access code expired",
+                'Access code revoked' => $visitorName ? "Code for {$visitorName} revoked" : "Access code revoked",
+                default => $activity->description,
             };
 
             return [
                 'type' => $type,
                 'message' => $message,
-                'time' => $timestamp?->diffForHumans() ?? '',
-                'time_full' => $timestamp?->format('M j, Y g:i A') ?? '',
-                'code' => $code->code,
-                'visitor' => $code->visitor_name,
+                'time' => $activity->created_at->diffForHumans(),
+                'time_full' => $activity->created_at->format('M j, Y g:i A'),
+                'code' => $codeStr,
+                'visitor' => $visitorName,
             ];
         });
     }

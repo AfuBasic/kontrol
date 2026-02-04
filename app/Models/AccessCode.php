@@ -49,11 +49,24 @@ class AccessCode extends Model
         return LogOptions::defaults()
             ->logOnly(['status', 'used_at', 'revoked_at'])
             ->logOnlyDirty()
-            ->setDescriptionForEvent(fn (string $eventName) => match ($eventName) {
-                'created' => 'Access code created',
-                'updated' => 'Access code updated',
-                'deleted' => 'Access code deleted',
-                default => "Access code {$eventName}",
+            ->setDescriptionForEvent(function (string $eventName) {
+                if ($eventName === 'updated') {
+                    if ($this->wasChanged('status')) {
+                        return match ($this->status) {
+                            AccessCodeStatus::Used => 'Access code used',
+                            AccessCodeStatus::Revoked => 'Access code revoked',
+                            AccessCodeStatus::Expired => 'Access code expired',
+                            default => 'Access code updated',
+                        };
+                    }
+                }
+                
+                return match ($eventName) {
+                    'created' => 'Access code created',
+                    'updated' => 'Access code updated',
+                    'deleted' => 'Access code deleted',
+                    default => "Access code {$eventName}",
+                };
             });
     }
 
