@@ -58,7 +58,7 @@ class AccessCodeService
 
         // Enforce Daily Limit
         $usage = $this->getDailyUsageAndLimit();
-        if ($usage['used'] >= $usage['limit']) {
+        if ($usage['limit'] !== null && $usage['used'] >= $usage['limit']) {
             throw ValidationException::withMessages([
                 'daily_limit' => ['You have reached your daily access code limit of ' . $usage['limit'] . ' codes.'],
             ]);
@@ -259,7 +259,7 @@ class AccessCodeService
     /**
      * Get daily code generation usage and limit.
      *
-     * @return array{used: int, limit: int}
+     * @return array{used: int, limit: int|null}
      */
     public function getDailyUsageAndLimit(): array
     {
