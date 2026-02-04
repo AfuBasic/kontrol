@@ -13,6 +13,7 @@
         "cloudinary-labs/cloudinary-laravel": "^3.0",
         "echolabsdev/prism": "^0.99.19",
         "inertiajs/inertia-laravel": "^2.0",
+        "laravel-notification-channels/webpush": "^10.4",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.0",
         "laravel/tinker": "^2.10.1",
