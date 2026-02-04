@@ -20,12 +20,24 @@ Broadcast::channel('estates.{id}', function ($user, $id) {
 
 Broadcast::channel('estates.{id}.residents', function ($user, $id) {
     // Check if user is a resident of this estate
-    return $user->estates()->where('estates.id', $id)->exists()
-        && $user->hasRole('resident', $id);
+    if (! $user->estates()->where('estates.id', $id)->exists()) {
+        return false;
+    }
+
+    // Set team context for Spatie Permission
+    setPermissionsTeamId($id);
+
+    return $user->hasRole('resident');
 });
 
 Broadcast::channel('estates.{id}.security', function ($user, $id) {
     // Check if user is security for this estate
-    return $user->estates()->where('estates.id', $id)->exists()
-        && $user->hasRole('security', $id);
+    if (! $user->estates()->where('estates.id', $id)->exists()) {
+        return false;
+    }
+
+    // Set team context for Spatie Permission
+    setPermissionsTeamId($id);
+
+    return $user->hasRole('security');
 });

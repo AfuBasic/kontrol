@@ -25,6 +25,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 async function getVapidPublicKey(): Promise<string> {
     const response = await fetch('/push/vapid-public-key');
     const data = await response.json();
+
+    if (!data.publicKey) {
+        throw new Error('VAPID public key not configured on server');
+    }
+
     return data.publicKey;
 }
 

@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -110,7 +110,23 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
     }, [flash]);
 
     const isActive = (item: (typeof navItems)[0]) => {
-        return item.matchPaths.some((path) => currentPath === path || currentPath.startsWith(path + '/'));
+        // Check for exact match first
+        if (item.matchPaths.some((path) => currentPath === path)) {
+            return true;
+        }
+
+        // For startsWith matching, ensure no other nav item has a more specific match
+        const hasStartsWithMatch = item.matchPaths.some((path) => currentPath.startsWith(path + '/'));
+        if (!hasStartsWithMatch) {
+            return false;
+        }
+
+        // Check if another item has a more specific match (longer path)
+        const otherItemsMatch = navItems
+            .filter((other) => other !== item)
+            .some((other) => other.matchPaths.some((otherPath) => currentPath === otherPath || currentPath.startsWith(otherPath + '/')));
+
+        return !otherItemsMatch;
     };
 
     return (
