@@ -4,6 +4,8 @@ namespace App\Services\Telegram;
 
 use App\Actions\Telegram\LinkTelegramAccountAction;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TelegramMessageHandler
@@ -39,8 +41,15 @@ class TelegramMessageHandler
      */
     private function handleLinkedUser(string $chatId, User $user): void
     {
-        $estate = $user->getCurrentEstate();
-        $this->sendMainMenu($chatId, $user, $estate->name);
+        $estateName = 'your estate';
+        try {
+            $estate = $user->getCurrentEstate();
+            $estateName = $estate->name;
+        } catch (ModelNotFoundException) {
+            // User has no accepted estate yet
+        }
+
+        $this->sendMainMenu($chatId, $user, $estateName);
     }
 
     /**
@@ -66,11 +75,19 @@ class TelegramMessageHandler
         try {
             $result = $this->linkAction->execute($otp, $chatId);
             $user = $result['user'];
-            $estate = $user->getCurrentEstate();
+
+            // Get estate name safely
+            $estateName = 'your estate';
+            try {
+                $estate = $user->getCurrentEstate();
+                $estateName = $estate->name;
+            } catch (ModelNotFoundException) {
+                // User has no accepted estate yet, use default message
+            }
 
             $text = "✅ <b>Account Linked Successfully!</b>\n\n";
             $text .= "Welcome, <b>{$user->name}</b>!\n";
-            $text .= "You're connected to <b>{$estate->name}</b>.";
+            $text .= "You're connected to <b>{$estateName}</b>.";
 
             $this->telegram->sendMessage($chatId, $text, $this->keyboard->mainMenu());
         } catch (ValidationException $e) {
@@ -78,6 +95,18 @@ class TelegramMessageHandler
             $this->telegram->sendMessage(
                 $chatId,
                 "❌ <b>Link Failed</b>\n\n{$errors}",
+                $this->keyboard->unlinkMenu()
+            );
+        } catch (\Throwable $e) {
+            Log::error('Telegram link account error', [
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $this->telegram->sendMessage(
+                $chatId,
+                "❌ <b>Something went wrong</b>\n\nPlease try again or contact support.",
                 $this->keyboard->unlinkMenu()
             );
         }
@@ -92,9 +121,10 @@ class TelegramMessageHandler
         $text .= "To get started, link your account:\n\n";
         $text .= "1️⃣ Open the Kontrol web app\n";
         $text .= "2️⃣ Go to Profile → Telegram\n";
-        $text .= "3️⃣ Click \"Link Telegram\"\n";
-        $text .= "4️⃣ Enter the 6-digit code here\n\n";
-        $text .= 'Or tap the button below to start linking.';
+        $text .= "3️⃣ Click \"Connect\"\n";
+        $text .= "4️⃣ Copy your 6-digit code\n\n";
+        $text .= "tap the button below to start linking.\n\n";
+        $text .= 'Paste the 6 digit code to complete linking';
 
         $this->telegram->sendMessage($chatId, $text, $this->keyboard->unlinkMenu());
     }
