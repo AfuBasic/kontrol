@@ -87,9 +87,10 @@ class TelegramKeyboardBuilder
         $keyboard = [];
 
         foreach ($codes->take(10) as $code) {
+            $validity = $code->time_remaining;
             $label = $code->visitor_name
-                ? "🎫 {$code->code} - {$code->visitor_name}"
-                : "🎫 {$code->code}";
+                ? "🎫 {$code->code} · {$code->visitor_name} · ⏱{$validity}"
+                : "🎫 {$code->code} · ⏱{$validity}";
 
             $keyboard[] = [
                 ['text' => $label, 'callback_data' => TelegramCallbackAction::RevokeCode->value.':'.$code->id],
