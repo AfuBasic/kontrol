@@ -88,7 +88,7 @@ export default function PushNotificationPrompt() {
                                         <button
                                             onClick={handleEnable}
                                             disabled={isLoading}
-                                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-500 hover:to-purple-500 active:scale-95 disabled:opacity-50"
+                                            className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-500 hover:to-purple-500 active:scale-95 disabled:opacity-50"
                                         >
                                             {isLoading ? (
                                                 <>
