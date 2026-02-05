@@ -9,12 +9,8 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames
-                    .filter((name) => name !== CACHE_NAME)
-                    .map((name) => caches.delete(name))
-            );
-        })
+            return Promise.all(cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name)));
+        }),
     );
     self.clients.claim();
 });
@@ -39,7 +35,7 @@ self.addEventListener('fetch', (event) => {
             })
             .catch(() => {
                 return caches.match(event.request);
-            })
+            }),
     );
 });
 
@@ -62,8 +58,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
         body: data.body || data.message || '',
-        icon: '/assets/images/icon.png',
-        badge: '/assets/images/icon.png',
+        icon: '/assets/images/app-icon.png',
+        badge: '/assets/images/app-icon.png',
         vibrate: [100, 50, 100],
         data: {
             url: data.url || data.action_url || '/',
@@ -75,9 +71,7 @@ self.addEventListener('push', (event) => {
         requireInteraction: data.requireInteraction || false,
     };
 
-    event.waitUntil(
-        self.registration.showNotification(data.title || 'Kontrol', options)
-    );
+    event.waitUntil(self.registration.showNotification(data.title || 'Kontrol', options));
 });
 
 // Notification click event - handle user clicking on notification
@@ -99,7 +93,7 @@ self.addEventListener('notificationclick', (event) => {
             if (clients.openWindow) {
                 return clients.openWindow(urlToOpen);
             }
-        })
+        }),
     );
 });
 

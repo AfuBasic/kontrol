@@ -7,8 +7,8 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/assets/images/icon.png" type="image/png">
-        <link rel="apple-touch-icon" href="/assets/images/icon.png">
+        <link rel="icon" href="/assets/images/app-icon.png" type="image/png">
+        <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111827">
@@ -46,7 +46,7 @@
     </head>
     <body class="font-sans antialiased">
         <div id="pwa-splash">
-            <img src="/assets/images/icon.png" alt="Kontrol" style="width: 120px; height: 120px; border-radius: 20px;">
+            <img src="/assets/images/app-icon.png" alt="Kontrol" style="width: 120px; height: 120px; border-radius: 20px;">
         </div>
         <script>
             // Remove splash screen after load
