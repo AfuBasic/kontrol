@@ -1,3 +1,4 @@
+import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
@@ -662,13 +663,13 @@ export default function Login() {
                                     <div className="w-full border-t border-gray-200" />
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="bg-white px-4 text-gray-500">or continue with</span>
+                                    <span className="bg-white px-4 text-gray-500">or</span>
                                 </div>
                             </div>
 
                             {/* Google Sign-in */}
                             <a
-                                href="/auth/google"
+                                href={SocialLoginController.redirectToGoogle.url()}
                                 className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -691,6 +692,18 @@ export default function Login() {
                                 </svg>
                                 Continue with Google
                             </a>
+
+                            {/* Legal Links */}
+                            <p className="mt-6 text-center text-xs text-gray-500">
+                                By signing in, you agree to our{' '}
+                                <a href="/terms" className="text-[#1F6FDB] hover:underline">
+                                    Terms of Service
+                                </a>{' '}
+                                and{' '}
+                                <a href="/privacy" className="text-[#1F6FDB] hover:underline">
+                                    Privacy Policy
+                                </a>
+                            </p>
                         </motion.form>
                     </div>
                 </div>

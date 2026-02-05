@@ -31,6 +31,14 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 
 /*
 |--------------------------------------------------------------------------
+| Legal Pages
+|--------------------------------------------------------------------------
+*/
+Route::get('/privacy', fn () => Inertia::render('legal/privacy'))->name('privacy');
+Route::get('/terms', fn () => Inertia::render('legal/terms'))->name('terms');
+
+/*
+|--------------------------------------------------------------------------
 | Push Notification Subscription Routes
 |--------------------------------------------------------------------------
 */
