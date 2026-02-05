@@ -19,6 +19,8 @@ class NewPostBroadcast implements ShouldBroadcast
     ) {}
 
     /**
+     * Broadcast to audience-specific channels within the estate.
+     *
      * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array

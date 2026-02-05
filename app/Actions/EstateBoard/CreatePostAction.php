@@ -54,23 +54,22 @@ class CreatePostAction
 
             $post->load(['author', 'media']);
 
-            // Broadcast to relevant users if published
+            // Send notification to relevant users if published
             if ($status === EstateBoardPostStatus::Published) {
+                // Broadcast once to estate channel for real-time UI updates
                 NewPostBroadcast::dispatch($post);
-                
-                // Send Database Notification
+
+                // Store database notification for each user
                 $query = User::forEstate($estate->id)->active();
 
                 if ($audience === EstateBoardPostAudience::Residents) {
-                     // Residents have global role, Admins have estate role
-                     $query->role('resident');
+                    $query->role('resident');
                 } elseif ($audience === EstateBoardPostAudience::Security) {
-                     // Security have global role
-                     $query->role('security');
+                    $query->role('security');
                 }
-                
+
                 $users = $query->where('id', '!=', $user->id)->get();
-                
+
                 Notification::send($users, new NewPostNotification($post));
             }
 

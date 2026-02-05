@@ -26,9 +26,9 @@ interface PageProps {
             name: string;
             email: string;
             unread_notifications_count?: number;
+            current_estate_id?: number;
         };
     };
-    current_estate_id?: number;
     [key: string]: unknown;
 }
 
@@ -76,14 +76,14 @@ const navItems = [
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
-    const { auth, current_estate_id } = usePage<PageProps>().props;
+    const { auth } = usePage<PageProps>().props;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
-    // Listen for real-time visitor notifications
+    // Listen for visitor notifications on user's private channel
     useEffect(() => {
         if (!auth?.user?.id) return;
 
@@ -99,23 +99,25 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
         };
     }, [auth?.user?.id]);
 
-    // Listen for real-time new posts
+    // Listen for new posts on residents channel
     useEffect(() => {
-        if (!current_estate_id) return;
+        const estateId = auth?.user?.current_estate_id;
+        if (!estateId) return;
 
-        const channel = window.Echo.private(`estates.${current_estate_id}.residents`);
+        const channel = window.Echo.private(`estates.${estateId}.residents`);
 
         channel.listen('.post.created', (event: { post: unknown; message: string }) => {
             setToastMessage(event.message);
             setShowToast(true);
+            setUnreadCount((prev) => prev + 1);
             setTimeout(() => setShowToast(false), 4000);
         });
 
         return () => {
             channel.stopListening('.post.created');
-            window.Echo.leave(`estates.${current_estate_id}.residents`);
+            window.Echo.leave(`estates.${estateId}.residents`);
         };
-    }, [current_estate_id]);
+    }, [auth?.user?.current_estate_id]);
 
     // Sync unread count when props change (e.g., after page navigation)
     useEffect(() => {

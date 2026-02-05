@@ -21,10 +21,10 @@ interface PageProps {
             id: number;
             name: string;
             email: string;
+            current_estate_id?: number;
         };
     };
     estateName?: string;
-    current_estate_id?: number;
     unreadCount?: number;
     flash?: {
         success?: string;
@@ -62,7 +62,7 @@ const navItems = [
 
 export default function SecurityLayout({ children, hideNav = false }: Props) {
     const page = usePage<PageProps>();
-    const { auth, estateName, current_estate_id, unreadCount: initialUnreadCount = 0, flash } = page.props;
+    const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -74,26 +74,26 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
         setUnreadCount(initialUnreadCount);
     }, [initialUnreadCount]);
 
-    // Listen for real-time new posts
+    // Listen for new posts on security channel
     useEffect(() => {
-        if (!current_estate_id) return;
+        const estateId = auth?.user?.current_estate_id;
+        if (!estateId) return;
 
-        const channel = window.Echo.private(`estates.${current_estate_id}.security`);
+        const channel = window.Echo.private(`estates.${estateId}.security`);
 
         channel.listen('.post.created', (event: { post: unknown; message: string }) => {
             setToastMessage(event.message);
             setToastType('success');
             setShowToast(true);
-            setTimeout(() => setShowToast(false), 4000);
-            // Increment unread count for new posts
             setUnreadCount((prev) => prev + 1);
+            setTimeout(() => setShowToast(false), 4000);
         });
 
         return () => {
             channel.stopListening('.post.created');
-            window.Echo.leave(`estates.${current_estate_id}.security`);
+            window.Echo.leave(`estates.${estateId}.security`);
         };
-    }, [current_estate_id]);
+    }, [auth?.user?.current_estate_id]);
 
     useEffect(() => {
         if (flash?.success) {

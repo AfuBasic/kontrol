@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Security;
 
 use App\Actions\Security\FetchSecurityNotificationsAction;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +18,7 @@ class NotificationController extends Controller
 
     public function index(): Response
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $estate = $user->getCurrentEstate();
         $notifications = $this->fetchNotificationsAction->execute($user);
         $formatted = $this->fetchNotificationsAction->formatForFrontend($notifications);
@@ -30,19 +31,19 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function markAsRead(Request $request, string $notification): JsonResponse
+    public function markAsRead(Request $request, string $notification): RedirectResponse
     {
-        $user = auth()->user();
-        $success = $this->fetchNotificationsAction->markAsRead($user, $notification);
+        $user = Auth::user();
+        $this->fetchNotificationsAction->markAsRead($user, $notification);
 
-        return response()->json(['success' => $success]);
+        return back();
     }
 
-    public function markAllAsRead(): JsonResponse
+    public function markAllAsRead(): RedirectResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $this->fetchNotificationsAction->markAllAsRead($user);
 
-        return response()->json(['success' => true]);
+        return back();
     }
 }

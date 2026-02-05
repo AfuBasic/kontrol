@@ -20,7 +20,7 @@ class ActivityController extends Controller
 
         // Capture count before marking as read so we can show it on the tab
         $unreadCount = $user->unreadNotifications()->count();
-        
+
         // Mark all notifications as read when visiting the feed
         $user->unreadNotifications->markAsRead();
 

@@ -42,8 +42,8 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         return (new WebPushMessage)
             ->title('Visitor Arrived')
             ->body("{$visitorName} has arrived at the gate.")
-            ->icon('/assets/images/icon.png')
-            ->badge('/assets/images/icon.png')
+            ->icon('/assets/images/app-icon.png')
+            ->badge('/assets/images/app-icon.png')
             ->tag('visitor-arrived-'.$this->accessCode->id)
             ->data([
                 'url' => '/resident',

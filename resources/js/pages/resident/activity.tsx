@@ -1,8 +1,10 @@
-import { Head } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { Head, router } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Bell, BellOff, CheckCircle2, Clock, Megaphone, User, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import type { ActivityItem } from '@/types/access-code';
 import ResidentLayout from '@/layouts/ResidentLayout';
+import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 
 type Props = {
     activities: ActivityItem[];
@@ -168,57 +170,101 @@ export default function Activity({ activities, notifications = [], unreadCount =
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
                     {notifications && notifications.length > 0 ? (
                         <div className="space-y-3">
-                            {notifications.map((notification, index) => (
-                                <motion.div
-                                    key={notification.id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    className={`flex gap-4 rounded-2xl border p-4 shadow-sm ${notification.read_at ? 'border-gray-100 bg-white' : 'border-indigo-100 bg-indigo-50/50'}`}
-                                >
-                                    <div
-                                        className={`flex h-10 w-10 items-center justify-center rounded-full ${notification.read_at ? 'bg-gray-100 text-gray-500' : 'bg-indigo-100 text-indigo-600'}`}
-                                    >
-                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        {/* Fallback support for different notification types */}
-                                        <p className="font-medium text-gray-900">
-                                            {notification.data.message || notification.data.title || 'New Notification'}
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                            {new Date(notification.created_at).toLocaleDateString(undefined, {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                        </p>
-                                    </div>
-                                    {!notification.read_at && <div className="mt-2 h-2 w-2 rounded-full bg-indigo-600"></div>}
-                                </motion.div>
-                            ))}
+                            <AnimatePresence>
+                                {notifications.map((notification, index) => {
+                                    const isUnread = !notification.read_at;
+                                    const notificationType = notification.data?.type || notification.type;
+
+                                    // Determine icon and colors based on notification type
+                                    let IconComponent = Bell;
+                                    let iconBgColor = 'bg-gray-100';
+                                    let iconColor = 'text-gray-500';
+
+                                    if (notificationType?.includes('VisitorArrived') || notification.data?.visitor_name) {
+                                        IconComponent = User;
+                                        iconBgColor = isUnread ? 'bg-emerald-100' : 'bg-gray-100';
+                                        iconColor = isUnread ? 'text-emerald-600' : 'text-gray-500';
+                                    } else if (notificationType?.includes('NewPost') || notification.data?.type === 'new_post') {
+                                        IconComponent = Megaphone;
+                                        iconBgColor = isUnread ? 'bg-indigo-100' : 'bg-gray-100';
+                                        iconColor = isUnread ? 'text-indigo-600' : 'text-gray-500';
+                                    }
+
+                                    const title = notification.data?.title || 'Notification';
+                                    const message = notification.data?.message
+                                        || (notification.data?.visitor_name
+                                            ? `${notification.data.visitor_name} has arrived`
+                                            : 'You have a new notification');
+
+                                    return (
+                                        <motion.div
+                                            key={notification.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 10 }}
+                                            transition={{ duration: 0.3, delay: index * 0.03 }}
+                                            className={`relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-all ${
+                                                isUnread
+                                                    ? 'border-indigo-100 bg-linear-to-r from-indigo-50/80 to-white'
+                                                    : 'border-gray-100 bg-white'
+                                            }`}
+                                        >
+                                            {/* Unread indicator bar */}
+                                            {isUnread && (
+                                                <div className="absolute inset-y-0 left-0 w-1 bg-linear-to-b from-indigo-500 to-indigo-600" />
+                                            )}
+
+                                            <div className="flex gap-4">
+                                                {/* Icon */}
+                                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${iconBgColor}`}>
+                                                    <IconComponent className={`h-6 w-6 ${iconColor}`} strokeWidth={1.5} />
+                                                </div>
+
+                                                {/* Content */}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <h3 className={`text-sm font-semibold ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
+                                                            {title}
+                                                        </h3>
+                                                        {isUnread && (
+                                                            <span className="shrink-0 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                                                                New
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{message}</p>
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                        <span className="text-xs text-gray-400">
+                                                            {new Date(notification.created_at).toLocaleDateString(undefined, {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
-                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                                <svg className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                                    />
-                                </svg>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm"
+                        >
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-gray-100 to-gray-50">
+                                <BellOff className="h-8 w-8 text-gray-400" strokeWidth={1.5} />
                             </div>
-                            <h3 className="mb-1 font-medium text-gray-900">No notifications</h3>
-                            <p className="text-sm text-gray-500">You're all caught up!</p>
-                        </div>
+                            <h3 className="text-base font-semibold text-gray-900">All caught up!</h3>
+                            <p className="mt-1 max-w-xs px-4 text-sm text-gray-500">
+                                You have no new notifications. We'll let you know when something happens.
+                            </p>
+                        </motion.div>
                     )}
                 </motion.div>
             )}
