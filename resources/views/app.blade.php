@@ -7,7 +7,7 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/assets/images/app-icon.png" type="image/png">
+        <link rel="icon" href="/assets/images/icon.png" type="image/png">
         <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
