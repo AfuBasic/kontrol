@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,10 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
+
+    // Google OAuth
+    Route::get('/auth/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
 });
 
 Route::post('/logout', [LoginController::class, 'destroy'])

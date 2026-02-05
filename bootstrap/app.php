@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')
                 ->group(base_path('routes/zeus.php'));
 
-            Route::middleware(['web', 'auth'])
+            Route::middleware(['web', 'auth', EnsureIsAdmin::class])
                 ->prefix('admin')
                 ->group(base_path('routes/admin.php'));
 

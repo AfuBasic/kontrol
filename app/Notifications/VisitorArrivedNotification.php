@@ -37,11 +37,13 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
+        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
+        $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
 
         return (new WebPushMessage)
-            ->title('Visitor Arrived')
-            ->body("{$visitorName} has arrived at the gate.")
+            ->title($estateName)
+            ->body("The access code issued for {$visitorName} has just been validated by {$securityName}")
             ->icon('/assets/images/app-icon.png')
             ->badge('/assets/images/app-icon.png')
             ->tag('visitor-arrived-'.$this->accessCode->id)
@@ -61,14 +63,18 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
+        $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
 
         return [
-            'title' => 'Visitor Arrived',
-            'message' => "{$visitorName} has arrived at the gate.",
+            'title' => 'Access code validated',
+            'message' => "The access code issued for {$visitorName} has just been validated by {$securityName}",
+            'estate_name' => $estateName,
             'access_code_id' => $this->accessCode->id,
             'visitor_name' => $this->accessCode->visitor_name,
             'code' => $this->accessCode->code,
+            'type' => 'visitor_arrived',
         ];
     }
 }
