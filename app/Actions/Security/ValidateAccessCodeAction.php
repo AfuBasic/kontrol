@@ -65,8 +65,9 @@ class ValidateAccessCodeAction
             return $this->denied('Code is not active', 'inactive', $accessCode);
         }
 
-        // Mark as used if it's a single-use code OR if settings enforce single-use (unless it's long-lived)
-        $shouldMarkUsed = $accessCode->type === 'single_use' || ($forceSingleUse && $accessCode->type !== 'long_lived');
+        // Mark as used only if estate setting enforces single-use AND it's a single-use code
+        // When access_code_single_use is false, single-use codes remain reusable until expiration
+        $shouldMarkUsed = $forceSingleUse && $accessCode->type === 'single_use';
 
         if ($shouldMarkUsed) {
             $accessCode->markAsUsed($verifiedBy);

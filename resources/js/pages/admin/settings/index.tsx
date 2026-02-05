@@ -268,22 +268,6 @@ export default function Settings({ settings }: Props) {
                                 </span>
                             </div>
                         </label>
-
-                        {/* Require Confirmation */}
-                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
-                            <input
-                                type="checkbox"
-                                checked={data.access_code_require_confirmation}
-                                onChange={(e) => setData('access_code_require_confirmation', e.target.checked)}
-                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <div>
-                                <span className="block text-sm font-medium text-gray-900">Require resident confirmation</span>
-                                <span className="block text-sm text-gray-500">
-                                    Valid codes still require resident approval before granting entry (higher security)
-                                </span>
-                            </div>
-                        </label>
                     </div>
                 </motion.div>
 
