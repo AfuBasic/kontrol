@@ -1,4 +1,5 @@
 export type AccessCodeStatus = 'active' | 'used' | 'expired' | 'revoked';
+export type AccessCodeSource = 'web' | 'telegram';
 
 export type AccessCode = {
     id: number;
@@ -8,6 +9,7 @@ export type AccessCode = {
     visitor_phone: string | null;
     purpose: string | null;
     status: AccessCodeStatus;
+    source: AccessCodeSource;
     expires_at: string;
     used_at: string | null;
     revoked_at: string | null;

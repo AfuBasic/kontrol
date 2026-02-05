@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
 use Inertia\Inertia;
 use Inertia\Response;
-
-use App\Services\EstateContextService;
 
 class HomeController extends Controller
 {
@@ -29,6 +28,7 @@ class HomeController extends Controller
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
                 'status' => $code->status->value,
+                'source' => $code->source->value,
                 'expires_at' => $code->expires_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at?->toISOString(),
