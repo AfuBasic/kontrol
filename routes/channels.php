@@ -9,6 +9,10 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
+Broadcast::channel('users.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
+
 Broadcast::channel('estates.{id}', function ($user, $id) {
     // Check if user belongs to the estate
     if (! $user->estates()->where('estates.id', $id)->exists()) {

@@ -135,11 +135,14 @@ class TelegramKeyboardBuilder
     /**
      * Build post-action keyboard with options to view codes or create new.
      *
-     * @return array<int, array<int, array{text: string, callback_data: string}>>
+     * @return array<int, array<int, array<string, mixed>>>
      */
-    public function afterCodeCreated(): array
+    public function afterCodeCreated(string $code): array
     {
         return [
+            [
+                ['text' => '📋 Copy Code', 'copy_text' => ['text' => $code]],
+            ],
             [
                 ['text' => '📋 View My Codes', 'callback_data' => TelegramCallbackAction::ViewCodes->value],
                 ['text' => '🎟️ New Code', 'callback_data' => TelegramCallbackAction::GenerateCode->value],

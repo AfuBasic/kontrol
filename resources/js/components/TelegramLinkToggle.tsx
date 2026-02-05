@@ -1,5 +1,5 @@
-import { router } from '@inertiajs/react';
-import { Loader2, Check, Copy, ExternalLink, X } from 'lucide-react';
+import { router, usePage } from '@inertiajs/react';
+import { Loader2, Check, Copy, ExternalLink, X, CheckCircle } from 'lucide-react';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import resident from '@/routes/resident';
 
@@ -9,12 +9,22 @@ interface Props {
     className?: string;
 }
 
+interface PageProps {
+    auth: {
+        user: {
+            id: number;
+        };
+    };
+    [key: string]: unknown;
+}
+
 interface OtpData {
     otp: string;
     expires_at: string;
 }
 
 export default function TelegramLinkToggle({ linked, botUsername, className = '' }: Props) {
+    const { auth } = usePage<PageProps>().props;
     const [isLinked, setIsLinked] = useState(linked);
     const [showModal, setShowModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +33,7 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const clearTimer = useCallback(() => {
@@ -31,6 +42,31 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
             timerRef.current = null;
         }
     }, []);
+
+    // Listen for real-time Telegram link event
+    useEffect(() => {
+        if (!window.Echo || !auth?.user?.id) return;
+
+        const channel = window.Echo.private(`users.${auth.user.id}`);
+
+        channel.listen('TelegramAccountLinked', () => {
+            // Show success state
+            setShowSuccess(true);
+            setIsLinked(true);
+            clearTimer();
+            setOtpData(null);
+
+            // Auto-close modal after showing success
+            setTimeout(() => {
+                setShowModal(false);
+                setShowSuccess(false);
+            }, 2000);
+        });
+
+        return () => {
+            channel.stopListening('TelegramAccountLinked');
+        };
+    }, [auth?.user?.id, clearTimer]);
 
     useEffect(() => {
         return () => clearTimer();
@@ -200,7 +236,19 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
 
                         {/* Content */}
                         <div className="p-6">
-                            {!otpData ? (
+                            {showSuccess ? (
+                                <div className="space-y-4 text-center">
+                                    <div className="flex justify-center">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+                                            <CheckCircle className="h-8 w-8 text-green-500" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900">Connected!</h3>
+                                        <p className="mt-1 text-gray-600">Your Telegram account is now linked.</p>
+                                    </div>
+                                </div>
+                            ) : !otpData ? (
                                 <div className="space-y-4">
                                     <div className="flex justify-center">
                                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">

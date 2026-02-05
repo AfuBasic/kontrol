@@ -119,9 +119,9 @@ class TelegramCallbackHandler
             $text .= "🔐 Code: <code>{$code->code}</code>\n";
             $text .= "⏱️ Expires: {$expiresIn}\n";
             $text .= "🔒 Single use: Yes\n\n";
-            $text .= '📋 <i>Tap the code to copy</i>';
+            $text .= '💡 <i>Tap "Copy Code" below to copy</i>';
 
-            $this->telegram->editMessage($chatId, $messageId, $text, $this->keyboard->afterCodeCreated());
+            $this->telegram->editMessage($chatId, $messageId, $text, $this->keyboard->afterCodeCreated($code->code));
         } catch (ValidationException $e) {
             $errors = collect($e->errors())->flatten()->first();
 

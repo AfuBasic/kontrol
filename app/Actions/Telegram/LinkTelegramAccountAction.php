@@ -2,6 +2,7 @@
 
 namespace App\Actions\Telegram;
 
+use App\Events\TelegramAccountLinked;
 use App\Models\TelegramLinkToken;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ class LinkTelegramAccountAction
      */
     public function execute(string $token, string $telegramChatId): array
     {
-        return DB::transaction(function () use ($token, $telegramChatId) {
+        $result = DB::transaction(function () use ($token, $telegramChatId) {
             // Check if this Telegram account is already linked
             $existingUser = User::findByTelegramChatId($telegramChatId);
             if ($existingUser) {
@@ -63,5 +64,10 @@ class LinkTelegramAccountAction
                 'message' => 'Telegram account linked successfully!',
             ];
         });
+
+        // Broadcast event after transaction commits
+        TelegramAccountLinked::dispatch($result['user']);
+
+        return $result;
     }
 }
