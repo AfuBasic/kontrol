@@ -58,3 +58,16 @@ export type CreateCodePageProps = {
 export type CodeSuccessPageProps = {
     accessCode: AccessCode;
 };
+
+export type UsageLog = {
+    id: number;
+    verified_at: string;
+    verifier_name: string;
+};
+
+export type CursorPaginatedUsageLogs = {
+    data: UsageLog[];
+    next_cursor: string | null;
+    next_page_url: string | null;
+    per_page: number;
+};

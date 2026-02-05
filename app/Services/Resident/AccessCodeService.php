@@ -364,4 +364,23 @@ class AccessCodeService
             'max' => $settings->access_code_max_lifespan_minutes,
         ];
     }
+
+    /**
+     * Get usage history for an access code with cursor pagination.
+     *
+     * @return \Illuminate\Contracts\Pagination\CursorPaginator<\App\Models\AccessLog>
+     */
+    public function getUsageHistory(AccessCode $accessCode, ?string $dateFilter = null, int $perPage = 15): \Illuminate\Contracts\Pagination\CursorPaginator
+    {
+        $query = $accessCode->accessLogs()
+            ->with('verifier:id,name')
+            ->orderByDesc('verified_at');
+
+        if ($dateFilter) {
+            $date = Carbon::parse($dateFilter);
+            $query->whereDate('verified_at', $date);
+        }
+
+        return $query->cursorPaginate($perPage);
+    }
 }

@@ -1,7 +1,7 @@
-import { MagnifyingGlassIcon, FunnelIcon, PlusCircleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
-import { format, formatDistanceToNow, parseISO, isToday, isYesterday } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { motion } from 'framer-motion';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
 import AdminLayout from '@/layouts/AdminLayout';
@@ -115,7 +115,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                 <div className="mx-auto mt-12 max-w-4xl px-4 sm:px-6">
                     <div className="relative">
                         {/* 2. THE RAIL: Soft Blue Connector */}
-                        <div className="absolute top-0 bottom-0 left-8 w-[4px] rounded-full bg-blue-100/60 sm:left-32" />
+                        <div className="absolute top-0 bottom-0 left-8 w-1 rounded-full bg-blue-100/60 sm:left-32" />
 
                         <div className="space-y-20">
                             {Object.entries(grouped).map(([date, items]) => (
@@ -127,7 +127,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
 
                                         {/* Date Label - Sitting properly next to the node */}
                                         <div className="ml-16 sm:absolute sm:left-32 sm:ml-0 sm:-translate-x-[calc(100%+24px)]">
-                                            <div className="inline-block rounded-[16px] bg-white px-5 py-2 text-sm font-black tracking-widest whitespace-nowrap text-[#1E293B] uppercase shadow-[0_4px_20px_rgba(0,0,0,0.04)] ring-1 ring-slate-100">
+                                            <div className="inline-block rounded-2xl bg-white px-5 py-2 text-sm font-black tracking-widest whitespace-nowrap text-[#1E293B] uppercase shadow-[0_4px_20px_rgba(0,0,0,0.04)] ring-1 ring-slate-100">
                                                 {getDateLabel(date)}
                                             </div>
                                         </div>
@@ -135,7 +135,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
 
                                     {/* 4. ACTIVITY ENTRIES */}
                                     <div className="space-y-12">
-                                        {items.map((act, i) => (
+                                        {items.map((act) => (
                                             <motion.div
                                                 key={act.id}
                                                 initial={{ opacity: 0, x: 20 }}
@@ -160,7 +160,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                                                         {format(parseISO(act.created_at), 'h:mm a')}
                                                     </div>
 
-                                                    <div className="relative rounded-[24px] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.03)] ring-1 ring-slate-100/50 transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] hover:ring-blue-100">
+                                                    <div className="relative rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.03)] ring-1 ring-slate-100/50 transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] hover:ring-blue-100">
                                                         <div className="flex items-start gap-5">
                                                             {/* User Avatar Placeholder */}
                                                             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-200 shadow-inner">

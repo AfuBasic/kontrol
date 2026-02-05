@@ -19,6 +19,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
 
+import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
@@ -33,7 +34,6 @@ import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
-import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 
 interface Props {
     children: ReactNode;
@@ -339,7 +339,7 @@ export default function AdminLayout({ children }: Props) {
                         animate={{ x: 0 }}
                         exit={{ x: -280 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] shadow-xl md:hidden"
+                        className="fixed inset-y-0 left-0 z-50 flex w-70 flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] shadow-xl md:hidden"
                     >
                         {/* Mobile Drawer Header */}
                         <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">

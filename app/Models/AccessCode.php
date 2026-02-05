@@ -99,6 +99,14 @@ class AccessCode extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<AccessLog, $this>
+     */
+    public function accessLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AccessLog::class);
+    }
+
+    /**
      * @param  Builder<AccessCode>  $query
      * @return Builder<AccessCode>
      */

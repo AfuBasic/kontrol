@@ -119,11 +119,14 @@ class AccessCodeController extends Controller
     /**
      * Display the specified access code.
      */
-    public function show(AccessCode $accessCode): Response
+    public function show(AccessCode $accessCode, Request $request): Response
     {
         $userCode = $this->accessCodeService->getCode($accessCode->id);
 
         abort_if(! $userCode, 404);
+
+        $dateFilter = $request->input('date');
+        $usageLogs = $this->accessCodeService->getUsageHistory($userCode, $dateFilter);
 
         return Inertia::render('resident/visitors/show', [
             'accessCode' => [
@@ -139,6 +142,19 @@ class AccessCodeController extends Controller
                 'created_at' => $userCode->created_at->toISOString(),
                 'used_at' => $userCode->used_at?->toISOString(),
                 'revoked_at' => $userCode->revoked_at?->toISOString(),
+            ],
+            'usageLogs' => [
+                'data' => collect($usageLogs->items())->map(fn ($log) => [
+                    'id' => $log->id,
+                    'verified_at' => $log->verified_at->toISOString(),
+                    'verifier_name' => $log->verifier?->name ?? 'Unknown',
+                ]),
+                'next_cursor' => $usageLogs->nextCursor()?->encode(),
+                'next_page_url' => $usageLogs->nextPageUrl(),
+                'per_page' => $usageLogs->perPage(),
+            ],
+            'filters' => [
+                'date' => $dateFilter,
             ],
         ]);
     }
