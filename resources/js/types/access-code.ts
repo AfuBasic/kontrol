@@ -29,7 +29,7 @@ export type HomeStats = {
 };
 
 export type ActivityItem = {
-    type: 'created' | 'used' | 'expired' | 'revoked';
+    type: 'created' | 'used' | 'expired' | 'revoked' | 'telegram_linked' | 'telegram_unlinked';
     message: string;
     time: string;
     time_full: string;
