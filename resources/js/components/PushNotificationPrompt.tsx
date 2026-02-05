@@ -59,12 +59,12 @@ export default function PushNotificationPrompt() {
                 >
                     <div className="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-900/10">
                         {/* Gradient accent bar */}
-                        <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                        <div className="h-1 bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500" />
 
                         <div className="p-4">
                             <div className="flex items-start gap-4">
                                 {/* Icon */}
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30">
                                     <Bell className="h-6 w-6 text-white" />
                                 </div>
 
