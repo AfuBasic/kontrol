@@ -92,11 +92,12 @@ class TelegramBotService
     /**
      * Set webhook URL.
      */
-    public function setWebhook(string $url, ?string $secretToken = null): bool
+    public function setWebhook(string $url): bool
     {
         $payload = ['url' => $url];
 
-        if ($secretToken !== null) {
+        $secretToken = config('services.telegram.webhook_secret');
+        if ($secretToken) {
             $payload['secret_token'] = $secretToken;
         }
 
@@ -109,6 +110,30 @@ class TelegramBotService
     public function deleteWebhook(): bool
     {
         return $this->request('deleteWebhook', []);
+    }
+
+    /**
+     * Get current webhook info.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getWebhookInfo(): ?array
+    {
+        try {
+            $response = $this->client()->post("{$this->baseUrl}/getWebhookInfo");
+
+            if ($response->successful() && $response->json('ok')) {
+                return $response->json('result');
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::error('Telegram API exception: getWebhookInfo', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
