@@ -9,6 +9,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+use function Sentry\captureException;
+
 class TelegramWebhookController extends Controller
 {
     public function __construct(
@@ -39,6 +41,7 @@ class TelegramWebhookController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+            captureException($e);
         }
 
         return response()->json(['ok' => true]);

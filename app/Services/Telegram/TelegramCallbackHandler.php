@@ -65,9 +65,9 @@ class TelegramCallbackHandler
         $text .= "To link your Kontrol account:\n\n";
         $text .= "1️⃣ Open the Kontrol web app\n";
         $text .= "2️⃣ Go to Profile → Telegram\n";
-        $text .= "3️⃣ Click \"Link Telegram\"\n";
+        $text .= "3️⃣ Click \"Connect\"\n";
         $text .= "4️⃣ Copy the 6-digit code\n";
-        $text .= "5️⃣ Send the code here\n\n";
+        $text .= "5️⃣ Paste the code here\n\n";
         $text .= '💡 <i>The code expires in 10 minutes.</i>';
 
         $this->telegram->editMessage($chatId, $messageId, $text, $this->keyboard->unlinkMenu());

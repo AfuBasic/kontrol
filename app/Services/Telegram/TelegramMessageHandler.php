@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+use function Sentry\captureException;
+
 class TelegramMessageHandler
 {
     public function __construct(
@@ -98,11 +100,12 @@ class TelegramMessageHandler
                 $this->keyboard->unlinkMenu()
             );
         } catch (\Throwable $e) {
+            // Log locally and send to Sentry
             Log::error('Telegram link account error', [
                 'chat_id' => $chatId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
+            captureException($e);
 
             $this->telegram->sendMessage(
                 $chatId,
