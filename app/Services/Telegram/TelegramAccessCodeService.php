@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\Estate;
@@ -46,6 +47,7 @@ class TelegramAccessCodeService
             'user_id' => $user->id,
             'code' => AccessCode::generateCode(),
             'type' => 'single_use',
+            'source' => AccessCodeSource::Telegram,
             'visitor_name' => $data['visitor_name'] ?? null,
             'status' => AccessCodeStatus::Active,
             'expires_at' => now()->addMinutes($minutes),

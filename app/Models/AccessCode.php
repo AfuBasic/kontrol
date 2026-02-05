@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ class AccessCode extends Model
         'user_id',
         'code',
         'type', // single_use, long_lived
+        'source', // web, telegram
         'visitor_name',
         'visitor_phone',
         'purpose',
@@ -38,6 +40,7 @@ class AccessCode extends Model
     {
         return [
             'status' => AccessCodeStatus::class,
+            'source' => AccessCodeSource::class,
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
             'revoked_at' => 'datetime',
@@ -59,12 +62,12 @@ class AccessCode extends Model
                             default => 'Access code updated',
                         };
                     }
-                    
+
                     if ($this->wasChanged('verified_by')) {
                         return 'Access code used';
                     }
                 }
-                
+
                 return match ($eventName) {
                     'created' => 'Access code created',
                     'updated' => 'Access code updated',
@@ -169,6 +172,7 @@ class AccessCode extends Model
         if ($this->expires_at === null) {
             return $this->status === AccessCodeStatus::Active;
         }
+
         return $this->status === AccessCodeStatus::Active && $this->expires_at->isFuture();
     }
 
@@ -177,6 +181,7 @@ class AccessCode extends Model
         if ($this->expires_at === null) {
             return false;
         }
+
         return $this->expires_at->isPast();
     }
 
