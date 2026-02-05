@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -60,3 +61,12 @@ Route::prefix('invitation')->name('invitation.')->group(function (): void {
     Route::post('/{user}', [InvitationController::class, 'store'])->name('store');
     Route::get('/error/invalid', [InvitationController::class, 'invalid'])->name('invalid');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Telegram Webhook Route
+|--------------------------------------------------------------------------
+| This route handles incoming webhooks from Telegram Bot API.
+| CSRF protection is disabled for this route in bootstrap/app.php.
+*/
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');

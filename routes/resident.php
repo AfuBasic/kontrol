@@ -8,6 +8,7 @@ use App\Http\Controllers\Resident\EstateContactController;
 use App\Http\Controllers\Resident\HomeController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\ProfileController;
+use App\Http\Controllers\Resident\TelegramLinkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -59,5 +60,12 @@ Route::middleware('role:resident')->group(function (): void {
             Route::post('/{post}/comments', [EstateBoardCommentController::class, 'store'])->name('comments.store');
             Route::delete('/comments/{comment}', [EstateBoardCommentController::class, 'destroy'])->name('comments.destroy');
         });
+    });
+
+    // Telegram Account Linking
+    Route::prefix('telegram')->name('resident.telegram.')->group(function (): void {
+        Route::post('/generate-otp', [TelegramLinkController::class, 'generateOtp'])->name('generate-otp');
+        Route::delete('/unlink', [TelegramLinkController::class, 'unlink'])->name('unlink');
+        Route::get('/status', [TelegramLinkController::class, 'status'])->name('status');
     });
 });

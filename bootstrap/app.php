@@ -39,6 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
         $middleware->trustProxies('*');
+        $middleware->validateCsrfTokens(except: [
+            'telegram/webhook',
+        ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'guest' => RedirectIfAuthenticated::class,

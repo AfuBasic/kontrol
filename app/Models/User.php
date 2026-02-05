@@ -28,6 +28,7 @@ class User extends Authenticatable
         'password',
         'suspended_at',
         'google_id',
+        'telegram_chat_id',
     ];
 
     /**
@@ -157,5 +158,40 @@ class User extends Authenticatable
     public function getCurrentEstateId(): int
     {
         return $this->getCurrentEstate()->id;
+    }
+
+    /**
+     * Check if user has Telegram linked.
+     */
+    public function hasTelegramLinked(): bool
+    {
+        return $this->telegram_chat_id !== null;
+    }
+
+    /**
+     * Scope: Users with Telegram linked.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeWithTelegram(Builder $query): Builder
+    {
+        return $query->whereNotNull('telegram_chat_id');
+    }
+
+    /**
+     * Find user by Telegram chat ID.
+     */
+    public static function findByTelegramChatId(string $chatId): ?self
+    {
+        return self::where('telegram_chat_id', $chatId)->first();
+    }
+
+    /**
+     * Route notifications for the Telegram channel.
+     */
+    public function routeNotificationForTelegram(): ?string
+    {
+        return $this->telegram_chat_id;
     }
 }
