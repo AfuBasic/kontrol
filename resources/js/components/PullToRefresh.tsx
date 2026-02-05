@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
-import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface Props {
     children: React.ReactNode;
@@ -19,7 +19,7 @@ export default function PullToRefresh({ children, onRefresh }: Props) {
     // Threshold to trigger refresh
     const REFRESH_THRESHOLD = 80;
 
-    async function handleRefresh() {
+    const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         try {
             if (onRefresh) {
@@ -39,7 +39,7 @@ export default function PullToRefresh({ children, onRefresh }: Props) {
                 y.set(0);
             }, 500);
         }
-    }
+    }, [onRefresh, y]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -47,55 +47,74 @@ export default function PullToRefresh({ children, onRefresh }: Props) {
 
         let startY = 0;
         let isDragging = false;
+        let initialScrollTop = 0;
+
+        // Check if page is at top - more permissive check for mobile
+        const getScrollTop = () => {
+            return Math.max(0, window.scrollY || document.documentElement.scrollTop || document.body.scrollTop);
+        };
+
+        const isAtTop = () => {
+            return getScrollTop() <= 5; // Allow small tolerance for mobile bounce
+        };
 
         const handleTouchStart = (e: TouchEvent) => {
-            if (window.scrollY === 0) {
+            // Don't start if already refreshing
+            if (isRefreshing) return;
+
+            initialScrollTop = getScrollTop();
+
+            if (isAtTop()) {
                 startY = e.touches[0].clientY;
                 isDragging = true;
             }
         };
 
         const handleTouchMove = (e: TouchEvent) => {
-            if (!isDragging) return;
+            if (!isDragging || isRefreshing) return;
 
             const currentY = e.touches[0].clientY;
             const diff = currentY - startY;
 
-            // Only allow dragging down if at top
-            if (diff > 0 && window.scrollY <= 0) {
+            // Only allow dragging down if at top and pulling down
+            if (diff > 0 && isAtTop()) {
                 // Add resistance
                 const damped = Math.min(diff * 0.4, 150);
                 y.set(damped);
 
                 // Prevent default pull-to-refresh of browser
                 if (e.cancelable) e.preventDefault();
-            } else {
+            } else if (diff < -10 || getScrollTop() > initialScrollTop + 10) {
+                // User is scrolling up or page has scrolled down, cancel the drag
                 isDragging = false;
-                y.set(0);
+                animate(y, 0, { type: 'spring', stiffness: 400, damping: 30 });
             }
         };
 
         const handleTouchEnd = () => {
+            if (!isDragging) return;
             isDragging = false;
+
             const currentY = y.get();
 
-            if (currentY > REFRESH_THRESHOLD) {
+            if (currentY > REFRESH_THRESHOLD && !isRefreshing) {
                 handleRefresh();
             } else {
                 animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
             }
         };
 
-        container.addEventListener('touchstart', handleTouchStart, { passive: true });
-        container.addEventListener('touchmove', handleTouchMove, { passive: false });
-        container.addEventListener('touchend', handleTouchEnd);
+        // Use document-level listeners for more reliable capture
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
 
         return () => {
-            container.removeEventListener('touchstart', handleTouchStart);
-            container.removeEventListener('touchmove', handleTouchMove);
-            container.removeEventListener('touchend', handleTouchEnd);
+            document.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [y, isRefreshing]);
+    }, [y, isRefreshing, handleRefresh]);
 
     return (
         <div ref={containerRef} className="relative min-h-screen">
