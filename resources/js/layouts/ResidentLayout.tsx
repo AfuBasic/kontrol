@@ -145,7 +145,7 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
+                    className="pt-safe sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
                 >
                     <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-4">
                         <Link href={HomeController.url()} className="flex cursor-pointer items-center gap-2.5">
@@ -168,7 +168,10 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                 <ContactModal isOpen={contactModalOpen} onClose={() => setContactModalOpen(false)} />
 
                 {/* Main Content */}
-                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-28">{children}</main>
+                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-28">
+                    <InstallPWABanner />
+                    {children}
+                </main>
 
                 {/* Bottom Navigation - Mobile First */}
                 {!hideNav && (
@@ -207,8 +210,6 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                         </div>
                     </motion.nav>
                 )}
-                {/* PWA Install Banner */}
-                <InstallPWABanner />
 
                 {/* Push Notification Prompt */}
                 <PushNotificationPrompt />
