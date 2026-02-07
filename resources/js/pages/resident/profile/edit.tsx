@@ -14,6 +14,10 @@ interface Props {
         linked: boolean;
         bot_username: string;
     };
+    profile: {
+        unit_number: string;
+        address: string;
+    };
 }
 
 interface PageProps {
@@ -29,12 +33,14 @@ interface PageProps {
     [key: string]: unknown;
 }
 
-export default function Edit({ telegram }: Props) {
+export default function Edit({ telegram, profile }: Props) {
     const user = usePage<PageProps>().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
+        unit_number: profile.unit_number || '',
+        address: profile.address || '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -98,6 +104,40 @@ export default function Edit({ telegram }: Props) {
                                 autoComplete="username"
                             />
                             {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                        </div>
+
+                        {/* Unit Number */}
+                        <div>
+                            <label htmlFor="unit_number" className="block text-sm font-medium text-gray-700">
+                                Unit / House Number
+                            </label>
+                            <input
+                                id="unit_number"
+                                type="text"
+                                className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
+                                value={data.unit_number}
+                                onChange={(e) => setData('unit_number', e.target.value)}
+                                placeholder="e.g. Block A, Flat 5"
+                            />
+                            {errors.unit_number && <p className="mt-2 text-sm text-red-600">{errors.unit_number}</p>}
+                        </div>
+
+                        {/* Full Address */}
+                        <div>
+                            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                                Full Address
+                            </label>
+                            <textarea
+                                id="address"
+                                rows={3}
+                                className="mt-1 block w-full resize-none rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                placeholder="e.g. Lekki Gardens Estate, Lekki, Lagos"
+                                autoComplete="street-address"
+                            />
+                            <p className="mt-1.5 text-xs text-gray-500">Your full address within the estate (optional).</p>
+                            {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address}</p>}
                         </div>
                     </div>
 

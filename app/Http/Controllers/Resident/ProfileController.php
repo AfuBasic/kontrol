@@ -26,6 +26,10 @@ class ProfileController extends Controller
                 'linked' => $user->hasTelegramLinked(),
                 'bot_username' => config('services.telegram.bot_username'),
             ],
+            'profile' => [
+                'unit_number' => $user->profile?->unit_number ?? '',
+                'address' => $user->profile?->address ?? '',
+            ],
         ]);
     }
 
@@ -34,13 +38,31 @@ class ProfileController extends Controller
      */
     public function update(UpdateProfileRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Update user fields
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        // Update or create user profile with address and unit number
+        if (isset($validated['address']) || isset($validated['unit_number'])) {
+            $user->profile()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'unit_number' => $validated['unit_number'] ?? null,
+                    'address' => $validated['address'] ?? null,
+                ]
+            );
+        }
 
         return back()->with('success', 'Profile updated successfully.');
     }

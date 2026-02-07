@@ -286,7 +286,7 @@ const solutionFeatures = [
     {
         icon: ChatBubbleIcon,
         title: 'Telegram Bot',
-        description: 'Manage codes in your Telegram chat.',
+        description: 'Manage codes and updates directly in your Telegram chat.',
     },
     {
         icon: DevicePhoneMobileIcon,
