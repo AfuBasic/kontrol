@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import ApplicationModal from '@/components/Public/ApplicationModal';
 import PublicLayout from '@/layouts/PublicLayout';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 
@@ -173,6 +175,18 @@ function ArrowRightIcon({ className }: { className?: string }) {
     );
 }
 
+function HeartHandshakeIcon({ className }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+        </svg>
+    );
+}
+
 const fadeInUp = {
     initial: { opacity: 0, y: 30 },
     animate: { opacity: 1, y: 0 },
@@ -214,42 +228,42 @@ const features = [
     {
         icon: QrCodeIcon,
         title: 'Instant Access Codes',
-        description: 'Generate secure, time-limited access codes for visitors in seconds. Share via SMS, WhatsApp, or email.',
+        description: 'Generate secure, time-limited access codes for visitors in seconds.',
     },
     {
         icon: BoltIcon,
         title: 'Real-time Validation',
-        description: 'Security validates codes instantly at the gate. No delays, no confusion, no unauthorized access.',
+        description: 'Security validates codes instantly at the gate. No delays.',
     },
     {
         icon: UsersIcon,
         title: 'Role-based Access',
-        description: 'Separate apps for residents, security, and admins. Everyone sees only what they need.',
+        description: 'Separate apps for residents, security, and admins.',
     },
     {
         icon: ClipboardIcon,
         title: 'Estate Announcements',
-        description: 'Keep everyone informed with estate-wide announcements. Pin important updates for visibility.',
+        description: 'Keep everyone informed with estate-wide updates.',
     },
     {
         icon: BellIcon,
         title: 'Smart Notifications',
-        description: 'Get notified when visitors arrive or when important estate updates are posted.',
+        description: 'Get notified when visitors arrive at the gate.',
     },
     {
         icon: ChatBubbleIcon,
         title: 'Telegram Integration',
-        description: 'Link your Telegram account to receive access codes and notifications directly in chat.',
+        description: 'Receive codes directly in your Telegram chat.',
     },
     {
         icon: DevicePhoneMobileIcon,
         title: 'Works Offline',
-        description: 'Install as a PWA on any device. Core features work even without internet connection.',
+        description: 'Install as a PWA on any device.',
     },
     {
         icon: LockClosedIcon,
         title: 'Privacy First',
-        description: 'Minimal data collection, encrypted storage, and full audit logs for complete transparency.',
+        description: 'Minimal data collection, full audit logs.',
     },
 ];
 
@@ -272,12 +286,12 @@ const solutionFeatures = [
     {
         icon: ChatBubbleIcon,
         title: 'Telegram Bot',
-        description: 'Receive codes and updates directly in your Telegram chat.',
+        description: 'Manage codes in your Telegram chat.',
     },
     {
         icon: DevicePhoneMobileIcon,
         title: 'PWA App',
-        description: 'Install on any device. Works offline when you need it.',
+        description: 'Install on any device. Faster access for when you need it.',
     },
     {
         icon: ShieldIcon,
@@ -289,23 +303,23 @@ const solutionFeatures = [
 const steps = [
     {
         step: '01',
-        title: 'Admin sets up estate',
-        description: 'Estate administrator registers the property and invites residents to join.',
+        title: 'Apply for access',
+        description: 'Submit your estate details. We review every application personally.',
     },
     {
         step: '02',
-        title: 'Residents generate codes',
-        description: 'Residents create access codes for expected visitors through the app.',
+        title: 'We reach out',
+        description: 'Our team contacts you to understand your needs and schedule setup.',
     },
     {
         step: '03',
-        title: 'Visitors show code',
-        description: 'Visitors present their access code at the gate when they arrive.',
+        title: 'Get set up',
+        description: 'We help you onboard residents and security personnel.',
     },
     {
         step: '04',
-        title: 'Security validates',
-        description: 'Security instantly validates the code and grants or denies entry.',
+        title: 'Go live',
+        description: 'Start generating access codes and securing your estate.',
     },
 ];
 
@@ -318,7 +332,55 @@ const trustPoints = [
     'Regular security assessments',
 ];
 
+const whyApplyPoints = [
+    {
+        title: 'Quality assurance',
+        description: 'We personally verify each estate to maintain platform quality.',
+    },
+    {
+        title: 'Dedicated support',
+        description: 'Our team helps you set up and onboard your estate.',
+    },
+    {
+        title: 'Completely free',
+        description: 'No payment or fees will ever be requested during signup.',
+    },
+    {
+        title: 'Personal touch',
+        description: 'We reach out to understand your specific needs.',
+    },
+];
+
 export default function Landing() {
+    const [modalOpen, setModalOpen] = useState(false);
+
+    // Sync modal state with URL hash
+    useEffect(() => {
+        // Check hash on mount
+        if (window.location.hash === '#apply') {
+            setModalOpen(true);
+        }
+
+        // Listen for hash changes
+        function handleHashChange() {
+            setModalOpen(window.location.hash === '#apply');
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    function openModal() {
+        window.location.hash = 'apply';
+        setModalOpen(true);
+    }
+
+    function closeModal() {
+        // Remove hash without scrolling
+        history.pushState('', document.title, window.location.pathname + window.location.search);
+        setModalOpen(false);
+    }
+
     return (
         <PublicLayout>
             <Head title="Kontrol - Modern Estate Access Control">
@@ -400,10 +462,10 @@ export default function Landing() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-4 py-2 text-sm font-medium text-blue-700 backdrop-blur-sm"
+                            className="mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur-sm"
                         >
-                            <ShieldIcon className="h-4 w-4" />
-                            <span>Trusted by residential estates across Africa</span>
+                            <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                            <span>100% Free, No payment ever required</span>
                         </motion.div>
 
                         <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
@@ -424,20 +486,87 @@ export default function Landing() {
                             transition={{ duration: 0.5, delay: 0.4 }}
                             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
                         >
-                            <Link
-                                href={LoginController.show.url()}
+                            <button
+                                onClick={openModal}
                                 className="group inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-slate-900 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-slate-900/10 transition-all duration-300 hover:bg-slate-800 hover:shadow-2xl hover:shadow-slate-900/20 sm:w-auto"
                             >
-                                Apply Now
+                                Apply for Access
                                 <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-                            </Link>
-                            <Link
+                            </button>
+                            <a
                                 href={LoginController.show.url()}
                                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-8 py-4 text-base font-semibold text-slate-700 backdrop-blur-sm transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
                             >
                                 Sign In
-                            </Link>
+                            </a>
                         </motion.div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Why Apply Section - NEW */}
+            <section className="relative overflow-hidden bg-white py-20 lg:py-24">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <motion.div
+                        initial="initial"
+                        whileInView="animate"
+                        viewport={{ once: true, margin: '-100px' }}
+                        variants={staggerContainer}
+                        className="mx-auto max-w-3xl text-center"
+                    >
+                        <motion.div
+                            variants={fadeInUp}
+                            className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25"
+                        >
+                            <HeartHandshakeIcon className="h-8 w-8 text-white" />
+                        </motion.div>
+                        <motion.h2 variants={fadeInUp} className="text-3xl font-bold text-slate-900 sm:text-4xl">
+                            Why we review applications
+                        </motion.h2>
+                        <motion.p variants={fadeInUp} className="mt-4 text-lg leading-relaxed text-slate-600">
+                            Kontrol is currently onboarding estates personally to ensure quality and security. Submit your details and we'll reach out
+                            to get you started.
+                        </motion.p>
+                    </motion.div>
+
+                    <motion.div
+                        initial="initial"
+                        whileInView="animate"
+                        viewport={{ once: true, margin: '-100px' }}
+                        variants={staggerContainer}
+                        className="mx-auto mt-12 grid max-w-4xl gap-6 sm:grid-cols-2"
+                    >
+                        {whyApplyPoints.map((item, index) => (
+                            <motion.div
+                                key={index}
+                                variants={fadeInUp}
+                                className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-6"
+                            >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                                    <CheckCircleIcon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
+                                    <p className="mt-1 text-sm text-slate-600">{item.description}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-10 text-center"
+                    >
+                        <button
+                            onClick={openModal}
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800"
+                        >
+                            Apply for Access
+                            <ArrowRightIcon className="h-4 w-4" />
+                        </button>
                     </motion.div>
                 </div>
             </section>
@@ -618,7 +747,7 @@ export default function Landing() {
                             Four simple steps
                         </motion.h2>
                         <motion.p variants={fadeInUp} className="mt-6 text-lg leading-relaxed text-slate-600">
-                            From setup to secure entry in minutes, not hours.
+                            From application to live in days, not weeks.
                         </motion.p>
                     </motion.div>
 
@@ -720,6 +849,10 @@ export default function Landing() {
                         </div>
 
                         <div className="relative">
+                            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400">
+                                <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
+                                Completely free — No fees, no commitments
+                            </div>
                             <h2 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
                                 Ready to modernize your
                                 <span className="mt-2 block bg-linear-to-r from-blue-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent">
@@ -727,21 +860,24 @@ export default function Landing() {
                                 </span>
                             </h2>
                             <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-                                Join estates that have already made the switch to digital access control. Start using Kontrol today.
+                                Submit your application and our team will reach out to get you started. No fees. No commitments.
                             </p>
                             <div className="mt-10">
-                                <Link
-                                    href="/login"
+                                <button
+                                    onClick={openModal}
                                     className="group inline-flex items-center gap-2.5 rounded-xl bg-white px-8 py-4 text-base font-semibold text-slate-900 shadow-xl transition-all duration-300 hover:bg-slate-100 hover:shadow-2xl"
                                 >
-                                    Get Started Free
+                                    Apply for Access
                                     <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </motion.div>
                 </div>
             </section>
+
+            {/* Application Modal */}
+            <ApplicationModal isOpen={modalOpen} onClose={closeModal} />
         </PublicLayout>
     );
 }

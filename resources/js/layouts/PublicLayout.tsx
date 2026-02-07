@@ -26,12 +26,12 @@ export default function PublicLayout({ children }: Props) {
                     </Link>
 
                     <div className="flex items-center gap-3">
-                        <Link
+                        <a
                             href={LoginController.show.url()}
                             className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 hover:shadow-slate-900/20"
                         >
                             Open App
-                        </Link>
+                        </a>
                     </div>
                 </nav>
             </motion.header>
