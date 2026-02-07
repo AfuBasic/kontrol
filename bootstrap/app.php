@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -13,25 +12,53 @@ use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
-        then: function (): void {
-            Route::middleware('web')
-                ->group(base_path('routes/zeus.php'));
+        using: function (): void {
+            $domainRoutingEnabled = config('domains.routing_enabled', true);
+            $isLocal = app()->environment('local');
 
-            Route::middleware(['web', 'auth', EnsureIsAdmin::class])
-                ->prefix('admin')
-                ->group(base_path('routes/admin.php'));
+            /*
+            |------------------------------------------------------------------
+            | Domain-Based Routing
+            |------------------------------------------------------------------
+            |
+            | When domain routing is enabled and we're not in local environment
+            | (or local with subdomain simulation), use domain constraints.
+            |
+            | PUBLIC domain (usekontrol.com): Marketing routes
+            | APP domain (app.usekontrol.com): Application routes
+            |
+            */
 
-            Route::middleware(['web', 'auth'])
-                ->prefix('security')
-                ->group(base_path('routes/security.php'));
+            if ($domainRoutingEnabled && ! $isLocal) {
+                // Production / Staging: Full domain-based routing
+                Route::domain(config('domains.root'))
+                    ->middleware('web')
+                    ->group(base_path('routes/public.php'));
 
-            Route::middleware(['web', 'auth'])
-                ->prefix('resident')
-                ->group(base_path('routes/resident.php'));
+                Route::domain(config('domains.app'))
+                    ->middleware('web')
+                    ->group(base_path('routes/app.php'));
+            } elseif ($domainRoutingEnabled && $isLocal && config('domains.app_subdomain')) {
+                // Local with subdomain simulation (e.g., app.usekontrol.test)
+                Route::domain(config('domains.root'))
+                    ->middleware('web')
+                    ->group(base_path('routes/public.php'));
+
+                Route::domain(config('domains.app'))
+                    ->middleware('web')
+                    ->group(base_path('routes/app.php'));
+            } else {
+                // Local fallback: Load all routes without domain restrictions
+                // Both public and app routes accessible on localhost
+                Route::middleware('web')
+                    ->group(base_path('routes/public.php'));
+
+                Route::middleware('web')
+                    ->group(base_path('routes/app.php'));
+            }
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

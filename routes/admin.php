@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Api\ContentEnhanceController;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('admin.dashboard');
 
