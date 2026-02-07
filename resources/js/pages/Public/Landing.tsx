@@ -256,9 +256,9 @@ const features = [
         description: 'Receive codes directly in your Telegram chat.',
     },
     {
-        icon: DevicePhoneMobileIcon,
-        title: 'Works Offline',
-        description: 'Install as a PWA on any device.',
+        icon: PhoneIcon,
+        title: 'Estate Contacts',
+        description: 'Quick access to important estate phone numbers.',
     },
     {
         icon: LockClosedIcon,
