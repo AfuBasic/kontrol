@@ -122,10 +122,10 @@ class TelegramMessageHandler
     {
         $text = "👋 <b>Welcome to Kontrol, {$firstName}!</b>\n\n";
         $text .= "To get started, link your account:\n\n";
-        $text .= "1️⃣ Open the Kontrol web app\n";
-        $text .= "2️⃣ Go to Profile → Telegram\n";
-        $text .= "3️⃣ Click \"Connect\"\n";
-        $text .= "4️⃣ Copy your 6-digit code\n\n";
+        $text .= "1️. Open the Kontrol web app\n";
+        $text .= "2️. Go to Profile → Telegram\n";
+        $text .= "3️. Click \"Connect\"\n";
+        $text .= "4️. Copy your 6-digit code\n\n";
         $text .= "tap the button below to start linking.\n\n";
         $text .= 'Paste the 6 digit code to complete linking';
 
