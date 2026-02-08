@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\DeleteResidentAction;
 use App\Actions\Admin\ResetResidentPasswordAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
-use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
 use App\Models\User;
@@ -59,6 +59,7 @@ class ResidentController extends Controller
     public function create(): Response
     {
         $this->authorize('residents.create');
+
         return Inertia::render('admin/residents/create');
     }
 
@@ -101,11 +102,10 @@ class ResidentController extends Controller
      * Update the specified resident.
      */
     public function update(
-        Request $request, 
-        User $resident, 
+        Request $request,
+        User $resident,
         UpdateResidentAction $action
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $this->authorize('residents.edit');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -129,7 +129,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.delete');
         $estate = $this->estateContext->getEstate();
-        
+
         $action->execute($resident, $estate);
 
         return redirect()
@@ -144,7 +144,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.suspend');
         $estate = $this->estateContext->getEstate();
-        
+
         $action->execute($resident, $estate);
 
         $message = $resident->suspended_at
@@ -165,5 +165,30 @@ class ResidentController extends Controller
         $action->execute($resident, $estate);
 
         return back()->with('success', 'Resident password reset and invitation resent.');
+    }
+
+    /**
+     * Bulk invite residents by email.
+     */
+    public function bulkInvite(Request $request, BulkInviteResidentsAction $action): RedirectResponse
+    {
+        $this->authorize('residents.create');
+
+        $validated = $request->validate([
+            'emails' => ['required', 'array', 'min:1', 'max:500'],
+            'emails.*' => ['required', 'email'],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $result = $action->execute($validated['emails'], $estate);
+
+        $message = "Successfully invited {$result['invited']} resident(s).";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} email(s) were skipped (already exist).";
+        }
+
+        return redirect()
+            ->route('residents.index')
+            ->with('success', $message);
     }
 }

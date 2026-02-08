@@ -54,6 +54,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
     // Residents management
     Route::middleware('permission:residents.view')->group(function (): void {
         Route::resource('residents', ResidentController::class)->except(['show']);
+        Route::post('residents/bulk-invite', [ResidentController::class, 'bulkInvite'])->name('residents.bulk-invite');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::post('residents/{resident}/reset-password', [ResidentController::class, 'resetPassword'])->name('residents.reset-password');
     });
