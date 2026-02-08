@@ -53,19 +53,21 @@ Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
 
     // Residents management
     Route::middleware('permission:residents.view')->group(function (): void {
-        Route::resource('residents', ResidentController::class)->except(['show']);
+        // Explicit routes must come before resource to avoid {resident} matching "bulk-delete"
         Route::post('residents/bulk-invite', [ResidentController::class, 'bulkInvite'])->name('residents.bulk-invite');
         Route::delete('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::post('residents/{resident}/reset-password', [ResidentController::class, 'resetPassword'])->name('residents.reset-password');
+        Route::resource('residents', ResidentController::class)->except(['show']);
     });
 
     // Security Personnel management
     Route::middleware('permission:security.view')->group(function (): void {
-        Route::resource('security', SecurityPersonnelController::class)->except(['show']);
+        // Explicit routes must come before resource to avoid {security} matching "bulk-delete"
         Route::delete('security/bulk-delete', [SecurityPersonnelController::class, 'bulkDelete'])->name('security.bulk-delete');
         Route::patch('security/{security}/suspend', [SecurityPersonnelController::class, 'suspend'])->name('security.suspend');
         Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
+        Route::resource('security', SecurityPersonnelController::class)->except(['show']);
     });
 
     // Settings (admin-only)
