@@ -58,6 +58,7 @@ async function subscribeToPush(registration: ServiceWorkerRegistration): Promise
 async function saveSubscriptionToServer(subscription: PushSubscription): Promise<void> {
     const response = await fetch('/push/subscribe', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
@@ -73,6 +74,7 @@ async function saveSubscriptionToServer(subscription: PushSubscription): Promise
 async function removeSubscriptionFromServer(subscription: PushSubscription): Promise<void> {
     const response = await fetch('/push/unsubscribe', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',

@@ -138,6 +138,7 @@ export default function MarkdownEditor({
         try {
             const response = await fetch(ContentEnhanceController.url(), {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',

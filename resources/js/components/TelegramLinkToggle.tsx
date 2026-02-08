@@ -102,6 +102,7 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
         try {
             const response = await fetch(resident.telegram.generateOtp.url(), {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -112,7 +113,6 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
             const data = await response.json();
 
             if (!response.ok) {
-                console.log(data);
                 throw new Error(data.error || 'Failed to generate code');
             }
 
