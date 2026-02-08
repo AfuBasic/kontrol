@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
+use App\Models\EstateApplication;
 use App\Services\Zeus\EstateService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,6 +23,10 @@ class DashboardController extends Controller
         return Inertia::render('zeus/dashboard', [
             'stats' => $this->estateService->getStats(),
             'estates' => $this->estateService->getPaginatedEstates($search ?: null, $status ?: null),
+            'applications' => EstateApplication::query()
+                ->whereIn('status', ['pending', 'contacted'])
+                ->orderByDesc('created_at')
+                ->get(['id', 'estate_name', 'email', 'phone', 'address', 'notes', 'status', 'created_at']),
             'filters' => [
                 'search' => $search,
                 'status' => $status,

@@ -1,4 +1,5 @@
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
+import { openInExternalBrowser, useIsStandalone } from '@/hooks/useIsStandalone';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
@@ -516,6 +517,7 @@ function RightPanelIllustration() {
 }
 
 export default function Login() {
+    const isStandalone = useIsStandalone();
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -525,6 +527,11 @@ export default function Login() {
     function submit(e: React.FormEvent) {
         e.preventDefault();
         post('/login');
+    }
+
+    function handleGoogleSignIn() {
+        const googleAuthUrl = SocialLoginController.redirectToGoogle.url();
+        openInExternalBrowser(googleAuthUrl, isStandalone);
     }
 
     return (
@@ -668,8 +675,9 @@ export default function Login() {
                             </div>
 
                             {/* Google Sign-in */}
-                            <a
-                                href={SocialLoginController.redirectToGoogle.url()}
+                            <button
+                                type="button"
+                                onClick={handleGoogleSignIn}
                                 className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -691,7 +699,7 @@ export default function Login() {
                                     />
                                 </svg>
                                 Continue with Google
-                            </a>
+                            </button>
 
                             {/* Legal Links */}
                             <p className="mt-6 text-center text-xs text-gray-500">

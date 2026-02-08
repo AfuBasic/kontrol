@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Zeus\ApplicationController;
 use App\Http\Controllers\Zeus\AuthController;
 use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
@@ -27,5 +28,10 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
         Route::delete('/estates/{estate}', [EstateController::class, 'destroy'])->name('estates.destroy');
+
+        // Application management
+        Route::post('/applications/{application}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');
+        Route::post('/applications/{application}/reject', [ApplicationController::class, 'reject'])->name('applications.reject');
+        Route::post('/applications/{application}/contacted', [ApplicationController::class, 'markContacted'])->name('applications.contacted');
     });
 });
