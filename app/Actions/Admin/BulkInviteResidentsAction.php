@@ -23,12 +23,13 @@ class BulkInviteResidentsAction
         $emails = array_map(fn ($email) => strtolower(trim($email)), $emails);
         $emails = array_unique($emails);
 
-        // Get existing emails in one query
+        // Get existing emails
         $existingEmails = User::whereIn('email', $emails)->pluck('email')->toArray();
 
         // Filter to only new emails
         $newEmails = array_diff($emails, $existingEmails);
 
+        // suspend operations since there's no new residents to create
         if (empty($newEmails)) {
             return [
                 'invited' => 0,
@@ -47,7 +48,7 @@ class BulkInviteResidentsAction
         $invitedUserIds = [];
 
         DB::transaction(function () use ($newEmails, $estate, $role, $now, &$invitedUserIds) {
-            // 1. Batch insert users
+            // Prepare users data for batch insert
             $usersData = [];
             foreach ($newEmails as $email) {
                 $usersData[] = [
@@ -61,30 +62,30 @@ class BulkInviteResidentsAction
 
             User::insert($usersData);
 
-            // 2. Get the IDs of newly created users
+            // Get the IDs of newly created users
             $newUsers = User::whereIn('email', $newEmails)->get(['id', 'email']);
             $invitedUserIds = $newUsers->pluck('id')->toArray();
 
-            // 3. Bulk attach users to estate
+            // Bulk attach users to estate
             $estateUserData = [];
             foreach ($invitedUserIds as $userId) {
                 $estateUserData[$userId] = ['status' => 'pending'];
             }
             $estate->users()->attach($estateUserData);
 
-            // 4. Bulk assign roles (direct insert for team-scoped permissions)
+            // Bulk assign roles (direct insert for team-scoped permissions)
             $roleAssignments = [];
             foreach ($invitedUserIds as $userId) {
                 $roleAssignments[] = [
                     'role_id' => $role->id,
                     'model_type' => User::class,
                     'model_id' => $userId,
-                    'team_id' => $estate->id,
+                    'estate_id' => $estate->id,
                 ];
             }
             DB::table('model_has_roles')->insert($roleAssignments);
 
-            // 5. Bulk insert user profiles
+            //Bulk insert user profiles
             $profilesData = [];
             foreach ($invitedUserIds as $userId) {
                 $profilesData[] = [
@@ -95,7 +96,7 @@ class BulkInviteResidentsAction
             }
             UserProfile::insert($profilesData);
 
-            // 6. Log activity for bulk invite
+            // Log activity for bulk invite
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties([
@@ -107,7 +108,7 @@ class BulkInviteResidentsAction
                 ->log('bulk invited '.count($invitedUserIds).' residents');
         });
 
-        // 7. Dispatch single job for all invitations (outside transaction)
+        // Dispatch single job for all invitations (outside transaction)
         if (! empty($invitedUserIds)) {
             SendBulkResidentInvitationsJob::dispatch($invitedUserIds, $estate->id);
         }
