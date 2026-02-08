@@ -85,7 +85,7 @@ class BulkInviteResidentsAction
             }
             DB::table('model_has_roles')->insert($roleAssignments);
 
-            //Bulk insert user profiles
+            // Bulk insert user profiles
             $profilesData = [];
             foreach ($invitedUserIds as $userId) {
                 $profilesData[] = [
@@ -130,8 +130,12 @@ class BulkInviteResidentsAction
         // Replace common separators with spaces
         $name = str_replace(['.', '_', '-', '+'], ' ', $localPart);
 
-        // Capitalize each word
-        $name = ucwords($name);
+        // Strip any HTML tags and non-printable characters (defense-in-depth)
+        $name = strip_tags($name);
+        $name = preg_replace('/[^\p{L}\p{N}\s]/u', '', $name);
+
+        // Capitalize each word and trim
+        $name = ucwords(trim($name));
 
         return $name ?: 'Resident';
     }
