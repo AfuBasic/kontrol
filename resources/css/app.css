@@ -137,7 +137,21 @@
 }
 
 /* Safe Area Insets for PWA */
+:root {
+    --safe-area-inset-top: 0px;
+    --safe-area-inset-bottom: 0px;
+    --safe-area-inset-left: 0px;
+    --safe-area-inset-right: 0px;
+}
+
 @supports (padding-top: env(safe-area-inset-top)) {
+    :root {
+        --safe-area-inset-top: env(safe-area-inset-top);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        --safe-area-inset-left: env(safe-area-inset-left);
+        --safe-area-inset-right: env(safe-area-inset-right);
+    }
+
     .pt-safe {
         padding-top: env(safe-area-inset-top);
     }
@@ -149,5 +163,23 @@
     }
     .pr-safe {
         padding-right: env(safe-area-inset-right);
+    }
+    .mt-safe {
+        margin-top: env(safe-area-inset-top);
+    }
+    .mb-safe {
+        margin-bottom: env(safe-area-inset-bottom);
+    }
+    /* For sticky elements that need to account for safe area */
+    .top-safe {
+        top: env(safe-area-inset-top);
+    }
+}
+
+/* PWA standalone mode - ensure body respects safe areas */
+@media (display-mode: standalone) {
+    html, body {
+        /* Prevent overscroll bounce showing content under status bar */
+        overscroll-behavior: none;
     }
 }

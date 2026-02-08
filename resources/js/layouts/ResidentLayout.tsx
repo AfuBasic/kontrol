@@ -140,12 +140,15 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
     return (
         <PullToRefresh>
             <div className="flex min-h-screen flex-col bg-gray-50/50">
+                {/* Safe area spacer - fills status bar area with background */}
+                <div className="pt-safe fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-lg" aria-hidden="true" />
+
                 {/* Top Header - Minimal */}
                 <motion.header
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="pt-safe sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
+                    className="mt-safe sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
                 >
                     <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-4">
                         <Link href={HomeController.url()} className="flex cursor-pointer items-center gap-2.5">

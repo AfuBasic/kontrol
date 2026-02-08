@@ -208,8 +208,11 @@ export default function AdminLayout({ children }: Props) {
 
     return (
         <div className="min-h-screen bg-[#F0F5FF]">
+            {/* Safe area spacer - fills status bar area with background on mobile */}
+            <div className="pt-safe fixed inset-x-0 top-0 z-60 bg-[#1F6FDB] md:hidden" aria-hidden="true" />
+
             {/* Mobile Top Bar */}
-            <header className="sticky top-0 z-50 flex h-14 items-center justify-between bg-[#1F6FDB] px-4 md:hidden">
+            <header className="mt-safe sticky top-0 z-50 flex h-14 items-center justify-between bg-[#1F6FDB] px-4 md:hidden">
                 <button
                     onClick={() => setMobileMenuOpen(true)}
                     className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"

@@ -132,12 +132,15 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
     return (
         <PullToRefresh>
             <div className="flex min-h-screen flex-col bg-slate-50">
+                {/* Safe area spacer - fills status bar area with background */}
+                <div className="pt-safe fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl" aria-hidden="true" />
+
                 {/* Minimal Header */}
                 <motion.header
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-xl"
+                    className="mt-safe sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-xl"
                 >
                     <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
                         <Link href={HomeController.url()} className="flex items-center gap-2.5">
