@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\DeleteResidentAction;
@@ -190,5 +191,27 @@ class ResidentController extends Controller
         return redirect()
             ->route('residents.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Bulk delete residents.
+     */
+    public function bulkDelete(Request $request, BulkDeleteResidentsAction $action): RedirectResponse
+    {
+        $this->authorize('residents.delete');
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer'],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $result = $action->execute($validated['ids'], $estate);
+
+        $total = $result['deleted'] + $result['detached'];
+
+        return redirect()
+            ->route('residents.index')
+            ->with('success', "Successfully removed {$total} resident(s).");
     }
 }

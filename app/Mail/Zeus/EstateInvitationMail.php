@@ -22,12 +22,19 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
         public Estate $estate,
         public User $user,
     ) {
-        // Generate signed URL that expires in 72 hours
+        // Generate signed URL on app domain that expires in 72 hours
+        $appDomain = config('domains.app');
+        $scheme = app()->environment('local') ? 'http' : 'https';
+
+        URL::forceRootUrl("{$scheme}://{$appDomain}");
+
         $this->invitationUrl = URL::temporarySignedRoute(
             'invitation.accept',
             now()->addHours(72),
             ['user' => $user->id]
         );
+
+        URL::forceRootUrl(null);
     }
 
     public function envelope(): Envelope

@@ -1,8 +1,9 @@
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react'; // Added request
-import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { Head, Link, router } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ResidentActions from '@/components/Admin/ResidentActions';
 
 import { useDebounce } from '@/hooks/useDebounce';
@@ -42,7 +43,15 @@ export default function Residents({ residents, filters }: Props) {
     const hasResidents = residents.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const debouncedSearch = useDebounce(search, 300);
+
+    // Clear selection when page changes
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [residents.current_page]);
 
     // Debounce search
     useEffect(() => {
@@ -56,6 +65,35 @@ export default function Residents({ residents, filters }: Props) {
         setStatus(newStatus);
         router.get(index.url(), { search, status: newStatus }, { preserveState: true, replace: true });
     };
+
+    const toggleSelectAll = useCallback(() => {
+        if (selectedIds.length === residents.data.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(residents.data.map((r) => r.id));
+        }
+    }, [selectedIds.length, residents.data]);
+
+    const toggleSelect = useCallback((id: number) => {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    }, []);
+
+    const handleBulkDelete = useCallback(() => {
+        if (selectedIds.length === 0) return;
+
+        setIsDeleting(true);
+        router.delete(bulkDelete.url(), {
+            data: { ids: selectedIds },
+            onSuccess: () => {
+                setSelectedIds([]);
+                setShowDeleteConfirm(false);
+            },
+            onFinish: () => setIsDeleting(false),
+        });
+    }, [selectedIds]);
+
+    const isAllSelected = residents.data.length > 0 && selectedIds.length === residents.data.length;
+    const isSomeSelected = selectedIds.length > 0 && selectedIds.length < residents.data.length;
 
     return (
         <AdminLayout>
@@ -130,6 +168,37 @@ export default function Residents({ residents, filters }: Props) {
                 </div>
             </motion.div>
 
+            {/* Bulk Actions Bar */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && can('residents.delete') && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mb-4 flex items-center justify-between rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
+                    >
+                        <span className="text-sm font-medium text-primary-800">{selectedIds.length} resident(s) selected</span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedIds([])}
+                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                            >
+                                Clear
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Selected
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Content */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -144,6 +213,19 @@ export default function Residents({ residents, filters }: Props) {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
+                                        {can('residents.delete') && (
+                                            <th className="w-12 px-4 py-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isAllSelected}
+                                                    ref={(el) => {
+                                                        if (el) el.indeterminate = isSomeSelected;
+                                                    }}
+                                                    onChange={toggleSelectAll}
+                                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                />
+                                            </th>
+                                        )}
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Name</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Email</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Phone</th>
@@ -156,7 +238,17 @@ export default function Residents({ residents, filters }: Props) {
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
                                     {residents.data.map((resident) => (
-                                        <tr key={resident.id} className="hover:bg-gray-50">
+                                        <tr key={resident.id} className={`hover:bg-gray-50 ${selectedIds.includes(resident.id) ? 'bg-primary-50' : ''}`}>
+                                            {can('residents.delete') && (
+                                                <td className="w-12 px-4 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(resident.id)}
+                                                        onChange={() => toggleSelect(resident.id)}
+                                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{resident.name}</div>
                                             </td>
@@ -250,6 +342,60 @@ export default function Residents({ residents, filters }: Props) {
                     </div>
                 )}
             </motion.div>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                        onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                                <Trash2 className="h-6 w-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">Delete {selectedIds.length} Resident(s)?</h3>
+                            <p className="mt-2 text-sm text-gray-500">
+                                This action cannot be undone. The selected residents will be permanently removed from this estate.
+                            </p>
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    disabled={isDeleting}
+                                    className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBulkDelete}
+                                    disabled={isDeleting}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </AdminLayout>
     );
 }

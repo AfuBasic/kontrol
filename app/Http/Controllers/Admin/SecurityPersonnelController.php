@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\BulkDeleteSecurityAction;
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\DeleteSecurityAction;
 use App\Actions\Admin\ResetSecurityPasswordAction;
@@ -161,5 +162,25 @@ class SecurityPersonnelController extends Controller
         $action->execute($security, $estate);
 
         return back()->with('success', 'Security personnel password reset and invitation resent.');
+    }
+
+    /**
+     * Bulk delete security personnel.
+     */
+    public function bulkDelete(Request $request, BulkDeleteSecurityAction $action): RedirectResponse
+    {
+        $this->authorize('security.delete');
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer'],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $deletedCount = $action->execute($validated['ids'], $estate);
+
+        return redirect()
+            ->route('security.index')
+            ->with('success', "Successfully removed {$deletedCount} security personnel.");
     }
 }
