@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -25,6 +26,12 @@ Route::middleware('guest')->group(function (): void {
     Route::get('/auth/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
 });
+
+// PWA bridge page - shown after OAuth to redirect back into the PWA
+Route::get('/auth/pwa-bridge', function (Request $request) {
+    $redirectUrl = $request->query('redirect', '/');
+    return view('auth.pwa-bridge', ['redirectUrl' => $redirectUrl]);
+})->middleware('auth')->name('auth.pwa-bridge');
 
 Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')

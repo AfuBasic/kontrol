@@ -530,7 +530,12 @@ export default function Login() {
     }
 
     function handleGoogleSignIn() {
-        const googleAuthUrl = SocialLoginController.redirectToGoogle.url();
+        let googleAuthUrl = SocialLoginController.redirectToGoogle.url();
+        // Tell the server this came from PWA so it can redirect through the bridge page
+        if (isStandalone) {
+            const separator = googleAuthUrl.includes('?') ? '&' : '?';
+            googleAuthUrl = `${googleAuthUrl}${separator}pwa=1`;
+        }
         openInExternalBrowser(googleAuthUrl, isStandalone);
     }
 

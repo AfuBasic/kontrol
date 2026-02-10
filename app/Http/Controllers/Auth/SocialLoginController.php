@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -12,15 +13,20 @@ class SocialLoginController
     /**
      * Redirect to Google OAuth.
      */
-    public function redirectToGoogle(): RedirectResponse
+    public function redirectToGoogle(Request $request): RedirectResponse
     {
+        // Store PWA flag so we know to redirect through bridge page after callback
+        if ($request->has('pwa')) {
+            session(['oauth_from_pwa' => true]);
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
     /**
      * Handle Google callback.
      */
-    public function handleGoogleCallback(): RedirectResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
             $googleUser = Socialite::driver('google')->user();
@@ -43,15 +49,30 @@ class SocialLoginController
 
         Auth::login($user, true);
 
-        // Redirect based on role
+        // Determine the redirect URL based on role
+        $redirectUrl = $this->getRedirectUrl($user);
+
+        // If login was initiated from PWA, show bridge page
+        if (session()->pull('oauth_from_pwa')) {
+            return redirect()->route('auth.pwa-bridge', ['redirect' => $redirectUrl]);
+        }
+
+        return redirect($redirectUrl);
+    }
+
+    /**
+     * Get the redirect URL based on user role.
+     */
+    private function getRedirectUrl(User $user): string
+    {
         if ($user->hasRole('resident')) {
-            return redirect()->route('resident.home');
+            return route('resident.home');
         }
 
         if ($user->hasRole('security')) {
-            return redirect()->route('security.dashboard');
+            return route('security.dashboard');
         }
 
-        return redirect()->route('admin.dashboard');
+        return route('admin.dashboard');
     }
 }
