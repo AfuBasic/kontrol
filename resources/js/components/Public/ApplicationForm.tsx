@@ -1,17 +1,27 @@
 import { useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Building2, Loader2, Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
-import type { FormEvent } from 'react';
+import type { FocusEvent, FormEvent } from 'react';
 
 interface Props {
     onSuccess: (estateName: string) => void;
 }
 
 const inputClasses = {
-    base: 'w-full rounded-xl border-2 bg-slate-50/50 px-4 py-3.5 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:outline-none',
+    base: 'w-full rounded-xl border-2 bg-slate-50/50 px-4 py-3.5 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:outline-none scroll-mt-4',
     normal: 'border-slate-200 hover:border-slate-300 focus:border-slate-900 focus:ring-slate-900/5',
     error: 'border-red-300 focus:border-red-500 focus:ring-red-500/10',
 };
+
+/**
+ * Scroll input into view when focused on mobile to prevent keyboard from obscuring it.
+ */
+function handleInputFocus(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    // Small delay to allow keyboard to fully appear
+    setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+}
 
 const labelClasses = 'mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700';
 
@@ -65,6 +75,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
                     type="text"
                     value={data.estate_name}
                     onChange={(e) => setData('estate_name', e.target.value)}
+                    onFocus={handleInputFocus}
                     placeholder="e.g. Lekki Gardens Phase 1"
                     className={`${inputClasses.base} ${errors.estate_name ? inputClasses.error : inputClasses.normal}`}
                 />
@@ -90,6 +101,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
                         type="email"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
+                        onFocus={handleInputFocus}
                         placeholder="admin@estate.com"
                         className={`${inputClasses.base} ${errors.email ? inputClasses.error : inputClasses.normal}`}
                     />
@@ -113,6 +125,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
                         type="tel"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
+                        onFocus={handleInputFocus}
                         placeholder="+234 800 000 0000"
                         className={`${inputClasses.base} ${errors.phone ? inputClasses.error : inputClasses.normal}`}
                     />
@@ -137,6 +150,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
                     type="text"
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
+                    onFocus={handleInputFocus}
                     placeholder="Full address of the estate"
                     className={`${inputClasses.base} ${inputClasses.normal}`}
                 />
@@ -154,6 +168,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
                     id="notes"
                     value={data.notes}
                     onChange={(e) => setData('notes', e.target.value)}
+                    onFocus={handleInputFocus}
                     placeholder="Anything else you'd like us to know?"
                     rows={3}
                     className={`${inputClasses.base} ${inputClasses.normal} resize-none`}

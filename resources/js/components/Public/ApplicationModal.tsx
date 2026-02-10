@@ -181,8 +181,8 @@ export default function ApplicationModal({ isOpen, onClose }: Props) {
                                     </div>
                                 )}
 
-                                {/* Form Content */}
-                                <div className="max-h-[55vh] overflow-y-auto px-6 py-6 sm:max-h-[60vh] sm:px-8">
+                                {/* Form Content - extra bottom padding on mobile for keyboard clearance */}
+                                <div className="max-h-[55vh] overflow-y-auto px-6 pt-6 pb-24 sm:max-h-[60vh] sm:px-8 sm:pb-6">
                                     <AnimatePresence mode="wait">
                                         {submitted ? (
                                             <SuccessState key="success" estateName={estateName} />
