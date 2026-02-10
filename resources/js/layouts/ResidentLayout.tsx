@@ -13,6 +13,7 @@ import ContactModal from '@/components/ContactModal';
 import InstallPWABanner from '@/components/InstallPWABanner';
 import PullToRefresh from '@/components/PullToRefresh';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
+import usePathFromUrl from '@/hooks/usePathFromUrl';
 
 interface Props {
     children: ReactNode;
@@ -107,7 +108,6 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
-
     // Listen for visitor notifications on user's private channel
     useEffect(() => {
         if (!auth?.user?.id) return;
@@ -212,7 +212,8 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                         <div className="mx-auto max-w-lg">
                             <div className="grid grid-cols-5 items-center justify-between py-2">
                                 {navItems.map((item) => {
-                                    const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
+                                    const isActive =
+                                        currentPath === usePathFromUrl(item.href) || currentPath.startsWith(usePathFromUrl(item.href) + '/');
                                     return (
                                         <Link key={item.name} href={item.href} className="group relative flex flex-col items-center gap-1 py-1">
                                             <div

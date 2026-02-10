@@ -34,6 +34,7 @@ import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
+import usePathFromUrl from '@/hooks/usePathFromUrl';
 
 interface Props {
     children: ReactNode;
@@ -181,26 +182,10 @@ export default function AdminLayout({ children }: Props) {
     }
 
     // Extract just the path from a URL (handles Wayfinder's protocol-relative URLs)
-    function getPathFromUrl(href: string): string {
-        // Handle protocol-relative URLs like //app.kontrol.test/admin/residents
-        if (href.startsWith('//')) {
-            const pathStart = href.indexOf('/', 2);
-            return pathStart !== -1 ? href.slice(pathStart) : '/';
-        }
-        // Handle full URLs
-        if (href.startsWith('http://') || href.startsWith('https://')) {
-            try {
-                return new URL(href).pathname;
-            } catch {
-                return href;
-            }
-        }
-        return href;
-    }
 
     function isCurrentPath(href: string) {
-        const path = getPathFromUrl(href);
-        const dashboardPath = getPathFromUrl(DashboardController.url());
+        const path = usePathFromUrl(href);
+        const dashboardPath = usePathFromUrl(DashboardController.url());
         if (path === dashboardPath) {
             return url === path || url === path + '/';
         }
