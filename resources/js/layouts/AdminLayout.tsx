@@ -61,7 +61,9 @@ const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.in
 
 export default function AdminLayout({ children }: Props) {
     const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;
-    const { url } = usePage();
+    const { url: fullUrl } = usePage();
+    // Strip query params for path matching
+    const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -178,11 +180,31 @@ export default function AdminLayout({ children }: Props) {
         router.post(LoginController.destroy.url());
     }
 
-    function isCurrentPath(href: string) {
-        if (href === DashboardController.url()) {
-            return url === href || url === href + '/';
+    // Extract just the path from a URL (handles Wayfinder's protocol-relative URLs)
+    function getPathFromUrl(href: string): string {
+        // Handle protocol-relative URLs like //app.kontrol.test/admin/residents
+        if (href.startsWith('//')) {
+            const pathStart = href.indexOf('/', 2);
+            return pathStart !== -1 ? href.slice(pathStart) : '/';
         }
-        return url.startsWith(href);
+        // Handle full URLs
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+            try {
+                return new URL(href).pathname;
+            } catch {
+                return href;
+            }
+        }
+        return href;
+    }
+
+    function isCurrentPath(href: string) {
+        const path = getPathFromUrl(href);
+        const dashboardPath = getPathFromUrl(DashboardController.url());
+        if (path === dashboardPath) {
+            return url === path || url === path + '/';
+        }
+        return url.startsWith(path);
     }
 
     function canAccess(item: NavItem): boolean {

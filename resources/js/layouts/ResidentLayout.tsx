@@ -32,25 +32,47 @@ interface PageProps {
     [key: string]: unknown;
 }
 
+// Extract just the path from a URL (handles Wayfinder's protocol-relative URLs)
+function getPathFromUrl(href: string): string {
+    // Handle protocol-relative URLs like //app.kontrol.test/resident/home
+    if (href.startsWith('//')) {
+        const pathStart = href.indexOf('/', 2);
+        return pathStart !== -1 ? href.slice(pathStart) : '/';
+    }
+    // Handle full URLs
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+        try {
+            return new URL(href).pathname;
+        } catch {
+            return href;
+        }
+    }
+    return href;
+}
+
 const navItems = [
     {
         name: 'Home',
         href: HomeController.url(),
+        path: getPathFromUrl(HomeController.url()),
         icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
     {
         name: 'Visitors',
         href: AccessCodeController.index.url(),
+        path: getPathFromUrl(AccessCodeController.index.url()),
         icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
     {
         name: 'Activity',
         href: ActivityController.url(),
+        path: getPathFromUrl(ActivityController.url()),
         icon: (active: boolean) => <Activity className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
     {
         name: 'Feed',
         href: EstateBoardController.index.url(),
+        path: getPathFromUrl(EstateBoardController.index.url()),
         icon: (active: boolean) => (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -71,6 +93,7 @@ const navItems = [
     {
         name: 'Profile',
         href: ProfileController.edit.url(),
+        path: getPathFromUrl(ProfileController.edit.url()),
         icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
     },
 ];

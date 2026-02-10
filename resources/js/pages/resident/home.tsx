@@ -142,7 +142,7 @@ export default function Home({ stats, activeCodes, recentActivity, estateName }:
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm font-medium text-amber-600">{code.time_remaining}</p>
-                                            <p className="text-xs text-gray-400">remaining</p>
+                                            {code.type === 'long_lived' && <p className="text-xs text-gray-400">remaining</p>}
                                         </div>
                                     </div>
                                 </Link>
