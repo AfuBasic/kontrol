@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
@@ -65,6 +65,14 @@ export default function SecurityPersonnel({ security, filters }: Props) {
         router.get(index.url(), { search, status: newStatus }, { preserveState: true, replace: true });
     };
 
+    const clearFilters = useCallback(() => {
+        setSearch('');
+        setStatus('');
+        router.get(index.url(), {}, { preserveState: true, replace: true });
+    }, []);
+
+    const hasActiveFilters = Boolean(search || status);
+
     const toggleSelectAll = useCallback(() => {
         if (selectedIds.length === security.data.length) {
             setSelectedIds([]);
@@ -99,12 +107,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
             <Head title="Security Personnel" />
 
             {/* Page Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-            >
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-900">Security Personnel</h1>
                     <p className="mt-1 text-gray-500">Manage security staff for your estate.</p>
@@ -120,15 +123,10 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                         Add Security
                     </Link>
                 )}
-            </motion.div>
+            </div>
 
             {/* Filters */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
-                className="mb-6 flex flex-col gap-4 sm:flex-row"
-            >
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                 <div className="relative flex-1">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -165,7 +163,17 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                         </div>
                     </div>
                 </div>
-            </motion.div>
+                {hasActiveFilters && (
+                    <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                    >
+                        <XMarkIcon className="h-4 w-4" />
+                        Clear
+                    </button>
+                )}
+            </div>
 
             {/* Bulk Actions Bar */}
             <AnimatePresence>
@@ -199,12 +207,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
             </AnimatePresence>
 
             {/* Content */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                className="rounded-xl border border-gray-200 bg-white"
-            >
+            <div className="rounded-xl border border-gray-200 bg-white">
                 {hasSecurity ? (
                     <>
                         {/* Table */}
@@ -340,7 +343,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                         )}
                     </div>
                 )}
-            </motion.div>
+            </div>
 
             {/* Delete Confirmation Modal */}
             <AnimatePresence>

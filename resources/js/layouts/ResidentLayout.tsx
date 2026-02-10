@@ -76,8 +76,10 @@ const navItems = [
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
-    const { auth } = usePage<PageProps>().props;
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const page = usePage<PageProps>();
+    const { auth } = page.props;
+    // Use Inertia's URL for active state (without query params)
+    const currentPath = page.url?.split('?')[0] || '';
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
     const [showToast, setShowToast] = useState(false);

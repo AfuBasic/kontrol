@@ -4,6 +4,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 export default function AnimatedLayout({ children }: { children: React.ReactNode }) {
     const { url } = usePage();
 
+    // Use only the pathname (without query params) as the key
+    // This prevents animation when just filtering/searching (query param changes)
+    const pathname = url.split('?')[0];
+
     const pageVariants = {
         initial: { x: 50, opacity: 0.5 },
         animate: { x: 0, opacity: 1 },
@@ -13,7 +17,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
     return (
         <AnimatePresence mode="wait">
             <motion.div
-                key={url}
+                key={pathname}
                 variants={pageVariants}
                 initial="initial"
                 animate="animate"

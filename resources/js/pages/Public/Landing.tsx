@@ -465,7 +465,7 @@ export default function Landing() {
                             className="mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur-sm"
                         >
                             <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-                            <span>100% Free, No payment ever required</span>
+                            <span>100% Free, No payment required</span>
                         </motion.div>
 
                         <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
