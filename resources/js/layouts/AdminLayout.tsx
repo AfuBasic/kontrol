@@ -204,6 +204,7 @@ export default function AdminLayout({ children }: Props) {
         if (path === dashboardPath) {
             return url === path || url === path + '/';
         }
+
         return url.startsWith(path);
     }
 
