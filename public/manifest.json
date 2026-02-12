@@ -3,10 +3,12 @@
     "short_name": "Kontrol",
     "description": "Estate access management made simple",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ffffff",
+    "theme_color": "#0A3D91",
     "orientation": "portrait-primary",
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "/assets/images/app-icon.png",

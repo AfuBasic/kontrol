@@ -26,17 +26,42 @@ export function useIsStandalone() {
 }
 
 /**
+ * Detects if the device is running iOS
+ */
+export function isIOS(): boolean {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * Detects if the device is running Android
+ */
+export function isAndroid(): boolean {
+    return /Android/.test(navigator.userAgent);
+}
+
+/**
  * Opens a URL in the device's external browser when in PWA mode,
  * or navigates normally when in a regular browser.
  *
- * This is particularly useful for OAuth flows that may not work
- * correctly within PWA webviews.
+ * For iOS PWAs, we use a programmatic anchor click which more reliably
+ * opens the external Safari browser.
+ *
+ * For Android, window.open with _system target helps open Chrome.
  */
 export function openInExternalBrowser(url: string, isStandalone: boolean): void {
     if (isStandalone) {
-        // In PWA mode, open in external browser
-        // Using _blank with specific features forces external browser on most platforms
-        window.open(url, '_blank', 'noopener,noreferrer');
+        // Create and click a temporary anchor element
+        // This is more reliable than window.open for PWAs, especially on iOS
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+
+        // For iOS, we need the anchor in the DOM briefly
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
     } else {
         // In regular browser, just navigate
         window.location.href = url;
