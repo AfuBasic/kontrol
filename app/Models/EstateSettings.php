@@ -49,7 +49,7 @@ class EstateSettings extends Model
         return Cache::remember(
             "estate_settings:{$estateId}",
             now()->addMinutes(15),
-            fn () => self::firstOrCreate(['estate_id' => $estateId])
+            fn () => self::firstOrCreate(['estate_id' => $estateId])->refresh()
         );
     }
 

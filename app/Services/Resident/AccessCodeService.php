@@ -348,8 +348,8 @@ class AccessCodeService
         $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
-        $min = $settings->access_code_min_lifespan_minutes;
-        $max = $settings->access_code_max_lifespan_minutes;
+        $min = $settings->access_code_min_lifespan_minutes ?? 30;
+        $max = $settings->access_code_max_lifespan_minutes ?? 1440;
 
         // Base options to consider (sensible defaults)
         $standardDurations = [30, 60, 120, 240, 480, 720, 1440, 2880, 4320, 10080];
