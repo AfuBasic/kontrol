@@ -20,8 +20,10 @@ class InvitationController extends Controller
             return redirect()->route('invitation.invalid');
         }
 
-        // Check if user already has a password (invitation already used)
-        if ($user->password !== null) {
+        $isPasswordReset = $request->boolean('password_reset');
+
+        // Check if user already has a password (invitation already used) — skip for password resets
+        if (! $isPasswordReset && $user->password !== null) {
             return redirect()->route('invitation.invalid');
         }
 
@@ -31,6 +33,7 @@ class InvitationController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
+            'isPasswordReset' => $isPasswordReset,
         ]);
     }
 
@@ -41,8 +44,10 @@ class InvitationController extends Controller
             return redirect()->route('invitation.invalid');
         }
 
-        // Check if invitation was already used
-        if ($user->password !== null) {
+        $isPasswordReset = $request->boolean('password_reset');
+
+        // Check if invitation was already used — skip for password resets
+        if (! $isPasswordReset && $user->password !== null) {
             return redirect()->route('invitation.invalid');
         }
 

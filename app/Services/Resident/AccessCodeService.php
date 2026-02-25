@@ -184,7 +184,7 @@ class AccessCodeService
                     $q->where('subject_type', AccessCode::class)
                         ->whereIn('subject_id', $codeIds);
                 })
-                // User activities (like Telegram linked) where the user is both causer and subject
+                    // User activities (like Telegram linked) where the user is both causer and subject
                     ->orWhere(function ($q) use ($user) {
                         $q->where('subject_type', User::class)
                             ->where('subject_id', $user->id)
@@ -400,8 +400,8 @@ class AccessCodeService
 
         if ($hours < 24) {
             return $remainingMinutes > 0
-               ? "{$hours} hr {$remainingMinutes} min"
-               : "{$hours} ".($hours == 1 ? 'hour' : 'hours');
+                ? "{$hours} hr {$remainingMinutes} min"
+                : "{$hours} ".($hours == 1 ? 'hour' : 'hours');
         }
 
         $days = floor($hours / 24);

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
-
 class Estate extends Model
 {
     use HasFactory;
@@ -55,6 +54,6 @@ class Estate extends Model
      */
     public function settings(): HasOne
     {
-        return $this->hasOne(EstateSettings::class);
+        return $this->hasOne(EstateSettings::class)->withDefault();
     }
 }
