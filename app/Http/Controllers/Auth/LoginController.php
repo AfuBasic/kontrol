@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AuthenticateUser;
+use App\Actions\Auth\CheckTrustedDevice;
 use App\Actions\Auth\DetermineUserRedirect;
+use App\Actions\Auth\GenerateLoginOtp;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
@@ -23,18 +25,33 @@ class LoginController extends Controller
     public function store(
         LoginRequest $request,
         AuthenticateUser $authenticateUser,
-        DetermineUserRedirect $determineRedirect
+        CheckTrustedDevice $checkTrustedDevice,
+        GenerateLoginOtp $generateOtp,
+        DetermineUserRedirect $determineRedirect,
     ): RedirectResponse {
-        $user = $authenticateUser->execute(
+        $user = $authenticateUser->validate(
             $request->validated('email'),
             $request->validated('password'),
-            $request->boolean('remember')
         );
 
+        if (! $checkTrustedDevice->execute($user, $request)) {
+            $request->session()->put([
+                'otp_user_id' => $user->id,
+                'otp_remember' => $request->boolean('remember'),
+            ]);
+
+            $generateOtp->execute($user, $request);
+
+            return redirect()->route('login.otp.show');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
         broadcast(new ForceLogout($user->id));
         Auth::logoutOtherDevices($request->validated('password'));
+
+        $authenticateUser->logActivity($user);
 
         $redirectUrl = $determineRedirect->execute($user);
 

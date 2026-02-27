@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\CheckTrustedDevice;
+use App\Actions\Auth\GenerateLoginOtp;
 use App\Events\ForceLogout;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +18,6 @@ class SocialLoginController
      */
     public function redirectToGoogle(Request $request): RedirectResponse
     {
-        // Store PWA flag so we know to redirect through bridge page after callback
         if ($request->has('pwa')) {
             session(['oauth_from_pwa' => true]);
         }
@@ -27,25 +28,36 @@ class SocialLoginController
     /**
      * Handle Google callback.
      */
-    public function handleGoogleCallback(Request $request): RedirectResponse
-    {
+    public function handleGoogleCallback(
+        Request $request,
+        CheckTrustedDevice $checkTrustedDevice,
+        GenerateLoginOtp $generateOtp,
+    ): RedirectResponse {
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (\Exception $e) {
             return redirect()->route('login')->with('error', 'Google authentication failed.');
         }
 
-        // Find or create user by email
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if (! $user) {
-            // User doesn't exist - redirect back with error
             return redirect()->route('login')->with('error', 'No account found with this email. Please contact your administrator.');
         }
 
-        // Update Google ID if not set
         if (! $user->google_id) {
             $user->update(['google_id' => $googleUser->getId()]);
+        }
+
+        if (! $checkTrustedDevice->execute($user, $request)) {
+            $request->session()->put([
+                'otp_user_id' => $user->id,
+                'otp_via_social' => true,
+            ]);
+
+            $generateOtp->execute($user, $request);
+
+            return redirect()->route('login.otp.show');
         }
 
         Auth::login($user, true);
@@ -54,10 +66,8 @@ class SocialLoginController
         broadcast(new ForceLogout($user->id));
         $this->storePasswordHashInSession($user);
 
-        // Determine the redirect URL based on role
         $redirectUrl = $this->getRedirectUrl($user);
 
-        // If login was initiated from PWA, show bridge page
         if (session()->pull('oauth_from_pwa')) {
             return redirect()->route('auth.pwa-bridge', ['redirect' => $redirectUrl]);
         }
@@ -67,7 +77,6 @@ class SocialLoginController
 
     /**
      * Store the user's password hash in the session to support AuthenticateSession middleware.
-     * This invalidates other sessions for the same user.
      */
     private function storePasswordHashInSession(User $user): void
     {

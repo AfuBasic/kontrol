@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
@@ -25,11 +26,19 @@ Route::middleware('guest')->group(function (): void {
     // Google OAuth
     Route::get('/auth/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
+
+    // OTP Verification (new device)
+    Route::get('/login/verify', [LoginOtpController::class, 'show'])->name('login.otp.show');
+    Route::post('/login/verify', [LoginOtpController::class, 'verify'])->name('login.otp.verify');
+    Route::post('/login/verify/resend', [LoginOtpController::class, 'resend'])
+        ->middleware('throttle:3,1')
+        ->name('login.otp.resend');
 });
 
 // PWA bridge page - shown after OAuth to redirect back into the PWA
 Route::get('/auth/pwa-bridge', function (Request $request) {
     $redirectUrl = $request->query('redirect', '/');
+
     return view('auth.pwa-bridge', ['redirectUrl' => $redirectUrl]);
 })->middleware('auth')->name('auth.pwa-bridge');
 

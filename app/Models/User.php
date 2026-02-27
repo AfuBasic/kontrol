@@ -57,6 +57,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<TrustedDevice, $this>
+     */
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(TrustedDevice::class);
+    }
+
+    /**
      * @return BelongsToMany<Estate, $this>
      */
     public function estates(): BelongsToMany

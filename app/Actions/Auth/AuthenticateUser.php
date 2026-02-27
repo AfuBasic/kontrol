@@ -10,11 +10,11 @@ use Illuminate\Validation\ValidationException;
 class AuthenticateUser
 {
     /**
-     * Authenticate a user and log them in.
+     * Validate credentials and return the user without logging in.
      *
      * @throws ValidationException
      */
-    public function execute(string $email, string $password, bool $remember = false): User
+    public function validate(string $email, string $password): User
     {
         $user = User::where('email', $email)->first();
 
@@ -23,15 +23,13 @@ class AuthenticateUser
                 'email' => ['The provided credentials do not match our records.'],
             ]);
         }
-        
-        //If user is suspended, inform them
+
         if ($user->suspended_at) {
             throw ValidationException::withMessages([
                 'email' => ['Your account has been suspended. Please contact the administrator.'],
             ]);
         }
 
-        // Check if user has accepted their invitation (has at least one accepted estate membership)
         $hasAcceptedMembership = $user->estates()
             ->wherePivot('status', 'accepted')
             ->exists();
@@ -42,9 +40,30 @@ class AuthenticateUser
             ]);
         }
 
+        return $user;
+    }
+
+    /**
+     * Validate credentials, log the user in, and log the activity.
+     *
+     * @throws ValidationException
+     */
+    public function execute(string $email, string $password, bool $remember = false): User
+    {
+        $user = $this->validate($email, $password);
+
         Auth::login($user, $remember);
 
-        // Try to get estate context if available
+        $this->logActivity($user);
+
+        return $user;
+    }
+
+    /**
+     * Log a successful login activity.
+     */
+    public function logActivity(User $user): void
+    {
         $estateId = $user->estates->first()?->id;
 
         $logger = activity()
@@ -54,8 +73,7 @@ class AuthenticateUser
         if ($estateId) {
             $logger->withProperties(['estate_id' => $estateId]);
         }
-        $logger->log('logged in');
 
-        return $user;
+        $logger->log('logged in');
     }
 }
