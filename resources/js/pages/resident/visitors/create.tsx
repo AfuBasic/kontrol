@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import type { DurationOption } from '@/types/access-code';
@@ -10,6 +10,8 @@ type Props = {
 };
 
 export default function CreateCode({ durationOptions, durationConstraints }: Props) {
+    const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const [selectedDuration, setSelectedDuration] = useState<number | 'custom'>(durationOptions[0]?.minutes || 60);
     const [customDuration, setCustomDuration] = useState<string>('');
     const [accessType, setAccessType] = useState<'single_use' | 'long_lived'>('single_use');
@@ -76,41 +78,43 @@ export default function CreateCode({ durationOptions, durationConstraints }: Pro
                     </motion.div>
                 )}
 
-                {/* Access Type Toggle */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.05 }}
-                    className="mb-6"
-                >
-                    <label className="mb-3 block text-sm font-medium text-gray-700">Access Type</label>
-                    <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                        {(['single_use', 'long_lived'] as const).map((type) => (
-                            <button
-                                key={type}
-                                type="button"
-                                onClick={() => {
-                                    setAccessType(type);
-                                    setData('type', type);
-                                }}
-                                className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
-                                    accessType === type ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                            >
-                                {accessType === type && (
-                                    <motion.div
-                                        layoutId="accessTypeTab"
-                                        className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-black/5"
-                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                                <span className="relative z-10 flex items-center justify-center gap-2">
-                                    {type === 'single_use' ? 'Single Visit' : 'Long-lived'}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
+                {/* Access Type Toggle (hidden for household members) */}
+                {!isHouseholdMember && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.05 }}
+                        className="mb-6"
+                    >
+                        <label className="mb-3 block text-sm font-medium text-gray-700">Access Type</label>
+                        <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                            {(['single_use', 'long_lived'] as const).map((type) => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => {
+                                        setAccessType(type);
+                                        setData('type', type);
+                                    }}
+                                    className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                                        accessType === type ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    {accessType === type && (
+                                        <motion.div
+                                            layoutId="accessTypeTab"
+                                            className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-black/5"
+                                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {type === 'single_use' ? 'Single Visit' : 'Long-lived'}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Visitor Name */}
                 <motion.div

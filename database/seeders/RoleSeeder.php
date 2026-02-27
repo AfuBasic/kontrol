@@ -11,9 +11,10 @@ class RoleSeeder extends Seeder
      * Reserved roles that cannot be created/edited by users.
      */
     public const RESERVED_ROLES = [
-        'admin',    // Estate-scoped admin role
-        'security', // Global security personnel role
-        'resident', // Global resident role
+        'admin',            // Estate-scoped admin role
+        'security',         // Global security personnel role
+        'resident',         // Global resident role
+        'household_member', // Global household member role
     ];
 
     /**
@@ -22,6 +23,7 @@ class RoleSeeder extends Seeder
     public const GLOBAL_ROLES = [
         'security',
         'resident',
+        'household_member',
     ];
 
     /**

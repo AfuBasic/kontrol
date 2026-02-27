@@ -6,6 +6,7 @@ use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\EstateContactController;
 use App\Http\Controllers\Resident\HomeController;
+use App\Http\Controllers\Resident\HouseholdMemberController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\ProfileController;
 use App\Http\Controllers\Resident\TelegramLinkController;
@@ -16,12 +17,16 @@ use Illuminate\Support\Facades\Route;
 | Resident Routes
 |--------------------------------------------------------------------------
 |
-| Routes for estate residents. All routes require authentication
-| and the 'resident' role (global).
+| Routes for estate residents and household members.
+| Shared routes are accessible by both 'resident' and 'household_member' roles.
+| Primary-resident-only routes require the 'resident' role exclusively.
 |
 */
 
-Route::middleware('role:resident')->group(function (): void {
+// ──────────────────────────────────────────────────────────────
+// Shared routes: accessible by both residents and household members
+// ──────────────────────────────────────────────────────────────
+Route::middleware('role:resident,household_member')->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', fn () => redirect()->route('resident.home'))->name('resident.dashboard');
 
@@ -40,15 +45,15 @@ Route::middleware('role:resident')->group(function (): void {
     Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');
     Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
 
-    // Access Codes (Visitors)
-    Route::prefix('visitors')->name('resident.visitors.')->group(function (): void {
-        Route::get('/', [AccessCodeController::class, 'index'])->name('index');
-        Route::get('/create', [AccessCodeController::class, 'create'])->name('create');
-        Route::post('/', [AccessCodeController::class, 'store'])->name('store');
-        Route::get('/{accessCode}/success', [AccessCodeController::class, 'success'])->name('success');
-        Route::get('/{accessCode}', [AccessCodeController::class, 'show'])->name('show');
-        Route::delete('/{accessCode}', [AccessCodeController::class, 'destroy'])->name('destroy');
-    });
+    // Access Code Creation (household members can create codes)
+    Route::get('/visitors/create', [AccessCodeController::class, 'create'])->name('resident.visitors.create');
+    Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
+    Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
+
+    // Visitor Management (index, show, revoke)
+    Route::get('/visitors', [AccessCodeController::class, 'index'])->name('resident.visitors.index');
+    Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
+    Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
 
     // Estate Board (read-only + comments)
     Route::prefix('estate-board')->name('resident.estate-board.')->group(function (): void {
@@ -69,3 +74,17 @@ Route::middleware('role:resident')->group(function (): void {
         Route::get('/status', [TelegramLinkController::class, 'status'])->name('status');
     });
 });
+
+// ──────────────────────────────────────────────────────────────
+// Primary resident only: household management
+// ──────────────────────────────────────────────────────────────
+Route::middleware('role:resident')->group(function (): void {
+    // Household Management
+    Route::prefix('household')->name('resident.household.')->group(function (): void {
+        Route::get('/', [HouseholdMemberController::class, 'index'])->name('index');
+        Route::post('/', [HouseholdMemberController::class, 'store'])->name('store');
+        Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
+        Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
+    });
+});
+

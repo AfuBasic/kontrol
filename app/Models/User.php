@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -71,6 +72,42 @@ class User extends Authenticatable
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Household members where this user is the primary resident (head).
+     *
+     * @return HasMany<HouseholdMember, $this>
+     */
+    public function householdMembers(): HasMany
+    {
+        return $this->hasMany(HouseholdMember::class, 'primary_resident_id');
+    }
+
+    /**
+     * The household record if this user is a household member.
+     *
+     * @return HasOne<HouseholdMember, $this>
+     */
+    public function householdOf(): HasOne
+    {
+        return $this->hasOne(HouseholdMember::class, 'household_member_id');
+    }
+
+    /**
+     * Check if this user is a household member (not a primary resident).
+     */
+    public function isHouseholdMember(): bool
+    {
+        return $this->hasRole('household_member');
+    }
+
+    /**
+     * Check if this user is a primary resident (not a household member).
+     */
+    public function isPrimaryResident(): bool
+    {
+        return $this->hasRole('resident') && ! $this->hasRole('household_member');
     }
 
     /**

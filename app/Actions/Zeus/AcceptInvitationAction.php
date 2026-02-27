@@ -36,7 +36,7 @@ class AcceptInvitationAction
                 setPermissionsTeamId($estate->id);
                 $user->unsetRelation('roles');
 
-                if ($user->hasRole(['resident', 'security'])) {
+                if ($user->hasRole(['resident', 'security', 'household_member'])) {
                     DB::afterCommit(function () use ($user, $estate, $isPasswordReset) {
                         User::withRole('admin', $estate->id)
                             ->get()

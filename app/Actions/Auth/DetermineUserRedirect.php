@@ -17,9 +17,13 @@ class DetermineUserRedirect
             setPermissionsTeamId($estate->id);
         }
 
-        // Check for global roles first (security, resident)
+        // Check for global roles first (security, household_member, resident)
         if ($user->hasRole('security')) {
             return route('security.dashboard');
+        }
+
+        if ($user->hasRole('household_member')) {
+            return route('resident.home');
         }
 
         if ($user->hasRole('resident')) {

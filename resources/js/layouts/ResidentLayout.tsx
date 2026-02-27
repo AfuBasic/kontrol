@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Users, Activity, User, LogOut, Shield, Phone } from 'lucide-react';
+import { Home, Users, Bell, User, LogOut, Shield, Phone, UserPlus } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import '@/echo';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
@@ -8,6 +8,7 @@ import AccessCodeController from '@/actions/App/Http/Controllers/Resident/Access
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
+import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
 import ContactModal from '@/components/ContactModal';
 import InstallPWABanner from '@/components/InstallPWABanner';
@@ -27,6 +28,7 @@ interface PageProps {
             id: number;
             name: string;
             email: string;
+            roles?: string[];
             unread_notifications_count?: number;
             current_estate_id?: number;
         };
@@ -52,25 +54,22 @@ function getPathFromUrl(href: string): string {
     return href;
 }
 
-const navItems = [
+const allNavItems = [
     {
         name: 'Home',
         href: HomeController.url(),
         path: getPathFromUrl(HomeController.url()),
         icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
+        roles: ['resident', 'household_member'],
     },
     {
         name: 'Visitors',
         href: AccessCodeController.index.url(),
         path: getPathFromUrl(AccessCodeController.index.url()),
         icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
+        roles: ['resident', 'household_member'],
     },
-    {
-        name: 'Activity',
-        href: ActivityController.url(),
-        path: getPathFromUrl(ActivityController.url()),
-        icon: (active: boolean) => <Activity className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
-    },
+
     {
         name: 'Feed',
         href: EstateBoardController.index.url(),
@@ -91,18 +90,30 @@ const navItems = [
                 />
             </svg>
         ),
+        roles: ['resident', 'household_member'],
+    },
+    {
+        name: 'Family',
+        href: HouseholdMemberController.index.url(),
+        path: getPathFromUrl(HouseholdMemberController.index.url()),
+        icon: (active: boolean) => <UserPlus className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
+        roles: ['resident'],
     },
     {
         name: 'Profile',
         href: ProfileController.edit.url(),
         path: getPathFromUrl(ProfileController.edit.url()),
         icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
+        roles: ['resident', 'household_member'],
     },
 ];
 
 export default function ResidentLayout({ children, hideNav = false }: Props) {
     const page = usePage<PageProps>();
     const { auth } = page.props;
+    const userRoles = auth?.user?.roles ?? [];
+    // Filter nav items based on user's roles
+    const navItems = allNavItems.filter((item) => item.roles.some((role) => userRoles.includes(role)));
     // Use Inertia's URL for active state (without query params)
     const currentPath = page.url?.split('?')[0] || '';
     useForceLogout(auth.user.id);
@@ -183,8 +194,21 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                             <span className="text-lg font-semibold text-gray-900">Kontrol</span>
                         </Link>
 
-                        {/* Contact Support Button */}
-                        <div className="relative">
+                        <div className="flex items-center gap-2">
+                            {/* Notifications */}
+                            <Link
+                                href={ActivityController.url()}
+                                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95"
+                            >
+                                <Bell className="h-5 w-5" strokeWidth={2} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </Link>
+
+                            {/* Contact Support */}
                             <button
                                 onClick={() => setContactModalOpen(true)}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"
@@ -212,22 +236,20 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                         className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white/95 backdrop-blur-lg"
                     >
                         <div className="mx-auto max-w-lg">
-                            <div className="grid grid-cols-5 items-center justify-between py-2">
+                            <div className="flex items-center justify-evenly py-2">
                                 {navItems.map((item) => {
                                     const isActive =
                                         currentPath === usePathFromUrl(item.href) || currentPath.startsWith(usePathFromUrl(item.href) + '/');
                                     return (
-                                        <Link key={item.name} href={item.href} className="group relative flex flex-col items-center gap-1 py-1">
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            className="group relative flex min-w-[56px] flex-1 flex-col items-center gap-1 py-1"
+                                        >
                                             <div
                                                 className={`rounded-xl p-1.5 transition-all ${isActive ? 'bg-indigo-50' : 'group-hover:bg-gray-50'}`}
                                             >
                                                 {item.icon(isActive)}
-
-                                                {item.name === 'Activity' && unreadCount > 0 && (
-                                                    <span className="absolute top-1 right-[18%] flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
-                                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                                    </span>
-                                                )}
                                             </div>
                                             <span
                                                 className={`text-[10px] leading-tight font-medium ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}

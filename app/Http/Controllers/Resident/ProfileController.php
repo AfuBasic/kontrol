@@ -41,15 +41,10 @@ class ProfileController extends Controller
         $user = $request->user();
         $validated = $request->validated();
 
-        // Update user fields
+        // Update user fields (email is not editable)
         $user->fill([
             'name' => $validated['name'],
-            'email' => $validated['email'],
         ]);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
 
         $user->save();
 

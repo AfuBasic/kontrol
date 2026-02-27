@@ -20,8 +20,8 @@ class EnsureIsAdmin
             return redirect()->route('login');
         }
 
-        // If user is a resident, redirect to resident area
-        if ($user->hasRole('resident') && ! $user->hasRole('admin')) {
+        // If user is a resident or household member, redirect to resident area
+        if (($user->hasRole('resident') || $user->hasRole('household_member')) && ! $user->hasRole('admin')) {
             return redirect()->route('resident.home');
         }
 

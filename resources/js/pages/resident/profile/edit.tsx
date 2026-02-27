@@ -27,6 +27,7 @@ interface PageProps {
             id: number;
             name: string;
             email: string;
+            roles?: string[];
         };
     };
     mustVerifyEmail: boolean;
@@ -121,6 +122,8 @@ export default function Edit({ telegram, profile }: Props) {
 /* ─── Profile Information Form ─── */
 function ProfileForm({ profile }: { profile: Props['profile'] }) {
     const user = usePage<PageProps>().props.auth.user;
+    const userRoles = user.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
@@ -154,7 +157,7 @@ function ProfileForm({ profile }: { profile: Props['profile'] }) {
                     {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
                 </div>
 
-                {/* Email */}
+                {/* Email (read-only) */}
                 <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                         Email
@@ -162,48 +165,51 @@ function ProfileForm({ profile }: { profile: Props['profile'] }) {
                     <input
                         id="email"
                         type="email"
-                        className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
+                        className="mt-1 block w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-gray-500 shadow-sm sm:text-sm"
                         value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
+                        readOnly
                         autoComplete="username"
                     />
-                    {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                    <p className="mt-1.5 text-xs text-gray-400">Email cannot be changed.</p>
                 </div>
 
-                {/* Unit Number */}
-                <div>
-                    <label htmlFor="unit_number" className="block text-sm font-medium text-gray-700">
-                        Unit / House Number
-                    </label>
-                    <input
-                        id="unit_number"
-                        type="text"
-                        className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
-                        value={data.unit_number}
-                        onChange={(e) => setData('unit_number', e.target.value)}
-                        placeholder="e.g. Block A, Flat 5"
-                    />
-                    {errors.unit_number && <p className="mt-2 text-sm text-red-600">{errors.unit_number}</p>}
-                </div>
+                {/* Unit Number (primary residents only) */}
+                {!isHouseholdMember && (
+                    <div>
+                        <label htmlFor="unit_number" className="block text-sm font-medium text-gray-700">
+                            Unit / House Number
+                        </label>
+                        <input
+                            id="unit_number"
+                            type="text"
+                            className="mt-1 block w-full rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
+                            value={data.unit_number}
+                            onChange={(e) => setData('unit_number', e.target.value)}
+                            placeholder="e.g. Block A, Flat 5"
+                        />
+                        {errors.unit_number && <p className="mt-2 text-sm text-red-600">{errors.unit_number}</p>}
+                    </div>
+                )}
 
-                {/* Full Address */}
-                <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                        Full Address
-                    </label>
-                    <textarea
-                        id="address"
-                        rows={3}
-                        className="mt-1 block w-full resize-none rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
-                        value={data.address}
-                        onChange={(e) => setData('address', e.target.value)}
-                        placeholder="e.g. Lekki Gardens Estate, Lekki, Lagos"
-                        autoComplete="street-address"
-                    />
-                    <p className="mt-1.5 text-xs text-gray-500">Your full address within the estate (optional).</p>
-                    {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address}</p>}
-                </div>
+                {/* Full Address (primary residents only) */}
+                {!isHouseholdMember && (
+                    <div>
+                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                            Full Address
+                        </label>
+                        <textarea
+                            id="address"
+                            rows={3}
+                            className="mt-1 block w-full resize-none rounded-xl border border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none sm:text-sm"
+                            value={data.address}
+                            onChange={(e) => setData('address', e.target.value)}
+                            placeholder="e.g. Lekki Gardens Estate, Lekki, Lagos"
+                            autoComplete="street-address"
+                        />
+                        <p className="mt-1.5 text-xs text-gray-500">Your full address within the estate (optional).</p>
+                        {errors.address && <p className="mt-2 text-sm text-red-600">{errors.address}</p>}
+                    </div>
+                )}
             </div>
 
             <div className="mt-8 flex items-center gap-4">

@@ -167,8 +167,10 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                     </div>
                 </motion.header>
 
-                {/* Main Content */}
-                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">{children}</main>
+                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
+                    <InstallPWABanner />
+                    {children}
+                </main>
 
                 {/* Bottom Navigation */}
                 {!hideNav && (
@@ -239,9 +241,6 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {/* PWA Install Banner */}
-                <InstallPWABanner />
             </div>
         </PullToRefresh>
     );

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import type { AccessCode } from '@/types/access-code';
@@ -25,6 +25,8 @@ type Props = {
 type Tab = 'active' | 'long_lived' | 'history';
 
 export default function Visitors({ activeCodes, historyCodes, filters, dailyUsage }: Props) {
+    const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const [activeTab, setActiveTab] = useState<Tab>('active');
 
     // Search State
@@ -141,7 +143,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                 <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
                     {[
                         { id: 'active' as const, label: 'Active', count: oneTimeCodes.length },
-                        { id: 'long_lived' as const, label: 'Long Term', count: longLivedCodes.length },
+                        ...(!isHouseholdMember ? [{ id: 'long_lived' as const, label: 'Long Term', count: longLivedCodes.length }] : []),
                         { id: 'history' as const, label: 'History' },
                     ].map((tab) => (
                         <button

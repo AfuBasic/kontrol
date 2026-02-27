@@ -33,7 +33,7 @@ export default function AcceptInvitation({ user }: Props) {
                 >
                     <div className="mb-8 text-center">
                         <div className="mb-6 flex justify-center">
-                            <div className="h-12 w-auto">
+                            <div className="h-30 w-auto">
                                 <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-full w-auto object-contain" />
                             </div>
                         </div>
