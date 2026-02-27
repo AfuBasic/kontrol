@@ -29,12 +29,14 @@ export type HomeStats = {
 };
 
 export type ActivityItem = {
-    type: 'created' | 'used' | 'expired' | 'revoked' | 'telegram_linked' | 'telegram_unlinked';
+    type: 'created' | 'used' | 'expired' | 'revoked' | 'telegram_linked' | 'telegram_unlinked' | 'logged_in';
     message: string;
     time: string;
     time_full: string;
     code?: string;
     visitor?: string;
+    detail?: string | null;
+    ip_address?: string | null;
 };
 
 export type ResidentHomeProps = {

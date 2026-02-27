@@ -60,20 +60,71 @@ class AuthenticateUser
     }
 
     /**
-     * Log a successful login activity.
+     * Log a successful login activity with device information.
      */
     public function logActivity(User $user): void
     {
+        $request = request();
         $estateId = $user->estates->first()?->id;
 
-        $logger = activity()
-            ->performedOn($user)
-            ->causedBy($user);
+        $properties = [
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'browser' => $this->parseBrowser($request->userAgent() ?? ''),
+        ];
 
         if ($estateId) {
-            $logger->withProperties(['estate_id' => $estateId]);
+            $properties['estate_id'] = $estateId;
         }
 
-        $logger->log('logged in');
+        activity()
+            ->performedOn($user)
+            ->causedBy($user)
+            ->withProperties($properties)
+            ->log('logged in');
+    }
+
+    /**
+     * Extract a human-readable browser/device label from a user agent string.
+     * Uses the Sec-CH-UA header when available for accurate Chromium-based browser detection.
+     */
+    private function parseBrowser(string $userAgent): string
+    {
+        $browser = 'Unknown browser';
+        $platform = '';
+
+        $clientHint = request()->header('Sec-CH-UA', '');
+
+        if ($clientHint && preg_match('/Brave/i', $clientHint)) {
+            $browser = 'Brave';
+        } elseif (preg_match('/Edg\//i', $userAgent)) {
+            $browser = 'Edge';
+        } elseif (preg_match('/OPR|Opera/i', $userAgent)) {
+            $browser = 'Opera';
+        } elseif (preg_match('/Vivaldi/i', $userAgent)) {
+            $browser = 'Vivaldi';
+        } elseif (preg_match('/SamsungBrowser/i', $userAgent)) {
+            $browser = 'Samsung Internet';
+        } elseif (preg_match('/Chrome/i', $userAgent) && ! preg_match('/Edg|OPR/i', $userAgent)) {
+            $browser = 'Chrome';
+        } elseif (preg_match('/Safari/i', $userAgent) && ! preg_match('/Chrome/i', $userAgent)) {
+            $browser = 'Safari';
+        } elseif (preg_match('/Firefox/i', $userAgent)) {
+            $browser = 'Firefox';
+        }
+
+        if (preg_match('/Windows/i', $userAgent)) {
+            $platform = 'Windows';
+        } elseif (preg_match('/Macintosh|Mac OS/i', $userAgent)) {
+            $platform = 'Mac';
+        } elseif (preg_match('/Android/i', $userAgent)) {
+            $platform = 'Android';
+        } elseif (preg_match('/iPhone|iPad/i', $userAgent)) {
+            $platform = 'iOS';
+        } elseif (preg_match('/Linux/i', $userAgent)) {
+            $platform = 'Linux';
+        }
+
+        return $platform ? "{$browser} on {$platform}" : $browser;
     }
 }

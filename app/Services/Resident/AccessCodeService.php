@@ -211,28 +211,38 @@ class AccessCodeService
     /**
      * Map a user activity to the activity format.
      *
-     * @return array{type: string, message: string, time: string, time_full: string}
+     * @return array{type: string, message: string, time: string, time_full: string, detail?: string, ip_address?: string}
      */
     private function mapUserActivity(\Spatie\Activitylog\Models\Activity $activity): array
     {
         $type = match ($activity->description) {
+            'logged in' => 'logged_in',
             'Linked Telegram account' => 'telegram_linked',
             'Unlinked Telegram account' => 'telegram_unlinked',
             default => 'info',
         };
 
         $message = match ($activity->description) {
+            'logged in' => 'Signed in',
             'Linked Telegram account' => 'Connected Telegram account',
             'Unlinked Telegram account' => 'Disconnected Telegram account',
             default => $activity->description,
         };
 
-        return [
+        $result = [
             'type' => $type,
             'message' => $message,
             'time' => $activity->created_at->diffForHumans(),
             'time_full' => $activity->created_at->format('M j, Y g:i A'),
         ];
+
+        if ($type === 'logged_in') {
+            $properties = $activity->properties;
+            $result['detail'] = $properties['browser'] ?? null;
+            $result['ip_address'] = $properties['ip_address'] ?? null;
+        }
+
+        return $result;
     }
 
     /**

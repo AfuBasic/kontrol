@@ -61,6 +61,14 @@ function getActivityIcon(type: ActivityItem['type']) {
                     </svg>
                 </div>
             );
+        case 'logged_in':
+            return (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100">
+                    <svg className="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                    </svg>
+                </div>
+            );
     }
 }
 
@@ -152,11 +160,19 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                 {getActivityIcon(activity.type)}
                                                 <div className="flex-1">
                                                     <p className="font-medium text-gray-900">{activity.message}</p>
+                                                    {activity.detail && (
+                                                        <p className="mt-0.5 text-sm text-gray-500">{activity.detail}</p>
+                                                    )}
                                                     <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
                                                         <span>{activity.time}</span>
                                                         {activity.code && (
                                                             <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">
                                                                 {activity.code}
+                                                            </span>
+                                                        )}
+                                                        {activity.ip_address && (
+                                                            <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">
+                                                                {activity.ip_address}
                                                             </span>
                                                         )}
                                                     </div>
