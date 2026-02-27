@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\ForceLogout;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,10 @@ class SocialLoginController
 
         Auth::login($user, true);
 
+        $request->session()->regenerate();
+        broadcast(new ForceLogout($user->id));
+        $this->storePasswordHashInSession($user);
+
         // Determine the redirect URL based on role
         $redirectUrl = $this->getRedirectUrl($user);
 
@@ -58,6 +63,15 @@ class SocialLoginController
         }
 
         return redirect($redirectUrl);
+    }
+
+    /**
+     * Store the user's password hash in the session to support AuthenticateSession middleware.
+     * This invalidates other sessions for the same user.
+     */
+    private function storePasswordHashInSession(User $user): void
+    {
+        session(['password_hash_web' => $user->getAuthPassword()]);
     }
 
     /**

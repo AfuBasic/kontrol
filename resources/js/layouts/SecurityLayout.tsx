@@ -9,6 +9,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Security/Noti
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import InstallPWABanner from '@/components/InstallPWABanner';
 import PullToRefresh from '@/components/PullToRefresh';
+import { useForceLogout } from '@/hooks/useForceLogout';
 
 interface Props {
     children: ReactNode;
@@ -64,6 +65,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
     const page = usePage<PageProps>();
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
+    useForceLogout(auth.user.id);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');

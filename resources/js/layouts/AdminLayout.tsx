@@ -18,6 +18,7 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
+import { useForceLogout } from '@/hooks/useForceLogout';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
@@ -51,7 +52,7 @@ type NavItem = {
 
 const primaryNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Estate Board', href: EstateBoardController.index.url(), icon: BuildingOffice2Icon },
+    { name: 'Announcement', href: EstateBoardController.index.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
     { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },
@@ -72,6 +73,7 @@ export default function AdminLayout({ children }: Props) {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const { isCollapsed, toggle } = useSidebarState();
+    useForceLogout(auth.user!.id);
 
     // Local state for instant updates
     const [unreadCount, setUnreadCount] = useState(auth.user?.unread_notifications_count || 0);

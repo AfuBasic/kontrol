@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AuthenticateUser;
 use App\Actions\Auth\DetermineUserRedirect;
+use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +32,9 @@ class LoginController extends Controller
         );
 
         $request->session()->regenerate();
+
+        broadcast(new ForceLogout($user->id));
+        Auth::logoutOtherDevices($request->validated('password'));
 
         $redirectUrl = $determineRedirect->execute($user);
 

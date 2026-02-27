@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Zeus\AcceptInvitationAction;
+use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -61,6 +62,10 @@ class InvitationController extends Controller
 
         // Log the user in
         Auth::login($user);
+
+        $request->session()->regenerate();
+        broadcast(new ForceLogout($user->id));
+        Auth::logoutOtherDevices($validated['password']);
 
         // Redirect based on role
         if ($estate = $user->estates()->first()) {

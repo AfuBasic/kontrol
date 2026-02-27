@@ -13,6 +13,7 @@ import ContactModal from '@/components/ContactModal';
 import InstallPWABanner from '@/components/InstallPWABanner';
 import PullToRefresh from '@/components/PullToRefresh';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
+import { useForceLogout } from '@/hooks/useForceLogout';
 import usePathFromUrl from '@/hooks/usePathFromUrl';
 
 interface Props {
@@ -104,6 +105,7 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
     const { auth } = page.props;
     // Use Inertia's URL for active state (without query params)
     const currentPath = page.url?.split('?')[0] || '';
+    useForceLogout(auth.user.id);
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
     const [showToast, setShowToast] = useState(false);
