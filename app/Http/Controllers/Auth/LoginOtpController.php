@@ -71,18 +71,19 @@ class LoginOtpController extends Controller
 
         $remember = $request->session()->get('otp_remember', false);
         $viaSocial = $request->session()->get('otp_via_social', false);
+        $password = $request->session()->get('otp_password');
 
-        $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social']);
+        $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social', 'otp_password']);
 
         Auth::login($user, $remember);
         $request->session()->regenerate();
 
         broadcast(new ForceLogout($user->id));
 
-        if ($viaSocial) {
-            $this->storePasswordHashInSession($user);
+        if ($password) {
+            Auth::logoutOtherDevices($password);
         } else {
-            Auth::logoutOtherDevices($user->getAuthPassword());
+            $this->storePasswordHashInSession($user);
         }
 
         $authenticateUser->logActivity($user);

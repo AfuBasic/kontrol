@@ -38,6 +38,7 @@ class LoginController extends Controller
             $request->session()->put([
                 'otp_user_id' => $user->id,
                 'otp_remember' => $request->boolean('remember'),
+                'otp_password' => $request->validated('password'),
             ]);
 
             $generateOtp->execute($user, $request);

@@ -13,6 +13,12 @@ class CheckTrustedDevice
      */
     public function execute(User $user, Request $request): bool
     {
+        // Set team context so Spatie Permission can resolve estate-scoped role assignments
+        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
+        if ($estate) {
+            setPermissionsTeamId($estate->id);
+        }
+
         if (! $user->hasRole('resident') && ! $user->hasRole('household_member')) {
             return true;
         }
