@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\Auth\PasswordResetMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -238,5 +241,25 @@ class User extends Authenticatable
     public function routeNotificationForTelegram(): ?string
     {
         return $this->telegram_chat_id;
+    }
+
+    /**
+     * Send the password reset notification using a custom mailable.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $appDomain = config('domains.app');
+        $scheme = app()->environment('local') ? 'http' : 'https';
+
+        URL::forceRootUrl("{$scheme}://{$appDomain}");
+
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->email,
+        ], false));
+
+        URL::forceRootUrl(null);
+
+        Mail::to($this->email)->send(new PasswordResetMail($this, $resetUrl));
     }
 }

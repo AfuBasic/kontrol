@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginOtpController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
@@ -35,6 +37,14 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login/verify/resend', [LoginOtpController::class, 'resend'])
         ->middleware('throttle:3,1')
         ->name('login.otp.resend');
+
+    // Password Reset
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
+        ->middleware('throttle:3,1')
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'show'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });
 
 // PWA bridge page - shown after OAuth to redirect back into the PWA

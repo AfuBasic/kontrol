@@ -1,6 +1,6 @@
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import { openInExternalBrowser, useIsStandalone } from '@/hooks/useIsStandalone';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
 // Abstract SVG illustration: "Controlled Passage"
@@ -518,6 +518,7 @@ function RightPanelIllustration() {
 
 export default function Login() {
     const isStandalone = useIsStandalone();
+    const { flash } = usePage<{ flash: { status?: string } }>().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -595,6 +596,16 @@ export default function Login() {
                             <p className="mb-8 text-gray-500">Sign in to your account to continue.</p>
                         </motion.div>
 
+                        {flash?.status && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+                            >
+                                {flash.status}
+                            </motion.div>
+                        )}
+
                         <motion.form
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -645,6 +656,9 @@ export default function Login() {
                                     />
                                     <span className="text-sm text-gray-600">Remember me</span>
                                 </label>
+                                <Link href="/forgot-password" className="text-sm font-medium text-[#1F6FDB] hover:text-[#0A3D91]">
+                                    Forgot password?
+                                </Link>
                             </div>
 
                             <button
