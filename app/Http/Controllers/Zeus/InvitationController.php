@@ -16,11 +16,6 @@ class InvitationController extends Controller
 {
     public function show(Request $request, User $user): Response|RedirectResponse
     {
-        // Validate signed URL
-        if (! $request->hasValidSignature()) {
-            return redirect()->route('invitation.invalid');
-        }
-
         $isPasswordReset = $request->boolean('password_reset');
 
         // Check if user already has a password (invitation already used) — skip for password resets
@@ -40,11 +35,6 @@ class InvitationController extends Controller
 
     public function store(Request $request, User $user, AcceptInvitationAction $action): RedirectResponse
     {
-        // Validate signed URL
-        if (! $request->hasValidSignature()) {
-            return redirect()->route('invitation.invalid');
-        }
-
         $isPasswordReset = $request->boolean('password_reset');
 
         // Check if invitation was already used — skip for password resets

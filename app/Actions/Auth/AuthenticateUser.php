@@ -84,10 +84,6 @@ class AuthenticateUser
             ->log('logged in');
     }
 
-    /**
-     * Extract a human-readable browser/device label from a user agent string.
-     * Uses the Sec-CH-UA header when available for accurate Chromium-based browser detection.
-     */
     private function parseBrowser(string $userAgent): string
     {
         $browser = 'Unknown browser';

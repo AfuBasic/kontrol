@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Facades\Route;
 use Sentry\Laravel\Integration;
 
@@ -79,4 +80,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
+
+        $exceptions->render(function (InvalidSignatureException $e, \Illuminate\Http\Request $request) {
+            if (str_starts_with($request->path(), 'invitation')) {
+                return redirect()->route('invitation.invalid');
+            }
+        });
     })->create();
