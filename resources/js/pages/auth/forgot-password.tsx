@@ -1,12 +1,22 @@
 import ForgotPasswordController from '@/actions/App/Http/Controllers/Auth/ForgotPasswordController';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 export default function ForgotPassword() {
     const { flash } = usePage<{ flash: { status?: string } }>().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
+    const [showToast, setShowToast] = useState(false);
+
+    useEffect(() => {
+        if (flash?.status) {
+            setShowToast(true);
+            const timer = setTimeout(() => setShowToast(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash?.status]);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -73,16 +83,6 @@ export default function ForgotPassword() {
                             <p className="mb-8 text-gray-500">Enter the email address associated with your account.</p>
                         </motion.div>
 
-                        {flash?.status && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-                            >
-                                {flash.status}
-                            </motion.div>
-                        )}
-
                         <motion.form
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -138,6 +138,21 @@ export default function ForgotPassword() {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {showToast && flash?.status && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-6 right-6 left-6 z-50 mx-auto max-w-sm"
+                    >
+                        <div className="rounded-2xl bg-emerald-600 px-5 py-3.5 text-center text-sm font-medium text-white shadow-lg">
+                            {flash.status}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }
