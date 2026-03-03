@@ -518,7 +518,7 @@ function RightPanelIllustration() {
 
 export default function Login() {
     const isStandalone = useIsStandalone();
-    const { flash } = usePage<{ flash: { status?: string } }>().props;
+    const { flash } = usePage<{ flash: { success?: string } }>().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -596,13 +596,13 @@ export default function Login() {
                             <p className="mb-8 text-gray-500">Sign in to your account to continue.</p>
                         </motion.div>
 
-                        {flash?.status && (
+                        {flash?.success && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
                             >
-                                {flash.status}
+                                {flash.success}
                             </motion.div>
                         )}
 

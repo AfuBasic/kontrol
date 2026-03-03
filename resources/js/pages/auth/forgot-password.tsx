@@ -1,22 +1,23 @@
 import ForgotPasswordController from '@/actions/App/Http/Controllers/Auth/ForgotPasswordController';
+import Toast from '@/components/Toast';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 export default function ForgotPassword() {
-    const { flash } = usePage<{ flash: { status?: string } }>().props;
+    const { flash } = usePage<{ flash: { success?: string } }>().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
     const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
-        if (flash?.status) {
+        if (flash?.success) {
             setShowToast(true);
             const timer = setTimeout(() => setShowToast(false), 5000);
             return () => clearTimeout(timer);
         }
-    }, [flash?.status]);
+    }, [flash?.success]);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -139,20 +140,7 @@ export default function ForgotPassword() {
                 </div>
             </div>
 
-            <AnimatePresence>
-                {showToast && flash?.status && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-6 right-6 left-6 z-50 mx-auto max-w-sm"
-                    >
-                        <div className="rounded-2xl bg-emerald-600 px-5 py-3.5 text-center text-sm font-medium text-white shadow-lg">
-                            {flash.status}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <Toast show={showToast} message={flash?.success ?? ''} type="success" onClose={() => setShowToast(false)} />
         </>
     );
 }

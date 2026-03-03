@@ -20,6 +20,6 @@ class ForgotPasswordController extends Controller
     {
         $sendResetLink->execute($request->validated('email'));
 
-        return back()->with('status', 'If an account exists with that email, we\'ve sent a password reset link.');
+        return back()->with('success', 'If an account exists with that email, we\'ve sent a password reset link.');
     }
 }
