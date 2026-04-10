@@ -7,10 +7,16 @@ use App\Models\Estate;
 class UpdateEstateAction
 {
     /**
-     * @param  array{name?: string, email?: string, address?: string|null, status?: string}  $data
+     * @param  array{name?: string, email?: string, address?: string|null, status?: string, charge_type?: string}  $data
      */
     public function execute(Estate $estate, array $data): Estate
     {
+        // Extract charge_type before updating estate
+        $chargeType = $data['charge_type'] ?? null;
+        if (isset($data['charge_type'])) {
+            unset($data['charge_type']);
+        }
+
         // Check if email is being changed
         if (isset($data['email']) && $data['email'] !== $estate->email) {
             if ($estate->hasAcceptedAdmin()) {
@@ -31,6 +37,14 @@ class UpdateEstateAction
         }
 
         $estate->update($data);
+
+        // Update charge_type in settings if provided
+        if ($chargeType) {
+            $estate->settings()->updateOrCreate(
+                ['estate_id' => $estate->id],
+                ['charge_type' => $chargeType]
+            );
+        }
 
         return $estate->fresh();
     }

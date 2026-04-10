@@ -4,6 +4,18 @@ import { useState } from 'react';
 import ZeusLayout from '@/layouts/ZeusLayout';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
+interface Plan {
+    id: number;
+    name: string;
+    billing_interval: 'monthly' | 'annual';
+}
+
+interface SubscriptionRecord {
+    id: number;
+    estate_id: number;
+    plan: Plan;
+}
+
 interface Estate {
     id: number;
     name: string;
@@ -12,6 +24,7 @@ interface Estate {
     status: 'active' | 'inactive';
     admin_accepted: boolean;
     created_at: string;
+    subscriptionRecord?: SubscriptionRecord;
 }
 
 interface PaginationLinks {
@@ -88,6 +101,7 @@ export default function EstatesIndex({ estates, filters }: Props) {
             router.delete(`/zeus/estates/${estateId}`, { preserveState: true });
         }
     }
+
 
     const hasFilters = filters.search || filters.status;
 
@@ -183,7 +197,7 @@ export default function EstatesIndex({ estates, filters }: Props) {
                             <tr>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Estate</th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Account</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Locale</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Plan</th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">State</th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Registered</th>
                                 <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Management</th>
@@ -202,7 +216,16 @@ export default function EstatesIndex({ estates, filters }: Props) {
                                         <td className="px-6 py-4 text-sm font-semibold whitespace-nowrap text-gray-900">{estate.name}</td>
                                         <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">{estate.email}</td>
                                         <td className="px-6 py-4 text-sm text-gray-500">
-                                            {estate.address || <span className="text-gray-300">—</span>}
+                                            {estate.subscriptionRecord?.plan ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="font-medium text-gray-900">{estate.subscriptionRecord.plan.name}</span>
+                                                    <span className="text-xs text-gray-400 capitalize">
+                                                        {estate.subscriptionRecord.plan.billing_interval}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-300">—</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span

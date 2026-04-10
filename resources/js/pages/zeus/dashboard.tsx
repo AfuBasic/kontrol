@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/layouts/ZeusLayout';
 import { SparklesIcon } from '@heroicons/react/24/outline';
+import ApplicationDetailModal from '@/components/Zeus/ApplicationDetailModal';
+import RejectionModal from '@/components/Zeus/RejectionModal';
+import ApplicationActionMenu from '@/components/Zeus/ApplicationActionMenu';
 
 interface Plan {
     id: number;
     name: string;
+    billing_interval?: 'monthly' | 'annual';
 }
 
 interface Application {
@@ -32,6 +36,12 @@ interface Props {
 }
 
 export default function Dashboard({ stats, applications }: Props) {
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+    const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
+    const [rejectionApplicationId, setRejectionApplicationId] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
     function formatDate(dateString: string): string {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -40,15 +50,37 @@ export default function Dashboard({ stats, applications }: Props) {
         });
     }
 
+    function handleViewDetails(app: Application) {
+        setSelectedApplication(app);
+        setDetailModalOpen(true);
+    }
+
     function handleApproveApplication(applicationId: number, estateName: string) {
         if (confirm(`Approve "${estateName}" and create the estate? This will send an invitation to the admin.`)) {
             router.post(`/zeus/applications/${applicationId}/approve`, {}, { preserveState: true });
         }
     }
 
-    function handleRejectApplication(applicationId: number) {
-        if (confirm('Are you sure you want to reject this application?')) {
-            router.post(`/zeus/applications/${applicationId}/reject`, {}, { preserveState: true });
+    function handleRejectClick(applicationId: number) {
+        setRejectionApplicationId(applicationId);
+        setRejectionModalOpen(true);
+    }
+
+    function handleConfirmRejection(reason: string) {
+        if (rejectionApplicationId) {
+            setIsLoading(true);
+            router.post(
+                `/zeus/applications/${rejectionApplicationId}/reject`,
+                { reason },
+                {
+                    preserveState: true,
+                    onFinish: () => {
+                        setIsLoading(false);
+                        setRejectionModalOpen(false);
+                        setRejectionApplicationId(null);
+                    },
+                }
+            );
         }
     }
 
@@ -136,9 +168,9 @@ export default function Dashboard({ stats, applications }: Props) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.1 }}
-                    className="mb-10 overflow-hidden rounded-lg border border-slate-900 bg-slate-900 text-white shadow-2xl shadow-slate-900/20"
+                    className="mb-10 rounded-lg border border-slate-900 bg-slate-900 text-white shadow-2xl shadow-slate-900/20"
                 >
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 overflow-hidden rounded-t-lg">
                         <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded bg-amber-500/20 text-amber-500">
                                 <SparklesIcon className="h-4 w-4" />
@@ -151,89 +183,51 @@ export default function Dashboard({ stats, applications }: Props) {
                         <span className="rounded bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight">Action Required</span>
                     </div>
 
-                    <div className="divide-y divide-white/5">
-                        {applications.map((app, index) => (
-                            <div
+                    <div className="divide-y divide-white/5 overflow-visible rounded-b-lg">
+                        {applications.map((app) => (
+                            <motion.div
                                 key={app.id}
-                                className="p-6 transition-colors hover:bg-white/2"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="relative flex items-center justify-between gap-4 p-6 transition-colors hover:bg-white/2"
                             >
-                                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                    <div className="flex-1 space-y-3">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <h3 className="text-sm font-bold text-white">{app.estate_name}</h3>
-                                            <span
-                                                className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight ${
-                                                    app.status === 'pending'
-                                                        ? 'bg-amber-500/10 text-amber-500'
-                                                        : 'bg-blue-500/10 text-blue-500'
-                                                }`}
-                                            >
-                                                {app.status === 'pending' ? 'Pending' : 'Contacted'}
-                                            </span>
-                                            {app.plan && (
-                                                <span className="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight bg-indigo-500/10 text-indigo-400">
-                                                    Plan: {app.plan.name}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                                            <div>
-                                                <span className="text-gray-500">Email:</span>{' '}
-                                                <a href={`mailto:${app.email}`} className="text-gray-900 hover:underline">
-                                                    {app.email}
-                                                </a>
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Phone:</span>{' '}
-                                                <a href={`tel:${app.phone}`} className="text-gray-900 hover:underline">
-                                                    {app.phone}
-                                                </a>
-                                            </div>
-                                            {app.address && (
-                                                <div>
-                                                    <span className="text-gray-500">Address:</span>{' '}
-                                                    <span className="text-gray-900">{app.address}</span>
-                                                </div>
-                                            )}
-                                            <div>
-                                                <span className="text-gray-500">Applied:</span>{' '}
-                                                <span className="text-gray-900">{formatDate(app.created_at)}</span>
-                                            </div>
-                                        </div>
-
-                                        {app.notes && (
-                                            <div className="rounded-xl bg-gray-50 p-3 text-sm">
-                                                <span className="font-medium text-gray-500">Notes:</span>{' '}
-                                                <span className="text-gray-700">{app.notes}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
-                                        {app.status === 'pending' && (
-                                            <button
-                                                onClick={() => handleMarkContacted(app.id)}
-                                                className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
-                                            >
-                                                Mark Contacted
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => handleApproveApplication(app.id, app.estate_name)}
-                                            className="inline-flex items-center rounded-xl bg-linear-to-r from-green-500 to-green-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-md hover:-translate-y-px"
+                                {/* Left: Estate name + status */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <h3 className="text-base font-bold text-white truncate">{app.estate_name}</h3>
+                                        <span
+                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight shrink-0 ${
+                                                app.status === 'pending'
+                                                    ? 'bg-amber-500/20 text-amber-300'
+                                                    : 'bg-blue-500/20 text-blue-300'
+                                            }`}
                                         >
-                                            Approve & Create
-                                        </button>
-                                        <button
-                                            onClick={() => handleRejectApplication(app.id)}
-                                            className="inline-flex items-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-50"
-                                        >
-                                            Reject
-                                        </button>
+                                            {app.status === 'pending' ? 'Pending' : 'Contacted'}
+                                        </span>
                                     </div>
                                 </div>
-                            </div>
+
+                                {/* Right: Action buttons */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {app.status === 'pending' && (
+                                        <button
+                                            onClick={() => handleMarkContacted(app.id)}
+                                            className="rounded-lg border border-slate-400/30 bg-white/10 px-3 py-2 text-sm font-medium text-slate-200 transition-all hover:bg-white/20"
+                                        >
+                                            Mark Contacted
+                                        </button>
+                                    )}
+
+                                    <ApplicationActionMenu
+                                        applicationId={app.id}
+                                        estateName={app.estate_name}
+                                        onView={() => handleViewDetails(app)}
+                                        onApprove={() => handleApproveApplication(app.id, app.estate_name)}
+                                        onReject={() => handleRejectClick(app.id)}
+                                        isLoading={isLoading}
+                                    />
+                                </div>
+                            </motion.div>
                         ))}
                     </div>
                 </motion.div>
@@ -269,6 +263,23 @@ export default function Dashboard({ stats, applications }: Props) {
                     </Link>
                 </motion.div>
             )}
+            {/* Modals */}
+            <ApplicationDetailModal
+                isOpen={detailModalOpen}
+                application={selectedApplication}
+                onClose={() => setDetailModalOpen(false)}
+            />
+
+            <RejectionModal
+                isOpen={rejectionModalOpen}
+                estateName={selectedApplication?.estate_name || ''}
+                isLoading={isLoading}
+                onConfirm={handleConfirmRejection}
+                onClose={() => {
+                    setRejectionModalOpen(false);
+                    setRejectionApplicationId(null);
+                }}
+            />
         </ZeusLayout>
     );
 }

@@ -10,6 +10,7 @@ interface Props {
         address: string | null;
         status: 'active' | 'inactive';
         admin_accepted: boolean;
+        charge_type: 'residents' | 'estate';
     };
 }
 
@@ -19,6 +20,7 @@ export default function EditEstate({ estate }: Props) {
         email: estate.email,
         address: estate.address || '',
         status: estate.status,
+        charge_type: estate.charge_type,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -124,6 +126,23 @@ export default function EditEstate({ estate }: Props) {
                                 <p className="mt-1 text-xs text-gray-500">Estate cannot be activated until the admin accepts the invitation.</p>
                             )}
                             {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
+                        </div>
+
+                        {/* Billing Model */}
+                        <div>
+                            <label htmlFor="charge_type" className="block text-sm font-medium text-gray-700">
+                                Billing Model
+                            </label>
+                            <select
+                                id="charge_type"
+                                value={data.charge_type}
+                                onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
+                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            >
+                                <option value="estate">Charge Estate</option>
+                                <option value="residents">Charge Residents</option>
+                            </select>
+                            {errors.charge_type && <p className="mt-1 text-sm text-red-600">{errors.charge_type}</p>}
                         </div>
                     </div>
 

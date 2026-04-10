@@ -384,6 +384,7 @@ export default function Landing({ plans }: Props) {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
     const [selectedPlanId, setSelectedPlanId] = useState<number | undefined>();
     const [selectedPlanName, setSelectedPlanName] = useState<string | undefined>();
+    const [selectedPlanInterval, setSelectedPlanInterval] = useState<'monthly' | 'annual' | undefined>();
 
     const allFeatures = useMemo(() => {
         const map = new Map<number, Feature>();
@@ -397,9 +398,15 @@ export default function Landing({ plans }: Props) {
 
     // Sync modal state with URL hash
     useEffect(() => {
-        // Check hash on mount
+        // Clear modal and selected plan data on page load/reload
+        // This prevents modal from persisting after page reload
+        setModalOpen(false);
+        setSelectedPlanId(undefined);
+        setSelectedPlanName(undefined);
+        setSelectedPlanInterval(undefined);
+        // Remove hash from URL on load if present
         if (window.location.hash === '#apply') {
-            setModalOpen(true);
+            history.replaceState('', document.title, window.location.pathname + window.location.search);
         }
 
         // Listen for hash changes
@@ -442,9 +449,10 @@ export default function Landing({ plans }: Props) {
         requestAnimationFrame(scroll);
     }
 
-    function openModalWithPlan(planId: number, planName: string) {
+    function openModalWithPlan(planId: number, planName: string, billingInterval: 'monthly' | 'annual') {
         setSelectedPlanId(planId);
         setSelectedPlanName(planName);
+        setSelectedPlanInterval(billingInterval);
         window.location.hash = 'apply';
         setModalOpen(true);
     }
@@ -971,7 +979,7 @@ export default function Landing({ plans }: Props) {
                                             plan={plan}
                                             allFeatures={allFeatures}
                                             billingPeriod={billingPeriod}
-                                            onSelect={() => openModalWithPlan(plan.id, plan.name)}
+                                            onSelect={() => openModalWithPlan(plan.id, plan.name, plan.billing_interval)}
                                         />
                                     ))}
                             </motion.div>
@@ -1066,6 +1074,7 @@ export default function Landing({ plans }: Props) {
                 onClose={closeModal}
                 selectedPlanId={selectedPlanId}
                 selectedPlanName={selectedPlanName}
+                selectedPlanInterval={selectedPlanInterval}
             />
         </PublicLayout>
     );

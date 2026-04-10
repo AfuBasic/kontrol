@@ -22,7 +22,8 @@ class EstateController extends Controller
         $search = request('search');
         $status = request('status');
 
-        $query = Estate::query();
+        $query = Estate::query()
+            ->with('subscriptionRecord.plan:id,name,billing_interval');
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%")
@@ -63,7 +64,8 @@ class EstateController extends Controller
         return Inertia::render('zeus/estates/edit', [
             'estate' => array_merge(
                 $estate->only(['id', 'name', 'email', 'address', 'status']),
-                ['admin_accepted' => $estate->hasAcceptedAdmin()]
+                ['admin_accepted' => $estate->hasAcceptedAdmin()],
+                ['charge_type' => $estate->settings?->charge_type ?? 'estate']
             ),
         ]);
     }

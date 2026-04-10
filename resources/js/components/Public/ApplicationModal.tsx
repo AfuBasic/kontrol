@@ -9,6 +9,7 @@ interface Props {
     onClose: () => void;
     selectedPlanId?: number;
     selectedPlanName?: string;
+    selectedPlanInterval?: 'monthly' | 'annual';
 }
 
 function FloatingShape({ className, delay = 0 }: { className: string; delay?: number }) {
@@ -22,7 +23,7 @@ function FloatingShape({ className, delay = 0 }: { className: string; delay?: nu
     );
 }
 
-export default function ApplicationModal({ isOpen, onClose, selectedPlanId, selectedPlanName }: Props) {
+export default function ApplicationModal({ isOpen, onClose, selectedPlanId, selectedPlanName, selectedPlanInterval }: Props) {
     const [submitted, setSubmitted] = useState(false);
     const [estateName, setEstateName] = useState('');
 
@@ -118,7 +119,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                                     <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400 opacity-75" />
                                                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                                                 </span>
-                                                <span className="text-xs font-medium text-white/90">100% Free Forever</span>
+                                                <span className="text-xs font-medium text-white/90">Get Started Today</span>
                                             </motion.div>
 
                                             {/* Title */}
@@ -194,6 +195,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                                     onSuccess={handleSuccess}
                                                     selectedPlanId={selectedPlanId}
                                                     selectedPlanName={selectedPlanName}
+                                                    selectedPlanInterval={selectedPlanInterval}
                                                 />
                                             </motion.div>
                                         )}

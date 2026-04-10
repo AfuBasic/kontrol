@@ -17,6 +17,7 @@ class EstateSettings extends Model
         'access_code_grace_period_minutes',
         'access_code_daily_limit_per_resident',
         'access_code_require_confirmation',
+        'charge_type',
         'contacts',
     ];
 

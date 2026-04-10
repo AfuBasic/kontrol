@@ -1,39 +1,225 @@
-<x-mail::message>
-@if($passwordReset ?? false)
-# Password Reset
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1f6fdb 0%, #0a3d91 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .role-badge {
+            display: inline-block;
+            background-color: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .estate-info {
+            background-color: #f3f4f6;
+            border-left: 4px solid #1f6fdb;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .estate-info-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .estate-info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .button-wrapper {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #1f6fdb 0%, #0a3d91 100%);
+            color: white;
+            padding: 14px 40px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(31, 111, 219, 0.3);
+        }
+        .features {
+            background-color: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .features-title {
+            font-weight: 600;
+            color: #15803d;
+            margin-bottom: 10px;
+        }
+        .feature-item {
+            color: #15803d;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .feature-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #1e40af;
+        }
+        .footer {
+            background-color: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .footer-link {
+            color: #1f6fdb;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ config('app.url') }}/assets/images/kontrol-white.png" alt="Kontrol Logo" class="logo">
+            @if($passwordReset ?? false)
+                <h1>🔑 Reset Your Password</h1>
+            @else
+                <h1>👥 Welcome to {{ $estateName }}</h1>
+            @endif
+        </div>
 
-Hello {{ $userName }},
+        <div class="content">
+            <div class="greeting">
+                Hello <strong>{{ $userName }}</strong>,
+            </div>
 
-{{ $primaryResidentName }} has requested a password reset for your household member account at **{{ $estateName }}** on Kontrol.
+            @if($passwordReset ?? false)
+                <p>
+                    <strong>{{ $primaryResidentName }}</strong> has requested a password reset for your household member account at <strong>{{ $estateName }}</strong>.
+                    Click the button below to set a new password.
+                </p>
+            @else
+                <p>
+                    <strong>{{ $primaryResidentName }}</strong> has added you as a household member at <strong>{{ $estateName }}</strong> on {{ config('app.name') }}.
+                </p>
+                <div class="role-badge">👥 Household Member</div>
 
-Click the button below to set a new password.
+                <div class="estate-info">
+                    <span class="estate-info-label">Estate</span>
+                    <div class="estate-info-value">{{ $estateName }}</div>
+                </div>
 
-<x-mail::button :url="$invitationUrl">
-Reset Your Password
-</x-mail::button>
-@else
-# Welcome to {{ $estateName }}
+                <div class="features">
+                    <div class="features-title">As a household member, you can:</div>
+                    <div class="feature-item">Generate visitor access codes</div>
+                    <div class="feature-item">View the estate community board</div>
+                    <div class="feature-item">Stay updated with estate activity</div>
+                    <div class="feature-item">Access resident services</div>
+                </div>
+            @endif
 
-Hello {{ $userName }},
+            <div class="button-wrapper">
+                @if($passwordReset ?? false)
+                    <a href="{{ $invitationUrl }}" class="button">Reset Your Password</a>
+                @else
+                    <a href="{{ $invitationUrl }}" class="button">Set Up Your Password</a>
+                @endif
+            </div>
 
-{{ $primaryResidentName }} has added you as a household member at **{{ $estateName }}** on Kontrol.
+            <p style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 15px;">
+                Or copy and paste this link:
+                <br>
+                <span style="word-break: break-all; font-size: 11px;">{{ $invitationUrl }}</span>
+            </p>
 
-As a household member, you can:
-- Generate visitor access codes
-- View the estate community board
-- Stay updated with estate activity
+            <div class="info-box">
+                <strong>⏱️ This link expires in 72 hours</strong><br>
+                @if($passwordReset ?? false)
+                    Complete your password reset within this timeframe to regain access to your account.
+                @else
+                    Complete your registration within this timeframe to activate your account.
+                @endif
+            </div>
 
-To get started, please set up your password by clicking the button below.
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
-<x-mail::button :url="$invitationUrl">
-Set up your password
-</x-mail::button>
-@endif
+            <p style="font-size: 13px; color: #6b7280; margin: 0;">
+                Questions? Contact us at <a href="mailto:support@usekontrol.com" class="footer-link">support@usekontrol.com</a>
+            </p>
+        </div>
 
-<x-slot:subcopy>
-This link is valid for 72 hours. If you did not expect this email, you can safely ignore it.
-</x-slot:subcopy>
-
-Thanks,<br>
-The {{ $estateName }} Team
-</x-mail::message>
+        <div class="footer">
+            <p style="margin: 0;">
+                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

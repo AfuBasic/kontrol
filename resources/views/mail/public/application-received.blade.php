@@ -26,6 +26,11 @@
             padding: 40px 20px;
             text-align: center;
         }
+        .logo {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 20px;
+        }
         .header h1 {
             margin: 0;
             font-size: 28px;
@@ -92,6 +97,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <img src="{{ config('app.url') }}/assets/images/kontrol-white.png" alt="Kontrol Logo" class="logo">
             <h1>✓ Application Received</h1>
         </div>
 
@@ -116,6 +122,11 @@
                 @if ($planName)
                 <div class="details-item">
                     <strong>Selected Plan:</strong> {{ $planName }}
+                    @if ($planInterval)
+                        <span style="font-size: 12px; color: #6b7280;">
+                            ({{ ucfirst($planInterval) }} Billing)
+                        </span>
+                    @endif
                 </div>
                 @endif
             </div>

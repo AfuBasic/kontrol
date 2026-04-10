@@ -10,14 +10,17 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
+class EstateApplicationRejectedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(private EstateApplication $application) {}
+    public function __construct(
+        private EstateApplication $application,
+        private string $reason,
+    ) {}
 
     /**
      * Get the message envelope.
@@ -26,7 +29,7 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
     {
         return new Envelope(
             to: $this->application->email,
-            subject: 'Kontrol - Application Received',
+            subject: 'Kontrol - Application Status Update',
         );
     }
 
@@ -36,12 +39,11 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'mail.public.application-received',
+            view: 'mail.public.application-rejected',
             with: [
                 'estateName' => $this->application->estate_name,
                 'email' => $this->application->email,
-                'planName' => $this->application->plan?->name,
-                'planInterval' => $this->application->plan?->billing_interval,
+                'reason' => $this->reason,
             ],
         );
     }

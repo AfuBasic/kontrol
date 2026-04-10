@@ -17,7 +17,7 @@
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
         <meta property="og:title" content="Kontrol - Modern Estate Access Control">
-        <meta property="og:description" content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds, not minutes. 100% Free.">
+        <meta property="og:description" content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds, not minutes.">
         <meta property="og:image" content="{{ asset('assets/images/app-icon.png') }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">

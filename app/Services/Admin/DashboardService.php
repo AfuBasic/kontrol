@@ -89,20 +89,20 @@ class DashboardService
         return [
             'residents' => [
                 'total' => $residentStats->total,
-                'active' => $residentStats->active,
-                'trend' => $residentsTrend,
-                'new_this_month' => $residentTrends->new_this_period,
+                'active' => $residentStats->active ?? 0,
+                'trend' => $residentsTrend ?? 0,
+                'new_this_month' => $residentTrends->new_this_period ?? 0,
             ],
             'security' => [
                 'total' => $securityStats->total,
-                'active' => $securityStats->active,
+                'active' => $securityStats->active ?? 0,
             ],
             'posts' => [
                 'total' => $postStats->total,
-                'published' => $postStats->published,
-                'draft' => $postStats->draft,
-                'trend' => $postsTrend,
-                'new_this_month' => $postsTrends->new_this_period,
+                'published' => $postStats->published ?? 0,
+                'draft' => $postStats->draft ?? 0,
+                'trend' => $postsTrend ?? 0,
+                'new_this_month' => $postsTrends->new_this_period ?? 0,
             ],
             'comments' => [
                 'total' => $totalComments,
