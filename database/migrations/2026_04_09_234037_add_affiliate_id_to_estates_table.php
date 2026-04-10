@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('estates', function (Blueprint $table): void {
+            $table->unsignedBigInteger('affiliate_id')->nullable()->after('name');
             $table->foreign('affiliate_id')->references('id')->on('affiliates')->onDelete('set null');
         });
     }
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('estates', function (Blueprint $table): void {
-            $table->dropForeignKeyIfExists(['affiliate_id']);
+            $table->dropForeignKey(['affiliate_id']);
+            $table->dropColumn('affiliate_id');
         });
     }
 };
