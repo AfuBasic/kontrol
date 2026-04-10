@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EstateApplication extends Model
 {
@@ -17,6 +18,7 @@ class EstateApplication extends Model
         'address',
         'phone',
         'notes',
+        'plan_id',
         'status',
         'reviewed_at',
     ];
@@ -31,6 +33,14 @@ class EstateApplication extends Model
         return [
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 
     /**

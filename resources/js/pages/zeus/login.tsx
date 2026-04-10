@@ -15,158 +15,145 @@ export default function Login() {
 
     return (
         <AnimatedLayout>
-            <Head title="Zeus - Admin Access" />
+            <Head title="Zeus - Kontrol Admin Portal" />
 
-            <style>{`
-                @import url('https://fonts.bunny.net/css?family=geist-sans:400,500,600&display=swap');
-
-                .font-geist { font-family: 'Geist Sans', system-ui, sans-serif; }
-
-                @keyframes pulse-subtle {
-                    0%, 100% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                }
-
-                .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
-
-                .input-field {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    transition: all 0.2s ease;
-                }
-
-                .input-field:focus {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-color: rgba(245, 48, 3, 0.5);
-                    box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.1);
-                }
-
-                .btn-primary {
-                    background: linear-gradient(135deg, #f53003 0%, #dc2702 100%);
-                    transition: all 0.2s ease;
-                }
-
-                .btn-primary:hover:not(:disabled) {
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 20px rgba(245, 48, 3, 0.4);
-                }
-
-                .btn-primary:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                }
-            `}</style>
-
-            <div className="font-geist relative flex min-h-screen items-center justify-center bg-[#0f0f0f] px-4">
-                {/* Subtle background gradient */}
-                <div className="fixed inset-0">
-                    <div className="absolute inset-0 bg-linear-to-br from-[#0f0f0f] via-[#141414] to-[#0f0f0f]" />
-                    <div className="animate-pulse-subtle absolute top-1/2 left-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(245,48,3,0.03)_0%,transparent_70%)]" />
+            <div className="relative flex min-h-screen items-center justify-center bg-linear-to-br from-primary-950 via-primary-900 to-primary-950 px-4">
+                {/* Animated background gradient orbs */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <motion.div
+                        animate={{ y: [0, 30, 0] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary-800/20 blur-3xl"
+                    />
+                    <motion.div
+                        animate={{ y: [30, -30, 30] }}
+                        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary-700/10 blur-3xl"
+                    />
                 </div>
 
                 {/* Main content */}
-                <div className="relative z-10 w-full max-w-sm">
-                    {/* Logo */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="relative z-10 w-full max-w-md"
+                >
+                    {/* Logo - Bold and Prominent */}
                     <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: 'easeOut' }}
-                        className="mb-8 flex justify-center"
-                    >
-                        <div className="h-16 w-full overflow-hidden">
-                            <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="w-full -translate-y-24" />
-                        </div>
-                    </motion.div>
-
-                    {/* Title */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
-                        className="mb-8 text-center"
+                        className="mb-12 flex justify-center"
                     >
-                        <h1 className="mb-1 text-2xl font-semibold tracking-tight text-white">Zeus</h1>
-                        <p className="text-sm text-zinc-500">Admin access portal</p>
+                        <img
+                            src="/assets/images/kontrol-white-logo.png"
+                            alt="Kontrol"
+                            className="h-24 w-auto object-contain"
+                        />
                     </motion.div>
 
-                    {/* Login form */}
-                    <motion.form
+                    {/* Heading */}
+                    <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
-                        onSubmit={submit}
+                        transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+                        className="mb-10 text-center"
                     >
-                        <div className="rounded-xl border border-white/6 bg-white/2 p-6 backdrop-blur-sm">
-                            {/* Username field */}
-                            <div className="mb-4">
-                                <label htmlFor="username" className="mb-2 block text-sm font-medium text-zinc-300">
-                                    Username
-                                </label>
-                                <input
-                                    id="username"
-                                    type="text"
-                                    value={data.username}
-                                    onChange={(e) => setData('username', e.target.value)}
-                                    className="input-field w-full rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none"
-                                    placeholder="Enter your username"
-                                    autoComplete="username"
-                                    autoFocus
-                                />
-                                {errors.username && <p className="mt-2 text-sm text-red-400">{errors.username}</p>}
-                            </div>
+                        <h1 className="mb-2 text-3xl font-bold tracking-tight text-white">Zeus</h1>
+                        <p className="text-sm text-primary-200">Platform Administration Portal</p>
+                    </motion.div>
 
-                            {/* Password field */}
-                            <div className="mb-6">
-                                <label htmlFor="password" className="mb-2 block text-sm font-medium text-zinc-300">
-                                    Password
-                                </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    className="input-field w-full rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none"
-                                    placeholder="Enter your password"
-                                    autoComplete="current-password"
-                                />
-                                {errors.password && <p className="mt-2 text-sm text-red-400">{errors.password}</p>}
-                            </div>
+                    {/* Login Form Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+                    >
+                        <div className="rounded-2xl border border-primary-800/40 bg-primary-900/50 p-8 backdrop-blur-xl shadow-2xl">
+                            <form onSubmit={submit} className="space-y-5">
+                                {/* Username field */}
+                                <div>
+                                    <label htmlFor="username" className="mb-2 block text-sm font-semibold text-primary-100">
+                                        Username
+                                    </label>
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        value={data.username}
+                                        onChange={(e) => setData('username', e.target.value)}
+                                        placeholder="Enter your username"
+                                        autoComplete="username"
+                                        autoFocus
+                                        className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    />
+                                    {errors.username && (
+                                        <p className="mt-2 text-sm text-red-400">{errors.username}</p>
+                                    )}
+                                </div>
 
-                            {/* Submit button */}
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="btn-primary w-full rounded-lg px-4 py-3 text-sm font-medium text-white"
-                            >
-                                {processing ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            />
-                                        </svg>
-                                        Signing in...
-                                    </span>
-                                ) : (
-                                    'Sign in'
-                                )}
-                            </button>
+                                {/* Password field */}
+                                <div>
+                                    <label htmlFor="password" className="mb-2 block text-sm font-semibold text-primary-100">
+                                        Password
+                                    </label>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        placeholder="Enter your password"
+                                        autoComplete="current-password"
+                                        className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    />
+                                    {errors.password && (
+                                        <p className="mt-2 text-sm text-red-400">{errors.password}</p>
+                                    )}
+                                </div>
+
+                                {/* Submit button */}
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="mt-6 w-full rounded-lg bg-linear-to-r from-primary-500 to-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-primary-600 hover:to-primary-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {processing ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="3"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                />
+                                            </svg>
+                                            Signing in...
+                                        </span>
+                                    ) : (
+                                        'Sign in to Zeus'
+                                    )}
+                                </button>
+                            </form>
                         </div>
-                    </motion.form>
+                    </motion.div>
 
-                    {/* Footer */}
+                    {/* Footer text */}
                     <motion.p
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
-                        className="mt-8 text-center text-xs text-zinc-600"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                        className="mt-8 text-center text-xs text-primary-300/60"
                     >
-                        Authorized personnel only
+                        Authorized personnel only • Kontrol Admin Portal
                     </motion.p>
-                </div>
+                </motion.div>
             </div>
         </AnimatedLayout>
     );

@@ -3,10 +3,9 @@
 namespace App\Http\Requests\Admin;
 
 use App\Rules\NotReservedRoleName;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use App\Services\EstateContextService;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRoleRequest extends FormRequest
 {
@@ -46,6 +45,4 @@ class StoreRoleRequest extends FormRequest
             'name.unique' => 'A role with this name already exists in your estate.',
         ];
     }
-
-
 }

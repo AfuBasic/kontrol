@@ -26,7 +26,7 @@ class DeleteRoleAction
             ->performedOn($role)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $role->estate_id])
-            ->log('deleted role ' . $role->name);
+            ->log('deleted role '.$role->name);
 
         $role->delete();
     }

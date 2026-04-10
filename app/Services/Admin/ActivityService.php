@@ -17,7 +17,7 @@ class ActivityService
     public function getCursorPaginatedActivities()
     {
         $estateId = $this->estateContext->getEstateId();
-        
+
         $query = Activity::query()
             ->with(['causer', 'subject'])
             ->where('activity_log.estate_id', $estateId)

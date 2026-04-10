@@ -4,8 +4,8 @@ namespace App\Actions\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UpdateResidentAction
 {
@@ -30,7 +30,7 @@ class UpdateResidentAction
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('updated resident ' . $resident->name);
+                ->log('updated resident '.$resident->name);
 
             return $resident->fresh('profile');
         });

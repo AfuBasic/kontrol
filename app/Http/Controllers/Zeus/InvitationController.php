@@ -58,6 +58,10 @@ class InvitationController extends Controller
         Auth::logoutOtherDevices($validated['password']);
 
         // Redirect based on role
+        if ($user->hasRole('affiliate')) {
+            return redirect()->route('affiliate.dashboard');
+        }
+
         if ($estate = $user->estates()->first()) {
             setPermissionsTeamId($estate->id);
             // Reload roles to ensure proper scope

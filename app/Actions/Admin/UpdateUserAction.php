@@ -30,7 +30,7 @@ class UpdateUserAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('updated admin ' . $user->name);
+                ->log('updated admin '.$user->name);
 
             return $user;
         });

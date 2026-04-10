@@ -6,24 +6,18 @@ use App\Actions\Admin\CreateUserAction;
 use App\Actions\Admin\DeleteUserAction;
 use App\Actions\Admin\ResetUserPasswordAction;
 use App\Actions\Admin\UpdateUserAction;
-use App\Events\Admin\UserCreated;
-use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Controllers\Controller;
-use App\Mail\Admin\AdminInvitationMail;
+use App\Http\Requests\Admin\StoreUserRequest;
 use App\Models\User;
 use App\Services\Admin\RoleService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
-use Database\Seeders\RoleSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -99,7 +93,7 @@ class UserController extends Controller
 
         $estateId = $this->estateContext->getEstateId();
         $roles = $this->roleService->getManageableRoles();
-        
+
         // Load roles for the user in the context of this estate
         setPermissionsTeamId($estateId);
         $currentRole = $user->roles->first()?->name;

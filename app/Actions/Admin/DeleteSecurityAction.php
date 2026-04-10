@@ -14,7 +14,7 @@ class DeleteSecurityAction
             ->performedOn($security)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log('deleted security personnel ' . $security->name);
+            ->log('deleted security personnel '.$security->name);
 
         $security->delete();
     }

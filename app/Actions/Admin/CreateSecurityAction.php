@@ -51,7 +51,7 @@ class CreateSecurityAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited security personnel ' . $user->email);
+                ->log('invited security personnel '.$user->email);
 
             return $user;
         });

@@ -26,7 +26,6 @@ class CreateHouseholdMemberAction
                 'password' => null,
             ]);
 
-
             $estate->users()->attach($user->id, ['status' => 'pending']);
 
             $role = Role::where('name', 'household_member')
@@ -36,7 +35,6 @@ class CreateHouseholdMemberAction
 
             setPermissionsTeamId($estate->id);
             $user->assignRole($role);
-
 
             $primaryProfile = $primaryResident->profile;
 
@@ -59,7 +57,7 @@ class CreateHouseholdMemberAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('added household member ' . $user->email);
+                ->log('added household member '.$user->email);
 
             return $user;
         });

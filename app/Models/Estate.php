@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\DB;
 
 class Estate extends Model
@@ -55,5 +57,36 @@ class Estate extends Model
     public function settings(): HasOne
     {
         return $this->hasOne(EstateSettings::class)->withDefault();
+    }
+
+    /**
+     * @return HasOneThrough<Plan, EstateSubscription>
+     */
+    public function subscription(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Plan::class,
+            EstateSubscription::class,
+            'estate_id',
+            'id',
+            'id',
+            'plan_id'
+        );
+    }
+
+    /**
+     * @return HasOne<EstateSubscription, $this>
+     */
+    public function subscriptionRecord(): HasOne
+    {
+        return $this->hasOne(EstateSubscription::class);
+    }
+
+    /**
+     * @return BelongsTo<Referrer, $this>
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(Referrer::class)->withDefault();
     }
 }

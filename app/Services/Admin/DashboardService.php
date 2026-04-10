@@ -7,11 +7,10 @@ use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\User;
+use App\Services\EstateContextService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
-use App\Services\EstateContextService;
 
 class DashboardService
 {
@@ -50,8 +49,8 @@ class DashboardService
         // Optimized posts stats
         $postStats = EstateBoardPost::forEstate($estateId)
             ->selectRaw('count(*) as total')
-            ->selectRaw("sum(case when status = ? and published_at is not null then 1 else 0 end) as published", [EstateBoardPostStatus::Published->value])
-            ->selectRaw("sum(case when status = ? then 1 else 0 end) as draft", [EstateBoardPostStatus::Draft->value])
+            ->selectRaw('sum(case when status = ? and published_at is not null then 1 else 0 end) as published', [EstateBoardPostStatus::Published->value])
+            ->selectRaw('sum(case when status = ? then 1 else 0 end) as draft', [EstateBoardPostStatus::Draft->value])
             ->toBase()
             ->first();
 
@@ -67,8 +66,8 @@ class DashboardService
         $residentTrends = User::query()
             ->forEstate($estateId)
             ->withRole('resident', $estateId)
-            ->selectRaw("sum(case when created_at >= ? then 1 else 0 end) as new_this_period", [$thirtyDaysAgo])
-            ->selectRaw("sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period", [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as new_this_period', [$thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period', [$sixtyDaysAgo, $thirtyDaysAgo])
             ->toBase()
             ->first();
 
@@ -78,8 +77,8 @@ class DashboardService
 
         // Optimized posts trends
         $postsTrends = EstateBoardPost::forEstate($estateId)
-            ->selectRaw("sum(case when created_at >= ? then 1 else 0 end) as new_this_period", [$thirtyDaysAgo])
-            ->selectRaw("sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period", [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as new_this_period', [$thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period', [$sixtyDaysAgo, $thirtyDaysAgo])
             ->toBase()
             ->first();
 

@@ -24,6 +24,6 @@ class ResetUserPasswordAction
             ->performedOn($user)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log('reset password for admin ' . $user->email);
+            ->log('reset password for admin '.$user->email);
     }
 }

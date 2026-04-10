@@ -36,7 +36,7 @@ class UpdateRoleAction
             ->performedOn($role)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $role->estate_id])
-            ->log('updated role ' . $role->name);
+            ->log('updated role '.$role->name);
 
         return $role->fresh();
     }

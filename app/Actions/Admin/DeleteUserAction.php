@@ -23,7 +23,7 @@ class DeleteUserAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('removed admin ' . $user->name);
+                ->log('removed admin '.$user->name);
 
             // If user has no other estates and no password (invite pending), maybe delete entirely?
             // For now, let's keep it safe and just detach.

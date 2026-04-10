@@ -1,9 +1,37 @@
 import { Head, Link } from '@inertiajs/react';
+import PricingCard from '@/components/PricingCard';
+import PricingToggle from '@/components/PricingToggle';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import ApplicationModal from '@/components/Public/ApplicationModal';
 import PublicLayout from '@/layouts/PublicLayout';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+
+interface Feature {
+    id: number;
+    name: string;
+}
+
+interface Plan {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    price: number;
+    formatted_price: string;
+    billing_interval: 'monthly' | 'annual';
+    is_featured: boolean;
+    badge: string | null;
+    color: string;
+    max_residents: number | null;
+    max_security: number | null;
+    max_admins: number | null;
+    features: Feature[];
+}
+
+interface Props {
+    plans: Plan[];
+}
 
 // Icon components
 function ShieldIcon({ className }: { className?: string }) {
@@ -342,8 +370,8 @@ const whyApplyPoints = [
         description: 'Our team helps you set up and onboard your estate.',
     },
     {
-        title: 'Completely free',
-        description: 'No payment or fees will ever be requested during signup.',
+        title: 'Flexible pricing',
+        description: "Choose a plan that fits your estate's needs and scales with you.",
     },
     {
         title: 'Personal touch',
@@ -351,8 +379,21 @@ const whyApplyPoints = [
     },
 ];
 
-export default function Landing() {
+export default function Landing({ plans }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+    const [selectedPlanId, setSelectedPlanId] = useState<number | undefined>();
+    const [selectedPlanName, setSelectedPlanName] = useState<string | undefined>();
+
+    const allFeatures = useMemo(() => {
+        const map = new Map<number, Feature>();
+        plans.forEach((plan) => {
+            plan.features.forEach((f) => {
+                if (!map.has(f.id)) map.set(f.id, f);
+            });
+        });
+        return Array.from(map.values());
+    }, [plans]);
 
     // Sync modal state with URL hash
     useEffect(() => {
@@ -375,14 +416,26 @@ export default function Landing() {
         setModalOpen(true);
     }
 
+    function openModalWithPlan(planId: number, planName: string) {
+        setSelectedPlanId(planId);
+        setSelectedPlanName(planName);
+        window.location.hash = 'apply';
+        setModalOpen(true);
+    }
+
     function closeModal() {
         // Remove hash without scrolling
         history.pushState('', document.title, window.location.pathname + window.location.search);
         setModalOpen(false);
+        // Reset plan selection after a short delay
+        setTimeout(() => {
+            setSelectedPlanId(undefined);
+            setSelectedPlanName(undefined);
+        }, 300);
     }
 
     return (
-        <PublicLayout>
+        <PublicLayout onApplyClick={openModal}>
             <Head title="Kontrol - Modern Estate Access Control">
                 {/* Primary Meta Tags */}
                 <meta
@@ -462,10 +515,10 @@ export default function Landing() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur-sm"
+                            className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-2 text-sm font-medium text-blue-700 backdrop-blur-sm"
                         >
-                            <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-                            <span>100% Free, No payment required</span>
+                            <span className="flex h-2 w-2 rounded-full bg-blue-500" />
+                            <span>Trusted by leading estates</span>
                         </motion.div>
 
                         <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
@@ -678,7 +731,7 @@ export default function Landing() {
             </section>
 
             {/* Features Section */}
-            <section className="relative overflow-hidden bg-slate-50 py-24 lg:py-32">
+            <section id="features" className="relative overflow-hidden bg-slate-50 py-24 lg:py-32">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f010_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f010_1px,transparent_1px)] bg-size-[4rem_4rem]" />
 
                 <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
@@ -777,7 +830,7 @@ export default function Landing() {
             </section>
 
             {/* Trust & Security Section */}
-            <section className="relative overflow-hidden bg-linear-to-b from-slate-900 to-slate-800 py-24 lg:py-32">
+            <section id="security" className="relative overflow-hidden bg-linear-to-b from-slate-900 to-slate-800 py-24 lg:py-32">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem]" />
 
                 <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
@@ -830,6 +883,111 @@ export default function Landing() {
                 </div>
             </section>
 
+            {/* Pricing Section */}
+            {plans.length > 0 && (
+                <section id="pricing" className="relative overflow-hidden bg-slate-950 py-24 lg:py-32">
+                    {/* Background decoration */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+                        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+                    </div>
+
+                    <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-100px' }}
+                            transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
+                            className="mx-auto max-w-3xl text-center"
+                        >
+                            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-400">
+                                <span className="flex h-2 w-2 rounded-full bg-blue-500" />
+                                Transparent Pricing
+                            </div>
+                            <h2 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                                Plans designed for
+                                <span className="mt-2 block bg-linear-to-r from-blue-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent">
+                                    every estate
+                                </span>
+                            </h2>
+                            <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
+                                Choose the perfect plan for your estate's needs. Scale up or down as you grow.
+                            </p>
+
+                            {/* Billing Toggle */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: 0.1 }}
+                                className="mt-12 flex justify-center"
+                            >
+                                <PricingToggle billingPeriod={billingPeriod} setBillingPeriod={setBillingPeriod} />
+                            </motion.div>
+
+
+                        </motion.div>
+
+                        {/* Plans Grid */}
+                        {plans.some((p) => p.billing_interval === billingPeriod) ? (
+                            <motion.div
+                                key={billingPeriod}
+                                initial="initial"
+                                animate="animate"
+                                variants={staggerContainer}
+                                className="mx-auto mt-16 grid gap-8 lg:grid-cols-3"
+                            >
+                                {plans
+                                    .filter((p) => p.billing_interval === billingPeriod)
+                                    .map((plan) => (
+                                        <PricingCard
+                                            key={plan.id}
+                                            plan={plan}
+                                            allFeatures={allFeatures}
+                                            billingPeriod={billingPeriod}
+                                            onSelect={() => openModalWithPlan(plan.id, plan.name)}
+                                        />
+                                    ))}
+                            </motion.div>
+                        ) : (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-16 text-center text-slate-400">
+                                <p className="text-lg">No plans available for this billing period</p>
+                            </motion.div>
+                        )}
+
+                        {/* Pricing Information Ribbon */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="mx-auto mt-16 mb-8 flex max-w-fit items-center justify-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3.5 shadow-lg shadow-indigo-500/10 backdrop-blur-md"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm font-bold text-indigo-400 tracking-widest uppercase">
+                                Pricing is calculated per resident
+                            </span>
+                        </motion.div>
+
+                        {/* Pricing Footer */}
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            className="mx-auto mt-12 max-w-2xl text-center text-sm text-slate-400"
+                        >
+                            All plans include 24/7 support, secure access codes, and real-time visitor verification. Need a custom plan?{' '}
+                            <button onClick={openModal} className="font-semibold text-blue-400 transition-colors hover:text-blue-300">
+                                Contact us
+                            </button>
+                        </motion.p>
+                    </div>
+                </section>
+            )}
+
             {/* Final CTA Section */}
             <section className="py-24 lg:py-32">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -849,9 +1007,9 @@ export default function Landing() {
                         </div>
 
                         <div className="relative">
-                            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400">
-                                <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
-                                Completely free — No fees, no commitments
+                            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-400">
+                                <span className="flex h-2 w-2 rounded-full bg-blue-400" />
+                                Simple pricing, no hidden fees
                             </div>
                             <h2 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
                                 Ready to modernize your
@@ -860,7 +1018,7 @@ export default function Landing() {
                                 </span>
                             </h2>
                             <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-                                Submit your application and our team will reach out to get you started. No fees. No commitments.
+                                Submit your application and our team will reach out to get you started with the perfect plan for your needs.
                             </p>
                             <div className="mt-10">
                                 <button
@@ -877,7 +1035,12 @@ export default function Landing() {
             </section>
 
             {/* Application Modal */}
-            <ApplicationModal isOpen={modalOpen} onClose={closeModal} />
+            <ApplicationModal
+                isOpen={modalOpen}
+                onClose={closeModal}
+                selectedPlanId={selectedPlanId}
+                selectedPlanName={selectedPlanName}
+            />
         </PublicLayout>
     );
 }

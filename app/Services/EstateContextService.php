@@ -15,6 +15,7 @@ class EstateContextService
     {
         /** @var User $user */
         $user = Auth::user();
+
         return $user->getCurrentEstate();
     }
 

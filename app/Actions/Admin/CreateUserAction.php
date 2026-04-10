@@ -21,7 +21,7 @@ class CreateUserAction
                 [
                     'name' => $data['name'],
                     'email' => $data['email'],
-                    'password' => NULL, 
+                    'password' => null,
                 ]
             );
 
@@ -32,13 +32,13 @@ class CreateUserAction
 
             // 3. Assign Role scoped to this estate
             setPermissionsTeamId($estate->id);
-            
+
             if (! $user->hasRole($data['role'])) {
                 $user->assignRole($data['role']);
             }
 
             // 4. Dispatch event (handles email invitation and realtime notification)
-            if ($user->password === NULL) {
+            if ($user->password === null) {
                 DB::afterCommit(function () use ($user, $estate) {
                     event(new UserCreated($user, $estate));
                 });
@@ -48,7 +48,7 @@ class CreateUserAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited admin ' . $user->email);
+                ->log('invited admin '.$user->email);
 
             return $user;
         });

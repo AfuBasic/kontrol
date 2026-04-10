@@ -4,10 +4,8 @@ namespace App\Services\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
-
 use App\Services\EstateContextService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ResidentService
 {
@@ -31,7 +29,7 @@ class ResidentService
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
@@ -39,10 +37,10 @@ class ResidentService
                     $query->whereNotNull('suspended_at');
                 } elseif ($status === 'active') {
                     $query->whereNull('suspended_at')
-                          ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'pending') {
                     $query->whereNull('suspended_at')
-                          ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
             ->orderBy('name')

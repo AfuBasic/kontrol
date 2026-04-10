@@ -4,11 +4,9 @@ namespace App\Services\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
+use App\Services\EstateContextService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
-
-use App\Services\EstateContextService;
 
 class UserService
 {

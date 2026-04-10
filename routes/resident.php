@@ -87,4 +87,3 @@ Route::middleware('role:resident')->group(function (): void {
         Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
     });
 });
-

@@ -8,7 +8,6 @@ use App\Actions\Admin\DeleteSecurityAction;
 use App\Actions\Admin\ResetSecurityPasswordAction;
 use App\Actions\Admin\SuspendSecurityAction;
 use App\Actions\Admin\UpdateSecurityAction;
-use App\Events\Admin\SecurityCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
@@ -62,6 +61,7 @@ class SecurityPersonnelController extends Controller
     public function create(): Response
     {
         $this->authorize('security.create');
+
         return Inertia::render('admin/security/create');
     }
 
@@ -126,7 +126,7 @@ class SecurityPersonnelController extends Controller
     {
         $this->authorize('security.delete');
         $estate = $this->estateContext->getEstate();
-        
+
         $action->execute($security, $estate);
 
         return redirect()
@@ -141,7 +141,7 @@ class SecurityPersonnelController extends Controller
     {
         $this->authorize('security.suspend');
         $estate = $this->estateContext->getEstate();
-        
+
         $action->execute($security, $estate);
 
         $message = $security->suspended_at

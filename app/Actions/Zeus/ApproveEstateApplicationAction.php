@@ -4,6 +4,7 @@ namespace App\Actions\Zeus;
 
 use App\Models\Estate;
 use App\Models\EstateApplication;
+use App\Models\EstateSubscription;
 use Illuminate\Support\Facades\DB;
 
 class ApproveEstateApplicationAction
@@ -17,6 +18,9 @@ class ApproveEstateApplicationAction
      *
      * Uses the information from the application to create the estate,
      * which triggers the existing invitation flow.
+     *
+     * If a plan_id is specified in the application, creates an EstateSubscription
+     * linking the estate to that plan.
      */
     public function execute(EstateApplication $application): Estate
     {
@@ -27,6 +31,16 @@ class ApproveEstateApplicationAction
                 'email' => $application->email,
                 'address' => $application->address,
             ]);
+
+            // If a plan was selected, create a subscription for it
+            if ($application->plan_id) {
+                EstateSubscription::create([
+                    'estate_id' => $estate->id,
+                    'plan_id' => $application->plan_id,
+                    'status' => 'active',
+                    'billing_interval' => 'monthly',
+                ]);
+            }
 
             // Mark the application as approved
             $application->markAsApproved();

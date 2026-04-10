@@ -24,6 +24,6 @@ class ResetSecurityPasswordAction
             ->performedOn($security)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log('reset password for security personnel ' . $security->email);
+            ->log('reset password for security personnel '.$security->email);
     }
 }

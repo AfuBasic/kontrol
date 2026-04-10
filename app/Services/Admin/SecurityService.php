@@ -4,16 +4,15 @@ namespace App\Services\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
-
 use App\Services\EstateContextService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class SecurityService
 {
     public function __construct(
         protected EstateContextService $estateContext
     ) {}
+
     /**
      * Get paginated security personnel for the current estate.
      *

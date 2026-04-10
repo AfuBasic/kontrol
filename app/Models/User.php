@@ -29,6 +29,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'user_type',
         'password',
         'suspended_at',
         'google_id',
@@ -56,6 +57,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'suspended_at' => 'datetime',
             'password' => 'hashed',
+            'user_type' => 'string',
         ];
     }
 
@@ -188,6 +190,28 @@ class User extends Authenticatable
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereNull('suspended_at');
+    }
+
+    /**
+     * Scope: Users with affiliate type.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeAffiliates(Builder $query): Builder
+    {
+        return $query->where('user_type', 'affiliate');
+    }
+
+    /**
+     * Scope: Users with regular user type.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeRegularUsers(Builder $query): Builder
+    {
+        return $query->where('user_type', 'user');
     }
 
     /**

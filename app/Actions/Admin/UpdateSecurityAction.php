@@ -34,7 +34,7 @@ class UpdateSecurityAction
                 ->performedOn($security)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('updated security personnel ' . $security->name);
+                ->log('updated security personnel '.$security->name);
 
             return $security->fresh('profile');
         });

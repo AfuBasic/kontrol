@@ -11,7 +11,8 @@ class StoreEstateApplicationAction
     /**
      * Validate and store a new estate application.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
+     *
      * @throws ValidationException
      */
     public function execute(array $data): EstateApplication

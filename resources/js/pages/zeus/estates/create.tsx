@@ -22,84 +22,91 @@ export default function CreateEstate() {
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    transition={{ duration: 0.45, ease: 'easeOut' }}
                     className="mb-8"
                 >
-                    <h1 className="text-2xl font-semibold text-gray-900">Create Estate</h1>
-                    <p className="mt-1 text-gray-500">Add a new estate to the platform. An invitation email will be sent to the estate admin.</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                            Infrastructure
+                        </span>
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                        Deploy <span className="text-slate-400 font-light">Estate</span>
+                    </h1>
                 </motion.div>
 
                 <motion.form
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.35, delay: 0.05 }}
                     onSubmit={handleSubmit}
-                    className="rounded-xl border border-gray-200 bg-white p-6"
+                    className="rounded-lg border border-slate-200 bg-white p-7"
                 >
                     <div className="space-y-6">
                         {/* Name */}
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                Estate Name
+                            <label htmlFor="name" className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                Entity Name
                             </label>
                             <input
                                 type="text"
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                placeholder="Enter estate name"
+                                className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                placeholder="e.g. Silverwood Heights"
                             />
-                            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                            {errors.name && <p className="mt-1.5 text-[11px] font-bold uppercase text-red-500 tracking-tight">{errors.name}</p>}
                         </div>
 
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Admin Email
+                            <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                Administrative Email
                             </label>
                             <input
                                 type="email"
                                 id="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                placeholder="admin@estate.com"
+                                className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                placeholder="admin@entity.com"
                             />
-                            <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email to set up the admin account.</p>
-                            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                            <p className="mt-2 text-[11px] text-slate-400 leading-relaxed uppercase tracking-tight font-medium">System will dispatch initialization credentials to this endpoint.</p>
+                            {errors.email && <p className="mt-1.5 text-[11px] font-bold uppercase text-red-500 tracking-tight">{errors.email}</p>}
                         </div>
 
                         {/* Address */}
                         <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                                Address <span className="text-gray-400">(optional)</span>
+                            <label htmlFor="address" className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                Physical Mapping
                             </label>
                             <textarea
                                 id="address"
                                 value={data.address}
                                 onChange={(e) => setData('address', e.target.value)}
                                 rows={3}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                placeholder="Enter estate address"
+                                className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                placeholder="Primary operations address..."
                             />
-                            {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+                            {errors.address && <p className="mt-1.5 text-[11px] font-bold uppercase text-red-500 tracking-tight">{errors.address}</p>}
                         </div>
                     </div>
 
-                    <div className="mt-8 flex items-center justify-end gap-4">
+                    <div className="mt-8 flex items-center justify-end gap-3">
                         <Link
                             href="/zeus/dashboard"
-                            className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                            className="rounded px-4 py-2 text-[12px] font-bold text-slate-400 transition-all hover:bg-slate-50 active:scale-95 uppercase tracking-wider"
                         >
-                            Cancel
+                            Abort
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                            className="rounded bg-slate-900 px-6 py-2.5 text-[12px] font-bold text-white transition-all hover:bg-slate-800 disabled:opacity-40 active:scale-95 uppercase tracking-wider"
                         >
-                            {processing ? 'Creating...' : 'Create Estate'}
+                            {processing ? 'Provisioning...' : 'Deploy Estate'}
                         </button>
                     </div>
                 </motion.form>

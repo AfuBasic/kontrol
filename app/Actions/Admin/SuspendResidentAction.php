@@ -18,6 +18,6 @@ class SuspendResidentAction
             ->performedOn($resident)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log($resident->suspended_at ? 'suspended resident ' . $resident->name : 'activated resident ' . $resident->name);
+            ->log($resident->suspended_at ? 'suspended resident '.$resident->name : 'activated resident '.$resident->name);
     }
 }

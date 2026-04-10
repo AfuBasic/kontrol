@@ -2,19 +2,18 @@
 
 namespace App\Services\Admin;
 
+use App\Services\EstateContextService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-
-use App\Services\EstateContextService;
 
 class RoleService
 {
     public function __construct(
         protected EstateContextService $estateContext
     ) {}
+
     /**
      * Get roles that can be managed by the current user.
      * Excludes reserved system roles.
@@ -54,6 +53,4 @@ class RoleService
     {
         return in_array(strtolower($name), array_map('strtolower', RoleSeeder::GLOBAL_ROLES));
     }
-
-
 }

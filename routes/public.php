@@ -15,6 +15,7 @@
  */
 
 use App\Http\Controllers\Public\ApplicationController;
+use App\Http\Controllers\Public\LandingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -24,7 +25,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', fn () => Inertia::render('Public/Landing'))->name('public.home');
+Route::get('/', LandingController::class)->name('public.home');
 
 /*
 |--------------------------------------------------------------------------
@@ -42,4 +43,3 @@ Route::post('/apply', [ApplicationController::class, 'store'])->name('public.app
 
 Route::get('/privacy', fn () => Inertia::render('Public/Privacy'))->name('public.privacy');
 Route::get('/terms', fn () => Inertia::render('Public/Terms'))->name('public.terms');
-

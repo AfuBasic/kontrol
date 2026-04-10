@@ -17,6 +17,33 @@ use Inertia\Response;
 
 class EstateController extends Controller
 {
+    public function index(): Response
+    {
+        $search = request('search');
+        $status = request('status');
+
+        $query = Estate::query();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $estates = $query->paginate(15);
+
+        return Inertia::render('zeus/estates/index', [
+            'estates' => $estates,
+            'filters' => [
+                'search' => $search ?? '',
+                'status' => $status ?? '',
+            ],
+        ]);
+    }
+
     public function create(): Response
     {
         return Inertia::render('zeus/estates/create');

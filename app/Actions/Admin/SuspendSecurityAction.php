@@ -18,6 +18,6 @@ class SuspendSecurityAction
             ->performedOn($security)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log($security->suspended_at ? 'suspended security personnel ' . $security->name : 'activated security personnel ' . $security->name);
+            ->log($security->suspended_at ? 'suspended security personnel '.$security->name : 'activated security personnel '.$security->name);
     }
 }

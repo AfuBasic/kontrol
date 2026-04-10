@@ -18,7 +18,7 @@ class DeleteHouseholdMemberAction
                 ->performedOn($member)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('removed household member ' . $member->name);
+                ->log('removed household member '.$member->name);
 
             // Delete the linking record
             $householdMember->delete();

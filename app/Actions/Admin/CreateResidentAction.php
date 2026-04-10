@@ -6,8 +6,8 @@ use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
@@ -52,7 +52,7 @@ class CreateResidentAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited resident ' . $user->email);
+                ->log('invited resident '.$user->email);
 
             return $user;
         });

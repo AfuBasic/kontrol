@@ -4,6 +4,10 @@ use App\Http\Controllers\Zeus\ApplicationController;
 use App\Http\Controllers\Zeus\AuthController;
 use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
+use App\Http\Controllers\Zeus\FeatureController;
+use App\Http\Controllers\Zeus\PlanController;
+use App\Http\Controllers\Zeus\ReferrerController;
+use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
 use App\Http\Middleware\Zeus\RedirectIfZeusAuthenticated;
 use Illuminate\Support\Facades\Route;
@@ -20,14 +24,29 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+        // Plans management
+        Route::resource('plans', PlanController::class)->except(['show']);
+
+        // Features management
+        Route::get('/features', [FeatureController::class, 'index'])->name('features.index');
+        Route::patch('/plans/{plan}/features/{feature}', [FeatureController::class, 'toggle'])->name('features.toggle');
+
+        // Subscriptions management
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::patch('/subscriptions/{estate}', [SubscriptionController::class, 'override'])->name('subscriptions.override');
+
+        // Billing configuration
+        Route::get('/billing', fn () => inertia('zeus/billing/index'))->name('billing.index');
+
+        // Referrers management
+        Route::resource('referrers', ReferrerController::class);
+        Route::post('/referrers/{referrer}/regenerate-key', [ReferrerController::class, 'regenerateKey'])->name('referrers.regenerate-key');
+        Route::post('/referrers/{referrer}/invite-member', [ReferrerController::class, 'inviteMember'])->name('referrers.invite-member');
+
         // Estate management
-        Route::get('/estates/create', [EstateController::class, 'create'])->name('estates.create');
-        Route::post('/estates', [EstateController::class, 'store'])->name('estates.store');
-        Route::get('/estates/{estate}/edit', [EstateController::class, 'edit'])->name('estates.edit');
-        Route::put('/estates/{estate}', [EstateController::class, 'update'])->name('estates.update');
+        Route::resource('estates', EstateController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
-        Route::delete('/estates/{estate}', [EstateController::class, 'destroy'])->name('estates.destroy');
 
         // Application management
         Route::post('/applications/{application}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');

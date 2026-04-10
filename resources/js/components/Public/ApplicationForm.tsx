@@ -5,6 +5,8 @@ import type { FocusEvent, FormEvent } from 'react';
 
 interface Props {
     onSuccess: (estateName: string) => void;
+    selectedPlanId?: number;
+    selectedPlanName?: string;
 }
 
 const inputClasses = {
@@ -25,13 +27,14 @@ function handleInputFocus(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>)
 
 const labelClasses = 'mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700';
 
-export default function ApplicationForm({ onSuccess }: Props) {
+export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPlanName }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         estate_name: '',
         email: '',
         phone: '',
         address: '',
         notes: '',
+        plan_id: selectedPlanId || null,
     });
 
     function handleSubmit(e: FormEvent) {
@@ -62,6 +65,15 @@ export default function ApplicationForm({ onSuccess }: Props) {
 
     return (
         <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-5">
+            {/* Selected Plan Banner */}
+            {selectedPlanId && selectedPlanName && (
+                <motion.div variants={itemVariants} className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                    <p className="text-sm text-blue-900">
+                        <span className="font-semibold">Selected Plan:</span> {selectedPlanName}
+                    </p>
+                </motion.div>
+            )}
+
             {/* Estate Name */}
             <motion.div variants={itemVariants}>
                 <label htmlFor="estate_name" className={labelClasses}>

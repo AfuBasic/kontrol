@@ -14,7 +14,8 @@ class RoleSeeder extends Seeder
         'admin',            // Estate-scoped admin role
         'security',         // Global security personnel role
         'resident',         // Global resident role
-        'household_member', // Global household member role
+        'household_member', // Global household member role,
+        'affiliate',
     ];
 
     /**
@@ -24,6 +25,7 @@ class RoleSeeder extends Seeder
         'security',
         'resident',
         'household_member',
+        'affiliate',
     ];
 
     /**

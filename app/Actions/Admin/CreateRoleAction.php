@@ -2,15 +2,16 @@
 
 namespace App\Actions\Admin;
 
+use App\Services\EstateContextService;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
-use App\Services\EstateContextService;
 
 class CreateRoleAction
 {
     public function __construct(
         protected EstateContextService $estateContext
     ) {}
+
     /**
      * Create a new role for the current estate.
      *
@@ -34,10 +35,8 @@ class CreateRoleAction
             ->performedOn($role)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estateId])
-            ->log('created role ' . $role->name);
+            ->log('created role '.$role->name);
 
         return $role;
     }
-
-
 }

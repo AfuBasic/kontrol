@@ -7,11 +7,9 @@ use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use Illuminate\Contracts\Pagination\CursorPaginator;
-use Illuminate\Support\Facades\Auth;
 
 class EstateBoardService
 {
-    
     /**
      * Get the feed of published posts for an estate using cursor pagination.
      *

@@ -23,7 +23,7 @@ class HouseholdMemberCreated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('estates.' . $this->estate->id),
+            new PrivateChannel('estates.'.$this->estate->id),
         ];
     }
 
