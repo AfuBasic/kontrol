@@ -412,8 +412,34 @@ export default function Landing({ plans }: Props) {
     }, []);
 
     function openModal() {
-        window.location.hash = 'apply';
-        setModalOpen(true);
+        // Scroll to pricing section so user can select a plan first
+        const pricingSection = document.querySelector('#pricing');
+        if (!pricingSection) return;
+
+        const target = pricingSection.getBoundingClientRect().top + window.scrollY;
+        const start = window.scrollY;
+        const distance = target - start - 80; // Account for header height
+        const duration = 1000;
+        let startTime: number | null = null;
+
+        function easeInOutCubic(t: number): number {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function scroll(currentTime: number) {
+            if (startTime === null) startTime = currentTime;
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = easeInOutCubic(progress);
+
+            window.scrollTo(0, start + distance * ease);
+
+            if (progress < 1) {
+                requestAnimationFrame(scroll);
+            }
+        }
+
+        requestAnimationFrame(scroll);
     }
 
     function openModalWithPlan(planId: number, planName: string) {

@@ -51,12 +51,7 @@ export default function SuccessState({ estateName }: Props) {
     ];
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="py-6 text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="py-6 text-center">
             {/* Success Icon with Confetti */}
             <div className="relative mx-auto mb-8 flex h-28 w-28 items-center justify-center">
                 {/* Confetti pieces */}
@@ -117,7 +112,12 @@ export default function SuccessState({ estateName }: Props) {
             </motion.div>
 
             {/* Message */}
-            <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mt-4 text-base text-slate-600">
+            <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="mt-4 text-base text-slate-600"
+            >
                 We'll review your application and reach out within <span className="font-semibold text-slate-900">24-48 hours</span>.
             </motion.p>
 
@@ -128,7 +128,7 @@ export default function SuccessState({ estateName }: Props) {
                 transition={{ delay: 0.5 }}
                 className="mt-8 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-6"
             >
-                <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-500">What happens next</h4>
+                <h4 className="mb-5 text-sm font-bold tracking-wider text-slate-500 uppercase">What happens next</h4>
 
                 <div className="space-y-4">
                     {steps.map((step, index) => (
@@ -156,10 +156,10 @@ export default function SuccessState({ estateName }: Props) {
                 <p className="text-sm text-slate-500">
                     Questions? Email us at{' '}
                     <a
-                        href="mailto:hello@usekontrol.com"
+                        href="mailto:support@usekontrol.com"
                         className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 transition-colors hover:decoration-slate-900"
                     >
-                        hello@usekontrol.com
+                        support@usekontrol.com
                     </a>
                 </p>
             </motion.div>

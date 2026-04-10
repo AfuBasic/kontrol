@@ -18,16 +18,21 @@ class StoreEstateApplicationAction
     public function execute(array $data): EstateApplication
     {
         $validated = Validator::make($data, [
-            'estate_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'estate_name' => ['required', 'string', 'max:255', 'unique:estate_applications,estate_name'],
+            'email' => ['required', 'email', 'max:255', 'unique:estate_applications,email'],
+            'phone' => ['required', 'string', 'max:20', 'unique:estate_applications,phone'],
             'address' => ['nullable', 'string', 'max:500'],
-            'phone' => ['required', 'string', 'max:20'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'plan_id' => ['nullable', 'exists:plans,id'],
         ], [
             'estate_name.required' => 'Please enter your estate name.',
+            'estate_name.unique' => 'An application for this estate name already exists.',
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'An application for this email address already exists.',
             'phone.required' => 'Please enter a contact phone number.',
+            'phone.unique' => 'An application for this phone number already exists.',
+            'plan_id.exists' => 'The selected plan does not exist.',
         ])->validate();
 
         return EstateApplication::create([
@@ -36,6 +41,7 @@ class StoreEstateApplicationAction
             'address' => $validated['address'] ?? null,
             'phone' => $validated['phone'],
             'notes' => $validated['notes'] ?? null,
+            'plan_id' => $validated['plan_id'] ?? null,
             'status' => 'pending',
         ]);
     }
