@@ -2,7 +2,9 @@
 
 namespace App\Actions\Public;
 
+use App\Mail\EstateApplicationReceivedMail;
 use App\Models\EstateApplication;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -35,7 +37,7 @@ class StoreEstateApplicationAction
             'plan_id.exists' => 'The selected plan does not exist.',
         ])->validate();
 
-        return EstateApplication::create([
+        $application = EstateApplication::create([
             'estate_name' => $validated['estate_name'],
             'email' => $validated['email'],
             'address' => $validated['address'] ?? null,
@@ -44,5 +46,10 @@ class StoreEstateApplicationAction
             'plan_id' => $validated['plan_id'] ?? null,
             'status' => 'pending',
         ]);
+
+        // Send confirmation email (queued, non-blocking)
+        Mail::to($application->email)->send(new EstateApplicationReceivedMail($application));
+
+        return $application;
     }
 }

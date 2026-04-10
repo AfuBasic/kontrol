@@ -184,7 +184,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                 )}
 
                                 {/* Form Content - extra bottom padding on mobile for keyboard clearance */}
-                                <div className="max-h-[55vh] overflow-y-auto px-6 pt-6 pb-24 sm:max-h-[60vh] sm:px-8 sm:pb-6">
+                                <div className="max-h-[55vh] overflow-y-auto px-6 pt-6 pb-24 sm:max-h-[60vh] sm:px-8 sm:pb-6 scrollbar-hide">
                                     <AnimatePresence mode="wait">
                                         {submitted ? (
                                             <SuccessState key="success" estateName={estateName} />
