@@ -71,6 +71,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies('*');
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
+            'webhooks/paystack',
         ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,

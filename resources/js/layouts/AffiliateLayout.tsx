@@ -96,11 +96,7 @@ export default function AffiliateLayout({ children }: Props) {
                             className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 lg:inline-flex"
                             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         >
-                            {isCollapsed ? (
-                                <ChevronDoubleRightIcon className="h-5 w-5" />
-                            ) : (
-                                <ChevronDoubleLeftIcon className="h-5 w-5" />
-                            )}
+                            {isCollapsed ? <ChevronDoubleRightIcon className="h-5 w-5" /> : <ChevronDoubleLeftIcon className="h-5 w-5" />}
                         </button>
                     </div>
 
@@ -113,9 +109,7 @@ export default function AffiliateLayout({ children }: Props) {
                                     key={item.href}
                                     href={item.href}
                                     className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                                        active
-                                            ? 'bg-primary-50 text-primary-700'
-                                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                                        active ? 'bg-primary-50 text-primary-700' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                     }`}
                                 >
                                     <item.icon className="h-5 w-5 shrink-0" />
@@ -129,7 +123,7 @@ export default function AffiliateLayout({ children }: Props) {
                     <div className="border-t border-gray-200 p-4">
                         <button
                             onClick={handleLogout}
-                            className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all"
+                            className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-red-50 hover:text-red-700"
                         >
                             <ArrowLeftStartOnRectangleIcon className="h-5 w-5 shrink-0" />
                             {!isCollapsed && <span>Logout</span>}
@@ -139,10 +133,7 @@ export default function AffiliateLayout({ children }: Props) {
 
                 {/* Mobile Menu Overlay */}
                 {mobileMenuOpen && (
-                    <div
-                        className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm lg:hidden"
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)} />
                 )}
 
                 {/* Mobile Menu Button */}
@@ -172,13 +163,7 @@ export default function AffiliateLayout({ children }: Props) {
                 </main>
 
                 {/* Toast */}
-                {showToast && (
-                    <Toast
-                        message={toastMessage}
-                        type={toastType}
-                        onClose={() => setShowToast(false)}
-                    />
-                )}
+                {showToast && <Toast message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />}
             </div>
         </AnimatedLayout>
     );

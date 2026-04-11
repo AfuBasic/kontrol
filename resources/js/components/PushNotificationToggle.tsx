@@ -55,25 +55,17 @@ export default function PushNotificationToggle({ className = '' }: Props) {
                     <p className="text-sm text-gray-500">
                         {isSubscribed ? 'Get notified when visitors arrive' : 'Enable instant visitor arrival alerts'}
                     </p>
-                    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
                 </div>
             </div>
             <button
                 onClick={isSubscribed ? unsubscribe : subscribe}
                 disabled={isLoading}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all disabled:opacity-50 ${
-                    isSubscribed
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                    isSubscribed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-indigo-600 text-white hover:bg-indigo-500'
                 }`}
             >
-                {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isSubscribed ? (
-                    'Disable'
-                ) : (
-                    'Enable'
-                )}
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isSubscribed ? 'Disable' : 'Enable'}
             </button>
         </div>
     );

@@ -63,10 +63,7 @@ export default function ApplicationDetailModal({ isOpen, application, onClose }:
                             <h2 className="text-2xl font-bold">{application.estate_name}</h2>
                             <p className="mt-1 text-sm text-slate-300">Application Details</p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="rounded-full bg-white/10 p-2 transition-all hover:bg-white/20"
-                        >
+                        <button onClick={onClose} className="rounded-full bg-white/10 p-2 transition-all hover:bg-white/20">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
@@ -75,23 +72,19 @@ export default function ApplicationDetailModal({ isOpen, application, onClose }:
                 {/* Content */}
                 <div className="space-y-6 px-6 py-6">
                     {/* Status & Plan */}
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex flex-wrap items-center gap-3">
                         <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-tight ${
-                                application.status === 'pending'
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-blue-100 text-blue-700'
+                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-tight uppercase ${
+                                application.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                             }`}
                         >
                             {application.status === 'pending' ? 'Pending' : 'Contacted'}
                         </span>
                         {application.plan && (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold uppercase tracking-tight text-indigo-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold tracking-tight text-indigo-700 uppercase">
                                 Plan: {application.plan.name}
                                 {application.plan.billing_interval && (
-                                    <span className="ml-1">
-                                        ({application.plan.billing_interval === 'monthly' ? 'Monthly' : 'Annual'})
-                                    </span>
+                                    <span className="ml-1">({application.plan.billing_interval === 'monthly' ? 'Monthly' : 'Annual'})</span>
                                 )}
                             </span>
                         )}
@@ -101,19 +94,13 @@ export default function ApplicationDetailModal({ isOpen, application, onClose }:
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700">Email</label>
-                            <a
-                                href={`mailto:${application.email}`}
-                                className="mt-1 text-base text-blue-600 hover:underline break-all"
-                            >
+                            <a href={`mailto:${application.email}`} className="mt-1 text-base break-all text-blue-600 hover:underline">
                                 {application.email}
                             </a>
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-slate-700">Phone</label>
-                            <a
-                                href={`tel:${application.phone}`}
-                                className="mt-1 text-base text-blue-600 hover:underline"
-                            >
+                            <a href={`tel:${application.phone}`} className="mt-1 text-base text-blue-600 hover:underline">
                                 {application.phone}
                             </a>
                         </div>
@@ -137,7 +124,7 @@ export default function ApplicationDetailModal({ isOpen, application, onClose }:
                     {application.notes && (
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <label className="block text-sm font-semibold text-slate-700">Notes</label>
-                            <p className="mt-2 text-sm text-slate-600 whitespace-pre-wrap">{application.notes}</p>
+                            <p className="mt-2 text-sm whitespace-pre-wrap text-slate-600">{application.notes}</p>
                         </div>
                     )}
                 </div>

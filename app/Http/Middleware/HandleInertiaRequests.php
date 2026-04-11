@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -75,6 +76,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'validation_result' => fn () => $request->session()->get('validation_result'),
             ],
+            'billing_enabled' => fn () => $estate && $estate->settings?->charge_type === 'estate',
+            'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
         ];
     }
 }

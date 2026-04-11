@@ -43,7 +43,7 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
             { enabled: !currentState },
             {
                 onFinish: () => setUpdating(null),
-            }
+            },
         );
     }
 
@@ -63,9 +63,7 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
 
         Object.entries(features).forEach(([group, groupFeatures]) => {
             const matchedFeatures = groupFeatures.filter(
-                (feature) =>
-                    feature.name.toLowerCase().includes(lowerSearchTerm) ||
-                    feature.description?.toLowerCase().includes(lowerSearchTerm)
+                (feature) => feature.name.toLowerCase().includes(lowerSearchTerm) || feature.description?.toLowerCase().includes(lowerSearchTerm),
             );
 
             if (matchedFeatures.length > 0) {
@@ -89,32 +87,25 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                 transition={{ duration: 0.45, ease: 'easeOut' }}
                 className="mb-10"
             >
-                <div className="flex items-center gap-2 mb-1">
+                <div className="mb-1 flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                        Capability Matrix
-                    </span>
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Capability Matrix</span>
                 </div>
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                    Feature <span className="text-slate-400 font-light">Control</span>
+                    Feature <span className="font-light text-slate-400">Control</span>
                 </h1>
             </motion.div>
 
             {/* Search Input */}
-            <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 }}
-                className="mb-6"
-            >
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }} className="mb-6">
                 <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <MagnifyingGlassIcon className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
                         placeholder="Filter system features..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full rounded border border-slate-200 bg-white pl-11 pr-4 py-3 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                        className="w-full rounded border border-slate-200 bg-white py-3 pr-4 pl-11 text-[13px] text-slate-900 transition-all placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                     />
                 </div>
             </motion.div>
@@ -124,21 +115,21 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.05 }}
-                className="rounded-lg border border-slate-200 bg-white overflow-hidden flex flex-col"
+                className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white"
                 style={{ maxHeight: 'calc(100vh - 400px)' }}
             >
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     <div className="space-y-0">
                         {visibleGroups.length === 0 ? (
                             <div className="flex items-center justify-center py-20">
-                                <p className="text-[13px] text-slate-400 font-bold uppercase tracking-widest">No Matches Found</p>
+                                <p className="text-[13px] font-bold tracking-widest text-slate-400 uppercase">No Matches Found</p>
                             </div>
                         ) : (
                             visibleGroups.map((group) => (
                                 <div key={group}>
                                     {/* Group Header */}
-                                    <div className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/80 backdrop-blur-md px-6 py-3">
-                                        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{group}</h2>
+                                    <div className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/80 px-6 py-3 backdrop-blur-md">
+                                        <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">{group}</h2>
                                     </div>
 
                                     {/* Table */}
@@ -146,13 +137,13 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                                         <table className="w-full">
                                             <thead className="border-b border-slate-100 bg-white">
                                                 <tr>
-                                                    <th className="sticky left-0 z-10 bg-white px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 min-w-[320px]">
+                                                    <th className="sticky left-0 z-10 min-w-[320px] bg-white px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">
                                                         Integration Point
                                                     </th>
                                                     {plans.map((plan) => (
                                                         <th
                                                             key={plan.id}
-                                                            className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 min-w-32"
+                                                            className="min-w-32 px-4 py-4 text-center text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase"
                                                         >
                                                             {plan.name}
                                                         </th>
@@ -161,39 +152,41 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
                                                 {filteredFeatures[group]?.map((feature, idx) => (
-                                        <tr key={feature.id} className="bg-white hover:bg-slate-50/50 transition-colors">
-                                            <td className="sticky left-0 z-10 bg-inherit px-6 py-5">
-                                                <div>
-                                                    <p className="text-[13px] font-bold text-slate-900">{feature.name}</p>
-                                                    {feature.description && (
-                                                        <p className="text-[11px] text-slate-400 uppercase tracking-tight font-medium mt-0.5">{feature.description}</p>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            {plans.map((plan) => {
-                                                const isEnabled = isFeatureEnabledForPlan(feature, plan.id);
-                                                const isUpdating = updating === `${plan.id}-${feature.id}`;
+                                                    <tr key={feature.id} className="bg-white transition-colors hover:bg-slate-50/50">
+                                                        <td className="sticky left-0 z-10 bg-inherit px-6 py-5">
+                                                            <div>
+                                                                <p className="text-[13px] font-bold text-slate-900">{feature.name}</p>
+                                                                {feature.description && (
+                                                                    <p className="mt-0.5 text-[11px] font-medium tracking-tight text-slate-400 uppercase">
+                                                                        {feature.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        {plans.map((plan) => {
+                                                            const isEnabled = isFeatureEnabledForPlan(feature, plan.id);
+                                                            const isUpdating = updating === `${plan.id}-${feature.id}`;
 
-                                                return (
-                                                    <td key={plan.id} className="px-4 py-4 text-center">
-                                                        <button
-                                                            onClick={() => handleToggle(plan.id, feature.id, isEnabled)}
-                                                            disabled={isUpdating}
-                                                            className={`relative inline-flex h-5 w-9 items-center rounded-sm transition-all ${
-                                                                isEnabled ? 'bg-blue-600' : 'bg-slate-200'
-                                                            } ${isUpdating ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 active:scale-90'}`}
-                                                        >
-                                                            <motion.span
-                                                                animate={{ x: isEnabled ? 18 : 2 }}
-                                                                transition={{ duration: 0.15 }}
-                                                                className="inline-block h-4 w-4 transform rounded-sm bg-white shadow-sm"
-                                                            />
-                                                        </button>
-                                                    </td>
-                                                );
-                                            })}
-                                            </tr>
-                                        ))}
+                                                            return (
+                                                                <td key={plan.id} className="px-4 py-4 text-center">
+                                                                    <button
+                                                                        onClick={() => handleToggle(plan.id, feature.id, isEnabled)}
+                                                                        disabled={isUpdating}
+                                                                        className={`relative inline-flex h-5 w-9 items-center rounded-sm transition-all ${
+                                                                            isEnabled ? 'bg-blue-600' : 'bg-slate-200'
+                                                                        } ${isUpdating ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 active:scale-90'}`}
+                                                                    >
+                                                                        <motion.span
+                                                                            animate={{ x: isEnabled ? 18 : 2 }}
+                                                                            transition={{ duration: 0.15 }}
+                                                                            className="inline-block h-4 w-4 transform rounded-sm bg-white shadow-sm"
+                                                                        />
+                                                                    </button>
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
@@ -211,12 +204,13 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                 transition={{ duration: 0.4, delay: 0.2 }}
                 className="mt-10 rounded border border-slate-900 bg-slate-900 p-6 text-white"
             >
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-2 flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Operational Notice</h3>
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Operational Notice</h3>
                 </div>
-                <p className="text-[13px] text-slate-300 leading-relaxed font-medium">
-                    Feature toggles modify the system capability matrix in real-time. Changes are immediately reflected in the billing engine and subscription logic. Use caution when disabling mission-critical services for active tiers.
+                <p className="text-[13px] leading-relaxed font-medium text-slate-300">
+                    Feature toggles modify the system capability matrix in real-time. Changes are immediately reflected in the billing engine and
+                    subscription logic. Use caution when disabling mission-critical services for active tiers.
                 </p>
             </motion.div>
         </ZeusLayout>

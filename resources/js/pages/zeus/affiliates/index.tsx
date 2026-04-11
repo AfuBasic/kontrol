@@ -78,14 +78,12 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
                 className="mb-10 flex items-end justify-between gap-6"
             >
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1 flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                            Partner Network
-                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Partner Network</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Strategic <span className="text-slate-400 font-light">Affiliates</span>
+                        Strategic <span className="font-light text-slate-400">Affiliates</span>
                     </h1>
                 </div>
                 <Link
@@ -106,25 +104,25 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
             >
                 <form onSubmit={handleSearch} className="grid gap-6 lg:grid-cols-4">
                     <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Search Partners</label>
+                        <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Search Partners</label>
                         <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                            <MagnifyingGlassIcon className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Name or email..."
-                                className="w-full rounded border border-slate-200 pl-10 pr-4 py-2 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                className="w-full rounded border border-slate-200 py-2 pr-4 pl-10 text-[13px] text-slate-900 transition-all placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Status Filter</label>
+                        <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Status Filter</label>
                         <select
                             value={status}
                             onChange={(e) => handleStatusChange(e.target.value)}
-                            className="w-full rounded border border-slate-200 px-4 py-2 text-[13px] text-slate-900 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                            className="w-full rounded border border-slate-200 px-4 py-2 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                         >
                             <option value="">All States</option>
                             <option value="active">Active</option>
@@ -164,11 +162,17 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
                     <table className="w-full">
                         <thead className="border-b border-slate-100 bg-white">
                             <tr>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Partner Details</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Commission</th>
-                                <th className="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Network Size</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Current State</th>
-                                <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Controls</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">
+                                    Partner Details
+                                </th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Commission</th>
+                                <th className="px-6 py-4 text-center text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">
+                                    Network Size
+                                </th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">
+                                    Current State
+                                </th>
+                                <th className="px-6 py-4 text-right text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Controls</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -180,26 +184,26 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
                                 </tr>
                             ) : (
                                 affiliates.data.map((affiliate) => (
-                                    <tr key={affiliate.id} className="bg-white hover:bg-slate-50/50 transition-colors">
+                                    <tr key={affiliate.id} className="bg-white transition-colors hover:bg-slate-50/50">
                                         <td className="px-6 py-5">
                                             <div>
                                                 <p className="text-[13px] font-bold text-slate-900">{affiliate.name}</p>
                                                 <p className="text-[11px] text-slate-500">{affiliate.email}</p>
                                                 {affiliate.contact_person && (
-                                                    <p className="text-[10px] text-slate-400 mt-0.5">Attn: {affiliate.contact_person}</p>
+                                                    <p className="mt-0.5 text-[10px] text-slate-400">Attn: {affiliate.contact_person}</p>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
                                             <span className="text-[13px] font-black text-slate-900">{affiliate.commission_rate}%</span>
-                                            <span className="text-[10px] font-bold text-slate-300 ml-1">COMM</span>
+                                            <span className="ml-1 text-[10px] font-bold text-slate-300">COMM</span>
                                         </td>
                                         <td className="px-6 py-5 text-center">
                                             <span className="text-[14px] font-bold text-slate-700">{affiliate.estates_count}</span>
                                         </td>
                                         <td className="px-6 py-5 text-left">
                                             <span
-                                                className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight ${
+                                                className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
                                                     affiliate.status === 'active' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-100 text-slate-500'
                                                 }`}
                                             >
@@ -210,13 +214,13 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
                                             <div className="flex justify-end gap-3">
                                                 <Link
                                                     href={`/zeus/affiliates/${affiliate.id}/edit`}
-                                                    className="text-[12px] font-bold uppercase tracking-tight text-blue-500 hover:text-blue-600 transition-colors"
+                                                    className="text-[12px] font-bold tracking-tight text-blue-500 uppercase transition-colors hover:text-blue-600"
                                                 >
                                                     Manage
                                                 </Link>
                                                 <button
                                                     onClick={() => handleDelete(affiliate.id, affiliate.name)}
-                                                    className="text-[12px] font-bold uppercase tracking-tight text-slate-400 hover:text-red-500 transition-colors"
+                                                    className="text-[12px] font-bold tracking-tight text-slate-400 uppercase transition-colors hover:text-red-500"
                                                 >
                                                     Retire
                                                 </button>
@@ -231,7 +235,7 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
 
                 {/* Pagination */}
                 {affiliates.last_page > 1 && (
-                    <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
                         <p className="text-sm text-gray-600">
                             Showing {affiliates.from} to {affiliates.to} of {affiliates.total} affiliates
                         </p>

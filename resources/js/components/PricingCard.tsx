@@ -36,11 +36,12 @@ export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect
     const primaryFeatures = allFeatures.slice(0, 4);
     const extraFeatures = allFeatures.slice(4);
 
-    const billingIntervalLabel = {
-        'quarterly': 'per quarter',
-        'semi-annually': 'every 6 months',
-        'annually': 'per year',
-    }[plan.billing_interval] || plan.billing_interval;
+    const billingIntervalLabel =
+        {
+            quarterly: 'per quarter',
+            'semi-annually': 'every 6 months',
+            annually: 'per year',
+        }[plan.billing_interval] || plan.billing_interval;
 
     return (
         <div

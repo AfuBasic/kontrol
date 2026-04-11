@@ -49,10 +49,7 @@ export default function RejectionModal({ isOpen, estateName, isLoading, onConfir
                                 <p className="text-sm text-slate-600">{estateName}</p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="rounded-full hover:bg-red-100 p-2 transition-all"
-                        >
+                        <button onClick={onClose} className="rounded-full p-2 transition-all hover:bg-red-100">
                             <X className="h-5 w-5 text-red-600" />
                         </button>
                     </div>
@@ -69,12 +66,12 @@ export default function RejectionModal({ isOpen, estateName, isLoading, onConfir
                         onChange={(e) => setReason(e.target.value)}
                         placeholder="e.g., Location outside service area, incomplete information, etc."
                         rows={4}
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-red-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-red-100 resize-none"
+                        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100 focus:outline-none"
                     />
                 </div>
 
                 {/* Actions */}
-                <div className="border-t border-slate-200 bg-slate-50 px-6 py-4 flex gap-3">
+                <div className="flex gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
                     <button
                         onClick={onClose}
                         disabled={isLoading}
@@ -85,7 +82,7 @@ export default function RejectionModal({ isOpen, estateName, isLoading, onConfir
                     <button
                         onClick={handleSubmit}
                         disabled={!reason.trim() || isLoading}
-                        className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white transition-all hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white transition-all hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {isLoading ? 'Rejecting...' : 'Reject & Notify'}
                     </button>

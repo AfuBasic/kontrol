@@ -21,11 +21,14 @@ class EstateSubscription extends Model
         'current_period_end',
         'overridden_by',
         'override_notes',
+        'billing_anchor_day',
+        'next_billing_date',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'current_period_end' => 'datetime',
+        'next_billing_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

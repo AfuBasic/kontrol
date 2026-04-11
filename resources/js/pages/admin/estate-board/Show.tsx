@@ -54,9 +54,7 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
                 <div className="rounded-lg bg-gray-50 px-4 py-3">
                     <div className="mb-1 flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-900">{comment.author.name}</span>
-                        <span className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </span>
+                        <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
                     </div>
                     <p className="text-sm text-gray-700">{comment.body}</p>
                 </div>
@@ -99,7 +97,14 @@ export default function EstateBoardShow({ post, comments }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
-    const { data, setData, post: submitComment, processing, reset, errors } = useForm({
+    const {
+        data,
+        setData,
+        post: submitComment,
+        processing,
+        reset,
+        errors,
+    } = useForm({
         body: '',
     });
 
@@ -204,10 +209,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
 
                 {/* Post Content */}
                 {post.title && <h1 className="mb-4 text-2xl font-semibold text-gray-900">{post.title}</h1>}
-                <div
-                    className="prose prose-gray max-w-none"
-                    dangerouslySetInnerHTML={{ __html: post.body }}
-                />
+                <div className="prose prose-gray max-w-none" dangerouslySetInnerHTML={{ __html: post.body }} />
 
                 {/* Media */}
                 {post.media && post.media.length > 0 && (

@@ -69,9 +69,7 @@ export default function EditPlan({ plan, features }: Props) {
 
         Object.entries(features).forEach(([group, groupFeatures]) => {
             const matched = groupFeatures.filter(
-                (f) =>
-                    f.name.toLowerCase().includes(lowerSearch) ||
-                    f.description?.toLowerCase().includes(lowerSearch)
+                (f) => f.name.toLowerCase().includes(lowerSearch) || f.description?.toLowerCase().includes(lowerSearch),
             );
             if (matched.length > 0) {
                 filtered[group] = matched;
@@ -83,7 +81,10 @@ export default function EditPlan({ plan, features }: Props) {
 
     function handleFeatureToggle(featureId: number) {
         if (data.features.includes(featureId)) {
-            setData('features', data.features.filter((id) => id !== featureId));
+            setData(
+                'features',
+                data.features.filter((id) => id !== featureId),
+            );
         } else {
             setData('features', [...data.features, featureId]);
         }
@@ -98,16 +99,8 @@ export default function EditPlan({ plan, features }: Props) {
         <ZeusLayout>
             <Head title={`Edit Plan - ${plan.name}`} />
 
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="mb-8"
-            >
-                <a
-                    href="/zeus/plans"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
-                >
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
+                <a href="/zeus/plans" className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
                     <ChevronLeftIcon className="h-4 w-4" /> Back to Plans
                 </a>
             </motion.div>
@@ -118,7 +111,7 @@ export default function EditPlan({ plan, features }: Props) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.05 }}
-                    className="lg:col-span-2 space-y-6"
+                    className="space-y-6 lg:col-span-2"
                 >
                     {/* Basic Info */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -312,21 +305,21 @@ export default function EditPlan({ plan, features }: Props) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="rounded-xl border border-gray-200 bg-white shadow-sm sticky top-8 flex flex-col overflow-hidden"
+                    className="sticky top-8 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     style={{ maxHeight: 'calc(100vh - 120px)' }}
                 >
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="border-b border-gray-200 p-6">
                         <h2 className="mb-4 text-lg font-semibold text-gray-900">Features</h2>
 
                         {/* Search Input */}
                         <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search features..."
                                 value={featureSearch}
                                 onChange={(e) => setFeatureSearch(e.target.value)}
-                                className="w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 py-2 text-xs text-gray-900 placeholder:text-gray-500 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                className="w-full rounded-lg border border-gray-200 bg-white py-2 pr-3 pl-9 text-xs text-gray-900 transition-colors placeholder:text-gray-500 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                             />
                         </div>
                     </div>
@@ -334,34 +327,32 @@ export default function EditPlan({ plan, features }: Props) {
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="space-y-6">
                             {Object.keys(filteredFeatures).length === 0 ? (
-                                <p className="text-center text-sm text-gray-500 py-8">No features found</p>
+                                <p className="py-8 text-center text-sm text-gray-500">No features found</p>
                             ) : (
                                 Object.entries(filteredFeatures).map(([group, groupFeatures]) => (
-                            <div key={group}>
-                                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-600">{group}</h3>
-                                <div className="space-y-2">
-                                    {groupFeatures.map((feature) => (
-                                        <label
-                                            key={feature.id}
-                                            className="flex items-start gap-3 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={data.features.includes(feature.id)}
-                                                onChange={() => handleFeatureToggle(feature.id)}
-                                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{feature.name}</p>
-                                                {feature.description && (
-                                                    <p className="text-xs text-gray-500">{feature.description}</p>
-                                                )}
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            ))
+                                    <div key={group}>
+                                        <h3 className="mb-3 text-xs font-bold tracking-wide text-gray-600 uppercase">{group}</h3>
+                                        <div className="space-y-2">
+                                            {groupFeatures.map((feature) => (
+                                                <label
+                                                    key={feature.id}
+                                                    className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.features.includes(feature.id)}
+                                                        onChange={() => handleFeatureToggle(feature.id)}
+                                                        className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
+                                                    />
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">{feature.name}</p>
+                                                        {feature.description && <p className="text-xs text-gray-500">{feature.description}</p>}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </div>

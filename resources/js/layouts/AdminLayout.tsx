@@ -7,6 +7,7 @@ import {
     ChevronDoubleRightIcon,
     ChevronDownIcon,
     Cog6ToothIcon,
+    CreditCardIcon,
     ShieldCheckIcon,
     Squares2X2Icon,
     UserCircleIcon,
@@ -21,6 +22,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { useForceLogout } from '@/hooks/useForceLogout';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
+import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
@@ -50,7 +52,7 @@ type NavItem = {
     comingSoon?: boolean;
 };
 
-const primaryNav: NavItem[] = [
+const baseNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
     { name: 'Announcement', href: EstateBoardController.index.url(), icon: BuildingOffice2Icon },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
@@ -59,11 +61,14 @@ const primaryNav: NavItem[] = [
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
 
+const primaryNav: NavItem[] = baseNav;
+
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
 export default function AdminLayout({ children }: Props) {
-    const { auth, flash } = usePage<SharedData & { flash: { success?: string; error?: string } }>().props;
-    const { url: fullUrl } = usePage();
+    const page = usePage<SharedData & { flash: { success?: string; error?: string }; billing_enabled?: boolean; has_overdue_invoice?: boolean }>();
+    const { auth, flash, billing_enabled, has_overdue_invoice } = page.props;
+    const { url: fullUrl } = page;
     // Strip query params for path matching
     const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -211,7 +216,10 @@ export default function AdminLayout({ children }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    const visiblePrimaryNav = filterNav(primaryNav);
+    // Add billing nav if enabled
+    const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }] : primaryNav;
+
+    const visiblePrimaryNav = filterNav(navWithBilling);
     const visibleSecondaryNav = filterNav(secondaryNav);
 
     const sidebarWidth = isCollapsed ? 72 : 240;
@@ -817,6 +825,33 @@ export default function AdminLayout({ children }: Props) {
                             </AnimatePresence>
                         </div>
                     </div>
+                    {/* Overdue Invoice Banner */}
+                    {has_overdue_invoice && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="border-b border-red-200 bg-red-50 px-6 py-3 lg:px-8"
+                        >
+                            <div className="flex items-center gap-3">
+                                <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-red-800">Overdue Invoice</p>
+                                    <p className="text-xs text-red-700">
+                                        You have an outstanding overdue invoice.{' '}
+                                        <Link href={BillingController.url()} className="underline hover:no-underline">
+                                            View details
+                                        </Link>
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                     {/* Content Body */}
                     <div className="p-6 lg:p-8">
                         <AnimatedLayout>{children}</AnimatedLayout>

@@ -102,7 +102,6 @@ export default function EstatesIndex({ estates, filters }: Props) {
         }
     }
 
-
     const hasFilters = filters.search || filters.status;
 
     return (
@@ -116,14 +115,12 @@ export default function EstatesIndex({ estates, filters }: Props) {
                 className="mb-8 flex items-end justify-between gap-6"
             >
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1 flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                            Infrastructure
-                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Infrastructure</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Manage <span className="text-slate-400 font-light">Estates</span>
+                        Manage <span className="font-light text-slate-400">Estates</span>
                     </h1>
                 </div>
                 <Link
@@ -144,26 +141,26 @@ export default function EstatesIndex({ estates, filters }: Props) {
                 transition={{ duration: 0.35, delay: 0.1 }}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white"
             >
-                <div className="px-6 py-5 border-b border-slate-100">
+                <div className="border-b border-slate-100 px-6 py-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <h2 className="text-[13px] font-bold uppercase tracking-wider text-slate-900">All Estates</h2>
+                        <h2 className="text-[13px] font-bold tracking-wider text-slate-900 uppercase">All Estates</h2>
 
                         {/* Search and Filters */}
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <form onSubmit={handleSearch} className="flex gap-2">
                                 <div className="relative">
-                                    <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <MagnifyingGlassIcon className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <input
                                         type="text"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search estates..."
-                                        className="rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="inline-flex items-center rounded-xl bg-linear-to-r from-primary-500 to-primary-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-px"
+                                    className="inline-flex items-center rounded-xl bg-linear-to-r from-primary-500 to-primary-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md"
                                 >
                                     Search
                                 </button>
@@ -172,7 +169,7 @@ export default function EstatesIndex({ estates, filters }: Props) {
                             <select
                                 value={status}
                                 onChange={(e) => handleStatusChange(e.target.value)}
-                                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                             >
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
@@ -180,10 +177,7 @@ export default function EstatesIndex({ estates, filters }: Props) {
                             </select>
 
                             {hasFilters && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                                >
+                                <button onClick={clearFilters} className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
                                     Clear
                                 </button>
                             )}
@@ -195,12 +189,12 @@ export default function EstatesIndex({ estates, filters }: Props) {
                     <table className="w-full">
                         <thead className="border-b border-gray-200/80 bg-linear-to-r from-gray-50/80 to-white">
                             <tr>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Estate</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Account</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Plan</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">State</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Registered</th>
-                                <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Management</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Estate</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Account</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Plan</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">State</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Registered</th>
+                                <th className="px-6 py-4 text-right text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Management</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -231,13 +225,11 @@ export default function EstatesIndex({ estates, filters }: Props) {
                                             <span
                                                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                                     estate.status === 'active'
-                                                        ? 'bg-green-50 ring-1 ring-green-200/80 text-green-700'
+                                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200/80'
                                                         : 'bg-gray-100 text-gray-600'
                                                 }`}
                                             >
-                                                {estate.status === 'active' && (
-                                                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                                                )}
+                                                {estate.status === 'active' && <span className="h-1.5 w-1.5 rounded-full bg-green-500" />}
                                                 {estate.status === 'active' ? 'Active' : 'Inactive'}
                                             </span>
                                         </td>

@@ -68,32 +68,19 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
             {/* Post Content */}
             <Link href={show.url({ post: post.hashid })}>
                 {post.title && <h2 className="mb-2 text-lg font-semibold text-gray-900 hover:text-primary-600">{post.title}</h2>}
-                <div
-                    className="prose prose-sm prose-gray line-clamp-3 max-w-none"
-                    dangerouslySetInnerHTML={{ __html: post.body }}
-                />
+                <div className="prose prose-sm prose-gray line-clamp-3 max-w-none" dangerouslySetInnerHTML={{ __html: post.body }} />
             </Link>
 
             {/* Media Preview */}
             {hasMedia && (
                 <div className="mt-4">
                     {post.media.length === 1 ? (
-                        <img
-                            src={post.media[0].url}
-                            alt=""
-                            className="h-64 w-full rounded-lg object-cover"
-                            loading="lazy"
-                        />
+                        <img src={post.media[0].url} alt="" className="h-64 w-full rounded-lg object-cover" loading="lazy" />
                     ) : (
                         <div className="grid grid-cols-2 gap-2">
                             {post.media.slice(0, 4).map((media, mediaIdx) => (
                                 <div key={media.id} className="relative">
-                                    <img
-                                        src={media.url}
-                                        alt=""
-                                        className="h-32 w-full rounded-lg object-cover"
-                                        loading="lazy"
-                                    />
+                                    <img src={media.url} alt="" className="h-32 w-full rounded-lg object-cover" loading="lazy" />
                                     {mediaIdx === 3 && post.media.length > 4 && (
                                         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
                                             <span className="text-lg font-semibold text-white">+{post.media.length - 4}</span>
@@ -208,9 +195,7 @@ export default function EstateBoardIndex({ posts }: Props) {
                         <MessageCircle className="h-8 w-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-900">No announcements yet</h3>
-                    <p className="mt-1 max-w-sm text-sm text-gray-500">
-                        Check back later for updates from the estate management.
-                    </p>
+                    <p className="mt-1 max-w-sm text-sm text-gray-500">Check back later for updates from the estate management.</p>
                 </motion.div>
             )}
         </SecurityLayout>

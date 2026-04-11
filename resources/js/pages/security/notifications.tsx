@@ -57,27 +57,19 @@ function NotificationItem({ notification, onMarkRead }: { notification: Notifica
             }`}
         >
             {/* Unread indicator */}
-            {!notification.read && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-linear-to-b from-primary-500 to-primary-700" />
-            )}
+            {!notification.read && <div className="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-primary-700" />}
 
             <div className="flex gap-3">
                 {/* Icon */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                    {getIcon(notification.type)}
-                </div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">{getIcon(notification.type)}</div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                        <h3 className={`text-sm font-semibold ${!notification.read ? 'text-slate-900' : 'text-slate-700'}`}>
-                            {notification.title}
-                        </h3>
-                        <span className="shrink-0 text-[10px] text-slate-400">
-                            {notification.created_at_human}
-                        </span>
+                        <h3 className={`text-sm font-semibold ${!notification.read ? 'text-slate-900' : 'text-slate-700'}`}>{notification.title}</h3>
+                        <span className="shrink-0 text-[10px] text-slate-400">{notification.created_at_human}</span>
                     </div>
-                    <p className="mt-0.5 text-sm text-slate-500 line-clamp-2">{notification.message}</p>
+                    <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">{notification.message}</p>
 
                     {/* Mark as read button */}
                     {!notification.read && (
@@ -102,8 +94,8 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
 
     function handleMarkRead(id: string) {
         // Optimistic update
-        setItems(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        setLocalUnreadCount(prev => Math.max(0, prev - 1));
+        setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+        setLocalUnreadCount((prev) => Math.max(0, prev - 1));
 
         // Send to server
         router.post(
@@ -112,7 +104,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
             {
                 preserveScroll: true,
                 preserveState: true,
-            }
+            },
         );
     }
 
@@ -122,7 +114,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
         setMarkingAllRead(true);
 
         // Optimistic update
-        setItems(prev => prev.map(n => ({ ...n, read: true })));
+        setItems((prev) => prev.map((n) => ({ ...n, read: true })));
         setLocalUnreadCount(0);
 
         // Send to server
@@ -133,7 +125,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                 preserveScroll: true,
                 preserveState: true,
                 onFinish: () => setMarkingAllRead(false),
-            }
+            },
         );
     }
 
@@ -147,7 +139,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                 preserveScroll: true,
                 preserveState: true,
                 only: ['notifications', 'pagination'],
-            }
+            },
         );
     }
 
@@ -164,9 +156,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
             >
                 <div>
                     <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
-                    <p className="mt-0.5 text-sm text-slate-500">
-                        {localUnreadCount > 0 ? `${localUnreadCount} unread` : 'All caught up'}
-                    </p>
+                    <p className="mt-0.5 text-sm text-slate-500">{localUnreadCount > 0 ? `${localUnreadCount} unread` : 'All caught up'}</p>
                 </div>
 
                 {localUnreadCount > 0 && (
@@ -191,21 +181,14 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.03 }}
                             >
-                                <NotificationItem
-                                    notification={notification}
-                                    onMarkRead={handleMarkRead}
-                                />
+                                <NotificationItem notification={notification} onMarkRead={handleMarkRead} />
                             </motion.div>
                         ))}
                     </AnimatePresence>
 
                     {/* Load More */}
                     {pagination.current_page < pagination.last_page && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="pt-4"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
                             <button
                                 onClick={handleLoadMore}
                                 className="w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-medium text-slate-500 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
@@ -227,9 +210,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                         <BellOff className="h-8 w-8 text-slate-400" />
                     </div>
                     <h3 className="text-base font-semibold text-slate-900">No notifications</h3>
-                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">
-                        You're all caught up! New alerts will appear here.
-                    </p>
+                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">You're all caught up! New alerts will appear here.</p>
                 </motion.div>
             )}
         </SecurityLayout>

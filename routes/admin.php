@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
 use App\Http\Controllers\Admin\InviteLinkController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\PaymentCallbackController;
+use App\Http\Controllers\Admin\PaymentHistoryController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
@@ -111,5 +115,17 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     // Admin User management (manage other admins)
     Route::middleware('role:admin')->group(function (): void {
         Route::resource('users', UserController::class)->except(['show']);
+    });
+
+    // Billing (gated by charge_type === 'estate' in controllers)
+    Route::prefix('billing')->name('billing.')->group(function (): void {
+        Route::get('/', BillingController::class)->name('index');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::post('/invoices/{invoice}/confirm-payment', [InvoiceController::class, 'confirmPayment'])->name('invoices.confirm-payment');
+        Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');
+        Route::get('/history', [PaymentHistoryController::class, 'index'])->name('history');
+        Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
     });
 });

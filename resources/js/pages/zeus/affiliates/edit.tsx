@@ -41,36 +41,36 @@ export default function EditAffiliate({ affiliate }: Props) {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-2xl">
                 <Link
                     href="/zeus/affiliates"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 mb-6"
+                    className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
                 >
                     <ChevronLeftIcon className="h-4 w-4" /> Back to Affiliates
                 </Link>
 
                 <div className="rounded-2xl border border-gray-200/80 bg-white p-8 shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Affiliate</h1>
-                    <p className="text-gray-600 mb-8">Update affiliate partner information</p>
+                    <h1 className="mb-2 text-3xl font-bold text-gray-900">Edit Affiliate</h1>
+                    <p className="mb-8 text-gray-600">Update affiliate partner information</p>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Name</label>
                                 <input
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="Affiliate name"
                                 />
                                 {errors.name && <p className="mt-1.5 text-xs font-medium text-red-600">{errors.name}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Email</label>
                                 <input
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="contact@affiliate.com"
                                 />
                                 {errors.email && <p className="mt-1.5 text-xs font-medium text-red-600">{errors.email}</p>}
@@ -78,52 +78,52 @@ export default function EditAffiliate({ affiliate }: Props) {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                            <label className="mb-2 block text-sm font-semibold text-gray-700">Description</label>
                             <textarea
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
                                 rows={3}
-                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                 placeholder="Brief description of the affiliate"
                             />
                         </div>
 
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Website</label>
                                 <input
                                     type="url"
                                     value={data.website}
                                     onChange={(e) => setData('website', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="https://example.com"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Person</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Contact Person</label>
                                 <input
                                     type="text"
                                     value={data.contact_person}
                                     onChange={(e) => setData('contact_person', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="John Doe"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Phone</label>
                                 <input
                                     type="tel"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="+1 (555) 123-4567"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Commission Rate (%)</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Commission Rate (%)</label>
                                 <input
                                     type="number"
                                     value={data.commission_rate}
@@ -131,18 +131,18 @@ export default function EditAffiliate({ affiliate }: Props) {
                                     min="0"
                                     max="100"
                                     step="0.5"
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                 />
                                 {errors.commission_rate && <p className="mt-1.5 text-xs font-medium text-red-600">{errors.commission_rate}</p>}
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                            <label className="mb-2 block text-sm font-semibold text-gray-700">Status</label>
                             <select
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value as any)}
-                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                             >
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -160,7 +160,7 @@ export default function EditAffiliate({ affiliate }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-1 rounded-xl bg-linear-to-r from-primary-500 to-primary-700 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:-translate-y-px disabled:opacity-60"
+                                className="flex-1 rounded-xl bg-linear-to-r from-primary-500 to-primary-700 px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-px hover:shadow-lg disabled:opacity-60"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </button>

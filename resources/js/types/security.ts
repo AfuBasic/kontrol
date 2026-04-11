@@ -1,10 +1,4 @@
-export type ValidationStatus =
-    | 'granted'
-    | 'not_found'
-    | 'already_used'
-    | 'expired'
-    | 'revoked'
-    | 'inactive';
+export type ValidationStatus = 'granted' | 'not_found' | 'already_used' | 'expired' | 'revoked' | 'inactive';
 
 export type ValidationResult = {
     valid: boolean;
@@ -17,13 +11,7 @@ export type ValidationResult = {
     code_type: 'single_use' | 'long_lived' | null;
 };
 
-export type NotificationType =
-    | 'validation'
-    | 'denied'
-    | 'visitor'
-    | 'alert'
-    | 'system'
-    | 'info';
+export type NotificationType = 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
 
 export type SecurityNotification = {
     id: string;

@@ -958,9 +958,9 @@ export default function Landing({ plans }: Props) {
                                 <div className="relative flex w-full max-w-md rounded-full bg-slate-800/80 p-1.5 shadow-inner ring-1 ring-white/5 backdrop-blur-md transition-all">
                                     {(['quarterly', 'semi-annually', 'annually'] as const).map((interval) => {
                                         const labels = {
-                                            'quarterly': 'Quarterly',
+                                            quarterly: 'Quarterly',
                                             'semi-annually': '6 Months',
-                                            'annually': 'Annually',
+                                            annually: 'Annually',
                                         };
                                         return (
                                             <button
@@ -984,8 +984,6 @@ export default function Landing({ plans }: Props) {
                                     })}
                                 </div>
                             </motion.div>
-
-
                         </motion.div>
 
                         {/* Plans Grid */}
@@ -1023,12 +1021,17 @@ export default function Landing({ plans }: Props) {
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="mx-auto mt-16 mb-8 flex max-w-fit items-center justify-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3.5 shadow-lg shadow-indigo-500/10 backdrop-blur-md"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 text-indigo-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="text-sm font-bold text-indigo-400 tracking-widest uppercase">
-                                Pricing is calculated per resident
-                            </span>
+                            <span className="text-sm font-bold tracking-widest text-indigo-400 uppercase">Pricing is calculated per resident</span>
                         </motion.div>
 
                         {/* Pricing Footer */}

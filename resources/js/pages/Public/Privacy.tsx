@@ -55,13 +55,13 @@ export default function Privacy() {
                                 <section>
                                     <h2 className="text-2xl font-semibold text-slate-900">1. Introduction</h2>
                                     <p className="mt-4 text-slate-600">
-                                        Kontrol ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains
-                                        how we collect, use, disclose, and safeguard your information when you use our estate access
-                                        management platform (the "Service").
+                                        Kontrol ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we
+                                        collect, use, disclose, and safeguard your information when you use our estate access management platform (the
+                                        "Service").
                                     </p>
                                     <p className="mt-4 text-slate-600">
-                                        By accessing or using Kontrol, you agree to this Privacy Policy. If you do not agree with the terms
-                                        of this privacy policy, please do not access the Service.
+                                        By accessing or using Kontrol, you agree to this Privacy Policy. If you do not agree with the terms of this
+                                        privacy policy, please do not access the Service.
                                     </p>
                                 </section>
 
@@ -71,24 +71,20 @@ export default function Privacy() {
 
                                     <h3 className="mt-6 text-lg font-semibold text-slate-800">2.1 Personal Information</h3>
                                     <p className="mt-3 text-slate-600">
-                                        We collect information that you provide directly to us when you create an account or use our
-                                        Service:
+                                        We collect information that you provide directly to us when you create an account or use our Service:
                                     </p>
                                     <ul className="mt-4 list-disc space-y-2 pl-6 text-slate-600">
                                         <li>
                                             <strong>Account information:</strong> Name, email address, phone number, and password
                                         </li>
                                         <li>
-                                            <strong>Profile information:</strong> Profile photo (optional), unit/house number within your
-                                            estate
+                                            <strong>Profile information:</strong> Profile photo (optional), unit/house number within your estate
                                         </li>
                                         <li>
-                                            <strong>Visitor information:</strong> Names and purposes of visit for visitors you create access
-                                            codes for
+                                            <strong>Visitor information:</strong> Names and purposes of visit for visitors you create access codes for
                                         </li>
                                         <li>
-                                            <strong>Estate information:</strong> Estate name and associated property details (for
-                                            administrators)
+                                            <strong>Estate information:</strong> Estate name and associated property details (for administrators)
                                         </li>
                                         <li>
                                             <strong>Communication data:</strong> Messages sent through the platform and support inquiries
@@ -114,8 +110,8 @@ export default function Privacy() {
                                 <section className="mt-10 rounded-xl border-2 border-blue-200 bg-blue-50 p-6">
                                     <h2 className="text-2xl font-semibold text-blue-900">3. Google User Data Disclosure</h2>
                                     <p className="mt-4 text-blue-800">
-                                        Kontrol offers sign-in with Google OAuth for convenient and secure authentication. This section
-                                        explains how we handle data received from Google.
+                                        Kontrol offers sign-in with Google OAuth for convenient and secure authentication. This section explains how
+                                        we handle data received from Google.
                                     </p>
 
                                     <h3 className="mt-6 text-lg font-semibold text-blue-900">3.1 What Google Data We Access</h3>
@@ -154,19 +150,19 @@ export default function Privacy() {
                                             <strong>We do NOT share</strong> your Google data with advertisers or marketing companies
                                         </li>
                                         <li>
-                                            <strong>We do NOT use</strong> your Google data for purposes unrelated to the core functionality
-                                            of Kontrol
+                                            <strong>We do NOT use</strong> your Google data for purposes unrelated to the core functionality of
+                                            Kontrol
                                         </li>
                                         <li>
-                                            <strong>We do NOT transfer</strong> your Google data to third parties except as necessary to
-                                            provide the Service
+                                            <strong>We do NOT transfer</strong> your Google data to third parties except as necessary to provide the
+                                            Service
                                         </li>
                                     </ul>
 
                                     <h3 className="mt-6 text-lg font-semibold text-blue-900">3.4 Data Storage and Security</h3>
                                     <p className="mt-3 text-blue-800">
-                                        Google data is stored securely in our encrypted database. We implement industry-standard security
-                                        measures to protect this data from unauthorized access, alteration, or disclosure.
+                                        Google data is stored securely in our encrypted database. We implement industry-standard security measures to
+                                        protect this data from unauthorized access, alteration, or disclosure.
                                     </p>
 
                                     <h3 className="mt-6 text-lg font-semibold text-blue-900">3.5 Revoking Access</h3>
@@ -180,8 +176,8 @@ export default function Privacy() {
                                         >
                                             Google Account Permissions
                                         </a>{' '}
-                                        page. Revoking access will disconnect your Google account from Kontrol, but your Kontrol account
-                                        and data will remain until you request deletion.
+                                        page. Revoking access will disconnect your Google account from Kontrol, but your Kontrol account and data will
+                                        remain until you request deletion.
                                     </p>
                                 </section>
 
@@ -205,8 +201,8 @@ export default function Privacy() {
                                 <section className="mt-10">
                                     <h2 className="text-2xl font-semibold text-slate-900">5. Information Sharing</h2>
                                     <p className="mt-4 text-slate-600">
-                                        We do not sell, trade, or rent your personal information to third parties. We may share your
-                                        information in the following limited circumstances:
+                                        We do not sell, trade, or rent your personal information to third parties. We may share your information in
+                                        the following limited circumstances:
                                     </p>
                                     <ul className="mt-4 list-disc space-y-2 pl-6 text-slate-600">
                                         <li>
@@ -214,16 +210,16 @@ export default function Privacy() {
                                             administrators and security personnel for access management purposes
                                         </li>
                                         <li>
-                                            <strong>Service providers:</strong> We may share information with third-party vendors who assist
-                                            us in operating the Service (e.g., hosting, email delivery, analytics)
+                                            <strong>Service providers:</strong> We may share information with third-party vendors who assist us in
+                                            operating the Service (e.g., hosting, email delivery, analytics)
                                         </li>
                                         <li>
-                                            <strong>Legal requirements:</strong> We may disclose information if required by law, subpoena, or
-                                            other legal process
+                                            <strong>Legal requirements:</strong> We may disclose information if required by law, subpoena, or other
+                                            legal process
                                         </li>
                                         <li>
-                                            <strong>Protection of rights:</strong> We may disclose information to protect our rights,
-                                            property, or safety, or that of our users or others
+                                            <strong>Protection of rights:</strong> We may disclose information to protect our rights, property, or
+                                            safety, or that of our users or others
                                         </li>
                                     </ul>
                                 </section>
@@ -232,9 +228,8 @@ export default function Privacy() {
                                 <section className="mt-10">
                                     <h2 className="text-2xl font-semibold text-slate-900">6. Data Security</h2>
                                     <p className="mt-4 text-slate-600">
-                                        We implement appropriate technical and organizational security measures to protect your personal
-                                        information against unauthorized access, alteration, disclosure, or destruction. These measures
-                                        include:
+                                        We implement appropriate technical and organizational security measures to protect your personal information
+                                        against unauthorized access, alteration, disclosure, or destruction. These measures include:
                                     </p>
                                     <ul className="mt-4 list-disc space-y-2 pl-6 text-slate-600">
                                         <li>Encryption of data in transit using TLS/SSL</li>
@@ -249,8 +244,8 @@ export default function Privacy() {
                                 <section className="mt-10">
                                     <h2 className="text-2xl font-semibold text-slate-900">7. Data Retention</h2>
                                     <p className="mt-4 text-slate-600">
-                                        We retain your personal information for as long as your account is active or as needed to provide
-                                        you with the Service. Specific retention periods:
+                                        We retain your personal information for as long as your account is active or as needed to provide you with the
+                                        Service. Specific retention periods:
                                     </p>
                                     <ul className="mt-4 list-disc space-y-2 pl-6 text-slate-600">
                                         <li>
@@ -290,13 +285,13 @@ export default function Privacy() {
                                             <strong>Objection:</strong> Object to processing of your personal data in certain circumstances
                                         </li>
                                         <li>
-                                            <strong>Withdrawal of consent:</strong> Withdraw consent for data processing where consent was
-                                            the basis for processing
+                                            <strong>Withdrawal of consent:</strong> Withdraw consent for data processing where consent was the basis
+                                            for processing
                                         </li>
                                     </ul>
                                     <p className="mt-4 text-slate-600">
-                                        To exercise any of these rights, please contact your estate administrator or reach out to us
-                                        directly at the contact information provided below.
+                                        To exercise any of these rights, please contact your estate administrator or reach out to us directly at the
+                                        contact information provided below.
                                     </p>
                                 </section>
 
@@ -311,9 +306,9 @@ export default function Privacy() {
                                         <li>Or email us directly with your deletion request</li>
                                     </ul>
                                     <p className="mt-4 text-slate-600">
-                                        Upon deletion, we will remove your personal information from our active systems within 30 days.
-                                        Some information may be retained in backups for a limited period and will be deleted in accordance
-                                        with our backup retention policies.
+                                        Upon deletion, we will remove your personal information from our active systems within 30 days. Some
+                                        information may be retained in backups for a limited period and will be deleted in accordance with our backup
+                                        retention policies.
                                     </p>
                                 </section>
 
@@ -321,9 +316,9 @@ export default function Privacy() {
                                 <section className="mt-10">
                                     <h2 className="text-2xl font-semibold text-slate-900">10. Children's Privacy</h2>
                                     <p className="mt-4 text-slate-600">
-                                        The Service is not intended for children under the age of 13. We do not knowingly collect personal
-                                        information from children under 13. If you believe we have collected information from a child under
-                                        13, please contact us immediately.
+                                        The Service is not intended for children under the age of 13. We do not knowingly collect personal information
+                                        from children under 13. If you believe we have collected information from a child under 13, please contact us
+                                        immediately.
                                     </p>
                                 </section>
 
@@ -331,9 +326,9 @@ export default function Privacy() {
                                 <section className="mt-10">
                                     <h2 className="text-2xl font-semibold text-slate-900">11. Changes to This Policy</h2>
                                     <p className="mt-4 text-slate-600">
-                                        We may update this Privacy Policy from time to time. We will notify you of any changes by posting
-                                        the new Privacy Policy on this page and updating the "Last updated" date. For significant changes,
-                                        we will provide additional notice through the Service or via email.
+                                        We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new
+                                        Privacy Policy on this page and updating the "Last updated" date. For significant changes, we will provide
+                                        additional notice through the Service or via email.
                                     </p>
                                 </section>
 

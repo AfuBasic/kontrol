@@ -85,10 +85,14 @@ export default function VerifyOtp({ email }: Props) {
             return;
         }
 
-        router.post(LoginOtpController.resend.url(), {}, {
-            preserveScroll: true,
-            onSuccess: () => setResendCooldown(60),
-        });
+        router.post(
+            LoginOtpController.resend.url(),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setResendCooldown(60),
+            },
+        );
     }
 
     return (
@@ -96,12 +100,7 @@ export default function VerifyOtp({ email }: Props) {
             <Head title="Verify your identity" />
 
             <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
                     <div className="rounded-2xl bg-white px-8 py-10 shadow-xl shadow-gray-200/50">
                         {/* Icon */}
                         <div className="mb-6 flex justify-center">
@@ -121,9 +120,7 @@ export default function VerifyOtp({ email }: Props) {
                             We sent a 6-digit code to <span className="font-medium text-gray-700">{email}</span>
                         </p>
 
-                        {flash?.status && (
-                            <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">{flash.status}</div>
-                        )}
+                        {flash?.status && <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">{flash.status}</div>}
 
                         <form onSubmit={submit}>
                             {/* OTP Input Boxes */}
@@ -131,7 +128,9 @@ export default function VerifyOtp({ email }: Props) {
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <input
                                         key={i}
-                                        ref={(el) => { inputRefs.current[i] = el; }}
+                                        ref={(el) => {
+                                            inputRefs.current[i] = el;
+                                        }}
                                         type="text"
                                         inputMode="numeric"
                                         maxLength={1}

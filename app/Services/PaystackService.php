@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Invoice;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
+
+class PaystackService
+{
+    private PendingRequest $client;
+
+    public function __construct()
+    {
+        $baseUrl = config('paystack.base_url');
+        $secretKey = config('paystack.secret_key');
+
+        \Log::info('PaystackService instantiated', [
+            'base_url' => $baseUrl,
+            'has_secret_key' => ! empty($secretKey),
+        ]);
+
+        $this->client = Http::baseUrl($baseUrl)
+            ->withHeader('Authorization', "Bearer {$secretKey}")
+            ->asJson();
+    }
+
+    /**
+     * Initialize a payment with Paystack.
+     *
+     * @throws \Exception
+     */
+    public function initializePayment(Invoice $invoice, string $callbackUrl, ?string $reference = null): array
+    {
+        \Log::info('initializePayment called', [
+            'invoice_id' => $invoice->id,
+            'callback_url' => $callbackUrl,
+            'reference' => $reference ?? $invoice->invoice_number,
+        ]);
+
+        $response = $this->client->post('/transaction/initialize', [
+            'email' => $invoice->estate->email ?? $invoice->estate->users()->first()?->email,
+            'amount' => $invoice->amount,
+            'reference' => $reference ?? $invoice->invoice_number,
+            'callback_url' => $callbackUrl,
+            'metadata' => [
+                'invoice_id' => $invoice->id,
+                'estate_id' => $invoice->estate_id,
+                'invoice_number' => $invoice->invoice_number,
+            ],
+        ]);
+
+        if (! $response->successful()) {
+            $status = $response->status();
+            $body = $response->body();
+
+            \Log::error('========== PAYSTACK API ERROR ==========');
+            \Log::error("HTTP Status: {$status}");
+            \Log::error("Raw Body: {$body}");
+
+            try {
+                $data = $response->json();
+                \Log::error('Parsed JSON:', $data);
+            } catch (\Exception $e) {
+                \Log::error("JSON Parse Error: {$e->getMessage()}");
+                $data = ['message' => $body];
+            }
+
+            $errorMessage = $data['message'] ?? $body ?? 'Payment initialization failed';
+            $errorCode = $data['code'] ?? 'unknown_error';
+
+            \Log::error('Paystack initialization error', [
+                'status' => $status,
+                'code' => $errorCode,
+                'message' => $errorMessage,
+            ]);
+            \Log::error('========== END PAYSTACK ERROR ==========');
+
+            throw new \Exception(json_encode([
+                'code' => $errorCode,
+                'message' => $errorMessage,
+            ]));
+        }
+
+        $data = $response->json();
+
+        return [
+            'authorization_url' => $data['data']['authorization_url'] ?? null,
+            'access_code' => $data['data']['access_code'] ?? null,
+            'reference' => $data['data']['reference'] ?? null,
+        ];
+    }
+
+    /**
+     * Verify a payment with Paystack.
+     *
+     *
+     * @throws \Exception
+     */
+    public function verifyPayment(string $reference): array
+    {
+        $response = $this->client->get("/transaction/verify/{$reference}");
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to verify Paystack payment: '.$response->body());
+        }
+
+        $data = $response->json();
+
+        return [
+            'status' => $data['data']['status'] ?? null,
+            'reference' => $data['data']['reference'] ?? null,
+            'amount' => $data['data']['amount'] ?? null,
+            'customer_email' => $data['data']['customer']['email'] ?? null,
+            'paid_at' => $data['data']['paid_at'] ?? null,
+            'message' => $data['message'] ?? null,
+        ];
+    }
+
+    /**
+     * Validate a Paystack webhook signature using HMAC-SHA512.
+     */
+    public function validateWebhookSignature(string $payload, string $signature): bool
+    {
+        $hash = hash_hmac('sha512', $payload, config('paystack.secret_key'));
+
+        return hash_equals($hash, $signature);
+    }
+}

@@ -102,14 +102,12 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                 transition={{ duration: 0.45, ease: 'easeOut' }}
                 className="mb-10"
             >
-                <div className="flex items-center gap-2 mb-1">
+                <div className="mb-1 flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                        Access Management
-                    </span>
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Access Management</span>
                 </div>
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                    Active <span className="text-slate-400 font-light">Subscriptions</span>
+                    Active <span className="font-light text-slate-400">Subscriptions</span>
                 </h1>
             </motion.div>
 
@@ -122,25 +120,25 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
             >
                 <form onSubmit={handleSearch} className="grid gap-6 lg:grid-cols-4">
                     <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Search Estates</label>
+                        <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Search Estates</label>
                         <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                            <MagnifyingGlassIcon className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Name or email..."
-                                className="w-full rounded border border-slate-200 pl-10 pr-4 py-2 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                className="w-full rounded border border-slate-200 py-2 pr-4 pl-10 text-[13px] text-slate-900 transition-all placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">State Filter</label>
+                        <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">State Filter</label>
                         <select
                             value={status}
                             onChange={(e) => handleStatusChange(e.target.value)}
-                            className="w-full rounded border border-slate-200 px-4 py-2 text-[13px] text-slate-900 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                            className="w-full rounded border border-slate-200 px-4 py-2 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                         >
                             <option value="">All States</option>
                             <option value="trial">Trialing</option>
@@ -181,12 +179,12 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                     <table className="w-full">
                         <thead className="border-b border-slate-100 bg-white">
                             <tr>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Account</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Current Plan</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Engine State</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Billing</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Term End</th>
-                                <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Controls</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Account</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Current Plan</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Engine State</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Billing</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Term End</th>
+                                <th className="px-6 py-4 text-right text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Controls</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -198,7 +196,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                 </tr>
                             ) : (
                                 estates.data.map((estate) => (
-                                    <tr key={estate.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={estate.id} className="transition-colors hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <div>
                                                 <p className="font-medium text-gray-900">{estate.name}</p>
@@ -209,14 +207,14 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-2">
                                                 <span
-                                                    className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight ${
+                                                    className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
                                                         estate.status === 'active' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-100 text-slate-500'
                                                     }`}
                                                 >
                                                     {estate.status === 'no_plan' ? 'None' : estate.status}
                                                 </span>
                                                 {estate.is_overridden && (
-                                                    <span className="inline-flex rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-amber-500">
+                                                    <span className="inline-flex rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold tracking-tight text-amber-500 uppercase">
                                                         Manual Override
                                                     </span>
                                                 )}
@@ -241,7 +239,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                                         notes: estate.override_notes || '',
                                                     });
                                                 }}
-                                                className="text-[12px] font-bold uppercase tracking-tight text-blue-500 hover:text-blue-600 transition-colors"
+                                                className="text-[12px] font-bold tracking-tight text-blue-500 uppercase transition-colors hover:text-blue-600"
                                             >
                                                 Configure
                                             </button>
@@ -255,7 +253,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
 
                 {/* Pagination */}
                 {estates.last_page > 1 && (
-                    <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
                         <p className="text-sm text-gray-600">
                             Showing {estates.from} to {estates.to} of {estates.total} subscriptions
                         </p>
@@ -273,7 +271,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                             ? 'bg-primary-600 text-white'
                                             : link.url
                                               ? 'border border-gray-300 text-gray-700 hover:bg-gray-100'
-                                              : 'text-gray-400 cursor-not-allowed'
+                                              : 'cursor-not-allowed text-gray-400'
                                     }`}
                                 />
                             ))}
@@ -284,7 +282,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
 
             {/* Override Modal */}
             {overrideEstate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -297,11 +295,11 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
 
                         <form onSubmit={handleOverride} className="space-y-5">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Selected Plan</label>
+                                <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Selected Plan</label>
                                 <select
                                     value={overrideData.plan_id}
                                     onChange={(e) => setOverrideData({ ...overrideData, plan_id: e.target.value })}
-                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                                 >
                                     <option value="">Select a plan</option>
                                     {plans.map((plan) => (
@@ -314,11 +312,11 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Engine State</label>
+                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Engine State</label>
                                     <select
                                         value={overrideData.status}
                                         onChange={(e) => setOverrideData({ ...overrideData, status: e.target.value })}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                                     >
                                         <option value="trial">Trialing</option>
                                         <option value="active">Active</option>
@@ -328,11 +326,11 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Billing Term</label>
+                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Billing Term</label>
                                     <select
                                         value={overrideData.billing_interval}
                                         onChange={(e) => setOverrideData({ ...overrideData, billing_interval: e.target.value })}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                                     >
                                         <option value="monthly">Monthly</option>
                                         <option value="annual">Annual</option>
@@ -341,12 +339,12 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Override Logs</label>
+                                <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Override Logs</label>
                                 <textarea
                                     value={overrideData.notes}
                                     onChange={(e) => setOverrideData({ ...overrideData, notes: e.target.value })}
                                     rows={2}
-                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 placeholder:text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
                                     placeholder="Enter administrative notes..."
                                 />
                             </div>

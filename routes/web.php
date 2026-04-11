@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
+use App\Http\Controllers\Webhooks\PaystackWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -110,3 +111,12 @@ Route::prefix('invitation')->name('invitation.')->group(function (): void {
 | CSRF protection is disabled for this route in bootstrap/app.php.
 */
 Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
+
+/*
+|--------------------------------------------------------------------------
+| Paystack Webhook Route
+|--------------------------------------------------------------------------
+| This route handles incoming webhooks from Paystack payment gateway.
+| CSRF protection is disabled for this route in bootstrap/app.php.
+*/
+Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');

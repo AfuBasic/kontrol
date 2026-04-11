@@ -1,16 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import {
-    Globe,
-    Image as ImageIcon,
-    Megaphone,
-    MessageCircle,
-    Plus,
-    Settings,
-    Shield,
-    Users,
-} from 'lucide-react';
+import { Globe, Image as ImageIcon, Megaphone, MessageCircle, Plus, Settings, Shield, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { create, show } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
@@ -80,9 +71,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                             {post.media.slice(0, 4).map((media, mediaIdx) => (
                                 <div
                                     key={media.id}
-                                    className={`relative overflow-hidden ${
-                                        post.media.length === 3 && mediaIdx === 0 ? 'row-span-2' : ''
-                                    } aspect-4/3`}
+                                    className={`relative overflow-hidden ${post.media.length === 3 && mediaIdx === 0 ? 'row-span-2' : ''} aspect-4/3`}
                                 >
                                     <img
                                         src={media.url}
@@ -111,7 +100,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary-500 to-primary-600 text-white shadow-sm">
                                 <span className="text-sm font-semibold">{post.author.name.charAt(0).toUpperCase()}</span>
                             </div>
-                            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+                            <div className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-gray-900">{post.author.name}</p>
@@ -133,9 +122,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                 {/* Post Content */}
                 <Link href={show.url({ post: post.hashid })} className="block">
                     {post.title && (
-                        <h2 className="mb-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-primary-600">
-                            {post.title}
-                        </h2>
+                        <h2 className="mb-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-primary-600">{post.title}</h2>
                     )}
                     <div
                         className={`prose prose-sm prose-gray line-clamp-3 max-w-none leading-relaxed ${!post.title ? 'text-base' : ''}`}

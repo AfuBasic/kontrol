@@ -65,7 +65,11 @@ function getActivityIcon(type: ActivityItem['type']) {
             return (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100">
                     <svg className="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                        />
                     </svg>
                 </div>
             );
@@ -160,9 +164,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                 {getActivityIcon(activity.type)}
                                                 <div className="flex-1">
                                                     <p className="font-medium text-gray-900">{activity.message}</p>
-                                                    {activity.detail && (
-                                                        <p className="mt-0.5 text-sm text-gray-500">{activity.detail}</p>
-                                                    )}
+                                                    {activity.detail && <p className="mt-0.5 text-sm text-gray-500">{activity.detail}</p>}
                                                     <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
                                                         <span>{activity.time}</span>
                                                         {activity.code && (
@@ -223,8 +225,9 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                     }
 
                                     const title = notification.data?.title || 'Notification';
-                                    const message = notification.data?.message
-                                        || (notification.data?.visitor_name
+                                    const message =
+                                        notification.data?.message ||
+                                        (notification.data?.visitor_name
                                             ? `${notification.data.visitor_name} has arrived`
                                             : 'You have a new notification');
 
@@ -236,9 +239,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                             exit={{ opacity: 0, x: 10 }}
                                             transition={{ duration: 0.3, delay: index * 0.03 }}
                                             className={`relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-all ${
-                                                isUnread
-                                                    ? 'border-indigo-100 bg-linear-to-r from-indigo-50/80 to-white'
-                                                    : 'border-gray-100 bg-white'
+                                                isUnread ? 'border-indigo-100 bg-linear-to-r from-indigo-50/80 to-white' : 'border-gray-100 bg-white'
                                             }`}
                                         >
                                             {/* Unread indicator bar */}
@@ -264,7 +265,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{message}</p>
+                                                    <p className="mt-1 line-clamp-2 text-sm text-gray-500">{message}</p>
                                                     <div className="mt-2 flex items-center gap-2">
                                                         <Clock className="h-3.5 w-3.5 text-gray-400" />
                                                         <span className="text-xs text-gray-400">

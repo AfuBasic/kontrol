@@ -10,7 +10,7 @@ interface Props {
 export default function JoinSuccess({ estate, requires_approval }: Props) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-[#F0F5FF] p-6 text-center">
-            <Head title={requires_approval ? "Registration Successful" : "Welcome to " + estate} />
+            <Head title={requires_approval ? 'Registration Successful' : 'Welcome to ' + estate} />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -38,20 +38,19 @@ export default function JoinSuccess({ estate, requires_approval }: Props) {
                     </div>
                 </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="mt-8"
-                >
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        {requires_approval ? 'Request Received!' : 'Almost There!'}
-                    </h1>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-8">
+                    <h1 className="text-3xl font-bold text-gray-900">{requires_approval ? 'Request Received!' : 'Almost There!'}</h1>
                     <p className="mt-4 text-lg text-gray-600">
                         {requires_approval ? (
-                            <>Your application to join <span className="font-bold text-primary-600">{estate}</span> has been submitted. Next step: confirm your email.</>
+                            <>
+                                Your application to join <span className="font-bold text-primary-600">{estate}</span> has been submitted. Next step:
+                                confirm your email.
+                            </>
                         ) : (
-                            <>Welcome to <span className="font-bold text-primary-600">{estate}</span>! Your account is created. Just one more step to unlock access.</>
+                            <>
+                                Welcome to <span className="font-bold text-primary-600">{estate}</span>! Your account is created. Just one more step
+                                to unlock access.
+                            </>
                         )}
                     </p>
                 </motion.div>
@@ -68,7 +67,9 @@ export default function JoinSuccess({ estate, requires_approval }: Props) {
                         </div>
                         <div>
                             <p className="font-semibold text-gray-900">Verify Your Email</p>
-                            <p className="text-sm text-gray-500">We've sent a verification link to your inbox. Please click it to activate your account.</p>
+                            <p className="text-sm text-gray-500">
+                                We've sent a verification link to your inbox. Please click it to activate your account.
+                            </p>
                         </div>
                     </motion.div>
 
@@ -84,18 +85,15 @@ export default function JoinSuccess({ estate, requires_approval }: Props) {
                             </div>
                             <div>
                                 <p className="font-semibold text-gray-900">Admin Approval</p>
-                                <p className="text-sm text-gray-500">Once verified, the estate administrators will review and approve your application.</p>
+                                <p className="text-sm text-gray-500">
+                                    Once verified, the estate administrators will review and approve your application.
+                                </p>
                             </div>
                         </motion.div>
                     )}
                 </div>
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="mt-12"
-                >
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-12">
                     <Link
                         href="/login"
                         className="inline-flex w-full items-center justify-center rounded-2xl bg-primary-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-700 hover:shadow-primary-500/40"

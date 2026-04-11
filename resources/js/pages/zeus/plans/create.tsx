@@ -90,9 +90,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
 
         Object.entries(features).forEach(([group, groupFeatures]) => {
             const matched = groupFeatures.filter(
-                (f) =>
-                    f.name.toLowerCase().includes(lowerSearch) ||
-                    f.description?.toLowerCase().includes(lowerSearch)
+                (f) => f.name.toLowerCase().includes(lowerSearch) || f.description?.toLowerCase().includes(lowerSearch),
             );
             if (matched.length > 0) {
                 filtered[group] = matched;
@@ -104,7 +102,10 @@ export default function CreatePlan({ features, copyPlan }: Props) {
 
     function handleFeatureToggle(featureId: number) {
         if (data.features.includes(featureId)) {
-            setData('features', data.features.filter((id) => id !== featureId));
+            setData(
+                'features',
+                data.features.filter((id) => id !== featureId),
+            );
         } else {
             setData('features', [...data.features, featureId]);
         }
@@ -119,16 +120,8 @@ export default function CreatePlan({ features, copyPlan }: Props) {
         <ZeusLayout>
             <Head title={copyPlan ? 'Copy Plan' : 'Create Plan'} />
 
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="mb-8"
-            >
-                <a
-                    href="/zeus/plans"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
-                >
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
+                <a href="/zeus/plans" className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
                     <ChevronLeftIcon className="h-4 w-4" /> Back to Plans
                 </a>
             </motion.div>
@@ -138,7 +131,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                 <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4"
+                    className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
                 >
                     <p className="text-sm font-medium text-blue-900">
                         You're creating a copy of <span className="font-bold">"{copyPlan.name}"</span>
@@ -152,7 +145,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.05 }}
-                    className="lg:col-span-2 space-y-6"
+                    className="space-y-6 lg:col-span-2"
                 >
                     {/* Basic Info */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -170,7 +163,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         // Auto-generate slug
                                         setData('slug', e.target.value.toLowerCase().replace(/\s+/g, '-'));
                                     }}
-                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="e.g., Professional Plan"
                                 />
                                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -183,7 +176,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     type="text"
                                     value={data.slug}
                                     onChange={(e) => setData('slug', e.target.value)}
-                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="professional-plan"
                                 />
                                 {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug}</p>}
@@ -196,7 +189,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     placeholder="Brief description of this plan"
                                 />
                             </div>
@@ -216,7 +209,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         type="number"
                                         value={data.price}
                                         onChange={(e) => setData('price', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         placeholder="0"
                                     />
                                     {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
@@ -228,7 +221,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     <select
                                         value={data.billing_interval}
                                         onChange={(e) => setData('billing_interval', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     >
                                         {billingIntervals.map((interval) => (
                                             <option key={interval} value={interval}>
@@ -253,7 +246,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         type="number"
                                         value={data.max_residents}
                                         onChange={(e) => setData('max_residents', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         placeholder="Leave empty for unlimited"
                                     />
                                 </div>
@@ -264,7 +257,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         type="number"
                                         value={data.max_security}
                                         onChange={(e) => setData('max_security', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         placeholder="Leave empty for unlimited"
                                     />
                                 </div>
@@ -275,7 +268,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         type="number"
                                         value={data.max_admins}
                                         onChange={(e) => setData('max_admins', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         placeholder="Leave empty for unlimited"
                                     />
                                 </div>
@@ -296,7 +289,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         type="text"
                                         value={data.badge}
                                         onChange={(e) => setData('badge', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         placeholder="e.g., Most Popular"
                                     />
                                 </div>
@@ -310,7 +303,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                             setData('color', e.target.value);
                                             setSelectedColor(e.target.value);
                                         }}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     >
                                         {colors.map((color) => (
                                             <option key={color} value={color}>
@@ -342,7 +335,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     <select
                                         value={data.visibility}
                                         onChange={(e) => setData('visibility', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     >
                                         <option value="public">Public</option>
                                         <option value="private">Private</option>
@@ -358,21 +351,21 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="rounded-xl border border-gray-200 bg-white shadow-sm sticky top-8 flex flex-col overflow-hidden"
+                    className="sticky top-8 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     style={{ maxHeight: 'calc(100vh - 120px)' }}
                 >
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="border-b border-gray-200 p-6">
                         <h2 className="mb-4 text-lg font-semibold text-gray-900">Features</h2>
 
                         {/* Search Input */}
                         <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search features..."
                                 value={featureSearch}
                                 onChange={(e) => setFeatureSearch(e.target.value)}
-                                className="w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 py-2 text-xs text-gray-900 placeholder:text-gray-500 transition-colors focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                className="w-full rounded-lg border border-gray-200 bg-white py-2 pr-3 pl-9 text-xs text-gray-900 transition-colors placeholder:text-gray-500 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                             />
                         </div>
                     </div>
@@ -380,34 +373,32 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="space-y-6">
                             {Object.keys(filteredFeatures).length === 0 ? (
-                                <p className="text-center text-sm text-gray-500 py-8">No features found</p>
+                                <p className="py-8 text-center text-sm text-gray-500">No features found</p>
                             ) : (
                                 Object.entries(filteredFeatures).map(([group, groupFeatures]) => (
-                            <div key={group}>
-                                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-600">{group}</h3>
-                                <div className="space-y-2">
-                                    {groupFeatures.map((feature) => (
-                                        <label
-                                            key={feature.id}
-                                            className="flex items-start gap-3 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={data.features.includes(feature.id)}
-                                                onChange={() => handleFeatureToggle(feature.id)}
-                                                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{feature.name}</p>
-                                                {feature.description && (
-                                                    <p className="text-xs text-gray-500">{feature.description}</p>
-                                                )}
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            ))
+                                    <div key={group}>
+                                        <h3 className="mb-3 text-xs font-bold tracking-wide text-gray-600 uppercase">{group}</h3>
+                                        <div className="space-y-2">
+                                            {groupFeatures.map((feature) => (
+                                                <label
+                                                    key={feature.id}
+                                                    className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.features.includes(feature.id)}
+                                                        onChange={() => handleFeatureToggle(feature.id)}
+                                                        className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
+                                                    />
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">{feature.name}</p>
+                                                        {feature.description && <p className="text-xs text-gray-500">{feature.description}</p>}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </div>
@@ -419,7 +410,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                             disabled={processing}
                             className="w-full rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {processing ? (copyPlan ? 'Copying...' : 'Creating...') : (copyPlan ? 'Create Copy' : 'Create Plan')}
+                            {processing ? (copyPlan ? 'Copying...' : 'Creating...') : copyPlan ? 'Create Copy' : 'Create Plan'}
                         </button>
                     </div>
                 </motion.div>

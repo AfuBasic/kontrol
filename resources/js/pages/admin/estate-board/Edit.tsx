@@ -186,9 +186,7 @@ export default function EditPost({ post }: Props) {
                             title={data.title}
                             error={errors.body}
                         />
-                        <p className="mt-1 text-xs text-gray-500">
-                            Use the toolbar for formatting. AI enhancement available after 20 characters.
-                        </p>
+                        <p className="mt-1 text-xs text-gray-500">Use the toolbar for formatting. AI enhancement available after 20 characters.</p>
                     </div>
 
                     {/* Audience */}
@@ -331,18 +329,12 @@ export default function EditPost({ post }: Props) {
                                     <Eye className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p
-                                        className={`text-sm font-semibold ${
-                                            data.status === 'published' ? 'text-green-900' : 'text-gray-900'
-                                        }`}
-                                    >
+                                    <p className={`text-sm font-semibold ${data.status === 'published' ? 'text-green-900' : 'text-gray-900'}`}>
                                         Published
                                     </p>
                                     <p className="text-xs text-gray-500">Visible to your audience</p>
                                 </div>
-                                {data.status === 'published' && (
-                                    <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-green-500" />
-                                )}
+                                {data.status === 'published' && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-green-500" />}
                             </label>
                             <label
                                 className={`relative flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
@@ -367,18 +359,10 @@ export default function EditPost({ post }: Props) {
                                     <FileEdit className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p
-                                        className={`text-sm font-semibold ${
-                                            data.status === 'draft' ? 'text-amber-900' : 'text-gray-900'
-                                        }`}
-                                    >
-                                        Draft
-                                    </p>
+                                    <p className={`text-sm font-semibold ${data.status === 'draft' ? 'text-amber-900' : 'text-gray-900'}`}>Draft</p>
                                     <p className="text-xs text-gray-500">Only you can see this</p>
                                 </div>
-                                {data.status === 'draft' && (
-                                    <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500" />
-                                )}
+                                {data.status === 'draft' && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500" />}
                             </label>
                         </div>
                         {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}

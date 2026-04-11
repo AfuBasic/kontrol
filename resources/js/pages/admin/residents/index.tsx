@@ -139,7 +139,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                     </div>
                 )}
             </div>
-            
+
             {/* Pending Approvals Notice */}
             <AnimatePresence>
                 {pendingCount > 0 && (
@@ -158,11 +158,13 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                     <Mail className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-primary-900">{pendingCount} Pending Application{pendingCount > 1 ? 's' : ''}</p>
+                                    <p className="font-semibold text-primary-900">
+                                        {pendingCount} Pending Application{pendingCount > 1 ? 's' : ''}
+                                    </p>
                                     <p className="text-sm text-primary-700">New residents are waiting for your approval to join the estate.</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 font-semibold text-primary-600 border-l border-primary-200 pl-4 ml-4 whitespace-nowrap">
+                            <div className="ml-4 flex items-center gap-2 border-l border-primary-200 pl-4 font-semibold whitespace-nowrap text-primary-600">
                                 Review Requests
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

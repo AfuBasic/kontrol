@@ -169,7 +169,7 @@
             <tr>
                 <td style="padding: 40px 48px 0; text-align: center;">
                     <a href="{{ config('app.url') }}" target="_blank">
-                        <img src="{{ config('app.url') }}/assets/images/icon.png" alt="Kontrol Icon" class="logo" style="width: 64px; margin-bottom: 0;">
+                        <img src="{{ config('app.url') }}/assets/images/app-icon.png" alt="Kontrol" class="logo" style="width: 100px; margin-bottom: 0;">
                     </a>
                 </td>
             </tr>

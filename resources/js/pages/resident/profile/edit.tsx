@@ -274,7 +274,7 @@ function UpdatePasswordForm() {
                         <button
                             type="button"
                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
                         >
                             {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
@@ -298,7 +298,7 @@ function UpdatePasswordForm() {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
                         >
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
@@ -322,7 +322,7 @@ function UpdatePasswordForm() {
                         <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
                         >
                             {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>

@@ -104,12 +104,7 @@ export default function Join({ token, estate }: Props) {
                     </div>
                 </div>
 
-                <motion.div
-                    className="relative z-10"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
+                <motion.div className="relative z-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                     <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white ring-1 ring-white/20 backdrop-blur-sm">
                         <Building2 className="h-4 w-4" />
                         Official Invitation
@@ -119,9 +114,7 @@ export default function Join({ token, estate }: Props) {
                         <br />
                         {estate.name}
                     </h1>
-                    <p className="max-w-md text-lg text-white/60">
-                        Join your estate community on Kontrol. Secure, verified, and connected.
-                    </p>
+                    <p className="max-w-md text-lg text-white/60">Join your estate community on Kontrol. Secure, verified, and connected.</p>
                 </motion.div>
             </div>
 
@@ -132,11 +125,7 @@ export default function Join({ token, estate }: Props) {
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-12 w-12" />
                     </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                         <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
                         <p className="mt-2 text-gray-500">Please fill in your details to request access to {estate.name}.</p>
                     </motion.div>
@@ -145,7 +134,7 @@ export default function Join({ token, estate }: Props) {
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                                <div className="mt-1 relative">
+                                <div className="relative mt-1">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <UserIcon className="h-5 w-5 text-gray-400" />
                                     </div>
@@ -153,7 +142,7 @@ export default function Join({ token, estate }: Props) {
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pl-10 pr-4 text-gray-900 focus:border-primary-500 focus:bg-white focus:ring-primary-500 transition-all outline-none"
+                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-4 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
                                         placeholder="John Doe"
                                     />
                                 </div>
@@ -162,7 +151,7 @@ export default function Join({ token, estate }: Props) {
 
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                                <div className="mt-1 relative">
+                                <div className="relative mt-1">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <Mail className="h-5 w-5 text-gray-400" />
                                     </div>
@@ -170,7 +159,7 @@ export default function Join({ token, estate }: Props) {
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pl-10 pr-4 text-gray-900 focus:border-primary-500 focus:bg-white focus:ring-primary-500 transition-all outline-none"
+                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-4 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
                                         placeholder="john@example.com"
                                     />
                                 </div>
@@ -179,7 +168,7 @@ export default function Join({ token, estate }: Props) {
 
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">Password</label>
-                                <div className="mt-1 relative">
+                                <div className="relative mt-1">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <Lock className="h-5 w-5 text-gray-400" />
                                     </div>
@@ -187,13 +176,13 @@ export default function Join({ token, estate }: Props) {
                                         type={showPassword ? 'text' : 'password'}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pl-10 pr-12 text-gray-900 focus:border-primary-500 focus:bg-white focus:ring-primary-500 transition-all outline-none"
+                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-12 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
                                     >
                                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>
@@ -203,7 +192,7 @@ export default function Join({ token, estate }: Props) {
 
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                                <div className="mt-1 relative">
+                                <div className="relative mt-1">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <CheckCircle2 className="h-5 w-5 text-gray-400" />
                                     </div>
@@ -211,13 +200,13 @@ export default function Join({ token, estate }: Props) {
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pl-10 pr-12 text-gray-900 focus:border-primary-500 focus:bg-white focus:ring-primary-500 transition-all outline-none"
+                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-12 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
                                     >
                                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>

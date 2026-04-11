@@ -86,14 +86,14 @@ export default function ZeusLayout({ children, backUrl }: Props) {
                     } lg:relative`}
                 >
                     {/* Subtle gradient overlay for depth */}
-                    <div className="absolute inset-0 bg-linear-to-b from-white/2 to-transparent pointer-events-none" />
+                    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/2 to-transparent" />
 
                     {/* Sidebar Header */}
                     <div className="relative z-10 flex h-20 items-center justify-between border-b border-white/5 px-6">
                         {!isCollapsed && (
                             <Link href="/zeus/dashboard" className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/20">
-                                    <span className="text-white font-bold text-lg">Z</span>
+                                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 shadow-lg shadow-blue-900/20">
+                                    <span className="text-lg font-bold text-white">Z</span>
                                 </div>
                                 <span className="text-sm font-bold tracking-tight text-white uppercase">Zeus Admin</span>
                             </Link>
@@ -116,9 +116,7 @@ export default function ZeusLayout({ children, backUrl }: Props) {
                                     <Link
                                         href={item.href}
                                         className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200 ${
-                                            active
-                                                ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                                            active ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                                         }`}
                                     >
                                         <item.icon
@@ -127,12 +125,7 @@ export default function ZeusLayout({ children, backUrl }: Props) {
                                             }`}
                                         />
                                         {!isCollapsed && <span>{item.name}</span>}
-                                        {active && (
-                                            <motion.div
-                                                layoutId="activeNav"
-                                                className="absolute left-0 h-4 w-0.5 rounded-full bg-blue-500"
-                                            />
-                                        )}
+                                        {active && <motion.div layoutId="activeNav" className="absolute left-0 h-4 w-0.5 rounded-full bg-blue-500" />}
                                     </Link>
                                 </div>
                             );

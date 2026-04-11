@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Events\Billing\InvoiceGenerated;
+use App\Events\Billing\PaymentReceived;
+use App\Listeners\Billing\SendInvoiceEmail;
+use App\Listeners\Billing\SendInvoiceGeneratedNotification;
+use App\Listeners\Billing\SendPaymentReceivedNotification;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Policies\EstateBoardCommentPolicy;
@@ -10,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->registerPolicies();
         $this->configureRateLimiting();
+        $this->registerEventListeners();
 
         // Allow admins to bypass all permission checks
         Gate::before(function ($user, $_ability) {
@@ -76,5 +83,12 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function registerEventListeners(): void
+    {
+        Event::listen(InvoiceGenerated::class, SendInvoiceEmail::class);
+        Event::listen(InvoiceGenerated::class, SendInvoiceGeneratedNotification::class);
+        Event::listen(PaymentReceived::class, SendPaymentReceivedNotification::class);
     }
 }

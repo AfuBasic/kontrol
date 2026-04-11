@@ -116,11 +116,7 @@ export default function SecurityHome() {
                                 transition={{ delay: 0.1, duration: 0.3 }}
                                 className="mb-8"
                             >
-                                <img
-                                    src="/assets/images/icon.png"
-                                    alt="Kontrol"
-                                    className="h-20 w-20 object-contain"
-                                />
+                                <img src="/assets/images/icon.png" alt="Kontrol" className="h-20 w-20 object-contain" />
                             </motion.div>
 
                             {/* Title */}
@@ -158,7 +154,7 @@ export default function SecurityHome() {
                                         value={data.code}
                                         onChange={(e) => setData('code', e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="000000"
-                                        className="w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-5 text-center text-3xl font-bold tracking-[0.3em] text-slate-900 placeholder-slate-300 transition-all focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                                        className="w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-5 text-center text-3xl font-bold tracking-[0.3em] text-slate-900 placeholder-slate-300 transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         maxLength={6}
                                         autoComplete="off"
                                         autoFocus
@@ -167,16 +163,14 @@ export default function SecurityHome() {
                                         <button
                                             type="button"
                                             onClick={() => setData('code', '')}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                            className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                         >
                                             <X className="h-5 w-5" />
                                         </button>
                                     )}
                                 </div>
 
-                                {errors.code && (
-                                    <p className="mb-4 text-center text-sm text-red-500">{errors.code}</p>
-                                )}
+                                {errors.code && <p className="mb-4 text-center text-sm text-red-500">{errors.code}</p>}
 
                                 <button
                                     type="submit"
@@ -186,8 +180,20 @@ export default function SecurityHome() {
                                     {processing ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                    fill="none"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                />
                                             </svg>
                                             Validating...
                                         </span>
@@ -264,7 +270,7 @@ export default function SecurityHome() {
                                                         <User className="h-5 w-5 text-slate-600" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Visitor</p>
+                                                        <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Visitor</p>
                                                         <p className="text-lg font-semibold text-slate-900">{validationResult.visitor_name}</p>
                                                     </div>
                                                 </div>
@@ -276,7 +282,7 @@ export default function SecurityHome() {
                                                         <HomeIcon className="h-5 w-5 text-slate-600" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Host</p>
+                                                        <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Host</p>
                                                         <p className="text-lg font-semibold text-slate-900">{validationResult.host_name}</p>
                                                     </div>
                                                 </div>
@@ -284,7 +290,7 @@ export default function SecurityHome() {
 
                                             {validationResult.purpose && (
                                                 <div className="rounded-xl bg-slate-50 px-4 py-3">
-                                                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Purpose</p>
+                                                    <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Purpose</p>
                                                     <p className="mt-0.5 text-sm text-slate-700">{validationResult.purpose}</p>
                                                 </div>
                                             )}

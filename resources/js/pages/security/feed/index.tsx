@@ -51,14 +51,9 @@ function FeedCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                 {/* Image Header */}
                 {firstImage && (
                     <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-                        <img
-                            src={firstImage.url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                        />
+                        <img src={firstImage.url} alt="" className="h-full w-full object-cover" loading="lazy" />
                         {post.media.length > 1 && (
-                            <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                            <div className="absolute right-3 bottom-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
                                 <ImageIcon className="h-3 w-3" />
                                 <span>{post.media.length}</span>
                             </div>
@@ -82,15 +77,11 @@ function FeedCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                     </div>
 
                     {/* Title */}
-                    {post.title && (
-                        <h2 className="mb-1.5 text-base font-semibold text-slate-900 line-clamp-2">
-                            {post.title}
-                        </h2>
-                    )}
+                    {post.title && <h2 className="mb-1.5 line-clamp-2 text-base font-semibold text-slate-900">{post.title}</h2>}
 
                     {/* Body Preview */}
                     <div
-                        className="text-sm text-slate-600 line-clamp-2"
+                        className="line-clamp-2 text-sm text-slate-600"
                         dangerouslySetInnerHTML={{ __html: post.body.replace(/<[^>]*>/g, ' ').substring(0, 150) }}
                     />
 
@@ -157,12 +148,7 @@ export default function FeedIndex({ posts }: Props) {
             <Head title="Feed" />
 
             {/* Page Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-5"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-5">
                 <h1 className="text-xl font-bold text-slate-900">Announcements</h1>
                 <p className="mt-0.5 text-sm text-slate-500">Estate news and updates</p>
             </motion.div>
@@ -193,9 +179,7 @@ export default function FeedIndex({ posts }: Props) {
                         <Newspaper className="h-8 w-8 text-slate-400" />
                     </div>
                     <h3 className="text-base font-semibold text-slate-900">No announcements</h3>
-                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">
-                        Check back later for updates from estate management.
-                    </p>
+                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">Check back later for updates from estate management.</p>
                 </motion.div>
             )}
         </SecurityLayout>

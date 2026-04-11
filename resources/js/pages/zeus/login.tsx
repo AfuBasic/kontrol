@@ -50,11 +50,7 @@ export default function Login() {
                         transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
                         className="mb-12 flex justify-center"
                     >
-                        <img
-                            src="/assets/images/kontrol-white-logo.png"
-                            alt="Kontrol"
-                            className="h-24 w-auto object-contain"
-                        />
+                        <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="h-24 w-auto object-contain" />
                     </motion.div>
 
                     {/* Heading */}
@@ -74,7 +70,7 @@ export default function Login() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
                     >
-                        <div className="rounded-2xl border border-primary-800/40 bg-primary-900/50 p-8 backdrop-blur-xl shadow-2xl">
+                        <div className="rounded-2xl border border-primary-800/40 bg-primary-900/50 p-8 shadow-2xl backdrop-blur-xl">
                             <form onSubmit={submit} className="space-y-5">
                                 {/* Username field */}
                                 <div>
@@ -89,11 +85,9 @@ export default function Login() {
                                         placeholder="Enter your username"
                                         autoComplete="username"
                                         autoFocus
-                                        className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     />
-                                    {errors.username && (
-                                        <p className="mt-2 text-sm text-red-400">{errors.username}</p>
-                                    )}
+                                    {errors.username && <p className="mt-2 text-sm text-red-400">{errors.username}</p>}
                                 </div>
 
                                 {/* Password field */}
@@ -109,19 +103,17 @@ export default function Login() {
                                             onChange={(e) => setData('password', e.target.value)}
                                             placeholder="Enter your password"
                                             autoComplete="current-password"
-                                            className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 pr-12 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                            className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 pr-12 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary-400 hover:text-primary-100 transition-colors outline-none"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary-400 transition-colors outline-none hover:text-primary-100"
                                         >
                                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                         </button>
                                     </div>
-                                    {errors.password && (
-                                        <p className="mt-2 text-sm text-red-400">{errors.password}</p>
-                                    )}
+                                    {errors.password && <p className="mt-2 text-sm text-red-400">{errors.password}</p>}
                                 </div>
 
                                 {/* Submit button */}
@@ -133,14 +125,7 @@ export default function Login() {
                                     {processing ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="3"
-                                                />
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                                                 <path
                                                     className="opacity-75"
                                                     fill="currentColor"

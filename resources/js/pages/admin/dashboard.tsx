@@ -120,7 +120,9 @@ function StatCard({
                         </div>
                     )}
                 </div>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${classes.iconBg} ${classes.iconColor} transition-transform group-hover:scale-110`}>
+                <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${classes.iconBg} ${classes.iconColor} transition-transform group-hover:scale-110`}
+                >
                     <Icon className="h-6 w-6" />
                 </div>
             </div>
@@ -228,9 +230,7 @@ function RecentActivityFeed({ activities }: { activities: RecentActivity[] }) {
                         >
                             <div className="relative">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 ring-4 ring-white">
-                                    <span className="text-xs font-semibold">
-                                        {activity.causer?.name.charAt(0).toUpperCase() || 'S'}
-                                    </span>
+                                    <span className="text-xs font-semibold">{activity.causer?.name.charAt(0).toUpperCase() || 'S'}</span>
                                 </div>
                                 {idx !== activities.length - 1 && (
                                     <div className="absolute top-9 left-1/2 h-full w-px -translate-x-1/2 bg-gray-100" />
@@ -285,10 +285,7 @@ function RecentPostsFeed({ posts }: { posts: RecentPost[] }) {
                     <h3 className="text-lg font-semibold text-gray-900">Recent Posts</h3>
                     <p className="text-sm text-gray-500">Latest from the estate board</p>
                 </div>
-                <Link
-                    href={postsIndex.url()}
-                    className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
-                >
+                <Link href={postsIndex.url()} className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700">
                     View all
                 </Link>
             </div>
@@ -313,15 +310,9 @@ function RecentPostsFeed({ posts }: { posts: RecentPost[] }) {
                                                 {post.title}
                                             </h4>
                                         ) : (
-                                            <p className="line-clamp-2 text-sm text-gray-700">
-                                                {extractTextFromHtml(post.body)}
-                                            </p>
+                                            <p className="line-clamp-2 text-sm text-gray-700">{extractTextFromHtml(post.body)}</p>
                                         )}
-                                        {post.title && (
-                                            <p className="mt-1 line-clamp-1 text-sm text-gray-500">
-                                                {extractTextFromHtml(post.body)}
-                                            </p>
-                                        )}
+                                        {post.title && <p className="mt-1 line-clamp-1 text-sm text-gray-500">{extractTextFromHtml(post.body)}</p>}
                                         <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
                                             <span>{post.author.name}</span>
                                             <span className="h-1 w-1 rounded-full bg-gray-300" />
@@ -429,7 +420,9 @@ function TodayHighlights({ stats }: { stats: TodayStats }) {
                 </div>
                 <div>
                     <h3 className="font-semibold text-gray-900">Today's Highlights</h3>
-                    <p className="text-sm text-gray-500">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                    <p className="text-sm text-gray-500">
+                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </p>
                 </div>
             </div>
 
@@ -469,9 +462,7 @@ export default function Dashboard({ stats, chartData, recentActivity, recentPost
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                            Welcome back!
-                        </h1>
+                        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome back!</h1>
                         <div className="mt-1 flex items-center gap-2 text-gray-600">
                             <BuildingOffice2Icon className="h-4 w-4" />
                             <span>{stats.estate.name}</span>

@@ -46,12 +46,7 @@ export default function ProfilePage({ user, estateName }: Props) {
             <Head title="Profile" />
 
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-6"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-6">
                 <h1 className="text-xl font-bold text-slate-900">Profile</h1>
                 <p className="mt-0.5 text-sm text-slate-500">Manage your account</p>
             </motion.div>
@@ -88,13 +83,11 @@ export default function ProfilePage({ user, estateName }: Props) {
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
                             <Mail className="h-5 w-5 text-slate-500" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Email</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-medium tracking-wide text-slate-400 uppercase">Email</p>
                             <p className="truncate text-sm text-slate-500">{user.email}</p>
                         </div>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
-                            Managed
-                        </span>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Managed</span>
                     </div>
                 </div>
 
@@ -104,8 +97,8 @@ export default function ProfilePage({ user, estateName }: Props) {
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
                             <Building2 className="h-5 w-5 text-slate-500" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Estate</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-medium tracking-wide text-slate-400 uppercase">Estate</p>
                             <p className="truncate text-sm text-slate-700">{estateName}</p>
                         </div>
                     </div>
@@ -133,7 +126,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            className="block w-full rounded-xl border-0 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                            className="block w-full rounded-xl border-0 bg-slate-50 py-3 pr-4 pl-10 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                             placeholder="Your name"
                         />
                     </div>
@@ -151,7 +144,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                             type={showPassword ? 'text' : 'password'}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            className="block w-full rounded-xl border-0 bg-slate-50 py-3 pl-10 pr-12 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                            className="block w-full rounded-xl border-0 bg-slate-50 py-3 pr-12 pl-10 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                             placeholder="Leave blank to keep current"
                         />
                         <button
@@ -167,11 +160,7 @@ export default function ProfilePage({ user, estateName }: Props) {
 
                 {/* Confirm Password Field */}
                 {data.password && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-4"
-                    >
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-4">
                         <label className="mb-1.5 block text-xs font-medium text-slate-600">Confirm Password</label>
                         <div className="relative">
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -181,7 +170,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 value={data.password_confirmation}
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                className="block w-full rounded-xl border-0 bg-slate-50 py-3 pl-10 pr-12 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                                className="block w-full rounded-xl border-0 bg-slate-50 py-3 pr-12 pl-10 text-sm text-slate-900 ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                                 placeholder="Confirm new password"
                             />
                             <button

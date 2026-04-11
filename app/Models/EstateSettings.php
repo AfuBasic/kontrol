@@ -19,6 +19,8 @@ class EstateSettings extends Model
         'access_code_require_confirmation',
         'charge_type',
         'contacts',
+        'free_trial_enabled',
+        'free_trial_days',
     ];
 
     /**
@@ -30,6 +32,8 @@ class EstateSettings extends Model
             'access_codes_enabled' => 'boolean',
             'access_code_single_use' => 'boolean',
             'access_code_require_confirmation' => 'boolean',
+            'free_trial_enabled' => 'boolean',
+            'free_trial_days' => 'integer',
             'contacts' => 'array',
         ];
     }

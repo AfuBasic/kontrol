@@ -85,15 +85,11 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         const value = e.target.value;
         setDateFilter(value);
 
-        router.get(
-            resident.visitors.show.url(accessCode.id),
-            value ? { date: value } : {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['usageLogs', 'filters'],
-            },
-        );
+        router.get(resident.visitors.show.url(accessCode.id), value ? { date: value } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['usageLogs', 'filters'],
+        });
     }
 
     function clearDateFilter() {
@@ -263,12 +259,12 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                             <div className="mb-4">
                                 <div className="flex items-center gap-2">
                                     <div className="relative flex-1">
-                                        <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                        <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                         <input
                                             type="date"
                                             value={dateFilter}
                                             onChange={handleDateFilterChange}
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 transition-colors focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-700 transition-colors focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         />
                                     </div>
                                     {dateFilter && (
@@ -286,18 +282,13 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                             {usageLogs.data.length > 0 ? (
                                 <div className="space-y-3">
                                     {usageLogs.data.map((log) => (
-                                        <div
-                                            key={log.id}
-                                            className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
-                                        >
+                                        <div key={log.id} className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
                                                     <Shield className="h-4 w-4 text-indigo-600" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-medium text-gray-900">
-                                                        Verified by {log.verifier_name}
-                                                    </p>
+                                                    <p className="text-sm font-medium text-gray-900">Verified by {log.verifier_name}</p>
                                                     <p className="text-xs text-gray-500">
                                                         {new Date(log.verified_at).toLocaleDateString(undefined, {
                                                             weekday: 'short',

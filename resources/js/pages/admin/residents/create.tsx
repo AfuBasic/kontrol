@@ -4,7 +4,11 @@ import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, Refr
 import { useCallback, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import { store as inviteLinkStore, regenerate as inviteLinkRegenerate, toggle as inviteLinkToggle } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
+import {
+    store as inviteLinkStore,
+    regenerate as inviteLinkRegenerate,
+    toggle as inviteLinkToggle,
+} from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import AdminLayout from '@/layouts/AdminLayout';
 
 // Wayfinder actions are used for routing
@@ -193,7 +197,7 @@ export default function CreateResident({ inviteLink }: Props) {
                 setTimeout(() => setIsCopied(false), 2000);
             } else {
                 // Fallback for non-secure contexts
-                const textArea = document.createElement("textarea");
+                const textArea = document.createElement('textarea');
                 textArea.value = inviteLink.url;
                 document.body.appendChild(textArea);
                 textArea.select();
@@ -211,14 +215,16 @@ export default function CreateResident({ inviteLink }: Props) {
 
     const handleShareWhatsApp = () => {
         if (inviteLink?.url) {
-            const text = encodeURIComponent(`Hi! You've been invited to join ${auth.user.estate_name} on Kontrol. 🚀\n\nClick the link below to get started: ${inviteLink.url}`);
+            const text = encodeURIComponent(
+                `Hi! You've been invited to join ${auth.user.estate_name} on Kontrol. 🚀\n\nClick the link below to get started: ${inviteLink.url}`,
+            );
             window.open(`https://wa.me/?text=${text}`, '_blank');
         }
     };
 
     const handleGenerateLink = () => {
         const isInitialGeneration = !inviteLink;
-        
+
         router.post(
             inviteLinkStore.url(),
             {
@@ -238,7 +244,7 @@ export default function CreateResident({ inviteLink }: Props) {
 
     const handleRegenerateLink = () => {
         if (!confirm('Are you sure? This will invalidate the previous link and reset its usage count.')) return;
-        
+
         router.post(
             inviteLinkRegenerate.url(),
             {},
@@ -670,11 +676,11 @@ export default function CreateResident({ inviteLink }: Props) {
                                             <input
                                                 type="number"
                                                 value={inviteSettings.max_usages}
-                                                onChange={(e) => setInviteSettings(prev => ({ ...prev, max_usages: e.target.value }))}
+                                                onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
                                                 placeholder="Unlimited"
-                                                className="block w-full rounded-lg border border-gray-300 py-2.5 pl-4 pr-12 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all outline-none"
+                                                className="block w-full rounded-lg border border-gray-300 py-2.5 pr-12 pl-4 text-sm transition-all outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             />
-                                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                                 <span className="text-xs text-gray-400">users</span>
                                             </div>
                                         </div>
@@ -688,14 +694,15 @@ export default function CreateResident({ inviteLink }: Props) {
                                                 <input
                                                     type="checkbox"
                                                     checked={inviteSettings.requires_approval}
-                                                    onChange={(e) => setInviteSettings(prev => ({ ...prev, requires_approval: e.target.checked }))}
+                                                    onChange={(e) => setInviteSettings((prev) => ({ ...prev, requires_approval: e.target.checked }))}
                                                     className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                                 />
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-semibold text-gray-900">Require Admin Approval</span>
                                                 <span className="text-xs text-gray-500">
-                                                    If enabled, residents will stay 'pending' after signup until you manually approve them in the dashboard.
+                                                    If enabled, residents will stay 'pending' after signup until you manually approve them in the
+                                                    dashboard.
                                                 </span>
                                             </div>
                                         </label>
@@ -709,19 +716,19 @@ export default function CreateResident({ inviteLink }: Props) {
                                                 type="date"
                                                 min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                                 value={inviteSettings.expires_at}
-                                                onChange={(e) => setInviteSettings(prev => ({ ...prev, expires_at: e.target.value }))}
-                                                className="block w-full rounded-lg border border-gray-300 py-2.5 pl-4 pr-4 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all outline-none"
+                                                onChange={(e) => setInviteSettings((prev) => ({ ...prev, expires_at: e.target.value }))}
+                                                className="block w-full rounded-lg border border-gray-300 py-2.5 pr-4 pl-4 text-sm transition-all outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             />
                                         </div>
                                         <p className="text-xs text-gray-500">Link will automatically expire after this date (min. 1 day).</p>
                                     </div>
                                 </div>
 
-                                <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                                <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={handleGenerateLink}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 shadow-sm"
+                                        className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
                                     >
                                         <RefreshCw className="h-4 w-4" />
                                         {inviteLink ? 'Update & Share Link' : 'Generate Invite Link'}
@@ -755,21 +762,23 @@ export default function CreateResident({ inviteLink }: Props) {
                                     <CheckCircle className="h-8 w-8" />
                                 </div>
                                 <h3 className="text-xl font-bold">Invite Link Ready!</h3>
-                                <p className="mt-2 text-sm text-white/80">Your estate invitation link has been generated and is ready to be shared with residents.</p>
+                                <p className="mt-2 text-sm text-white/80">
+                                    Your estate invitation link has been generated and is ready to be shared with residents.
+                                </p>
                             </div>
 
                             <div className="p-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Shareable URL</label>
+                                        <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Shareable URL</label>
                                         <div className="mt-2 flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                                            <input 
-                                                type="text" 
-                                                readOnly 
-                                                value={inviteLink.url} 
-                                                className="flex-1 bg-transparent text-sm text-gray-600 font-mono focus:outline-none" 
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={inviteLink.url}
+                                                className="flex-1 bg-transparent font-mono text-sm text-gray-600 focus:outline-none"
                                             />
-                                            <button 
+                                            <button
                                                 onClick={handleCopyLink}
                                                 className={`rounded-lg p-2 transition-colors ${isCopied ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
                                             >
@@ -780,16 +789,14 @@ export default function CreateResident({ inviteLink }: Props) {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="rounded-xl border border-gray-100 p-4">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Approval</p>
+                                            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Approval</p>
                                             <p className="mt-1 text-sm font-semibold text-gray-700">
                                                 {inviteLink.requires_approval ? 'Manual' : 'Automatic'}
                                             </p>
                                         </div>
                                         <div className="rounded-xl border border-gray-100 p-4">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Max Usage</p>
-                                            <p className="mt-1 text-sm font-semibold text-gray-700">
-                                                {inviteLink.max_usages || 'Unlimited'}
-                                            </p>
+                                            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Max Usage</p>
+                                            <p className="mt-1 text-sm font-semibold text-gray-700">{inviteLink.max_usages || 'Unlimited'}</p>
                                         </div>
                                     </div>
 

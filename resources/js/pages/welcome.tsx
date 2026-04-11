@@ -8,7 +8,7 @@ export default function Welcome() {
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
             <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-                <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-4 lg:px-8">
+                <header className="fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-6 py-4 lg:px-8">
                     <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-6 dark:hidden" />
                     <img src="/assets/images/kontrol-white.png" alt="Kontrol" className="hidden h-6 dark:block" />
                 </header>

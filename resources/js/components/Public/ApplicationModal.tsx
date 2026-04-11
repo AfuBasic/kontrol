@@ -81,7 +81,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
 
                                 {/* Decorative Header */}
                                 {!submitted && (
-                                    <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 pb-8 pt-12 sm:px-8">
+                                    <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 pt-12 pb-8 sm:px-8">
                                         {/* Gradient orbs */}
                                         <div className="pointer-events-none absolute inset-0 overflow-hidden">
                                             <FloatingShape
@@ -185,7 +185,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                 )}
 
                                 {/* Form Content - extra bottom padding on mobile for keyboard clearance */}
-                                <div className="max-h-[55vh] overflow-y-auto px-6 pt-6 pb-24 sm:max-h-[60vh] sm:px-8 sm:pb-6 scrollbar-hide">
+                                <div className="scrollbar-hide max-h-[55vh] overflow-y-auto px-6 pt-6 pb-24 sm:max-h-[60vh] sm:px-8 sm:pb-6">
                                     <AnimatePresence mode="wait">
                                         {submitted ? (
                                             <SuccessState key="success" estateName={estateName} />

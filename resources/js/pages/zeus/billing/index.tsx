@@ -9,13 +9,8 @@ export default function BillingIndex() {
             <Head title="Billing Configuration" />
 
             {/* Page Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="mb-8"
-            >
-                <div className="flex items-center gap-3 mb-2">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
+                <div className="mb-2 flex items-center gap-3">
                     <CurrencyDollarIcon className="h-8 w-8 text-primary-600" />
                     <h1 className="text-3xl font-bold text-gray-900">Billing Configuration</h1>
                 </div>
@@ -78,7 +73,7 @@ export default function BillingIndex() {
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Primary Currency</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">Primary Currency</label>
                             <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
                                 <span className="text-xl font-bold text-gray-900">₦</span>
                                 <div>
@@ -89,7 +84,7 @@ export default function BillingIndex() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">VAT/Tax Rate</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">VAT/Tax Rate</label>
                             <div className="rounded-lg border border-gray-300 px-4 py-3">
                                 <p className="font-medium text-gray-900">7.5%</p>
                                 <p className="text-xs text-gray-600">Applied to all pricing</p>
@@ -143,7 +138,7 @@ export default function BillingIndex() {
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Retry Attempts</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">Retry Attempts</label>
                             <div className="rounded-lg border border-gray-300 px-4 py-3">
                                 <p className="font-medium text-gray-900">3 attempts</p>
                                 <p className="text-xs text-gray-600">Before marking as past due</p>
@@ -151,7 +146,7 @@ export default function BillingIndex() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Grace Period</label>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">Grace Period</label>
                             <div className="rounded-lg border border-gray-300 px-4 py-3">
                                 <p className="font-medium text-gray-900">7 days</p>
                                 <p className="text-xs text-gray-600">Before suspending service</p>

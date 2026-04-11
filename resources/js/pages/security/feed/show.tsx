@@ -50,15 +50,13 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
                 <span className="text-xs font-semibold">{comment.author.name.charAt(0).toUpperCase()}</span>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                     <div className="mb-1 flex items-center gap-2">
                         <span className="text-sm font-semibold text-slate-900">{comment.author.name}</span>
-                        <span className="text-[10px] text-slate-400">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </span>
+                        <span className="text-[10px] text-slate-400">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
                     </div>
-                    <p className="text-sm text-slate-700 break-words">{comment.body}</p>
+                    <p className="text-sm break-words text-slate-700">{comment.body}</p>
                 </div>
                 {comment.can_delete && (
                     <div className="mt-1.5 flex items-center gap-3 px-2">
@@ -73,10 +71,7 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
                                 </button>
                             </div>
                         ) : (
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="flex items-center gap-1 text-[10px] text-slate-400"
-                            >
+                            <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1 text-[10px] text-slate-400">
                                 <Trash2 className="h-3 w-3" />
                                 Delete
                             </button>
@@ -101,7 +96,14 @@ export default function FeedShow({ post, comments }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
-    const { data, setData, post: submitComment, processing, reset, errors } = useForm({
+    const {
+        data,
+        setData,
+        post: submitComment,
+        processing,
+        reset,
+        errors,
+    } = useForm({
         body: '',
     });
 
@@ -155,12 +157,7 @@ export default function FeedShow({ post, comments }: Props) {
             <Head title={post.title || 'Post'} />
 
             {/* Back Button */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-4"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-4">
                 <Link
                     href={EstateBoardController.index.url()}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-slate-100 transition-all active:scale-95"
@@ -225,10 +222,7 @@ export default function FeedShow({ post, comments }: Props) {
                     {post.title && <h1 className="mb-2 text-lg font-bold text-slate-900">{post.title}</h1>}
 
                     {/* Body */}
-                    <div
-                        className="prose prose-sm prose-slate max-w-none text-slate-700"
-                        dangerouslySetInnerHTML={{ __html: post.body }}
-                    />
+                    <div className="prose prose-sm prose-slate max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: post.body }} />
 
                     {/* Comment Count */}
                     <div className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
@@ -270,12 +264,7 @@ export default function FeedShow({ post, comments }: Props) {
             </motion.div>
 
             {/* Comments List */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.15 }}
-                className="mt-4"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }} className="mt-4">
                 {comments.data.length > 0 ? (
                     <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                         <h3 className="text-sm font-semibold text-slate-900">Comments</h3>

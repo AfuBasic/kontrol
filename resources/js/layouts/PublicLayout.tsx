@@ -57,13 +57,13 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                 className="fixed top-0 right-0 left-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-xl"
             >
                 <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-                    <Link href="/" className="shrink-0 flex items-center gap-2">
+                    <Link href="/" className="flex shrink-0 items-center gap-2">
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9" />
                         <span className="text-xl font-bold text-slate-900">Kontrol</span>
                     </Link>
 
                     {/* Center Navigation - Desktop */}
-                    <div className="hidden md:flex items-center gap-0.5">
+                    <div className="hidden items-center gap-0.5 md:flex">
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
@@ -97,7 +97,7 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                     <div className="flex items-center gap-3">
                         <a
                             href={LoginController.show.url()}
-                            className="hidden sm:inline-block px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+                            className="hidden px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 sm:inline-block"
                         >
                             Sign In
                         </a>
@@ -112,28 +112,13 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                            className="rounded-lg p-2 transition-colors hover:bg-slate-100 md:hidden"
                         >
-                            <svg
-                                className="w-6 h-6 text-slate-900"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
+                            <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {mobileMenuOpen ? (
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 ) : (
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                 )}
                             </svg>
                         </button>
@@ -147,15 +132,15 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="md:hidden border-t border-slate-100 bg-white"
+                        className="border-t border-slate-100 bg-white md:hidden"
                     >
-                        <div className="mx-auto max-w-7xl px-6 py-4 space-y-2">
+                        <div className="mx-auto max-w-7xl space-y-2 px-6 py-4">
                             <button
                                 onClick={() => {
                                     smoothScrollTo('#features');
                                     handleNavClick();
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                                className="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                             >
                                 Features
                             </button>
@@ -164,7 +149,7 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                                     smoothScrollTo('#pricing');
                                     handleNavClick();
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                                className="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                             >
                                 Pricing
                             </button>
@@ -173,14 +158,14 @@ export default function PublicLayout({ children, onApplyClick }: Props) {
                                     smoothScrollTo('#security');
                                     handleNavClick();
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                                className="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                             >
                                 Security
                             </button>
                             <a
                                 href={LoginController.show.url()}
                                 onClick={handleNavClick}
-                                className="block px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors sm:hidden"
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:hidden"
                             >
                                 Sign In
                             </a>

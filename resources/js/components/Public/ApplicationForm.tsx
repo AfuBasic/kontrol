@@ -68,11 +68,11 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
         <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-5">
             {/* Selected Plan Banner */}
             {selectedPlanId && selectedPlanName && (
-                <motion.div variants={itemVariants} className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                <motion.div variants={itemVariants} className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                     <p className="text-sm text-blue-900">
                         <span className="font-semibold">Selected Plan:</span> {selectedPlanName}
                         {selectedPlanInterval && (
-                            <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold uppercase text-blue-700">
+                            <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 uppercase">
                                 {selectedPlanInterval === 'monthly' ? 'Monthly' : 'Annual'} Plan
                             </span>
                         )}

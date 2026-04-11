@@ -25,18 +25,21 @@ export default function CreateAffiliate() {
             <Head title="Create Affiliate" />
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-2xl">
-                <a href="/zeus/affiliates" className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 mb-6">
+                <a
+                    href="/zeus/affiliates"
+                    className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+                >
                     <ChevronLeftIcon className="h-4 w-4" /> Back to Affiliates
                 </a>
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Affiliate</h1>
-                    <p className="text-gray-600 mb-8">Add a new affiliate partner to your platform</p>
+                    <h1 className="mb-2 text-3xl font-bold text-gray-900">Create Affiliate</h1>
+                    <p className="mb-8 text-gray-600">Add a new affiliate partner to your platform</p>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Name</label>
                                 <input
                                     type="text"
                                     value={data.name}
@@ -48,7 +51,7 @@ export default function CreateAffiliate() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Email</label>
                                 <input
                                     type="email"
                                     value={data.email}
@@ -61,7 +64,7 @@ export default function CreateAffiliate() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                            <label className="mb-2 block text-sm font-semibold text-gray-700">Description</label>
                             <textarea
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
@@ -73,7 +76,7 @@ export default function CreateAffiliate() {
 
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Website</label>
                                 <input
                                     type="url"
                                     value={data.website}
@@ -84,7 +87,7 @@ export default function CreateAffiliate() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Person</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Contact Person</label>
                                 <input
                                     type="text"
                                     value={data.contact_person}
@@ -95,7 +98,7 @@ export default function CreateAffiliate() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Phone</label>
                                 <input
                                     type="tel"
                                     value={data.phone}
@@ -106,7 +109,7 @@ export default function CreateAffiliate() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Commission Rate (%)</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Commission Rate (%)</label>
                                 <input
                                     type="number"
                                     value={data.commission_rate}
@@ -121,7 +124,7 @@ export default function CreateAffiliate() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                            <label className="mb-2 block text-sm font-semibold text-gray-700">Status</label>
                             <select
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value)}

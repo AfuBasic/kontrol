@@ -11,14 +11,7 @@ interface Props {
     isLoading: boolean;
 }
 
-export default function ApplicationActionMenu({
-    applicationId,
-    estateName,
-    onView,
-    onApprove,
-    onReject,
-    isLoading,
-}: Props) {
+export default function ApplicationActionMenu({ applicationId, estateName, onView, onApprove, onReject, isLoading }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +48,7 @@ export default function ApplicationActionMenu({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+                        className="absolute top-full right-0 z-40 mt-2 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
                     >
                         {/* View */}
                         <button

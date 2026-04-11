@@ -206,11 +206,7 @@ export default function MarkdownEditor({
                     hasEnhanced ? 'border-violet-300 bg-violet-50/50' : ''
                 } ${error ? 'border-red-300' : ''}`}
             >
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    isActive={editor.isActive('bold')}
-                    title="Bold (Ctrl+B)"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
                     <Bold className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
@@ -220,18 +216,10 @@ export default function MarkdownEditor({
                 >
                     <Italic className="h-4 w-4" />
                 </ToolbarButton>
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().toggleStrike().run()}
-                    isActive={editor.isActive('strike')}
-                    title="Strikethrough"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
                     <Strikethrough className="h-4 w-4" />
                 </ToolbarButton>
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().toggleCode().run()}
-                    isActive={editor.isActive('code')}
-                    title="Inline Code"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline Code">
                     <Code className="h-4 w-4" />
                 </ToolbarButton>
 
@@ -268,22 +256,14 @@ export default function MarkdownEditor({
                 >
                     <ListOrdered className="h-4 w-4" />
                 </ToolbarButton>
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                    isActive={editor.isActive('blockquote')}
-                    title="Quote"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Quote">
                     <Quote className="h-4 w-4" />
                 </ToolbarButton>
 
                 <ToolbarDivider />
 
                 <div className="relative">
-                    <ToolbarButton
-                        onClick={() => setShowLinkInput(!showLinkInput)}
-                        isActive={editor.isActive('link')}
-                        title="Add Link"
-                    >
+                    <ToolbarButton onClick={() => setShowLinkInput(!showLinkInput)} isActive={editor.isActive('link')} title="Add Link">
                         <LinkIcon className="h-4 w-4" />
                     </ToolbarButton>
                     {showLinkInput && (
@@ -309,18 +289,10 @@ export default function MarkdownEditor({
 
                 <ToolbarDivider />
 
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().undo().run()}
-                    disabled={!editor.can().undo()}
-                    title="Undo (Ctrl+Z)"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
                     <Undo className="h-4 w-4" />
                 </ToolbarButton>
-                <ToolbarButton
-                    onClick={() => editor.chain().focus().redo().run()}
-                    disabled={!editor.can().redo()}
-                    title="Redo (Ctrl+Y)"
-                >
+                <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Y)">
                     <Redo className="h-4 w-4" />
                 </ToolbarButton>
 
