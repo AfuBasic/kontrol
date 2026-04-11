@@ -13,7 +13,7 @@ interface Plan {
     description: string;
     price: number;
     formatted_price: string;
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     is_featured: boolean;
     badge: string | null;
     color: string; // hex or css color string from DB
@@ -26,7 +26,7 @@ interface Plan {
 interface Props {
     plan: Plan;
     allFeatures: Feature[];
-    billingPeriod: 'monthly' | 'annual';
+    billingPeriod: 'quarterly' | 'semi-annually' | 'annually';
     onSelect: (planId: number) => void;
 }
 
@@ -35,6 +35,12 @@ export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect
     const accent = plan.color || '#3b82f6'; // fallback blue
     const primaryFeatures = allFeatures.slice(0, 4);
     const extraFeatures = allFeatures.slice(4);
+
+    const billingIntervalLabel = {
+        'quarterly': 'per quarter',
+        'semi-annually': 'every 6 months',
+        'annually': 'per year',
+    }[plan.billing_interval] || plan.billing_interval;
 
     return (
         <div
@@ -76,7 +82,7 @@ export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect
                 <p className="mt-2 text-sm leading-relaxed font-light text-slate-400">{plan.description}</p>
                 <div className="mt-8 mb-2 flex items-baseline gap-x-2">
                     <span className="text-5xl font-extrabold tracking-tight text-white drop-shadow-sm">{plan.formatted_price}</span>
-                    <span className="text-sm font-medium text-slate-400">/ {plan.billing_interval}</span>
+                    <span className="text-sm font-medium text-slate-400">/ {billingIntervalLabel}</span>
                 </div>
 
                 <ul className="mt-8 space-y-4 border-t border-slate-800/80 pt-8">

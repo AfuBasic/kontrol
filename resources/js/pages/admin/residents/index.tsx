@@ -1,14 +1,18 @@
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { LinkIcon, Mail, Trash2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
+import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import ResidentActions from '@/components/Admin/ResidentActions';
 
 import { useDebounce } from '@/hooks/useDebounce';
 import { usePermission } from '@/hooks/usePermission';
 import AdminLayout from '@/layouts/AdminLayout';
+
+// Wayfinder actions are used for routing instead of global route()
 
 type Resident = {
     id: number;
@@ -36,9 +40,10 @@ type Props = {
         search?: string;
         status?: string;
     };
+    pendingCount: number;
 };
 
-export default function Residents({ residents, filters }: Props) {
+export default function Residents({ residents, filters, pendingCount }: Props) {
     const { can } = usePermission();
     const hasResidents = residents.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
@@ -114,17 +119,59 @@ export default function Residents({ residents, filters }: Props) {
                     <p className="mt-1 text-gray-500">Manage residents in your estate.</p>
                 </div>
                 {can('residents.create') && (
-                    <Link
-                        href={index.url() + '/create'}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Resident
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={inviteLinkIndex.url()}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                            <LinkIcon className="h-5 w-5" />
+                            Manage Invite Link
+                        </Link>
+                        <Link
+                            href={index.url() + '/create'}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Add Resident
+                        </Link>
+                    </div>
                 )}
             </div>
+            
+            {/* Pending Approvals Notice */}
+            <AnimatePresence>
+                {pendingCount > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-8"
+                    >
+                        <Link
+                            href={approvalsIndex.url()}
+                            className="flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50 p-4 transition-all hover:bg-primary-100/50"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                                    <Mail className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-primary-900">{pendingCount} Pending Application{pendingCount > 1 ? 's' : ''}</p>
+                                    <p className="text-sm text-primary-700">New residents are waiting for your approval to join the estate.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 font-semibold text-primary-600 border-l border-primary-200 pl-4 ml-4 whitespace-nowrap">
+                                Review Requests
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                </svg>
+                            </div>
+                        </Link>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Filters */}
             <div className="mb-6 flex flex-col gap-4 sm:flex-row">

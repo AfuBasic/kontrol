@@ -4,7 +4,9 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
+use App\Http\Controllers\Admin\InviteLinkController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
@@ -24,12 +26,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
+Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(function (): void {
     // Legacy dashboard redirect
-    Route::get('/dashboard', DashboardController::class)->name('admin.dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // Estate Board
-    Route::prefix('estate-board')->name('admin.estate-board.')->group(function (): void {
+    Route::prefix('estate-board')->name('estate-board.')->group(function (): void {
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
         Route::get('/manage', [EstateBoardController::class, 'manage'])->name('manage');
         Route::get('/create', [EstateBoardController::class, 'create'])->name('create');
@@ -58,6 +60,19 @@ Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
         Route::delete('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::post('residents/{resident}/reset-password', [ResidentController::class, 'resetPassword'])->name('residents.reset-password');
+
+        Route::get('residents/invite-link', [InviteLinkController::class, 'index'])->name('residents.invite-link.index');
+        Route::post('residents/invite-link', [InviteLinkController::class, 'store'])->name('residents.invite-link.store');
+        Route::post('residents/invite-link/toggle', [InviteLinkController::class, 'toggle'])->name('residents.invite-link.toggle');
+        Route::post('residents/invite-link/regenerate', [InviteLinkController::class, 'regenerate'])->name('residents.invite-link.regenerate');
+        Route::delete('residents/invite-link', [InviteLinkController::class, 'destroy'])->name('residents.invite-link.destroy');
+
+        Route::prefix('residents/approvals')->name('residents.approvals.')->group(function (): void {
+            Route::get('/', [ResidentApprovalController::class, 'index'])->name('index');
+            Route::post('/{user}/approve', [ResidentApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{user}/reject', [ResidentApprovalController::class, 'reject'])->name('reject');
+        });
+
         Route::resource('residents', ResidentController::class)->except(['show']);
     });
 
@@ -72,16 +87,16 @@ Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
 
     // Settings (admin-only)
     Route::middleware('role:admin')->group(function (): void {
-        Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
         // Activity Log
-        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log.index');
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
     });
 
     // Profile (own profile)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Role management
     Route::middleware('permission:roles.view')->group(function (): void {
@@ -89,9 +104,9 @@ Route::middleware(['auth', EnsureIsAdmin::class])->group(function (): void {
     });
 
     // Notifications
-    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('admin.notifications.index');
-    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('admin.notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('admin.notifications.read-all');
+    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
     // Admin User management (manage other admins)
     Route::middleware('role:admin')->group(function (): void {

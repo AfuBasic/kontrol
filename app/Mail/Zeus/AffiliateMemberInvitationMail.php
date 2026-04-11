@@ -47,7 +47,7 @@ class AffiliateMemberInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.zeus.affiliate-member-invitation',
+            view: 'mail.zeus.affiliate-member-invitation',
             with: [
                 'affiliateName' => $this->affiliate->name,
                 'userName' => $this->user->name,

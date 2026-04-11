@@ -7,7 +7,7 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 interface Plan {
     id: number;
     name: string;
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
 }
 
 interface SubscriptionRecord {

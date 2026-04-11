@@ -83,6 +83,14 @@ class Estate extends Model
     }
 
     /**
+     * @return HasOne<EstateInviteLink, $this>
+     */
+    public function inviteLink(): HasOne
+    {
+        return $this->hasOne(EstateInviteLink::class);
+    }
+
+    /**
      * @return BelongsTo<Referrer, $this>
      */
     public function referrer(): BelongsTo

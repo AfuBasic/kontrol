@@ -7,7 +7,7 @@ interface Props {
     onSuccess: (estateName: string) => void;
     selectedPlanId?: number;
     selectedPlanName?: string;
-    selectedPlanInterval?: 'monthly' | 'annual';
+    selectedPlanInterval?: 'quarterly' | 'semi-annually' | 'annually';
 }
 
 const inputClasses = {

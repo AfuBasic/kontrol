@@ -29,7 +29,7 @@ class LoginOtpMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.auth.login-otp',
+            view: 'mail.auth.login-otp',
             with: [
                 'userName' => $this->user->name,
                 'code' => $this->code,

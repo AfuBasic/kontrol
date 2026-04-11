@@ -47,10 +47,11 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.admin.invitation',
+            view: 'mail.admin.invitation',
             with: [
                 'estateName' => $this->estate->name,
                 'userName' => $this->user->name,
+                'roleName' => 'Administrator',
                 'invitationUrl' => $this->invitationUrl,
             ],
         );

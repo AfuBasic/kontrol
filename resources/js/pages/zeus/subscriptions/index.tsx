@@ -11,7 +11,7 @@ interface Estate {
     plan_id: number | null;
     plan_name: string;
     status: 'trial' | 'active' | 'past_due' | 'cancelled' | 'no_plan';
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     trial_ends_at: string | null;
     current_period_end: string | null;
     is_overridden: boolean;

@@ -2,6 +2,8 @@ import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLog
 import { openInExternalBrowser, useIsStandalone } from '@/hooks/useIsStandalone';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 // Abstract SVG illustration: "Controlled Passage"
 // Flowing paths through layered boundaries suggesting secure, approved entry
@@ -525,6 +527,8 @@ export default function Login() {
         remember: false,
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
         post('/login');
@@ -634,15 +638,24 @@ export default function Login() {
                                 <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
                                     Password
                                 </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                    placeholder="Enter your password"
-                                    autoComplete="current-password"
-                                />
+                                <div className="relative">
+                                    <input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
+                                        placeholder="Enter your password"
+                                        autoComplete="current-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                                    >
+                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                </div>
                                 {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
                             </div>
 

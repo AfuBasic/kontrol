@@ -1,191 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f9fafb;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #1f6fdb 0%, #0a3d91 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        .content {
-            padding: 40px;
-        }
-        .greeting {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .estate-info {
-            background-color: #f3f4f6;
-            border-left: 4px solid #1f6fdb;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .estate-info-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .estate-info-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .button-wrapper {
-            text-align: center;
-            margin: 40px 0;
-        }
-        .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #1f6fdb 0%, #0a3d91 100%);
-            color: white;
-            padding: 14px 40px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(31, 111, 219, 0.3);
-        }
-        .info-box {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 14px;
-            color: #1e40af;
-        }
-        .next-steps {
-            background-color: #f0fdf4;
-            border-left: 4px solid #16a34a;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .next-steps-title {
-            font-weight: 600;
-            color: #15803d;
-            margin-bottom: 10px;
-        }
-        .next-steps-item {
-            color: #15803d;
-            font-size: 14px;
-            margin-bottom: 8px;
-            padding-left: 20px;
-            position: relative;
-        }
-        .next-steps-item:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-        }
-        .next-steps-item:last-child {
-            margin-bottom: 0;
-        }
-        .footer {
-            background-color: #f3f4f6;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        .footer-link {
-            color: #1f6fdb;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Welcome to Kontrol</h1>
-        </div>
+@extends('mail.layout')
 
-        <div class="content">
-            <div class="greeting">
-                Hello,
-            </div>
-
-            <p>
-                You've been invited to manage <strong>{{ $estateName }}</strong> on {{ config('app.name') }}.
-                Get ready to streamline your estate operations with our powerful management platform.
-            </p>
-
-            <div class="estate-info">
-                <span class="estate-info-label">You're managing</span>
-                <div class="estate-info-value">{{ $estateName }}</div>
-            </div>
-
-            <p>
-                To complete your setup and access your estate dashboard, please set up your password by clicking the button below.
-            </p>
-
-            <div class="button-wrapper">
-                <a href="{{ $invitationUrl }}" class="button">Set Up Your Password</a>
-            </div>
-
-            <p style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 15px;">
-                Or copy and paste this link:
-                <br>
-                <span style="word-break: break-all; font-size: 11px;">{{ $invitationUrl }}</span>
-            </p>
-
-            <div class="info-box">
-                <strong>⏱️ This invitation link expires in 72 hours</strong><br>
-                Complete your setup within this timeframe to activate your account.
-            </div>
-
-            <div class="next-steps">
-                <div class="next-steps-title">What happens next?</div>
-                <div class="next-steps-item">Set up your password to secure your account</div>
-                <div class="next-steps-item">Access your estate dashboard and settings</div>
-                <div class="next-steps-item">Start managing residents and security</div>
-                <div class="next-steps-item">Invite your team members</div>
-            </div>
-
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-
-            <p style="font-size: 13px; color: #6b7280; margin: 0;">
-                Questions or need help? Contact us at <a href="mailto:support@usekontrol.com" class="footer-link">support@usekontrol.com</a>
-            </p>
-        </div>
-
-        <div class="footer">
-            <p style="margin: 0;">
-                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-            </p>
-        </div>
+@section('content')
+    <div class="badge" style="background-color: #f0fdf4; color: #166534;">Onboarding</div>
+    <h1>Welcome to Kontrol</h1>
+    
+    <p>Hello,</p>
+    
+    <p>You've been invited to manage <span class="bold">{{ $estateName }}</span> on Kontrol. We're excited to help you streamline your estate operations with our powerful management platform.</p>
+    
+    <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 32px 0; border: 1px solid #e2e8f0;">
+        <table width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td style="padding-bottom: 8px; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Estate</td>
+                <td style="padding-bottom: 8px; color: #0f172a; font-weight: 700; text-align: right;">{{ $estateName }}</td>
+            </tr>
+            <tr>
+                <td style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Platform</td>
+                <td style="color: #0f172a; font-weight: 700; text-align: right;">Kontrol Estate Management</td>
+            </tr>
+        </table>
     </div>
-</body>
-</html>
+    
+    <p>To complete your setup and access your estate dashboard, please set up your account by clicking the button below.</p>
+    
+    <div class="button-container">
+        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #4f46e5; box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);">Set Up Your Password</a>
+    </div>
+    
+    <div style="margin-bottom: 32px; background-color: #ffffff; border-radius: 12px; padding: 24px; border: 1px solid #f1f5f9;">
+        <p style="margin: 0 0 16px; font-weight: 600; color: #0f172a; font-size: 14px;">What happens next?</p>
+        <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px;">
+            <li style="margin-bottom: 8px;">Set up your password to secure your account.</li>
+            <li style="margin-bottom: 8px;">Access your estate dashboard and settings.</li>
+            <li style="margin-bottom: 8px;">Invite your team and start managing residents.</li>
+        </ul>
+    </div>
+    
+    <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
+        <strong>Link Validity</strong><br>
+        This invitation link will expire in 72 hours.
+    </div>
+    
+    <div class="divider"></div>
+    
+    <p style="font-size: 14px; color: #64748b;">If you're having trouble, copy and paste this link: <br> <span style="font-size: 12px; color: #6366f1;">{{ $invitationUrl }}</span></p>
+@endsection

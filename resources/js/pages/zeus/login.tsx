@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
         username: '',
         password: '',
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -97,15 +101,24 @@ export default function Login() {
                                     <label htmlFor="password" className="mb-2 block text-sm font-semibold text-primary-100">
                                         Password
                                     </label>
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="Enter your password"
-                                        autoComplete="current-password"
-                                        className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            id="password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
+                                            placeholder="Enter your password"
+                                            autoComplete="current-password"
+                                            className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 pr-12 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary-400 hover:text-primary-100 transition-colors outline-none"
+                                        >
+                                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                        </button>
+                                    </div>
                                     {errors.password && (
                                         <p className="mt-2 text-sm text-red-400">{errors.password}</p>
                                     )}

@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\StoreEstateRequest;
 use App\Http\Requests\Zeus\UpdateEstateRequest;
 use App\Models\Estate;
+use App\Models\Plan;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,7 +48,9 @@ class EstateController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('zeus/estates/create');
+        return Inertia::render('zeus/estates/create', [
+            'plans' => Plan::with('features')->get(),
+        ]);
     }
 
     public function store(StoreEstateRequest $request, CreateEstateAction $action): RedirectResponse

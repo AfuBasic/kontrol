@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 interface Plan {
     id: number;
     name: string;
-    billing_interval?: 'monthly' | 'annual';
+    billing_interval?: 'quarterly' | 'semi-annually' | 'annually';
 }
 
 interface Application {

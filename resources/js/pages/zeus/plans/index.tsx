@@ -12,7 +12,7 @@ interface Plan {
     description: string | null;
     price: number;
     formatted_price: string;
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     is_featured: boolean;
     badge: string | null;
     color: string;
@@ -178,7 +178,9 @@ export default function PlansIndex({ plans }: Props) {
                                                 <span className="text-3xl font-black tracking-tight text-slate-900">
                                                     {plan.formatted_price}
                                                 </span>
-                                                <span className="text-[13px] font-medium text-slate-400">/{plan.billing_interval === 'monthly' ? 'mo' : 'yr'}</span>
+                                                <span className="text-[13px] font-medium text-slate-400">
+                                                    /{plan.billing_interval === 'quarterly' ? 'Q' : plan.billing_interval === 'semi-annually' ? '6mo' : 'yr'}
+                                                </span>
                                             </div>
                                         </div>
 

@@ -25,7 +25,7 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            to: $this->application->email,
+            to: [$this->application->email],
             subject: 'Kontrol - Application Received',
         );
     }
@@ -38,10 +38,9 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.public.application-received',
             with: [
+                'applicantName' => explode('@', $this->application->email)[0],
                 'estateName' => $this->application->estate_name,
-                'email' => $this->application->email,
-                'planName' => $this->application->plan?->name,
-                'planInterval' => $this->application->plan?->billing_interval,
+                'statusUrl' => config('app.url'),
             ],
         );
     }

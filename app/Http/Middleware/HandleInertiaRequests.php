@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $permissions,
                     'roles' => $roles,
                     'current_estate_id' => $estate?->id,
+                    'estate_name' => $estate?->name,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
                         'id' => $n->id,

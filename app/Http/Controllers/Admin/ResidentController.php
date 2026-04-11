@@ -48,9 +48,15 @@ class ResidentController extends Controller
                 'created_at' => $user->created_at->format('M d, Y'),
             ]);
 
+        $estate = $this->estateContext->getEstate();
+        $pendingCount = User::query()
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+            ->count();
+
         return Inertia::render('admin/residents/index', [
             'residents' => $residents,
             'filters' => $filters,
+            'pendingCount' => $pendingCount,
         ]);
     }
 
@@ -60,8 +66,21 @@ class ResidentController extends Controller
     public function create(): Response
     {
         $this->authorize('residents.create');
+        $estate = $this->estateContext->getEstate();
+        $link = $estate->inviteLink;
 
-        return Inertia::render('admin/residents/create');
+        return Inertia::render('admin/residents/create', [
+            'inviteLink' => $link ? [
+                'token' => $link->token,
+                'url' => url("/join/{$link->token}"),
+                'is_active' => $link->is_active,
+                'usage_count' => $link->usage_count,
+                'max_usages' => $link->max_usages,
+                'requires_approval' => $link->requires_approval,
+                'expires_at' => $link->expires_at?->toDateTimeString(),
+                'is_expired' => $link->expires_at?->isPast() ?? false,
+            ] : null,
+        ]);
     }
 
     /**

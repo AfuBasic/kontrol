@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\InviteRegistrationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -45,7 +47,17 @@ Route::middleware('guest')->group(function (): void {
         ->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'show'])->name('password.reset');
     Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
+
+    // Invite Link Registration
+    Route::get('/join/{token}', [InviteRegistrationController::class, 'show'])->name('invite.join');
+    Route::post('/join/{token}', [InviteRegistrationController::class, 'store'])->name('invite.join.store');
+
 });
+
+// Email Verification
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
 
 // PWA bridge page - shown after OAuth to redirect back into the PWA
 Route::get('/auth/pwa-bridge', function (Request $request) {

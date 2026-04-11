@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('activity', function (Blueprint $table) {
+        Schema::table('activity_log', function (Blueprint $table) {
             $table->dropForeignIdFor(Estate::class);
         });
     }

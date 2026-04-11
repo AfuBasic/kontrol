@@ -77,12 +77,12 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
         $time = now()->format('M j, Y g:i A');
 
-        $text = "🔔 <b>Visitor Arrived</b>\n\n";
-        $text .= "🏠 <b>Estate:</b> {$estateName}\n";
-        $text .= "👤 <b>Visitor:</b> {$visitorName}\n";
-        $text .= "🔐 <b>Code:</b> <code>{$this->accessCode->code}</code>\n";
-        $text .= "✅ <b>Verified by:</b> {$securityName}\n";
-        $text .= "🕐 <b>Time:</b> {$time}";
+        $text = "<b>Visitor Arrived</b>\n\n";
+        $text .= "<b>Estate:</b> {$estateName}\n";
+        $text .= "<b>Visitor:</b> {$visitorName}\n";
+        $text .= "<b>Code:</b> <code>{$this->accessCode->code}</code>\n";
+        $text .= "<b>Verified by:</b> {$securityName}\n";
+        $text .= "<b>Time:</b> {$time}";
 
         return [
             'text' => $text,

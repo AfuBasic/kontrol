@@ -57,7 +57,7 @@ class SecurityInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.admin.security-invitation',
+            view: 'mail.admin.security-invitation',
             with: [
                 'estateName' => $this->estate->name,
                 'userName' => $this->user->name,

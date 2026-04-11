@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import PricingCard from '@/components/PricingCard';
-import PricingToggle from '@/components/PricingToggle';
 import { motion } from 'framer-motion';
 import { useEffect, useState, useMemo } from 'react';
 import ApplicationModal from '@/components/Public/ApplicationModal';
@@ -19,7 +18,7 @@ interface Plan {
     description: string;
     price: number;
     formatted_price: string;
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     is_featured: boolean;
     badge: string | null;
     color: string;
@@ -381,10 +380,10 @@ const whyApplyPoints = [
 
 export default function Landing({ plans }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
-    const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+    const [billingPeriod, setBillingPeriod] = useState<'quarterly' | 'semi-annually' | 'annually'>('annually');
     const [selectedPlanId, setSelectedPlanId] = useState<number | undefined>();
     const [selectedPlanName, setSelectedPlanName] = useState<string | undefined>();
-    const [selectedPlanInterval, setSelectedPlanInterval] = useState<'monthly' | 'annual' | undefined>();
+    const [selectedPlanInterval, setSelectedPlanInterval] = useState<'quarterly' | 'semi-annually' | 'annually' | undefined>();
 
     const allFeatures = useMemo(() => {
         const map = new Map<number, Feature>();
@@ -449,7 +448,7 @@ export default function Landing({ plans }: Props) {
         requestAnimationFrame(scroll);
     }
 
-    function openModalWithPlan(planId: number, planName: string, billingInterval: 'monthly' | 'annual') {
+    function openModalWithPlan(planId: number, planName: string, billingInterval: 'quarterly' | 'semi-annually' | 'annually') {
         setSelectedPlanId(planId);
         setSelectedPlanName(planName);
         setSelectedPlanInterval(billingInterval);
@@ -948,7 +947,7 @@ export default function Landing({ plans }: Props) {
                                 Choose the perfect plan for your estate's needs. Scale up or down as you grow.
                             </p>
 
-                            {/* Billing Toggle */}
+                            {/* Billing Interval Selector */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -956,7 +955,34 @@ export default function Landing({ plans }: Props) {
                                 transition={{ duration: 0.6, delay: 0.1 }}
                                 className="mt-12 flex justify-center"
                             >
-                                <PricingToggle billingPeriod={billingPeriod} setBillingPeriod={setBillingPeriod} />
+                                <div className="relative flex w-full max-w-md rounded-full bg-slate-800/80 p-1.5 shadow-inner ring-1 ring-white/5 backdrop-blur-md transition-all">
+                                    {(['quarterly', 'semi-annually', 'annually'] as const).map((interval) => {
+                                        const labels = {
+                                            'quarterly': 'Quarterly',
+                                            'semi-annually': '6 Months',
+                                            'annually': 'Annually',
+                                        };
+                                        return (
+                                            <button
+                                                key={interval}
+                                                onClick={() => setBillingPeriod(interval)}
+                                                className={`relative flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors duration-300 ${
+                                                    billingPeriod === interval ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                                                }`}
+                                                style={{ WebkitTapHighlightColor: 'transparent' }}
+                                            >
+                                                {billingPeriod === interval && (
+                                                    <motion.div
+                                                        layoutId="pricing-selector-pill"
+                                                        className="absolute inset-0 rounded-full bg-blue-500 shadow-lg shadow-blue-500/20"
+                                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                                    />
+                                                )}
+                                                <span className="relative z-10">{labels[interval]}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </motion.div>
 
 

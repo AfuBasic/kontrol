@@ -28,7 +28,7 @@ class EstateApplicationRejectedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            to: $this->application->email,
+            to: [$this->application->email],
             subject: 'Kontrol - Application Status Update',
         );
     }
@@ -41,9 +41,9 @@ class EstateApplicationRejectedMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.public.application-rejected',
             with: [
+                'applicantName' => explode('@', $this->application->email)[0],
                 'estateName' => $this->application->estate_name,
-                'email' => $this->application->email,
-                'reason' => $this->reason,
+                'rejectionReason' => $this->reason,
             ],
         );
     }

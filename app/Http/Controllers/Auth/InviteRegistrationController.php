@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\Estate;
+use App\Models\EstateInviteLink;
+use App\Models\User;
+use App\Models\UserProfile;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class InviteRegistrationController extends Controller
+{
+    /**
+     * Show the registration form for the invite link.
+     */
+    public function show(string $token): Response
+    {
+        $inviteLink = EstateInviteLink::where('token', $token)
+            ->where('is_active', true)
+            ->with('estate')
+            ->firstOrFail();
+
+        if ($inviteLink->isExpired() || $inviteLink->isFull()) {
+            abort(403, 'This invitation link is invalid or has reached its usage limit.');
+        }
+
+        return Inertia::render('auth/Join', [
+            'token' => $token,
+            'estate' => [
+                'name' => $inviteLink->estate->name,
+                'address' => $inviteLink->estate->address,
+                'logo' => $inviteLink->estate->logo_url,
+            ],
+        ]);
+    }
+
+    /**
+     * Handle the registration submission.
+     */
+    public function store(Request $request, string $token)
+    {
+        $inviteLink = EstateInviteLink::where('token', $token)
+            ->where('is_active', true)
+            ->with('estate')
+            ->firstOrFail();
+
+        if ($inviteLink->isExpired() || $inviteLink->isFull()) {
+            abort(403, 'This invitation link is invalid or has reached its usage limit.');
+        }
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        return DB::transaction(function () use ($request, $inviteLink) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'user_type' => 'user',
+            ]);
+
+            // Assign 'resident' role scoped to this estate
+            $role = \Spatie\Permission\Models\Role::where('name', 'resident')
+                ->where('guard_name', 'web')
+                ->whereNull('estate_id')
+                ->firstOrFail();
+
+            setPermissionsTeamId($inviteLink->estate_id);
+            $user->assignRole($role);
+
+            // Send verification email
+            $user->notify(new \App\Notifications\VerifyResidentEmail($inviteLink->estate));
+
+            // Create profile
+            UserProfile::create([
+                'user_id' => $user->id,
+            ]);
+
+            // Create membership based on requires_approval setting
+            $status = $inviteLink->requires_approval ? 'pending' : 'accepted';
+
+            $user->estates()->attach($inviteLink->estate_id, [
+                'status' => $status,
+            ]);
+
+            // Increment usage count
+            $inviteLink->increment('usage_count');
+
+            // Notify estate admins only if manual approval is required
+            if ($inviteLink->requires_approval) {
+                $admins = User::withRole('admin', $inviteLink->estate_id)->get();
+                if ($admins->isNotEmpty()) {
+                    Notification::send($admins, new \App\Notifications\Admin\NewResidentSignup($user, $inviteLink->estate->name));
+                }
+            }
+
+            return Inertia::render('auth/JoinSuccess', [
+                'estate' => $inviteLink->estate->name,
+                'requires_approval' => $inviteLink->requires_approval,
+            ]);
+        });
+    }
+}

@@ -47,7 +47,7 @@ class ReferrerMemberInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.zeus.referrer-member-invitation',
+            view: 'mail.zeus.referrer-member-invitation',
             with: [
                 'referrerName' => $this->referrer->name,
                 'userName' => $this->user->name,

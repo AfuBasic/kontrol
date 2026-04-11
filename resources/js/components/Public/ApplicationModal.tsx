@@ -9,7 +9,7 @@ interface Props {
     onClose: () => void;
     selectedPlanId?: number;
     selectedPlanName?: string;
-    selectedPlanInterval?: 'monthly' | 'annual';
+    selectedPlanInterval?: 'quarterly' | 'semi-annually' | 'annually';
 }
 
 function FloatingShape({ className, delay = 0 }: { className: string; delay?: number }) {

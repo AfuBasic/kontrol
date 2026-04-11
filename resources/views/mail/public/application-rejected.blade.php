@@ -1,176 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f9fafb;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #1f6fdb 0%, #0a3d91 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .logo {
-            max-width: 100px;
-            height: auto;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        .content {
-            padding: 40px;
-        }
-        .greeting {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .reason-box {
-            background-color: #fee2e2;
-            border-left: 4px solid #dc2626;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .reason-box-label {
-            font-weight: 600;
-            color: #7f1d1d;
-            display: block;
-            margin-bottom: 10px;
-        }
-        .reason-text {
-            color: #7f1d1d;
-            white-space: pre-wrap;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-        .next-steps {
-            background-color: #f0fdf4;
-            border-left: 4px solid #16a34a;
-            border-radius: 4px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .next-steps-title {
-            font-weight: 600;
-            color: #15803d;
-            margin-bottom: 10px;
-        }
-        .next-steps-item {
-            color: #15803d;
-            font-size: 14px;
-            margin-bottom: 8px;
-            padding-left: 20px;
-            position: relative;
-        }
-        .next-steps-item:before {
-            content: "→";
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-        }
-        .next-steps-item:last-child {
-            margin-bottom: 0;
-        }
-        .info-box {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 14px;
-            color: #1e40af;
-        }
-        .footer {
-            background-color: #f3f4f6;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        .footer-link {
-            color: #1f6fdb;
-            text-decoration: none;
-        }
-        .contact-link {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #e5e7eb;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <img src="{{ config('app.url') }}/assets/images/kontrol-white.png" alt="Kontrol Logo" class="logo">
-            <h1>Application Review</h1>
-        </div>
+@extends('mail.layout')
 
-        <div class="content">
-            <div class="greeting">
-                Hello <strong>{{ $estateName }}</strong>,
-            </div>
-
-            <p>
-                Thank you for your interest in {{ config('app.name') }}.
-                We have carefully reviewed your application for <strong>{{ $estateName }}</strong>, and unfortunately, we are unable to move forward with your request at this time.
-            </p>
-
-            <div class="reason-box">
-                <span class="reason-box-label">📋 Feedback from Our Review Team:</span>
-                <div class="reason-text">{{ $reason }}</div>
-            </div>
-
-            <p>
-                We genuinely appreciate the time and effort you took to submit your application.
-                This decision was made after careful consideration of your requirements and our current capabilities.
-            </p>
-
-            <div class="next-steps">
-                <div class="next-steps-title">What you can do next:</div>
-                <div class="next-steps-item">Review the feedback provided above</div>
-                <div class="next-steps-item">Address any concerns or requirements mentioned</div>
-                <div class="next-steps-item">Reapply in the future if circumstances change</div>
-                <div class="next-steps-item">Contact us to discuss alternative solutions</div>
-            </div>
-
-            <div class="info-box">
-                <strong>💡 Don't lose hope!</strong><br>
-                If your situation changes or you'd like to explore other possibilities with us, we'd be happy to hear from you again.
-            </div>
-
-            <div class="contact-link">
-                <p style="font-size: 14px; color: #374151; margin: 0;">
-                    Have questions or want to discuss this further?<br>
-                    Reach out to our support team at <a href="mailto:support@usekontrol.com" class="footer-link">support@usekontrol.com</a>
-                </p>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p style="margin: 0;">
-                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-            </p>
-        </div>
+@section('content')
+    <div class="badge" style="background-color: #fef2f2; color: #991b1b;">Update</div>
+    <h1>Application update</h1>
+    
+    <p>Hello <span class="bold">{{ $applicantName }}</span>,</p>
+    
+    <p>We're writing to provide an update regarding your application to join <span class="bold">{{ $estateName }}</span>.</p>
+    
+    <p>After a thorough review by the estate administration, we regret to inform you that your application has been declined at this time.</p>
+    
+    <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 32px 0; border: 1px solid #e2e8f0; font-size: 14px; color: #475569;">
+        <strong>Note from Administration:</strong><br>
+        <p style="margin: 8px 0 0;">{{ $rejectionReason ?? 'No additional details provided.' }}</p>
     </div>
-</body>
-</html>
+    
+    <p>While we cannot proceed with your application currently, we appreciate your interest in our community.</p>
+    
+    <div class="divider"></div>
+    
+    <p style="font-size: 14px; color: #64748b;">If you believe there has been an error or have additional information to provide, you may contact the estate management office directly.</p>
+@endsection

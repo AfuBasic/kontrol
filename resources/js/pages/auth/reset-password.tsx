@@ -1,6 +1,8 @@
 import ResetPasswordController from '@/actions/App/Http/Controllers/Auth/ResetPasswordController';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     token: string;
@@ -14,6 +16,9 @@ export default function ResetPassword({ token, email }: Props) {
         password: '',
         password_confirmation: '',
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -105,16 +110,30 @@ export default function ResetPassword({ token, email }: Props) {
                                 <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
                                     New password
                                 </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                    placeholder="At least 8 characters"
-                                    autoComplete="new-password"
-                                    autoFocus
-                                />
+                                <div className="relative">
+                                    <input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 pr-10 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
+                                        placeholder="At least 8 characters"
+                                        autoComplete="new-password"
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
                                 {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
                             </div>
 
@@ -122,15 +141,29 @@ export default function ResetPassword({ token, email }: Props) {
                                 <label htmlFor="password_confirmation" className="mb-1.5 block text-sm font-medium text-gray-700">
                                     Confirm password
                                 </label>
-                                <input
-                                    id="password_confirmation"
-                                    type="password"
-                                    value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                    placeholder="Re-enter your password"
-                                    autoComplete="new-password"
-                                />
+                                <div className="relative">
+                                    <input
+                                        id="password_confirmation"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        value={data.password_confirmation}
+                                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                                        className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 pr-10 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
+                                        placeholder="Re-enter your password"
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
                             <button

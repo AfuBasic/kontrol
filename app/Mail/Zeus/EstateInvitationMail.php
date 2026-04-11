@@ -47,7 +47,7 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.zeus.estate-invitation',
+            view: 'mail.zeus.estate-invitation',
             with: [
                 'estateName' => $this->estate->name,
                 'invitationUrl' => $this->invitationUrl,

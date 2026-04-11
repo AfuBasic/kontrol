@@ -18,7 +18,7 @@ interface Plan {
     slug: string;
     description: string | null;
     price: number;
-    billing_interval: 'monthly' | 'annual';
+    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     is_featured: boolean;
     badge: string | null;
     color: string;
@@ -36,7 +36,7 @@ interface Props {
 }
 
 const colors = ['blue', 'indigo', 'purple', 'pink', 'red', 'orange', 'yellow', 'green', 'teal', 'cyan'];
-const billingIntervals = ['monthly', 'annual'];
+const billingIntervals = ['quarterly', 'semi-annually', 'annually'];
 
 export default function EditPlan({ plan, features }: Props) {
     const { data, setData, put, processing, errors } = useForm({

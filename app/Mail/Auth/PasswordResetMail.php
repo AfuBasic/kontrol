@@ -29,7 +29,7 @@ class PasswordResetMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.auth.password-reset',
+            view: 'mail.auth.password-reset',
             with: [
                 'userName' => $this->user->name,
                 'resetUrl' => $this->resetUrl,

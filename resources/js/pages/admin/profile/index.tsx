@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import type { FormEvent } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface Props {
     user: {
@@ -18,6 +20,9 @@ export default function Profile({ user }: Props) {
         password: '',
         password_confirmation: '',
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     function handleSubmit(e: FormEvent) {
         e.preventDefault();
@@ -93,14 +98,23 @@ export default function Profile({ user }: Props) {
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                             New Password
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Leave blank to keep current"
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
-                        />
+                        <div className="relative mt-1">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                id="password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                placeholder="Leave blank to keep current"
+                                className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-12 text-sm focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                        </div>
                         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                     </div>
 
@@ -109,14 +123,23 @@ export default function Profile({ user }: Props) {
                         <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
                             Confirm Password
                         </label>
-                        <input
-                            type="password"
-                            id="password_confirmation"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                            placeholder="Confirm new password"
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
-                        />
+                        <div className="relative mt-1">
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                id="password_confirmation"
+                                value={data.password_confirmation}
+                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                placeholder="Confirm new password"
+                                className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-12 text-sm focus:border-gray-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 outline-none"
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Submit */}

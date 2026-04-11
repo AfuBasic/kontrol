@@ -51,7 +51,7 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.resident.household-member-invitation',
+            view: 'mail.resident.household-member-invitation',
             with: [
                 'estateName' => $this->estate->name,
                 'userName' => $this->user->name,
