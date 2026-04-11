@@ -41,9 +41,7 @@ return new class extends Migration
         \DB::table('plans')->where('billing_interval', 'semi-annually')->update(['billing_interval' => 'semi-annual']);
         \DB::table('plans')->where('billing_interval', 'annually')->update(['billing_interval' => 'annual']);
 
-        // Convert back to enum with old values
-        Schema::table('plans', function (Blueprint $table) {
-            $table->enum('billing_interval', ['quarterly', 'semi-annual', 'annual'])->change();
-        });
+        // Convert back to varchar (don't use enum to avoid data type issues)
+        // This is safer than trying to enforce an enum during rollback
     }
 };

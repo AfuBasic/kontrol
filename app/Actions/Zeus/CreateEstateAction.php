@@ -6,13 +6,18 @@ use App\Events\Zeus\EstateCreated;
 use App\Models\Estate;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\Billing\InitializeTrialService;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class CreateEstateAction
 {
+    public function __construct(
+        private InitializeTrialService $initializeTrialService,
+    ) {}
+
     /**
-     * @param  array{name: string, email: string, address?: string|null, plan_id: int}  $data
+     * @param  array{name: string, email: string, address?: string|null, plan_id: int, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
      */
     public function execute(array $data): Estate
     {
@@ -49,7 +54,18 @@ class CreateEstateAction
                 'billing_interval' => $plan->billing_interval,
             ]);
 
-            // 6. Dispatch event for side effects (invitation email)
+            // 6. Create estate settings with billing model and free trial configuration
+            $settingsData = [
+                'charge_type' => $data['charge_type'] ?? 'estate',
+                'free_trial_enabled' => $data['free_trial_enabled'] ?? true,
+                'free_trial_days' => $data['free_trial_days'] ?? 30,
+            ];
+            $estate->settings()->create($settingsData);
+
+            // 7. Initialize trial period based on settings
+            $this->initializeTrialService->initializeForEstate($estate);
+
+            // 8. Dispatch event for side effects (invitation email)
             event(new EstateCreated($estate, $user));
 
             return $estate;

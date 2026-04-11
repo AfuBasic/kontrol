@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $permissions = [];
         $roles = [];
+        $estate = null;
 
         if ($user) {
             // Set team context for permission check

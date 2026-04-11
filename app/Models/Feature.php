@@ -15,6 +15,7 @@ class Feature extends Model
         'slug',
         'description',
         'group',
+        'suggested_plan',
         'is_global',
         'is_active',
         'sort_order',

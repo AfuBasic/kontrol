@@ -11,6 +11,8 @@ interface Props {
         status: 'active' | 'inactive';
         admin_accepted: boolean;
         charge_type: 'residents' | 'estate';
+        free_trial_enabled: boolean;
+        free_trial_days: number;
     };
 }
 
@@ -21,6 +23,8 @@ export default function EditEstate({ estate }: Props) {
         address: estate.address || '',
         status: estate.status,
         charge_type: estate.charge_type,
+        free_trial_enabled: estate.free_trial_enabled,
+        free_trial_days: estate.free_trial_days,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -144,6 +148,40 @@ export default function EditEstate({ estate }: Props) {
                             </select>
                             {errors.charge_type && <p className="mt-1 text-sm text-red-600">{errors.charge_type}</p>}
                         </div>
+
+                        {/* Free Trial Enabled */}
+                        <div>
+                            <label className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={data.free_trial_enabled}
+                                    onChange={(e) => setData('free_trial_enabled', e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Enable Free Trial</span>
+                            </label>
+                            <p className="mt-1 text-xs text-gray-500">Allow this estate to start with a trial period before billing begins.</p>
+                        </div>
+
+                        {/* Free Trial Days */}
+                        {data.free_trial_enabled && (
+                            <div>
+                                <label htmlFor="free_trial_days" className="block text-sm font-medium text-gray-700">
+                                    Trial Duration (Days)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="free_trial_days"
+                                    min="1"
+                                    max="365"
+                                    value={data.free_trial_days}
+                                    onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
+                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">Number of days from estate creation before billing begins (default: 30)</p>
+                                {errors.free_trial_days && <p className="mt-1 text-sm text-red-600">{errors.free_trial_days}</p>}
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-8 flex items-center justify-end gap-4">

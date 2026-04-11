@@ -14,26 +14,18 @@ class UpdatePlanAction
     public function execute(Plan $plan, array $data): Plan
     {
         return DB::transaction(function () use ($plan, $data) {
-            $plan->update([
-                'name' => $data['name'] ?? $plan->name,
-                'slug' => $data['slug'] ?? $plan->slug,
-                'description' => $data['description'] ?? $plan->description,
-                'price' => $data['price'] ?? $plan->price,
-                'billing_interval' => $data['billing_interval'] ?? $plan->billing_interval,
-                'is_featured' => $data['is_featured'] ?? $plan->is_featured,
-                'badge' => $data['badge'] ?? $plan->badge,
-                'color' => $data['color'] ?? $plan->color,
-                'visibility' => $data['visibility'] ?? $plan->visibility,
-                'max_residents' => $data['max_residents'] ?? $plan->max_residents,
-                'max_security' => $data['max_security'] ?? $plan->max_security,
-                'max_admins' => $data['max_admins'] ?? $plan->max_admins,
-            ]);
+            // Extract features separately as it's not a plan attribute
+            $features = $data['features'] ?? null;
+            unset($data['features']);
+
+            // Update plan with all provided data
+            $plan->update($data);
 
             // Update features if provided
-            if (isset($data['features'])) {
+            if ($features !== null) {
                 $plan->features()->detach();
-                if (! empty($data['features'])) {
-                    $features = Feature::whereIn('id', $data['features'])->get();
+                if (! empty($features)) {
+                    $features = Feature::whereIn('id', $features)->get();
                     foreach ($features as $feature) {
                         $plan->features()->attach($feature->id, [
                             'is_enabled' => true,

@@ -14,25 +14,17 @@ class CreatePlanAction
     public function execute(array $data): Plan
     {
         return DB::transaction(function () use ($data) {
-            $plan = Plan::create([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'description' => $data['description'] ?? null,
-                'price' => $data['price'],
-                'billing_interval' => $data['billing_interval'],
-                'is_featured' => $data['is_featured'] ?? false,
-                'badge' => $data['badge'] ?? null,
-                'color' => $data['color'],
-                'visibility' => $data['visibility'],
-                'max_residents' => $data['max_residents'] ?? null,
-                'max_security' => $data['max_security'] ?? null,
-                'max_admins' => $data['max_admins'] ?? null,
-            ]);
+            // Extract features separately as it's not a plan attribute
+            $features = $data['features'] ?? null;
+            unset($data['features']);
+
+            // Create plan with provided data
+            $plan = Plan::create($data);
 
             // Attach features to plan
-            if (! empty($data['features'])) {
-                $features = Feature::whereIn('id', $data['features'])->get();
-                foreach ($features as $feature) {
+            if (! empty($features)) {
+                $featureRecords = Feature::whereIn('id', $features)->get();
+                foreach ($featureRecords as $feature) {
                     $plan->features()->attach($feature->id, [
                         'is_enabled' => true,
                         'limit' => null,

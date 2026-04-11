@@ -52,6 +52,14 @@ class PlanController extends Controller
             ->orderBy('group')
             ->orderBy('sort_order')
             ->get()
+            ->map(fn (Feature $feature) => [
+                'id' => $feature->id,
+                'name' => $feature->name,
+                'slug' => $feature->slug,
+                'description' => $feature->description,
+                'group' => $feature->group,
+                'suggested_plan' => $feature->suggested_plan,
+            ])
             ->groupBy('group')
             ->map(fn ($group) => $group->values());
 
@@ -101,6 +109,14 @@ class PlanController extends Controller
             ->orderBy('group')
             ->orderBy('sort_order')
             ->get()
+            ->map(fn (Feature $feature) => [
+                'id' => $feature->id,
+                'name' => $feature->name,
+                'slug' => $feature->slug,
+                'description' => $feature->description,
+                'group' => $feature->group,
+                'suggested_plan' => $feature->suggested_plan,
+            ])
             ->groupBy('group')
             ->map(fn ($group) => $group->values());
 

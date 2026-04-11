@@ -395,6 +395,26 @@ export default function Landing({ plans }: Props) {
         return Array.from(map.values());
     }, [plans]);
 
+    const savingsMap = useMemo(() => {
+        const basePrices = new Map<string, number>(); // plan name -> quarterly price
+        plans.filter((p) => p.billing_interval === 'quarterly').forEach((p) => basePrices.set(p.name, p.price));
+
+        const savings = new Map<number, number>(); // planId -> percentage
+        plans.forEach((p) => {
+            const base = basePrices.get(p.name);
+            if (base && p.billing_interval !== 'quarterly') {
+                const multiplier = p.billing_interval === 'semi-annually' ? 2 : 4;
+                const expectedPrice = base * multiplier;
+                const actualPrice = p.price;
+                const percentage = Math.round(((expectedPrice - actualPrice) / expectedPrice) * 100);
+                if (percentage > 0) {
+                    savings.set(p.id, percentage);
+                }
+            }
+        });
+        return savings;
+    }, [plans]);
+
     // Sync modal state with URL hash
     useEffect(() => {
         // Clear modal and selected plan data on page load/reload
@@ -1003,6 +1023,7 @@ export default function Landing({ plans }: Props) {
                                             plan={plan}
                                             allFeatures={allFeatures}
                                             billingPeriod={billingPeriod}
+                                            savings={savingsMap.get(plan.id)}
                                             onSelect={() => openModalWithPlan(plan.id, plan.name, plan.billing_interval)}
                                         />
                                     ))}

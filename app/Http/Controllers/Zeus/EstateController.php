@@ -58,7 +58,7 @@ class EstateController extends Controller
         $action->execute($request->validated());
 
         return redirect()
-            ->route('zeus.dashboard')
+            ->route('zeus.estates.index')
             ->with('success', 'Estate created successfully. An invitation has been sent.');
     }
 
@@ -68,7 +68,9 @@ class EstateController extends Controller
             'estate' => array_merge(
                 $estate->only(['id', 'name', 'email', 'address', 'status']),
                 ['admin_accepted' => $estate->hasAcceptedAdmin()],
-                ['charge_type' => $estate->settings?->charge_type ?? 'estate']
+                ['charge_type' => $estate->settings?->charge_type ?? 'estate'],
+                ['free_trial_enabled' => $estate->settings?->free_trial_enabled ?? true],
+                ['free_trial_days' => $estate->settings?->free_trial_days ?? 30]
             ),
         ]);
     }
@@ -78,7 +80,7 @@ class EstateController extends Controller
         $action->execute($estate, $request->validated());
 
         return redirect()
-            ->route('zeus.dashboard')
+            ->route('zeus.estates.edit', $estate->id)
             ->with('success', 'Estate updated successfully.');
     }
 
@@ -89,7 +91,7 @@ class EstateController extends Controller
         $status = $estate->fresh()->status;
 
         return redirect()
-            ->route('zeus.dashboard')
+            ->route('zeus.estates.index')
             ->with('success', "Estate {$status} successfully.");
     }
 
@@ -98,7 +100,7 @@ class EstateController extends Controller
         $action->execute($estate);
 
         return redirect()
-            ->route('zeus.dashboard')
+            ->route('zeus.estates.index')
             ->with('success', 'Password reset link has been sent to the estate admin.');
     }
 
@@ -107,7 +109,7 @@ class EstateController extends Controller
         $action->execute($estate);
 
         return redirect()
-            ->route('zeus.dashboard')
+            ->route('zeus.estates.index')
             ->with('success', 'Estate deleted successfully.');
     }
 }

@@ -30,6 +30,8 @@ class UpdateEstateRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:500'],
             'status' => ['sometimes', 'in:active,inactive'],
             'charge_type' => ['sometimes', 'in:residents,estate'],
+            'free_trial_enabled' => ['sometimes', 'boolean'],
+            'free_trial_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
         ];
     }
 }

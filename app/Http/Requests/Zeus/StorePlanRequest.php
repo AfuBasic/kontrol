@@ -26,7 +26,7 @@ class StorePlanRequest extends FormRequest
             'slug' => ['required', 'string', 'max:255', 'unique:plans,slug'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
-            'billing_interval' => ['required', 'in:monthly,annual'],
+            'billing_interval' => ['required', 'in:quarterly,semi-annually,annually'],
             'is_featured' => ['boolean'],
             'badge' => ['nullable', 'string', 'max:100'],
             'color' => ['required', 'string', 'max:20'],
@@ -37,5 +37,23 @@ class StorePlanRequest extends FormRequest
             'features' => ['nullable', 'array'],
             'features.*' => ['integer', 'exists:features,id'],
         ];
+    }
+
+    /**
+     * Get custom validated data including null values for nullable fields.
+     */
+    public function validated($key = null, $default = null): mixed
+    {
+        $validated = parent::validated($key, $default);
+
+        // Ensure nullable fields are included even if they're null
+        $nullableFields = ['description', 'badge', 'max_residents', 'max_security', 'max_admins'];
+        foreach ($nullableFields as $field) {
+            if ($this->has($field) && ! isset($validated[$field])) {
+                $validated[$field] = $this->input($field);
+            }
+        }
+
+        return $validated;
     }
 }

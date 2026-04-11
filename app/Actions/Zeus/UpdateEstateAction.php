@@ -7,14 +7,23 @@ use App\Models\Estate;
 class UpdateEstateAction
 {
     /**
-     * @param  array{name?: string, email?: string, address?: string|null, status?: string, charge_type?: string}  $data
+     * @param  array{name?: string, email?: string, address?: string|null, status?: string, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
      */
     public function execute(Estate $estate, array $data): Estate
     {
-        // Extract charge_type before updating estate
+        // Extract settings-related fields before updating estate
         $chargeType = $data['charge_type'] ?? null;
+        $freeTrialEnabled = $data['free_trial_enabled'] ?? null;
+        $freeTrialDays = $data['free_trial_days'] ?? null;
+
         if (isset($data['charge_type'])) {
             unset($data['charge_type']);
+        }
+        if (isset($data['free_trial_enabled'])) {
+            unset($data['free_trial_enabled']);
+        }
+        if (isset($data['free_trial_days'])) {
+            unset($data['free_trial_days']);
         }
 
         // Check if email is being changed
@@ -38,11 +47,22 @@ class UpdateEstateAction
 
         $estate->update($data);
 
-        // Update charge_type in settings if provided
-        if ($chargeType) {
+        // Update settings if any settings-related fields are provided
+        $settingsData = [];
+        if ($chargeType !== null) {
+            $settingsData['charge_type'] = $chargeType;
+        }
+        if ($freeTrialEnabled !== null) {
+            $settingsData['free_trial_enabled'] = $freeTrialEnabled;
+        }
+        if ($freeTrialDays !== null) {
+            $settingsData['free_trial_days'] = $freeTrialDays;
+        }
+
+        if (! empty($settingsData)) {
             $estate->settings()->updateOrCreate(
                 ['estate_id' => $estate->id],
-                ['charge_type' => $chargeType]
+                $settingsData
             );
         }
 

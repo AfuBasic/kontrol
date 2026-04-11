@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('activity_log', function (Blueprint $table) {
-            $table->bigInteger('estate_id')->nullable()->change();
+        Schema::table('features', function (Blueprint $table) {
+            $table->enum('suggested_plan', ['basic', 'growth', 'pro'])->nullable()->after('group');
         });
     }
 
@@ -21,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // No-op: Keep estate_id nullable for backward compatibility
+        Schema::table('features', function (Blueprint $table) {
+            $table->dropColumn('suggested_plan');
+        });
     }
 };

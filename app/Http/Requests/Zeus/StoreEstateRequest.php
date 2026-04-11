@@ -21,6 +21,9 @@ class StoreEstateRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:estates,email', 'unique:users,email'],
             'address' => ['nullable', 'string', 'max:500'],
             'plan_id' => ['required', 'exists:plans,id'],
+            'charge_type' => ['sometimes', 'in:residents,estate'],
+            'free_trial_enabled' => ['sometimes', 'boolean'],
+            'free_trial_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
         ];
     }
 

@@ -35,6 +35,9 @@ export default function CreateEstate({ plans }: Props) {
         email: '',
         address: '',
         plan_id: plans.length > 0 ? plans[0].id : '',
+        charge_type: 'estate',
+        free_trial_enabled: true,
+        free_trial_days: 30,
     });
 
     const [selectedPlanId, setSelectedPlanId] = useState<number | string>(plans.length > 0 ? plans[0].id : '');
@@ -176,6 +179,71 @@ export default function CreateEstate({ plans }: Props) {
                                 ))}
                             </div>
                             {errors.plan_id && <p className="mt-2 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.plan_id}</p>}
+                        </div>
+
+                        {/* Billing Configuration */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
+                            <h3 className="mb-6 text-sm font-bold tracking-wider text-slate-900 uppercase">Billing Configuration</h3>
+                            <div className="space-y-6">
+                                {/* Billing Model */}
+                                <div>
+                                    <label htmlFor="charge_type" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                        Billing Model
+                                    </label>
+                                    <select
+                                        id="charge_type"
+                                        value={data.charge_type}
+                                        onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
+                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
+                                    >
+                                        <option value="estate">Charge Estate (Fixed)</option>
+                                        <option value="residents">Charge Residents (Per-resident)</option>
+                                    </select>
+                                    {errors.charge_type && (
+                                        <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.charge_type}</p>
+                                    )}
+                                </div>
+
+                                {/* Free Trial Toggle */}
+                                <div>
+                                    <label className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.free_trial_enabled}
+                                            onChange={(e) => setData('free_trial_enabled', e.target.checked)}
+                                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm font-bold text-slate-900">Enable Free Trial Period</span>
+                                    </label>
+                                    <p className="mt-2 text-[10px] leading-relaxed font-medium tracking-tight text-slate-400 uppercase">
+                                        Estate begins with a trial period before billing starts
+                                    </p>
+                                </div>
+
+                                {/* Trial Days (conditional) */}
+                                {data.free_trial_enabled && (
+                                    <div>
+                                        <label htmlFor="free_trial_days" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                            Trial Duration (Days)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="free_trial_days"
+                                            min="1"
+                                            max="365"
+                                            value={data.free_trial_days}
+                                            onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
+                                            className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
+                                        />
+                                        <p className="mt-2 text-[10px] leading-relaxed font-medium tracking-tight text-slate-400 uppercase">
+                                            Days from creation before first billing (1-365, default: 30)
+                                        </p>
+                                        {errors.free_trial_days && (
+                                            <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.free_trial_days}</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-end gap-3 pt-4">

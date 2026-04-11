@@ -10,6 +10,7 @@ interface Feature {
     slug: string;
     description: string | null;
     group: string;
+    suggested_plan: 'basic' | 'growth' | 'pro' | null;
 }
 
 interface CopyPlan {
@@ -36,6 +37,12 @@ interface Props {
 
 const colors = ['blue', 'indigo', 'purple', 'pink', 'red', 'orange', 'yellow', 'green', 'teal', 'cyan'];
 const billingIntervals = ['quarterly', 'semi-annually', 'annually'];
+
+const suggestedPlanStyles: Record<string, { badge: string; label: string }> = {
+    basic: { badge: 'bg-blue-100 text-blue-700', label: 'Basic' },
+    growth: { badge: 'bg-purple-100 text-purple-700', label: 'Growth' },
+    pro: { badge: 'bg-amber-100 text-amber-700', label: 'Pro' },
+};
 
 export default function CreatePlan({ features, copyPlan }: Props) {
     const { data, setData, post, processing, errors } = useForm({
@@ -113,7 +120,15 @@ export default function CreatePlan({ features, copyPlan }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post('/zeus/plans');
+        // Convert empty strings to null for nullable fields
+        const submitData = {
+            ...data,
+            badge: data.badge || null,
+            max_residents: data.max_residents ? Number(data.max_residents) : null,
+            max_security: data.max_security ? Number(data.max_security) : null,
+            max_admins: data.max_admins ? Number(data.max_admins) : null,
+        };
+        post('/zeus/plans', submitData);
     }
 
     return (
@@ -390,8 +405,17 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                                         onChange={() => handleFeatureToggle(feature.id)}
                                                         className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600"
                                                     />
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-900">{feature.name}</p>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-medium text-gray-900">{feature.name}</p>
+                                                            {feature.suggested_plan && (
+                                                                <span
+                                                                    className={`rounded px-2 py-0.5 text-[10px] font-semibold ${suggestedPlanStyles[feature.suggested_plan].badge}`}
+                                                                >
+                                                                    {suggestedPlanStyles[feature.suggested_plan].label}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         {feature.description && <p className="text-xs text-gray-500">{feature.description}</p>}
                                                     </div>
                                                 </label>

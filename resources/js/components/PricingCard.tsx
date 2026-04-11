@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, CheckIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface Feature {
     id: number;
@@ -27,10 +27,11 @@ interface Props {
     plan: Plan;
     allFeatures: Feature[];
     billingPeriod: 'quarterly' | 'semi-annually' | 'annually';
+    savings?: number;
     onSelect: (planId: number) => void;
 }
 
-export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect }: Props) {
+export default function PricingCard({ plan, allFeatures, billingPeriod, savings, onSelect }: Props) {
     const [showAll, setShowAll] = useState(false);
     const accent = plan.color || '#3b82f6'; // fallback blue
     const primaryFeatures = allFeatures.slice(0, 4);
@@ -39,7 +40,7 @@ export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect
     const billingIntervalLabel =
         {
             quarterly: 'per quarter',
-            'semi-annually': 'every 6 months',
+            'semi-annually': '6 months',
             annually: 'per year',
         }[plan.billing_interval] || plan.billing_interval;
 
@@ -77,13 +78,28 @@ export default function PricingCard({ plan, allFeatures, billingPeriod, onSelect
                     </div>
                 </div>
             )}
-
             <div className="relative z-20 flex flex-1 flex-col p-8 lg:p-10">
-                <h3 className={`text-xl font-bold tracking-tight text-white ${plan.is_featured ? 'mt-2' : ''}`}>{plan.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed font-light text-slate-400">{plan.description}</p>
-                <div className="mt-8 mb-2 flex items-baseline gap-x-2">
-                    <span className="text-5xl font-extrabold tracking-tight text-white drop-shadow-sm">{plan.formatted_price}</span>
-                    <span className="text-sm font-medium text-slate-400">/ {billingIntervalLabel}</span>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h3 className={`text-xl font-bold tracking-tight text-white ${plan.is_featured ? 'mt-2' : ''}`}>{plan.name}</h3>
+                        <p className="mt-2 text-sm leading-relaxed font-light text-slate-400">{plan.description}</p>
+                    </div>
+                </div>
+
+                <div className="mt-8 mb-2 flex flex-col items-start gap-2">
+                    {savings && savings > 0 && (
+                        <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-extrabold tracking-widest text-emerald-400 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)] uppercase">
+                            <BoltIcon className="mr-1.5 h-3 w-3" />
+                            Save {savings}% Today
+                        </div>
+                    )}
+                    <div className="flex items-baseline">
+                        <span className="mr-1 text-2xl font-bold text-slate-400 opacity-80">₦</span>
+                        <span className="text-5xl leading-none font-extrabold tracking-tight text-white drop-shadow-sm">
+                            {plan.formatted_price.replace(/[^\d.,]/g, '')}
+                        </span>
+                        <span className="ml-2 text-sm font-medium whitespace-nowrap text-slate-400/80">/ {billingIntervalLabel}</span>
+                    </div>
                 </div>
 
                 <ul className="mt-8 space-y-4 border-t border-slate-800/80 pt-8">
