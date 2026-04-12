@@ -3,7 +3,6 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDownIcon, Eye, EyeOff } from 'lucide-react';
 import { type FormEventHandler, useState } from 'react';
-import PushNotificationToggle from '@/components/PushNotificationToggle';
 import TelegramLinkToggle from '@/components/TelegramLinkToggle';
 import ResidentLayout from '@/layouts/ResidentLayout';
 import resident from '@/routes/resident';
@@ -358,7 +357,6 @@ function UpdatePasswordForm() {
 function NotificationsPanel({ telegram }: { telegram: Props['telegram'] }) {
     return (
         <div className="space-y-4">
-            <PushNotificationToggle />
             <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
         </div>
     );

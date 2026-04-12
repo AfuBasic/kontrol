@@ -1,12 +1,21 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+// Set this to true for local development with Simulator/Emulator
+const isDev = true;
+
 const config: CapacitorConfig = {
     appId: 'com.kontrol.app',
     appName: 'Kontrol',
     webDir: 'public',
     server: {
-        url: 'https://app.usekontrol.com',
-        cleartext: false,
+        // Toggle between your local Herd URL and production
+        // Using http for local dev to bypass SSL certificate issues in simulators
+        url: isDev ? 'http://app.kontrol.test' : 'https://app.usekontrol.com',
+        cleartext: isDev,
+        allowNavigation: [
+            'app.kontrol.test',
+            'kontrol.test'
+        ]
     },
     plugins: {
         SplashScreen: {
