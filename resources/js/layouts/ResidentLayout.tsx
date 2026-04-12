@@ -11,9 +11,7 @@ import HomeController from '@/actions/App/Http/Controllers/Resident/HomeControll
 import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
 import ContactModal from '@/components/ContactModal';
-import InstallPWABanner from '@/components/InstallPWABanner';
 import PullToRefresh from '@/components/PullToRefresh';
-import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import { useForceLogout } from '@/hooks/useForceLogout';
 import usePathFromUrl from '@/hooks/usePathFromUrl';
 
@@ -223,7 +221,6 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
 
                 {/* Main Content */}
                 <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-28">
-                    <InstallPWABanner />
                     {children}
                 </main>
 
@@ -263,9 +260,6 @@ export default function ResidentLayout({ children, hideNav = false }: Props) {
                         </div>
                     </motion.nav>
                 )}
-
-                {/* Push Notification Prompt */}
-                <PushNotificationPrompt />
 
                 {/* Toast Notification for New Posts */}
                 <AnimatePresence>

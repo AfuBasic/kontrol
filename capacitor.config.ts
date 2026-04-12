@@ -5,8 +5,19 @@ const config: CapacitorConfig = {
     appName: 'Kontrol',
     webDir: 'public',
     server: {
-        url: 'https://app.kontrol.test',
+        url: 'https://app.usekontrol.com',
         cleartext: false,
+    },
+    plugins: {
+        SplashScreen: {
+            launchShowDuration: 3000,
+            launchAutoHide: false,
+            backgroundColor: '#FFFFFF',
+            androidScaleType: 'FIT_CENTER',
+            showSpinner: false,
+            splashFullScreen: true,
+            splashImmersive: true,
+        },
     },
 };
 

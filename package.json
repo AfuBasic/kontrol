@@ -34,9 +34,12 @@
     },
     "dependencies": {
         "@capacitor/android": "^8.3.0",
+        "@capacitor/app": "^8.1.0",
         "@capacitor/cli": "^8.3.0",
         "@capacitor/core": "^8.3.0",
         "@capacitor/ios": "^8.3.0",
+        "@capacitor/splash-screen": "^8.0.1",
+        "@capacitor/status-bar": "^8.0.2",
         "@headlessui/react": "^2.2.9",
         "@heroicons/react": "^2.2.0",
         "@inertiajs/react": "^2.3.7",

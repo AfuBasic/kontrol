@@ -7,7 +7,6 @@ import EstateBoardController from '@/actions/App/Http/Controllers/Security/Estat
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
-import InstallPWABanner from '@/components/InstallPWABanner';
 import PullToRefresh from '@/components/PullToRefresh';
 import { useForceLogout } from '@/hooks/useForceLogout';
 
@@ -168,7 +167,6 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                 </motion.header>
 
                 <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
-                    <InstallPWABanner />
                     {children}
                 </main>
 

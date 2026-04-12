@@ -11,7 +11,6 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Webhooks\PaystackWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -59,13 +58,6 @@ Route::middleware('guest')->group(function (): void {
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
-
-// PWA bridge page - shown after OAuth to redirect back into the PWA
-Route::get('/auth/pwa-bridge', function (Request $request) {
-    $redirectUrl = $request->query('redirect', '/');
-
-    return view('auth.pwa-bridge', ['redirectUrl' => $redirectUrl]);
-})->middleware('auth')->name('auth.pwa-bridge');
 
 Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')

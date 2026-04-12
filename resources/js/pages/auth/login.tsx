@@ -1,5 +1,4 @@
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
-import { openInExternalBrowser, useIsStandalone } from '@/hooks/useIsStandalone';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
@@ -519,7 +518,6 @@ function RightPanelIllustration() {
 }
 
 export default function Login() {
-    const isStandalone = useIsStandalone();
     const { flash } = usePage<{ flash: { success?: string } }>().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
@@ -535,13 +533,7 @@ export default function Login() {
     }
 
     function handleGoogleSignIn() {
-        let googleAuthUrl = SocialLoginController.redirectToGoogle.url();
-        // Tell the server this came from PWA so it can redirect through the bridge page
-        if (isStandalone) {
-            const separator = googleAuthUrl.includes('?') ? '&' : '?';
-            googleAuthUrl = `${googleAuthUrl}${separator}pwa=1`;
-        }
-        openInExternalBrowser(googleAuthUrl, isStandalone);
+        window.location.href = SocialLoginController.redirectToGoogle.url();
     }
 
     return (

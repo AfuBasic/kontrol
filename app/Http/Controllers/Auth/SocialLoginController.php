@@ -16,12 +16,8 @@ class SocialLoginController
     /**
      * Redirect to Google OAuth.
      */
-    public function redirectToGoogle(Request $request): RedirectResponse
+    public function redirectToGoogle(): RedirectResponse
     {
-        if ($request->has('pwa')) {
-            session(['oauth_from_pwa' => true]);
-        }
-
         return Socialite::driver('google')->redirect();
     }
 
@@ -67,10 +63,6 @@ class SocialLoginController
         $this->storePasswordHashInSession($user);
 
         $redirectUrl = $this->getRedirectUrl($user);
-
-        if (session()->pull('oauth_from_pwa')) {
-            return redirect()->route('auth.pwa-bridge', ['redirect' => $redirectUrl]);
-        }
 
         return redirect($redirectUrl);
     }
