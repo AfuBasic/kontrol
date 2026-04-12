@@ -8,10 +8,12 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\EstateContextService;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Models\Activity;
 
 class AccessCodeService
 {
@@ -177,7 +179,7 @@ class AccessCodeService
             ->forUser($user->id)
             ->pluck('id');
 
-        $activities = \Spatie\Activitylog\Models\Activity::query()
+        $activities = Activity::query()
             ->where(function ($query) use ($codeIds, $user) {
                 // Access code activities
                 $query->where(function ($q) use ($codeIds) {
@@ -213,7 +215,7 @@ class AccessCodeService
      *
      * @return array{type: string, message: string, time: string, time_full: string, detail?: string, ip_address?: string}
      */
-    private function mapUserActivity(\Spatie\Activitylog\Models\Activity $activity): array
+    private function mapUserActivity(Activity $activity): array
     {
         $type = match ($activity->description) {
             'logged in' => 'logged_in',
@@ -250,7 +252,7 @@ class AccessCodeService
      *
      * @return array{type: string, message: string, time: string, time_full: string, code: string, visitor: string|null}
      */
-    private function mapAccessCodeActivity(\Spatie\Activitylog\Models\Activity $activity): array
+    private function mapAccessCodeActivity(Activity $activity): array
     {
         /** @var AccessCode|null $code */
         $code = $activity->subject;
@@ -436,9 +438,9 @@ class AccessCodeService
     /**
      * Get usage history for an access code with cursor pagination.
      *
-     * @return \Illuminate\Contracts\Pagination\CursorPaginator<\App\Models\AccessLog>
+     * @return CursorPaginator<\App\Models\AccessLog>
      */
-    public function getUsageHistory(AccessCode $accessCode, ?string $dateFilter = null, int $perPage = 15): \Illuminate\Contracts\Pagination\CursorPaginator
+    public function getUsageHistory(AccessCode $accessCode, ?string $dateFilter = null, int $perPage = 15): CursorPaginator
     {
         $query = $accessCode->accessLogs()
             ->with('verifier:id,name')

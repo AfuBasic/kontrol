@@ -33,6 +33,7 @@ import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/Se
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import PendingInvoiceNotification from '@/components/PendingInvoiceNotification';
 import Toast from '@/components/Toast'; // Added import
 import { useSidebarState } from '@/hooks/useSidebarState';
 import AnimatedLayout from '@/layouts/AnimatedLayout';
@@ -66,8 +67,8 @@ const primaryNav: NavItem[] = baseNav;
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
 export default function AdminLayout({ children }: Props) {
-    const page = usePage<SharedData & { flash: { success?: string; error?: string }; billing_enabled?: boolean; has_overdue_invoice?: boolean }>();
-    const { auth, flash, billing_enabled, has_overdue_invoice } = page.props;
+    const page = usePage<SharedData & { flash: { success?: string; error?: string }; billing_enabled?: boolean; has_overdue_invoice?: boolean; pendingInvoice?: any }>();
+    const { auth, flash, billing_enabled, has_overdue_invoice, pendingInvoice } = page.props;
     const { url: fullUrl } = page;
     // Strip query params for path matching
     const url = fullUrl.split('?')[0];
@@ -854,6 +855,7 @@ export default function AdminLayout({ children }: Props) {
                     )}
                     {/* Content Body */}
                     <div className="p-6 lg:p-8">
+                        <PendingInvoiceNotification invoice={pendingInvoice} />
                         <AnimatedLayout>{children}</AnimatedLayout>
                     </div>
                 </motion.main>

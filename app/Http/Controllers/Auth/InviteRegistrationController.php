@@ -7,6 +7,8 @@ use App\Models\Estate;
 use App\Models\EstateInviteLink;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Notifications\Admin\NewResidentSignup;
+use App\Notifications\VerifyResidentEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class InviteRegistrationController extends Controller
 {
@@ -70,7 +73,7 @@ class InviteRegistrationController extends Controller
             ]);
 
             // Assign 'resident' role scoped to this estate
-            $role = \Spatie\Permission\Models\Role::where('name', 'resident')
+            $role = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
                 ->whereNull('estate_id')
                 ->firstOrFail();
@@ -79,7 +82,7 @@ class InviteRegistrationController extends Controller
             $user->assignRole($role);
 
             // Send verification email
-            $user->notify(new \App\Notifications\VerifyResidentEmail($inviteLink->estate));
+            $user->notify(new VerifyResidentEmail($inviteLink->estate));
 
             // Create profile
             UserProfile::create([
@@ -100,7 +103,7 @@ class InviteRegistrationController extends Controller
             if ($inviteLink->requires_approval) {
                 $admins = User::withRole('admin', $inviteLink->estate_id)->get();
                 if ($admins->isNotEmpty()) {
-                    Notification::send($admins, new \App\Notifications\Admin\NewResidentSignup($user, $inviteLink->estate->name));
+                    Notification::send($admins, new NewResidentSignup($user, $inviteLink->estate->name));
                 }
             }
 

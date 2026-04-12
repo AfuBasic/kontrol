@@ -56,7 +56,7 @@ class CreateEstateAction
 
             // 6. Create estate settings with billing model and free trial configuration
             $settingsData = [
-                'charge_type' => $data['charge_type'] ?? 'estate',
+                'charge_type' => $data['charge_type'] ?? 'residents',
                 'free_trial_enabled' => $data['free_trial_enabled'] ?? true,
                 'free_trial_days' => $data['free_trial_days'] ?? 30,
             ];

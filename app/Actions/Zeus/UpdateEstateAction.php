@@ -3,6 +3,7 @@
 namespace App\Actions\Zeus;
 
 use App\Models\Estate;
+use Illuminate\Validation\ValidationException;
 
 class UpdateEstateAction
 {
@@ -29,7 +30,7 @@ class UpdateEstateAction
         // Check if email is being changed
         if (isset($data['email']) && $data['email'] !== $estate->email) {
             if ($estate->hasAcceptedAdmin()) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'email' => 'The estate admin email cannot be changed once the invitation has been accepted.',
                 ]);
             }

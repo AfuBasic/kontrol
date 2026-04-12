@@ -5,8 +5,10 @@ namespace App\Actions\Billing;
 use App\Events\Billing\InvoiceGenerated;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\User;
 use App\Services\BillingCycleService;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class GenerateInvoiceAction
 {
@@ -30,7 +32,7 @@ class GenerateInvoiceAction
         return DB::transaction(function () use ($estate, $subscription, $isFirstInvoice) {
             // Count active residents (billed) - only accepted members with resident role
             // Get resident role first, then count users with that role and accepted status
-            $residentRole = \Spatie\Permission\Models\Role::where('name', 'resident')
+            $residentRole = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
                 ->whereNull('estate_id')
                 ->first();
@@ -43,18 +45,15 @@ class GenerateInvoiceAction
                         $q->select('model_has_roles.model_id')
                             ->from('model_has_roles')
                             ->where('model_has_roles.role_id', $residentRole->id)
-                            ->where('model_has_roles.model_type', \App\Models\User::class)
+                            ->where('model_has_roles.model_type', User::class)
                             ->where('model_has_roles.estate_id', $estate->id);
                     })
                     ->count();
             }
 
-            // Compute amount: plan price × resident count
-            $amount = ($subscription->plan->price ?? 0) * $activeResidents;
-
             // Calculate period dates
             // For first invoice, start from trial end date; otherwise from next_billing_date
-            $periodStart = $isFirstInvoice
+            $periodStart = $isFirstInvoice && $subscription->trial_ends_at
                 ? $subscription->trial_ends_at->startOfDay()
                 : ($subscription->next_billing_date ?? now()->startOfDay());
 
@@ -64,7 +63,34 @@ class GenerateInvoiceAction
                 'annually' => $periodStart->copy()->addYear()->subDay(),
                 default => $periodStart->copy()->endOfDay(),
             };
+
             $dueDate = $periodStart->copy()->addDays(7);
+            $nextDate = $periodEnd->copy()->addDay();
+
+            // Handle Zero Residents Case: Skip Invoice Generation
+            if ($activeResidents === 0) {
+                // Advance subscription state even if no invoice is generated
+                if ($subscription->billing_anchor_day === null) {
+                    $subscription->update(['billing_anchor_day' => $periodStart->day]);
+                }
+
+                $subscription->update([
+                    'status' => 'active',
+                    'trial_ends_at' => null,
+                    'next_billing_date' => $nextDate,
+                ]);
+
+                // Log activity for clarity
+                activity()
+                    ->on($estate)
+                    ->withProperties(['reason' => 'zero_residents', 'period_start' => $periodStart->toDateString()])
+                    ->log('Invoice skipped due to zero residents');
+
+                return null;
+            }
+
+            // Compute amount: plan price × resident count
+            $amount = ($subscription->plan->price ?? 0) * $activeResidents;
 
             // Generate unique invoice number
             $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id);
@@ -90,9 +116,6 @@ class GenerateInvoiceAction
             }
 
             // Update subscription: clear trial, set next billing date
-            // Next billing date is the day after this period ends
-            $nextDate = $periodEnd->addDay();
-
             $subscription->update([
                 'status' => 'active',
                 'trial_ends_at' => null,

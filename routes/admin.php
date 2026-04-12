@@ -120,6 +120,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     // Billing (gated by charge_type === 'estate' in controllers)
     Route::prefix('billing')->name('billing.')->group(function (): void {
         Route::get('/', BillingController::class)->name('index');
+        Route::get('/invoice', [InvoiceController::class, 'showPending'])->name('invoice.pending');
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');

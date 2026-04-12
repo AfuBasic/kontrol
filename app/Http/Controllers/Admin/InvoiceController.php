@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendInvoiceMail;
 use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Services\Admin\BillingService;
+use App\Services\Billing\InvoiceGenerationService;
+use App\Services\Billing\PaymentVerificationService;
 use App\Services\EstateContextService;
 use App\Services\PaystackService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +23,7 @@ class InvoiceController extends Controller
         private EstateContextService $estateContext,
         private BillingService $billingService,
         private PaystackService $paystackService,
+        private InvoiceGenerationService $invoiceGenerationService,
     ) {}
 
     public function index(): Response
@@ -33,6 +39,35 @@ class InvoiceController extends Controller
 
         return Inertia::render('admin/billing/invoices', [
             'invoices' => $invoices,
+        ]);
+    }
+
+    /**
+     * Show pending (or generate) invoice for the current estate.
+     * Refreshes invoice on every page load.
+     */
+    public function showPending(): Response
+    {
+        $estate = $this->estateContext->getEstate();
+
+        abort_if($estate->settings->charge_type !== 'estate', 403);
+
+        $invoice = $this->invoiceGenerationService->getOrCreatePendingInvoice($estate);
+
+        abort_if(! $invoice, 404, 'No pending invoice. Add residents to your estate to generate an invoice.');
+
+        // Share pending invoice globally for the notification banner
+        Inertia::share('pendingInvoice', [
+            'id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'amount' => $invoice->amount,
+            'status' => $invoice->status,
+            'due_date' => $invoice->due_date?->toDateString(),
+            'created_at' => $invoice->created_at?->toDateString(),
+        ]);
+
+        return Inertia::render('admin/billing/invoice-detail', [
+            'invoice' => $invoice->load(['plan', 'paymentTransactions']),
         ]);
     }
 
@@ -71,7 +106,7 @@ class InvoiceController extends Controller
             // If there's a successful transaction that hasn't been recorded, verify it
             if ($existingTransaction && $existingTransaction->status === 'success' && ! $existingTransaction->recorded_at) {
                 \Log::info('Payment flow: verifying unrecorded successful transaction');
-                $verificationService = app(\App\Services\Billing\PaymentVerificationService::class);
+                $verificationService = app(PaymentVerificationService::class);
                 $verificationService->verifyAndRecordPayment(
                     $existingTransaction->paystack_reference,
                     $invoice,
@@ -100,7 +135,7 @@ class InvoiceController extends Controller
                 'invoice_id' => $invoice->id,
                 'estate_id' => $estate->id,
                 'paystack_reference' => $invoice->invoice_number,
-                'idempotency_key' => (string) \Illuminate\Support\Str::uuid(),
+                'idempotency_key' => (string) Str::uuid(),
                 'amount' => $invoice->amount,
                 'currency' => 'NGN',
                 'status' => 'pending',
@@ -153,7 +188,7 @@ class InvoiceController extends Controller
     private function handleDuplicateReference(Invoice $invoice, PaymentTransaction $transaction): ?RedirectResponse
     {
         $verificationService = app(\App\Services\Billing\PaymentVerificationService::class);
-        $maxRetries = \App\Services\Billing\PaymentVerificationService::MAX_RETRY_ATTEMPTS;
+        $maxRetries = PaymentVerificationService::MAX_RETRY_ATTEMPTS;
 
         try {
             // Step 1: Verify the original reference first
@@ -240,7 +275,7 @@ class InvoiceController extends Controller
                 return back()->with('error', 'No email address found for this estate.');
             }
 
-            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\SendInvoiceMail($invoice));
+            Mail::to($email)->send(new SendInvoiceMail($invoice));
 
             // Update last sent timestamp
             $invoice->update(['last_sent_email_at' => now()]);
@@ -288,7 +323,7 @@ class InvoiceController extends Controller
             }
 
             // Record the payment
-            $verificationService = app(\App\Services\Billing\PaymentVerificationService::class);
+            $verificationService = app(PaymentVerificationService::class);
             $verificationService->verifyAndRecordPayment(
                 $transaction->paystack_reference,
                 $invoice,

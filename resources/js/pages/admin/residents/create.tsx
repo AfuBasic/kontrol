@@ -2,7 +2,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, RefreshCw, Share2, Upload, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import Papa from 'papaparse';
 import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import {
     store as inviteLinkStore,
@@ -110,43 +111,66 @@ export default function CreateResident({ inviteLink }: Props) {
         setIsProcessing(true);
         setFileName(file.name);
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = event.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
+        const isCsv = file.name.toLowerCase().endsWith('.csv');
 
-                const emails: string[] = [];
-
-                // Process all sheets
-                for (const sheetName of workbook.SheetNames) {
-                    const sheet = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 });
-
-                    for (const row of rows) {
+        if (isCsv) {
+            Papa.parse(file, {
+                header: false,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    const emails: string[] = [];
+                    results.data.forEach((row: any) => {
                         if (Array.isArray(row)) {
                             const email = extractEmailsFromRow(row);
                             if (email && !emails.includes(email)) {
                                 emails.push(email);
                             }
                         }
-                    }
+                    });
+                    setExtractedEmails(emails);
+                    setIsProcessing(false);
+                },
+                error: () => {
+                    setBulkError('Failed to parse CSV file.');
+                    setIsProcessing(false);
+                },
+            });
+        } else {
+            // Assume XLSX
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const buffer = event.target?.result as ArrayBuffer;
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(buffer);
+
+                    const emails: string[] = [];
+
+                    workbook.eachSheet((sheet) => {
+                        sheet.eachRow((row) => {
+                            // exceljs row.values can be an array where index 0 is null/empty
+                            const values = Array.isArray(row.values) ? row.values.slice(1) : [];
+                            const email = extractEmailsFromRow(values);
+                            if (email && !emails.includes(email)) {
+                                emails.push(email);
+                            }
+                        });
+                    });
+
+                    setExtractedEmails(emails);
+                    setIsProcessing(false);
+                } catch (err) {
+                    console.error('Excel parse error:', err);
+                    setBulkError('Failed to parse Excel file. Please ensure it is a valid .xlsx file.');
+                    setIsProcessing(false);
                 }
-
-                setExtractedEmails(emails);
+            };
+            reader.onerror = () => {
+                setBulkError('Failed to read file.');
                 setIsProcessing(false);
-            } catch {
-                setBulkError('Failed to parse file. Please ensure it is a valid Excel or CSV file.');
-                setIsProcessing(false);
-            }
-        };
-
-        reader.onerror = () => {
-            setBulkError('Failed to read file.');
-            setIsProcessing(false);
-        };
-
-        reader.readAsBinaryString(file);
+            };
+            reader.readAsArrayBuffer(file);
+        }
     }, []);
 
     // Handle paste text change
@@ -475,11 +499,11 @@ export default function CreateResident({ inviteLink }: Props) {
                                             <span className="text-sm font-medium text-gray-700">
                                                 {fileName ? fileName : 'Click to upload or drag and drop'}
                                             </span>
-                                            <span className="mt-1 text-xs text-gray-500">.xlsx, .xls, .csv</span>
+                                            <span className="mt-1 text-xs text-gray-500">.xlsx, .csv</span>
                                             <input
                                                 id="file-upload"
                                                 type="file"
-                                                accept=".xlsx,.xls,.csv"
+                                                accept=".xlsx,.csv"
                                                 onChange={handleFileUpload}
                                                 className="hidden"
                                             />

@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\DetermineUserRedirect;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EmailVerificationController extends Controller
 {
     /**
      * Mark the authenticated user's email address as verified.
      */
-    public function verify(\Illuminate\Http\Request $request, $id, $hash)
+    public function verify(Request $request, $id, $hash)
     {
         $user = User::findOrFail($id);
 
@@ -24,7 +27,7 @@ class EmailVerificationController extends Controller
         }
 
         if ($user->markEmailAsVerified()) {
-            event(new \Illuminate\Auth\Events\Verified($user));
+            event(new Verified($user));
         }
 
         // Check the user's estate membership status
@@ -32,9 +35,9 @@ class EmailVerificationController extends Controller
         $status = $membership?->pivot?->status ?? 'pending';
 
         if ($status === 'accepted') {
-            \Illuminate\Support\Facades\Auth::login($user);
+            Auth::login($user);
 
-            $redirectAction = new \App\Actions\Auth\DetermineUserRedirect;
+            $redirectAction = new DetermineUserRedirect;
             $redirectUrl = $redirectAction->execute($user);
 
             return redirect($redirectUrl)->with('success', 'Email verified successfully! Welcome to the platform.');

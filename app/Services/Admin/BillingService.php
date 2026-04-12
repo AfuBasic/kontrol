@@ -3,10 +3,12 @@
 namespace App\Services\Admin;
 
 use App\Models\Invoice;
+use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
 use App\Services\BillingCycleService;
 use App\Services\EstateContextService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Spatie\Permission\Models\Role;
 
 class BillingService
 {
@@ -43,7 +45,7 @@ class BillingService
             ];
         }
 
-        $residentRole = \Spatie\Permission\Models\Role::where('name', 'resident')
+        $residentRole = Role::where('name', 'resident')
             ->where('guard_name', 'web')
             ->whereNull('estate_id')
             ->first();
@@ -56,7 +58,7 @@ class BillingService
                     $q->select('model_has_roles.model_id')
                         ->from('model_has_roles')
                         ->where('model_has_roles.role_id', $residentRole->id)
-                        ->where('model_has_roles.model_type', \App\Models\User::class)
+                        ->where('model_has_roles.model_type', User::class)
                         ->where('model_has_roles.estate_id', $estate->id);
                 })
                 ->count();
