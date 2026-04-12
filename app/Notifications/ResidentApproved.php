@@ -13,6 +13,8 @@ use Illuminate\Queue\SerializesModels;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -27,14 +29,19 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
         public Estate $estate
     ) {}
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail', FcmChannel::class];
+        $channels = ['database', 'broadcast', 'mail'];
+
+        if ($notifiable->fcm_token) {
+            $channels[] = FcmChannel::class;
+        }
+
+        if ($notifiable->pushSubscriptions()->exists()) {
+            $channels[] = WebPushChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
@@ -102,6 +109,23 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Get the WebPush representation of the notification.
+     */
+    public function toWebPush(object $notifiable): WebPushMessage
+    {
+        $data = $this->notificationData();
+
+        return (new WebPushMessage)
+            ->title($data['title'])
+            ->body($data['message'])
+            ->action('View Details', $data['action_url'])
+            ->data(['action_url' => $data['action_url']])
+            ->options([
+                'vibrate' => [100, 50, 100],
+            ]);
     }
 
     /**

@@ -10,6 +10,8 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class ResidentInvitedNotification extends Notification implements ShouldQueue
 {
@@ -29,6 +31,10 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
 
         if ($notifiable->fcm_token) {
             $channels[] = FcmChannel::class;
+        }
+
+        if ($notifiable->pushSubscriptions()->exists()) {
+            $channels[] = WebPushChannel::class;
         }
 
         return $channels;
@@ -82,5 +88,22 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Get the WebPush representation of the notification.
+     */
+    public function toWebPush(object $notifiable): WebPushMessage
+    {
+        $data = $this->toArray($notifiable);
+
+        return (new WebPushMessage)
+            ->title($data['title'])
+            ->body($data['message'])
+            ->action('View Residents', '/admin/residents')
+            ->data(['action_url' => '/admin/residents'])
+            ->options([
+                'vibrate' => [100, 50, 100],
+            ]);
     }
 }

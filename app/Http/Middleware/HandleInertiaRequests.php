@@ -48,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                 setPermissionsTeamId($estate->id);
             }
 
-            $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p->name])->values()->all();
+            $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
             $roles = $user->getRoleNames()->toArray();
         }
 
