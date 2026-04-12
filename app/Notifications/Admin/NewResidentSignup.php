@@ -10,6 +10,9 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -32,7 +35,31 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        return ['database', 'broadcast', 'mail', FcmChannel::class];
+    }
+
+    public function toFcm(object $notifiable): FcmMessage
+    {
+        return (new FcmMessage(notification: new FcmNotification(
+            title: 'New Resident Request',
+            body: "{$this->resident->name} is requesting to join {$this->estateName}.",
+        )))
+            ->data(['url' => route('admin.residents.approvals.index')])
+            ->custom([
+            'android' => [
+                'notification' => [
+                    'click_action' => 'TOP_STORY_ACTIVITY',
+                ],
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'badge' => $notifiable->unreadNotifications()->count(),
+                        'sound' => 'default',
+                    ],
+                ],
+            ],
+        ]);
     }
 
     /**

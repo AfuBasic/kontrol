@@ -43,7 +43,7 @@ class RoleController extends Controller
         $this->authorize('roles.create');
         $action->execute($request->validated());
 
-        return redirect()->route('roles.index')
+        return redirect()->route('admin.roles.index')
             ->with('success', 'Role created successfully.');
     }
 
@@ -67,7 +67,7 @@ class RoleController extends Controller
         $this->authorize('roles.edit');
         $action->execute($role, $request->validated());
 
-        return redirect()->route('roles.index')
+        return redirect()->route('admin.roles.index')
             ->with('success', 'Role updated successfully.');
     }
 
@@ -76,7 +76,7 @@ class RoleController extends Controller
         $this->authorize('roles.delete');
         $action->execute($role);
 
-        return redirect()->route('roles.index')
+        return redirect()->route('admin.roles.index')
             ->with('success', 'Role deleted successfully.');
     }
 }

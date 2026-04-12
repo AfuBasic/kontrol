@@ -25,8 +25,8 @@ class CreateResidentAction
                 'password' => null,
             ]);
 
-            // 2. Attach user to estate with pending status
-            $estate->users()->attach($user->id, ['status' => 'pending']);
+            // 2. Attach user to estate with accepted status (admin invited them, so they are pre-approved)
+            $estate->users()->attach($user->id, ['status' => 'accepted']);
 
             // 3. Assign global resident role scoped to this estate
             $role = Role::where('name', 'resident')

@@ -14,6 +14,9 @@ class NotificationController extends Controller
      */
     public function index(Request $request): Response
     {
+        // Mark all as read when visiting the notifications page
+        $request->user()->unreadNotifications->markAsRead();
+
         $notifications = $request->user()
             ->notifications()
             ->when($request->search, function ($query, $search) {

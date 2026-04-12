@@ -130,9 +130,15 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                     {notifications.data.map((notification) => (
                                         <li
                                             key={notification.id}
+                                            onClick={() => {
+                                                const url = notification.data.action_url || (notification.data as any).url;
+                                                if (url) {
+                                                    router.visit(url);
+                                                }
+                                            }}
                                             className={`relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6 ${
                                                 !notification.read_at ? 'bg-primary-50/30' : ''
-                                            }`}
+                                            } ${notification.data.action_url || (notification.data as any).url ? 'cursor-pointer' : ''}`}
                                         >
                                             <div className="flex min-w-0 gap-x-4">
                                                 <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary-100">
@@ -158,8 +164,11 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                             <div className="flex shrink-0 items-center gap-x-4">
                                                 {!notification.read_at && (
                                                     <button
-                                                        onClick={() => markAsRead(notification.id)}
-                                                        className="text-sm font-medium text-primary-600 hover:text-primary-500"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            markAsRead(notification.id);
+                                                        }}
+                                                        className="relative z-10 text-sm font-medium text-primary-600 hover:text-primary-500"
                                                     >
                                                         Mark as read
                                                     </button>

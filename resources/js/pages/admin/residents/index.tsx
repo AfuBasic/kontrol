@@ -1,12 +1,13 @@
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, PlusIcon, ArrowRightIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LinkIcon, Mail, Trash2 } from 'lucide-react';
+import { LinkIcon, Mail, Trash2, MapPin, Phone, User, Loader2, Check } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import ResidentActions from '@/components/Admin/ResidentActions';
+import ResidentsSkeleton from '@/components/Admin/ResidentsSkeleton';
 
 import { useDebounce } from '@/hooks/useDebounce';
 import { usePermission } from '@/hooks/usePermission';
@@ -35,7 +36,7 @@ type PaginatedResidents = {
 };
 
 type Props = {
-    residents: PaginatedResidents;
+    residents: PaginatedResidents & { next_page_url: string | null };
     filters: {
         search?: string;
         status?: string;
@@ -45,47 +46,49 @@ type Props = {
 
 export default function Residents({ residents, filters, pendingCount }: Props) {
     const { can } = usePermission();
-    const hasResidents = residents.data.length > 0;
+    const hasResidents = residents && residents.data && residents.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const debouncedSearch = useDebounce(search, 300);
 
     // Clear selection when page changes
     useEffect(() => {
         setSelectedIds([]);
-    }, [residents.current_page]);
+    }, [residents?.current_page]);
 
     // Debounce search
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, replace: true });
+            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, preserveScroll: true, replace: true });
         }
     }, [debouncedSearch, filters.search, status]);
 
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;
         setStatus(newStatus);
-        router.get(index.url(), { search, status: newStatus }, { preserveState: true, replace: true });
+        router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const clearFilters = useCallback(() => {
         setSearch('');
         setStatus('');
-        router.get(index.url(), {}, { preserveState: true, replace: true });
+        router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
     }, []);
 
     const hasActiveFilters = Boolean(search || status);
 
     const toggleSelectAll = useCallback(() => {
+        if (!residents?.data) return;
         if (selectedIds.length === residents.data.length) {
             setSelectedIds([]);
         } else {
             setSelectedIds(residents.data.map((r) => r.id));
         }
-    }, [selectedIds.length, residents.data]);
+    }, [selectedIds.length, residents?.data]);
 
     const toggleSelect = useCallback((id: number) => {
         setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -105,81 +108,95 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
         });
     }, [selectedIds]);
 
-    const isAllSelected = residents.data.length > 0 && selectedIds.length === residents.data.length;
-    const isSomeSelected = selectedIds.length > 0 && selectedIds.length < residents.data.length;
+    const isAllSelected = (residents?.data?.length ?? 0) > 0 && selectedIds.length === (residents?.data?.length ?? 0);
+    const isSomeSelected = selectedIds.length > 0 && selectedIds.length < (residents?.data?.length ?? 0);
+
+    const loadMore = () => {
+        if (residents.next_page_url && !isLoadingMore) {
+            setIsLoadingMore(true);
+            router.get(
+                residents.next_page_url,
+                {},
+                {
+                    preserveScroll: true,
+                    only: ['residents'],
+                    // @ts-expect-error - merge is a new Inertia v2 feature
+                    merge: true,
+                    onFinish: () => setIsLoadingMore(false),
+                },
+            );
+        }
+    };
 
     return (
         <AdminLayout>
             <Head title="Residents" />
 
             {/* Page Header */}
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Residents</h1>
-                    <p className="mt-1 text-gray-500">Manage residents in your estate.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Residents</h1>
+                    <p className="mt-1 text-slate-500">Manage and oversee all estate residents.</p>
                 </div>
                 {can('residents.create') && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                         <Link
                             href={inviteLinkIndex.url()}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                         >
-                            <LinkIcon className="h-5 w-5" />
+                            <LinkIcon className="h-4 w-4" />
                             Manage Invite Link
                         </Link>
                         <Link
                             href={index.url() + '/create'}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                            className="flex items-center justify-center gap-2 rounded-2xl bg-[#1F6FDB] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95"
                         >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
+                            <PlusIcon className="h-5 w-5" />
                             Add Resident
                         </Link>
                     </div>
                 )}
             </div>
 
-            {/* Pending Approvals Notice */}
+            {/* Pending Approvals Notice - Glassmorphism Redesign */}
             <AnimatePresence>
-                {pendingCount > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-8"
-                    >
+                {pendingCount && pendingCount > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-8">
                         <Link
                             href={approvalsIndex.url()}
-                            className="flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50 p-4 transition-all hover:bg-primary-100/50"
+                            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-3xl border border-blue-100 bg-linear-to-br from-blue-50/50 to-indigo-50/50 p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98] sm:flex-row sm:items-center sm:justify-between"
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                                    <Mail className="h-5 w-5" />
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 shadow-inner ring-4 ring-blue-50">
+                                    <Mail className="h-7 w-7" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-primary-900">
+                                    <p className="text-lg font-black tracking-tight text-blue-900">
                                         {pendingCount} Pending Application{pendingCount > 1 ? 's' : ''}
                                     </p>
-                                    <p className="text-sm text-primary-700">New residents are waiting for your approval to join the estate.</p>
+                                    <p className="text-sm leading-relaxed text-blue-700/80">Approvals required for new resident sign-ups.</p>
                                 </div>
                             </div>
-                            <div className="ml-4 flex items-center gap-2 border-l border-primary-200 pl-4 font-semibold whitespace-nowrap text-primary-600">
-                                Review Requests
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                </svg>
+                            <div className="flex w-full items-center justify-between border-t border-blue-100 pt-4 sm:w-auto sm:border-0 sm:pt-0">
+                                <span className="text-sm font-bold text-blue-600 sm:hidden">Action Required</span>
+                                <div className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all group-hover:bg-blue-700 group-hover:px-5">
+                                    Review
+                                    <ArrowRightIcon className="h-4 w-4" />
+                                </div>
                             </div>
+                            {/* Decorative Blobs */}
+                            <div className="absolute -top-12 -right-12 h-24 w-24 rounded-full bg-blue-400/5 blur-3xl" />
+                            <div className="absolute -bottom-12 -left-12 h-24 w-24 rounded-full bg-indigo-400/5 blur-3xl" />
                         </Link>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Filters */}
+            {/* Filters Section - Modernized */}
             <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                 <div className="relative flex-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                        <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
                     </div>
                     <input
                         type="text"
@@ -187,29 +204,27 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                         id="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="Search residents by name or email..."
+                        className="block w-full rounded-2xl border-0 bg-white py-3.5 pl-11 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
+                        placeholder="Search residents..."
                     />
                 </div>
-                <div className="w-full sm:w-48">
+                <div className="w-full sm:w-56">
                     <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <FunnelIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <FunnelIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
                         </div>
                         <select
                             value={status}
                             onChange={handleStatusChange}
-                            className="block w-full appearance-none rounded-lg border border-gray-300 bg-white py-2.5 pr-8 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                            className="block w-full appearance-none rounded-2xl border-0 bg-white py-3.5 pr-10 pl-11 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
                         >
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="pending">Pending</option>
-                            <option value="suspended">Suspended</option>
+                            <option value="">All Statuses</option>
+                            <option value="active">Active Residents</option>
+                            <option value="pending">Pending Invites</option>
+                            <option value="suspended">Suspended Users</option>
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <ChevronDownIcon className="h-5 w-5" />
                         </div>
                     </div>
                 </div>
@@ -217,10 +232,10 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                     <button
                         type="button"
                         onClick={clearFilters}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                     >
                         <XMarkIcon className="h-4 w-4" />
-                        Clear
+                        Reset
                     </button>
                 )}
             </div>
@@ -256,17 +271,91 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                 )}
             </AnimatePresence>
 
-            {/* Content */}
-            <div className="rounded-xl border border-gray-200 bg-white">
-                {hasResidents ? (
+            {/* Content Container */}
+            <div className="space-y-4">
+                {!residents ? (
+                    <ResidentsSkeleton />
+                ) : hasResidents ? (
                     <>
-                        {/* Table */}
-                        <div className="overflow-x-auto lg:overflow-visible">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                        {/* Mobile Card List (Hidden on Desktop) */}
+                        <div className="flex flex-col gap-4 sm:hidden">
+                            <AnimatePresence mode="popLayout">
+                                {residents.data.map((resident) => (
+                                    <motion.div
+                                        layout
+                                        key={resident.id}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className={`group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all active:bg-slate-50 ${
+                                            selectedIds.includes(resident.id) ? 'bg-blue-50/30 ring-2 ring-blue-500' : ''
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleSelect(resident.id);
+                                                    }}
+                                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black shadow-inner transition-colors ${
+                                                        selectedIds.includes(resident.id) ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'
+                                                    }`}
+                                                >
+                                                    {selectedIds.includes(resident.id) ? (
+                                                        <Check className="h-6 w-6" strokeWidth={3} />
+                                                    ) : (
+                                                        resident.name.charAt(0).toUpperCase()
+                                                    )}
+                                                </div>
+                                                <div onClick={() => toggleSelect(resident.id)}>
+                                                    <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                                                        <MapPin className="h-3 w-3" />
+                                                        {resident.unit_number || 'Unit Pending'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span
+                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest uppercase ${
+                                                        resident.suspended_at
+                                                            ? 'bg-rose-100 text-rose-700'
+                                                            : resident.status === 'accepted'
+                                                              ? 'bg-emerald-100 text-emerald-700'
+                                                              : 'bg-amber-100 text-amber-700'
+                                                    }`}
+                                                >
+                                                    {resident.suspended_at ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                </span>
+                                                <ResidentActions resident={resident} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-5 space-y-3 rounded-2xl bg-slate-50/50 p-4 ring-1 ring-slate-100">
+                                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                                <Mail className="h-4 w-4 text-slate-400" />
+                                                <span className="truncate">{resident.email}</span>
+                                            </div>
+                                            {resident.phone && (
+                                                <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                                    <Phone className="h-4 w-4 text-slate-400" />
+                                                    {resident.phone}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Desktop Table (Hidden on Mobile) */}
+                        <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm sm:block">
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-50/50">
                                     <tr>
                                         {can('residents.delete') && (
-                                            <th className="w-12 px-4 py-3">
+                                            <th className="w-12 px-6 py-4">
                                                 <input
                                                     type="checkbox"
                                                     checked={isAllSelected}
@@ -274,56 +363,69 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                         if (el) el.indeterminate = isSomeSelected;
                                                     }}
                                                     onChange={toggleSelectAll}
-                                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                    className="h-5 w-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
                                                 />
                                             </th>
                                         )}
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Phone</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Unit</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Status</th>
-                                        <th className="relative px-6 py-3">
+                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                            Resident
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                            Contact
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Unit</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                            Status
+                                        </th>
+                                        <th className="relative px-6 py-4">
                                             <span className="sr-only">Actions</span>
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white">
+                                <tbody className="divide-y divide-slate-100 bg-white">
                                     {residents.data.map((resident) => (
                                         <tr
                                             key={resident.id}
-                                            className={`hover:bg-gray-50 ${selectedIds.includes(resident.id) ? 'bg-primary-50' : ''}`}
+                                            className={`transition-colors hover:bg-slate-50/50 ${selectedIds.includes(resident.id) ? 'bg-blue-50/50' : ''}`}
                                         >
                                             {can('residents.delete') && (
-                                                <td className="w-12 px-4 py-4">
+                                                <td className="w-12 px-6 py-4">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedIds.includes(resident.id)}
                                                         onChange={() => toggleSelect(resident.id)}
-                                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                        className="h-5 w-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
                                                     />
                                                 </td>
                                             )}
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{resident.name}</div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
+                                                        {resident.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="text-sm font-bold text-slate-900">{resident.name}</div>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{resident.email}</div>
+                                                <div className="flex flex-col text-xs font-medium text-slate-500">
+                                                    <span className="font-bold text-slate-900">{resident.email}</span>
+                                                    <span>{resident.phone || '—'}</span>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{resident.phone || '—'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{resident.unit_number || '—'}</div>
+                                                <div className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
+                                                    <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                                    {resident.unit_number || '—'}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black tracking-widest uppercase ${
                                                         resident.suspended_at
-                                                            ? 'bg-red-100 text-red-800'
+                                                            ? 'bg-rose-100 text-rose-700'
                                                             : resident.status === 'accepted'
-                                                              ? 'bg-green-100 text-green-800'
-                                                              : 'bg-yellow-100 text-yellow-800'
+                                                              ? 'bg-emerald-100 text-emerald-700'
+                                                              : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
                                                     {resident.suspended_at ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
@@ -338,32 +440,57 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                             </table>
                         </div>
 
-                        {/* Pagination */}
-                        {residents.last_page > 1 && (
-                            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
-                                <div className="text-sm text-gray-500">
-                                    Showing {(residents.current_page - 1) * residents.per_page + 1} to{' '}
-                                    {Math.min(residents.current_page * residents.per_page, residents.total)} of {residents.total} residents
+                        {/* Pagination Strategy - Load More for Mobile, Links for Desktop */}
+                        <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
+                            {residents.next_page_url ? (
+                                <button
+                                    onClick={loadMore}
+                                    disabled={isLoadingMore}
+                                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-black tracking-tight text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 sm:hidden"
+                                >
+                                    {isLoadingMore ? (
+                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                                    ) : (
+                                        <>
+                                            Load More Residents
+                                            <ChevronRightIcon className="h-4 w-4 text-slate-400" />
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                residents.total > 0 && (
+                                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase sm:hidden">End of listing</p>
+                                )
+                            )}
+
+                            {/* Desktop Pagination */}
+                            {residents.last_page > 1 && (
+                                <div className="hidden w-full items-center justify-between sm:flex">
+                                    <p className="text-sm font-bold text-slate-500">
+                                        Showing <span className="text-slate-900">{residents.data.length}</span> of{' '}
+                                        <span className="text-slate-900">{residents.total}</span> residents
+                                    </p>
+                                    <div className="flex gap-2">
+                                        {residents.links.map((link, index) => (
+                                            <Link
+                                                key={index}
+                                                href={link.url || '#'}
+                                                preserveScroll
+                                                preserveState
+                                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                                                    link.active
+                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                                        : link.url
+                                                          ? 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                                                          : 'cursor-not-allowed text-slate-400 opacity-30'
+                                                }`}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    {residents.links.map((link, index) => (
-                                        <Link
-                                            key={index}
-                                            href={link.url || '#'}
-                                            preserveScroll
-                                            className={`rounded-lg px-3 py-1.5 text-sm ${
-                                                link.active
-                                                    ? 'bg-primary-600 text-white'
-                                                    : link.url
-                                                      ? 'text-gray-600 hover:bg-gray-100'
-                                                      : 'cursor-not-allowed text-gray-300'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </>
                 ) : (
                     /* Empty State */

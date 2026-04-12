@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
@@ -47,10 +47,37 @@ export default function SecurityPersonnel({ security, filters }: Props) {
     const [isDeleting, setIsDeleting] = useState(false);
     const debouncedSearch = useDebounce(search, 300);
 
-    // Clear selection when page changes
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [allSecurity, setAllSecurity] = useState(security.data);
+
+    // Update security data when search/status changes
     useEffect(() => {
-        setSelectedIds([]);
-    }, [security.current_page]);
+        setAllSecurity(security.data);
+    }, [security.data]);
+
+    // Handle Infinite Scroll / Load More
+    const loadMore = () => {
+        if (security.current_page < security.last_page && !isLoadingMore) {
+            setIsLoadingMore(true);
+            router.get(
+                index.url(),
+                {
+                    search: debouncedSearch,
+                    status: status,
+                    page: security.current_page + 1,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    only: ['security'],
+                    onFinish: () => {
+                        setIsLoadingMore(false);
+                        setAllSecurity((prev) => [...prev, ...security.data]);
+                    },
+                }
+            );
+        }
+    };
 
     // Debounce search
     useEffect(() => {
@@ -206,104 +233,181 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                 )}
             </AnimatePresence>
 
-            {/* Content */}
-            <div className="rounded-xl border border-gray-200 bg-white">
+            {/* Content Container */}
+            <div className="space-y-4">
                 {hasSecurity ? (
                     <>
-                        {/* Table */}
-                        <div className="overflow-x-auto lg:overflow-visible">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        {can('security.delete') && (
-                                            <th className="w-12 px-4 py-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isAllSelected}
-                                                    ref={(el) => {
-                                                        if (el) el.indeterminate = isSomeSelected;
-                                                    }}
-                                                    onChange={toggleSelectAll}
-                                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                />
-                                            </th>
-                                        )}
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Phone</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Badge #</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Status</th>
-                                        <th className="relative px-6 py-3">
-                                            <span className="sr-only">Actions</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {security.data.map((person) => (
-                                        <tr key={person.id} className={`hover:bg-gray-50 ${selectedIds.includes(person.id) ? 'bg-primary-50' : ''}`}>
+                        {/* Desktop Table View */}
+                        <div className="hidden lg:block overflow-hidden rounded-xl border border-gray-200 bg-white">
+                            <div className="overflow-x-auto overflow-visible">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
                                             {can('security.delete') && (
-                                                <td className="w-12 px-4 py-4">
+                                                <th className="w-12 px-4 py-3 text-center">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedIds.includes(person.id)}
-                                                        onChange={() => toggleSelect(person.id)}
+                                                        checked={isAllSelected}
+                                                        ref={(el) => {
+                                                            if (el) el.indeterminate = isSomeSelected;
+                                                        }}
+                                                        onChange={toggleSelectAll}
                                                         className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                                     />
-                                                </td>
+                                                </th>
                                             )}
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{person.name}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{person.email}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{person.phone || '—'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{person.badge_number || '—'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                                        person.suspended_at
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : person.status === 'accepted'
-                                                              ? 'bg-green-100 text-green-800'
-                                                              : 'bg-yellow-100 text-yellow-800'
-                                                    }`}
-                                                >
-                                                    {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                                                <SecurityActions security={person} />
-                                            </td>
+                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Personnel</th>
+                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Badge #</th>
+                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Status</th>
+                                            <th className="relative px-6 py-3">
+                                                <span className="sr-only">Actions</span>
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                        {allSecurity.map((person) => (
+                                            <tr key={person.id} className={`hover:bg-gray-50/50 transition-colors ${selectedIds.includes(person.id) ? 'bg-primary-50/50' : ''}`}>
+                                                {can('security.delete') && (
+                                                    <td className="w-12 px-4 py-4 text-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(person.id)}
+                                                            onChange={() => toggleSelect(person.id)}
+                                                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                        />
+                                                    </td>
+                                                )}
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center">
+                                                        <div className="h-10 w-10 shrink-0 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400">
+                                                            {person.name.charAt(0)}
+                                                        </div>
+                                                        <div className="ml-4">
+                                                            <div className="text-sm font-semibold text-gray-900">{person.name}</div>
+                                                            <div className="text-xs text-gray-500">{person.email}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-600 font-medium">{person.badge_number || '—'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${
+                                                            person.suspended_at
+                                                              ? 'bg-red-50 text-red-700 ring-red-600/20'
+                                                              : person.status === 'accepted'
+                                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                                                                : 'bg-amber-50 text-amber-700 ring-amber-600/20'
+                                                        }`}
+                                                    >
+                                                        {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                                                    <SecurityActions security={person} />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
-                        {/* Pagination */}
+                        {/* Mobile Card View */}
+                        <div className="space-y-3 lg:hidden">
+                            {allSecurity.map((person) => (
+                                <motion.div
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    key={person.id}
+                                    className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-xl font-black text-slate-400">
+                                                {person.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-slate-900 leading-tight">{person.name}</h3>
+                                                <p className="text-sm font-medium text-slate-500">{person.email}</p>
+                                                <div className="mt-1 flex gap-2">
+                                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                                                        person.suspended_at ? 'bg-rose-100 text-rose-700' : 
+                                                        person.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 
+                                                        'bg-amber-100 text-amber-700'
+                                                    }`}>
+                                                        {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    </span>
+                                                    {person.badge_number && (
+                                                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">
+                                                            #{person.badge_number}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <SecurityActions security={person} />
+                                    </div>
+                                    
+                                    <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-50 pt-4">
+                                        <div className="rounded-2xl bg-slate-50/50 p-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Phone</p>
+                                            <p className="text-sm font-bold text-slate-700 truncate">{person.phone || '—'}</p>
+                                        </div>
+                                        <div className="rounded-2xl bg-slate-50/50 p-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Joined</p>
+                                            <p className="text-sm font-bold text-slate-700">{person.created_at}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Load More Trigger */}
+                        {security.current_page < security.last_page && (
+                            <div className="mt-8 flex justify-center pb-12">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={loadMore}
+                                    disabled={isLoadingMore}
+                                    className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 font-black text-white shadow-xl transition-all hover:bg-slate-800 disabled:opacity-50"
+                                >
+                                    {isLoadingMore ? (
+                                        <>
+                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                                            <span>Loading...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ArrowPathIcon className="h-5 w-5" />
+                                            <span>Show more personnel</span>
+                                        </>
+                                    )}
+                                </motion.button>
+                            </div>
+                        )}
+
+                        {/* Desktop Table View fallback pagination (hidden on mobile if load more exists) */}
                         {security.last_page > 1 && (
-                            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
-                                <div className="text-sm text-gray-500">
-                                    Showing {(security.current_page - 1) * security.per_page + 1} to{' '}
-                                    {Math.min(security.current_page * security.per_page, security.total)} of {security.total} personnel
+                            <div className="hidden lg:flex items-center justify-between border-t border-gray-100 px-6 py-4">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Showing <span className="text-slate-900 font-bold">{security.data.length}</span> of <span className="text-slate-900 font-bold">{security.total}</span> personnel
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-1">
                                     {security.links.map((link, idx) => (
                                         <Link
                                             key={idx}
                                             href={link.url || '#'}
                                             preserveScroll
-                                            className={`rounded-lg px-3 py-1.5 text-sm ${
+                                            className={`rounded-xl px-3.5 py-2 text-sm font-bold transition-all ${
                                                 link.active
-                                                    ? 'bg-primary-600 text-white'
+                                                    ? 'bg-slate-900 text-white shadow-lg'
                                                     : link.url
-                                                      ? 'text-gray-600 hover:bg-gray-100'
-                                                      : 'cursor-not-allowed text-gray-300'
+                                                      ? 'text-slate-600 hover:bg-slate-100'
+                                                      : 'cursor-not-allowed text-slate-300'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
@@ -314,7 +418,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                     </>
                 ) : (
                     /* Empty State */
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-gray-200">
                         <div className="mb-4 rounded-full bg-gray-100 p-4">
                             <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path

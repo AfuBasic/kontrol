@@ -802,12 +802,23 @@ export default function CreateResident({ inviteLink }: Props) {
                                                 value={inviteLink.url}
                                                 className="flex-1 bg-transparent font-mono text-sm text-gray-600 focus:outline-none"
                                             />
-                                            <button
+                                            <motion.button
                                                 onClick={handleCopyLink}
-                                                className={`rounded-lg p-2 transition-colors ${isCopied ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+                                                whileTap={{ scale: 0.9 }}
+                                                className={`rounded-lg p-2 transition-colors ${isCopied ? 'bg-green-500 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
                                             >
-                                                {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                            </button>
+                                                <AnimatePresence mode="wait">
+                                                    <motion.div
+                                                        key={isCopied ? 'check' : 'copy'}
+                                                        initial={{ opacity: 0, scale: 0.5 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.5 }}
+                                                        transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+                                                    >
+                                                        {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                                    </motion.div>
+                                                </AnimatePresence>
+                                            </motion.button>
                                         </div>
                                     </div>
 

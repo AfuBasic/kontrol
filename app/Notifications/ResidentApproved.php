@@ -10,6 +10,9 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -31,7 +34,7 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        return ['database', 'broadcast', 'mail', FcmChannel::class];
     }
 
     /**
@@ -64,6 +67,41 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage($this->notificationData());
+    }
+
+    /**
+     * Get the FCM representation of the notification.
+     */
+    public function toFcm(object $notifiable): FcmMessage
+    {
+        $data = $this->notificationData();
+
+        return (new FcmMessage(
+            notification: new FcmNotification(
+                title: $data['title'],
+                body: $data['message'],
+            )
+        ))
+        ->data([
+            'action_url' => $data['action_url'],
+            'type' => $data['type'],
+        ])
+        ->custom([
+            'android' => [
+                'notification' => [
+                    'color' => '#0A3D91',
+                    'sound' => 'default',
+                    'icon' => 'notification_icon',
+                ],
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                    ],
+                ],
+            ],
+        ]);
     }
 
     /**

@@ -34,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'suspended_at',
         'google_id',
         'telegram_chat_id',
+        'fcm_token',
     ];
 
     /**
@@ -285,5 +286,13 @@ class User extends Authenticatable implements MustVerifyEmail
         URL::forceRootUrl(null);
 
         Mail::to($this->email)->send(new PasswordResetMail($this, $resetUrl));
+    }
+
+    /**
+     * Route notifications for the FCM channel.
+     */
+    public function routeNotificationForFcm(): ?string
+    {
+        return $this->fcm_token;
     }
 }

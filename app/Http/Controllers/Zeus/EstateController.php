@@ -68,7 +68,7 @@ class EstateController extends Controller
             'estate' => array_merge(
                 $estate->only(['id', 'name', 'email', 'address', 'status']),
                 ['admin_accepted' => $estate->hasAcceptedAdmin()],
-                ['charge_type' => $estate->settings?->charge_type ?? 'estate'],
+                ['charge_type' => $estate->settings?->charge_type ?? 'residents'],
                 ['free_trial_enabled' => $estate->settings?->free_trial_enabled ?? true],
                 ['free_trial_days' => $estate->settings?->free_trial_days ?? 30]
             ),

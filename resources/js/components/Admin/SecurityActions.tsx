@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { usePermission } from '@/hooks/usePermission';
+import MobileSheet from '@/components/MobileSheet';
 
 type SecurityPerson = {
     id: number;
@@ -20,6 +21,7 @@ interface Props {
 export default function SecurityActions({ security }: Props) {
     const { can } = usePermission();
     const [isOpen, setIsOpen] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
         type: 'suspend' | 'reset' | 'delete' | null;
@@ -43,7 +45,8 @@ export default function SecurityActions({ security }: Props) {
 
     const openModal = (type: 'suspend' | 'reset' | 'delete') => {
         setModalConfig({ isOpen: true, type });
-        setIsOpen(false); // Close dropdown
+        setIsOpen(false);
+        setIsSheetOpen(false);
     };
 
     const closeModal = () => {
@@ -110,85 +113,164 @@ export default function SecurityActions({ security }: Props) {
     const modalContent = getModalContent();
     const modalType = modalContent.type as 'danger' | 'warning' | 'info';
 
+    const ActionItems = ({ isMobile = false }) => (
+        <div className={isMobile ? 'flex flex-col gap-3' : 'space-y-0.5'}>
+            {/* Edit */}
+            {can('security.edit') && (
+                <div className={isMobile ? '' : 'contents'}>
+                    {isMobile ? (
+                        <Link
+                            href={edit.url({ security: security.id })}
+                            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                        >
+                            <PencilIcon className="h-6 w-6 text-slate-400" />
+                            Edit Profile
+                        </Link>
+                    ) : (
+                        <Link
+                            href={edit.url({ security: security.id })}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
+                        >
+                            <PencilIcon className="h-4 w-4" />
+                            Edit
+                        </Link>
+                    )}
+                </div>
+            )}
+
+            {/* Suspend / Activate */}
+            {can('security.suspend') && (
+                <div className={isMobile ? '' : 'contents'}>
+                    {isMobile ? (
+                        <button
+                            onClick={() => openModal('suspend')}
+                            className={`flex w-full items-center gap-3 rounded-2xl p-4 font-black shadow-sm active:scale-95 ${
+                                security.suspended_at ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                            }`}
+                        >
+                            {security.suspended_at ? (
+                                <>
+                                    <CheckCircleIcon className="h-6 w-6" />
+                                    Activate Guard
+                                </>
+                            ) : (
+                                <>
+                                    <NoSymbolIcon className="h-6 w-6" />
+                                    Suspend Guard
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => openModal('suspend')}
+                            className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-gray-50 ${
+                                security.suspended_at ? 'text-green-600' : 'text-orange-600'
+                            }`}
+                        >
+                            {security.suspended_at ? (
+                                <>
+                                    <CheckCircleIcon className="h-4 w-4" />
+                                    Activate
+                                </>
+                            ) : (
+                                <>
+                                    <NoSymbolIcon className="h-4 w-4" />
+                                    Suspend
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Reset Password */}
+            {can('security.reset-password') && (
+                <div className={isMobile ? '' : 'contents'}>
+                    {isMobile ? (
+                        <button
+                            onClick={() => openModal('reset')}
+                            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                        >
+                            <ArrowPathIcon className="h-6 w-6 text-slate-400" />
+                            Reset Password
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => openModal('reset')}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
+                        >
+                            <ArrowPathIcon className="h-4 w-4" />
+                            Reset Password
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {!isMobile && <hr className="my-1 border-gray-100" />}
+
+            {/* Delete */}
+            {can('security.delete') && (
+                <div className={isMobile ? '' : 'contents'}>
+                    {isMobile ? (
+                        <button
+                            onClick={() => openModal('delete')}
+                            className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/50 p-4 font-black text-rose-600 shadow-sm active:scale-95"
+                        >
+                            <TrashIcon className="h-6 w-6" />
+                            Remove Guard
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => openModal('delete')}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                        >
+                            <TrashIcon className="h-4 w-4" />
+                            Delete
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
+            {/* Mobile Toggle */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                onClick={() => setIsSheetOpen(true)}
+                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 md:hidden"
             >
                 <EllipsisVerticalIcon className="h-5 w-5" />
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 z-10 mt-1 w-48 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none"
-                    >
-                        <div className="space-y-0.5">
-                            {/* Edit */}
-                            {can('security.edit') && (
-                                <Link
-                                    href={edit.url({ security: security.id })}
-                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
-                                >
-                                    <PencilIcon className="h-4 w-4" />
-                                    Edit
-                                </Link>
-                            )}
+            {/* Desktop Dropdown */}
+            <div className="relative hidden md:block" ref={dropdownRef}>
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                    <EllipsisVerticalIcon className="h-5 w-5" />
+                </button>
 
-                            {/* Suspend / Activate */}
-                            {can('security.suspend') && (
-                                <button
-                                    onClick={() => openModal('suspend')}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-gray-50 ${
-                                        security.suspended_at ? 'text-green-600' : 'text-orange-600'
-                                    }`}
-                                >
-                                    {security.suspended_at ? (
-                                        <>
-                                            <CheckCircleIcon className="h-4 w-4" />
-                                            Activate
-                                        </>
-                                    ) : (
-                                        <>
-                                            <NoSymbolIcon className="h-4 w-4" />
-                                            Suspend
-                                        </>
-                                    )}
-                                </button>
-                            )}
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 z-10 mt-1 w-48 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                        >
+                            <ActionItems />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
-                            {/* Reset Password */}
-                            {can('security.reset-password') && (
-                                <button
-                                    onClick={() => openModal('reset')}
-                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
-                                >
-                                    <ArrowPathIcon className="h-4 w-4" />
-                                    Reset Password
-                                </button>
-                            )}
-
-                            <hr className="my-1 border-gray-100" />
-
-                            {/* Delete */}
-                            {can('security.delete') && (
-                                <button
-                                    onClick={() => openModal('delete')}
-                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
-                                >
-                                    <TrashIcon className="h-4 w-4" />
-                                    Delete
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Mobile Sheet */}
+            <MobileSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title={security.name}>
+                <ActionItems isMobile />
+            </MobileSheet>
 
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}

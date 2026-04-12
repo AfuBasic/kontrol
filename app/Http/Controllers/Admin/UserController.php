@@ -80,7 +80,7 @@ class UserController extends Controller
 
         $action->execute($request->validated(), $estate);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', 'Admin invited successfully.');
     }
 
@@ -150,7 +150,7 @@ class UserController extends Controller
 
         $action->execute($user, $estate);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', 'Admin removed successfully.');
     }
 

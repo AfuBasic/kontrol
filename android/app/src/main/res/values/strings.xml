@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kontrol</string>
+    <string name="title_activity_main">Kontrol</string>
+    <string name="package_name">com.kontrol.app</string>
+    <string name="custom_url_scheme">com.kontrol.app</string>
+</resources>

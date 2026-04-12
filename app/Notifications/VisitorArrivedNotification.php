@@ -10,6 +10,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 class VisitorArrivedNotification extends Notification implements ShouldQueue
 {
@@ -29,6 +32,11 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         // Add WebPush channel if user has push subscriptions
         if ($notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
+        }
+
+        // Add FCM channel if user has an FCM token
+        if ($notifiable->fcm_token) {
+            $channels[] = FcmChannel::class;
         }
 
         // Add Telegram channel if user has Telegram linked
@@ -92,6 +100,43 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
                 ],
             ],
         ];
+    }
+
+    /**
+     * Get the FCM notification representation.
+     */
+    public function toFcm(object $notifiable): FcmMessage
+    {
+        $data = $this->toArray($notifiable);
+
+        return (new FcmMessage(
+            notification: new FcmNotification(
+                title: $data['title'],
+                body: $data['message'],
+            )
+        ))
+        ->data([
+            'action_url' => '/resident',
+            'access_code_id' => (string) $this->accessCode->id,
+            'type' => 'visitor_arrived',
+        ])
+        ->custom([
+            'android' => [
+                'notification' => [
+                    'color' => '#0A3D91',
+                    'sound' => 'default',
+                    'icon' => 'notification_icon',
+                ],
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                        'badge' => 1,
+                    ],
+                ],
+            ],
+        ]);
     }
 
     /**

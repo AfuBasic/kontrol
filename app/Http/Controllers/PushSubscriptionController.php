@@ -22,6 +22,19 @@ class PushSubscriptionController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        if ($request->has('token') && $request->has('platform')) {
+            $validated = $request->validate([
+                'token' => ['required', 'string'],
+                'platform' => ['required', 'string'],
+            ]);
+
+            /** @var \App\Models\User $user */
+            $user = $request->user();
+            $user->update(['fcm_token' => $validated['token']]);
+
+            return response()->json(['success' => true]);
+        }
+
         $validated = $request->validate([
             'endpoint' => ['required', 'url'],
             'keys.auth' => ['required', 'string'],

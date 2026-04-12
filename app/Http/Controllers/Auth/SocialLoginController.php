@@ -6,9 +6,12 @@ use App\Actions\Auth\CheckTrustedDevice;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Events\ForceLogout;
 use App\Models\User;
+use Exception;
+use Google\Client as GoogleClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialLoginController
@@ -31,14 +34,76 @@ class SocialLoginController
     ): RedirectResponse {
         try {
             $googleUser = Socialite::driver('google')->user();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->route('login')->with('error', 'Google authentication failed.');
         }
 
+        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp);
+    }
+
+    /**
+     * Handle Google Sign-in from mobile app via token.
+     */
+    public function handleGoogleMobileToken(
+        Request $request,
+        CheckTrustedDevice $checkTrustedDevice,
+        GenerateLoginOtp $generateOtp,
+    ): RedirectResponse {
+        $request->validate(['token' => 'required|string']);
+
+        try {
+            // Verify the ID token against all whitelisted audiences (Web, iOS, Android)
+            $client = new GoogleClient;
+            $audiences = array_filter(array_merge(
+                [config('services.google.client_id')],
+                config('services.google.mobile_ids', [])
+            ));
+
+            $payload = $client->verifyIdToken($request->token);
+
+            // Double check: If the token is valid but was generated for an audience we trust
+            if (! $payload || ! in_array($payload['aud'], $audiences)) {
+                throw new Exception('Identity verification failed. Invalid audience: '.($payload['aud'] ?? 'unknown'));
+            }
+
+            // Map Google payload to a compatible User object for authenticateSocialUser
+            $googleUser = new class($payload)
+            {
+                public function __construct(public array $payload) {}
+
+                public function getEmail()
+                {
+                    return $this->payload['email'];
+                }
+
+                public function getId()
+                {
+                    return $this->payload['sub'];
+                }
+            };
+
+        } catch (Exception $e) {
+            Log::error('Google Mobile Token Verification Failed: '.$e->getMessage());
+
+            return redirect()->route('login')->with('error', 'Google token verification failed: '.$e->getMessage());
+        }
+
+        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp);
+    }
+
+    /**
+     * Common authentication logic for social users.
+     */
+    private function authenticateSocialUser(
+        $googleUser,
+        Request $request,
+        CheckTrustedDevice $checkTrustedDevice,
+        GenerateLoginOtp $generateOtp,
+    ): RedirectResponse {
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if (! $user) {
-            return redirect()->route('login')->with('error', 'No account found with this email. Please contact your administrator.');
+            return redirect()->route('login')->with('error', 'No account found for this email. We don\'t allow signup with Google. Please contact your administrator to create an account.');
         }
 
         if (! $user->google_id) {

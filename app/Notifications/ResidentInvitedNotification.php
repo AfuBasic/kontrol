@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 class ResidentInvitedNotification extends Notification implements ShouldQueue
 {
@@ -22,7 +25,13 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if ($notifiable->fcm_token) {
+            $channels[] = FcmChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
@@ -37,6 +46,41 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
             'resident_name' => $this->resident->name,
             'estate_id' => $this->estate->id,
             'estate_name' => $this->estate->name,
+            'type' => 'info',
         ];
+    }
+
+    /**
+     * Get the FCM notification representation.
+     */
+    public function toFcm(object $notifiable): FcmMessage
+    {
+        $data = $this->toArray($notifiable);
+
+        return (new FcmMessage(
+            notification: new FcmNotification(
+                title: $data['title'],
+                body: $data['message'],
+            )
+        ))
+        ->data([
+            'action_url' => '/admin/residents',
+            'type' => $data['type'],
+        ])
+        ->custom([
+            'android' => [
+                'notification' => [
+                    'color' => '#0A3D91',
+                    'sound' => 'default',
+                ],
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                    ],
+                ],
+            ],
+        ]);
     }
 }

@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import FirebaseAuthenticationPlugin
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

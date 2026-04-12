@@ -8,21 +8,25 @@ const config: CapacitorConfig = {
     appName: 'Kontrol',
     webDir: 'public',
     server: {
-        // Toggle between your local Herd URL and production
         // Using http for local dev to bypass SSL certificate issues in simulators
         url: isDev ? 'http://app.kontrol.test' : 'https://app.usekontrol.com',
         cleartext: isDev,
-        allowNavigation: [
-            'app.kontrol.test',
-            'kontrol.test'
-        ]
+        allowNavigation: ['app.kontrol.test', 'kontrol.test'],
     },
     plugins: {
+        FirebaseAuthentication: {
+            providers: ['google.com'],
+            skipNativeAuth: false,
+            google: {
+                webClientId: '642588363209-ju96lbs3lvhb0stpvf0q9j5i9m2vselh.apps.googleusercontent.com',
+                forceCodeForRefreshToken: true,
+            },
+        },
         SplashScreen: {
             launchShowDuration: 3000,
-            launchAutoHide: false,
+            launchAutoHide: true,
             backgroundColor: '#FFFFFF',
-            androidScaleType: 'FIT_CENTER',
+            androidScaleType: 'CENTER',
             showSpinner: false,
             splashFullScreen: true,
             splashImmersive: true,

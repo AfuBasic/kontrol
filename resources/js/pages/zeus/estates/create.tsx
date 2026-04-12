@@ -35,7 +35,7 @@ export default function CreateEstate({ plans }: Props) {
         email: '',
         address: '',
         plan_id: plans.length > 0 ? plans[0].id : '',
-        charge_type: 'estate',
+        charge_type: 'residents',
         free_trial_enabled: true,
         free_trial_days: 30,
     });

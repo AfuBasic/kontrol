@@ -20,6 +20,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
 import { useForceLogout } from '@/hooks/useForceLogout';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import axios from 'axios';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
@@ -66,11 +69,21 @@ const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
+import MobileBottomNav from '@/components/Admin/MobileBottomNav';
+import PullToRefresh from '@/components/PullToRefresh';
+
 export default function AdminLayout({ children }: Props) {
-    const page = usePage<SharedData & { flash: { success?: string; error?: string }; billing_enabled?: boolean; has_overdue_invoice?: boolean; pendingInvoice?: any }>();
-    const { auth, flash, billing_enabled, has_overdue_invoice, pendingInvoice } = page.props;
+    const page = usePage<
+        SharedData & {
+            flash: { success?: string; error?: string };
+            billing_enabled?: boolean;
+            has_overdue_invoice?: boolean;
+            pendingInvoice?: any;
+            webpush_public_key?: string;
+        }
+    >();
+    const { auth, flash, billing_enabled, has_overdue_invoice, pendingInvoice, webpush_public_key } = page.props;
     const { url: fullUrl } = page;
-    // Strip query params for path matching
     const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -78,6 +91,8 @@ export default function AdminLayout({ children }: Props) {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+    const [toastUrl, setToastUrl] = useState<string | null>(null);
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
     useForceLogout(auth.user!.id);
 
@@ -114,12 +129,11 @@ export default function AdminLayout({ children }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             channel.listen('.resident.created', (e: any) => {
-                // Show toast
                 setToastMessage(e.message);
                 setToastType(e.type || 'info');
+                setToastUrl(e.action_url || e.url || null);
                 setShowToast(true);
 
-                // Instantly update badge and list locally
                 setUnreadCount((prev) => prev + 1);
                 setNotifications((prev) => [
                     {
@@ -132,7 +146,6 @@ export default function AdminLayout({ children }: Props) {
                     ...prev,
                 ]);
 
-                // Reload notifications to ensure consistency with backend
                 router.reload({ only: ['auth'] });
             });
         }
@@ -151,12 +164,11 @@ export default function AdminLayout({ children }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             userChannel.notification((notification: any) => {
-                // Show toast
                 setToastMessage(notification.message);
                 setToastType(notification.type || 'info');
+                setToastUrl(notification.action_url || notification.url || null);
                 setShowToast(true);
 
-                // Instantly update badge and list locally
                 setUnreadCount((prev) => prev + 1);
                 setNotifications((prev) => [
                     {
@@ -169,7 +181,6 @@ export default function AdminLayout({ children }: Props) {
                     ...prev,
                 ]);
 
-                // Reload notifications to ensure consistency with backend
                 router.reload({ only: ['auth'] });
             });
         }
@@ -177,6 +188,112 @@ export default function AdminLayout({ children }: Props) {
         return () => {
             if (auth.user?.id) {
                 window.Echo.leave(`App.Models.User.${auth.user.id}`);
+            }
+        };
+    }, [auth.user?.id]);
+
+    // Universal Push Notification Registration (Native FCM or Browser WebPush)
+    useEffect(() => {
+        if (!auth.user) {
+            return;
+        }
+
+        const urlBase64ToUint8Array = (base64String: string) => {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        };
+
+        const setupPush = async () => {
+            try {
+                // PATH 1: Native Platform (Capacitor FCM)
+                if (Capacitor.isNativePlatform()) {
+                    let permStatus = await PushNotifications.checkPermissions();
+
+                    if (permStatus.receive === 'prompt') {
+                        permStatus = await PushNotifications.requestPermissions();
+                    }
+
+                    if (permStatus.receive !== 'granted') {
+                        console.warn('Push notification permission not granted (Native)');
+                        return;
+                    }
+
+                    await PushNotifications.register();
+
+                    // Registration listeners
+                    PushNotifications.addListener('registration', (token) => {
+                        axios.post('/push/subscribe', {
+                            token: token.value,
+                            platform: Capacitor.getPlatform(),
+                        }).catch(err => {
+                            console.error('Failed to sync native push token:', err);
+                        });
+                    });
+
+                    PushNotifications.addListener('registrationError', (error) => {
+                        console.error('Native push registration error:', error);
+                    });
+
+                    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        console.info('Native push received in foreground:', notification);
+                        router.reload({ only: ['auth'] });
+                    });
+
+                    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+                        const data = notification.notification.data;
+                        const targetUrl = data?.action_url || data?.url;
+                        if (targetUrl) {
+                            router.visit(targetUrl);
+                        }
+                    });
+                }
+                // PATH 2: Web Platform (Browser WebPush)
+                else if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/',
+                    });
+
+                    // Wait for service worker to be ready
+                    await navigator.serviceWorker.ready;
+
+                    let permission = Notification.permission;
+                    if (permission === 'default') {
+                        permission = await Notification.requestPermission();
+                    }
+
+                    if (permission === 'granted' && webpush_public_key) {
+                        try {
+                            const subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(webpush_public_key),
+                            });
+
+                            // Send subscription object to backend
+                            await axios.post('/push/subscribe', subscription.toJSON());
+                            console.info('WebPush subscription synced successfully');
+                        } catch (subErr) {
+                            console.error('Failed to subscribe to WebPush:', subErr);
+                        }
+                    } else if (permission === 'denied') {
+                        console.warn('WebPush permission denied');
+                    }
+                }
+            } catch (err) {
+                console.error('Push notification setup failed:', err);
+            }
+        };
+
+        setupPush();
+
+        return () => {
+            if (Capacitor.isNativePlatform()) {
+                PushNotifications.removeAllListeners();
             }
         };
     }, [auth.user?.id]);
@@ -189,8 +306,6 @@ export default function AdminLayout({ children }: Props) {
         router.post(LoginController.destroy.url());
     }
 
-    // Extract just the path from a URL (handles Wayfinder's protocol-relative URLs)
-
     function isCurrentPath(href: string) {
         const path = usePathFromUrl(href);
         const dashboardPath = usePathFromUrl(DashboardController.url());
@@ -202,12 +317,10 @@ export default function AdminLayout({ children }: Props) {
     }
 
     function canAccess(item: NavItem): boolean {
-        // specific role check
         if (item.role && !userRoles.includes(item.role)) {
             return false;
         }
 
-        // permission check
         if (!item.permission) return true;
         if (isAdmin) return true;
         return userPermissions.includes(item.permission);
@@ -217,7 +330,6 @@ export default function AdminLayout({ children }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    // Add billing nav if enabled
     const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }] : primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);
@@ -226,244 +338,50 @@ export default function AdminLayout({ children }: Props) {
     const sidebarWidth = isCollapsed ? 72 : 240;
 
     return (
-        <div className="min-h-screen bg-[#F0F5FF]">
-            {/* Safe area spacer - fills status bar area with background on mobile */}
-            <div className="pt-safe fixed inset-x-0 top-0 z-60 bg-[#1F6FDB] md:hidden" aria-hidden="true" />
+        <div className="min-h-screen bg-slate-50/50">
+            {/* Mobile View Structure */}
+            <div className="md:hidden">
+                <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200/50 bg-white/80 ring-1 ring-black/5 backdrop-blur-xl">
+                    <div className="h-[env(safe-area-inset-top)] w-full" />
+                    <div className="flex h-16 items-center justify-between px-4">
+                        <button
+                            onClick={() => setMobileMenuOpen(true)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-all active:scale-90 active:bg-slate-100"
+                        >
+                            <Bars3Icon className="h-6 w-6" />
+                        </button>
+                        
+                        <Link href={DashboardController.url()} className="flex items-center gap-2">
+                            <img src="/assets/images/app-icon.png" alt="Kontrol" className="h-7 w-auto" />
+                            <span className="text-xl font-black tracking-tighter text-[#0A3D91] uppercase">Kontrol</span>
+                        </Link>
 
-            {/* Mobile Top Bar */}
-            <header className="mt-safe sticky top-0 z-50 flex h-14 items-center justify-between bg-[#1F6FDB] px-4 md:hidden">
-                <button
-                    onClick={() => setMobileMenuOpen(true)}
-                    className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                    <Bars3Icon className="h-5 w-5" />
-                </button>
-                <Link href={DashboardController.url()} className="shrink-0">
-                    <span className="text-lg font-bold text-white">Kontrol</span>
-                </Link>
-                <div className="relative">
-                    <button
-                        onClick={() => setNotificationOpen(!notificationOpen)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                        <span className="sr-only">View notifications</span>
-                        <BellIcon className="h-6 w-6" />
-                        {unreadCount ? (
-                            <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
-                            </span>
-                        ) : null}
-                    </button>
-
-                    {/* Mobile Notification Dropdown */}
-                    <AnimatePresence>
-                        {notificationOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm md:hidden"
-                                    onClick={() => setNotificationOpen(false)}
-                                />
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
-                                >
-                                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                                        <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
-                                        {unreadCount ? (
-                                            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                {unreadCount} new
-                                            </span>
-                                        ) : null}
-                                    </div>
-
-                                    <div className="max-h-80 overflow-y-auto">
-                                        {notifications && notifications.length > 0 ? (
-                                            <div className="divide-y divide-slate-100">
-                                                {notifications.map((notification) => (
-                                                    <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-medium text-slate-900">
-                                                                {/* @ts-expect-error - dynamic data content */}
-                                                                {notification.data.message || 'New notification'}
-                                                            </p>
-                                                            <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>
-                                                        </div>
-                                                        <div className="flex h-2 w-2 shrink-0 translate-y-1.5 rounded-full bg-blue-600"></div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="py-8 text-center">
-                                                <BellIcon className="mx-auto h-8 w-8 text-slate-300" />
-                                                <p className="mt-2 text-sm font-medium text-slate-900">No notifications</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="border-t border-slate-100 p-2">
-                                        {unreadCount > 0 && (
-                                            <button
-                                                onClick={() => {
-                                                    router.post(
-                                                        NotificationController.markAllAsRead.url(),
-                                                        {},
-                                                        {
-                                                            preserveScroll: true,
-                                                            onSuccess: () => {
-                                                                setUnreadCount(0);
-                                                                setNotifications([]);
-                                                            },
-                                                        },
-                                                    );
-                                                }}
-                                                className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                                            >
-                                                Mark all as read
-                                            </button>
-                                        )}
-                                        <Link
-                                            href={NotificationController.index.url()}
-                                            onClick={() => setNotificationOpen(false)}
-                                            className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
-                                        >
-                                            View all notifications
-                                        </Link>
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </header>
-
-            {/* Mobile Drawer Backdrop */}
-            <AnimatePresence>
-                {mobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-50 bg-black/60 md:hidden"
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                )}
-            </AnimatePresence>
-
-            {/* Mobile Drawer */}
-            <AnimatePresence>
-                {mobileMenuOpen && (
-                    <motion.aside
-                        initial={{ x: -280 }}
-                        animate={{ x: 0 }}
-                        exit={{ x: -280 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-y-0 left-0 z-50 flex w-70 flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] shadow-xl md:hidden"
-                    >
-                        {/* Mobile Drawer Header */}
-                        <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
-                            <Link href={DashboardController.url()} className="shrink-0">
-                                <span className="text-lg font-bold text-white">Kontrol</span>
-                            </Link>
-                            <button
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                            >
-                                <XMarkIcon className="h-5 w-5" />
-                            </button>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] ring-1 ring-slate-200 shadow-sm">
+                            <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                         </div>
+                    </div>
+                </header>
 
-                        {/* Mobile Nav */}
-                        <nav className="flex-1 overflow-y-auto p-3">
-                            <div className="space-y-1">
-                                {visiblePrimaryNav.map((item) =>
-                                    item.comingSoon ? (
-                                        <div
-                                            key={item.name}
-                                            className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/40"
-                                        >
-                                            <item.icon className="h-5 w-5 text-white/30" />
-                                            <span>{item.name}</span>
-                                            <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
-                                                Soon
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                                                isCurrentPath(item.href)
-                                                    ? 'bg-white/20 text-white shadow-sm'
-                                                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                            }`}
-                                        >
-                                            <item.icon className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60'}`} />
-                                            {item.name}
-                                        </Link>
-                                    ),
-                                )}
-                            </div>
-                            {visibleSecondaryNav.length > 0 && (
-                                <>
-                                    <div className="my-4 border-t border-white/10" />
-                                    <div className="space-y-1">
-                                        {visibleSecondaryNav.map((item) => (
-                                            <Link
-                                                key={item.name}
-                                                href={item.href}
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                                                    isCurrentPath(item.href)
-                                                        ? 'bg-white/20 text-white shadow-sm'
-                                                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                                }`}
-                                            >
-                                                <item.icon className={`h-5 w-5 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60'}`} />
-                                                {item.name}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </nav>
-
-                        {/* Mobile User Section */}
-                        <div className="border-t border-white/10 p-3">
-                            <Link
-                                href={ProfileController.edit.url()}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-                            >
-                                <UserCircleIcon className="h-5 w-5 text-white/60" />
-                                Profile
-                            </Link>
-                            <button
-                                onClick={handleLogout}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-                            >
-                                <ArrowLeftStartOnRectangleIcon className="h-5 w-5 text-white/60" />
-                                Sign out
-                            </button>
+                <PullToRefresh>
+                    <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
+                        <div className="p-4">
+                            <PendingInvoiceNotification invoice={pendingInvoice} />
+                            <AnimatedLayout>{children}</AnimatedLayout>
                         </div>
-                    </motion.aside>
-                )}
-            </AnimatePresence>
+                    </main>
+                </PullToRefresh>
 
-            {/* Desktop Layout */}
+                <MobileBottomNav url={url} unreadNotifications={unreadCount} />
+            </div>
+
+            {/* Desktop View Structure */}
             <div className="hidden md:flex">
-                {/* Desktop Sidebar — Navy gradient with light text */}
                 <motion.aside
                     initial={false}
                     animate={{ width: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="fixed inset-y-0 left-0 z-40 flex flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A]"
                 >
-                    {/* Sidebar Header */}
                     <div className="flex h-14 items-center border-b border-white/10 px-4">
                         <Link href={DashboardController.url()} className="shrink-0 overflow-hidden">
                             <AnimatePresence mode="wait" initial={false}>
@@ -492,7 +410,6 @@ export default function AdminLayout({ children }: Props) {
                         </Link>
                     </div>
 
-                    {/* Sidebar Nav */}
                     <nav className="flex-1 overflow-y-auto p-3">
                         <div className="space-y-1">
                             {visiblePrimaryNav.map((item) =>
@@ -503,25 +420,12 @@ export default function AdminLayout({ children }: Props) {
                                         className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
                                     >
                                         <item.icon className="h-5 w-5 shrink-0 text-white/30" />
-                                        <AnimatePresence initial={false}>
-                                            {!isCollapsed && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, width: 0 }}
-                                                    animate={{ opacity: 1, width: 'auto' }}
-                                                    exit={{ opacity: 0, width: 0 }}
-                                                    className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap"
-                                                >
-                                                    <span>{item.name}</span>
-                                                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
-                                                        Soon
-                                                    </span>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                        {/* Tooltip for collapsed state */}
-                                        {isCollapsed && (
-                                            <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
-                                                {item.name} (Soon)
+                                        {!isCollapsed && (
+                                            <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
+                                                <span>{item.name}</span>
+                                                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
+                                                    Soon
+                                                </span>
                                             </div>
                                         )}
                                     </div>
@@ -529,6 +433,7 @@ export default function AdminLayout({ children }: Props) {
                                     <Link
                                         key={item.name}
                                         href={item.href}
+                                        prefetch
                                         title={isCollapsed ? item.name : undefined}
                                         className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
                                             isCurrentPath(item.href)
@@ -536,34 +441,16 @@ export default function AdminLayout({ children }: Props) {
                                                 : 'text-white/70 hover:bg-white/10 hover:text-white'
                                         }`}
                                     >
-                                        {/* Active indicator */}
                                         {isCurrentPath(item.href) && (
                                             <motion.div
                                                 layoutId="activeIndicator"
-                                                className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
+                                                className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
                                             />
                                         )}
                                         <item.icon
                                             className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
                                         />
-                                        <AnimatePresence initial={false}>
-                                            {!isCollapsed && (
-                                                <motion.span
-                                                    initial={{ opacity: 0, width: 0 }}
-                                                    animate={{ opacity: 1, width: 'auto' }}
-                                                    exit={{ opacity: 0, width: 0 }}
-                                                    className="overflow-hidden whitespace-nowrap"
-                                                >
-                                                    {item.name}
-                                                </motion.span>
-                                            )}
-                                        </AnimatePresence>
-                                        {/* Tooltip for collapsed state */}
-                                        {isCollapsed && (
-                                            <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
-                                                {item.name}
-                                            </div>
-                                        )}
+                                        {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
                                     </Link>
                                 ),
                             )}
@@ -577,6 +464,7 @@ export default function AdminLayout({ children }: Props) {
                                         <Link
                                             key={item.name}
                                             href={item.href}
+                                            prefetch
                                             title={isCollapsed ? item.name : undefined}
                                             className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
                                                 isCurrentPath(item.href)
@@ -584,34 +472,10 @@ export default function AdminLayout({ children }: Props) {
                                                     : 'text-white/70 hover:bg-white/10 hover:text-white'
                                             }`}
                                         >
-                                            {isCurrentPath(item.href) && (
-                                                <motion.div
-                                                    layoutId="activeIndicatorSecondary"
-                                                    className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#1F6FDB]"
-                                                />
-                                            )}
                                             <item.icon
-                                                className={`h-5 w-5 shrink-0 ${
-                                                    isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'
-                                                }`}
+                                                className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
                                             />
-                                            <AnimatePresence initial={false}>
-                                                {!isCollapsed && (
-                                                    <motion.span
-                                                        initial={{ opacity: 0, width: 0 }}
-                                                        animate={{ opacity: 1, width: 'auto' }}
-                                                        exit={{ opacity: 0, width: 0 }}
-                                                        className="overflow-hidden whitespace-nowrap"
-                                                    >
-                                                        {item.name}
-                                                    </motion.span>
-                                                )}
-                                            </AnimatePresence>
-                                            {isCollapsed && (
-                                                <div className="pointer-events-none absolute left-full ml-2 hidden rounded-md bg-[#0A3D91] px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 md:block">
-                                                    {item.name}
-                                                </div>
-                                            )}
+                                            {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
                                         </Link>
                                     ))}
                                 </div>
@@ -619,9 +483,7 @@ export default function AdminLayout({ children }: Props) {
                         )}
                     </nav>
 
-                    {/* Sidebar Footer */}
                     <div className="border-t border-white/10 p-3">
-                        {/* Collapse Toggle */}
                         <button
                             onClick={toggle}
                             className="mb-2 flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/10 hover:text-white"
@@ -633,7 +495,6 @@ export default function AdminLayout({ children }: Props) {
                             )}
                         </button>
 
-                        {/* User Menu */}
                         <div className="relative">
                             <button
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -642,26 +503,15 @@ export default function AdminLayout({ children }: Props) {
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F6FDB] ring-2 ring-white/30">
                                     <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                                 </div>
-                                <AnimatePresence>
-                                    {!isCollapsed && (
-                                        <motion.div
-                                            initial={{ opacity: 0, width: 0 }}
-                                            animate={{ opacity: 1, width: 'auto' }}
-                                            exit={{ opacity: 0, width: 0 }}
-                                            className="flex flex-1 items-center justify-between overflow-hidden"
-                                        >
-                                            <div className="min-w-0">
-                                                <p className="truncate text-left text-sm font-medium text-white">{auth.user?.name}</p>
-                                            </div>
-                                            <ChevronDownIcon
-                                                className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                                            />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                {!isCollapsed && (
+                                    <div className="flex flex-1 items-center justify-between overflow-hidden">
+                                        <p className="truncate text-left text-sm font-medium text-white">{auth.user?.name}</p>
+                                        <ChevronDownIcon
+                                            className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                        />
+                                    </div>
+                                )}
                             </button>
-
-                            {/* User Dropdown */}
                             <AnimatePresence>
                                 {userMenuOpen && (
                                     <>
@@ -670,43 +520,33 @@ export default function AdminLayout({ children }: Props) {
                                             initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute bottom-full left-0 z-20 mb-2 w-56 origin-bottom-left rounded-xl border border-[#1F6FDB]/20 bg-white p-1.5 shadow-lg"
+                                            className="absolute bottom-full left-0 z-20 mb-2 w-56 origin-bottom-left rounded-xl border border-[#1F6FDB]/20 bg-white p-1.5 shadow-xl"
                                         >
-                                            <div className="rounded-lg bg-[#F0F5FF] px-3 py-2">
-                                                <p className="text-sm font-medium text-[#0A3D91]">{auth.user?.name}</p>
-                                                <p className="truncate text-xs text-[#1F6FDB]">{auth.user?.email}</p>
-                                                <p className="mt-1 truncate text-xs font-medium text-[#1F6FDB]/70 capitalize">
-                                                    {auth.user?.roles?.[0]?.replace('_', ' ') ?? 'User'}
-                                                </p>
-                                            </div>
-                                            <div className="mt-1.5 space-y-0.5">
+                                            <Link
+                                                href={ProfileController.edit.url()}
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                            >
+                                                <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                Profile
+                                            </Link>
+                                            {isAdmin && (
                                                 <Link
-                                                    href={ProfileController.edit.url()}
+                                                    href={ActivityLogController.index.url()}
                                                     onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
                                                 >
-                                                    <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Profile
+                                                    <ClipboardDocumentListIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                    Activity Log
                                                 </Link>
-                                                {isAdmin && (
-                                                    <Link
-                                                        href={ActivityLogController.index.url()}
-                                                        onClick={() => setUserMenuOpen(false)}
-                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                    >
-                                                        <ClipboardDocumentListIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                        Activity Log
-                                                    </Link>
-                                                )}
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Sign out
-                                                </button>
-                                            </div>
+                                            )}
+                                            <button
+                                                onClick={() => setShowLogoutConfirmation(true)}
+                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                            >
+                                                <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                Sign out
+                                            </button>
                                         </motion.div>
                                     </>
                                 )}
@@ -715,158 +555,237 @@ export default function AdminLayout({ children }: Props) {
                     </div>
                 </motion.aside>
 
-                {/* Main Content Area */}
-                <motion.main
+                <motion.div
                     initial={false}
                     animate={{ marginLeft: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="min-h-screen flex-1"
+                    className="min-h-screen flex-1 px-6 py-8 lg:px-8"
                 >
-                    {/* Content Header Bar */}
-                    <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 backdrop-blur-md lg:px-8">
+                    <header className="mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
-                            <span className="text-sm font-medium text-slate-500">Admin Panel</span>
+                            <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">Dashboard</span>
                         </div>
-                        {/* Notification Dropdown */}
                         <div className="relative">
                             <button
                                 onClick={() => setNotificationOpen(!notificationOpen)}
-                                className={`relative rounded-full p-1.5 transition-colors ${
-                                    notificationOpen ? 'bg-slate-100 text-slate-600' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-500'
-                                }`}
+                                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:text-[#1F6FDB] hover:shadow-md"
                             >
-                                <span className="sr-only">View notifications</span>
-                                <BellIcon className="h-6 w-6" aria-hidden="true" />
-                                {unreadCount ? (
-                                    <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                                <BellIcon className="h-6 w-6" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
                                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                                         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
                                     </span>
-                                ) : null}
+                                )}
                             </button>
-
                             <AnimatePresence>
                                 {notificationOpen && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setNotificationOpen(false)} />
                                         <motion.div
-                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute top-full right-0 z-20 mt-2 w-80 origin-top-right rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none sm:w-96"
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full right-0 z-20 mt-3 w-80 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
                                         >
                                             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                                                <h3 className="text-base font-semibold text-slate-900">Notifications</h3>
-                                                {unreadCount ? (
-                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                        {unreadCount} new
-                                                    </span>
-                                                ) : null}
-                                            </div>
-
-                                            <div className="max-h-112 overflow-y-auto">
-                                                {notifications && notifications.length > 0 ? (
-                                                    <div className="divide-y divide-slate-100">
-                                                        {notifications.map((notification) => (
-                                                            <div key={notification.id} className="group relative flex gap-4 p-4 hover:bg-slate-50">
-                                                                <div className="flex-1">
-                                                                    <p className="text-sm font-medium text-slate-900">
-                                                                        {/* @ts-expect-error - dynamic data content */}
-                                                                        {notification.data.message || 'New notification'}
-                                                                    </p>
-                                                                    <p className="mt-1 text-xs text-slate-500">{notification.created_at_human}</p>
-                                                                </div>
-                                                                <div className="flex h-2 w-2 shrink-0 translate-y-1.5 rounded-full bg-blue-600"></div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="py-12 text-center">
-                                                        <BellIcon className="mx-auto h-10 w-10 text-slate-300" />
-                                                        <p className="mt-2 text-sm font-medium text-slate-900">No notifications</p>
-                                                        <p className="mt-1 text-xs text-slate-500">You're all caught up!</p>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="border-t border-slate-100 p-2">
+                                                <h3 className="font-bold text-slate-900">Notifications</h3>
                                                 {unreadCount > 0 && (
-                                                    <button
-                                                        onClick={() => {
-                                                            router.post(
-                                                                NotificationController.markAllAsRead.url(),
-                                                                {},
-                                                                {
-                                                                    preserveScroll: true,
-                                                                    onSuccess: () => {
-                                                                        setUnreadCount(0);
-                                                                        setNotifications([]);
-                                                                    },
-                                                                },
-                                                            );
-                                                        }}
-                                                        className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                                                    >
-                                                        Mark all as read
-                                                    </button>
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600">
+                                                        {unreadCount} New
+                                                    </span>
                                                 )}
-                                                <Link
-                                                    href={NotificationController.index.url()}
-                                                    onClick={() => setNotificationOpen(false)}
-                                                    className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                                            </div>
+                                            <div className="max-h-96 overflow-y-auto">
+                                                {notifications.length > 0 ? (
+                                                    notifications.map((n) => (
+                                                        <div
+                                                            key={n.id}
+                                                            onClick={() => {
+                                                                const targetUrl = (n.data?.action_url || n.data?.url) as string | undefined;
+                                                                if (targetUrl) {
+                                                                    router.visit(targetUrl);
+                                                                    setNotificationOpen(false);
+                                                                }
+                                                            }}
+                                                            className="cursor-pointer rounded-xl p-4 transition-colors hover:bg-slate-50"
+                                                        >
+                                                            <p className="text-sm font-medium text-slate-900">
+                                                                {n.data?.message ? String(n.data.message) : 'New notification'}
+                                                            </p>
+                                                            <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase">
+                                                                {n.created_at_human}
+                                                            </p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="py-12 text-center text-slate-400">
+                                                        <BellIcon className="mx-auto mb-2 h-8 w-8 opacity-20" />
+                                                        <p className="text-sm">No notifications yet</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-2 pt-0">
+                                                <button
+                                                    onClick={() => {
+                                                        router.post(NotificationController.markAllAsRead.url());
+                                                        setUnreadCount(0);
+                                                        setNotifications([]);
+                                                        setNotificationOpen(false);
+                                                        // Clear native notifications and badge
+                                                        if (Capacitor.isNativePlatform()) {
+                                                            PushNotifications.removeAllDeliveredNotifications();
+                                                            if ('setAppBadge' in navigator) {
+                                                                (navigator as any).setAppBadge(0).catch(() => {});
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="w-full rounded-xl bg-blue-50 py-2.5 text-xs font-bold text-[#1F6FDB] transition-colors hover:bg-blue-100"
                                                 >
-                                                    View all notifications
-                                                </Link>
+                                                    Mark all as read
+                                                </button>
                                             </div>
                                         </motion.div>
                                     </>
                                 )}
                             </AnimatePresence>
                         </div>
-                    </div>
-                    {/* Overdue Invoice Banner */}
-                    {has_overdue_invoice && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="border-b border-red-200 bg-red-50 px-6 py-3 lg:px-8"
-                        >
-                            <div className="flex items-center gap-3">
-                                <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-red-800">Overdue Invoice</p>
-                                    <p className="text-xs text-red-700">
-                                        You have an outstanding overdue invoice.{' '}
-                                        <Link href={BillingController.url()} className="underline hover:no-underline">
-                                            View details
-                                        </Link>
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                    {/* Content Body */}
-                    <div className="p-6 lg:p-8">
-                        <PendingInvoiceNotification invoice={pendingInvoice} />
-                        <AnimatedLayout>{children}</AnimatedLayout>
-                    </div>
-                </motion.main>
+                    </header>
+
+                    <PendingInvoiceNotification invoice={pendingInvoice} />
+                    <AnimatedLayout>{children}</AnimatedLayout>
+                </motion.div>
             </div>
 
-            <main className="p-4 md:hidden">
-                <AnimatedLayout>{children}</AnimatedLayout>
-            </main>
+            {/* Mobile Navigation & Bottom Bar */}
+            <MobileBottomNav url={url} unreadNotifications={unreadCount} />
 
-            {/* Flash Messages */}
-            <Toast show={showToast} message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />
+            {/* Mobile Sidebar (Drawer-style for 'More' or complex navigation) */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm md:hidden"
+                            onClick={() => setMobileMenuOpen(false)}
+                        />
+                        <motion.aside
+                            initial={{ x: -280 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -280 }}
+                            className="fixed inset-y-0 left-0 z-70 flex w-72 flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] pt-safe md:hidden"
+                        >
+                            <div className="flex h-16 items-center justify-end px-4">
+                                <button
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-all active:scale-90"
+                                >
+                                    <XMarkIcon className="h-6 w-6" />
+                                </button>
+                            </div>
+                            <nav className="flex-1 space-y-1 overflow-y-auto p-4 pt-2">
+                                {visiblePrimaryNav.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${isCurrentPath(item.href) ? 'bg-white/20 text-white shadow-lg' : 'text-white/60 hover:bg-white/10'}`}
+                                    >
+                                        <item.icon className="h-5 w-5" />
+                                        <span className="font-bold">{item.name}</span>
+                                    </Link>
+                                ))}
+                                <div className="my-4 h-px bg-white/10" />
+                                {visibleSecondaryNav.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${isCurrentPath(item.href) ? 'bg-white/20 text-white shadow-lg' : 'text-white/60 hover:bg-white/10'}`}
+                                    >
+                                        <item.icon className="h-5 w-5" />
+                                        <span className="font-bold">{item.name}</span>
+                                    </Link>
+                                ))}
+                            </nav>
+                            <div className="border-t border-white/10 bg-black/20 p-4">
+                                <Link href={ProfileController.edit.url()} className="flex items-center gap-3 px-4 py-3 text-white/70">
+                                    <UserCircleIcon className="h-5 w-5" /> Profile
+                                </Link>
+                                    <button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            setShowLogoutConfirmation(true);
+                                        }}
+                                        className="flex w-full items-center gap-3 px-4 py-3 text-white/70"
+                                    >
+                                        <ArrowLeftStartOnRectangleIcon className="h-5 w-5" /> Sign Out
+                                    </button>
+                            </div>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Flash & Toast Messages */}
+            {/* Logout Confirmation Modal */}
+            <AnimatePresence>
+                {showLogoutConfirmation && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md"
+                            onClick={() => setShowLogoutConfirmation(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/20 bg-white/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-black/5"
+                        >
+                            <div className="mb-6 flex justify-center">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500 ring-4 ring-red-50/50">
+                                    <ArrowLeftStartOnRectangleIcon className="h-8 w-8" />
+                                </div>
+                            </div>
+                            <h3 className="mb-2 text-center text-xl font-black tracking-tight text-slate-900">Sign Out</h3>
+                            <p className="mb-8 text-center text-sm leading-relaxed text-slate-500">
+                                Are you sure you want to end your session? You will need to sign back in to access your dashboard.
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex h-12 items-center justify-center rounded-2xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/20 transition-all active:scale-95 hover:bg-red-600"
+                                >
+                                    Yes, Sign Out
+                                </button>
+                                <button
+                                    onClick={() => setShowLogoutConfirmation(false)}
+                                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 transition-all active:scale-95 hover:bg-slate-200"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <Toast
+                show={showToast}
+                message={toastMessage}
+                type={toastType}
+                onClick={toastUrl ? () => router.visit(toastUrl) : undefined}
+                onClose={() => {
+                    setShowToast(false);
+                    setToastUrl(null);
+                }}
+            />
         </div>
     );
 }

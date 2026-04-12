@@ -18,6 +18,7 @@ import {
     ArrowPathIcon,
     ShieldCheckIcon,
     SparklesIcon,
+    XCircleIcon,
 } from '@heroicons/react/24/outline';
 import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
@@ -105,21 +106,79 @@ const MiniStamp = ({ status }: { status: string }) => {
     );
 };
 
-const HeaderStat = ({ icon: Icon, label, value, color }: any) => (
-    <div className="flex items-center gap-2.5 rounded-xl border border-white/60 bg-white/40 px-3 py-1.5 shadow-xs backdrop-blur-sm">
-        <div className={`rounded-lg p-1 ${color}`}>
-            <Icon className="h-3.5 w-3.5" />
-        </div>
-        <div>
-            <p className="mb-0.5 text-[9px] leading-none font-black tracking-widest text-gray-400 uppercase">{label}</p>
-            <p className="text-xs leading-none font-bold text-gray-900">{value}</p>
-        </div>
-    </div>
-);
+type StatCardProps = {
+    title: string;
+    value: string;
+    subValue?: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: 'blue' | 'green' | 'purple' | 'amber' | 'red';
+    delay: number;
+};
+
+const StatCard = ({ title, value, subValue, icon: Icon, color, delay }: StatCardProps) => {
+    const colorClasses = {
+        blue: {
+            bg: 'bg-blue-50',
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-600',
+            border: 'border-blue-100',
+        },
+        green: {
+            bg: 'bg-emerald-50',
+            iconBg: 'bg-emerald-100',
+            iconColor: 'text-emerald-600',
+            border: 'border-emerald-100',
+        },
+        purple: {
+            bg: 'bg-violet-50',
+            iconBg: 'bg-violet-100',
+            iconColor: 'text-violet-600',
+            border: 'border-violet-100',
+        },
+        amber: {
+            bg: 'bg-amber-50',
+            iconBg: 'bg-amber-100',
+            iconColor: 'text-amber-600',
+            border: 'border-amber-100',
+        },
+        red: {
+            bg: 'bg-red-50',
+            iconBg: 'bg-red-100',
+            iconColor: 'text-red-600',
+            border: 'border-red-100',
+        },
+    };
+
+    const classes = colorClasses[color];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay }}
+            className={`relative overflow-hidden rounded-2xl border ${classes.border} ${classes.bg} p-6`}
+        >
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/50 blur-3xl" />
+
+            <div className="relative flex items-start justify-between">
+                <div>
+                    <p className="text-sm font-medium text-gray-600">{title}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+                    {subValue && <p className="mt-1 text-sm text-gray-500">{subValue}</p>}
+                </div>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${classes.iconBg} ${classes.iconColor}`}>
+                    <Icon className="h-6 w-6" />
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
 
 export default function InvoiceDetailPage({ invoice }: Props) {
     const isPaid = invoice.status === 'paid';
     const isOverdue = invoice.status === 'overdue';
+    const isPending = invoice.status === 'pending';
     const overdueDays = Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / 86400000);
 
     // Calculate email cooldown
@@ -216,34 +275,50 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                 <BackgroundAura />
 
                 <div className="relative z-10 mx-auto max-w-5xl px-4 py-8 sm:py-12 lg:px-8">
-                    {/* Compact Actions Bar */}
-                    <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-                            <Link
-                                href={InvoiceController.index.url()}
-                                className="group flex items-center gap-2 font-semibold text-slate-500 transition-all hover:text-primary-600"
-                            >
-                                <div className="rounded-lg border border-slate-200 bg-white p-1.5 shadow-xs transition-colors group-hover:border-primary-200 group-hover:bg-primary-50">
-                                    <ArrowLeftIcon className="h-4 w-4" />
-                                </div>
-                                <span className="text-sm">Invoice List</span>
-                            </Link>
-                        </motion.div>
+                    {/* Back Link */}
+                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
+                        <Link
+                            href={InvoiceController.index.url()}
+                            className="group flex items-center gap-2 font-semibold text-slate-500 transition-all hover:text-primary-600"
+                        >
+                            <div className="rounded-lg border border-slate-200 bg-white p-1.5 shadow-xs transition-colors group-hover:border-primary-200 group-hover:bg-primary-50">
+                                <ArrowLeftIcon className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm">Invoice List</span>
+                        </Link>
+                    </motion.div>
 
-                        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="flex flex-wrap gap-2">
-                            <HeaderStat
-                                icon={CalendarIcon}
-                                label="Due"
-                                value={new Date(invoice.due_date).toLocaleDateString()}
-                                color="bg-amber-50 text-amber-600"
-                            />
-                            <HeaderStat
-                                icon={isPaid ? CheckCircleIcon : InformationCircleIcon}
-                                label="Status"
-                                value={invoice.status.toUpperCase()}
-                                color={isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}
-                            />
-                        </motion.div>
+                    {/* Stat Cards Grid */}
+                    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <StatCard
+                            title="Amount Due"
+                            value={invoice.formatted_amount}
+                            icon={BanknotesIcon}
+                            color="green"
+                            delay={0.05}
+                        />
+                        <StatCard
+                            title="Residents Billed"
+                            value={invoice.resident_count.toString()}
+                            icon={UsersIcon}
+                            color="blue"
+                            delay={0.1}
+                        />
+                        <StatCard
+                            title="Status"
+                            value={invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                            icon={isPaid ? CheckCircleIcon : isOverdue ? XCircleIcon : ClockIcon}
+                            color={isPaid ? 'green' : isOverdue ? 'red' : 'purple'}
+                            delay={0.15}
+                        />
+                        <StatCard
+                            title="Due Date"
+                            value={new Date(invoice.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            subValue={isOverdue ? `${overdueDays} days overdue` : 'Upcoming'}
+                            icon={CalendarIcon}
+                            color={isOverdue ? 'amber' : 'blue'}
+                            delay={0.2}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-6 sm:gap-8 lg:grid-cols-12">

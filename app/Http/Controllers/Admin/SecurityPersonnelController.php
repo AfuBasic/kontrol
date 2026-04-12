@@ -76,7 +76,7 @@ class SecurityPersonnelController extends Controller
         $action->execute($request->validated(), $estate);
 
         return redirect()
-            ->route('security.index')
+            ->route('admin.security.index')
             ->with('success', 'Security personnel invited successfully. They will receive an email to set up their account.');
     }
 
@@ -115,7 +115,7 @@ class SecurityPersonnelController extends Controller
         $action->execute($security, $validated, $estate);
 
         return redirect()
-            ->route('security.index')
+            ->route('admin.security.index')
             ->with('success', 'Security personnel updated successfully.');
     }
 
@@ -130,7 +130,7 @@ class SecurityPersonnelController extends Controller
         $action->execute($security, $estate);
 
         return redirect()
-            ->route('security.index')
+            ->route('admin.security.index')
             ->with('success', 'Security personnel removed successfully.');
     }
 
@@ -180,7 +180,7 @@ class SecurityPersonnelController extends Controller
         $deletedCount = $action->execute($validated['ids'], $estate);
 
         return redirect()
-            ->route('security.index')
+            ->route('admin.security.index')
             ->with('success', "Successfully removed {$deletedCount} security personnel.");
     }
 }

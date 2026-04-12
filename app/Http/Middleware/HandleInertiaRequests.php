@@ -79,6 +79,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'billing_enabled' => fn () => $estate && $estate->settings?->charge_type === 'estate',
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
+            'webpush_public_key' => config('webpush.vapid.public_key'),
         ];
     }
 }

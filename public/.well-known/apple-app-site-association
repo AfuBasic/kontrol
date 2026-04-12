@@ -1,0 +1,16 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "YOURTeamID.com.kontrol.app",
+                "paths": [
+                    "/invitation/*",
+                    "/join/*",
+                    "/reset-password/*",
+                    "/forgot-password/*"
+                ]
+            }
+        ]
+    }
+}

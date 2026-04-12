@@ -1,134 +1,92 @@
 import { router } from '@inertiajs/react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     children: React.ReactNode;
-    onRefresh?: () => Promise<void> | void;
 }
 
-export default function PullToRefresh({ children, onRefresh }: Props) {
+export default function PullToRefresh({ children }: Props) {
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const [isPulling, setIsPulling] = useState(false);
     const y = useMotionValue(0);
-    const rotate = useTransform(y, [0, 100], [0, 360]);
-    const opacity = useTransform(y, [0, 50], [0, 1]);
-    const scale = useTransform(y, [0, 80], [0.5, 1]);
+    const pullThreshold = 60;
 
-    // Threshold to trigger refresh
-    const REFRESH_THRESHOLD = 80;
-
-    const handleRefresh = useCallback(async () => {
-        setIsRefreshing(true);
-        try {
-            if (onRefresh) {
-                await onRefresh();
-            } else {
-                // Default to Inertia reload
-                await new Promise<void>((resolve) => {
-                    router.reload({
-                        onFinish: () => resolve(),
-                    });
-                });
-            }
-        } finally {
-            // Min wait to show animation
-            setTimeout(() => {
-                setIsRefreshing(false);
-                y.set(0);
-            }, 500);
-        }
-    }, [onRefresh, y]);
+    // Transform drag distance to opacity and rotation
+    const opacity = useTransform(y, [0, pullThreshold], [0, 1]);
+    const rotate = useTransform(y, [0, pullThreshold], [0, 360]);
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        let startY = 0;
-        let isDragging = false;
-        let initialScrollTop = 0;
-
-        // Check if page is at top - more permissive check for mobile
-        const getScrollTop = () => {
-            return Math.max(0, window.scrollY || document.documentElement.scrollTop || document.body.scrollTop);
-        };
-
-        const isAtTop = () => {
-            return getScrollTop() <= 5; // Allow small tolerance for mobile bounce
-        };
-
-        const handleTouchStart = (e: TouchEvent) => {
-            // Don't start if already refreshing
-            if (isRefreshing) return;
-
-            initialScrollTop = getScrollTop();
-
-            if (isAtTop()) {
-                startY = e.touches[0].clientY;
-                isDragging = true;
-            }
-        };
-
-        const handleTouchMove = (e: TouchEvent) => {
-            if (!isDragging || isRefreshing) return;
-
-            const currentY = e.touches[0].clientY;
-            const diff = currentY - startY;
-
-            // Only allow dragging down if at top and pulling down
-            if (diff > 0 && isAtTop()) {
-                // Add resistance
-                const damped = Math.min(diff * 0.4, 150);
-                y.set(damped);
-
-                // Prevent default pull-to-refresh of browser
-                if (e.cancelable) e.preventDefault();
-            } else if (diff < -10 || getScrollTop() > initialScrollTop + 10) {
-                // User is scrolling up or page has scrolled down, cancel the drag
-                isDragging = false;
-                animate(y, 0, { type: 'spring', stiffness: 400, damping: 30 });
-            }
-        };
-
-        const handleTouchEnd = () => {
-            if (!isDragging) return;
-            isDragging = false;
-
-            const currentY = y.get();
-
-            if (currentY > REFRESH_THRESHOLD && !isRefreshing) {
+        const unsubscribeY = y.on('change', (latest) => {
+            if (latest >= pullThreshold && !isRefreshing) {
                 handleRefresh();
-            } else {
-                animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
             }
-        };
+        });
 
-        // Use document-level listeners for more reliable capture
-        document.addEventListener('touchstart', handleTouchStart, { passive: true });
-        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        document.addEventListener('touchend', handleTouchEnd);
+        return () => unsubscribeY();
+    }, [isRefreshing]);
 
-        return () => {
-            document.removeEventListener('touchstart', handleTouchStart);
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleTouchEnd);
-        };
-    }, [y, isRefreshing, handleRefresh]);
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            router.reload({
+                onFinish: () => {
+                    setIsRefreshing(false);
+                    animate(y, 0, { type: 'spring', stiffness: 400, damping: 40 });
+                    setIsPulling(false);
+                },
+            });
+        }, 800);
+    };
 
     return (
-        <div ref={containerRef} className="relative min-h-screen">
-            {/* Refresh Indicator */}
-            <motion.div style={{ y, opacity, scale }} className="fixed -top-10 left-0 z-50 flex w-full justify-center pt-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-gray-100">
-                    <motion.div style={{ rotate }} animate={isRefreshing ? { rotate: 360 } : {}}>
-                        <Loader2 className={`h-6 w-6 text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <div className="relative overflow-visible">
+            {/* Branded Pulse Indicator */}
+            <motion.div
+                style={{ y, opacity }}
+                className="absolute top-0 right-0 left-0 z-50 flex justify-center pt-4 pointer-events-none"
+            >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xl ring-1 ring-slate-200">
+                    <motion.div style={{ rotate }}>
+                        <SparklesIcon className="h-5 w-5 text-[#1F6FDB]" />
                     </motion.div>
                 </div>
             </motion.div>
 
-            {/* Content with offset */}
-            <motion.div style={{ y }} animate={isRefreshing ? { y: REFRESH_THRESHOLD } : {}} className="min-h-screen">
+            {/* Content Container */}
+            <motion.div
+                onPan={(e, info) => {
+                    if (isRefreshing) return;
+
+                    // Only start pulling if we're at the top and moving DOWN
+                    if (!isPulling) {
+                        if (window.scrollY <= 0 && info.offset.y > 5) {
+                            setIsPulling(true);
+                        } else {
+                            return;
+                        }
+                    }
+
+                    if (info.offset.y > 0) {
+                        const newY = info.offset.y * 0.5;
+                        y.set(newY);
+                    } else {
+                        y.set(0);
+                    }
+                }}
+                onPanEnd={(e, info) => {
+                    const currentY = y.get();
+                    if (isPulling && currentY >= pullThreshold && !isRefreshing) {
+                        handleRefresh();
+                    } else {
+                        animate(y, 0, { type: 'spring', stiffness: 400, damping: 40 });
+                        setIsPulling(false);
+                    }
+                }}
+                style={{ y, touchAction: isPulling ? 'none' : 'auto' }}
+                className="relative z-10"
+            >
                 {children}
             </motion.div>
         </div>

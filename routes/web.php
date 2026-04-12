@@ -30,6 +30,7 @@ Route::middleware('guest')->group(function (): void {
     // Google OAuth
     Route::get('/auth/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
+    Route::post('/auth/google/mobile', [SocialLoginController::class, 'handleGoogleMobileToken'])->name('auth.google.mobile');
 
     // OTP Verification (new device)
     Route::get('/login/verify', [LoginOtpController::class, 'show'])->name('login.otp.show');

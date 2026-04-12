@@ -34,8 +34,9 @@ class ResidentController extends Controller
         $this->authorize('residents.view');
 
         $filters = $request->only(['search', 'status']);
+        $estate = $this->estateContext->getEstate();
 
-        $residents = $this->residentService
+        $residents = Inertia::defer(fn () => $this->residentService
             ->getPaginatedResidents(15, $filters)
             ->through(fn ($user) => [
                 'id' => $user->id,
@@ -46,12 +47,11 @@ class ResidentController extends Controller
                 'status' => $user->estates->first()?->pivot?->status ?? 'pending',
                 'suspended_at' => $user->suspended_at,
                 'created_at' => $user->created_at->format('M d, Y'),
-            ]);
+            ]));
 
-        $estate = $this->estateContext->getEstate();
-        $pendingCount = User::query()
+        $pendingCount = Inertia::defer(fn () => User::query()
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
-            ->count();
+            ->count());
 
         return Inertia::render('admin/residents/index', [
             'residents' => $residents,
@@ -94,7 +94,7 @@ class ResidentController extends Controller
         $action->execute($request->validated(), $estate);
 
         return redirect()
-            ->route('residents.index')
+            ->route('admin.residents.index')
             ->with('success', 'Resident invited successfully. They will receive an email to set up their account.');
     }
 
@@ -138,7 +138,7 @@ class ResidentController extends Controller
         $action->execute($resident, $validated, $estate);
 
         return redirect()
-            ->route('residents.index')
+            ->route('admin.residents.index')
             ->with('success', 'Resident updated successfully.');
     }
 
@@ -153,7 +153,7 @@ class ResidentController extends Controller
         $action->execute($resident, $estate);
 
         return redirect()
-            ->route('residents.index')
+            ->route('admin.residents.index')
             ->with('success', 'Resident removed successfully.');
     }
 
@@ -208,7 +208,7 @@ class ResidentController extends Controller
         }
 
         return redirect()
-            ->route('residents.index')
+            ->route('admin.residents.index')
             ->with('success', $message);
     }
 
@@ -230,7 +230,7 @@ class ResidentController extends Controller
         $total = $result['deleted'] + $result['detached'];
 
         return redirect()
-            ->route('residents.index')
+            ->route('admin.residents.index')
             ->with('success', "Successfully removed {$total} resident(s).");
     }
 }
