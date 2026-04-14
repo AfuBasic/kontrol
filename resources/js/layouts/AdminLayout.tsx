@@ -106,6 +106,13 @@ export default function AdminLayout({ children }: Props) {
         setNotifications(auth.user?.notifications || []);
     }, [auth.user?.unread_notifications_count, auth.user?.notifications]);
 
+    // Close all open menus on navigation
+    useEffect(() => {
+        setNotificationOpen(false);
+        setUserMenuOpen(false);
+        setMobileMenuOpen(false);
+    }, [url]);
+
     useEffect(() => {
         if (flash?.success) {
             setToastMessage(flash.success);

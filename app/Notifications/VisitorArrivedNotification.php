@@ -155,6 +155,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
             'access_code_id' => $this->accessCode->id,
             'visitor_name' => $this->accessCode->visitor_name,
             'code' => $this->accessCode->code,
+            'action_url' => '/resident/home',
             'type' => 'visitor_arrived',
         ];
     }

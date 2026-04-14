@@ -138,7 +138,7 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
         return [
             'title' => 'Application Approved',
             'message' => "Your application to join {$this->estate->name} has been approved. Welcome!",
-            'action_url' => url('/login'),
+            'action_url' => '/admin/dashboard',
             'type' => 'success',
         ];
     }

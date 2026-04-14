@@ -52,6 +52,7 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
             'resident_name' => $this->resident->name,
             'estate_id' => $this->estate->id,
             'estate_name' => $this->estate->name,
+            'action_url' => '/admin/residents',
             'type' => 'info',
         ];
     }
