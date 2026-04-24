@@ -8,11 +8,11 @@ use App\Models\AccessCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushChannel;
-use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class VisitorArrivedNotification extends Notification implements ShouldQueue
 {
@@ -52,7 +52,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
-        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
+        $estateName = $this->accessCode->estate?->name ?? 'Your Community';
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
         $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
 
@@ -80,13 +80,13 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toTelegram(object $notifiable): array
     {
-        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
+        $estateName = $this->accessCode->estate?->name ?? 'Your Community';
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
         $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
         $time = now()->format('M j, Y g:i A');
 
         $text = "<b>Visitor Arrived</b>\n\n";
-        $text .= "<b>Estate:</b> {$estateName}\n";
+        $text .= "<b>Community:</b> {$estateName}\n";
         $text .= "<b>Visitor:</b> {$visitorName}\n";
         $text .= "<b>Code:</b> <code>{$this->accessCode->code}</code>\n";
         $text .= "<b>Verified by:</b> {$securityName}\n";
@@ -115,28 +115,28 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
                 body: $data['message'],
             )
         ))
-        ->data([
-            'action_url' => '/resident',
-            'access_code_id' => (string) $this->accessCode->id,
-            'type' => 'visitor_arrived',
-        ])
-        ->custom([
-            'android' => [
-                'notification' => [
-                    'color' => '#0A3D91',
-                    'sound' => 'default',
-                    'icon' => 'notification_icon',
-                ],
-            ],
-            'apns' => [
-                'payload' => [
-                    'aps' => [
+            ->data([
+                'action_url' => '/resident',
+                'access_code_id' => (string) $this->accessCode->id,
+                'type' => 'visitor_arrived',
+            ])
+            ->custom([
+                'android' => [
+                    'notification' => [
+                        'color' => '#0A3D91',
                         'sound' => 'default',
-                        'badge' => 1,
+                        'icon' => 'notification_icon',
                     ],
                 ],
-            ],
-        ]);
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
+            ]);
     }
 
     /**
@@ -144,7 +144,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
+        $estateName = $this->accessCode->estate?->name ?? 'Your Community';
         $visitorName = $this->accessCode->visitor_name ?? 'A visitor';
         $securityName = $this->accessCode->verifiedBy?->name ?? 'Security';
 

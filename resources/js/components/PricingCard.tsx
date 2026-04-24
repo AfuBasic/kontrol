@@ -1,5 +1,5 @@
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { BoltIcon, CheckIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface Feature {
     id: number;
@@ -16,7 +16,7 @@ interface Plan {
     billing_interval: 'quarterly' | 'semi-annually' | 'annually';
     is_featured: boolean;
     badge: string | null;
-    color: string; // hex or css color string from DB
+    color: string;
     max_residents: number | null;
     max_security: number | null;
     max_admins: number | null;
@@ -31,162 +31,279 @@ interface Props {
     onSelect: (planId: number) => void;
 }
 
-export default function PricingCard({ plan, allFeatures, billingPeriod, savings, onSelect }: Props) {
+export default function PricingCard({ plan, allFeatures, savings, onSelect }: Props) {
     const [showAll, setShowAll] = useState(false);
-    const accent = plan.color || '#3b82f6'; // fallback blue
     const primaryFeatures = allFeatures.slice(0, 4);
     const extraFeatures = allFeatures.slice(4);
 
-    const billingIntervalLabel =
-        {
-            quarterly: 'per quarter',
-            'semi-annually': '6 months',
-            annually: 'per year',
-        }[plan.billing_interval] || plan.billing_interval;
+    const billingIntervalLabel = {
+        quarterly: 'per quarter',
+        'semi-annually': 'per 6 months',
+        annually: 'per year',
+    }[plan.billing_interval];
+
+    const priceValue = plan.formatted_price.replace(/[^\d.,]/g, '');
+
+    const capacityItems = [
+        plan.max_residents ? `Up to ${plan.max_residents} residents` : 'Unlimited residents',
+        plan.max_security ? `Up to ${plan.max_security} security staff` : 'Unlimited security staff',
+        plan.max_admins ? `Up to ${plan.max_admins} admins` : 'Unlimited admins',
+    ];
+
+    if (plan.is_featured) {
+        return (
+            <FeaturedCard
+                plan={plan}
+                priceValue={priceValue}
+                billingIntervalLabel={billingIntervalLabel}
+                savings={savings}
+                capacityItems={capacityItems}
+                primaryFeatures={primaryFeatures}
+                extraFeatures={extraFeatures}
+                showAll={showAll}
+                onToggleShowAll={() => setShowAll((v) => !v)}
+                onSelect={() => onSelect(plan.id)}
+            />
+        );
+    }
 
     return (
-        <div
-            className={`group relative flex h-full flex-col overflow-hidden rounded-4xl border bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 ${
-                plan.is_featured ? 'z-10 border-white/10 lg:scale-[1.03]' : 'border-slate-800/80 hover:border-slate-700/80'
-            }`}
-            style={{
-                boxShadow: plan.is_featured
-                    ? `0 0 60px -15px ${accent}40, inset 0 1px 0 rgba(255,255,255,0.1)`
-                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
-            }}
-        >
-            {/* Intense Ambient Top Glow */}
-            <div
-                className="absolute top-[-50px] right-[-20%] left-[-20%] h-48 rounded-full opacity-20 blur-[80px] transition-opacity duration-700 group-hover:opacity-40"
-                style={{ background: accent }}
-            />
+        <RegularCard
+            plan={plan}
+            priceValue={priceValue}
+            billingIntervalLabel={billingIntervalLabel}
+            savings={savings}
+            capacityItems={capacityItems}
+            primaryFeatures={primaryFeatures}
+            extraFeatures={extraFeatures}
+            showAll={showAll}
+            onToggleShowAll={() => setShowAll((v) => !v)}
+            onSelect={() => onSelect(plan.id)}
+        />
+    );
+}
 
-            {/* Featured/Custom badge */}
-            {(plan.badge || plan.is_featured) && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2">
-                    <div
-                        className="inline-flex items-center gap-1.5 rounded-b-xl px-4 py-1.5 text-center text-[10px] font-bold tracking-widest text-white uppercase shadow-lg backdrop-blur-md"
-                        style={{
-                            background: `linear-gradient(to bottom, ${accent}dd, ${accent}aa)`,
-                            borderBottom: '1px solid rgba(255,255,255,0.2)',
-                            borderLeft: '1px solid rgba(255,255,255,0.1)',
-                            borderRight: '1px solid rgba(255,255,255,0.1)',
-                        }}
-                    >
-                        {plan.is_featured && <StarIcon className="h-3 w-3" />}
-                        {plan.badge || 'Most Popular'}
-                    </div>
+interface CardProps {
+    plan: Plan;
+    priceValue: string;
+    billingIntervalLabel: string;
+    savings?: number;
+    capacityItems: string[];
+    primaryFeatures: Feature[];
+    extraFeatures: Feature[];
+    showAll: boolean;
+    onToggleShowAll: () => void;
+    onSelect: () => void;
+}
+
+function RegularCard({
+    plan,
+    priceValue,
+    billingIntervalLabel,
+    savings,
+    capacityItems,
+    primaryFeatures,
+    extraFeatures,
+    showAll,
+    onToggleShowAll,
+    onSelect,
+}: CardProps) {
+    return (
+        <div className="relative flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-8 transition-all duration-300 hover:border-slate-300 hover:shadow-[0_20px_50px_-20px_rgba(15,23,42,0.15)]">
+            {plan.badge && (
+                <div className="absolute -top-3 left-8">
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold tracking-[0.15em] text-slate-600 uppercase shadow-sm">
+                        {plan.badge}
+                    </span>
                 </div>
             )}
-            <div className="relative z-20 flex flex-1 flex-col p-8 lg:p-10">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <h3 className={`text-xl font-bold tracking-tight text-white ${plan.is_featured ? 'mt-2' : ''}`}>{plan.name}</h3>
-                        <p className="mt-2 text-sm leading-relaxed font-light text-slate-400">{plan.description}</p>
-                    </div>
-                </div>
 
-                <div className="mt-8 mb-2 flex flex-col items-start gap-2">
-                    {savings && savings > 0 && (
-                        <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-extrabold tracking-widest text-emerald-400 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)] uppercase">
-                            <BoltIcon className="mr-1.5 h-3 w-3" />
-                            Save {savings}% Today
-                        </div>
-                    )}
-                    <div className="flex items-baseline">
-                        <span className="mr-1 text-2xl font-bold text-slate-400 opacity-80">₦</span>
-                        <span className="text-5xl leading-none font-extrabold tracking-tight text-white drop-shadow-sm">
-                            {plan.formatted_price.replace(/[^\d.,]/g, '')}
-                        </span>
-                        <span className="ml-2 text-sm font-medium whitespace-nowrap text-slate-400/80">/ {billingIntervalLabel}</span>
-                    </div>
-                </div>
-
-                <ul className="mt-8 space-y-4 border-t border-slate-800/80 pt-8">
-                    <li className="flex items-center text-sm font-medium text-slate-200 transition-colors group-hover:text-white">
-                        <CheckIcon className="mr-3 h-5 w-5 shrink-0" style={{ color: accent }} />
-                        {plan.max_residents ? `Up to ${plan.max_residents} residents` : 'Unlimited residents'}
-                    </li>
-                    <li className="flex items-center text-sm font-medium text-slate-200 transition-colors group-hover:text-white">
-                        <CheckIcon className="mr-3 h-5 w-5 shrink-0" style={{ color: accent }} />
-                        {plan.max_security ? `Up to ${plan.max_security} security staff` : 'Unlimited security staff'}
-                    </li>
-                    <li className="flex items-center text-sm font-medium text-slate-200 transition-colors group-hover:text-white">
-                        <CheckIcon className="mr-3 h-5 w-5 shrink-0" style={{ color: accent }} />
-                        {plan.max_admins ? `Up to ${plan.max_admins} admin users` : 'Unlimited admin users'}
-                    </li>
-
-                    {primaryFeatures.map((f) => {
-                        const isIncluded = plan.features.some((pf) => pf.id === f.id);
-                        return (
-                            <li
-                                key={f.id}
-                                className={`flex items-start text-sm transition-colors ${isIncluded ? 'font-medium text-slate-300' : 'font-light text-slate-500 opacity-40'}`}
-                            >
-                                {isIncluded ? (
-                                    <CheckIcon className="mt-0.5 mr-3 h-5 w-5 shrink-0" style={{ color: accent }} />
-                                ) : (
-                                    <XMarkIcon className="mt-0.5 mr-3 h-5 w-5 shrink-0 text-slate-600" />
-                                )}
-                                <span className={isIncluded ? '' : 'line-through decoration-slate-600/50'}>{f.name}</span>
-                            </li>
-                        );
-                    })}
-
-                    {extraFeatures.length > 0 && !showAll && (
-                        <li>
-                            <button
-                                type="button"
-                                className="mt-2 text-xs font-semibold tracking-wider text-slate-500 uppercase transition-colors hover:text-slate-300"
-                                onClick={() => setShowAll(true)}
-                            >
-                                + {extraFeatures.length} more features
-                            </button>
-                        </li>
-                    )}
-
-                    {showAll &&
-                        extraFeatures.map((f) => {
-                            const isIncluded = plan.features.some((pf) => pf.id === f.id);
-                            return (
-                                <li
-                                    key={f.id}
-                                    className={`flex items-start text-sm transition-colors ${isIncluded ? 'font-medium text-slate-300' : 'font-light text-slate-500 opacity-40'}`}
-                                >
-                                    {isIncluded ? (
-                                        <CheckIcon className="mt-0.5 mr-3 h-5 w-5 shrink-0" style={{ color: accent }} />
-                                    ) : (
-                                        <XMarkIcon className="mt-0.5 mr-3 h-5 w-5 shrink-0 text-slate-600" />
-                                    )}
-                                    <span className={isIncluded ? '' : 'line-through decoration-slate-600/50'}>{f.name}</span>
-                                </li>
-                            );
-                        })}
-                </ul>
+            <div>
+                <h3 className="text-lg font-semibold tracking-tight text-slate-900">{plan.name}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{plan.description}</p>
             </div>
 
-            <div className="relative z-20 mt-auto p-8 pt-0 lg:p-10">
-                <button
-                    onClick={() => onSelect(plan.id)}
-                    className="w-full rounded-[14px] px-6 py-4 text-sm font-bold tracking-wide transition-all duration-300 group-hover:scale-[1.02] active:scale-[0.98]"
-                    style={
-                        plan.is_featured
-                            ? {
-                                  background: `linear-gradient(to bottom, ${accent}, ${accent}dd)`,
-                                  color: '#fff',
-                                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 20px -6px ${accent}60`,
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                              }
-                            : {
-                                  background: 'rgba(255,255,255,0.03)',
-                                  color: '#fff',
-                                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.1)',
-                              }
-                    }
-                >
-                    Get Started
-                </button>
+            <div className="mt-6 flex flex-col gap-2">
+                {savings && savings > 0 ? (
+                    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+                        Save {savings}%
+                    </span>
+                ) : null}
+                <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-slate-500">₦</span>
+                    <span className="text-5xl font-bold tracking-tight text-slate-900">{priceValue}</span>
+                </div>
+                <p className="text-xs text-slate-500">{billingIntervalLabel} · per resident</p>
+            </div>
+
+            <button
+                onClick={onSelect}
+                className="mt-6 w-full rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-900 transition-all duration-200 hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+            >
+                Get started
+            </button>
+
+            <div className="mt-8 border-t border-slate-100 pt-6">
+                <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-500 uppercase">What's included</p>
+                <ul className="mt-4 space-y-3">
+                    {capacityItems.map((item) => (
+                        <FeatureRow key={item} label={item} included variant="light" />
+                    ))}
+                    {primaryFeatures.map((f) => (
+                        <FeatureRow
+                            key={f.id}
+                            label={f.name}
+                            included={plan.features.some((pf) => pf.id === f.id)}
+                            variant="light"
+                        />
+                    ))}
+                    {showAll &&
+                        extraFeatures.map((f) => (
+                            <FeatureRow
+                                key={f.id}
+                                label={f.name}
+                                included={plan.features.some((pf) => pf.id === f.id)}
+                                variant="light"
+                            />
+                        ))}
+                </ul>
+                {extraFeatures.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={onToggleShowAll}
+                        className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-600 transition-colors hover:text-slate-900"
+                    >
+                        {showAll ? 'Show less' : `Show ${extraFeatures.length} more`}
+                        <svg
+                            className={`h-3 w-3 transition-transform ${showAll ? 'rotate-180' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                )}
             </div>
         </div>
+    );
+}
+
+function FeaturedCard({
+    plan,
+    priceValue,
+    billingIntervalLabel,
+    savings,
+    capacityItems,
+    primaryFeatures,
+    extraFeatures,
+    showAll,
+    onToggleShowAll,
+    onSelect,
+}: CardProps) {
+    return (
+        <div className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-slate-950 p-8 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.5)] lg:-my-4">
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
+            </div>
+
+            <div className="relative">
+                <div className="absolute -top-5 left-0">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-linear-to-r from-blue-500 to-indigo-500 px-3 py-1 text-[10px] font-semibold tracking-[0.15em] text-white uppercase shadow-lg shadow-blue-500/30">
+                        <span className="flex h-1.5 w-1.5 rounded-full bg-white" />
+                        {plan.badge || 'Most popular'}
+                    </span>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="text-lg font-semibold tracking-tight text-white">{plan.name}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{plan.description}</p>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-2">
+                    {savings && savings > 0 ? (
+                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+                            Save {savings}%
+                        </span>
+                    ) : null}
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-lg font-semibold text-slate-400">₦</span>
+                        <span className="text-5xl font-bold tracking-tight text-white">{priceValue}</span>
+                    </div>
+                    <p className="text-xs text-slate-400">{billingIntervalLabel} · per resident</p>
+                </div>
+
+                <button
+                    onClick={onSelect}
+                    className="mt-6 w-full rounded-xl bg-white py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all duration-200 hover:bg-slate-100"
+                >
+                    Get started
+                </button>
+
+                <div className="mt-8 border-t border-white/10 pt-6">
+                    <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-400 uppercase">What's included</p>
+                    <ul className="mt-4 space-y-3">
+                        {capacityItems.map((item) => (
+                            <FeatureRow key={item} label={item} included variant="dark" />
+                        ))}
+                        {primaryFeatures.map((f) => (
+                            <FeatureRow
+                                key={f.id}
+                                label={f.name}
+                                included={plan.features.some((pf) => pf.id === f.id)}
+                                variant="dark"
+                            />
+                        ))}
+                        {showAll &&
+                            extraFeatures.map((f) => (
+                                <FeatureRow
+                                    key={f.id}
+                                    label={f.name}
+                                    included={plan.features.some((pf) => pf.id === f.id)}
+                                    variant="dark"
+                                />
+                            ))}
+                    </ul>
+                    {extraFeatures.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={onToggleShowAll}
+                            className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
+                        >
+                            {showAll ? 'Show less' : `Show ${extraFeatures.length} more`}
+                            <svg
+                                className={`h-3 w-3 transition-transform ${showAll ? 'rotate-180' : ''}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2.5}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FeatureRow({ label, included, variant }: { label: string; included: boolean; variant: 'light' | 'dark' }) {
+    const includedIconClass = variant === 'light' ? 'text-blue-600' : 'text-blue-400';
+    const excludedIconClass = variant === 'light' ? 'text-slate-300' : 'text-slate-600';
+    const includedTextClass = variant === 'light' ? 'text-slate-700' : 'text-slate-200';
+    const excludedTextClass = variant === 'light' ? 'text-slate-400' : 'text-slate-500';
+
+    return (
+        <li className="flex items-start gap-3 text-sm">
+            {included ? (
+                <CheckIcon className={`mt-0.5 h-4 w-4 shrink-0 ${includedIconClass}`} strokeWidth={2.5} />
+            ) : (
+                <XMarkIcon className={`mt-0.5 h-4 w-4 shrink-0 ${excludedIconClass}`} strokeWidth={2.5} />
+            )}
+            <span className={included ? includedTextClass : `${excludedTextClass} line-through decoration-slate-300`}>{label}</span>
+        </li>
     );
 }

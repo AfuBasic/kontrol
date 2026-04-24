@@ -149,11 +149,13 @@ export default function SecurityHome() {
                                     <input
                                         ref={inputRef}
                                         type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
+                                        inputMode="text"
+                                        autoCapitalize="characters"
+                                        autoCorrect="off"
+                                        spellCheck={false}
                                         value={data.code}
-                                        onChange={(e) => setData('code', e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                        placeholder="000000"
+                                        onChange={(e) => setData('code', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+                                        placeholder="——————"
                                         className="w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-5 text-center text-3xl font-bold tracking-[0.3em] text-slate-900 placeholder-slate-300 transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         maxLength={6}
                                         autoComplete="off"

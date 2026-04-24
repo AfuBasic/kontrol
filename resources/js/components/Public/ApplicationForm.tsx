@@ -80,13 +80,13 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                 </motion.div>
             )}
 
-            {/* Estate Name */}
+            {/* Community Name */}
             <motion.div variants={itemVariants}>
                 <label htmlFor="estate_name" className={labelClasses}>
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-white">
                         <Building2 className="h-3.5 w-3.5" />
                     </div>
-                    Estate Name <span className="text-red-500">*</span>
+                    Community Name <span className="text-red-500">*</span>
                 </label>
                 <input
                     id="estate_name"
@@ -120,7 +120,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
                         onFocus={handleInputFocus}
-                        placeholder="admin@estate.com"
+                        placeholder="admin@community.com"
                         className={`${inputClasses.base} ${errors.email ? inputClasses.error : inputClasses.normal}`}
                     />
                     {errors.email && (
@@ -161,7 +161,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500 text-white">
                         <MapPin className="h-3.5 w-3.5" />
                     </div>
-                    Estate Address <span className="font-normal text-slate-400">(optional)</span>
+                    Community Address <span className="font-normal text-slate-400">(optional)</span>
                 </label>
                 <input
                     id="address"
@@ -169,7 +169,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
                     onFocus={handleInputFocus}
-                    placeholder="Full address of the estate"
+                    placeholder="Full address of the community"
                     className={`${inputClasses.base} ${inputClasses.normal}`}
                 />
             </motion.div>

@@ -1,277 +1,138 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Users, Bell, User, LogOut, Shield, Phone, UserPlus } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
-import '@/echo';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
-import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
-import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
-import EstateBoardController from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
-import HomeController from '@/actions/App/Http/Controllers/Resident/HomeController';
-import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
-import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
-import ContactModal from '@/components/ContactModal';
+import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import type { SharedData } from '@/types';
 import PullToRefresh from '@/components/PullToRefresh';
 import { useForceLogout } from '@/hooks/useForceLogout';
 import usePathFromUrl from '@/hooks/usePathFromUrl';
+import CreateCodeBottomSheet from '@/components/Resident/CreateCodeBottomSheet';
 
 interface Props {
     children: ReactNode;
+    hideHeader?: boolean;
     hideNav?: boolean;
+    className?: string;
 }
 
-interface PageProps {
-    auth: {
-        user: {
-            id: number;
-            name: string;
-            email: string;
-            roles?: string[];
-            unread_notifications_count?: number;
-            current_estate_id?: number;
-        };
-    };
-    [key: string]: unknown;
-}
+export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const currentPath = usePage().url;
 
-// Extract just the path from a URL (handles Wayfinder's protocol-relative URLs)
-function getPathFromUrl(href: string): string {
-    // Handle protocol-relative URLs like //app.kontrol.test/resident/home
-    if (href.startsWith('//')) {
-        const pathStart = href.indexOf('/', 2);
-        return pathStart !== -1 ? href.slice(pathStart) : '/';
-    }
-    // Handle full URLs
-    if (href.startsWith('http://') || href.startsWith('https://')) {
-        try {
-            return new URL(href).pathname;
-        } catch {
-            return href;
-        }
-    }
-    return href;
-}
-
-const allNavItems = [
-    {
-        name: 'Home',
-        href: HomeController.url(),
-        path: getPathFromUrl(HomeController.url()),
-        icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
-        roles: ['resident', 'household_member'],
-    },
-    {
-        name: 'Visitors',
-        href: AccessCodeController.index.url(),
-        path: getPathFromUrl(AccessCodeController.index.url()),
-        icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
-        roles: ['resident', 'household_member'],
-    },
-
-    {
-        name: 'Feed',
-        href: EstateBoardController.index.url(),
-        path: getPathFromUrl(EstateBoardController.index.url()),
-        icon: (active: boolean) => (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`}
-            >
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z"
-                />
-            </svg>
-        ),
-        roles: ['resident', 'household_member'],
-    },
-    {
-        name: 'Family',
-        href: HouseholdMemberController.index.url(),
-        path: getPathFromUrl(HouseholdMemberController.index.url()),
-        icon: (active: boolean) => <UserPlus className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
-        roles: ['resident'],
-    },
-    {
-        name: 'Profile',
-        href: ProfileController.edit.url(),
-        path: getPathFromUrl(ProfileController.edit.url()),
-        icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={1.5} />,
-        roles: ['resident', 'household_member'],
-    },
-];
-
-export default function ResidentLayout({ children, hideNav = false }: Props) {
-    const page = usePage<PageProps>();
-    const { auth } = page.props;
-    const userRoles = auth?.user?.roles ?? [];
-    // Filter nav items based on user's roles
-    const navItems = allNavItems.filter((item) => item.roles.some((role) => userRoles.includes(role)));
-    // Use Inertia's URL for active state (without query params)
-    const currentPath = page.url?.split('?')[0] || '';
-    useForceLogout(auth.user.id);
-    const [contactModalOpen, setContactModalOpen] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
-    // Listen for visitor notifications on user's private channel
-    useEffect(() => {
-        if (!auth?.user?.id) return;
+    const [createModalOpen, setCreateModalOpen] = useState(false);
 
-        const channel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+    // Force logout if account is disabled
+    useForceLogout(auth?.user?.id);
 
-        channel.listen('.visitor.arrived', (event: { notification: unknown; unread_count: number }) => {
-            setUnreadCount(event.unread_count);
-        });
-
-        return () => {
-            channel.stopListening('.visitor.arrived');
-            window.Echo.leave(`App.Models.User.${auth.user.id}`);
-        };
-    }, [auth?.user?.id]);
-
-    // Listen for new posts on residents channel
-    useEffect(() => {
-        const estateId = auth?.user?.current_estate_id;
-        if (!estateId) return;
-
-        const channel = window.Echo.private(`estates.${estateId}.residents`);
-
-        channel.listen('.post.created', (event: { post: unknown; message: string }) => {
-            setToastMessage(event.message);
-            setShowToast(true);
-            setUnreadCount((prev) => prev + 1);
-            setTimeout(() => setShowToast(false), 4000);
-        });
-
-        return () => {
-            channel.stopListening('.post.created');
-            window.Echo.leave(`estates.${estateId}.residents`);
-        };
-    }, [auth?.user?.current_estate_id]);
-
-    // Sync unread count when props change (e.g., after page navigation)
-    useEffect(() => {
-        setUnreadCount(auth?.user?.unread_notifications_count ?? 0);
-    }, [auth?.user?.unread_notifications_count]);
-
-    // Get initials for avatar
-    const initials =
-        auth?.user?.name
-            ?.split(' ')
-            .map((n) => n[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase() || '?';
-
-    function handleLogout() {
-        router.post(LoginController.destroy.url());
-    }
+    const navItems = [
+        { name: 'Dashboard', href: '/resident/home', icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
+        { name: 'Visitors', href: '/resident/visitors', icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
+        { name: 'CREATE_CODE', href: '#', icon: () => null },
+        { name: 'Hub', href: '/resident/household', icon: (active: boolean) => <LayoutGrid className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
+        { name: 'Profile', href: '/resident/profile', icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
+    ];
 
     return (
         <PullToRefresh>
-            <div className="flex min-h-screen flex-col bg-gray-50/50">
-                {/* Safe area spacer - fills status bar area with background */}
-                <div className="pt-safe fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-lg" aria-hidden="true" />
-
-                {/* Top Header - Minimal */}
-                <motion.header
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="mt-safe sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-lg"
-                >
-                    <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-4">
-                        <Link href={HomeController.url()} className="flex cursor-pointer items-center gap-2.5">
-                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
-                            <span className="text-lg font-semibold text-gray-900">Kontrol</span>
-                        </Link>
-
-                        <div className="flex items-center gap-2">
-                            {/* Notifications */}
-                            <Link
-                                href={ActivityController.url()}
-                                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95"
-                            >
-                                <Bell className="h-5 w-5" strokeWidth={2} />
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
-                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                    </span>
-                                )}
-                            </Link>
-
-                            {/* Contact Support */}
-                            <button
-                                onClick={() => setContactModalOpen(true)}
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"
-                            >
-                                <Phone className="h-5 w-5" strokeWidth={2} />
-                            </button>
+            <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
+                {/* Header - Conditional Light Premium Header */}
+                {!hideHeader && (
+                    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
+                        <div className="mx-auto max-w-lg px-6">
+                            <div className="flex h-16 items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
+                                    <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <Link 
+                                        href="/resident/activity"
+                                        className="relative rounded-2xl bg-slate-100 p-2 text-slate-500 transition-all hover:bg-slate-200"
+                                    >
+                                        <Bell className="h-5 w-5" />
+                                        {(auth?.user?.unread_notifications_count ?? 0) > 0 && (
+                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-2 ring-white">
+                                                {auth?.user?.unread_notifications_count}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </motion.header>
-
-                <ContactModal isOpen={contactModalOpen} onClose={() => setContactModalOpen(false)} />
+                    </header>
+                )}
 
                 {/* Main Content */}
-                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-28">
-                    {children}
-                </main>
+                <main className="relative mx-auto w-full max-w-lg flex-1 px-6 py-8">{children}</main>
 
-                {/* Bottom Navigation - Mobile First */}
+                {/* Bottom Navigation - Refined Glass Design */}
                 {!hideNav && (
-                    <motion.nav
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white/95 backdrop-blur-lg"
-                    >
-                        <div className="mx-auto max-w-lg">
-                            <div className="flex items-center justify-evenly py-2">
-                                {navItems.map((item) => {
+                    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6">
+                        <motion.nav
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/[0.05] backdrop-blur-2xl"
+                        >
+                            <div className="flex items-center justify-between px-3 py-2">
+                                {navItems.map((item, index) => {
+                                    if (item.name === 'CREATE_CODE') {
+                                        return (
+                                            <div key="fab" className="relative flex flex-1 justify-center">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => setCreateModalOpen(true)}
+                                                    className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
+                                                >
+                                                    <Plus className="h-7 w-7" strokeWidth={3} />
+                                                </motion.button>
+                                            </div>
+                                        );
+                                    }
+
                                     const isActive =
                                         currentPath === usePathFromUrl(item.href) || currentPath.startsWith(usePathFromUrl(item.href) + '/');
+
                                     return (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            className="group relative flex min-w-[56px] flex-1 flex-col items-center gap-1 py-1"
-                                        >
+                                        <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
                                             <div
-                                                className={`rounded-xl p-1.5 transition-all ${isActive ? 'bg-indigo-50' : 'group-hover:bg-gray-50'}`}
+                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                                             >
                                                 {item.icon(isActive)}
                                             </div>
-                                            <span
-                                                className={`text-[10px] leading-tight font-medium ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}
-                                            >
-                                                {item.name}
-                                            </span>
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="navIndicator"
+                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                                />
+                                            )}
                                         </Link>
                                     );
                                 })}
                             </div>
-                        </div>
-                    </motion.nav>
+                        </motion.nav>
+                    </div>
                 )}
 
-                {/* Toast Notification for New Posts */}
+                {/* Code Creation Sheet */}
+                <CreateCodeBottomSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />
+
+                {/* Toast Notification */}
                 <AnimatePresence>
                     {showToast && (
                         <motion.div
-                            initial={{ opacity: 0, y: 50 }}
+                            initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 50 }}
-                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md"
+                            exit={{ opacity: 0, y: 100 }}
+                            className="fixed bottom-32 left-1/2 z-50 w-full max-w-xs -translate-x-1/2 px-4"
                         >
-                            <div className="rounded-2xl bg-indigo-600 px-4 py-3 text-center text-sm font-medium text-white shadow-lg">
-                                {toastMessage}
+                            <div className="flex items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-2xl ring-1 ring-slate-100 backdrop-blur-xl">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                    <Bell className="h-5 w-5" />
+                                </div>
+                                <p className="text-sm font-bold">{toastMessage}</p>
                             </div>
                         </motion.div>
                     )}

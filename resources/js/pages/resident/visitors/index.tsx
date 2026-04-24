@@ -6,8 +6,9 @@ import ResidentLayout from '@/layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import SearchInput from '@/components/SearchInput';
-import DailyLimitCard from './components/DailyLimitCard';
+import SummaryDashboard from './components/SummaryDashboard';
 import CodeCard from './components/CodeCard';
+import { Plus, User, Clock as ClockIcon, Search, History as HistoryIcon, Calendar, Activity } from 'lucide-react';
 
 type Props = {
     activeCodes: AccessCode[];
@@ -117,68 +118,66 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
         <ResidentLayout>
             <Head title="Visitors" />
 
-            {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">Visitors</h1>
-                <p className="mt-1 text-gray-500">Manage your access codes</p>
-            </motion.div>
-
-            {/* Daily Limit Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.02 }}>
-                <DailyLimitCard used={dailyUsage.used} limit={dailyUsage.limit} />
-            </motion.div>
-
-            {/* Search Code */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.04 }} className="mb-4">
-                <SearchInput
-                    value={queries[activeTab]}
-                    onChange={handleSearch}
-                    placeholder={`Search ${activeTab === 'history' ? 'history' : 'active codes'}...`}
-                    isLoading={isLoading}
+            {/* 1. TOP SUMMARY */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
+                <div className="mb-6">
+                    <div className="mb-2 flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-indigo-600" />
+                        <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Operations</span>
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Access Control</h1>
+                    <p className="mt-1 text-sm font-bold text-slate-400">Manage community flow and visitor permissions</p>
+                </div>
+                <SummaryDashboard 
+                    activeCount={oneTimeCodes.filter(c => c.status === 'used').length}
+                    expectedToday={oneTimeCodes.filter(c => c.status === 'active').length}
+                    totalToday={dailyUsage.used}
                 />
             </motion.div>
 
-            {/* Tabs */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="mb-6">
-                <div className="flex w-full rounded-2xl bg-gray-100 p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+            {/* 2. TABS & SEARCH */}
+            <div className="sticky top-0 z-30 -mx-4 bg-slate-50/80 px-4 pb-4 backdrop-blur-md">
+                <div className="flex gap-2 rounded-[28px] bg-white p-1.5 shadow-sm ring-1 ring-slate-100">
                     {[
-                        { id: 'active' as const, label: 'Active', count: oneTimeCodes.length },
-                        ...(!isHouseholdMember ? [{ id: 'long_lived' as const, label: 'Long Term', count: longLivedCodes.length }] : []),
-                        { id: 'history' as const, label: 'History' },
-                    ].map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`relative flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-                                activeTab === tab.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                        >
-                            {activeTab === tab.id && (
-                                <motion.div
-                                    layoutId="activeTab"
-                                    className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-black/5"
-                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                                {tab.label}
-                                {tab.count !== undefined && tab.count > 0 && (
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-colors ${
-                                            activeTab === tab.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-600'
-                                        }`}
-                                    >
-                                        {tab.count}
-                                    </span>
+                        { id: 'active' as const, label: 'Active', icon: ClockIcon },
+                        ...(!isHouseholdMember ? [{ id: 'long_lived' as const, label: 'Long Term', icon: Calendar }] : []),
+                        { id: 'history' as const, label: 'History', icon: HistoryIcon },
+                    ].map((tab) => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-[22px] py-3 text-[10px] font-black transition-all ${
+                                    isActive ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeVisitorTab"
+                                        className="absolute inset-[2px] rounded-[20px] bg-slate-50 shadow-sm ring-1 ring-slate-200/50"
+                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                    />
                                 )}
-                            </span>
-                        </button>
-                    ))}
+                                <tab.icon className="relative z-10 h-3.5 w-3.5" strokeWidth={3} />
+                                <span className="relative z-10 whitespace-nowrap uppercase tracking-widest">{tab.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
-            </motion.div>
+                
+                <div className="mt-4">
+                    <SearchInput
+                        value={queries[activeTab]}
+                        onChange={handleSearch}
+                        placeholder={`Search ${activeTab.replace('_', ' ')} codes...`}
+                        isLoading={isLoading}
+                    />
+                </div>
+            </div>
 
-            {/* Code List */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+            {/* 3. CODE LIST */}
+            <div className="mt-4 pb-32">
                 <AnimatePresence mode="wait">
                     {currentCodes.length > 0 ? (
                         <motion.div
@@ -187,7 +186,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.3 }}
-                            className="space-y-3"
+                            className="space-y-4"
                         >
                             {currentCodes.map((code, index) => (
                                 <motion.div
@@ -207,56 +206,29 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                     ) : (
                         <motion.div
                             key="empty"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex flex-col items-center justify-center rounded-[40px] bg-white py-16 px-8 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200"
                         >
-                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                                <svg className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
-                                    />
-                                </svg>
+                            <div className="relative mb-6">
+                                <div className="absolute inset-0 animate-pulse rounded-full bg-indigo-500/10 blur-3xl" />
+                                <div className="relative flex h-24 w-24 items-center justify-center rounded-[32px] bg-slate-50 text-slate-300 ring-1 ring-slate-100">
+                                    <User className="h-12 w-12" strokeWidth={1.5} />
+                                </div>
                             </div>
-                            <h3 className="mb-1 font-medium text-gray-900">{activeTab === 'active' ? 'No active codes' : 'No history yet'}</h3>
-                            <p className="mb-5 text-sm text-gray-500">
-                                {activeTab === 'active' ? 'Create a code for your next visitor' : 'Your visitor history will appear here'}
+                            <h3 className="text-2xl font-black tracking-tight text-slate-900">
+                                {activeTab === 'active' ? "You're all clear" : "No history yet"}
+                            </h3>
+                            <p className="mt-3 text-base font-bold leading-relaxed text-slate-400 max-w-xs mx-auto">
+                                {activeTab === 'active' 
+                                    ? "No active visitors right now. Everything is quiet at the gate." 
+                                    : "Your visitor activity and history will appear here once you start generating codes."}
                             </p>
-                            {activeTab === 'active' && (
-                                <Link
-                                    href="/resident/visitors/create"
-                                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98]"
-                                >
-                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
-                                    Create Code
-                                </Link>
-                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </motion.div>
-
-            {/* Floating Action Button */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-                className="fixed right-4 bottom-24 z-30"
-            >
-                <Link
-                    href="/resident/visitors/create"
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition-transform hover:scale-105 active:scale-95"
-                >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                </Link>
-            </motion.div>
+            </div>
 
             <ConfirmationModal
                 isOpen={revokeModalOpen}

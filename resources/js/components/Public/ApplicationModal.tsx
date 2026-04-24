@@ -129,7 +129,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                                 transition={{ delay: 0.25 }}
                                                 className="text-2xl font-bold tracking-tight text-white sm:text-3xl"
                                             >
-                                                Get Your Estate on Kontrol
+                                                Get Your Community on Kontrol
                                             </motion.h2>
 
                                             {/* Subtitle */}
@@ -139,7 +139,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                                 transition={{ delay: 0.3 }}
                                                 className="mt-2 text-base text-slate-300"
                                             >
-                                                Join hundreds of estates using modern access control.
+                                                Join hundreds of communities using modern access control.
                                             </motion.p>
 
                                             {/* Trust indicators */}

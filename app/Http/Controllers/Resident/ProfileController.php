@@ -30,6 +30,11 @@ class ProfileController extends Controller
                 'unit_number' => $user->profile?->unit_number ?? '',
                 'address' => $user->profile?->address ?? '',
             ],
+            'stats' => [
+                'active_codes_count' => \App\Models\AccessCode::where('user_id', $user->id)->active()->count(),
+                'household_members_count' => $user->householdMembers()->count(),
+                'last_activity' => $user->notifications()->latest()->first()?->created_at?->diffForHumans() ?? 'No recent activity',
+            ],
         ]);
     }
 

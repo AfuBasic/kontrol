@@ -217,8 +217,29 @@ class AccessCode extends Model
 
     public static function generateCode(): string
     {
+        // Unambiguous alphabet — excludes 0, 1, I, O to prevent misreads at the gate.
+        $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $numbers = '23456789';
+        $alphabet = $letters.$numbers;
+
+        $lettersLen = strlen($letters);
+        $numbersLen = strlen($numbers);
+        $alphabetLen = strlen($alphabet);
+
         do {
-            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $code = '';
+            // Ensure at least one letter and one number
+            $code .= $letters[random_int(0, $lettersLen - 1)];
+            $code .= $numbers[random_int(0, $numbersLen - 1)];
+
+            // Fill the rest randomly
+            for ($i = 0; $i < 4; $i++) {
+                $code .= $alphabet[random_int(0, $alphabetLen - 1)];
+            }
+
+            // Shuffle to avoid predictable pattern (e.g. always starts with letter-number)
+            $code = str_shuffle($code);
+
         } while (self::where('code', $code)->where('status', AccessCodeStatus::Active)->exists());
 
         return $code;

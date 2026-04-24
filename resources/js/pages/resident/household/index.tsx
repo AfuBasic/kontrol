@@ -1,10 +1,12 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { KeyRound, Mail, Trash2, UserPlus, Users } from 'lucide-react';
-import { type FormEventHandler, useState } from 'react';
+import { useState, FormEventHandler } from 'react';
 import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import ResidentLayout from '@/layouts/ResidentLayout';
+import FeatureCard from './components/FeatureCard';
+import { KeyRound, Mail, Trash2, UserPlus, Users, ShieldCheck, Activity, BellRing, Sparkles, Zap } from 'lucide-react';
+import MobileSheet from '@/components/MobileSheet';
 
 interface HouseholdMember {
     id: number;
@@ -81,20 +83,24 @@ export default function HouseholdIndex({ members }: Props) {
         <ResidentLayout>
             <Head title="My Household" />
 
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
                 {/* Header */}
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-8 flex items-end justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">My Household</h1>
-                        <p className="mt-1 text-sm text-gray-500">Manage family members who can access your estate.</p>
+                        <div className="mb-2 flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-amber-500" />
+                            <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Household Hub</span>
+                        </div>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Manage Family</h1>
+                        <p className="mt-1 text-sm font-bold text-slate-400">Share community access with your loved ones</p>
                     </div>
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setShowForm(!showForm)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95"
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-100 transition-all hover:bg-indigo-700"
                     >
-                        <UserPlus className="h-4 w-4" />
-                        Add Member
-                    </button>
+                        <UserPlus className="h-6 w-6" />
+                    </motion.button>
                 </div>
 
                 {/* Flash Messages */}
@@ -121,190 +127,144 @@ export default function HouseholdIndex({ members }: Props) {
                     )}
                 </AnimatePresence>
 
-                {/* Add Member Form */}
-                <AnimatePresence>
-                    {showForm && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                        >
-                            <form onSubmit={handleSubmit} className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-                                <h3 className="mb-4 text-base font-semibold text-gray-900">Add Family Member</h3>
-                                <p className="mb-4 text-sm text-gray-500">
-                                    They'll receive an email invitation to set up their account. Household members can generate visitor access codes
-                                    and view the estate board.
-                                </p>
+                {/* Add Member Form - Premium Bottom Sheet */}
+                <MobileSheet isOpen={showForm} onClose={() => setShowForm(false)} title="Add Family Member">
+                    <form onSubmit={handleSubmit} className="p-1">
+                        <p className="mb-6 text-sm font-bold text-slate-400">
+                            They'll receive an email invitation to set up their account. Household members can generate visitor access codes
+                            and view the estate board.
+                        </p>
 
-                                <div className="space-y-3">
-                                    <div>
-                                        <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
-                                            Full Name
-                                        </label>
-                                        <input
-                                            id="name"
-                                            type="text"
-                                            value={form.data.name}
-                                            onChange={(e) => form.setData('name', e.target.value)}
-                                            placeholder="e.g. Jane Doe"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                                        />
-                                        {form.errors.name && <p className="mt-1 text-xs text-red-600">{form.errors.name}</p>}
-                                    </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="name" className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                                    Full Name
+                                </label>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    autoFocus
+                                    value={form.data.name}
+                                    onChange={(e) => form.setData('name', e.target.value)}
+                                    placeholder="e.g. Jane Doe"
+                                    className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                />
+                                {form.errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.name}</p>}
+                            </div>
 
-                                    <div>
-                                        <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
-                                            Email Address
-                                        </label>
-                                        <input
-                                            id="email"
-                                            type="email"
-                                            value={form.data.email}
-                                            onChange={(e) => form.setData('email', e.target.value)}
-                                            placeholder="e.g. jane@example.com"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                                        />
-                                        {form.errors.email && <p className="mt-1 text-xs text-red-600">{form.errors.email}</p>}
-                                    </div>
-                                </div>
+                            <div>
+                                <label htmlFor="email" className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                                    Email Address
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={form.data.email}
+                                    onChange={(e) => form.setData('email', e.target.value)}
+                                    placeholder="e.g. jane@example.com"
+                                    className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                />
+                                {form.errors.email && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.email}</p>}
+                            </div>
+                        </div>
 
-                                <div className="mt-4 flex gap-3">
-                                    <button
-                                        type="submit"
-                                        disabled={form.processing}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50"
-                                    >
-                                        {form.processing ? (
-                                            <span className="flex items-center gap-2">
-                                                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                                                    <circle
-                                                        cx="12"
-                                                        cy="12"
-                                                        r="10"
-                                                        stroke="currentColor"
-                                                        strokeWidth="4"
-                                                        fill="none"
-                                                        className="opacity-25"
-                                                    />
-                                                    <path
-                                                        fill="currentColor"
-                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                                        className="opacity-75"
-                                                    />
-                                                </svg>
-                                                Sending...
-                                            </span>
-                                        ) : (
-                                            <>
-                                                <Mail className="h-4 w-4" />
-                                                Send Invitation
-                                            </>
-                                        )}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowForm(false);
-                                            form.reset();
-                                            form.clearErrors();
-                                        }}
-                                        className="rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        <div className="mt-8 flex flex-col gap-3 pb-6">
+                            <button
+                                type="submit"
+                                disabled={form.processing}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                            >
+                                {form.processing ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                                            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                                        </svg>
+                                        Sending Invite...
+                                    </span>
+                                ) : (
+                                    <>
+                                        <Mail className="h-5 w-5" />
+                                        <span>Send Invitation</span>
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowForm(false);
+                                    form.reset();
+                                    form.clearErrors();
+                                }}
+                                className="w-full py-2 text-sm font-black text-slate-400 transition-colors hover:text-slate-900"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </MobileSheet>
 
                 {/* Members List */}
                 {members.length === 0 ? (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="rounded-2xl bg-white p-10 text-center shadow-sm ring-1 ring-gray-100"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="group relative overflow-hidden rounded-[40px] bg-slate-900 p-12 text-center shadow-2xl"
                     >
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50">
-                            <Users className="h-8 w-8 text-indigo-400" />
+                        <div className="absolute inset-0 opacity-[0.1] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                        <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[32px] bg-white/10 text-white backdrop-blur-md transition-transform group-hover:rotate-6">
+                            <Users className="h-12 w-12" />
                         </div>
-                        <h3 className="text-base font-semibold text-gray-900">No household members</h3>
-                        <p className="mt-1 text-sm text-gray-500">Add family members to let them generate access codes and view the estate board.</p>
+                        <h3 className="text-2xl font-black tracking-tight text-white">Your household is empty</h3>
+                        <p className="mt-3 text-sm font-medium leading-relaxed text-slate-400 px-4">
+                            Add family members to share control. They'll be able to generate their own visitor codes and stay updated.
+                        </p>
                         <button
                             onClick={() => setShowForm(true)}
-                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95"
+                            className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-sm font-black text-slate-900 shadow-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
-                            <UserPlus className="h-4 w-4" />
-                            Add your first member
+                            <UserPlus className="h-5 w-5" />
+                            Add first member
                         </button>
                     </motion.div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-2">
+                            <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Household Members ({members.length})</h3>
+                        </div>
                         {members.map((member, index) => (
                             <motion.div
                                 key={member.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: index * 0.05 }}
-                                className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                className="group relative flex items-center justify-between rounded-[28px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200 transition-all hover:shadow-lg"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50">
-                                        <span className="text-sm font-semibold text-indigo-600">
-                                            {member.name
-                                                .split(' ')
-                                                .map((n) => n[0])
-                                                .join('')
-                                                .slice(0, 2)
-                                                .toUpperCase()}
-                                        </span>
+                                <div className="flex items-center gap-4">
+                                    <div className="relative">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-xl font-black text-white">
+                                            {member.name[0].toUpperCase()}
+                                        </div>
+                                        <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white ${member.status === 'accepted' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-900">{member.name}</p>
-                                        <p className="text-xs text-gray-500">{member.email}</p>
+                                        <p className="text-base font-black text-slate-900">{member.name}</p>
+                                        <p className="text-xs font-bold text-slate-400">{member.email}</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <span
-                                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                            member.status === 'accepted' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                                        }`}
-                                    >
-                                        {member.status === 'accepted' ? 'Active' : 'Pending'}
-                                    </span>
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setMemberToReset(member)}
-                                        disabled={resettingId === member.id}
-                                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-amber-50 hover:text-amber-500 disabled:opacity-50"
-                                        title="Reset password"
+                                        className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
                                     >
-                                        <KeyRound className="h-4 w-4" />
+                                        <KeyRound className="h-5 w-5" />
                                     </button>
                                     <button
                                         onClick={() => setMemberToDelete(member)}
-                                        disabled={deletingId === member.id}
-                                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
-                                        title="Remove member"
+                                        className="rounded-xl p-3 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
                                     >
-                                        {deletingId === member.id ? (
-                                            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                    fill="none"
-                                                    className="opacity-25"
-                                                />
-                                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-                                            </svg>
-                                        ) : (
-                                            <Trash2 className="h-4 w-4" />
-                                        )}
+                                        <Trash2 className="h-5 w-5" />
                                     </button>
                                 </div>
                             </motion.div>
@@ -312,21 +272,44 @@ export default function HouseholdIndex({ members }: Props) {
                     </div>
                 )}
 
-                {/* Info Card */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-6 rounded-2xl bg-indigo-50/50 p-4 ring-1 ring-indigo-100"
-                >
-                    <h4 className="text-sm font-semibold text-indigo-900">What can household members do?</h4>
-                    <ul className="mt-2 space-y-1 text-xs text-indigo-700">
-                        <li>• Manage visitors and generate short-term access codes</li>
-                        <li>• View the estate community board</li>
-                        <li>• Read estate activity and announcements</li>
-                    </ul>
-                    <p className="mt-2 text-xs text-indigo-600/70">Household members cannot add other members or create long-term codes.</p>
-                </motion.div>
+                {/* Features Section */}
+                <div className="mt-12 space-y-6 pb-32">
+                    <div className="px-2">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">What they can do</h3>
+                    </div>
+                    <div className="grid gap-4">
+                        <FeatureCard 
+                            title="Visitor Management"
+                            description="They can generate short-term access codes for their own guests and deliveries."
+                            icon={<Zap className="h-6 w-6" />}
+                            color="bg-indigo-50 text-indigo-600"
+                            delay={0.1}
+                        />
+                        <FeatureCard 
+                            title="Community Board"
+                            description="Stay updated with announcements and community activities on the estate board."
+                            icon={<BellRing className="h-6 w-6" />}
+                            color="bg-amber-50 text-amber-600"
+                            delay={0.2}
+                        />
+                        <FeatureCard 
+                            title="Real-time Activity"
+                            description="View visitor entries and exits related to your home in the live activity feed."
+                            icon={<Activity className="h-6 w-6" />}
+                            color="bg-emerald-50 text-emerald-600"
+                            delay={0.3}
+                        />
+                    </div>
+                    <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl">
+                        <div className="flex items-center gap-3 mb-2">
+                            <ShieldCheck className="h-5 w-5 text-indigo-400" />
+                            <h4 className="text-sm font-black uppercase tracking-widest">Privacy & Control</h4>
+                        </div>
+                        <p className="text-xs font-medium leading-relaxed text-slate-400">
+                            Household members cannot add other members or create long-term codes. You remain the primary administrator of your home.
+                        </p>
+                    </div>
+                </div>
 
                 {/* Delete Confirmation Modal */}
                 <ConfirmationModal

@@ -46,7 +46,6 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
 
     // Access Code Creation (household members can create codes)
-    Route::get('/visitors/create', [AccessCodeController::class, 'create'])->name('resident.visitors.create');
     Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
     Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
 

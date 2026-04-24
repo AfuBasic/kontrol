@@ -33,7 +33,7 @@ export default function SuccessState({ estateName }: Props) {
         {
             icon: Settings,
             title: 'Application Review',
-            description: 'We review your estate details',
+            description: 'We review your community details',
             color: 'bg-blue-600',
         },
         {

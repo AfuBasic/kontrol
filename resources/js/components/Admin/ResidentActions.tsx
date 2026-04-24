@@ -1,11 +1,12 @@
 import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, NoSymbolIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { usePermission } from '@/hooks/usePermission';
 import MobileSheet from '@/components/MobileSheet';
+import { usePermission } from '@/hooks/usePermission';
 
 type Resident = {
     id: number;
@@ -29,18 +30,58 @@ export default function ResidentActions({ resident }: Props) {
         type: null,
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [isDesktop, setIsDesktop] = useState(false);
 
-    // Close on click outside
     useEffect(() => {
+        const mql = window.matchMedia('(min-width: 640px)');
+        setIsDesktop(mql.matches);
+        const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+        mql.addEventListener('change', handler);
+        return () => mql.removeEventListener('change', handler);
+    }, []);
+
+    const updatePosition = useCallback(() => {
+        if (!buttonRef.current) return;
+        const rect = buttonRef.current.getBoundingClientRect();
+        setMenuPosition({
+            top: rect.bottom + 4,
+            right: window.innerWidth - rect.right,
+        });
+    }, []);
+
+    // Close on click outside (button + portal dropdown)
+    useEffect(() => {
+        if (!isOpen) return;
+
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+            const clickedButton = buttonRef.current?.contains(target);
+            const clickedDropdown = dropdownRef.current?.contains(target);
+            if (!clickedButton && !clickedDropdown) {
                 setIsOpen(false);
             }
         }
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
+    }, [isOpen, updatePosition]);
+
+    const handleToggle = () => {
+        if (!isOpen) {
+            updatePosition();
+        }
+        setIsOpen((v) => !v);
+    };
 
     const openModal = (type: 'suspend' | 'reset' | 'delete') => {
         setModalConfig({ isOpen: true, type });
@@ -121,9 +162,9 @@ export default function ResidentActions({ resident }: Props) {
                 <Link
                     href={edit.url({ resident: resident.id })}
                     className={`flex w-full items-center gap-3 transition-all ${
-                        isMobile 
-                        ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95' 
-                        : 'rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600'
+                        isMobile
+                            ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600'
                     }`}
                 >
                     <PencilIcon className={isMobile ? 'h-6 w-6 text-slate-400' : 'h-4 w-4'} />
@@ -136,9 +177,9 @@ export default function ResidentActions({ resident }: Props) {
                 <button
                     onClick={() => openModal('suspend')}
                     className={`flex w-full items-center gap-3 transition-all ${
-                        isMobile 
-                        ? 'rounded-2xl bg-slate-50 p-4 font-black shadow-sm active:scale-95' 
-                        : 'rounded-lg px-3 py-2 text-sm hover:bg-gray-50'
+                        isMobile
+                            ? 'rounded-2xl bg-slate-50 p-4 font-black shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm hover:bg-gray-50'
                     } ${resident.suspended_at ? 'text-emerald-600' : 'text-orange-600'}`}
                 >
                     {resident.suspended_at ? (
@@ -160,9 +201,9 @@ export default function ResidentActions({ resident }: Props) {
                 <button
                     onClick={() => openModal('reset')}
                     className={`flex w-full items-center gap-3 transition-all ${
-                        isMobile 
-                        ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95' 
-                        : 'rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600'
+                        isMobile
+                            ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600'
                     }`}
                 >
                     <ArrowPathIcon className={isMobile ? 'h-6 w-6 text-slate-400' : 'h-4 w-4'} />
@@ -177,9 +218,9 @@ export default function ResidentActions({ resident }: Props) {
                 <button
                     onClick={() => openModal('delete')}
                     className={`flex w-full items-center gap-3 transition-all ${
-                        isMobile 
-                        ? 'rounded-2xl border border-rose-100 bg-rose-50/50 p-4 font-black text-rose-600 shadow-sm active:scale-95' 
-                        : 'rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700'
+                        isMobile
+                            ? 'rounded-2xl border border-rose-100 bg-rose-50/50 p-4 font-black text-rose-600 shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700'
                     }`}
                 >
                     <TrashIcon className={isMobile ? 'h-6 w-6' : 'h-4 w-4'} />
@@ -190,32 +231,42 @@ export default function ResidentActions({ resident }: Props) {
     );
 
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                ref={buttonRef}
+                onClick={handleToggle}
                 className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
                 <EllipsisVerticalIcon className="h-5 w-5" />
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 z-10 mt-1 hidden w-48 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none md:block"
-                    >
-                        <ActionItems />
-                    </motion.div>
+            {/* Desktop dropdown — portalled so it escapes overflow-hidden table wrappers */}
+            {typeof document !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        {isOpen && menuPosition && isDesktop && (
+                            <motion.div
+                                ref={dropdownRef}
+                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                style={{ position: 'fixed', top: menuPosition.top, right: menuPosition.right }}
+                                className="z-[100] w-48 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                            >
+                                <ActionItems />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
+                    document.body,
                 )}
-            </AnimatePresence>
 
-            {/* Mobile Sheet */}
-            <MobileSheet isOpen={isOpen} onClose={() => setIsOpen(false)} title={resident.name}>
-                <ActionItems isMobile />
-            </MobileSheet>
+            {/* Mobile Sheet — scoped to <sm since the residents page switches to the desktop table at sm */}
+            {!isDesktop && (
+                <MobileSheet isOpen={isOpen} onClose={() => setIsOpen(false)} title={resident.name}>
+                    <ActionItems isMobile />
+                </MobileSheet>
+            )}
 
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
