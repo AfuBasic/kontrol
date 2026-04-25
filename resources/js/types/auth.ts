@@ -2,6 +2,12 @@ export type Permission = {
     name: string;
 };
 
+export type ResidentSubscription = {
+    status: 'trial' | 'active' | 'past_due';
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+};
+
 export type User = {
     id: number;
     name: string;
@@ -19,6 +25,7 @@ export type User = {
         created_at_human: string;
     }[];
     unread_notifications_count?: number;
+    resident_subscription?: ResidentSubscription | null;
     [key: string]: unknown;
 };
 

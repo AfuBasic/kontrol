@@ -77,6 +77,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
             'guest' => RedirectIfAuthenticated::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'resident.active' => \App\Http\Middleware\EnsureResidentSubscriptionActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

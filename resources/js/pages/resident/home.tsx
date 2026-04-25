@@ -8,6 +8,7 @@ import QuickActions from '@/components/Resident/Dashboard/QuickActions';
 import VisitorStatus from '@/components/Resident/Dashboard/VisitorStatus';
 import DailyMetrics from '@/components/Resident/Dashboard/DailyMetrics';
 import LiveFeed from '@/components/Resident/Dashboard/LiveFeed';
+import SubscriptionBanner from '@/components/Resident/Dashboard/SubscriptionBanner';
 
 import type { SharedData } from '@/types';
 
@@ -40,6 +41,10 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                     estateName={estateName}
                     unreadCount={auth?.user?.unread_notifications_count ?? 0}
                 />
+
+                {auth?.user?.resident_subscription && (
+                    <SubscriptionBanner subscription={auth.user.resident_subscription} />
+                )}
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
                 <CommandCenter

@@ -8,5 +8,12 @@ import type { Auth } from './auth';
 export type SharedData = {
     name: string;
     auth: Auth;
+    flash: {
+        success?: string;
+        error?: string;
+        validation_result?: unknown;
+    };
+    billing_enabled?: boolean;
+    has_overdue_invoice?: boolean;
     [key: string]: unknown;
 };

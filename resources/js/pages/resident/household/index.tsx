@@ -7,6 +7,7 @@ import ResidentLayout from '@/layouts/ResidentLayout';
 import FeatureCard from './components/FeatureCard';
 import { KeyRound, Mail, Trash2, UserPlus, Users, ShieldCheck, Activity, BellRing, Sparkles, Zap } from 'lucide-react';
 import MobileSheet from '@/components/MobileSheet';
+import type { SharedData } from '@/types';
 
 interface HouseholdMember {
     id: number;
@@ -20,16 +21,8 @@ interface Props {
     members: HouseholdMember[];
 }
 
-interface PageProps {
-    flash: {
-        success?: string;
-        error?: string;
-    };
-    [key: string]: unknown;
-}
-
 export default function HouseholdIndex({ members }: Props) {
-    const { flash } = usePage<PageProps>().props;
+    const { flash, auth } = usePage<SharedData>().props;
     const [showForm, setShowForm] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [memberToDelete, setMemberToDelete] = useState<HouseholdMember | null>(null);
@@ -129,7 +122,24 @@ export default function HouseholdIndex({ members }: Props) {
 
                 {/* Add Member Form - Premium Bottom Sheet */}
                 <MobileSheet isOpen={showForm} onClose={() => setShowForm(false)} title="Add Family Member">
-                    <form onSubmit={handleSubmit} className="p-1">
+                    {auth?.user?.resident_subscription?.status === 'past_due' ? (
+                        <div className="flex flex-col items-center text-center py-8">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600 mb-6">
+                                <ShieldCheck className="h-10 w-10" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900 mb-3">Access Restricted</h3>
+                            <p className="text-slate-500 font-medium leading-relaxed mb-10 px-4">
+                                Your subscription for this estate is currently inactive. Please visit the Kontrol web platform to manage your access.
+                            </p>
+                            <button 
+                                onClick={() => setShowForm(false)}
+                                className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
+                            >
+                                Got it
+                            </button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="p-1">
                         <p className="mb-6 text-sm font-bold text-slate-400">
                             They'll receive an email invitation to set up their account. Household members can generate visitor access codes
                             and view the estate board.
@@ -202,6 +212,7 @@ export default function HouseholdIndex({ members }: Props) {
                             </button>
                         </div>
                     </form>
+                )}
                 </MobileSheet>
 
                 {/* Members List */}

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserProfile;
 use App\Notifications\Admin\NewResidentSignup;
 use App\Notifications\VerifyResidentEmail;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,10 @@ use Spatie\Permission\Models\Role;
 
 class InviteRegistrationController extends Controller
 {
+    public function __construct(
+        protected ResidentSubscriptionService $subscriptionService
+    ) {}
+
     /**
      * Show the registration form for the invite link.
      */
@@ -95,6 +100,9 @@ class InviteRegistrationController extends Controller
             $user->estates()->attach($inviteLink->estate_id, [
                 'status' => $status,
             ]);
+
+            // Create resident subscription if required
+            $this->subscriptionService->createForUser($user, $inviteLink->estate);
 
             // Increment usage count
             $inviteLink->increment('usage_count');

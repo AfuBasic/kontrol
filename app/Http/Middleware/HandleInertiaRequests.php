@@ -70,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                         'data' => $n->data,
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ]),
+                    'resident_subscription' => ($user && $estate) ? $user->residentSubscription()->where('estate_id', $estate->id)->first()?->only(['status', 'trial_ends_at', 'current_period_end']) : null,
                 ] : null,
             ],
             'flash' => [

@@ -46,7 +46,9 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
 
     // Access Code Creation (household members can create codes)
-    Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
+    Route::middleware('resident.active')->group(function (): void {
+        Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
+    });
     Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
 
     // Visitor Management (index, show, revoke)
@@ -81,7 +83,7 @@ Route::middleware('role:resident')->group(function (): void {
     // Household Management
     Route::prefix('household')->name('resident.household.')->group(function (): void {
         Route::get('/', [HouseholdMemberController::class, 'index'])->name('index');
-        Route::post('/', [HouseholdMemberController::class, 'store'])->name('store');
+        Route::middleware('resident.active')->post('/', [HouseholdMemberController::class, 'store'])->name('store');
         Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
         Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
     });
