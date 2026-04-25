@@ -34,7 +34,7 @@ class EstateBoardController extends Controller
         $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId);
 
-        return Inertia::render('Admin/Estate-board/Index', [
+        return Inertia::render('Admin/EstateBoard/Index', [
             'posts' => $posts,
         ]);
     }
@@ -49,7 +49,7 @@ class EstateBoardController extends Controller
         $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getAdminPosts($estateId);
 
-        return Inertia::render('Admin/Estate-board/Manage', [
+        return Inertia::render('Admin/EstateBoard/Manage', [
             'posts' => $posts,
         ]);
     }
@@ -61,7 +61,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        return Inertia::render('Admin/Estate-board/Create');
+        return Inertia::render('Admin/EstateBoard/Create');
     }
 
     /**
@@ -90,7 +90,7 @@ class EstateBoardController extends Controller
         $postData = $this->boardService->getPost($post->id, $estateId);
         $comments = $this->boardService->getComments($post->id, $estateId);
 
-        return Inertia::render('Admin/Estate-board/Show', [
+        return Inertia::render('Admin/EstateBoard/Show', [
             'post' => $postData,
             'comments' => $comments,
         ]);
@@ -105,7 +105,7 @@ class EstateBoardController extends Controller
 
         $post->load(['media']);
 
-        return Inertia::render('Admin/Estate-board/Edit', [
+        return Inertia::render('Admin/EstateBoard/Edit', [
             'post' => $post,
         ]);
     }
