@@ -5,7 +5,7 @@ import { Calendar, Clock, Shield, User } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AccessCode, CursorPaginatedUsageLogs } from '@/Types/access-code';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import resident from '@/Routes/resident';
+import resident from '@/routes/resident';
 
 import { shareAccessCode } from '@/Utils/share';
 

@@ -1,6 +1,6 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { index, update, destroy } from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {

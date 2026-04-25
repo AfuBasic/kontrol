@@ -4,12 +4,12 @@ import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, Refr
 import { useCallback, useEffect, useState } from 'react';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
-import { bulkInvite, index, store, create as residentCreate } from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import {
     store as inviteLinkStore,
     regenerate as inviteLinkRegenerate,
     toggle as inviteLinkToggle,
-} from '@/Actions/App/Http/Controllers/Admin/InviteLinkController';
+} from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 // Wayfinder actions are used for routing

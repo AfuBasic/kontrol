@@ -5,7 +5,7 @@ import { User, Lock, Bell, Shield, ChevronRight, LogOut, Mail, Home, MapPin, Zap
 import { type FormEventHandler, useState } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import resident from '@/Routes/resident';
+import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
 import type { SharedData } from '@/Types';
 

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-import { index, show, update, destroy } from '@/Actions/App/Http/Controllers/Admin/EstateBoardController';
+import { index, show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import MarkdownEditor from '@/Components/MarkdownEditor';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { EstateBoardPost, PostAudience, PostStatus } from '@/Types';

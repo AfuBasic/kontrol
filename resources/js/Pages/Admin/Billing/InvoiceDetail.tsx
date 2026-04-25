@@ -20,7 +20,7 @@ import {
     SparklesIcon,
     XCircleIcon,
 } from '@heroicons/react/24/outline';
-import InvoiceController from '@/Actions/App/Http/Controllers/Admin/InvoiceController';
+import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
 type PaymentTransaction = {
     id: number;

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import type { AccessCode } from '@/Types/access-code';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import resident from '@/Routes/resident';
+import resident from '@/routes/resident';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import SummaryDashboard from './Components/SummaryDashboard';

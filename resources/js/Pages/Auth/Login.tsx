@@ -3,7 +3,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import SocialLoginController from '@/Actions/App/Http/Controllers/Auth/SocialLoginController';
+import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import Toast from '@/Components/Toast';
 
 interface LoginFlash {

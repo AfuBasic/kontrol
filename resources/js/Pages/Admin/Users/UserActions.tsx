@@ -2,7 +2,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
-import { destroy, edit } from '@/Actions/App/Http/Controllers/Admin/UserController';
+import { destroy, edit } from '@/actions/App/Http/Controllers/Admin/UserController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import { usePermission } from '@/Hooks/usePermission';
 import MobileSheet from '@/Components/MobileSheet';

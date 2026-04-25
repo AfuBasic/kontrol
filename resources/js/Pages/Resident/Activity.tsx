@@ -4,7 +4,7 @@ import { Bell, BellOff, CheckCircle2, Clock, Megaphone, User, XCircle } from 'lu
 import { useState } from 'react';
 import type { ActivityItem } from '@/Types/access-code';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import ActivityController from '@/Actions/App/Http/Controllers/Resident/ActivityController';
+import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 
 type Props = {
     activities: ActivityItem[];

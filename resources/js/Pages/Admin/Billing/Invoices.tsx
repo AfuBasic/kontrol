@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeftIcon, ChevronRightIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import InvoiceController from '@/Actions/App/Http/Controllers/Admin/InvoiceController';
+import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
 type Invoice = {
     id: number;

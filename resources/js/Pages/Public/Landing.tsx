@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useState, useMemo } from 'react';
-import LoginController from '@/Actions/App/Http/Controllers/Auth/LoginController';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import PricingCard from '@/Components/PricingCard';
 import ApplicationModal from '@/Components/Public/ApplicationModal';
 import PublicLayout from '@/Layouts/PublicLayout';

@@ -1,7 +1,7 @@
 import { Bell, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from '@inertiajs/react';
-import ActivityController from '@/Actions/App/Http/Controllers/Resident/ActivityController';
+import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 
 interface Props {
     userName: string;

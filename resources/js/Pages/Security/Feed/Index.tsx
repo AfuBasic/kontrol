@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Globe, Image as ImageIcon, MessageCircle, Shield, Users, Newspaper } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import EstateBoardController from '@/Actions/App/Http/Controllers/Security/EstateBoardController';
+import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/Types';
 

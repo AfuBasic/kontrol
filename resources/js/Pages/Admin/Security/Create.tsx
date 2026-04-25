@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { index, store } from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import { index, store } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 export default function CreateSecurity() {

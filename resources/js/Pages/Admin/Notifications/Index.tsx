@@ -6,7 +6,7 @@ import {
     index,
     markAllAsRead as markAllAsReadAction,
     markAsRead as markAsReadAction,
-} from '@/Actions/App/Http/Controllers/Admin/NotificationController';
+} from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { SharedData } from '@/Types';
 

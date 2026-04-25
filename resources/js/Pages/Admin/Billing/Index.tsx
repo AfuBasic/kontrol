@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowTrendingUpIcon, CalendarIcon, CreditCardIcon, UsersIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '@/Layouts/AdminLayout';
-import InvoiceController from '@/Actions/App/Http/Controllers/Admin/InvoiceController';
+import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
 type StatCard = {
     title: string;

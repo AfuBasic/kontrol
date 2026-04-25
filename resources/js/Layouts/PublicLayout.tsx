@@ -1,4 +1,4 @@
-import LoginController from '@/Actions/App/Http/Controllers/Auth/LoginController';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';

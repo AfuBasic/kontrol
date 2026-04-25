@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Edit, Eye, Filter, Globe, Image as ImageIcon, MessageCircle, Plus, Search, Shield, Trash2, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { create, edit, index, show, destroy } from '@/Actions/App/Http/Controllers/Admin/EstateBoardController';
+import { create, edit, index, show, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, PostStatus } from '@/Types';
 

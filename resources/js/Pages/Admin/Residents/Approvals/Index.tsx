@@ -7,8 +7,8 @@ import {
     index as approvalIndex,
     approve as approvalApprove,
     reject as approvalReject,
-} from '@/Actions/App/Http/Controllers/Admin/ResidentApprovalController';
-import { index as residentsIndex } from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+} from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
+import { index as residentsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 
 interface Resident {
     id: number;

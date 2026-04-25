@@ -17,9 +17,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } from 'lucide-react';
 
-import { create as createPost, index as postsIndex, show as showPost } from '@/Actions/App/Http/Controllers/Admin/EstateBoardController';
-import ResidentController from '@/Actions/App/Http/Controllers/Admin/ResidentController';
-import SecurityPersonnelController from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/Types';
 

@@ -3,7 +3,7 @@ import { EllipsisVerticalIcon, MagnifyingGlassIcon, PencilIcon, ShieldCheckIcon,
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
-import { destroy, index } from '@/Actions/App/Http/Controllers/Admin/RoleController';
+import { destroy, index } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
 

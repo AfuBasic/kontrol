@@ -4,9 +4,9 @@
 /public/build
 /public/hot
 /public/storage
-/resources/js/Actions
-/resources/js/Routes
-/resources/js/Wayfinder
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder
 /storage/*.key
 /storage/pail
 /vendor

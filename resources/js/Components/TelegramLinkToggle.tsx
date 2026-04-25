@@ -1,7 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { Loader2, Check, Copy, ExternalLink, X, CheckCircle } from 'lucide-react';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import resident from '@/Routes/resident';
+import resident from '@/routes/resident';
 
 interface Props {
     linked: boolean;

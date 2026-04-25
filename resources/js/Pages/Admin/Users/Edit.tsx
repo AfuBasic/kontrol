@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { update, index } from '@/Actions/App/Http/Controllers/Admin/UserController';
+import { update, index } from '@/actions/App/Http/Controllers/Admin/UserController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import UserForm from './UserForm';
 
