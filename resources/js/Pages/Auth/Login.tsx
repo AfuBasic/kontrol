@@ -384,7 +384,7 @@ function AccessCodePreview() {
 
             <div className="mt-5 rounded-2xl bg-linear-to-br from-white to-slate-100 p-5 text-center">
                 <p className="text-[11px] font-medium tracking-[0.2em] text-slate-500 uppercase">Show at gate</p>
-                <p className="mt-1.5 font-mono text-3xl font-bold tracking-[0.35em] text-slate-900">K7M2XQ</p>
+                <p className="mt-1.5 font-mono text-3xl font-bold tracking-[0.35em] text-slate-900 blur-md select-none" aria-hidden="true">K7M2XQ</p>
                 <p className="mt-2 text-xs text-slate-500">Expires in 2h 14m · Single use</p>
             </div>
 
