@@ -39,7 +39,7 @@ class FeatureController extends Controller
             ]),
         ])->groupBy('group');
 
-        return Inertia::render('zeus/features/index', [
+        return Inertia::render('Zeus/Features/Index', [
             'features' => $matrix,
             'plans' => $plans,
             'groups' => $features->pluck('group')->unique()->values()->toArray(),

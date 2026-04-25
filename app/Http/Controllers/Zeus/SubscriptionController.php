@@ -35,7 +35,7 @@ class SubscriptionController extends Controller
         $estates = $query->paginate(15);
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
 
-        return Inertia::render('zeus/subscriptions/index', [
+        return Inertia::render('Zeus/Subscriptions/Index', [
             'estates' => $estates->through(function (Estate $estate) {
                 $sub = $estate->subscriptionRecord;
 

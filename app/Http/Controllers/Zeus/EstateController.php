@@ -37,7 +37,7 @@ class EstateController extends Controller
 
         $estates = $query->paginate(15);
 
-        return Inertia::render('zeus/estates/index', [
+        return Inertia::render('Zeus/Estates/Index', [
             'estates' => $estates,
             'filters' => [
                 'search' => $search ?? '',
@@ -48,7 +48,7 @@ class EstateController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('zeus/estates/create', [
+        return Inertia::render('Zeus/Estates/Create', [
             'plans' => Plan::with('features')->get(),
         ]);
     }
@@ -64,7 +64,7 @@ class EstateController extends Controller
 
     public function edit(Estate $estate): Response
     {
-        return Inertia::render('zeus/estates/edit', [
+        return Inertia::render('Zeus/Estates/Edit', [
             'estate' => array_merge(
                 $estate->only(['id', 'name', 'email', 'address', 'status']),
                 ['admin_accepted' => $estate->hasAcceptedAdmin()],

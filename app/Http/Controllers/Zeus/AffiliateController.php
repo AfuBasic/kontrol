@@ -33,7 +33,7 @@ class AffiliateController extends Controller
 
         $affiliates = $query->paginate(15);
 
-        return Inertia::render('zeus/affiliates/index', [
+        return Inertia::render('Zeus/Affiliates/Index', [
             'affiliates' => $affiliates->through(function (Affiliate $affiliate) {
                 return [
                     'id' => $affiliate->id,
@@ -55,7 +55,7 @@ class AffiliateController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('zeus/affiliates/create');
+        return Inertia::render('Zeus/Affiliates/Create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -80,7 +80,7 @@ class AffiliateController extends Controller
 
     public function edit(Affiliate $affiliate): Response
     {
-        return Inertia::render('zeus/affiliates/edit', [
+        return Inertia::render('Zeus/Affiliates/Edit', [
             'affiliate' => [
                 'id' => $affiliate->id,
                 'name' => $affiliate->name,

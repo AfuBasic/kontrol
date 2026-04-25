@@ -28,7 +28,7 @@ class SettingsController extends Controller
             $settings = $estate->settings()->create([]);
         }
 
-        return Inertia::render('admin/settings/index', [
+        return Inertia::render('Admin/Settings/Index', [
             'settings' => [
                 'access_codes_enabled' => $settings->access_codes_enabled,
                 'access_code_min_lifespan_minutes' => $settings->access_code_min_lifespan_minutes,

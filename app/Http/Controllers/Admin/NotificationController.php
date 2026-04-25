@@ -32,7 +32,7 @@ class NotificationController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('admin/notifications/index', [
+        return Inertia::render('Admin/Notifications/Index', [
             'notifications' => $notifications,
             'filters' => $request->only(['search', 'type']),
         ]);

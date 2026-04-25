@@ -18,7 +18,7 @@ class ActivityLogController extends Controller
     {
         $activities = $this->activityService->getCursorPaginatedActivities();
 
-        return Inertia::render('admin/activity-log/Index', [
+        return Inertia::render('Admin/ActivityLog/Index', [
             'activities' => $activities,
         ]);
     }

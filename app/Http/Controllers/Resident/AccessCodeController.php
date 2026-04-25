@@ -24,7 +24,7 @@ class AccessCodeController extends Controller
         $searchActive = $request->input('search_active');
         $searchHistory = $request->input('search_history');
 
-        return Inertia::render('resident/visitors/index', [
+        return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_active' => $searchActive,
                 'search_history' => $searchHistory,
@@ -66,7 +66,7 @@ class AccessCodeController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('resident/visitors/create', [
+        return Inertia::render('Resident/Visitors/Create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
         ]);
@@ -102,7 +102,7 @@ class AccessCodeController extends Controller
             abort(404);
         }
 
-        return Inertia::render('resident/visitors/success', [
+        return Inertia::render('Resident/Visitors/Success', [
             'accessCode' => [
                 'id' => $userCode->id,
                 'type' => $userCode->type,
@@ -131,7 +131,7 @@ class AccessCodeController extends Controller
         $dateFilter = $request->input('date');
         $usageLogs = $this->accessCodeService->getUsageHistory($userCode, $dateFilter);
 
-        return Inertia::render('resident/visitors/show', [
+        return Inertia::render('Resident/Visitors/Show', [
             'accessCode' => [
                 'id' => $userCode->id,
                 'type' => $userCode->type,

@@ -36,7 +36,7 @@ class DashboardController extends Controller
                 ] : null,
             ]);
 
-        return Inertia::render('zeus/dashboard', [
+        return Inertia::render('Zeus/Dashboard', [
             'stats' => $this->estateService->getStats(),
             'applications' => $applications,
         ]);

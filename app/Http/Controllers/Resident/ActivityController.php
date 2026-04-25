@@ -24,7 +24,7 @@ class ActivityController extends Controller
         // Mark all notifications as read when visiting the feed
         $user->unreadNotifications->markAsRead();
 
-        return Inertia::render('resident/activity', [
+        return Inertia::render('Resident/Activity', [
             'unreadCount' => $unreadCount,
             'activities' => $this->accessCodeService->getRecentActivity(50),
             'notifications' => $user->notifications()->take(20)->get()->map(function ($notification) {

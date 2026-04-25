@@ -29,7 +29,7 @@ class BillingController extends Controller
         $overview = $this->billingService->getOverview();
         $recentInvoices = $this->billingService->getInvoices(['per_page' => 3]);
 
-        return Inertia::render('admin/billing/index', [
+        return Inertia::render('Admin/Billing/Index', [
             'overview' => $overview,
             'recentInvoices' => $recentInvoices,
         ]);

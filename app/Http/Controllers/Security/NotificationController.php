@@ -23,7 +23,7 @@ class NotificationController extends Controller
         $notifications = $this->fetchNotificationsAction->execute($user);
         $formatted = $this->fetchNotificationsAction->formatForFrontend($notifications);
 
-        return Inertia::render('security/notifications', [
+        return Inertia::render('Security/Notifications', [
             'notifications' => $formatted['data'],
             'pagination' => $formatted['pagination'],
             'unreadCount' => $this->fetchNotificationsAction->getUnreadCount($user),

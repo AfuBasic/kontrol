@@ -23,7 +23,7 @@ class EstateContactController extends Controller
         $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
-        return Inertia::render('resident/contacts/index', [
+        return Inertia::render('Resident/Contacts/Index', [
             'contacts' => $settings->contacts ?? [],
             'estateName' => $estate->name,
         ]);

@@ -13,7 +13,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        return Inertia::render('affiliate/dashboard', [
+        return Inertia::render('Affiliate/Dashboard', [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

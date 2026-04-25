@@ -20,7 +20,7 @@ class ProfileController extends Controller
         $user = auth()->user();
         $estate = $user->getCurrentEstate();
 
-        return Inertia::render('security/profile', [
+        return Inertia::render('Security/Profile', [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

@@ -39,7 +39,7 @@ class InviteRegistrationController extends Controller
             abort(403, 'This invitation link is invalid or has reached its usage limit.');
         }
 
-        return Inertia::render('auth/Join', [
+        return Inertia::render('Auth/Join', [
             'token' => $token,
             'estate' => [
                 'name' => $inviteLink->estate->name,
@@ -115,7 +115,7 @@ class InviteRegistrationController extends Controller
                 }
             }
 
-            return Inertia::render('auth/JoinSuccess', [
+            return Inertia::render('Auth/JoinSuccess', [
                 'estate' => $inviteLink->estate->name,
                 'requires_approval' => $inviteLink->requires_approval,
             ]);

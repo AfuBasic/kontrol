@@ -14,7 +14,7 @@ class AuthController extends Controller
 {
     public function showLogin(): Response
     {
-        return Inertia::render('zeus/Login');
+        return Inertia::render('Zeus/Login');
     }
 
     public function login(LoginRequest $request, AuthenticateZeusUser $authenticateZeusUser): RedirectResponse

@@ -37,7 +37,7 @@ class InvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return Inertia::render('admin/billing/invoices', [
+        return Inertia::render('Admin/Billing/Invoices', [
             'invoices' => $invoices,
         ]);
     }
@@ -66,7 +66,7 @@ class InvoiceController extends Controller
             'created_at' => $invoice->created_at?->toDateString(),
         ]);
 
-        return Inertia::render('admin/billing/invoice-detail', [
+        return Inertia::render('Admin/Billing/InvoiceDetail', [
             'invoice' => $invoice->load(['plan', 'paymentTransactions']),
         ]);
     }
@@ -78,7 +78,7 @@ class InvoiceController extends Controller
         abort_if($estate->settings->charge_type !== 'estate', 403);
         abort_if($invoice->estate_id !== $estate->id, 404);
 
-        return Inertia::render('admin/billing/invoice-detail', [
+        return Inertia::render('Admin/Billing/InvoiceDetail', [
             'invoice' => $invoice->load(['plan', 'paymentTransactions']),
         ]);
     }

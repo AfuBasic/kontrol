@@ -37,7 +37,7 @@ class EstateBoardController extends Controller
         $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences);
 
-        return Inertia::render('security/feed/index', [
+        return Inertia::render('Security/Feed/Index', [
             'posts' => $posts,
         ]);
     }
@@ -56,7 +56,7 @@ class EstateBoardController extends Controller
 
         $comments = $this->boardService->getComments($post->id, $estateId);
 
-        return Inertia::render('security/feed/show', [
+        return Inertia::render('Security/Feed/Show', [
             'post' => $postData,
             'comments' => $comments,
         ]);

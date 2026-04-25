@@ -26,7 +26,7 @@ class PaymentHistoryController extends Controller
             ->orderBy('paid_at', 'desc')
             ->paginate(15);
 
-        return Inertia::render('admin/billing/payment-history', [
+        return Inertia::render('Admin/Billing/PaymentHistory', [
             'payments' => $payments,
         ]);
     }

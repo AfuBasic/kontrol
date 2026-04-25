@@ -46,7 +46,7 @@ class UserController extends Controller
                 'roles' => $user->roles->where('pivot.estate_id', $estateId)->pluck('name'),
             ]);
 
-        return Inertia::render('admin/users/Index', [
+        return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search']),
         ]);
@@ -61,7 +61,7 @@ class UserController extends Controller
 
         $roles = $this->roleService->getManageableRoles();
 
-        return Inertia::render('admin/users/Create', [
+        return Inertia::render('Admin/Users/Create', [
             'roles' => $roles,
         ]);
     }
@@ -98,7 +98,7 @@ class UserController extends Controller
         setPermissionsTeamId($estateId);
         $currentRole = $user->roles->first()?->name;
 
-        return Inertia::render('admin/users/Edit', [
+        return Inertia::render('Admin/Users/Edit', [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

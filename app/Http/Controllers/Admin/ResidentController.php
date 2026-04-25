@@ -53,7 +53,7 @@ class ResidentController extends Controller
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
             ->count());
 
-        return Inertia::render('admin/residents/index', [
+        return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
             'filters' => $filters,
             'pendingCount' => $pendingCount,
@@ -69,7 +69,7 @@ class ResidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $link = $estate->inviteLink;
 
-        return Inertia::render('admin/residents/create', [
+        return Inertia::render('Admin/Residents/Create', [
             'inviteLink' => $link ? [
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
@@ -106,7 +106,7 @@ class ResidentController extends Controller
         $this->authorize('residents.edit');
         $resident->load('profile');
 
-        return Inertia::render('admin/residents/edit', [
+        return Inertia::render('Admin/Residents/Edit', [
             'resident' => [
                 'id' => $resident->id,
                 'name' => $resident->name,
@@ -179,7 +179,7 @@ class ResidentController extends Controller
      */
     public function resetPassword(User $resident, ResetResidentPasswordAction $action): RedirectResponse
     {
-        $this->authorize('residents.reset-password');
+        $this->authorize('residents.ResetPassword');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);

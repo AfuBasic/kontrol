@@ -49,7 +49,7 @@ class SecurityPersonnelController extends Controller
                 'created_at' => $user->created_at->format('M d, Y'),
             ]);
 
-        return Inertia::render('admin/security/index', [
+        return Inertia::render('Admin/Security/Index', [
             'security' => $security,
             'filters' => $filters,
         ]);
@@ -62,7 +62,7 @@ class SecurityPersonnelController extends Controller
     {
         $this->authorize('security.create');
 
-        return Inertia::render('admin/security/create');
+        return Inertia::render('Admin/Security/Create');
     }
 
     /**
@@ -88,7 +88,7 @@ class SecurityPersonnelController extends Controller
         $this->authorize('security.edit');
         $security->load('profile');
 
-        return Inertia::render('admin/security/edit', [
+        return Inertia::render('Admin/Security/Edit', [
             'security' => [
                 'id' => $security->id,
                 'name' => $security->name,
@@ -156,7 +156,7 @@ class SecurityPersonnelController extends Controller
      */
     public function resetPassword(User $security, ResetSecurityPasswordAction $action): RedirectResponse
     {
-        $this->authorize('security.reset-password');
+        $this->authorize('security.ResetPassword');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($security, $estate);

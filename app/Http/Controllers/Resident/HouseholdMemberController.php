@@ -29,7 +29,7 @@ class HouseholdMemberController extends Controller
         $user = $request->user();
         $members = $this->householdMemberService->getHouseholdMembers($user);
 
-        return Inertia::render('resident/household/index', [
+        return Inertia::render('Resident/Household/Index', [
             'members' => $members->map(fn (HouseholdMember $hm) => [
                 'id' => $hm->id,
                 'name' => $hm->member->name,

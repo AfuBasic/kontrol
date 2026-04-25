@@ -42,7 +42,7 @@ class ResidentApprovalController extends Controller
                 'created_at' => $user->created_at->format('M d, Y'),
             ]);
 
-        return Inertia::render('admin/residents/approvals/index', [
+        return Inertia::render('Admin/Residents/Approvals/Index', [
             'residents' => $residents,
             'filters' => $filters,
         ]);

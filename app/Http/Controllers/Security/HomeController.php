@@ -20,7 +20,7 @@ class HomeController extends Controller
         $user = auth()->user();
         $estate = $user->getCurrentEstate();
 
-        return Inertia::render('security/home', [
+        return Inertia::render('Security/Home', [
             'estateName' => $estate->name,
         ]);
     }

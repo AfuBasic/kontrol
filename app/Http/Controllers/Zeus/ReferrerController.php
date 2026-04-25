@@ -33,7 +33,7 @@ class ReferrerController extends Controller
 
         $referrers = $query->paginate(15);
 
-        return Inertia::render('zeus/referrers/index', [
+        return Inertia::render('Zeus/Referrers/Index', [
             'referrers' => $referrers->through(function (Referrer $referrer) {
                 return [
                     'id' => $referrer->id,
@@ -55,7 +55,7 @@ class ReferrerController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('zeus/referrers/create');
+        return Inertia::render('Zeus/Referrers/Create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -80,7 +80,7 @@ class ReferrerController extends Controller
 
     public function edit(Referrer $referrer): Response
     {
-        return Inertia::render('zeus/referrers/edit', [
+        return Inertia::render('Zeus/Referrers/Edit', [
             'referrer' => [
                 'id' => $referrer->id,
                 'name' => $referrer->name,

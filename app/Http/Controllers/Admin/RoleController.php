@@ -24,7 +24,7 @@ class RoleController extends Controller
     {
         $this->authorize('roles.view');
 
-        return Inertia::render('admin/roles/index', [
+        return Inertia::render('Admin/Roles/Index', [
             'roles' => $this->roleService->getManageableRoles(),
         ]);
     }
@@ -33,7 +33,7 @@ class RoleController extends Controller
     {
         $this->authorize('roles.create');
 
-        return Inertia::render('admin/roles/create', [
+        return Inertia::render('Admin/Roles/Create', [
             'permissions' => $this->roleService->getAvailablePermissions(),
         ]);
     }
@@ -56,7 +56,7 @@ class RoleController extends Controller
             abort(403, 'This role cannot be edited.');
         }
 
-        return Inertia::render('admin/roles/edit', [
+        return Inertia::render('Admin/Roles/Edit', [
             'role' => $role->load('permissions'),
             'permissions' => $this->roleService->getAvailablePermissions(),
         ]);

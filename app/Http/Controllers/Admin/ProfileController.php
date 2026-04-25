@@ -14,7 +14,7 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): Response
     {
-        return Inertia::render('admin/profile/index', [
+        return Inertia::render('Admin/Profile/Index', [
             'user' => $request->user()->only(['name', 'email']),
         ]);
     }

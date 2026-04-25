@@ -19,7 +19,7 @@ class HomeController extends Controller
     {
         $estate = $this->estateContext->getEstate();
 
-        return Inertia::render('resident/home', [
+        return Inertia::render('Resident/Home', [
             'stats' => $this->accessCodeService->getHomeStats(),
             'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [
                 'id' => $code->id,

@@ -23,7 +23,7 @@ class InvitationController extends Controller
             return redirect()->route('invitation.invalid');
         }
 
-        return Inertia::render('invitation/accept', [
+        return Inertia::render('Invitation/Accept', [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -81,6 +81,6 @@ class InvitationController extends Controller
 
     public function invalid(): Response
     {
-        return Inertia::render('invitation/invalid');
+        return Inertia::render('Invitation/Invalid');
     }
 }

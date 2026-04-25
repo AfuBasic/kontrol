@@ -41,7 +41,7 @@ class PlanController extends Controller
                 'subscriptions_count' => $plan->subscriptions()->count(),
             ]);
 
-        return Inertia::render('zeus/plans/index', [
+        return Inertia::render('Zeus/Plans/Index', [
             'plans' => $plans,
         ]);
     }
@@ -88,7 +88,7 @@ class PlanController extends Controller
             }
         }
 
-        return Inertia::render('zeus/plans/create', [
+        return Inertia::render('Zeus/Plans/Create', [
             'features' => $features,
             'copyPlan' => $copyPlan,
         ]);
@@ -120,7 +120,7 @@ class PlanController extends Controller
             ->groupBy('group')
             ->map(fn ($group) => $group->values());
 
-        return Inertia::render('zeus/plans/edit', [
+        return Inertia::render('Zeus/Plans/Edit', [
             'plan' => [
                 'id' => $plan->id,
                 'name' => $plan->name,

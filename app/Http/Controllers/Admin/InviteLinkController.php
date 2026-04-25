@@ -22,7 +22,7 @@ class InviteLinkController extends Controller
         $estate = $this->estateContext->getEstate();
         $link = $estate->inviteLink;
 
-        return Inertia::render('admin/residents/invite-link/index', [
+        return Inertia::render('Admin/Residents/InviteLink/Index', [
             'inviteLink' => $link ? [
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
