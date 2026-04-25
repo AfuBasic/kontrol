@@ -38,7 +38,7 @@ class LoginOtpController extends Controller
             return redirect()->route('login');
         }
 
-        return Inertia::render('auth/verify-otp', [
+        return Inertia::render('auth/VerifyOtp', [
             'email' => $this->maskEmail($user->email),
         ]);
     }

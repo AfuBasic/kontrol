@@ -13,7 +13,7 @@ class ForgotPasswordController extends Controller
 {
     public function show(): Response
     {
-        return Inertia::render('auth/forgot-password');
+        return Inertia::render('auth/ForgotPassword');
     }
 
     public function store(ForgotPasswordRequest $request, SendPasswordResetLink $sendResetLink): RedirectResponse
