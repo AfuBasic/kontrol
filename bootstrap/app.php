@@ -66,6 +66,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \Illuminate\Session\Middleware\AuthenticateSession::class,
             HandleInertiaRequests::class,
+            AddLinkHeadersForPreloadedAssets::class,
         ]);
         $middleware->trustProxies('*');
         $middleware->validateCsrfTokens(except: [
