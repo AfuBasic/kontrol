@@ -13,6 +13,7 @@ interface Props {
         charge_type: 'residents' | 'estate';
         free_trial_enabled: boolean;
         free_trial_days: number;
+        grace_period_days: number;
     };
 }
 
@@ -25,6 +26,7 @@ export default function EditEstate({ estate }: Props) {
         charge_type: estate.charge_type,
         free_trial_enabled: estate.free_trial_enabled,
         free_trial_days: estate.free_trial_days,
+        grace_period_days: estate.grace_period_days,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -182,6 +184,24 @@ export default function EditEstate({ estate }: Props) {
                                 {errors.free_trial_days && <p className="mt-1 text-sm text-red-600">{errors.free_trial_days}</p>}
                             </div>
                         )}
+
+                        {/* Grace Period Days */}
+                        <div>
+                            <label htmlFor="grace_period_days" className="block text-sm font-medium text-gray-700">
+                                Grace Period (Days)
+                            </label>
+                            <input
+                                type="number"
+                                id="grace_period_days"
+                                min="1"
+                                max="30"
+                                value={data.grace_period_days}
+                                onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
+                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">Number of days allowed for access if no trial exists or trial has ended (default: 2)</p>
+                            {errors.grace_period_days && <p className="mt-1 text-sm text-red-600">{errors.grace_period_days}</p>}
+                        </div>
                     </div>
 
                     <div className="mt-8 flex items-center justify-end gap-4">

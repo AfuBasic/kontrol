@@ -32,6 +32,7 @@ class UpdateEstateRequest extends FormRequest
             'charge_type' => ['sometimes', 'in:residents,estate'],
             'free_trial_enabled' => ['sometimes', 'boolean'],
             'free_trial_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
+            'grace_period_days' => ['sometimes', 'integer', 'min:1', 'max:30'],
         ];
     }
 }

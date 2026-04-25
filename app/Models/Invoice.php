@@ -14,7 +14,9 @@ class Invoice extends Model
 
     protected $fillable = [
         'estate_id',
+        'user_id',
         'plan_id',
+        'estate_subscription_id',
         'invoice_number',
         'amount',
         'resident_count',
@@ -58,6 +60,22 @@ class Invoice extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<EstateSubscription, $this>
+     */
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(EstateSubscription::class, 'estate_subscription_id');
     }
 
     /**

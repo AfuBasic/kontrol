@@ -30,11 +30,33 @@ class AuthenticateUser
             ]);
         }
 
-        $hasAcceptedMembership = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->exists();
+        // 1. Email Verification Check (Prioritize this)
+        if (! $user->hasVerifiedEmail()) {
+            throw ValidationException::withMessages([
+                'email' => ['Your email address is not verified. Please check your inbox for the verification link.'],
+            ]);
+        }
+
+        // 2. Membership Check
+        $memberships = $user->estates()->get();
+
+        if ($memberships->isEmpty()) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account is not yet activated. Please check your email for an invitation.'],
+            ]);
+        }
+
+        $hasAcceptedMembership = $memberships->contains(fn ($e) => $e->pivot->status === 'accepted');
 
         if (! $hasAcceptedMembership) {
+            $hasPendingMembership = $memberships->contains(fn ($e) => $e->pivot->status === 'pending');
+
+            if ($hasPendingMembership) {
+                throw ValidationException::withMessages([
+                    'email' => ['Your account is currently awaiting approval from the estate administrator.'],
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'email' => ['Your account is not yet activated. Please check your email for an invitation.'],
             ]);

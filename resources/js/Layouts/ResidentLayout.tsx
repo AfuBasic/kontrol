@@ -1,12 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
-import { ReactNode, useState } from 'react';
-import type { SharedData } from '@/Types';
+import { ReactNode, useEffect, useState } from 'react';
+import type { SharedData } from '@/types';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
 interface Props {
     children: ReactNode;
@@ -26,11 +27,31 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     // Force logout if account is disabled
     useForceLogout(auth?.user?.id);
 
+    const { flash } = usePage<SharedData>().props;
+
+    useEffect(() => {
+        if (flash?.success) {
+            setToastMessage(flash.success);
+            setShowToast(true);
+            const timer = setTimeout(() => setShowToast(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash?.success]);
+
     const navItems = [
         { name: 'Dashboard', href: '/resident/home', icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
         { name: 'Visitors', href: '/resident/visitors', icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
         { name: 'CREATE_CODE', href: '#', icon: () => null },
-        { name: 'Hub', href: '/resident/household', icon: (active: boolean) => <LayoutGrid className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
+        { name: 'Feed', href: '/resident/activity', icon: (active: boolean) => (
+            <div className="relative">
+                <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
+                {(auth?.user?.unread_notifications_count ?? 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
+                        {auth?.user?.unread_notifications_count}
+                    </span>
+                )}
+            </div>
+        ) },
         { name: 'Profile', href: '/resident/profile', icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
     ];
 
@@ -46,26 +67,22 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                     <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <Link 
-                                        href="/resident/activity"
-                                        className="relative rounded-2xl bg-slate-100 p-2 text-slate-500 transition-all hover:bg-slate-200"
-                                    >
-                                        <Bell className="h-5 w-5" />
-                                        {(auth?.user?.unread_notifications_count ?? 0) > 0 && (
-                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-2 ring-white">
-                                                {auth?.user?.unread_notifications_count}
-                                            </span>
-                                        )}
-                                    </Link>
-                                </div>
                             </div>
                         </div>
                     </header>
                 )}
 
                 {/* Main Content */}
-                <main className="relative mx-auto w-full max-w-lg flex-1 px-6 py-8">{children}</main>
+                <main className="relative mx-auto w-full max-w-lg flex-1 py-8">
+                    {auth?.user?.resident_subscription && (
+                        <div className="px-2">
+                            <SubscriptionBanner subscription={auth.user.resident_subscription} />
+                        </div>
+                    )}
+                    <div className="px-6">
+                        {children}
+                    </div>
+                </main>
 
                 {/* Bottom Navigation - Refined Glass Design */}
                 {!hideNav && (

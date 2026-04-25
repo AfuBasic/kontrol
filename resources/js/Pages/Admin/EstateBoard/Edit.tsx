@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import { index, show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import MarkdownEditor from '@/Components/MarkdownEditor';
 import AdminLayout from '@/Layouts/AdminLayout';
-import type { EstateBoardPost, PostAudience, PostStatus } from '@/Types';
+import type { EstateBoardPost, PostAudience, PostStatus } from '@/types';
 
 type Props = {
     post: EstateBoardPost;

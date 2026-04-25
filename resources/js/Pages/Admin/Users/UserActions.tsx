@@ -13,7 +13,7 @@ type User = {
     email: string;
 };
 
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 export default function UserActions({ user }: { user: User }) {
     const { auth } = usePage<SharedData>().props;

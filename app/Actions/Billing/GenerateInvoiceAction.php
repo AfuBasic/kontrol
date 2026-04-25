@@ -5,8 +5,10 @@ namespace App\Actions\Billing;
 use App\Events\Billing\InvoiceGenerated;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\ResidentSubscription;
 use App\Models\User;
 use App\Services\BillingCycleService;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -17,7 +19,7 @@ class GenerateInvoiceAction
     ) {}
 
     /**
-     * Generate an invoice for an estate's subscription.
+     * Generate an invoice for an estate's subscription (bulk billing).
      *
      * @param  bool  $isFirstInvoice  Whether this is the first invoice (after trial ends)
      */
@@ -30,61 +32,20 @@ class GenerateInvoiceAction
         }
 
         return DB::transaction(function () use ($estate, $subscription, $isFirstInvoice) {
-            // Count active residents (billed) - only accepted members with resident role
-            // Get resident role first, then count users with that role and accepted status
-            $residentRole = Role::where('name', 'resident')
-                ->where('guard_name', 'web')
-                ->whereNull('estate_id')
-                ->first();
-
-            $activeResidents = 0;
-            if ($residentRole) {
-                $activeResidents = $estate->users()
-                    ->wherePivot('status', 'accepted')
-                    ->whereIn('users.id', function ($q) use ($residentRole, $estate) {
-                        $q->select('model_has_roles.model_id')
-                            ->from('model_has_roles')
-                            ->where('model_has_roles.role_id', $residentRole->id)
-                            ->where('model_has_roles.model_type', User::class)
-                            ->where('model_has_roles.estate_id', $estate->id);
-                    })
-                    ->count();
-            }
+            $activeResidents = $this->countActiveResidents($estate);
 
             // Calculate period dates
-            // For first invoice, start from trial end date; otherwise from next_billing_date
             $periodStart = $isFirstInvoice && $subscription->trial_ends_at
                 ? $subscription->trial_ends_at->startOfDay()
                 : ($subscription->next_billing_date ?? now()->startOfDay());
 
-            $periodEnd = match ($subscription->billing_interval) {
-                'quarterly' => $periodStart->copy()->addMonths(3)->subDay(),
-                'semi-annually' => $periodStart->copy()->addMonths(6)->subDay(),
-                'annually' => $periodStart->copy()->addYear()->subDay(),
-                default => $periodStart->copy()->endOfDay(),
-            };
-
+            $periodEnd = $this->billingCycleService->calculatePeriodEnd($periodStart, $subscription->billing_interval);
             $dueDate = $periodStart->copy()->addDays(7);
             $nextDate = $periodEnd->copy()->addDay();
 
             // Handle Zero Residents Case: Skip Invoice Generation
             if ($activeResidents === 0) {
-                // Advance subscription state even if no invoice is generated
-                if ($subscription->billing_anchor_day === null) {
-                    $subscription->update(['billing_anchor_day' => $periodStart->day]);
-                }
-
-                $subscription->update([
-                    'status' => 'active',
-                    'trial_ends_at' => null,
-                    'next_billing_date' => $nextDate,
-                ]);
-
-                // Log activity for clarity
-                activity()
-                    ->on($estate)
-                    ->withProperties(['reason' => 'zero_residents', 'period_start' => $periodStart->toDateString()])
-                    ->log('Invoice skipped due to zero residents');
+                $this->advanceSubscription($subscription, $periodStart, $nextDate);
 
                 return null;
             }
@@ -99,6 +60,7 @@ class GenerateInvoiceAction
             $invoice = Invoice::create([
                 'estate_id' => $estate->id,
                 'plan_id' => $subscription->plan_id,
+                'estate_subscription_id' => $subscription->id,
                 'invoice_number' => $invoiceNumber,
                 'amount' => $amount,
                 'resident_count' => $activeResidents,
@@ -108,30 +70,107 @@ class GenerateInvoiceAction
                 'status' => 'pending',
             ]);
 
-            // Set billing anchor if first invoice (use the trial end day as anchor)
-            if ($subscription->billing_anchor_day === null) {
-                $subscription->update([
-                    'billing_anchor_day' => $periodStart->day,
-                ]);
-            }
-
-            // Update subscription: clear trial, set next billing date
-            $subscription->update([
-                'status' => 'active',
-                'trial_ends_at' => null,
-                'next_billing_date' => $nextDate,
-            ]);
+            $this->advanceSubscription($subscription, $periodStart, $nextDate);
 
             // Log activity
             activity()
                 ->on($estate)
                 ->withProperties(['invoice_id' => $invoice->id, 'amount' => $amount])
-                ->log('Invoice generated');
+                ->log('Estate bulk invoice generated');
 
             // Dispatch event
             InvoiceGenerated::dispatch($invoice);
 
             return $invoice;
         });
+    }
+
+    /**
+     * Generate an individual invoice for a resident.
+     */
+    public function executeForResident(ResidentSubscription $subscription): ?Invoice
+    {
+        $estate = $subscription->estate;
+        $estateSub = $estate->subscriptionRecord;
+
+        if (! $estateSub || ! $estateSub->plan) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($estate, $estateSub, $subscription) {
+            // Period dates for the resident
+            $periodStart = $subscription->current_period_end ?? now()->startOfDay();
+            $periodEnd = $this->billingCycleService->calculatePeriodEnd($periodStart, $estateSub->billing_interval);
+            $dueDate = $periodStart->copy()->addDays(7);
+
+            // Amount is simply the estate plan price (individual resident payment)
+            $amount = $estateSub->plan->price;
+
+            // Generate unique invoice number
+            $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
+
+            // Create invoice
+            $invoice = Invoice::create([
+                'estate_id' => $estate->id,
+                'user_id' => $subscription->user_id,
+                'plan_id' => $estateSub->plan_id,
+                'estate_subscription_id' => $estateSub->id,
+                'invoice_number' => $invoiceNumber,
+                'amount' => $amount,
+                'resident_count' => 1,
+                'billing_period_start' => $periodStart,
+                'billing_period_end' => $periodEnd,
+                'due_date' => $dueDate,
+                'status' => 'pending',
+            ]);
+
+            // Log activity
+            activity()
+                ->on($subscription->user)
+                ->withProperties(['invoice_id' => $invoice->id, 'amount' => $amount])
+                ->log('Individual resident invoice generated');
+
+            // Dispatch event
+            InvoiceGenerated::dispatch($invoice);
+
+            return $invoice;
+        });
+    }
+
+
+    private function advanceSubscription($subscription, $periodStart, $nextDate): void
+    {
+        if ($subscription->billing_anchor_day === null) {
+            $subscription->update(['billing_anchor_day' => $periodStart->day]);
+        }
+
+        $subscription->update([
+            'status' => 'active',
+            'trial_ends_at' => null,
+            'next_billing_date' => $nextDate,
+        ]);
+    }
+
+    private function countActiveResidents(Estate $estate): int
+    {
+        $residentRole = Role::where('name', 'resident')
+            ->where('guard_name', 'web')
+            ->whereNull('estate_id')
+            ->first();
+
+        if (! $residentRole) {
+            return 0;
+        }
+
+        return $estate->users()
+            ->wherePivot('status', 'accepted')
+            ->whereIn('users.id', function ($q) use ($residentRole, $estate) {
+                $q->select('model_has_roles.model_id')
+                    ->from('model_has_roles')
+                    ->where('model_has_roles.role_id', $residentRole->id)
+                    ->where('model_has_roles.model_type', User::class)
+                    ->where('model_has_roles.estate_id', $estate->id);
+            })
+            ->count();
     }
 }

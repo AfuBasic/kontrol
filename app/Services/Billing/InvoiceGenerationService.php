@@ -69,6 +69,46 @@ class InvoiceGenerationService
     }
 
     /**
+     * Get or create a pending invoice for a resident.
+     */
+    public function getOrCreatePendingInvoiceForResident(\App\Models\ResidentSubscription $subscription): ?Invoice
+    {
+        // Check if resident has a pending invoice
+        $pendingInvoice = Invoice::where('user_id', $subscription->user_id)
+            ->where('estate_id', $subscription->estate_id)
+            ->where('status', 'pending')
+            ->latest('created_at')
+            ->first();
+
+        // If no pending invoice, generate one only if they are due or past due
+        if (! $pendingInvoice) {
+            $isDue = $subscription->status === 'past_due' || 
+                     $subscription->status === 'expired' || 
+                     ($subscription->current_period_end && $subscription->current_period_end->isPast()) ||
+                     ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
+
+            if ($isDue) {
+                return $this->generateInvoiceAction->executeForResident($subscription);
+            }
+            
+            return null;
+        }
+
+        // If pending invoice exists, ensure amount is updated to current estate plan price
+        $estateSub = $subscription->estate->subscriptionRecord;
+        if ($estateSub && $estateSub->plan) {
+            $newAmount = $estateSub->plan->price;
+
+            if ($pendingInvoice->amount !== $newAmount) {
+                $pendingInvoice->update(['amount' => $newAmount]);
+                $pendingInvoice->refresh();
+            }
+        }
+
+        return $pendingInvoice;
+    }
+
+    /**
      * Count active residents for an estate (accepted members with resident role).
      */
     private function countActiveResidents(Estate $estate): int

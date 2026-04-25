@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/Types';
+import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
     posts: CursorPaginatedPosts;

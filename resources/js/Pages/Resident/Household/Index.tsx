@@ -7,7 +7,7 @@ import ResidentLayout from '@/Layouts/ResidentLayout';
 import FeatureCard from './Components/FeatureCard';
 import { KeyRound, Mail, Trash2, UserPlus, Users, ShieldCheck, Activity, BellRing, Sparkles, Zap } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 interface HouseholdMember {
     id: number;

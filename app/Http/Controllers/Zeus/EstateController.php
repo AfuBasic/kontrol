@@ -46,6 +46,43 @@ class EstateController extends Controller
         ]);
     }
 
+    public function show(Estate $estate): Response
+    {
+        $estate->load([
+            'subscriptionRecord.plan',
+            'settings',
+            'referrer.affiliate',
+        ]);
+
+        $residentStats = [
+            'total' => $estate->residentSubscriptions()->count(),
+            'active' => $estate->residentSubscriptions()->where('status', 'active')->count(),
+            'trial' => $estate->residentSubscriptions()->where('status', 'trial')->count(),
+            'past_due' => $estate->residentSubscriptions()->where('status', 'past_due')->count(),
+            'expired' => $estate->residentSubscriptions()->where('status', 'expired')->count(),
+        ];
+
+        $recentInvoices = \App\Models\Invoice::where('estate_id', $estate->id)
+            ->with(['user:id,name,email', 'plan:id,name'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        $admin = $estate->users()
+            ->wherePivot('status', 'accepted')
+            ->whereHas('roles', function ($q) use ($estate) {
+                $q->where('roles.name', 'admin')->where('model_has_roles.estate_id', $estate->id);
+            })
+            ->first();
+
+        return Inertia::render('Zeus/Estates/Show', [
+            'estate' => $estate,
+            'residentStats' => $residentStats,
+            'recentInvoices' => $recentInvoices,
+            'admin' => $admin,
+        ]);
+    }
+
     public function create(): Response
     {
         return Inertia::render('Zeus/Estates/Create', [
@@ -70,7 +107,8 @@ class EstateController extends Controller
                 ['admin_accepted' => $estate->hasAcceptedAdmin()],
                 ['charge_type' => $estate->settings?->charge_type ?? 'residents'],
                 ['free_trial_enabled' => $estate->settings?->free_trial_enabled ?? true],
-                ['free_trial_days' => $estate->settings?->free_trial_days ?? 30]
+                ['free_trial_days' => $estate->settings?->free_trial_days ?? 30],
+                ['grace_period_days' => $estate->settings?->grace_period_days ?? 2]
             ),
         ]);
     }

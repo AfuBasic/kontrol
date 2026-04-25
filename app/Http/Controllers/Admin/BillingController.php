@@ -19,19 +19,31 @@ class BillingController extends Controller
     {
         $estate = $this->estateContext->getEstate();
 
-        // Gate: billing only for charge_type = 'estate'
-        abort_if(
-            $estate->settings->charge_type !== 'estate',
-            403,
-            'Billing is not enabled for this estate.'
-        );
-
         $overview = $this->billingService->getOverview();
-        $recentInvoices = $this->billingService->getInvoices(['per_page' => 3]);
+        $recentInvoices = $this->billingService->getInvoices(['per_page' => 5]);
 
         return Inertia::render('Admin/Billing/Index', [
             'overview' => $overview,
             'recentInvoices' => $recentInvoices,
+            'chargeType' => $estate->settings->charge_type,
         ]);
+    }
+
+    public function updatePreference(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'billing_preference' => 'required|in:auto,manual',
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $subscription = $estate->subscriptionRecord;
+
+        if ($subscription) {
+            $subscription->update([
+                'billing_preference' => $request->billing_preference,
+            ]);
+        }
+
+        return back()->with('success', 'Billing preference updated.');
     }
 }

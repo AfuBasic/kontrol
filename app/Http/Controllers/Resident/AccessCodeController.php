@@ -87,7 +87,8 @@ class AccessCodeController extends Controller
 
         $accessCode = $this->accessCodeService->createCode($validated);
 
-        return redirect()->route('resident.visitors.success', $accessCode);
+        return redirect()->route('resident.visitors.show', $accessCode)
+            ->with('success', 'Access code generated successfully!');
     }
 
     /**

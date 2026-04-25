@@ -44,7 +44,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/referrers/{referrer}/invite-member', [ReferrerController::class, 'inviteMember'])->name('referrers.invite-member');
 
         // Estate management
-        Route::resource('estates', EstateController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('estates', EstateController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
 

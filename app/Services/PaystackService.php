@@ -113,8 +113,32 @@ class PaystackService
             'amount' => $data['data']['amount'] ?? null,
             'customer_email' => $data['data']['customer']['email'] ?? null,
             'paid_at' => $data['data']['paid_at'] ?? null,
+            'authorization' => $data['data']['authorization'] ?? null,
+            'customer' => $data['data']['customer'] ?? null,
             'message' => $data['message'] ?? null,
         ];
+    }
+
+    /**
+     * Charge a saved authorization.
+     *
+     * @throws \Exception
+     */
+    public function chargeAuthorization(string $authorizationCode, string $email, int $amount, ?string $reference = null, array $metadata = []): array
+    {
+        $response = $this->client->post('/transaction/charge_authorization', [
+            'authorization_code' => $authorizationCode,
+            'email' => $email,
+            'amount' => $amount,
+            'reference' => $reference,
+            'metadata' => $metadata,
+        ]);
+
+        if (! $response->successful()) {
+            throw new \Exception('Paystack charge authorization failed: '.$response->body());
+        }
+
+        return $response->json('data');
     }
 
     /**

@@ -4,6 +4,8 @@ namespace App\Services\Billing;
 
 use App\Models\Invoice;
 use App\Models\PaymentTransaction;
+use App\Models\ResidentSubscription;
+use App\Services\BillingCycleService;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,6 +18,7 @@ class PaymentVerificationService
 
     public function __construct(
         private PaystackService $paystackService,
+        private BillingCycleService $billingCycleService,
     ) {}
 
     /**
@@ -109,6 +112,59 @@ class PaymentVerificationService
                 'paid_at' => now(),
                 'paystack_reference' => $paystackReference,
             ]);
+
+            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING
+            if ($verification['status'] === 'success' && ! empty($verification['authorization']['authorization_code'])) {
+                $auth = $verification['authorization'];
+                $customer = $verification['customer'];
+
+                $authData = [
+                    'paystack_authorization_code' => $auth['authorization_code'],
+                    'paystack_customer_code' => $customer['customer_code'] ?? null,
+                    'card_brand' => $auth['brand'] ?? null,
+                    'card_last4' => $auth['last4'] ?? null,
+                ];
+
+                if ($invoice->user_id) {
+                    // Resident individual billing
+                    $residentSubscription = \App\Models\ResidentSubscription::where('user_id', $invoice->user_id)
+                        ->where('estate_id', $invoice->estate_id)
+                        ->first();
+
+                    if ($residentSubscription && $residentSubscription->billing_preference === 'auto') {
+                        $residentSubscription->update($authData);
+                    }
+                } else {
+                    // Estate bulk billing
+                    $estateSubscription = $invoice->estate->subscriptionRecord;
+                    if ($estateSubscription && $estateSubscription->billing_preference === 'auto') {
+                        $estateSubscription->update($authData);
+                    }
+                }
+            }
+
+            // 8.2 ADVANCE RESIDENT SUBSCRIPTION PERIOD
+            if ($invoice->user_id) {
+                $residentSubscription = ResidentSubscription::where('user_id', $invoice->user_id)
+                    ->where('estate_id', $invoice->estate_id)
+                    ->first();
+
+                if ($residentSubscription) {
+                    $estateSub = $invoice->estate->subscriptionRecord;
+                    $interval = $estateSub->billing_interval ?? 'monthly';
+
+                    // Advance period: Start = previous end, End = start + interval
+                    $newStart = $invoice->billing_period_start ?? $residentSubscription->current_period_end ?? now();
+                    $newEnd = $invoice->billing_period_end ?? $this->billingCycleService->calculatePeriodEnd($newStart, $interval);
+
+                    $residentSubscription->update([
+                        'status' => 'active',
+                        'current_period_start' => $newStart,
+                        'current_period_end' => $newEnd,
+                        'last_paid_at' => now(),
+                    ]);
+                }
+            }
 
             // 9. RECORD TRANSACTION AS PROCESSED - Prevent reprocessing
             $transaction->update([

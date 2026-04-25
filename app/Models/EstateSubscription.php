@@ -16,6 +16,11 @@ class EstateSubscription extends Model
         'estate_id',
         'plan_id',
         'status',
+        'billing_preference',
+        'paystack_authorization_code',
+        'paystack_customer_code',
+        'card_brand',
+        'card_last4',
         'billing_interval',
         'trial_ends_at',
         'current_period_end',
@@ -31,6 +36,7 @@ class EstateSubscription extends Model
         'next_billing_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'billing_preference' => 'string',
     ];
 
     /**
@@ -47,6 +53,11 @@ class EstateSubscription extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    public function hasSavedCard(): bool
+    {
+        return ! empty($this->paystack_authorization_code);
     }
 
     public function isActive(): bool

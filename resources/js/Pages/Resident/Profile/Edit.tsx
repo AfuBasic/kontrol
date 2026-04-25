@@ -1,13 +1,30 @@
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { User, Lock, Bell, Shield, ChevronRight, LogOut, Mail, Home, MapPin, Zap, Users, Activity, UserCircle, Eye, EyeOff } from 'lucide-react';
+import {
+    User,
+    Lock,
+    Bell,
+    Shield,
+    ChevronRight,
+    LogOut,
+    Mail,
+    Home,
+    MapPin,
+    Zap,
+    Users,
+    Activity,
+    UserCircle,
+    Eye,
+    EyeOff,
+    CreditCard,
+} from 'lucide-react';
 import { type FormEventHandler, useState } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -28,7 +45,7 @@ interface Props {
 }
 
 export default function Edit({ telegram, profile, stats }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, app_url } = usePage<SharedData>().props;
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | null>(null);
 
     const userInitials = auth.user?.name
@@ -128,8 +145,34 @@ export default function Edit({ telegram, profile, stats }: Props) {
                                 description="Update your account password"
                                 onClick={() => setActiveSheet('password')}
                             />
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <Link href="/resident/household" className="block">
+                                <SettingsRow
+                                    icon={<Users className="h-5 w-5" />}
+                                    label="Household Management"
+                                    description="Manage family members and residents"
+                                    onClick={() => {}}
+                                />
+                            </Link>
                         </div>
                     </section>
+
+                    {/* Billing Section (Only for primary residents) */}
+                    {auth.user?.roles?.includes('resident') && (
+                        <section>
+                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Account Status</h2>
+                            <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
+                                <SettingsRow
+                                    icon={<CreditCard className="h-5 w-5" />}
+                                    label="Manage Account on Web"
+                                    description="View your plan and status on the web"
+                                    onClick={() =>
+                                        window.open(`${app_url}/resident/billing`, 'BillingHub', 'width=500,height=800,resizable=yes,scrollbars=yes')
+                                    }
+                                />
+                            </div>
+                        </section>
+                    )}
 
                     {/* Integrations Section */}
                     <section>
@@ -170,12 +213,23 @@ export default function Edit({ telegram, profile, stats }: Props) {
     );
 }
 
-function SettingsRow({ icon, label, description, onClick }: { icon: React.ReactNode; label: string; description: string; onClick: () => void }) {
-    return (
-        <button
-            onClick={onClick}
-            className="flex w-full items-center justify-between p-6 text-left transition-all hover:bg-slate-50 active:bg-slate-100"
-        >
+function SettingsRow({
+    icon,
+    label,
+    description,
+    onClick,
+    href,
+    target,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    description: string;
+    onClick?: () => void;
+    href?: string;
+    target?: string;
+}) {
+    const content = (
+        <>
             <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600">
                     {icon}
@@ -186,6 +240,22 @@ function SettingsRow({ icon, label, description, onClick }: { icon: React.ReactN
                 </div>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-300" />
+        </>
+    );
+
+    const className = 'flex w-full items-center justify-between p-6 text-left transition-all hover:bg-slate-50 active:bg-slate-100 group';
+
+    if (href) {
+        return (
+            <a href={href} target={target} rel="noopener noreferrer" className={className}>
+                {content}
+            </a>
+        );
+    }
+
+    return (
+        <button onClick={onClick} className={className}>
+            {content}
         </button>
     );
 }

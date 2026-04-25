@@ -21,6 +21,8 @@ interface Estate {
 interface Plan {
     id: number;
     name: string;
+    formatted_price: string;
+    billing_interval: string;
 }
 
 interface Props {
@@ -304,7 +306,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                     <option value="">Select a plan</option>
                                     {plans.map((plan) => (
                                         <option key={plan.id} value={plan.id}>
-                                            {plan.name}
+                                            {plan.name} — {plan.formatted_price} ({plan.billing_interval})
                                         </option>
                                     ))}
                                 </select>

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
 import EstateBoardCommentController from '@/actions/App/Http/Controllers/Security/EstateBoardCommentController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
-import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/Types';
+import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
     post: EstateBoardPost;

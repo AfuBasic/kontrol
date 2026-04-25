@@ -21,6 +21,7 @@ class EstateSettings extends Model
         'contacts',
         'free_trial_enabled',
         'free_trial_days',
+        'grace_period_days',
     ];
 
     /**
@@ -34,6 +35,7 @@ class EstateSettings extends Model
             'access_code_require_confirmation' => 'boolean',
             'free_trial_enabled' => 'boolean',
             'free_trial_days' => 'integer',
+            'grace_period_days' => 'integer',
             'contacts' => 'array',
         ];
     }

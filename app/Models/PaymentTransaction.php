@@ -11,6 +11,7 @@ class PaymentTransaction extends Model
         'invoice_id',
         'estate_id',
         'paystack_reference',
+        'provider',
         'idempotency_key',
         'amount',
         'currency',

@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import type { AccessCode, ActivityItem, HomeStats } from '@/Types/access-code';
+import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
@@ -10,7 +10,7 @@ import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
 import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 type Props = SharedData & {
     stats: HomeStats;
@@ -41,10 +41,6 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                     estateName={estateName}
                     unreadCount={auth?.user?.unread_notifications_count ?? 0}
                 />
-
-                {auth?.user?.resident_subscription && (
-                    <SubscriptionBanner subscription={auth.user.resident_subscription} />
-                )}
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
                 <CommandCenter

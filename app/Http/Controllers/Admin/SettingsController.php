@@ -37,6 +37,9 @@ class SettingsController extends Controller
                 'access_code_grace_period_minutes' => $settings->access_code_grace_period_minutes,
                 'access_code_daily_limit_per_resident' => $settings->access_code_daily_limit_per_resident,
                 'access_code_require_confirmation' => $settings->access_code_require_confirmation,
+                'free_trial_enabled' => $settings->free_trial_enabled,
+                'free_trial_days' => $settings->free_trial_days,
+                'grace_period_days' => $settings->grace_period_days,
                 'contacts' => $settings->contacts ?? [],
             ],
         ]);

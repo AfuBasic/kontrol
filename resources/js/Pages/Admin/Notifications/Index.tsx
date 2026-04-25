@@ -8,7 +8,7 @@ import {
     markAsRead as markAsReadAction,
 } from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import AdminLayout from '@/Layouts/AdminLayout';
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 interface NotificationData {
     message?: string;

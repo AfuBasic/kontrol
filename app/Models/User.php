@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'user_type',
         'password',
         'suspended_at',
+        'email_verified_at',
         'google_id',
         'telegram_chat_id',
         'fcm_token',

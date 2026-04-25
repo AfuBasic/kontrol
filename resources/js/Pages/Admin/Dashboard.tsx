@@ -21,7 +21,7 @@ import { create as createPost, index as postsIndex, show as showPost } from '@/a
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import AdminLayout from '@/Layouts/AdminLayout';
-import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/Types';
+import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';
 
 type Props = {
     stats: DashboardStats;

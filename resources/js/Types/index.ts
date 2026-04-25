@@ -15,5 +15,6 @@ export type SharedData = {
     };
     billing_enabled?: boolean;
     has_overdue_invoice?: boolean;
+    app_url: string;
     [key: string]: unknown;
 };

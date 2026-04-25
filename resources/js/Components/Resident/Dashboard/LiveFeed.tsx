@@ -1,4 +1,4 @@
-import { ActivityItem } from '@/Types/access-code';
+import { ActivityItem } from '@/types/access-code';
 import { motion } from 'framer-motion';
 import { Plus, Check, Clock, X, Info } from 'lucide-react';
 import { Link } from '@inertiajs/react';

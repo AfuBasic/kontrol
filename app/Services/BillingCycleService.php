@@ -20,6 +20,7 @@ class BillingCycleService
         // If we're past the anchor day this month, compute next cycle
         if ($today->day > $anchorDay) {
             $baseDate = match ($interval) {
+                'monthly' => $today->addMonth(),
                 'quarterly' => $today->addMonths(3),
                 'semi-annually' => $today->addMonths(6),
                 'annually' => $today->addYear(),
@@ -53,22 +54,46 @@ class BillingCycleService
      * Generate a unique invoice number.
      * Format: KTRL-{number without dashes}
      */
-    public function generateInvoiceNumber(int $estateId): string
+    public function generateInvoiceNumber(int $estateId, ?int $userId = null): string
     {
         $dateStr = now()->format('Ymd');
         $sequence = 1;
 
-        // Count invoices for this estate today
-        $count = \DB::table('invoices')
+        // Count invoices for this estate (and user) today
+        $query = \DB::table('invoices')
             ->where('estate_id', $estateId)
-            ->whereDate('created_at', today())
-            ->count();
+            ->whereDate('created_at', today());
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->whereNull('user_id');
+        }
+
+        $count = $query->count();
 
         $sequence = $count + 1;
 
-        // Generate compact number: estate_id + date + sequence (no dashes)
-        $number = sprintf('%d%s%03d', $estateId, $dateStr, $sequence);
+        // Generate compact number: estate_id + (user_id if exists) + date + sequence
+        if ($userId) {
+            $number = sprintf('%d%d%s%03d', $estateId, $userId, $dateStr, $sequence);
+        } else {
+            $number = sprintf('%d%s%03d', $estateId, $dateStr, $sequence);
+        }
 
         return sprintf('KTRL-%s', $number);
+    }
+
+    /**
+     * Calculate the end of a billing period.
+     */
+    public function calculatePeriodEnd(CarbonInterface $periodStart, string $interval): CarbonInterface
+    {
+        return match ($interval) {
+            'quarterly' => $periodStart->copy()->addMonths(3)->subDay(),
+            'semi-annually' => $periodStart->copy()->addMonths(6)->subDay(),
+            'annually' => $periodStart->copy()->addYear()->subDay(),
+            default => $periodStart->copy()->addMonth()->subDay(),
+        };
     }
 }

@@ -15,9 +15,10 @@ class AcceptInvitationAction
     public function execute(User $user, array $data): void
     {
         DB::transaction(function () use ($user, $data) {
-            // Set the user's password
+            // Set the user's password and verify email
             $user->update([
                 'password' => Hash::make($data['password']),
+                'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
 
             // Update pivot status to accepted

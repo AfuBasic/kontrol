@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { create, show } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { manage } from '@/routes/admin/estate-board';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/Types';
+import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
     posts: CursorPaginatedPosts;

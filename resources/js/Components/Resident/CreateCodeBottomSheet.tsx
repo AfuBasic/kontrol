@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, User, Phone, MessageSquare, Clock, ShieldCheck, Zap } from 'lucide-react';
 import { router, useForm, usePage } from '@inertiajs/react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 
 interface Props {
     isOpen: boolean;
@@ -121,35 +121,47 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                         >
                                             <div className="grid gap-4">
                                                 <button
-                                                    onClick={() => { form.setData('type', 'single_use'); setStep('details'); }}
-                                                    className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50 p-6 transition-all hover:bg-slate-100 active:scale-[0.98]"
+                                                    onClick={() => form.setData('type', 'single_use')}
+                                                    className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
+                                                        form.data.type === 'single_use' 
+                                                            ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
+                                                            : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+                                                    }`}
                                                 >
                                                     <div className="flex items-center gap-4 text-left">
-                                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm text-indigo-600">
+                                                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'single_use' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600'}`}>
                                                             <Zap className="h-7 w-7" />
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-slate-900">One-Time Visit</p>
+                                                            <p className={`font-bold ${form.data.type === 'single_use' ? 'text-indigo-900' : 'text-slate-900'}`}>One-Time Visit</p>
                                                             <p className="text-sm font-medium text-slate-500">Perfect for guests & deliveries</p>
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                                                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'single_use' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-200'}`}>
+                                                        {form.data.type === 'single_use' && <div className="h-2 w-2 rounded-full bg-white" />}
+                                                    </div>
                                                 </button>
 
                                                 <button
-                                                    onClick={() => { form.setData('type', 'long_lived'); setStep('details'); }}
-                                                    className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50 p-6 transition-all hover:bg-slate-100 active:scale-[0.98]"
+                                                    onClick={() => form.setData('type', 'long_lived')}
+                                                    className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
+                                                        form.data.type === 'long_lived' 
+                                                            ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20' 
+                                                            : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+                                                    }`}
                                                 >
                                                     <div className="flex items-center gap-4 text-left">
-                                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm text-amber-600">
+                                                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'long_lived' ? 'bg-amber-600 text-white' : 'bg-white text-amber-600'}`}>
                                                             <Clock className="h-7 w-7" />
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-slate-900">Long-Term Access</p>
+                                                            <p className={`font-bold ${form.data.type === 'long_lived' ? 'text-amber-900' : 'text-slate-900'}`}>Long-Term Access</p>
                                                             <p className="text-sm font-medium text-slate-500">For regular staff or family</p>
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                                                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'long_lived' ? 'border-amber-600 bg-amber-600' : 'border-slate-200'}`}>
+                                                        {form.data.type === 'long_lived' && <div className="h-2 w-2 rounded-full bg-white" />}
+                                                    </div>
                                                 </button>
                                             </div>
 
@@ -171,6 +183,15 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                         </button>
                                                     ))}
                                                 </div>
+                                            </div>
+
+                                            <div className="pt-6">
+                                                <button 
+                                                    onClick={() => setStep('details')}
+                                                    className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all hover:bg-slate-800 active:scale-95"
+                                                >
+                                                    Continue
+                                                </button>
                                             </div>
                                         </motion.div>
                                     )}

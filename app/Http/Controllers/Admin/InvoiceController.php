@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Billing\InitializeInvoicePaymentAction;
+use App\Actions\Billing\PaymentInitializationException;
 use App\Http\Controllers\Controller;
 use App\Mail\SendInvoiceMail;
 use App\Models\Invoice;
-use App\Models\PaymentTransaction;
 use App\Services\Admin\BillingService;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\Billing\PaymentVerificationService;
@@ -13,9 +14,9 @@ use App\Services\EstateContextService;
 use App\Services\PaystackService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class InvoiceController extends Controller
 {
@@ -83,171 +84,34 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function pay(Invoice $invoice): RedirectResponse
+    public function pay(Invoice $invoice, InitializeInvoicePaymentAction $initialize): RedirectResponse|SymfonyResponse
     {
-        \Log::info('InvoiceController::pay() called', ['invoice_id' => $invoice->id]);
-
         $estate = $this->estateContext->getEstate();
 
         abort_if($estate->settings->charge_type !== 'estate', 403);
         abort_if($invoice->estate_id !== $estate->id, 404);
-        abort_if($invoice->isPaid(), 422, 'Invoice is already paid.');
 
         try {
-            \Log::info('Payment flow: checking existing transactions');
-            // Check if there's already a pending/initiated payment for this invoice
-            $existingTransaction = PaymentTransaction::where('invoice_id', $invoice->id)
-                ->whereIn('status', ['pending', 'success'])
-                ->latest()
-                ->first();
-
-            \Log::info('Payment flow: checked existing transactions', ['found' => $existingTransaction ? true : false]);
-
-            // If there's a successful transaction that hasn't been recorded, verify it
-            if ($existingTransaction && $existingTransaction->status === 'success' && ! $existingTransaction->recorded_at) {
-                \Log::info('Payment flow: verifying unrecorded successful transaction');
-                $verificationService = app(PaymentVerificationService::class);
-                $verificationService->verifyAndRecordPayment(
-                    $existingTransaction->paystack_reference,
-                    $invoice,
-                    $existingTransaction->idempotency_key
-                );
-
-                return redirect()->route('admin.billing.invoices.show', $invoice->id)
-                    ->with('success', 'Payment verified and recorded!');
-            }
-
-            // If there's a pending transaction, reuse its Paystack reference
-            if ($existingTransaction && $existingTransaction->status === 'pending') {
-                \Log::info('Payment flow: reusing pending transaction');
-
-                return redirect($existingTransaction->metadata['authorization_url'] ?? route('admin.billing.invoices.show', $invoice->id))
-                    ->with('info', 'Returning to existing payment checkout. Please complete the payment.');
-            }
-
-            \Log::info('Payment flow: creating new transaction', [
-                'invoice_id' => $invoice->id,
-                'amount' => $invoice->amount,
-            ]);
-
-            // Create a new pending payment transaction
-            $transaction = PaymentTransaction::create([
-                'invoice_id' => $invoice->id,
-                'estate_id' => $estate->id,
-                'paystack_reference' => $invoice->invoice_number,
-                'idempotency_key' => (string) Str::uuid(),
-                'amount' => $invoice->amount,
-                'currency' => 'NGN',
-                'status' => 'pending',
-                'attempt_count' => 1,
-            ]);
-
-            \Log::info('Payment flow: transaction created', ['transaction_id' => $transaction->id]);
-
-            // Initialize payment with Paystack using invoice number as reference
-            $paymentData = $this->paystackService->initializePayment(
-                $invoice,
-                route('admin.billing.payment.callback')
-            );
-
-            // Update transaction with Paystack data
-            $transaction->update([
-                'paystack_reference' => $paymentData['reference'],
-                'metadata' => [
-                    'access_code' => $paymentData['access_code'],
-                    'authorization_url' => $paymentData['authorization_url'],
-                ],
-            ]);
-
-            // Save access code for later
-            $invoice->update(['paystack_access_code' => $paymentData['access_code']]);
-
-            return redirect($paymentData['authorization_url']);
-        } catch (\Exception $e) {
-            $errorData = json_decode($e->getMessage(), true);
-
-            if (($errorData['code'] ?? '') === 'duplicate_reference' && isset($transaction)) {
-                $result = $this->handleDuplicateReference($invoice, $transaction);
-                if ($result !== null) {
-                    return $result;
-                }
-            }
-
-            // Clean transaction on unrecoverable errors only
-            if (isset($transaction) && $transaction->exists) {
-                $transaction->delete();
-            }
-
-            return $this->handlePaymentError($e);
-        }
-    }
-
-    /**
-     * Handle duplicate reference errors by verifying existing payment or retrying with a new reference.
-     */
-    private function handleDuplicateReference(Invoice $invoice, PaymentTransaction $transaction): ?RedirectResponse
-    {
-        $verificationService = app(\App\Services\Billing\PaymentVerificationService::class);
-        $maxRetries = PaymentVerificationService::MAX_RETRY_ATTEMPTS;
-
-        try {
-            // Step 1: Verify the original reference first
-            $verification = $this->paystackService->verifyPayment($invoice->invoice_number);
-
-            if ($verification['status'] === 'success') {
-                // Payment already went through — record it and mark invoice paid
-                $verificationService->verifyAndRecordPayment(
-                    $invoice->invoice_number,
-                    $invoice,
-                    null
-                );
-
-                return redirect()
-                    ->route('admin.billing.invoices.show', $invoice->id)
-                    ->with('success', 'Payment verified and recorded successfully!');
-            }
-        } catch (\Exception) {
-            // Verification failed — proceed to retry with new reference
-        }
-
-        // Step 2: Guard max retries
-        if ($transaction->attempt_count >= $maxRetries) {
-            $transaction->delete();
-
-            return back()->with('error',
-                'Too many payment attempts for this invoice. Please contact support.'
-            );
-        }
-
-        // Step 3: Increment attempt count and build suffix reference
-        $transaction->increment('attempt_count');
-        $transaction->refresh();
-        $newReference = $invoice->invoice_number.'_'.$transaction->attempt_count;
-
-        try {
-            $paymentData = $this->paystackService->initializePayment(
+            $result = $initialize->execute(
                 $invoice,
                 route('admin.billing.payment.callback'),
-                $newReference
+                route('admin.billing.invoices.show', $invoice->id),
             );
-
-            // Update transaction with new reference and metadata
-            $transaction->update([
-                'paystack_reference' => $paymentData['reference'],
-                'metadata' => [
-                    'access_code' => $paymentData['access_code'],
-                    'authorization_url' => $paymentData['authorization_url'],
-                    'original_reference' => $invoice->invoice_number,
-                ],
-            ]);
-
-            $invoice->update(['paystack_access_code' => $paymentData['access_code']]);
-
-            return redirect($paymentData['authorization_url']);
-        } catch (\Exception) {
-            // Let the caller handle it
-            return null;
+        } catch (PaymentInitializationException $e) {
+            return back()->with('error', $e->getUserMessage());
         }
+
+        if ($result->isExternal()) {
+            return Inertia::location($result->redirectUrl);
+        }
+
+        $redirect = redirect($result->redirectUrl);
+
+        if ($result->hasFlash()) {
+            $redirect->with($result->flashType, $result->flashMessage);
+        }
+
+        return $redirect;
     }
 
     /**
@@ -340,40 +204,5 @@ class InvoiceController extends Controller
 
             return back()->with('error', 'Error confirming payment: '.$e->getMessage());
         }
-    }
-
-    /**
-     * Handle payment initialization errors with user-friendly messages.
-     */
-    private function handlePaymentError(\Exception $e): RedirectResponse
-    {
-        try {
-            $errorData = json_decode($e->getMessage(), true);
-            $errorCode = $errorData['code'] ?? 'unknown';
-            $errorMessage = $errorData['message'] ?? 'Payment initialization failed';
-        } catch (\Exception) {
-            return back()->with('error', 'An unexpected error occurred. Please try again.');
-        }
-
-        // Map Paystack error codes to user-friendly messages
-        $userMessages = [
-            'invalid_reference' => 'Invalid invoice reference. Please try again.',
-            'invalid_amount' => 'Invalid invoice amount. Please contact support.',
-            'authentication_failed' => 'Payment gateway authentication failed. Please try again.',
-            'rate_limit' => 'Too many payment attempts. Please wait a moment and try again.',
-            'network_error' => 'Network connection error. Please check your internet and try again.',
-            'timeout' => 'Payment service timeout. Please try again.',
-        ];
-
-        $message = $userMessages[$errorCode] ?? 'Failed to initialize payment. Please try again or contact support.';
-
-        // Log for debugging
-        \Log::warning('Payment initialization error', [
-            'code' => $errorCode,
-            'message' => $errorMessage,
-            'user_message' => $message,
-        ]);
-
-        return back()->with('error', $message);
     }
 }

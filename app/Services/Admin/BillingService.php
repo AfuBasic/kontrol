@@ -84,6 +84,11 @@ class BillingService
                 'active_residents' => $activeResidents,
                 'upcoming_amount' => $upcomingAmount,
                 'has_overdue' => $hasOverdue,
+                'billing_preference' => $subscription->billing_preference,
+                'has_saved_card' => $subscription->hasSavedCard(),
+                'card_brand' => $subscription->card_brand,
+                'card_last4' => $subscription->card_last4,
+                'residents_rate' => $subscription->plan->price,
             ];
         }
 
@@ -108,6 +113,16 @@ class BillingService
             'active_residents' => $activeResidents,
             'upcoming_amount' => $upcomingAmount,
             'has_overdue' => $hasOverdue,
+            'billing_preference' => $subscription->billing_preference,
+            'has_saved_card' => $subscription->hasSavedCard(),
+            'card_brand' => $subscription->card_brand,
+            'card_last4' => $subscription->card_last4,
+            'residents_rate' => $subscription->plan->price,
+            'resident_payment_stats' => [
+                'paid' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->where('status', 'active')->count(),
+                'pending' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due'])->count(),
+                'expired' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->where('status', 'expired')->count(),
+            ],
         ];
     }
 

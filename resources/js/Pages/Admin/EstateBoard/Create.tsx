@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import MarkdownEditor from '@/Components/MarkdownEditor';
 import AdminLayout from '@/Layouts/AdminLayout';
-import type { PostAudience, PostStatus } from '@/Types';
+import type { PostAudience, PostStatus } from '@/types';
 
 type FormData = {
     title: string;

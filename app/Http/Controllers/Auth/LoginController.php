@@ -35,13 +35,6 @@ class LoginController extends Controller
             $request->validated('password'),
         );
 
-        // Block unverified residents
-        if ($user->hasRole('resident') && ! $user->hasVerifiedEmail()) {
-            return back()->withErrors([
-                'email' => 'Your email address is not verified. Please check your inbox for the verification link.',
-            ]);
-        }
-
         if (! $checkTrustedDevice->execute($user, $request)) {
             $request->session()->put([
                 'otp_user_id' => $user->id,

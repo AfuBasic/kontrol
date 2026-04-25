@@ -19,16 +19,32 @@ class ResidentSubscriptionService
             return null;
         }
 
-        $trialDays = $settings->free_trial_days ?? 0;
         $now = now();
+        $isTrialAvailable = $settings->free_trial_enabled && ($settings->free_trial_days ?? 0) > 0;
+
+        if ($isTrialAvailable) {
+            $trialDays = $settings->free_trial_days;
+
+            return ResidentSubscription::create([
+                'user_id' => $user->id,
+                'estate_id' => $estate->id,
+                'status' => 'trial',
+                'trial_ends_at' => $now->copy()->addDays($trialDays),
+                'current_period_start' => $now,
+                'current_period_end' => $now->copy()->addDays($trialDays)->addMonth(),
+            ]);
+        }
+
+        // No trial available, put in grace period (past_due)
+        $graceDays = $settings->grace_period_days ?? 2;
 
         return ResidentSubscription::create([
             'user_id' => $user->id,
             'estate_id' => $estate->id,
-            'status' => $trialDays > 0 ? 'trial' : 'active',
-            'trial_ends_at' => $trialDays > 0 ? $now->addDays($trialDays) : null,
+            'status' => 'past_due',
+            'trial_ends_at' => null,
             'current_period_start' => $now,
-            'current_period_end' => $now->copy()->addMonth(), // Default to 1 month
+            'current_period_end' => $now->copy()->addDays($graceDays),
         ]);
     }
 }

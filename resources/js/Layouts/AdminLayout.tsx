@@ -40,7 +40,7 @@ import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification'
 import Toast from '@/Components/Toast'; // Added import
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
-import type { SharedData } from '@/Types';
+import type { SharedData } from '@/types';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
 interface Props {

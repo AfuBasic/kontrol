@@ -11,6 +11,8 @@ class Plan extends Model
 {
     use HasFactory;
 
+    protected $appends = ['formatted_price'];
+
     protected $fillable = [
         'name',
         'slug',

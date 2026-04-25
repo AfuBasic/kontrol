@@ -74,6 +74,15 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::delete('/unlink', [TelegramLinkController::class, 'unlink'])->name('unlink');
         Route::get('/status', [TelegramLinkController::class, 'status'])->name('status');
     });
+
+    // Billing
+    Route::prefix('billing')->name('resident.billing.')->group(function (): void {
+        Route::get('/', [\App\Http\Controllers\Resident\BillingController::class, 'index'])->name('index');
+        Route::patch('/preference', [\App\Http\Controllers\Resident\BillingController::class, 'updatePreference'])->name('preference.update');
+        Route::post('/pay', [\App\Http\Controllers\Resident\BillingController::class, 'payOutstanding'])->name('pay-outstanding');
+        Route::post('/invoices/{invoice}/pay', [\App\Http\Controllers\Resident\BillingController::class, 'pay'])->name('invoices.pay');
+        Route::get('/payment/callback', \App\Http\Controllers\Resident\PaymentCallbackController::class)->name('payment.callback');
+    });
 });
 
 // ──────────────────────────────────────────────────────────────

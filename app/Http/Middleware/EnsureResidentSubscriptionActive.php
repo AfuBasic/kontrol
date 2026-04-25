@@ -29,14 +29,20 @@ class EnsureResidentSubscriptionActive
         if ($estate && $estate->settings->charge_type === 'residents') {
             $subscription = $user->residentSubscription()->where('estate_id', $estate->id)->first();
 
+            // If no subscription exists, create one (grace period by default)
+            if (! $subscription) {
+                $service = app(\App\Services\ResidentSubscriptionService::class);
+                $subscription = $service->createForUser($user, $estate);
+            }
+
             if (! $subscription || ! $subscription->isActive()) {
+                $message = 'Your access is currently limited due to an inactive subscription. Please visit the billing section to restore access.';
+
                 if ($request->expectsJson()) {
-                    return response()->json([
-                        'message' => 'Your access is currently limited. Please visit the Kontrol web platform to manage your subscription.',
-                    ], 403);
+                    return response()->json(['message' => $message], 403);
                 }
 
-                return back()->with('error', 'Your access is currently limited. Please visit the Kontrol web platform to manage your subscription.');
+                return back()->with('error', $message);
             }
         }
 

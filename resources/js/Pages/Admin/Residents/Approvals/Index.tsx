@@ -9,6 +9,7 @@ import {
     reject as approvalReject,
 } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { index as residentsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 interface Resident {
     id: number;
@@ -39,6 +40,17 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'approve' | 'reject';
+        residentId: number | null;
+        residentName: string;
+    }>({
+        isOpen: false,
+        type: 'approve',
+        residentId: null,
+        residentName: '',
+    });
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,23 +74,35 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         }
     };
 
-    const handleApprove = (id: number) => {
-        if (!confirm('Are you sure you want to approve this resident?')) return;
-        setProcessingId(id);
-        router.post(
-            approvalApprove.url({ id }),
-            {},
-            {
-                onFinish: () => setProcessingId(null),
-            },
-        );
+    const handleApprove = (resident: Resident) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'approve',
+            residentId: resident.id,
+            residentName: resident.name,
+        });
     };
 
-    const handleReject = (id: number) => {
-        if (!confirm('Are you sure you want to reject this application? This will permanently remove the request.')) return;
+    const handleReject = (resident: Resident) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'reject',
+            residentId: resident.id,
+            residentName: resident.name,
+        });
+    };
+
+    const confirmAction = () => {
+        if (!modalConfig.residentId) return;
+
+        const id = modalConfig.residentId;
+        const action = modalConfig.type === 'approve' ? approvalApprove : approvalReject;
+
         setProcessingId(id);
+        setModalConfig((prev) => ({ ...prev, isOpen: false }));
+
         router.post(
-            approvalReject.url({ id }),
+            action.url({ id }),
             {},
             {
                 onFinish: () => setProcessingId(null),
@@ -93,13 +117,13 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
             <div className="mb-8 flex items-start gap-4">
                 <Link
                     href={residentsIndex.url()}
-                    className="mt-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-all active:scale-95 hover:bg-slate-50"
+                    className="mt-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95"
                 >
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">Pending Resident Applications</h1>
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                    <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">Pending Resident Applications</h1>
+                    <p className="mt-2 text-sm leading-relaxed font-medium text-slate-500">
                         Review and approve residents who signed up via the invite link.
                     </p>
                 </div>
@@ -142,15 +166,13 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                 </div>
                                                 <div>
                                                     <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
-                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
                                                         <MapPin className="h-3 w-3" />
                                                         {resident.unit_number || 'Unit Pending'}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="text-[10px] font-black text-slate-300 uppercase">
-                                                {resident.created_at_human}
-                                            </div>
+                                            <div className="text-[10px] font-black text-slate-300 uppercase">{resident.created_at_human}</div>
                                         </div>
 
                                         <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4">
@@ -168,7 +190,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
 
                                         <div className="mt-5 flex items-center gap-3">
                                             <button
-                                                onClick={() => handleReject(resident.id)}
+                                                onClick={() => handleReject(resident)}
                                                 disabled={processingId === resident.id}
                                                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 py-3.5 text-sm font-bold text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
@@ -176,7 +198,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                 Reject
                                             </button>
                                             <button
-                                                onClick={() => handleApprove(resident.id)}
+                                                onClick={() => handleApprove(resident)}
                                                 disabled={processingId === resident.id}
                                                 className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
@@ -198,10 +220,14 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                             <table className="w-full text-left">
                                 <thead className="border-b border-slate-100 bg-slate-50/50">
                                     <tr>
-                                        <th className="px-6 py-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">Resident Details</th>
+                                        <th className="px-6 py-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                            Resident Details
+                                        </th>
                                         <th className="px-6 py-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">Contact Info</th>
                                         <th className="px-6 py-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">Submitted</th>
-                                        <th className="px-6 py-4 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                                        <th className="px-6 py-4 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -252,16 +278,16 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                 <td className="px-6 py-5 text-right whitespace-nowrap">
                                                     <div className="flex justify-end gap-2.5">
                                                         <button
-                                                            onClick={() => handleReject(resident.id)}
+                                                            onClick={() => handleReject(resident)}
                                                             disabled={processingId === resident.id}
-                                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 shadow-sm transition-all active:scale-95 hover:bg-rose-50 disabled:opacity-50"
+                                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 shadow-sm transition-all hover:bg-rose-50 active:scale-95 disabled:opacity-50"
                                                         >
                                                             <X className="h-5 w-5" />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleApprove(resident.id)}
+                                                            onClick={() => handleApprove(resident)}
                                                             disabled={processingId === resident.id}
-                                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 hover:bg-blue-700 disabled:opacity-50"
+                                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                                                         >
                                                             {processingId === resident.id ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -285,7 +311,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                 <button
                                     onClick={loadMore}
                                     disabled={isLoadingMore}
-                                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-black tracking-tight text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all active:scale-95 hover:bg-slate-50 disabled:opacity-50 sm:hidden"
+                                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-black tracking-tight text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 sm:hidden"
                                 >
                                     {isLoadingMore ? (
                                         <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
@@ -296,16 +322,17 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                         </>
                                     )}
                                 </button>
-                            ) : residents.total > 0 && (
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest sm:hidden">
-                                    All applications loaded
-                                </p>
+                            ) : (
+                                residents.total > 0 && (
+                                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase sm:hidden">All applications loaded</p>
+                                )
                             )}
 
                             {/* Desktop Pagination */}
                             <div className="hidden w-full items-center justify-between sm:flex">
                                 <p className="text-sm font-bold text-slate-500">
-                                    Showing <span className="text-slate-900">{residents.data.length}</span> of <span className="text-slate-900">{residents.total}</span> entries
+                                    Showing <span className="text-slate-900">{residents.data.length}</span> of{' '}
+                                    <span className="text-slate-900">{residents.total}</span> entries
                                 </p>
                                 <div className="flex gap-2">
                                     {residents.links.map((link, i) => (
@@ -317,7 +344,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                                                     : link.url
                                                       ? 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
-                                                      : 'cursor-not-allowed opacity-30 text-slate-400'
+                                                      : 'cursor-not-allowed text-slate-400 opacity-30'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
@@ -330,13 +357,13 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                     <div className="flex flex-col items-center justify-center py-32 text-center">
                         <div className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-slate-50 transition-transform active:scale-95">
                             <Check className="h-10 w-10 text-slate-300" />
-                            <div className="absolute -inset-2 rounded-full border-2 border-dashed border-slate-100 animate-spin-slow" />
+                            <div className="animate-spin-slow absolute -inset-2 rounded-full border-2 border-dashed border-slate-100" />
                         </div>
                         <h3 className="mt-8 text-xl font-black tracking-tight text-slate-900">No pending applications</h3>
                         <p className="mt-2 text-slate-500">All resident signups have been processed.</p>
                         {search && (
-                            <button 
-                                onClick={() => setSearch('')} 
+                            <button
+                                onClick={() => setSearch('')}
                                 className="mt-6 text-sm font-bold text-blue-600 underline underline-offset-4 hover:text-blue-700"
                             >
                                 Clear Search Results
@@ -345,6 +372,21 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmAction}
+                title={modalConfig.type === 'approve' ? 'Approve Resident' : 'Reject Application'}
+                message={
+                    modalConfig.type === 'approve'
+                        ? `Are you sure you want to approve ${modalConfig.residentName}? They will be granted access to the estate portal immediately.`
+                        : `Are you sure you want to reject ${modalConfig.residentName}'s application? This action cannot be undone and they will need to apply again.`
+                }
+                confirmLabel={modalConfig.type === 'approve' ? 'Approve' : 'Reject'}
+                type={modalConfig.type === 'approve' ? 'info' : 'danger'}
+                isLoading={processingId !== null}
+            />
         </AdminLayout>
     );
 }

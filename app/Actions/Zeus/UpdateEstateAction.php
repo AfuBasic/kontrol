@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 class UpdateEstateAction
 {
     /**
-     * @param  array{name?: string, email?: string, address?: string|null, status?: string, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
+     * @param  array{name?: string, email?: string, address?: string|null, status?: string, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int, grace_period_days?: int}  $data
      */
     public function execute(Estate $estate, array $data): Estate
     {
@@ -16,6 +16,7 @@ class UpdateEstateAction
         $chargeType = $data['charge_type'] ?? null;
         $freeTrialEnabled = $data['free_trial_enabled'] ?? null;
         $freeTrialDays = $data['free_trial_days'] ?? null;
+        $gracePeriodDays = $data['grace_period_days'] ?? null;
 
         if (isset($data['charge_type'])) {
             unset($data['charge_type']);
@@ -25,6 +26,9 @@ class UpdateEstateAction
         }
         if (isset($data['free_trial_days'])) {
             unset($data['free_trial_days']);
+        }
+        if (isset($data['grace_period_days'])) {
+            unset($data['grace_period_days']);
         }
 
         // Check if email is being changed
@@ -58,6 +62,9 @@ class UpdateEstateAction
         }
         if ($freeTrialDays !== null) {
             $settingsData['free_trial_days'] = $freeTrialDays;
+        }
+        if ($gracePeriodDays !== null) {
+            $settingsData['grace_period_days'] = $gracePeriodDays;
         }
 
         if (! empty($settingsData)) {
