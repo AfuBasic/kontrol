@@ -2,11 +2,11 @@ import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
 import { ReactNode, useState } from 'react';
-import type { SharedData } from '@/types';
-import PullToRefresh from '@/components/PullToRefresh';
-import { useForceLogout } from '@/hooks/useForceLogout';
-import usePathFromUrl from '@/hooks/usePathFromUrl';
-import CreateCodeBottomSheet from '@/components/Resident/CreateCodeBottomSheet';
+import type { SharedData } from '@/Types';
+import PullToRefresh from '@/Components/PullToRefresh';
+import { useForceLogout } from '@/Hooks/useForceLogout';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 
 interface Props {
     children: ReactNode;

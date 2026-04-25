@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import ZeusLayout from '@/layouts/ZeusLayout';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Props {
     estate: {

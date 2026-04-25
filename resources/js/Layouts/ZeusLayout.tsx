@@ -14,10 +14,10 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
-import Toast from '@/components/Toast';
-import { useSidebarState } from '@/hooks/useSidebarState';
-import AnimatedLayout from '@/layouts/AnimatedLayout';
-import usePathFromUrl from '@/hooks/usePathFromUrl';
+import Toast from '@/Components/Toast';
+import { useSidebarState } from '@/Hooks/useSidebarState';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
 interface Props {
     children: ReactNode;

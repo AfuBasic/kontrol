@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import '@/echo';
-import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
-import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
-import PullToRefresh from '@/components/PullToRefresh';
-import { useForceLogout } from '@/hooks/useForceLogout';
+import EstateBoardController from '@/Actions/App/Http/Controllers/Security/EstateBoardController';
+import HomeController from '@/Actions/App/Http/Controllers/Security/HomeController';
+import NotificationController from '@/Actions/App/Http/Controllers/Security/NotificationController';
+import ProfileController from '@/Actions/App/Http/Controllers/Security/ProfileController';
+import PullToRefresh from '@/Components/PullToRefresh';
+import { useForceLogout } from '@/Hooks/useForceLogout';
 
 interface Props {
     children: ReactNode;

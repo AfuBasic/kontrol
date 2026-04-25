@@ -1,9 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import AdminLayout from '@/layouts/AdminLayout';
-import PaymentHistoryController from '@/actions/App/Http/Controllers/Admin/PaymentHistoryController';
-import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
+import AdminLayout from '@/Layouts/AdminLayout';
+import PaymentHistoryController from '@/Actions/App/Http/Controllers/Admin/PaymentHistoryController';
+import InvoiceController from '@/Actions/App/Http/Controllers/Admin/InvoiceController';
 
 type Payment = {
     id: number;

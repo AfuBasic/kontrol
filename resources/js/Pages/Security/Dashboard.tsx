@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import SecurityLayout from '@/layouts/SecurityLayout';
+import SecurityLayout from '@/Layouts/SecurityLayout';
 
 export default function Dashboard() {
     return (

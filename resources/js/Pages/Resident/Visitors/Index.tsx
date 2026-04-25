@@ -1,13 +1,13 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import type { AccessCode } from '@/types/access-code';
-import ResidentLayout from '@/layouts/ResidentLayout';
-import resident from '@/routes/resident';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import SearchInput from '@/components/SearchInput';
-import SummaryDashboard from './components/SummaryDashboard';
-import CodeCard from './components/CodeCard';
+import type { AccessCode } from '@/Types/access-code';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import resident from '@/Routes/resident';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import SearchInput from '@/Components/SearchInput';
+import SummaryDashboard from './Components/SummaryDashboard';
+import CodeCard from './Components/CodeCard';
 import { Plus, User, Clock as ClockIcon, Search, History as HistoryIcon, Calendar, Activity } from 'lucide-react';
 
 type Props = {

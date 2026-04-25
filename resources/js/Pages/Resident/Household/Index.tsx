@@ -1,13 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, FormEventHandler } from 'react';
-import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import ResidentLayout from '@/layouts/ResidentLayout';
-import FeatureCard from './components/FeatureCard';
+import HouseholdMemberController from '@/Actions/App/Http/Controllers/Resident/HouseholdMemberController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import FeatureCard from './Components/FeatureCard';
 import { KeyRound, Mail, Trash2, UserPlus, Users, ShieldCheck, Activity, BellRing, Sparkles, Zap } from 'lucide-react';
-import MobileSheet from '@/components/MobileSheet';
-import type { SharedData } from '@/types';
+import MobileSheet from '@/Components/MobileSheet';
+import type { SharedData } from '@/Types';
 
 interface HouseholdMember {
     id: number;

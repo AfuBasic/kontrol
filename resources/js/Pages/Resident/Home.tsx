@@ -1,16 +1,16 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
-import ResidentLayout from '@/layouts/ResidentLayout';
-import DashboardHeader from '@/components/Resident/Dashboard/DashboardHeader';
-import CommandCenter from '@/components/Resident/Dashboard/CommandCenter';
-import QuickActions from '@/components/Resident/Dashboard/QuickActions';
-import VisitorStatus from '@/components/Resident/Dashboard/VisitorStatus';
-import DailyMetrics from '@/components/Resident/Dashboard/DailyMetrics';
-import LiveFeed from '@/components/Resident/Dashboard/LiveFeed';
-import SubscriptionBanner from '@/components/Resident/Dashboard/SubscriptionBanner';
+import type { AccessCode, ActivityItem, HomeStats } from '@/Types/access-code';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
+import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
+import QuickActions from '@/Components/Resident/Dashboard/QuickActions';
+import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
+import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
+import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 
-import type { SharedData } from '@/types';
+import type { SharedData } from '@/Types';
 
 type Props = SharedData & {
     stats: HomeStats;
@@ -20,7 +20,7 @@ type Props = SharedData & {
 };
 
 import { useState } from 'react';
-import CreateCodeBottomSheet from '@/components/Resident/CreateCodeBottomSheet';
+import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 
 export default function Home({ auth, stats, activeCodes, recentActivity, estateName }: Props) {
     // Calculate live data for Command Center

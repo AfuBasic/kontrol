@@ -19,29 +19,29 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
-import { useForceLogout } from '@/hooks/useForceLogout';
+import { useForceLogout } from '@/Hooks/useForceLogout';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import axios from 'axios';
 
-import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
-import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
-import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
-import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
-import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
-import PendingInvoiceNotification from '@/components/PendingInvoiceNotification';
-import Toast from '@/components/Toast'; // Added import
-import { useSidebarState } from '@/hooks/useSidebarState';
-import AnimatedLayout from '@/layouts/AnimatedLayout';
-import type { SharedData } from '@/types';
-import usePathFromUrl from '@/hooks/usePathFromUrl';
+import ActivityLogController from '@/Actions/App/Http/Controllers/Admin/ActivityLogController';
+import BillingController from '@/Actions/App/Http/Controllers/Admin/BillingController';
+import DashboardController from '@/Actions/App/Http/Controllers/Admin/DashboardController';
+import EstateBoardController from '@/Actions/App/Http/Controllers/Admin/EstateBoardController';
+import NotificationController from '@/Actions/App/Http/Controllers/Admin/NotificationController';
+import ProfileController from '@/Actions/App/Http/Controllers/Admin/ProfileController';
+import ResidentController from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+import RoleController from '@/Actions/App/Http/Controllers/Admin/RoleController';
+import SecurityPersonnelController from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import SettingsController from '@/Actions/App/Http/Controllers/Admin/SettingsController';
+import UserController from '@/Actions/App/Http/Controllers/Admin/UserController';
+import LoginController from '@/Actions/App/Http/Controllers/Auth/LoginController';
+import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification';
+import Toast from '@/Components/Toast'; // Added import
+import { useSidebarState } from '@/Hooks/useSidebarState';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
+import type { SharedData } from '@/Types';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
 interface Props {
     children: ReactNode;
@@ -69,8 +69,8 @@ const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
-import MobileBottomNav from '@/components/Admin/MobileBottomNav';
-import PullToRefresh from '@/components/PullToRefresh';
+import MobileBottomNav from '@/Components/Admin/MobileBottomNav';
+import PullToRefresh from '@/Components/PullToRefresh';
 
 export default function AdminLayout({ children }: Props) {
     const page = usePage<

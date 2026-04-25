@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import AnimatedLayout from '@/layouts/AnimatedLayout';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {

@@ -1,7 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import ZeusLayout from '@/layouts/ZeusLayout';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 import { ChevronLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Feature {

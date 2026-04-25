@@ -2,8 +2,8 @@ import { Head, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCircle, XCircle, User, AlertTriangle, Info, Check, BellOff } from 'lucide-react';
 import { useState } from 'react';
-import SecurityLayout from '@/layouts/SecurityLayout';
-import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import NotificationController from '@/Actions/App/Http/Controllers/Security/NotificationController';
 
 interface Notification {
     id: string;

@@ -2,9 +2,9 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { User, Mail, Building2, Lock, LogOut, Eye, EyeOff, Check } from 'lucide-react';
 import { useState } from 'react';
-import SecurityLayout from '@/layouts/SecurityLayout';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import ProfileController from '@/Actions/App/Http/Controllers/Security/ProfileController';
+import LoginController from '@/Actions/App/Http/Controllers/Auth/LoginController';
 
 interface Props {
     user: {

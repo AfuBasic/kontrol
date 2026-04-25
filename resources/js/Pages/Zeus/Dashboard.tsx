@@ -1,11 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import ZeusLayout from '@/layouts/ZeusLayout';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 import { SparklesIcon } from '@heroicons/react/24/outline';
-import ApplicationDetailModal from '@/components/Zeus/ApplicationDetailModal';
-import RejectionModal from '@/components/Zeus/RejectionModal';
-import ApplicationActionMenu from '@/components/Zeus/ApplicationActionMenu';
+import ApplicationDetailModal from '@/Components/Zeus/ApplicationDetailModal';
+import RejectionModal from '@/Components/Zeus/RejectionModal';
+import ApplicationActionMenu from '@/Components/Zeus/ApplicationActionMenu';
 
 interface Plan {
     id: number;

@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { RotateCcw, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import ContentEnhanceController from '@/actions/App/Http/Controllers/Api/ContentEnhanceController';
+import ContentEnhanceController from '@/Actions/App/Http/Controllers/Api/ContentEnhanceController';
 
 type AIEnhanceTextareaProps = {
     id?: string;

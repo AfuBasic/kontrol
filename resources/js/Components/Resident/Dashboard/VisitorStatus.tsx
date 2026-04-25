@@ -1,4 +1,4 @@
-import { AccessCode } from '@/types/access-code';
+import { AccessCode } from '@/Types/access-code';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, User, ChevronRight } from 'lucide-react';
 import { Link } from '@inertiajs/react';

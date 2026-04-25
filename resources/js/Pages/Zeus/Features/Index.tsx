@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
-import ZeusLayout from '@/layouts/ZeusLayout';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 import { SparklesIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Plan {

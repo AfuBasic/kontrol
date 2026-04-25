@@ -4,7 +4,7 @@ import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Activity {
     id: number;

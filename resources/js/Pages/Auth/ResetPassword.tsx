@@ -1,4 +1,4 @@
-import ResetPasswordController from '@/actions/App/Http/Controllers/Auth/ResetPasswordController';
+import ResetPasswordController from '@/Actions/App/Http/Controllers/Auth/ResetPasswordController';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';

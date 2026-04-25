@@ -1,8 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import ZeusLayout from '@/layouts/ZeusLayout';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 import { CurrencyDollarIcon, PencilIcon, TrashIcon, SparklesIcon, ArrowTrendingUpIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 
 interface Plan {

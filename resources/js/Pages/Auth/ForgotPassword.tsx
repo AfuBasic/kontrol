@@ -1,5 +1,5 @@
-import ForgotPasswordController from '@/actions/App/Http/Controllers/Auth/ForgotPasswordController';
-import Toast from '@/components/Toast';
+import ForgotPasswordController from '@/Actions/App/Http/Controllers/Auth/ForgotPasswordController';
+import Toast from '@/Components/Toast';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';

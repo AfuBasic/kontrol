@@ -2,10 +2,10 @@ import { Menu, Transition } from '@headlessui/react';
 import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
-import { destroy, edit } from '@/actions/App/Http/Controllers/Admin/UserController';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import { usePermission } from '@/hooks/usePermission';
-import MobileSheet from '@/components/MobileSheet';
+import { destroy, edit } from '@/Actions/App/Http/Controllers/Admin/UserController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import { usePermission } from '@/Hooks/usePermission';
+import MobileSheet from '@/Components/MobileSheet';
 
 type User = {
     id: number;
@@ -13,7 +13,7 @@ type User = {
     email: string;
 };
 
-import type { SharedData } from '@/types';
+import type { SharedData } from '@/Types';
 
 export default function UserActions({ user }: { user: User }) {
     const { auth } = usePage<SharedData>().props;

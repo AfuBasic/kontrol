@@ -1,4 +1,4 @@
-import LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
+import LoginOtpController from '@/Actions/App/Http/Controllers/Auth/LoginOtpController';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';

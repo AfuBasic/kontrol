@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, AlertCircle, Clock } from 'lucide-react';
-import type { ResidentSubscription } from '@/types/auth';
+import type { ResidentSubscription } from '@/Types/auth';
 
 interface SubscriptionBannerProps {
     subscription: ResidentSubscription;

@@ -3,11 +3,11 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import SecurityActions from '@/components/Admin/SecurityActions';
-import { useDebounce } from '@/hooks/useDebounce';
-import { usePermission } from '@/hooks/usePermission';
-import AdminLayout from '@/layouts/AdminLayout';
+import { bulkDelete, index } from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import SecurityActions from '@/Components/Admin/SecurityActions';
+import { useDebounce } from '@/Hooks/useDebounce';
+import { usePermission } from '@/Hooks/usePermission';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type SecurityPerson = {
     id: number;

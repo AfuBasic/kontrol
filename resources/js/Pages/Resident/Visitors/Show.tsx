@@ -3,11 +3,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Shield, User } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AccessCode, CursorPaginatedUsageLogs } from '@/types/access-code';
-import ResidentLayout from '@/layouts/ResidentLayout';
-import resident from '@/routes/resident';
+import type { AccessCode, CursorPaginatedUsageLogs } from '@/Types/access-code';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import resident from '@/Routes/resident';
 
-import { shareAccessCode } from '@/utils/share';
+import { shareAccessCode } from '@/Utils/share';
 
 type Props = {
     accessCode: AccessCode;

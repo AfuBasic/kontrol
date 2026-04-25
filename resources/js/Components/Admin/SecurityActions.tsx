@@ -2,10 +2,10 @@ import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, NoSymbolIco
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import { usePermission } from '@/hooks/usePermission';
-import MobileSheet from '@/components/MobileSheet';
+import { edit, destroy, suspend, resetPassword } from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import { usePermission } from '@/Hooks/usePermission';
+import MobileSheet from '@/Components/MobileSheet';
 
 type SecurityPerson = {
     id: number;

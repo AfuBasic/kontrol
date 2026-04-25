@@ -1,4 +1,4 @@
-import type { AccessCode } from '@/types/access-code';
+import type { AccessCode } from '@/Types/access-code';
 
 export function shareAccessCode(accessCode: AccessCode) {
     if (navigator.share) {

@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { Globe, Image as ImageIcon, MessageCircle, Shield, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import { index, show } from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import SecurityLayout from '@/layouts/SecurityLayout';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
+import { index, show } from '@/Actions/App/Http/Controllers/Security/EstateBoardController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/Types';
 
 type Props = {
     posts: CursorPaginatedPosts;

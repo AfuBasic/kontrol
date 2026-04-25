@@ -3,10 +3,10 @@ import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import MobileSheet from '@/components/MobileSheet';
-import { usePermission } from '@/hooks/usePermission';
+import { edit, destroy, suspend, resetPassword } from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import MobileSheet from '@/Components/MobileSheet';
+import { usePermission } from '@/Hooks/usePermission';
 
 type Resident = {
     id: number;

@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { index, store } from '@/actions/App/Http/Controllers/Admin/RoleController';
-import AdminLayout from '@/layouts/AdminLayout';
+import { index, store } from '@/Actions/App/Http/Controllers/Admin/RoleController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type Permission = {
     id: number;

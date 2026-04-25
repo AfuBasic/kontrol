@@ -3,15 +3,15 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LinkIcon, Mail, Trash2, MapPin, Phone, User, Loader2, Check } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
-import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
-import ResidentActions from '@/components/Admin/ResidentActions';
-import ResidentsSkeleton from '@/components/Admin/ResidentsSkeleton';
+import { bulkDelete, index } from '@/Actions/App/Http/Controllers/Admin/ResidentController';
+import { index as inviteLinkIndex } from '@/Actions/App/Http/Controllers/Admin/InviteLinkController';
+import { index as approvalsIndex } from '@/Actions/App/Http/Controllers/Admin/ResidentApprovalController';
+import ResidentActions from '@/Components/Admin/ResidentActions';
+import ResidentsSkeleton from '@/Components/Admin/ResidentsSkeleton';
 
-import { useDebounce } from '@/hooks/useDebounce';
-import { usePermission } from '@/hooks/usePermission';
-import AdminLayout from '@/layouts/AdminLayout';
+import { useDebounce } from '@/Hooks/useDebounce';
+import { usePermission } from '@/Hooks/usePermission';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 // Wayfinder actions are used for routing instead of global route()
 

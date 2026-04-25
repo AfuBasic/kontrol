@@ -3,11 +3,11 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { User, Lock, Bell, Shield, ChevronRight, LogOut, Mail, Home, MapPin, Zap, Users, Activity, UserCircle, Eye, EyeOff } from 'lucide-react';
 import { type FormEventHandler, useState } from 'react';
-import TelegramLinkToggle from '@/components/TelegramLinkToggle';
-import ResidentLayout from '@/layouts/ResidentLayout';
-import resident from '@/routes/resident';
-import MobileSheet from '@/components/MobileSheet';
-import type { SharedData } from '@/types';
+import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import resident from '@/Routes/resident';
+import MobileSheet from '@/Components/MobileSheet';
+import type { SharedData } from '@/Types';
 
 interface Props {
     mustVerifyEmail: boolean;

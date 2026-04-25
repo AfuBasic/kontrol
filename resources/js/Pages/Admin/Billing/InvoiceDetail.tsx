@@ -1,9 +1,9 @@
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
-import Toast from '@/components/Toast';
-import Spinner from '@/components/Spinner';
+import Toast from '@/Components/Toast';
+import Spinner from '@/Components/Spinner';
 import {
     ArrowLeftIcon,
     CheckCircleIcon,
@@ -20,7 +20,7 @@ import {
     SparklesIcon,
     XCircleIcon,
 } from '@heroicons/react/24/outline';
-import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
+import InvoiceController from '@/Actions/App/Http/Controllers/Admin/InvoiceController';
 
 type PaymentTransaction = {
     id: number;

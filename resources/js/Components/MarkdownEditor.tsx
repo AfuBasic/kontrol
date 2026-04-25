@@ -24,7 +24,7 @@ import {
 import { marked } from 'marked';
 import { useCallback, useEffect, useState } from 'react';
 
-import ContentEnhanceController from '@/actions/App/Http/Controllers/Api/ContentEnhanceController';
+import ContentEnhanceController from '@/Actions/App/Http/Controllers/Api/ContentEnhanceController';
 
 // Configure marked for safe HTML output
 marked.setOptions({

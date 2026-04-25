@@ -2,9 +2,9 @@ import { Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import { Copy, Trash2, Clock, CheckCircle2, AlertCircle, Calendar, MoreVertical, Share2, Zap, ExternalLink, Activity } from 'lucide-react';
-import type { AccessCode } from '@/types/access-code';
-import resident from '@/routes/resident';
-import MobileSheet from '@/components/MobileSheet';
+import type { AccessCode } from '@/Types/access-code';
+import resident from '@/Routes/resident';
+import MobileSheet from '@/Components/MobileSheet';
 
 function getStatusInfo(status: AccessCode['status']) {
     switch (status) {

@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import { store, index } from '@/actions/App/Http/Controllers/Admin/UserController';
-import AdminLayout from '@/layouts/AdminLayout';
+import { store, index } from '@/Actions/App/Http/Controllers/Admin/UserController';
+import AdminLayout from '@/Layouts/AdminLayout';
 import UserForm from './UserForm';
 
 type Props = {

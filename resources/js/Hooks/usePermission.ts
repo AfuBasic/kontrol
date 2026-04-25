@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import type { SharedData } from '@/types';
+import type { SharedData } from '@/Types';
 
 export function usePermission() {
     const { auth } = usePage<SharedData>().props;

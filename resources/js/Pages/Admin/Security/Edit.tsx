@@ -1,7 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import AdminLayout from '@/layouts/AdminLayout';
+import { index, update, destroy } from '@/Actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type SecurityPerson = {
     id: number;

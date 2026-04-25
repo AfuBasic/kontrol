@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import EstateBoardCommentController from '@/actions/App/Http/Controllers/Security/EstateBoardCommentController';
-import SecurityLayout from '@/layouts/SecurityLayout';
-import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
+import EstateBoardController from '@/Actions/App/Http/Controllers/Security/EstateBoardController';
+import EstateBoardCommentController from '@/Actions/App/Http/Controllers/Security/EstateBoardCommentController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/Types';
 
 type Props = {
     post: EstateBoardPost;

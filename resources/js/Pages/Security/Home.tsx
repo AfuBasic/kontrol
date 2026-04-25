@@ -2,8 +2,8 @@ import { useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ShieldX, User, Clock, Home as HomeIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import SecurityLayout from '@/layouts/SecurityLayout';
-import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import HomeController from '@/Actions/App/Http/Controllers/Security/HomeController';
 
 interface ValidationResult {
     valid: boolean;

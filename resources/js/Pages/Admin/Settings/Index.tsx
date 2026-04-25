@@ -1,8 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2 } from 'lucide-react';
-import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import AdminLayout from '@/layouts/AdminLayout';
+import { update } from '@/Actions/App/Http/Controllers/Admin/SettingsController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type Contact = {
     name: string;
