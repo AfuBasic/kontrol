@@ -15,7 +15,7 @@ type Props = {
 
 export default function Edit({ user, roles }: Props) {
     return (
-        <AdminLayout>
+        <>
             <Head title="Edit Admin" />
             <UserForm
                 user={user}
@@ -27,6 +27,6 @@ export default function Edit({ user, roles }: Props) {
                 cancelUrl={index.url()}
                 roles={roles}
             />
-        </AdminLayout>
+        </>
     );
 }

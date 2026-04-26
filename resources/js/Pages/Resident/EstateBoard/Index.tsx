@@ -170,7 +170,7 @@ export default function EstateBoardIndex({ posts }: Props) {
     }, [loadMore]);
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Feed" />
 
             {/* Page Header */}
@@ -215,6 +215,6 @@ export default function EstateBoardIndex({ posts }: Props) {
                     </p>
                 </motion.div>
             )}
-        </ResidentLayout>
+        </>
     );
 }

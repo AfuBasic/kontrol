@@ -130,7 +130,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
     const isSomeSelected = selectedIds.length > 0 && selectedIds.length < security.data.length;
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Security Personnel" />
 
             {/* Page Header */}
@@ -515,6 +515,6 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

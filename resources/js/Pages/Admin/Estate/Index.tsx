@@ -4,7 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 
 export default function EstateBoard() {
     return (
-        <AdminLayout>
+        <>
             <Head title="Estate Board" />
 
             {/* Page Header */}
@@ -39,6 +39,6 @@ export default function EstateBoard() {
                     <p className="mt-1 text-sm text-gray-400">This page will display estate-level information and activity.</p>
                 </div>
             </motion.div>
-        </AdminLayout>
+        </>
     );
 }

@@ -268,7 +268,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title={`Invoice ${invoice.invoice_number}`} />
 
             <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50/50">
@@ -712,6 +712,6 @@ export default function InvoiceDetailPage({ invoice }: Props) {
             `,
                 }}
             />
-        </AdminLayout>
+        </>
     );
 }

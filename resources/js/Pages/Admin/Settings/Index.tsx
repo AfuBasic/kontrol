@@ -87,7 +87,7 @@ export default function Settings({ settings }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Settings" />
 
             {/* Page Header */}
@@ -435,6 +435,6 @@ export default function Settings({ settings }: Props) {
                     </button>
                 </motion.div>
             </form>
-        </AdminLayout>
+        </>
     );
 }

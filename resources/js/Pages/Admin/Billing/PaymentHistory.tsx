@@ -40,7 +40,7 @@ export default function PaymentHistoryPage({ payments }: Props) {
     const totalReceived = payments.data.reduce((sum, payment) => sum + payment.amount, 0);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Payment History" />
 
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -195,6 +195,6 @@ export default function PaymentHistoryPage({ payments }: Props) {
                     )}
                 </motion.div>
             </div>
-        </AdminLayout>
+        </>
     );
 }

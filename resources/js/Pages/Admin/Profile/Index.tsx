@@ -30,7 +30,7 @@ export default function Profile({ user }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Profile" />
 
             {/* Page Header */}
@@ -154,6 +154,6 @@ export default function Profile({ user }: Props) {
                     </div>
                 </form>
             </motion.div>
-        </AdminLayout>
+        </>
     );
 }

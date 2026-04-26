@@ -193,7 +193,7 @@ export default function EstateBoardIndex({ posts }: Props) {
     }, [loadMore]);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Estate Board" />
 
             {/* Hero Header */}
@@ -280,6 +280,6 @@ export default function EstateBoardIndex({ posts }: Props) {
                     </Link>
                 </motion.div>
             )}
-        </AdminLayout>
+        </>
     );
 }

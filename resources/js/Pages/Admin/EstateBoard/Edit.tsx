@@ -96,7 +96,7 @@ export default function EditPost({ post }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Edit Post" />
 
             {/* Back Button */}
@@ -391,6 +391,6 @@ export default function EditPost({ post }: Props) {
                     </button>
                 </motion.div>
             </form>
-        </AdminLayout>
+        </>
     );
 }

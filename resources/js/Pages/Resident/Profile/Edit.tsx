@@ -1,5 +1,5 @@
 import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     User,
@@ -21,6 +21,7 @@ import {
     Crown,
     X,
     Loader2,
+    Plus,
 } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
@@ -58,18 +59,18 @@ interface Props {
 
 export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const [activeTab, setActiveTab] = useState<'account' | 'emergency'>('account');
-    const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | null>(null);
+    const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
+    const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
     const { openExternalBilling } = useExternalBilling();
 
     const CONTACT_LIMIT = 5;
 
-    // Support deep-linking to tabs via query param
+    // Support deep-linking via query param
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const open = urlParams.get('tab');
-        if (open === 'emergency') {
-            setActiveTab('emergency');
+        const open = urlParams.get('open');
+        if (open === 'emergency_management') {
+            setActiveSheet('emergency_management');
             window.history.replaceState({}, '', window.location.pathname);
         }
     }, []);
@@ -126,144 +127,123 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     </div>
                 </motion.div>
 
-                {/* 2. TAB SWITCHER */}
-                <div className="flex rounded-[24px] bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
-                    <button
-                        onClick={() => setActiveTab('account')}
-                        className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-3.5 text-xs font-black tracking-widest uppercase transition-all ${
-                            activeTab === 'account' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                        }`}
-                    >
-                        <User className="h-4 w-4" />
-                        Account
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('emergency')}
-                        className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-3.5 text-xs font-black tracking-widest uppercase transition-all ${
-                            activeTab === 'emergency' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                        }`}
-                    >
-                        <Shield className="h-4 w-4" />
-                        Emergency
-                    </button>
+                {/* 2. STATS OVERVIEW */}
+                <div className="flex items-center rounded-[32px] bg-white py-6 shadow-sm ring-1 ring-slate-200">
+                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                        <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Active Codes</p>
+                    </div>
+                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                        <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Family</p>
+                    </div>
+                    <div className="flex-1 px-2 text-center">
+                        <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">SOS Contacts</p>
+                    </div>
                 </div>
 
-                <AnimatePresence mode="wait">
-                    {activeTab === 'account' ? (
-                        <motion.div
-                            key="account"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-8"
-                        >
-                            {/* Stats Overview */}
-                            <div className="flex items-center rounded-[32px] bg-white py-6 shadow-sm ring-1 ring-slate-200">
-                                <div className="flex-1 border-r border-slate-50 px-2 text-center">
-                                    <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
-                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Codes</p>
-                                </div>
-                                <div className="flex-1 border-r border-slate-50 px-2 text-center">
-                                    <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
-                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
-                                </div>
-                                <div className="flex-1 px-2 text-center">
-                                    <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
-                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Contacts</p>
-                                </div>
+                {/* 3. SETTINGS HUB */}
+                <div className="space-y-8">
+                    {/* Account Section */}
+                    <section>
+                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Personal & Security</h2>
+                        <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                            <SettingsRow
+                                icon={<UserCircle className="h-5 w-5" />}
+                                label="Profile Information"
+                                description="Update your name and address"
+                                onClick={() => setActiveSheet('profile')}
+                            />
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <SettingsRow
+                                icon={<Lock className="h-5 w-5" />}
+                                label="Security"
+                                description="Update your account password"
+                                onClick={() => setActiveSheet('password')}
+                            />
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <Link href="/resident/household" className="block">
+                                <SettingsRow
+                                    icon={<Users className="h-5 w-5" />}
+                                    label="Household Management"
+                                    description="Manage family members"
+                                    onClick={() => {}}
+                                />
+                            </Link>
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <SettingsRow
+                                icon={<Shield className="h-5 w-5" />}
+                                label="Emergency Contacts"
+                                description="Manage SOS alert recipients"
+                                onClick={() => setActiveSheet('emergency_management')}
+                            />
+                        </div>
+                    </section>
+
+                    {/* Billing Section */}
+                    {auth.user?.roles?.includes('resident') && (
+                        <section>
+                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Subscription</h2>
+                            <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                                <SettingsRow
+                                    icon={<CreditCard className="h-5 w-5" />}
+                                    label="Estate Billing"
+                                    description={
+                                        auth.user?.resident_subscription
+                                            ? `${auth.user.resident_subscription.plan_name} • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
+                                            : 'Manage your payments'
+                                    }
+                                    onClick={openExternalBilling}
+                                />
                             </div>
-
-                            {/* Account Section */}
-                            <section>
-                                <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Security & Access</h2>
-                                <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
-                                    <SettingsRow
-                                        icon={<UserCircle className="h-5 w-5" />}
-                                        label="Profile Information"
-                                        description="Full name, address and unit"
-                                        onClick={() => setActiveSheet('profile')}
-                                    />
-                                    <div className="mx-6 h-px bg-slate-50" />
-                                    <SettingsRow
-                                        icon={<Lock className="h-5 w-5" />}
-                                        label="Account Password"
-                                        description="Secure your digital access"
-                                        onClick={() => setActiveSheet('password')}
-                                    />
-                                    <div className="mx-6 h-px bg-slate-50" />
-                                    <Link href="/resident/household" className="block">
-                                        <SettingsRow
-                                            icon={<Users className="h-5 w-5" />}
-                                            label="Household Management"
-                                            description="Invite and manage residents"
-                                            onClick={() => {}}
-                                        />
-                                    </Link>
-                                </div>
-                            </section>
-
-                            {/* Billing Section */}
-                            {auth.user?.roles?.includes('resident') && (
-                                <section>
-                                    <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Subscription</h2>
-                                    <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
-                                        <SettingsRow
-                                            icon={<CreditCard className="h-5 w-5" />}
-                                            label="Estate Billing"
-                                            description={
-                                                auth.user?.resident_subscription
-                                                    ? `${auth.user.resident_subscription.plan_name} • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
-                                                    : 'Manage your payments'
-                                            }
-                                            onClick={openExternalBilling}
-                                        />
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Integrations */}
-                            <section>
-                                <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Notifications</h2>
-                                <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                                    <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
-                                </div>
-                            </section>
-
-                            <div className="px-2">
-                                <Link
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                    className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
-                                >
-                                    <LogOut className="h-5 w-5" />
-                                    Sign Out Account
-                                </Link>
-                            </div>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="emergency"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                        >
-                            <EmergencyContactsForm contacts={emergency_contacts} limit={CONTACT_LIMIT} />
-                        </motion.div>
+                        </section>
                     )}
-                </AnimatePresence>
-            </div>
 
-            {/* EDIT SHEETS */}
-            <MobileSheet isOpen={activeSheet === 'profile'} onClose={() => setActiveSheet(null)} title="Profile Information">
+                    {/* Integrations */}
+                    <section>
+                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Notifications</h2>
+                        <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                            <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
+                        </div>
+                    </section>
+
+                    {/* Logout */}
+                    <div className="px-2">
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
+                        >
+                            <LogOut className="h-5 w-5" />
+                            Sign Out Account
+                        </Link>
+                </div>
+            </div>
+        </div>
+            {/* EMERGENCY MANAGEMENT FLOW */}
+            <MobileSheet 
+                isOpen={activeSheet === 'emergency_management'} 
+                onClose={() => setActiveSheet(null)} 
+                title="SOS Contacts"
+            >
                 <div className="p-1">
-                    <ProfileForm profile={profile} onSuccess={() => setActiveSheet(null)} />
+                    <EmergencyContactsManager 
+                        contacts={emergency_contacts} 
+                        limit={CONTACT_LIMIT}
+                        onAddClick={() => setIsAddContactSheetOpen(true)}
+                    />
                 </div>
             </MobileSheet>
 
-            <MobileSheet isOpen={activeSheet === 'password'} onClose={() => setActiveSheet(null)} title="Update Password">
+            <MobileSheet 
+                isOpen={isAddContactSheetOpen} 
+                onClose={() => setIsAddContactSheetOpen(false)} 
+                title="New Emergency Contact"
+            >
                 <div className="p-1">
-                    <UpdatePasswordForm onSuccess={() => setActiveSheet(null)} />
+                    <AddEmergencyContactForm onSuccess={() => setIsAddContactSheetOpen(false)} />
                 </div>
             </MobileSheet>
         </>
@@ -466,28 +446,21 @@ function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
     );
 }
 
-/* ─── Emergency Contacts Form ─── */
-function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency_contacts']; limit: number }) {
-    const { data, setData, post, processing, reset, delete: destroy } = useForm({
-        name: '',
-        phone: '',
-        relationship: '',
-    });
-
+/* ─── Emergency Contacts Management List ─── */
+function EmergencyContactsManager({ 
+    contacts, 
+    limit, 
+    onAddClick 
+}: { 
+    contacts: Props['emergency_contacts']; 
+    limit: number;
+    onAddClick: () => void;
+}) {
     const isLimitReached = contacts.length >= limit;
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        if (isLimitReached) return;
-
-        post(EmergencyContactController.store.url(), {
-            onSuccess: () => reset(),
-        });
-    };
-
     return (
-        <div className="space-y-8 pb-12">
-            {/* Limit Progress */}
+        <div className="space-y-6 pb-12">
+            {/* Header Area with Add Button */}
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                     <div className={`h-2 w-2 rounded-full ${isLimitReached ? 'bg-amber-500' : 'bg-emerald-500'}`} />
@@ -495,8 +468,15 @@ function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency
                         {contacts.length} / {limit} Contacts
                     </span>
                 </div>
-                {isLimitReached && (
-                    <span className="text-[10px] font-black tracking-widest text-amber-600 uppercase">Limit Reached</span>
+                
+                {!isLimitReached && (
+                    <button
+                        onClick={onAddClick}
+                        className="flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-[10px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95"
+                    >
+                        <Plus className="h-3 w-3" />
+                        Add New
+                    </button>
                 )}
             </div>
 
@@ -506,13 +486,21 @@ function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="rounded-[32px] border-2 border-dashed border-slate-100 p-12 text-center"
+                        className="rounded-[40px] border-2 border-dashed border-slate-100 bg-white/50 p-12 text-center"
                     >
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                             <Users className="h-8 w-8" />
                         </div>
                         <p className="text-sm font-black text-slate-900">No emergency contacts</p>
                         <p className="mt-1 text-xs font-bold text-slate-400">Add people who should be alerted in emergencies.</p>
+                        
+                        <button
+                            onClick={onAddClick}
+                            className="mt-8 flex w-full items-center justify-center gap-3 rounded-[24px] bg-slate-900 py-4 text-sm font-black text-white shadow-xl transition-all active:scale-[0.98]"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Add Your First Contact
+                        </button>
                     </motion.div>
                 ) : (
                     <div className="grid gap-3">
@@ -520,15 +508,17 @@ function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency
                             <motion.div
                                 layout
                                 key={contact.id}
-                                className="flex items-center justify-between rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-indigo-100"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="group flex items-center justify-between rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-indigo-100"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-indigo-50 text-indigo-600 shadow-inner">
-                                        <User className="h-6 w-6" />
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-indigo-50 text-indigo-600 shadow-inner group-hover:bg-indigo-100 transition-colors">
+                                        <User className="h-7 w-7" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-black text-slate-900">{contact.name}</p>
-                                        <div className="flex items-center gap-2">
+                                        <p className="text-base font-black text-slate-900 leading-tight">{contact.name}</p>
+                                        <div className="mt-1 flex items-center gap-2">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{contact.phone}</p>
                                             <span className="h-1 w-1 rounded-full bg-slate-200" />
                                             <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{contact.relationship || 'Contact'}</p>
@@ -538,12 +528,12 @@ function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency
                                 <button
                                     onClick={() => {
                                         if (confirm('Remove this emergency contact?')) {
-                                            destroy(EmergencyContactController.destroy.url(contact.id));
+                                            router.delete(EmergencyContactController.destroy.url(contact.id));
                                         }
                                     }}
-                                    className="flex h-10 w-10 items-center justify-center rounded-full text-slate-300 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
+                                    className="flex h-12 w-12 items-center justify-center rounded-full text-slate-300 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <X className="h-6 w-6" />
                                 </button>
                             </motion.div>
                         ))}
@@ -551,69 +541,85 @@ function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency
                 )}
             </div>
 
-            {/* Add New Contact Form */}
-            {!isLimitReached ? (
-                <form onSubmit={submit} className="space-y-5 rounded-[32px] bg-slate-50 p-6 ring-1 ring-slate-100">
-                    <div className="flex items-center gap-3 px-1">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
-                            <Users className="h-4 w-4" />
-                        </div>
-                        <h3 className="text-xs font-black tracking-[0.2em] text-slate-900 uppercase">New Contact</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="group relative">
-                            <input
-                                type="text"
-                                placeholder="Full Name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                required
-                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                            />
-                        </div>
-                        <div className="group relative">
-                            <input
-                                type="tel"
-                                placeholder="Phone Number"
-                                value={data.phone}
-                                onChange={(e) => setData('phone', e.target.value)}
-                                required
-                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                            />
-                        </div>
-                        <div className="group relative">
-                            <input
-                                type="text"
-                                placeholder="Relationship (e.g. Spouse, Brother)"
-                                value={data.relationship || ''}
-                                onChange={(e) => setData('relationship', e.target.value)}
-                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="flex w-full items-center justify-center gap-3 rounded-[20px] bg-slate-900 py-4.5 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
-                    >
-                        {processing ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                            <>
-                                <Users className="h-5 w-5" />
-                                Add Emergency Contact
-                            </>
-                        )}
-                    </button>
-                </form>
-            ) : (
+            {isLimitReached && (
                 <div className="rounded-[32px] bg-amber-50 p-6 text-center ring-1 ring-amber-100">
                     <p className="text-sm font-black text-amber-900 uppercase">Maximum Limit Reached</p>
                     <p className="mt-1 text-xs font-bold text-amber-600">You can have up to 5 emergency contacts. Remove one to add a new person.</p>
                 </div>
             )}
         </div>
+    );
+}
+
+/* ─── Add Emergency Contact Form (Inside Sheet) ─── */
+function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
+    const { data, setData, post, processing, reset } = useForm({
+        name: '',
+        phone: '',
+        relationship: '',
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(EmergencyContactController.store.url(), {
+            onSuccess: () => {
+                reset();
+                onSuccess();
+            },
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-6 pb-10">
+            <div className="space-y-4">
+                <div className="group relative">
+                    <label className="mb-2 block px-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Contact Name</label>
+                    <input
+                        type="text"
+                        placeholder="e.g. John Doe"
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        required
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                    />
+                </div>
+                <div className="group relative">
+                    <label className="mb-2 block px-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Phone Number</label>
+                    <input
+                        type="tel"
+                        placeholder="e.g. +234..."
+                        value={data.phone}
+                        onChange={(e) => setData('phone', e.target.value)}
+                        required
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                    />
+                </div>
+                <div className="group relative">
+                    <label className="mb-2 block px-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Relationship</label>
+                    <input
+                        type="text"
+                        placeholder="e.g. Spouse, Brother"
+                        value={data.relationship || ''}
+                        onChange={(e) => setData('relationship', e.target.value)}
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={processing}
+                className="flex w-full items-center justify-center gap-3 rounded-[28px] bg-slate-900 py-5 text-base font-black text-white shadow-2xl shadow-slate-900/20 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+            >
+                {processing ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                    <>
+                        <Plus className="h-6 w-6" />
+                        Save Contact
+                    </>
+                )}
+            </button>
+        </form>
     );
 }

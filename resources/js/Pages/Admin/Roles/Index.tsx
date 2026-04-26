@@ -56,7 +56,7 @@ export default function Roles({ roles }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Roles" />
 
             {/* Page Header */}
@@ -247,6 +247,6 @@ export default function Roles({ roles }: Props) {
                     )}
                 </motion.div>
             )}
-        </AdminLayout>
+        </>
     );
 }

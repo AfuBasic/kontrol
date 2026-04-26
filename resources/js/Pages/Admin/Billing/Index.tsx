@@ -71,7 +71,7 @@ export default function BillingPage({ overview, recentInvoices, chargeType }: Pr
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Billing & Subscriptions" />
 
             <div className="min-h-screen bg-[#F8FAFC] pb-20">
@@ -362,6 +362,6 @@ export default function BillingPage({ overview, recentInvoices, chargeType }: Pr
                     </div>
                 </div>
             </div>
-        </AdminLayout>
+        </>
     );
 }

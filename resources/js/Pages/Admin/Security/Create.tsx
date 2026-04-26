@@ -17,7 +17,7 @@ export default function CreateSecurity() {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Add Security Personnel" />
 
             <div className="mx-auto max-w-2xl">
@@ -122,6 +122,6 @@ export default function CreateSecurity() {
                     </div>
                 </motion.form>
             </div>
-        </AdminLayout>
+        </>
     );
 }

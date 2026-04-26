@@ -299,7 +299,7 @@ export default function CreateResident({ inviteLink }: Props) {
     ];
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Add Resident" />
 
             <div className="mx-auto max-w-2xl">
@@ -856,6 +856,6 @@ export default function CreateResident({ inviteLink }: Props) {
                     </div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

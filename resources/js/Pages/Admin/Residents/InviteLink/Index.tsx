@@ -88,7 +88,7 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Manage Invite Link" />
 
             <div className="mx-auto max-w-3xl">
@@ -386,6 +386,6 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

@@ -69,7 +69,7 @@ export default function CreatePost() {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Create Post" />
 
             {/* Back Button */}
@@ -318,6 +318,6 @@ export default function CreatePost() {
                     </button>
                 </motion.div>
             </form>
-        </AdminLayout>
+        </>
     );
 }

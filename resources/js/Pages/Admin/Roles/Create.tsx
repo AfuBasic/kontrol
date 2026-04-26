@@ -79,7 +79,7 @@ export default function CreateRole({ permissions }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Create Role" />
 
             <div className="mx-auto max-w-full">
@@ -184,6 +184,6 @@ export default function CreateRole({ permissions }: Props) {
                     </div>
                 </motion.form>
             </div>
-        </AdminLayout>
+        </>
     );
 }

@@ -73,7 +73,7 @@ export default function HouseholdIndex({ members }: Props) {
     };
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="My Household" />
 
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -346,6 +346,6 @@ export default function HouseholdIndex({ members }: Props) {
                     isLoading={resettingId !== null}
                 />
             </motion.div>
-        </ResidentLayout>
+        </>
     );
 }

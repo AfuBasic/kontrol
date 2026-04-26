@@ -86,7 +86,7 @@ export default function EditRole({ role, permissions }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title={`Edit Role: ${role.name}`} />
 
             <div className="mx-auto max-w-3xl">
@@ -193,6 +193,6 @@ export default function EditRole({ role, permissions }: Props) {
                     </div>
                 </motion.form>
             </div>
-        </AdminLayout>
+        </>
     );
 }

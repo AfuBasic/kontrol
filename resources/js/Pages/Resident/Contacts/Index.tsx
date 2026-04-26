@@ -127,7 +127,7 @@ export default function Contacts({ contacts, estateName }: Props) {
     const hasAnyContacts = contacts.length > 0;
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Estate Contacts" />
 
             {/* Hero Section */}
@@ -179,6 +179,6 @@ export default function Contacts({ contacts, estateName }: Props) {
                     </motion.div>
                 )}
             </motion.div>
-        </ResidentLayout>
+        </>
     );
 }

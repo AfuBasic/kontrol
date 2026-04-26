@@ -36,7 +36,7 @@ export default function EditResident({ resident }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Edit Resident" />
 
             <div className="mx-auto max-w-2xl">
@@ -161,6 +161,6 @@ export default function EditResident({ resident }: Props) {
                     </div>
                 </motion.form>
             </div>
-        </AdminLayout>
+        </>
     );
 }

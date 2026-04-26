@@ -31,7 +31,7 @@ export default function CodeSuccess({ accessCode }: Props) {
         }
     }
     return (
-        <ResidentLayout hideNav>
+        <>
             <Head title="Code Created" />
 
             <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
@@ -177,6 +177,6 @@ export default function CodeSuccess({ accessCode }: Props) {
                     </Link>
                 </motion.div>
             </div>
-        </ResidentLayout>
+        </>
     );
 }

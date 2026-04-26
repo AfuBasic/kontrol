@@ -47,7 +47,7 @@ export default function Users({ users, filters }: Props) {
     }, [debouncedSearch, filters.search]);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Admins" />
 
             {/* Page Header */}
@@ -222,6 +222,6 @@ export default function Users({ users, filters }: Props) {
                     </div>
                 )}
             </motion.div>
-        </AdminLayout>
+        </>
     );
 }

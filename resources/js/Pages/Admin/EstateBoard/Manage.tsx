@@ -237,7 +237,7 @@ export default function ManagePosts({ posts }: Props) {
     }, [loadMore]);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Manage Posts" />
 
             {/* Page Header */}
@@ -441,6 +441,6 @@ export default function ManagePosts({ posts }: Props) {
                     </Link>
                 </motion.div>
             )}
-        </AdminLayout>
+        </>
     );
 }

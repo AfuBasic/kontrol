@@ -4,7 +4,7 @@ import ResidentLayout from '@/Layouts/ResidentLayout';
 
 export default function Dashboard() {
     return (
-        <ResidentLayout>
+        <>
             <Head title="Resident Dashboard" />
 
             {/* Page Header */}
@@ -90,6 +90,6 @@ export default function Dashboard() {
                     <p className="mt-1 text-sm text-gray-400">Pre-register visitors to speed up their entry.</p>
                 </div>
             </motion.div>
-        </ResidentLayout>
+        </>
     );
 }

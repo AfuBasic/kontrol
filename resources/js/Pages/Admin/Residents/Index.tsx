@@ -129,7 +129,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Residents" />
 
             {/* Page Header */}
@@ -578,6 +578,6 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

@@ -67,7 +67,7 @@ export default function InvoicesPage({ invoices }: Props) {
     const filteredInvoices = statusFilter ? invoices.data.filter((inv) => inv.status === statusFilter) : invoices.data;
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Invoices" />
 
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -264,6 +264,6 @@ export default function InvoicesPage({ invoices }: Props) {
                     )}
                 </motion.div>
             </div>
-        </AdminLayout>
+        </>
     );
 }

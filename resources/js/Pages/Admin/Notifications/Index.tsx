@@ -67,7 +67,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title={`Notifications - ${name}`} />
 
             <div className="sm:flex sm:items-center sm:justify-between">
@@ -243,6 +243,6 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                     </div>
                 </div>
             )}
-        </AdminLayout>
+        </>
     );
 }

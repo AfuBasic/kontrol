@@ -34,7 +34,7 @@ export default function EditSecurity({ security }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Edit Security Personnel" />
 
             <div className="mx-auto max-w-2xl">
@@ -143,6 +143,6 @@ export default function EditSecurity({ security }: Props) {
                     </div>
                 </motion.form>
             </div>
-        </AdminLayout>
+        </>
     );
 }

@@ -154,7 +154,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
     }
 
     return (
-        <AdminLayout>
+        <>
             <Head title={post.title || 'Post'} />
 
             {/* Back Button */}
@@ -295,6 +295,6 @@ export default function EstateBoardShow({ post, comments }: Props) {
                     </div>
                 )}
             </motion.div>
-        </AdminLayout>
+        </>
     );
 }

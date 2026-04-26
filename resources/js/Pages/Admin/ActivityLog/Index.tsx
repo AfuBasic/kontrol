@@ -92,7 +92,7 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Activity Feed" />
 
             <div className="min-h-screen bg-[#F8FAFC] pb-32">
@@ -231,6 +231,6 @@ export default function ActivityLogIndex({ activities: initialActivities }: Prop
                     </div>
                 </div>
             </div>
-        </AdminLayout>
+        </>
     );
 }

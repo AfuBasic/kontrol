@@ -111,7 +111,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Pending Residents" />
 
             <div className="mb-8 flex items-start gap-4">
@@ -387,6 +387,6 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                 type={modalConfig.type === 'approve' ? 'info' : 'danger'}
                 isLoading={processingId !== null}
             />
-        </AdminLayout>
+        </>
     );
 }

@@ -9,7 +9,7 @@ type Props = {
 
 export default function Create({ roles }: Props) {
     return (
-        <AdminLayout>
+        <>
             <Head title="Invite User" />
             <UserForm
                 title="Invite User"
@@ -20,6 +20,6 @@ export default function Create({ roles }: Props) {
                 cancelUrl={index.url()}
                 roles={roles}
             />
-        </AdminLayout>
+        </>
     );
 }
