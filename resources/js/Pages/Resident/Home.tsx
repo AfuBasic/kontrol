@@ -9,6 +9,7 @@ import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
 import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
 import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
+import resident from '@/routes/resident';
 
 import type { SharedData } from '@/types';
 
@@ -78,7 +79,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 <section>
                     <div className="mb-4 flex items-center justify-between px-2">
                         <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Activity</h3>
-                        <Link href={'/access-codes'} className="text-[10px] font-bold tracking-wider text-indigo-600 uppercase">
+                        <Link href={resident.activity.url()} className="text-[10px] font-bold tracking-wider text-indigo-600 uppercase">
                             View All
                         </Link>
                     </div>

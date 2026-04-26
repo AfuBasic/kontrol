@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\Auth\DetermineUserRedirect;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\Resident\WelcomeMail;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class EmailVerificationController extends Controller
 {
@@ -36,6 +38,11 @@ class EmailVerificationController extends Controller
 
         if ($status === 'accepted') {
             Auth::login($user);
+
+            // Send Welcome Email only to residents
+            if ($user->user_type === 'user') {
+                Mail::to($user->email)->send(new WelcomeMail($user));
+            }
 
             $redirectAction = new DetermineUserRedirect;
             $redirectUrl = $redirectAction->execute($user);

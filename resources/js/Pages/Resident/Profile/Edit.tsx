@@ -27,6 +27,7 @@ import { type FormEventHandler, useState, useEffect } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import type { SharedData } from '@/types';
 import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
@@ -222,6 +223,28 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                 </div>
             </div>
         </div>
+            {/* PROFILE INFORMATION SHEET */}
+            <MobileSheet 
+                isOpen={activeSheet === 'profile'} 
+                onClose={() => setActiveSheet(null)} 
+                title="Profile Information"
+            >
+                <div className="p-1">
+                    <ProfileForm profile={profile} onSuccess={() => setActiveSheet(null)} />
+                </div>
+            </MobileSheet>
+
+            {/* PASSWORD UPDATE SHEET */}
+            <MobileSheet 
+                isOpen={activeSheet === 'password'} 
+                onClose={() => setActiveSheet(null)} 
+                title="Account Security"
+            >
+                <div className="p-1">
+                    <UpdatePasswordForm onSuccess={() => setActiveSheet(null)} />
+                </div>
+            </MobileSheet>
+
             {/* EMERGENCY MANAGEMENT FLOW */}
             <MobileSheet 
                 isOpen={activeSheet === 'emergency_management'} 
@@ -457,6 +480,14 @@ function EmergencyContactsManager({
     onAddClick: () => void;
 }) {
     const isLimitReached = contacts.length >= limit;
+    const [contactToDelete, setContactToDelete] = useState<{id: number, name: string} | null>(null);
+
+    const handleDelete = () => {
+        if (!contactToDelete) return;
+        router.delete(EmergencyContactController.destroy.url(contactToDelete.id), {
+            onSuccess: () => setContactToDelete(null)
+        });
+    };
 
     return (
         <div className="space-y-6 pb-12">
@@ -526,11 +557,7 @@ function EmergencyContactsManager({
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => {
-                                        if (confirm('Remove this emergency contact?')) {
-                                            router.delete(EmergencyContactController.destroy.url(contact.id));
-                                        }
-                                    }}
+                                    onClick={() => setContactToDelete({ id: contact.id, name: contact.name })}
                                     className="flex h-12 w-12 items-center justify-center rounded-full text-slate-300 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
                                 >
                                     <X className="h-6 w-6" />
@@ -540,6 +567,16 @@ function EmergencyContactsManager({
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={contactToDelete !== null}
+                onClose={() => setContactToDelete(null)}
+                onConfirm={handleDelete}
+                title="Remove Contact"
+                message={`Are you sure you want to remove ${contactToDelete?.name}? They will no longer receive your SOS alerts.`}
+                confirmLabel="Remove"
+                type="danger"
+            />
 
             {isLimitReached && (
                 <div className="rounded-[32px] bg-amber-50 p-6 text-center ring-1 ring-amber-100">

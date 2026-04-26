@@ -16,34 +16,40 @@ import AppLoader from './Components/AppLoader';
 
 // Pre-hide splash screen logic or other initializations
 
+import AnimatedLayout from './Layouts/AnimatedLayout';
+import ResidentLayout from './Layouts/ResidentLayout';
+import AdminLayout from './Layouts/AdminLayout';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const ResidentLayoutWrapper = (page: React.ReactNode) => (
+    <ResidentLayout>
+        <AnimatedLayout>{page}</AnimatedLayout>
+    </ResidentLayout>
+);
+
+const AdminLayoutWrapper = (page: React.ReactNode) => (
+    <AdminLayout>
+        <AnimatedLayout>{page}</AnimatedLayout>
+    </AdminLayout>
+);
+
+const DefaultLayoutWrapper = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: async (name) => {
         const page = await resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx'));
         const pageModule = page as any;
-        const AnimatedLayout = (await import('./Layouts/AnimatedLayout')).default;
 
         // Automatically apply layouts if not explicitly set
         if (pageModule.default.layout === undefined) {
             if (name.startsWith('Resident/')) {
-                const ResidentLayout = (await import('./Layouts/ResidentLayout')).default;
-                pageModule.default.layout = (page: React.ReactNode) => (
-                    <AnimatedLayout>
-                        <ResidentLayout>{page}</ResidentLayout>
-                    </AnimatedLayout>
-                );
+                pageModule.default.layout = ResidentLayoutWrapper;
             } else if (name.startsWith('Admin/')) {
-                const AdminLayout = (await import('./Layouts/AdminLayout')).default;
-                pageModule.default.layout = (page: React.ReactNode) => (
-                    <AnimatedLayout>
-                        <AdminLayout>{page}</AdminLayout>
-                    </AnimatedLayout>
-                );
+                pageModule.default.layout = AdminLayoutWrapper;
             } else {
-                // For non-dashboard pages, still allow animation
-                pageModule.default.layout = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
+                pageModule.default.layout = DefaultLayoutWrapper;
             }
         }
 
