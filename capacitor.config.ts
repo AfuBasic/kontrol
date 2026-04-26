@@ -8,10 +8,9 @@ const config: CapacitorConfig = {
     appName: 'Kontrol',
     webDir: 'public',
     server: {
-        // Using http for local dev to bypass SSL certificate issues in simulators
-        url: isDev ? 'http://app.kontrol.test' : 'https://app.usekontrol.com',
+        url: isDev ? 'http://kontrol.test' : 'https://app.usekontrol.com',
         cleartext: isDev,
-        allowNavigation: ['app.kontrol.test', 'kontrol.test'],
+        allowNavigation: ['kontrol.test', 'app.kontrol.test'],
     },
     plugins: {
         FirebaseAuthentication: {
@@ -23,8 +22,8 @@ const config: CapacitorConfig = {
             },
         },
         SplashScreen: {
-            launchShowDuration: 3000,
-            launchAutoHide: true,
+            launchShowDuration: 0,
+            launchAutoHide: false, // Handled manually in app.tsx after custom loader is ready
             backgroundColor: '#FFFFFF',
             androidScaleType: 'CENTER',
             showSpinner: false,

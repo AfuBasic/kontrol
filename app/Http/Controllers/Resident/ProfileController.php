@@ -36,6 +36,7 @@ class ProfileController extends Controller
                 'household_members_count' => $user->householdMembers()->count(),
                 'last_activity' => $user->notifications()->latest()->first()?->created_at?->diffForHumans() ?? 'No recent activity',
             ],
+            'emergency_contacts' => $user->emergencyContacts()->get(),
         ]);
     }
 

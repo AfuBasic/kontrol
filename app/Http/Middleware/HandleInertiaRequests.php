@@ -90,6 +90,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'sos_success' => fn () => $request->session()->get('sos_success'),
                 'validation_result' => fn () => $request->session()->get('validation_result'),
             ],
             'billing_enabled' => fn () => $estate && $estate->settings?->charge_type === 'estate',

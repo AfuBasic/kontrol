@@ -12,6 +12,7 @@ use App\Http\Controllers\Resident\NotificationController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\PaymentCallbackController;
 use App\Http\Controllers\Resident\ProfileController;
+use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Resident\TelegramLinkController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,15 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::post('/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('invoices.pay');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
         Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
+    });
+
+    // SOS Emergency
+    Route::post('/sos/trigger', [SosController::class, 'trigger'])->name('resident.sos.trigger');
+
+    // Emergency Contacts Management
+    Route::prefix('emergency-contacts')->name('resident.emergency-contacts.')->group(function (): void {
+        Route::post('/', [\App\Http\Controllers\Resident\EmergencyContactController::class, 'store'])->name('store');
+        Route::delete('/{emergencyContact}', [\App\Http\Controllers\Resident\EmergencyContactController::class, 'destroy'])->name('destroy');
     });
 });
 

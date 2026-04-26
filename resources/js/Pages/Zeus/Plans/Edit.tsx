@@ -99,6 +99,7 @@ export default function EditPlan({ plan, features }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+
         // Convert empty strings to null for nullable fields
         const submitData = {
             ...data,
@@ -107,7 +108,10 @@ export default function EditPlan({ plan, features }: Props) {
             max_security: data.max_security ? Number(data.max_security) : null,
             max_admins: data.max_admins ? Number(data.max_admins) : null,
         };
-        put(`/zeus/plans/${plan.id}`, submitData);
+
+        put(`/zeus/plans/${plan.id}`, {
+            data: submitData,
+        } as any);
     }
 
     return (
@@ -193,7 +197,7 @@ export default function EditPlan({ plan, features }: Props) {
                                     <label className="block text-sm font-medium text-gray-700">Billing Interval</label>
                                     <select
                                         value={data.billing_interval}
-                                        onChange={(e) => setData('billing_interval', e.target.value)}
+                                        onChange={(e) => setData('billing_interval', e.target.value as any)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                     >
                                         {billingIntervals.map((interval) => (
@@ -303,7 +307,7 @@ export default function EditPlan({ plan, features }: Props) {
                                     <label className="block text-sm font-medium text-gray-700">Visibility</label>
                                     <select
                                         value={data.visibility}
-                                        onChange={(e) => setData('visibility', e.target.value)}
+                                        onChange={(e) => setData('visibility', e.target.value as any)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                     >
                                         <option value="public">Public</option>

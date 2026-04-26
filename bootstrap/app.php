@@ -56,9 +56,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->group(base_path('routes/app.php'));
             } else {
                 // Local fallback: Load all routes without domain restrictions
-                // Both public and app routes accessible on localhost
+                // Both public and app routes accessible on localhost/tunnel
                 Route::middleware('web')
-                    ->group(base_path('routes/app.php'));
+                    ->group(function () {
+                        require base_path('routes/public.php');
+                        require base_path('routes/app.php');
+                    });
 
                 Route::middleware('api')
                     ->prefix('api')

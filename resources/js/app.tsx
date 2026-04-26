@@ -9,7 +9,10 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
+import { useState, useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
+import GlobalLoading from './Components/GlobalLoading';
+import AppLoader from './Components/AppLoader';
 
 // Pre-hide splash screen logic or other initializations
 
@@ -21,7 +24,7 @@ createInertiaApp({
         const page = await resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx'));
         const pageModule = page as any;
         const AnimatedLayout = (await import('./Layouts/AnimatedLayout')).default;
-        
+
         // Automatically apply layouts if not explicitly set
         if (pageModule.default.layout === undefined) {
             if (name.startsWith('Resident/')) {
@@ -40,25 +43,65 @@ createInertiaApp({
                 );
             } else {
                 // For non-dashboard pages, still allow animation
-                pageModule.default.layout = (page: React.ReactNode) => (
-                    <AnimatedLayout>{page}</AnimatedLayout>
-                );
+                pageModule.default.layout = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
             }
         }
-        
+
         return page;
     },
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        function AppWrapper() {
+            const [isBooting, setIsBooting] = useState(true);
+            const [isExiting, setIsExiting] = useState(false);
+
+            useEffect(() => {
+                const unregister = router.on('finish', () => {
+                    // Small delay to ensure React has painted the first frame
+                    setTimeout(() => {
+                        setIsExiting(true);
+                        // Hide native splash once our custom loader is fully visible underneath
+                        if (Capacitor.isNativePlatform()) {
+                            SplashScreen.hide().catch(() => {});
+                        }
+                        // Remove the loader from DOM after its fade-out animation
+                        setTimeout(() => setIsBooting(false), 600);
+                    }, 400);
+                    unregister();
+                });
+
+                // Safety timeout: Never leave the user stranded on the splash
+                const timer = setTimeout(() => {
+                    setIsExiting(true);
+                    if (Capacitor.isNativePlatform()) {
+                        SplashScreen.hide().catch(() => {});
+                    }
+                    setTimeout(() => setIsBooting(false), 600);
+                }, 8000);
+
+                return () => {
+                    unregister();
+                    clearTimeout(timer);
+                };
+            }, []);
+
+            return (
+                <>
+                    <App {...props} />
+                    {isBooting && <AppLoader isExiting={isExiting} />}
+                    <GlobalLoading />
+                </>
+            );
+        }
+
+        root.render(<AppWrapper />);
 
         // Handle Capacitor specific logic
         if (Capacitor.isNativePlatform()) {
             (async () => {
                 try {
-                    // Set StatusBar style and overlay
-                    await StatusBar.setStyle({ style: Style.Light });
+                    await StatusBar.setStyle({ style: Style.Default });
                     await StatusBar.setOverlaysWebView({ overlay: true });
 
                     // Handle Android back button
@@ -104,15 +147,7 @@ createInertiaApp({
                         }
                     });
 
-                    // Dismiss splash screen (Standard Load Fallback)
-                    setTimeout(() => {
-                        SplashScreen.hide().catch(() => {});
-                    }, 1000);
-
-                    // Global Safety Timeout: Ensure splash screen hides even if Inertia loop hangs
-                    setTimeout(() => {
-                        // SplashScreen.hide().catch(() => {});
-                    }, 4000);
+                    // First-load splash screen dismissal is now handled in AppWrapper
                 } catch (err) {
                     console.warn('Native bridge initialization failed:', err);
                     // Even on failure, try to hide splash

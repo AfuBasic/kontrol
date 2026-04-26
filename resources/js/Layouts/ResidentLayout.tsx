@@ -14,6 +14,7 @@ import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import SosButton from '@/Components/SosButton';
 
 interface Props {
     children: ReactNode;
@@ -76,7 +77,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         });
 
         return () => {
-            window.Echo.leave(`App.Models.User.${auth.user.id}`);
+            if (auth.user?.id) {
+                window.Echo.leave(`App.Models.User.${auth.user.id}`);
+            }
         };
     }, [auth?.user?.id]);
 
@@ -236,6 +239,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                     <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                                 </div>
+                                <SosButton variant="header" />
                             </div>
                         </div>
                     </header>

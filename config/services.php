@@ -49,4 +49,9 @@ return [
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
+    'bulksms_nigeria' => [
+        'api_token' => env('BULKSMS_NIGERIA_API_TOKEN'),
+        'sender_id' => env('BULKSMS_NIGERIA_SENDER_ID', 'KONTROL'),
+    ],
+
 ];

@@ -163,7 +163,7 @@ export default function AffiliateLayout({ children }: Props) {
                 </main>
 
                 {/* Toast */}
-                {showToast && <Toast message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />}
+                {showToast && <Toast show={showToast} message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />}
             </div>
         </AnimatedLayout>
     );

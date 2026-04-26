@@ -28,7 +28,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\SMS\SMSProvider::class, \App\Services\SMS\BulkSmsNigeriaProvider::class);
+
+        $this->app->singleton(\App\Services\SMS\SmsService::class, function ($app) {
+            return new \App\Services\SMS\SmsService($app->make(\App\Services\SMS\SMSProvider::class));
+        });
     }
 
     /**
@@ -40,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->configureRateLimiting();
         $this->registerEventListeners();
+        $this->configureTunnelSupport();
 
         // Allow admins to bypass all permission checks
         Gate::before(function ($user, $_ability) {
@@ -47,6 +52,28 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
         });
+    }
+
+    protected function configureTunnelSupport(): void
+    {
+        if (app()->environment('local')) {
+            $host = request()->getHost();
+
+            // If the host is an Expose or Ngrok tunnel
+            if (str_contains($host, 'sharedwithexpose.com') || str_contains($host, 'ngrok-free.app')) {
+                $protocol = request()->isSecure() ? 'https://' : 'http://';
+                $url = $protocol . $host;
+
+                // Dynamically update app URL and Sanctum/CORS stateful domains
+                config(['app.url' => $url]);
+
+                $stateful = config('sanctum.stateful', []);
+                if (! in_array($host, $stateful)) {
+                    $stateful[] = $host;
+                    config(['sanctum.stateful' => $stateful]);
+                }
+            }
+        }
     }
 
     protected function registerPolicies(): void

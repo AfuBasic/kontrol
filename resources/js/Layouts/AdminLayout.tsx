@@ -41,6 +41,7 @@ import Toast from '@/Components/Toast'; // Added import
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import type { SharedData } from '@/types';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import SosAlertOverlay from '@/Components/SosAlertOverlay';
 
 interface Props {
     children: ReactNode;
@@ -792,6 +793,8 @@ export default function AdminLayout({ children }: Props) {
                     setToastUrl(null);
                 }}
             />
+
+            {auth.user?.roles?.includes('security') && <SosAlertOverlay />}
         </div>
     );
 }

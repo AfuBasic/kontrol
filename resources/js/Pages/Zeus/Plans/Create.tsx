@@ -120,6 +120,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+
         // Convert empty strings to null for nullable fields
         const submitData = {
             ...data,
@@ -128,7 +129,10 @@ export default function CreatePlan({ features, copyPlan }: Props) {
             max_security: data.max_security ? Number(data.max_security) : null,
             max_admins: data.max_admins ? Number(data.max_admins) : null,
         };
-        post('/zeus/plans', submitData);
+
+        post('/zeus/plans', {
+            data: submitData,
+        } as any); // Inertia's useForm post second arg is options, but data can be overridden in some versions or we can just use transform
     }
 
     return (
@@ -235,7 +239,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     <label className="block text-sm font-medium text-gray-700">Billing Interval</label>
                                     <select
                                         value={data.billing_interval}
-                                        onChange={(e) => setData('billing_interval', e.target.value)}
+                                        onChange={(e) => setData('billing_interval', e.target.value as any)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     >
                                         {billingIntervals.map((interval) => (
@@ -349,7 +353,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                     <label className="block text-sm font-medium text-gray-700">Visibility</label>
                                     <select
                                         value={data.visibility}
-                                        onChange={(e) => setData('visibility', e.target.value)}
+                                        onChange={(e) => setData('visibility', e.target.value as any)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     >
                                         <option value="public">Public</option>

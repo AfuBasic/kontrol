@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 
 export default function AnimatedLayout({ children }: { children: React.ReactNode }) {
@@ -18,7 +18,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
         }
     }, [url, children]);
 
-    const pageVariants = {
+    const pageVariants: Variants = {
         initial: {
             opacity: 0,
         },

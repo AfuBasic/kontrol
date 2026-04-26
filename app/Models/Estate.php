@@ -106,4 +106,12 @@ class Estate extends Model
     {
         return $this->belongsTo(Referrer::class)->withDefault();
     }
+
+    /**
+     * @return HasMany<SosEvent, $this>
+     */
+    public function sosEvents(): HasMany
+    {
+        return $this->hasMany(SosEvent::class);
+    }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Security\EstateBoardCommentController;
 use App\Http\Controllers\Security\EstateBoardController;
 use App\Http\Controllers\Security\HomeController;
@@ -54,4 +55,7 @@ Route::middleware('role:security')->group(function (): void {
 
     // Legacy dashboard redirect
     Route::get('/dashboard', fn () => redirect()->route('security.home'))->name('security.dashboard');
+
+    // SOS Emergency
+    Route::post('/sos/{sosEvent}/acknowledge', [SosController::class, 'acknowledge'])->name('security.sos.acknowledge');
 });

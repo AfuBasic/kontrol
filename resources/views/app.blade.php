@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light" style="color-scheme: light;">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -40,8 +40,7 @@
         <link rel="icon" href="/assets/images/icon.png" type="image/png">
         <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
         <link rel="canonical" href="{{ url()->current() }}">
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111827">
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

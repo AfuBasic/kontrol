@@ -19,13 +19,17 @@ import {
     EyeOff,
     CreditCard,
     Crown,
+    X,
+    Loader2,
 } from 'lucide-react';
-import { type FormEventHandler, useState } from 'react';
+import { type FormEventHandler, useState, useEffect } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
 import type { SharedData } from '@/types';
 import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
+import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface Props {
@@ -44,12 +48,31 @@ interface Props {
         household_members_count: number;
         last_activity: string;
     };
+    emergency_contacts: {
+        id: number;
+        name: string;
+        phone: string;
+        relationship: string | null;
+    }[];
 }
 
-export default function Edit({ telegram, profile, stats }: Props) {
-    const { auth, app_url } = usePage<SharedData>().props;
+export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const [activeTab, setActiveTab] = useState<'account' | 'emergency'>('account');
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | null>(null);
     const { openExternalBilling } = useExternalBilling();
+
+    const CONTACT_LIMIT = 5;
+
+    // Support deep-linking to tabs via query param
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const open = urlParams.get('tab');
+        if (open === 'emergency') {
+            setActiveTab('emergency');
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []);
 
     const userInitials = auth.user?.name
         ?.split(' ')
@@ -67,145 +90,168 @@ export default function Edit({ telegram, profile, stats }: Props) {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 text-white shadow-2xl"
+                    className="relative overflow-hidden rounded-[40px] bg-slate-900 p-8 text-white shadow-2xl"
                 >
                     {/* Background Accents */}
-                    <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-indigo-500/20 blur-3xl" />
-                    <div className="absolute bottom-0 left-0 h-32 w-32 -translate-x-8 translate-y-8 rounded-full bg-emerald-500/10 blur-3xl" />
+                    <div className="absolute top-0 right-0 h-48 w-48 translate-x-12 -translate-y-12 rounded-full bg-indigo-500/20 blur-[80px]" />
+                    <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-12 translate-y-12 rounded-full bg-emerald-500/10 blur-[80px]" />
 
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="group relative">
-                            <div className="h-24 w-24 rounded-[24px] bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-xl ring-4 ring-white/10">
-                                <div className="flex h-full w-full items-center justify-center rounded-[20px] bg-slate-900 text-3xl font-black">
+                            <div className="h-28 w-28 rounded-[32px] bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-2xl ring-4 ring-white/10">
+                                <div className="flex h-full w-full items-center justify-center rounded-[28px] bg-slate-900 text-4xl font-black">
                                     {userInitials}
                                 </div>
                             </div>
-                            <div className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 ring-4 ring-slate-900">
-                                <Zap className="h-4 w-4 text-white" fill="currentColor" />
+                            <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 ring-4 ring-slate-900 shadow-lg">
+                                <Zap className="h-5 w-5 text-white" fill="currentColor" />
                             </div>
                         </div>
 
                         <div className="mt-6">
                             <h1 className="text-2xl font-black tracking-tight">{auth.user?.name}</h1>
-                            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 px-4">
-                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-300 uppercase ring-1 ring-white/10">
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black tracking-[0.2em] text-indigo-300 uppercase ring-1 ring-white/10">
                                     <Shield className="h-3 w-3" />
                                     Resident
                                 </span>
                                 {auth.user?.resident_subscription && (
-                                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400/20 px-3 py-1.5 text-[10px] font-black tracking-widest text-amber-100 uppercase ring-1 ring-amber-400/30 backdrop-blur-sm">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/10 px-4 py-2 text-[10px] font-black tracking-[0.2em] text-amber-200 uppercase ring-1 ring-amber-400/20 backdrop-blur-sm">
                                         <Crown className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                        {auth.user.resident_subscription.plan_name} • {auth.user.resident_subscription.billing_interval.replace('-', ' ')}
+                                        {auth.user.resident_subscription.plan_name}
                                     </span>
                                 )}
                             </div>
-                            <span className="mt-3 block text-xs font-bold text-slate-400">{auth.user?.email}</span>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* 2. UNIFIED ACCOUNT OVERVIEW */}
-                <div className="flex items-center rounded-[32px] bg-white py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
-                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
-                            <Zap className="h-5 w-5" fill="currentColor" />
-                        </div>
-                        <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Active</p>
-                    </div>
-
-                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                            <Users className="h-5 w-5" />
-                        </div>
-                        <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
-                    </div>
-
-                    <div className="flex-1 px-2 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                            <Activity className="h-5 w-5" />
-                        </div>
-                        <p className="text-xl font-black text-slate-900">
-                            {stats.last_activity === 'No recent activity' ? 'None' : stats.last_activity.split(' ')[0]}
-                        </p>
-                        <p className="truncate text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                            {stats.last_activity === 'No recent activity' ? 'Activity' : stats.last_activity.split(' ').slice(1).join(' ')}
-                        </p>
-                    </div>
+                {/* 2. TAB SWITCHER */}
+                <div className="flex rounded-[24px] bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
+                    <button
+                        onClick={() => setActiveTab('account')}
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-3.5 text-xs font-black tracking-widest uppercase transition-all ${
+                            activeTab === 'account' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                    >
+                        <User className="h-4 w-4" />
+                        Account
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('emergency')}
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-[18px] py-3.5 text-xs font-black tracking-widest uppercase transition-all ${
+                            activeTab === 'emergency' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                    >
+                        <Shield className="h-4 w-4" />
+                        Emergency
+                    </button>
                 </div>
 
-                {/* 3. SETTINGS GROUPS */}
-                <div className="space-y-8">
-                    {/* Account Section */}
-                    <section>
-                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Account</h2>
-                        <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
-                            <SettingsRow
-                                icon={<UserCircle className="h-5 w-5" />}
-                                label="Profile Information"
-                                description="Update your name and address"
-                                onClick={() => setActiveSheet('profile')}
-                            />
-                            <div className="mx-6 h-px bg-slate-50" />
-                            <SettingsRow
-                                icon={<Lock className="h-5 w-5" />}
-                                label="Security"
-                                description="Update your account password"
-                                onClick={() => setActiveSheet('password')}
-                            />
-                            <div className="mx-6 h-px bg-slate-50" />
-                            <Link href="/resident/household" className="block">
-                                <SettingsRow
-                                    icon={<Users className="h-5 w-5" />}
-                                    label="Household Management"
-                                    description="Manage family members and residents"
-                                    onClick={() => {}}
-                                />
-                            </Link>
-                        </div>
-                    </section>
-
-                    {/* Billing Section (Only for primary residents) */}
-                    {auth.user?.roles?.includes('resident') && (
-                        <section>
-                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Account Status</h2>
-                            <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
-                                <SettingsRow
-                                    icon={<CreditCard className="h-5 w-5" />}
-                                    label="Subscription Details"
-                                    description={
-                                        auth.user?.resident_subscription
-                                            ? `${auth.user.resident_subscription.plan_name} (${auth.user.resident_subscription.billing_interval}) • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
-                                            : 'View your plan and status on the web'
-                                    }
-                                    onClick={openExternalBilling}
-                                />
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Integrations Section */}
-                    <section>
-                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Integrations</h2>
-                        <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
-                            <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
-                        </div>
-                    </section>
-
-                    {/* Danger Zone */}
-                    <div className="px-2">
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
+                <AnimatePresence mode="wait">
+                    {activeTab === 'account' ? (
+                        <motion.div
+                            key="account"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-8"
                         >
-                            <LogOut className="h-5 w-5" />
-                            Sign Out Account
-                        </Link>
-                    </div>
-                </div>
+                            {/* Stats Overview */}
+                            <div className="flex items-center rounded-[32px] bg-white py-6 shadow-sm ring-1 ring-slate-200">
+                                <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                                    <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
+                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Codes</p>
+                                </div>
+                                <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                                    <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
+                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
+                                </div>
+                                <div className="flex-1 px-2 text-center">
+                                    <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
+                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Contacts</p>
+                                </div>
+                            </div>
+
+                            {/* Account Section */}
+                            <section>
+                                <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Security & Access</h2>
+                                <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                                    <SettingsRow
+                                        icon={<UserCircle className="h-5 w-5" />}
+                                        label="Profile Information"
+                                        description="Full name, address and unit"
+                                        onClick={() => setActiveSheet('profile')}
+                                    />
+                                    <div className="mx-6 h-px bg-slate-50" />
+                                    <SettingsRow
+                                        icon={<Lock className="h-5 w-5" />}
+                                        label="Account Password"
+                                        description="Secure your digital access"
+                                        onClick={() => setActiveSheet('password')}
+                                    />
+                                    <div className="mx-6 h-px bg-slate-50" />
+                                    <Link href="/resident/household" className="block">
+                                        <SettingsRow
+                                            icon={<Users className="h-5 w-5" />}
+                                            label="Household Management"
+                                            description="Invite and manage residents"
+                                            onClick={() => {}}
+                                        />
+                                    </Link>
+                                </div>
+                            </section>
+
+                            {/* Billing Section */}
+                            {auth.user?.roles?.includes('resident') && (
+                                <section>
+                                    <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Subscription</h2>
+                                    <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                                        <SettingsRow
+                                            icon={<CreditCard className="h-5 w-5" />}
+                                            label="Estate Billing"
+                                            description={
+                                                auth.user?.resident_subscription
+                                                    ? `${auth.user.resident_subscription.plan_name} • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
+                                                    : 'Manage your payments'
+                                            }
+                                            onClick={openExternalBilling}
+                                        />
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Integrations */}
+                            <section>
+                                <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase text-center">Notifications</h2>
+                                <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                                    <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
+                                </div>
+                            </section>
+
+                            <div className="px-2">
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button"
+                                    className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                    Sign Out Account
+                                </Link>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="emergency"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                        >
+                            <EmergencyContactsForm contacts={emergency_contacts} limit={CONTACT_LIMIT} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* EDIT SHEETS */}
@@ -417,5 +463,157 @@ function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
                 {processing ? 'Updating...' : 'Update Password'}
             </button>
         </form>
+    );
+}
+
+/* ─── Emergency Contacts Form ─── */
+function EmergencyContactsForm({ contacts, limit }: { contacts: Props['emergency_contacts']; limit: number }) {
+    const { data, setData, post, processing, reset, delete: destroy } = useForm({
+        name: '',
+        phone: '',
+        relationship: '',
+    });
+
+    const isLimitReached = contacts.length >= limit;
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        if (isLimitReached) return;
+
+        post(EmergencyContactController.store.url(), {
+            onSuccess: () => reset(),
+        });
+    };
+
+    return (
+        <div className="space-y-8 pb-12">
+            {/* Limit Progress */}
+            <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                    <div className={`h-2 w-2 rounded-full ${isLimitReached ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                    <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                        {contacts.length} / {limit} Contacts
+                    </span>
+                </div>
+                {isLimitReached && (
+                    <span className="text-[10px] font-black tracking-widest text-amber-600 uppercase">Limit Reached</span>
+                )}
+            </div>
+
+            {/* Existing Contacts List */}
+            <div className="space-y-4">
+                {contacts.length === 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="rounded-[32px] border-2 border-dashed border-slate-100 p-12 text-center"
+                    >
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                            <Users className="h-8 w-8" />
+                        </div>
+                        <p className="text-sm font-black text-slate-900">No emergency contacts</p>
+                        <p className="mt-1 text-xs font-bold text-slate-400">Add people who should be alerted in emergencies.</p>
+                    </motion.div>
+                ) : (
+                    <div className="grid gap-3">
+                        {contacts.map((contact) => (
+                            <motion.div
+                                layout
+                                key={contact.id}
+                                className="flex items-center justify-between rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-indigo-100"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-indigo-50 text-indigo-600 shadow-inner">
+                                        <User className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-slate-900">{contact.name}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{contact.phone}</p>
+                                            <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{contact.relationship || 'Contact'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (confirm('Remove this emergency contact?')) {
+                                            destroy(EmergencyContactController.destroy.url(contact.id));
+                                        }
+                                    }}
+                                    className="flex h-10 w-10 items-center justify-center rounded-full text-slate-300 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Add New Contact Form */}
+            {!isLimitReached ? (
+                <form onSubmit={submit} className="space-y-5 rounded-[32px] bg-slate-50 p-6 ring-1 ring-slate-100">
+                    <div className="flex items-center gap-3 px-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
+                            <Users className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-xs font-black tracking-[0.2em] text-slate-900 uppercase">New Contact</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="group relative">
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                required
+                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            />
+                        </div>
+                        <div className="group relative">
+                            <input
+                                type="tel"
+                                placeholder="Phone Number"
+                                value={data.phone}
+                                onChange={(e) => setData('phone', e.target.value)}
+                                required
+                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            />
+                        </div>
+                        <div className="group relative">
+                            <input
+                                type="text"
+                                placeholder="Relationship (e.g. Spouse, Brother)"
+                                value={data.relationship || ''}
+                                onChange={(e) => setData('relationship', e.target.value)}
+                                className="w-full rounded-[20px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="flex w-full items-center justify-center gap-3 rounded-[20px] bg-slate-900 py-4.5 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {processing ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <>
+                                <Users className="h-5 w-5" />
+                                Add Emergency Contact
+                            </>
+                        )}
+                    </button>
+                </form>
+            ) : (
+                <div className="rounded-[32px] bg-amber-50 p-6 text-center ring-1 ring-amber-100">
+                    <p className="text-sm font-black text-amber-900 uppercase">Maximum Limit Reached</p>
+                    <p className="mt-1 text-xs font-bold text-amber-600">You can have up to 5 emergency contacts. Remove one to add a new person.</p>
+                </div>
+            )}
+        </div>
     );
 }

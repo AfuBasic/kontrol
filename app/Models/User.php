@@ -312,4 +312,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->residentSubscription()->whereNotNull('paystack_authorization_code')->exists();
     }
+
+    /**
+     * @return HasMany<EmergencyContact, $this>
+     */
+    public function emergencyContacts(): HasMany
+    {
+        return $this->hasMany(EmergencyContact::class);
+    }
+
+    /**
+     * @return HasMany<SosEvent, $this>
+     */
+    public function sosEvents(): HasMany
+    {
+        return $this->hasMany(SosEvent::class);
+    }
 }

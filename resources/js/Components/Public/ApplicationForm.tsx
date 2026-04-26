@@ -73,7 +73,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                         <span className="font-semibold">Selected Plan:</span> {selectedPlanName}
                         {selectedPlanInterval && (
                             <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 uppercase">
-                                {selectedPlanInterval === 'monthly' ? 'Monthly' : 'Annual'} Plan
+                                {selectedPlanInterval === 'annually' ? 'Annual' : 'Quarterly'} Plan
                             </span>
                         )}
                     </p>
