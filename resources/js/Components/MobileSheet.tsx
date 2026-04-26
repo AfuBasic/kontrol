@@ -12,7 +12,7 @@ interface Props {
 export default function MobileSheet({ isOpen, onClose, title, children }: Props) {
     return (
         <Transition show={isOpen} as={Fragment}>
-            <Dialog onClose={onClose} className="relative z-100 md:hidden">
+            <Dialog onClose={onClose} className="relative z-[100] md:hidden">
                 {/* Backdrop */}
                 <TransitionChild
                     as={Fragment}

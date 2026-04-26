@@ -157,39 +157,52 @@ export default function SosButton({ variant = 'floating' }: Props) {
     const circumference = 2 * Math.PI * radius;
 
     const TriggerButton = (
-        <motion.button
-            onPointerDown={handleStartHold}
-            onPointerUp={handleEndHold}
-            onPointerLeave={handleEndHold}
-            whileTap={{ scale: 0.9 }}
-            className={buttonClass}
-        >
-            {/* Hold Progress Circle */}
-            {isHolding && (
-                <svg className="absolute inset-0 h-full w-full -rotate-90" width={svgSize} height={svgSize}>
-                    <circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        fill="transparent"
-                        stroke={variant === 'floating' ? 'rgba(255,255,255,0.4)' : 'rgba(220,38,38,0.2)'}
-                        strokeWidth={variant === 'floating' ? '4' : '3'}
-                    />
-                    <motion.circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        fill="transparent"
-                        stroke={variant === 'floating' ? 'white' : 'rgb(220,38,38)'}
-                        strokeWidth={variant === 'floating' ? '4' : '3'}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={circumference - (circumference * holdProgress) / 100}
-                        strokeLinecap="round"
-                    />
-                </svg>
-            )}
-            <ShieldAlert className={iconSize} />
-        </motion.button>
+        <div className="relative flex items-center justify-center">
+            <motion.button
+                onPointerDown={handleStartHold}
+                onPointerUp={handleEndHold}
+                onPointerCancel={handleEndHold}
+                onContextMenu={(e) => e.preventDefault()}
+                whileTap={{ scale: 0.92 }}
+                className={`${buttonClass} overflow-hidden`}
+            >
+                {/* Hold Progress Circle Overlay */}
+                <AnimatePresence>
+                    {isHolding && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="pointer-events-none absolute inset-0 z-10"
+                        >
+                            <svg className="h-full w-full -rotate-90 p-1" viewBox={`0 0 ${svgSize} ${svgSize}`}>
+                                <circle
+                                    cx={center}
+                                    cy={center}
+                                    r={radius}
+                                    fill="transparent"
+                                    stroke={variant === 'floating' ? 'rgba(255,255,255,0.2)' : 'rgba(220,38,38,0.1)'}
+                                    strokeWidth={variant === 'floating' ? '6' : '4'}
+                                />
+                                <motion.circle
+                                    cx={center}
+                                    cy={center}
+                                    r={radius}
+                                    fill="transparent"
+                                    stroke={variant === 'floating' ? 'white' : 'rgb(220,38,38)'}
+                                    strokeWidth={variant === 'floating' ? '6' : '4'}
+                                    strokeDasharray={circumference}
+                                    strokeDashoffset={circumference - (circumference * holdProgress) / 100}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <ShieldAlert className={`${iconSize} relative z-20`} strokeWidth={2.5} />
+            </motion.button>
+        </div>
     );
 
     return (
@@ -304,7 +317,9 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                 {sosSuccessData?.has_emergency_contacts ? (
                                                     <p>Emergency contacts are being alerted.</p>
                                                 ) : (
-                                                    <p className="mt-1 text-sm text-[#F59E0B]">Add emergency contacts to notify loved ones in emergencies.</p>
+                                                    <p className="mt-1 text-sm text-[#F59E0B]">
+                                                        Add emergency contacts to notify loved ones in emergencies.
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
@@ -330,7 +345,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                         {/* Timeline */}
                                         <div className="mt-10 w-full max-w-sm">
                                             <h3 className="mb-6 text-lg font-black text-[#111827]">What happens next</h3>
-                                            
+
                                             <div className="space-y-8">
                                                 {/* Step 1 */}
                                                 <div className="flex gap-4">
@@ -349,7 +364,9 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                 {/* Step 2 */}
                                                 <div className="flex gap-4">
                                                     <div className="relative flex flex-col items-center">
-                                                        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${sosSuccessData?.has_emergency_contacts ? 'bg-[#F59E0B]' : 'bg-[#E5E7EB] text-[#6B7280]'}`}>
+                                                        <div
+                                                            className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${sosSuccessData?.has_emergency_contacts ? 'bg-[#F59E0B]' : 'bg-[#E5E7EB] text-[#6B7280]'}`}
+                                                        >
                                                             {sosSuccessData?.has_emergency_contacts ? (
                                                                 <Loader2 className="h-5 w-5 animate-spin" />
                                                             ) : (
@@ -359,12 +376,16 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                         <div className="absolute top-8 bottom-[-32px] w-0.5 bg-[#E5E7EB]"></div>
                                                     </div>
                                                     <div>
-                                                        <p className={`font-bold ${sosSuccessData?.has_emergency_contacts ? 'text-[#111827]' : 'text-[#6B7280]'}`}>
-                                                            {sosSuccessData?.has_emergency_contacts ? 'Emergency contacts alerted' : 'No emergency contacts'}
+                                                        <p
+                                                            className={`font-bold ${sosSuccessData?.has_emergency_contacts ? 'text-[#111827]' : 'text-[#6B7280]'}`}
+                                                        >
+                                                            {sosSuccessData?.has_emergency_contacts
+                                                                ? 'Emergency contacts alerted'
+                                                                : 'No emergency contacts'}
                                                         </p>
                                                         <p className="text-sm text-[#6B7280]">
-                                                            {sosSuccessData?.has_emergency_contacts 
-                                                                ? 'Sending alerts to your contacts' 
+                                                            {sosSuccessData?.has_emergency_contacts
+                                                                ? 'Sending alerts to your contacts'
                                                                 : 'Setup contacts to alert them in future'}
                                                         </p>
                                                     </div>
@@ -395,8 +416,8 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                             <Users className="h-5 w-5" />
                                                         </div>
                                                         <div className="text-left">
-                                                            <p className="text-sm font-black uppercase tracking-tight">Add Emergency Contacts</p>
-                                                            <p className="text-[10px] font-bold opacity-80 uppercase">Protect your loved ones</p>
+                                                            <p className="text-sm font-black tracking-tight uppercase">Add Emergency Contacts</p>
+                                                            <p className="text-[10px] font-bold uppercase opacity-80">Protect your loved ones</p>
                                                         </div>
                                                     </div>
                                                     <ChevronRight className="h-5 w-5" />

@@ -2,9 +2,10 @@
 
 namespace App\Jobs;
 
-use App\Jobs\SendSmsAlert;
+use App\Mail\Admin\SosAlertMail;
 use App\Models\SosEvent;
 use App\Models\User;
+use App\Notifications\Admin\SosIntrusionNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -30,6 +31,9 @@ class ProcessSOSAlert implements ShouldQueue
         $estate = $this->sosEvent->estate;
         $address = $user->profile?->address ?? 'N/A';
 
+        // Set Spatie permissions team ID for this estate to ensure roles are correctly scoped
+        setPermissionsTeamId($estate->id);
+
         // 1. Notify Security (High Priority)
         $securityPersonnel = User::withRole('security', $estate->id)->active()->get();
 
@@ -47,7 +51,7 @@ class ProcessSOSAlert implements ShouldQueue
             }
 
             // Queue Mobile Push/Telegram/WebPush (Queued automatically by Notification class)
-            $security->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
+            $security->notify(new SosIntrusionNotification($this->sosEvent));
         }
 
         // 2. Notify Emergency Contacts (Medium Priority)
@@ -64,14 +68,17 @@ class ProcessSOSAlert implements ShouldQueue
 
         // 3. Notify Estate Admins (Information Priority)
         $admins = User::withRole('admin', $estate->id)->active()->get();
-        
+
         foreach ($admins as $admin) {
             // Queue Email
-            Mail::to($admin->email)->queue(new \App\Mail\Admin\SosAlertMail($this->sosEvent));
+            Mail::to($admin->email)->queue(new SosAlertMail($this->sosEvent));
 
             // Queue Mobile Push/Telegram/WebPush
-            $admin->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
+            $admin->notify(new SosIntrusionNotification($this->sosEvent));
         }
+
+        // Reset team ID after processing
+        setPermissionsTeamId(null);
 
         $this->sosEvent->update(['status' => 'completed']);
     }
