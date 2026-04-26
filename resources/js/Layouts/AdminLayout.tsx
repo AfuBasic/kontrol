@@ -39,7 +39,6 @@ import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController
 import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification';
 import Toast from '@/Components/Toast'; // Added import
 import { useSidebarState } from '@/Hooks/useSidebarState';
-import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import type { SharedData } from '@/types';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
@@ -373,7 +372,7 @@ export default function AdminLayout({ children }: Props) {
                     <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
                         <div className="p-4">
                             <PendingInvoiceNotification invoice={pendingInvoice} />
-                            <AnimatedLayout>{children}</AnimatedLayout>
+                            {children}
                         </div>
                     </main>
                 </PullToRefresh>
@@ -661,7 +660,7 @@ export default function AdminLayout({ children }: Props) {
                     </header>
 
                     <PendingInvoiceNotification invoice={pendingInvoice} />
-                    <AnimatedLayout>{children}</AnimatedLayout>
+                    {children}
                 </motion.div>
             </div>
 

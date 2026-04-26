@@ -19,22 +19,15 @@ const purposes = [
     { id: 'Emergency', icon: Zap },
 ];
 
-const durations = [
-    { label: '1 Hour', value: 60 },
-    { label: '4 Hours', value: 240 },
-    { label: '12 Hours', value: 720 },
-    { label: '24 Hours', value: 1440 },
-];
-
 export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, access_code_durations, access_code_constraints } = usePage<SharedData>().props;
     const [step, setStep] = useState<Step>('type');
     const form = useForm({
         type: 'single_use' as 'single_use' | 'long_lived',
         visitor_name: '',
         visitor_phone: '',
         purpose: 'Guest',
-        duration_minutes: 60,
+        duration_minutes: access_code_durations?.[0]?.minutes || access_code_constraints?.min || 60,
     });
 
     const resetAndClose = () => {
@@ -253,12 +246,12 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                             className="space-y-8"
                                         >
                                             <div className="grid grid-cols-2 gap-4">
-                                                {durations.map((d) => (
+                                                {(usePage().props as unknown as SharedData).access_code_durations.map((d) => (
                                                     <button
-                                                        key={d.value}
-                                                        onClick={() => form.setData('duration_minutes', d.value)}
+                                                        key={d.minutes}
+                                                        onClick={() => form.setData('duration_minutes', d.minutes)}
                                                         className={`rounded-3xl p-6 text-center transition-all ${
-                                                            form.data.duration_minutes === d.value
+                                                            form.data.duration_minutes === d.minutes
                                                                 ? 'bg-indigo-600 text-white shadow-xl ring-4 ring-indigo-500/20'
                                                                 : 'bg-slate-50 text-slate-900 ring-1 ring-slate-100'
                                                         }`}

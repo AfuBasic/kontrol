@@ -115,7 +115,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
     };
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Visitors" />
 
             {/* 1. TOP SUMMARY */}
@@ -242,6 +242,6 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                 type="danger"
                 isLoading={revoking}
             />
-        </ResidentLayout>
+        </>
     );
 }

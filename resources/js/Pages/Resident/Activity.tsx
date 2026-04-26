@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, BellOff, Clock, User, Zap, Shield, Key, LogIn, ChevronRight, Activity as ActivityIcon, Megaphone } from 'lucide-react';
 import { useState } from 'react';
 import type { ActivityItem } from '@/types/access-code';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 
 type Props = {
     activities: ActivityItem[];
@@ -102,7 +101,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
     const [activeTab, setActiveTab] = useState<'posts' | 'feed' | 'notifications'>('posts');
 
     return (
-        <ResidentLayout className="!px-0">
+        <>
             <Head title="Feed" />
 
             {/* Premium Header Section */}
@@ -407,6 +406,6 @@ export default function Activity({ activities, posts = [], notifications = [], u
                     )}
                 </AnimatePresence>
             </div>
-        </ResidentLayout>
+        </>
     );
 }

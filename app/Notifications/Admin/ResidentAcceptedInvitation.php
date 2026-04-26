@@ -61,7 +61,7 @@ class ResidentAcceptedInvitation extends Notification implements ShouldBroadcast
 
         return [
             'message' => $message,
-            'action_url' => route('residents.index'),
+            'action_url' => route('admin.residents.index'),
             'type' => 'success',
         ];
     }

@@ -1,13 +1,16 @@
 import { Head, router } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckCircle, XCircle, User, AlertTriangle, Info, Check, BellOff } from 'lucide-react';
-import { useState } from 'react';
-import SecurityLayout from '@/Layouts/SecurityLayout';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, User as UserIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+
+type NotificationType = 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
+type Severity = 'critical' | 'warning' | 'info';
 
 interface Notification {
     id: string;
-    type: 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
+    type: NotificationType;
     title: string;
     message: string;
     icon: string;
@@ -24,195 +27,268 @@ interface Pagination {
 }
 
 interface Props {
-    notifications: Notification[];
-    pagination: Pagination;
-    unreadCount: number;
+    notifications?: Notification[];
+    pagination?: Pagination;
+    unreadCount?: number;
 }
 
-function getIcon(type: Notification['type']) {
+const EMPTY_PAGINATION: Pagination = { current_page: 1, last_page: 1, per_page: 10, total: 0 };
+
+const SEVERITY_OF: Record<NotificationType, Severity> = {
+    denied: 'critical',
+    alert: 'critical',
+    system: 'warning',
+    validation: 'info',
+    visitor: 'info',
+    info: 'info',
+};
+
+const SEVERITY_META: Record<Severity, { label: string; tone: string; pill: string; rule: string }> = {
+    critical: {
+        label: 'Critical',
+        tone: 'text-rose-600',
+        pill: 'bg-rose-50 text-rose-700 ring-rose-200',
+        rule: 'border-rose-200/70',
+    },
+    warning: {
+        label: 'Warning',
+        tone: 'text-amber-600',
+        pill: 'bg-amber-50 text-amber-700 ring-amber-200',
+        rule: 'border-amber-200/70',
+    },
+    info: {
+        label: 'Info',
+        tone: 'text-slate-600',
+        pill: 'bg-slate-100 text-slate-700 ring-slate-200',
+        rule: 'border-slate-200',
+    },
+};
+
+function iconFor(type: NotificationType) {
     switch (type) {
         case 'validation':
-            return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+            return CheckCircle;
         case 'denied':
-            return <XCircle className="h-5 w-5 text-red-500" />;
+            return ShieldX;
         case 'visitor':
-            return <User className="h-5 w-5 text-blue-500" />;
+            return UserIcon;
         case 'alert':
-            return <AlertTriangle className="h-5 w-5 text-warning-500" />;
+            return AlertTriangle;
         case 'system':
-            return <Info className="h-5 w-5 text-slate-500" />;
+            return Info;
         default:
-            return <Bell className="h-5 w-5 text-slate-400" />;
+            return Info;
     }
-}
-
-function NotificationItem({ notification, onMarkRead }: { notification: Notification; onMarkRead: (id: string) => void }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            className={`relative overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-all ${
-                !notification.read ? 'bg-primary-50/50 ring-primary-100' : ''
-            }`}
-        >
-            {/* Unread indicator */}
-            {!notification.read && <div className="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-primary-700" />}
-
-            <div className="flex gap-3">
-                {/* Icon */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">{getIcon(notification.type)}</div>
-
-                {/* Content */}
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                        <h3 className={`text-sm font-semibold ${!notification.read ? 'text-slate-900' : 'text-slate-700'}`}>{notification.title}</h3>
-                        <span className="shrink-0 text-[10px] text-slate-400">{notification.created_at_human}</span>
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">{notification.message}</p>
-
-                    {/* Mark as read button */}
-                    {!notification.read && (
-                        <button
-                            onClick={() => onMarkRead(notification.id)}
-                            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700"
-                        >
-                            <Check className="h-3 w-3" />
-                            Mark as read
-                        </button>
-                    )}
-                </div>
-            </div>
-        </motion.div>
-    );
 }
 
 export default function NotificationsIndex({ notifications, pagination, unreadCount }: Props) {
-    const [items, setItems] = useState(notifications);
-    const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
-    const [markingAllRead, setMarkingAllRead] = useState(false);
+    const safePagination = pagination ?? EMPTY_PAGINATION;
+    const [items, setItems] = useState<Notification[]>(notifications ?? []);
+    const [localUnread, setLocalUnread] = useState(unreadCount ?? 0);
+    const [markingAll, setMarkingAll] = useState(false);
 
-    function handleMarkRead(id: string) {
-        // Optimistic update
+    const grouped = useMemo(() => {
+        const buckets: Record<Severity, Notification[]> = { critical: [], warning: [], info: [] };
+        for (const n of items) {
+            buckets[SEVERITY_OF[n.type] ?? 'info'].push(n);
+        }
+        return buckets;
+    }, [items]);
+
+    const handleMarkRead = (id: string) => {
         setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-        setLocalUnreadCount((prev) => Math.max(0, prev - 1));
-
-        // Send to server
+        setLocalUnread((prev) => Math.max(0, prev - 1));
         router.post(
             NotificationController.markAsRead.url({ notification: id }),
             {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-            },
+            { preserveScroll: true, preserveState: true },
         );
-    }
+    };
 
-    function handleMarkAllRead() {
-        if (localUnreadCount === 0) return;
-
-        setMarkingAllRead(true);
-
-        // Optimistic update
+    const handleMarkAll = () => {
+        if (localUnread === 0) return;
+        setMarkingAll(true);
         setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-        setLocalUnreadCount(0);
-
-        // Send to server
+        setLocalUnread(0);
         router.post(
             NotificationController.markAllAsRead.url(),
             {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => setMarkingAllRead(false),
-            },
+            { preserveScroll: true, preserveState: true, onFinish: () => setMarkingAll(false) },
         );
-    }
+    };
 
-    function handleLoadMore() {
-        if (pagination.current_page >= pagination.last_page) return;
-
+    const handleLoadMore = () => {
+        if (safePagination.current_page >= safePagination.last_page) return;
         router.get(
             NotificationController.index.url(),
-            { page: pagination.current_page + 1 },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: ['notifications', 'pagination'],
-            },
+            { page: safePagination.current_page + 1 },
+            { preserveScroll: true, preserveState: true, only: ['notifications', 'pagination'] },
         );
-    }
+    };
+
+    const sections: Severity[] = ['critical', 'warning', 'info'];
 
     return (
         <SecurityLayout>
-            <Head title="Notifications" />
+            <Head title="Alerts · Security" />
 
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-5 flex items-center justify-between"
-            >
+            <header className="mb-5 flex items-end justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
-                    <p className="mt-0.5 text-sm text-slate-500">{localUnreadCount > 0 ? `${localUnreadCount} unread` : 'All caught up'}</p>
+                    <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Alerts</p>
+                    <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+                        {localUnread > 0 ? `${localUnread} unread` : 'All caught up'}
+                    </h1>
                 </div>
-
-                {localUnreadCount > 0 && (
+                {localUnread > 0 && (
                     <button
-                        onClick={handleMarkAllRead}
-                        disabled={markingAllRead}
-                        className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-100 transition-all active:scale-95 disabled:opacity-50"
+                        onClick={handleMarkAll}
+                        disabled={markingAll}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                     >
-                        {markingAllRead ? 'Marking...' : 'Mark all read'}
+                        {markingAll ? 'Marking…' : 'Mark all read'}
                     </button>
                 )}
-            </motion.div>
+            </header>
 
-            {/* Notifications List */}
-            {items.length > 0 ? (
-                <div className="space-y-3">
-                    <AnimatePresence>
-                        {items.map((notification, idx) => (
-                            <motion.div
-                                key={notification.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: idx * 0.03 }}
-                            >
-                                <NotificationItem notification={notification} onMarkRead={handleMarkRead} />
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
+            {items.length === 0 ? (
+                <EmptyState />
+            ) : (
+                <div className="space-y-6">
+                    {sections.map((severity) => {
+                        const list = grouped[severity];
+                        if (list.length === 0) return null;
+                        return (
+                            <SeveritySection
+                                key={severity}
+                                severity={severity}
+                                items={list}
+                                onMarkRead={handleMarkRead}
+                            />
+                        );
+                    })}
 
-                    {/* Load More */}
-                    {pagination.current_page < pagination.last_page && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
-                            <button
-                                onClick={handleLoadMore}
-                                className="w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-medium text-slate-500 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
-                            >
-                                Load more
-                            </button>
-                        </motion.div>
+                    {safePagination.current_page < safePagination.last_page && (
+                        <button
+                            onClick={handleLoadMore}
+                            className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                            Load more
+                            <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
+                        </button>
                     )}
                 </div>
-            ) : (
-                /* Empty State */
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                    className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 text-center shadow-sm ring-1 ring-slate-100"
-                >
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-                        <BellOff className="h-8 w-8 text-slate-400" />
-                    </div>
-                    <h3 className="text-base font-semibold text-slate-900">No notifications</h3>
-                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">You're all caught up! New alerts will appear here.</p>
-                </motion.div>
             )}
         </SecurityLayout>
+    );
+}
+
+function SeveritySection({
+    severity,
+    items,
+    onMarkRead,
+}: {
+    severity: Severity;
+    items: Notification[];
+    onMarkRead: (id: string) => void;
+}) {
+    const meta = SEVERITY_META[severity];
+    const unread = items.filter((n) => !n.read).length;
+
+    return (
+        <section>
+            <header className={`flex items-center gap-2 border-b ${meta.rule} pb-2`}>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase ring-1 ring-inset ${meta.pill}`}>
+                    {meta.label}
+                </span>
+                <span className="text-[11px] text-slate-500">{items.length} {items.length === 1 ? 'alert' : 'alerts'}</span>
+                {unread > 0 && (
+                    <span className={`ml-auto text-[11px] font-semibold ${meta.tone}`}>{unread} unread</span>
+                )}
+            </header>
+
+            <ul className="mt-2 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                <AnimatePresence initial={false}>
+                    {items.map((notification) => (
+                        <NotificationRow
+                            key={notification.id}
+                            notification={notification}
+                            severity={severity}
+                            onMarkRead={onMarkRead}
+                        />
+                    ))}
+                </AnimatePresence>
+            </ul>
+        </section>
+    );
+}
+
+function NotificationRow({
+    notification,
+    severity,
+    onMarkRead,
+}: {
+    notification: Notification;
+    severity: Severity;
+    onMarkRead: (id: string) => void;
+}) {
+    const Icon = iconFor(notification.type);
+    const tone = SEVERITY_META[severity].tone;
+
+    return (
+        <motion.li
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className={`flex items-start gap-3 bg-white px-4 py-3 ${notification.read ? 'opacity-70' : ''}`}
+        >
+            <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 ${tone}`}>
+                <Icon className="h-4 w-4" strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                    <p className={`truncate text-sm ${notification.read ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}`}>
+                        {notification.title}
+                    </p>
+                    <span className="ml-auto shrink-0 font-mono text-[10px] tracking-wider text-slate-400">
+                        {notification.created_at_human}
+                    </span>
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500">{notification.message}</p>
+
+                {!notification.read && (
+                    <button
+                        onClick={() => onMarkRead(notification.id)}
+                        className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 transition hover:text-emerald-800"
+                    >
+                        <Check className="h-3 w-3" strokeWidth={2.4} />
+                        Acknowledge
+                    </button>
+                )}
+            </div>
+            {!notification.read && (
+                <span
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                        severity === 'critical' ? 'bg-rose-500' : severity === 'warning' ? 'bg-amber-500' : 'bg-slate-400'
+                    }`}
+                    aria-label="Unread"
+                />
+            )}
+        </motion.li>
+    );
+}
+
+function EmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-14 text-center">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <BellOff className="h-5 w-5" strokeWidth={2} />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-slate-900">No alerts</p>
+            <p className="mt-1 max-w-xs px-4 text-xs text-slate-500">
+                You're all caught up. New incidents and system alerts will appear here as they happen.
+            </p>
+        </div>
     );
 }

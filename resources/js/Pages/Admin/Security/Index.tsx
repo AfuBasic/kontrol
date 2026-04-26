@@ -74,7 +74,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                         setIsLoadingMore(false);
                         setAllSecurity((prev) => [...prev, ...security.data]);
                     },
-                }
+                },
             );
         }
     };
@@ -237,14 +237,13 @@ export default function SecurityPersonnel({ security, filters }: Props) {
             <div className="space-y-4">
                 {hasSecurity ? (
                     <>
-                        {/* Desktop Table View */}
-                        <div className="hidden lg:block overflow-hidden rounded-xl border border-gray-200 bg-white">
-                            <div className="overflow-x-auto overflow-visible">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
+                        <div className="hidden overflow-visible rounded-xl border border-gray-200 bg-white lg:block">
+                            <div className="overflow-visible">
+                                <table className="min-w-full divide-y divide-gray-200 overflow-visible">
+                                    <thead className="overflow-visible bg-gray-50">
+                                        <tr className="overflow-visible">
                                             {can('security.delete') && (
-                                                <th className="w-12 px-4 py-3 text-center">
+                                                <th className="w-12 overflow-visible px-4 py-3 text-center">
                                                     <input
                                                         type="checkbox"
                                                         checked={isAllSelected}
@@ -256,19 +255,28 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                                     />
                                                 </th>
                                             )}
-                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Personnel</th>
-                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Badge #</th>
-                                            <th className="px-6 py-3 text-left text-xs tracking-wider text-gray-500 uppercase font-bold">Status</th>
-                                            <th className="relative px-6 py-3">
+                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
+                                                Personnel
+                                            </th>
+                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
+                                                Badge #
+                                            </th>
+                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
+                                                Status
+                                            </th>
+                                            <th className="relative overflow-visible px-6 py-3">
                                                 <span className="sr-only">Actions</span>
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                    <tbody className="divide-y divide-gray-200 overflow-visible bg-white">
                                         {allSecurity.map((person) => (
-                                            <tr key={person.id} className={`hover:bg-gray-50/50 transition-colors ${selectedIds.includes(person.id) ? 'bg-primary-50/50' : ''}`}>
+                                            <tr
+                                                key={person.id}
+                                                className={`overflow-visible transition-colors hover:bg-gray-50/50 ${selectedIds.includes(person.id) ? 'bg-primary-50/50' : ''}`}
+                                            >
                                                 {can('security.delete') && (
-                                                    <td className="w-12 px-4 py-4 text-center">
+                                                    <td className="w-12 overflow-visible px-4 py-4 text-center">
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedIds.includes(person.id)}
@@ -277,9 +285,9 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                                         />
                                                     </td>
                                                 )}
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
-                                                        <div className="h-10 w-10 shrink-0 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-400">
                                                             {person.name.charAt(0)}
                                                         </div>
                                                         <div className="ml-4">
@@ -288,23 +296,23 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-600 font-medium">{person.badge_number || '—'}</div>
+                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-600">{person.badge_number || '—'}</div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
                                                     <span
                                                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${
                                                             person.suspended_at
-                                                              ? 'bg-red-50 text-red-700 ring-red-600/20'
-                                                              : person.status === 'accepted'
-                                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
-                                                                : 'bg-amber-50 text-amber-700 ring-amber-600/20'
+                                                                ? 'bg-red-50 text-red-700 ring-red-600/20'
+                                                                : person.status === 'accepted'
+                                                                  ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                                                                  : 'bg-amber-50 text-amber-700 ring-amber-600/20'
                                                         }`}
                                                     >
                                                         {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                                                <td className="overflow-visible px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                                                     <SecurityActions security={person} />
                                                 </td>
                                             </tr>
@@ -330,18 +338,22 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                                 {person.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <h3 className="font-black text-slate-900 leading-tight">{person.name}</h3>
+                                                <h3 className="leading-tight font-black text-slate-900">{person.name}</h3>
                                                 <p className="text-sm font-medium text-slate-500">{person.email}</p>
                                                 <div className="mt-1 flex gap-2">
-                                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                                                        person.suspended_at ? 'bg-rose-100 text-rose-700' : 
-                                                        person.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 
-                                                        'bg-amber-100 text-amber-700'
-                                                    }`}>
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-black tracking-wider uppercase ${
+                                                            person.suspended_at
+                                                                ? 'bg-rose-100 text-rose-700'
+                                                                : person.status === 'accepted'
+                                                                  ? 'bg-emerald-100 text-emerald-700'
+                                                                  : 'bg-amber-100 text-amber-700'
+                                                        }`}
+                                                    >
                                                         {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
                                                     </span>
                                                     {person.badge_number && (
-                                                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">
+                                                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-wider text-slate-600 uppercase">
                                                             #{person.badge_number}
                                                         </span>
                                                     )}
@@ -350,14 +362,14 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                         </div>
                                         <SecurityActions security={person} />
                                     </div>
-                                    
+
                                     <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-50 pt-4">
                                         <div className="rounded-2xl bg-slate-50/50 p-3">
-                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Phone</p>
-                                            <p className="text-sm font-bold text-slate-700 truncate">{person.phone || '—'}</p>
+                                            <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Phone</p>
+                                            <p className="truncate text-sm font-bold text-slate-700">{person.phone || '—'}</p>
                                         </div>
                                         <div className="rounded-2xl bg-slate-50/50 p-3">
-                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Joined</p>
+                                            <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Joined</p>
                                             <p className="text-sm font-bold text-slate-700">{person.created_at}</p>
                                         </div>
                                     </div>
@@ -392,9 +404,10 @@ export default function SecurityPersonnel({ security, filters }: Props) {
 
                         {/* Desktop Table View fallback pagination (hidden on mobile if load more exists) */}
                         {security.last_page > 1 && (
-                            <div className="hidden lg:flex items-center justify-between border-t border-gray-100 px-6 py-4">
-                                <div className="text-sm text-gray-500 font-medium">
-                                    Showing <span className="text-slate-900 font-bold">{security.data.length}</span> of <span className="text-slate-900 font-bold">{security.total}</span> personnel
+                            <div className="hidden items-center justify-between border-t border-gray-100 px-6 py-4 lg:flex">
+                                <div className="text-sm font-medium text-gray-500">
+                                    Showing <span className="font-bold text-slate-900">{security.data.length}</span> of{' '}
+                                    <span className="font-bold text-slate-900">{security.total}</span> personnel
                                 </div>
                                 <div className="flex gap-1">
                                     {security.links.map((link, idx) => (
@@ -418,7 +431,7 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                     </>
                 ) : (
                     /* Empty State */
-                    <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-gray-200">
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 text-center">
                         <div className="mb-4 rounded-full bg-gray-100 p-4">
                             <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path

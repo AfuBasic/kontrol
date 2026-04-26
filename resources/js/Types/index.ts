@@ -15,6 +15,8 @@ export type SharedData = {
     };
     billing_enabled?: boolean;
     has_overdue_invoice?: boolean;
+    access_code_durations: Array<{ minutes: number; label: string }>;
+    access_code_constraints: { min: number; max: number };
     app_url: string;
     [key: string]: unknown;
 };

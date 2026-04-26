@@ -4,9 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Clock, Shield, User } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AccessCode, CursorPaginatedUsageLogs } from '@/types/access-code';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
-
 import { shareAccessCode } from '@/Utils/share';
 
 type Props = {
@@ -118,7 +116,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
     const isLongLived = accessCode.type === 'long_lived';
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Access Code Details" />
 
             <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -351,6 +349,6 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                     </Link>
                 </motion.div>
             </div>
-        </ResidentLayout>
+        </>
     );
 }

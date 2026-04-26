@@ -17,7 +17,37 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')),
+    resolve: async (name) => {
+        const page = await resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx'));
+        const pageModule = page as any;
+        const AnimatedLayout = (await import('./Layouts/AnimatedLayout')).default;
+        
+        // Automatically apply layouts if not explicitly set
+        if (pageModule.default.layout === undefined) {
+            if (name.startsWith('Resident/')) {
+                const ResidentLayout = (await import('./Layouts/ResidentLayout')).default;
+                pageModule.default.layout = (page: React.ReactNode) => (
+                    <AnimatedLayout>
+                        <ResidentLayout>{page}</ResidentLayout>
+                    </AnimatedLayout>
+                );
+            } else if (name.startsWith('Admin/')) {
+                const AdminLayout = (await import('./Layouts/AdminLayout')).default;
+                pageModule.default.layout = (page: React.ReactNode) => (
+                    <AnimatedLayout>
+                        <AdminLayout>{page}</AdminLayout>
+                    </AnimatedLayout>
+                );
+            } else {
+                // For non-dashboard pages, still allow animation
+                pageModule.default.layout = (page: React.ReactNode) => (
+                    <AnimatedLayout>{page}</AnimatedLayout>
+                );
+            }
+        }
+        
+        return page;
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 

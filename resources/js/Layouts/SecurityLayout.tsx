@@ -38,7 +38,7 @@ const navItems = [
         name: 'Home',
         href: HomeController.url(),
         icon: Home,
-        matchPaths: ['/security', '/security/validate'],
+        matchPaths: ['/security'],
     },
     {
         name: 'Feed',
@@ -170,52 +170,68 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                     {children}
                 </main>
 
-                {/* Bottom Navigation */}
+                {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
                 {!hideNav && (
                     <motion.nav
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white/95 backdrop-blur-xl"
+                        transition={{ duration: 0.25, delay: 0.05 }}
+                        className="pb-safe fixed inset-x-0 bottom-0 z-40 bg-white/85 backdrop-blur-xl"
                     >
-                        <div className="mx-auto max-w-lg">
-                            <div className="grid grid-cols-4 items-center justify-between px-2 py-2">
+                        <div
+                            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80"
+                            aria-hidden="true"
+                        />
+                        <div className="mx-auto max-w-lg px-2">
+                            <ul className="grid grid-cols-4 items-stretch">
                                 {navItems.map((item) => {
                                     const active = isActive(item);
                                     const Icon = item.icon;
-                                    const hasNotifications = item.name === 'Alerts' && unreadCount > 0;
+                                    const hasUnread = item.name === 'Alerts' && unreadCount > 0;
 
                                     return (
-                                        <Link key={item.name} href={item.href} className="group relative flex flex-col items-center gap-1 py-2">
-                                            <div
-                                                className={`relative rounded-2xl p-2.5 transition-all duration-200 ${
-                                                    active
-                                                        ? 'bg-linear-to-br from-primary-500 to-primary-700 shadow-lg shadow-primary-500/25'
-                                                        : 'group-hover:bg-slate-100 group-active:scale-95'
-                                                }`}
+                                        <li key={item.name} className="relative">
+                                            <Link
+                                                href={item.href}
+                                                aria-current={active ? 'page' : undefined}
+                                                className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
                                             >
-                                                <Icon
-                                                    className={`h-5 w-5 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`}
-                                                    strokeWidth={active ? 2.5 : 1.5}
-                                                />
-                                                {/* Notification Badge */}
-                                                {hasNotifications && (
-                                                    <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">
-                                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                                    </span>
+                                                {/* Animated top accent — morphs between active tabs */}
+                                                {active && (
+                                                    <motion.span
+                                                        layoutId="security-nav-indicator"
+                                                        className="absolute inset-x-5 top-0 h-[2px] rounded-b-full bg-slate-900"
+                                                        transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                                    />
                                                 )}
-                                            </div>
-                                            <span
-                                                className={`text-[10px] leading-tight font-medium transition-colors ${
-                                                    active ? 'text-primary-600' : 'text-slate-500'
-                                                }`}
-                                            >
-                                                {item.name}
-                                            </span>
-                                        </Link>
+
+                                                <span className="relative inline-flex h-7 w-7 items-center justify-center transition-transform duration-150 group-active:scale-90">
+                                                    <Icon
+                                                        className={`h-[22px] w-[22px] transition-colors ${
+                                                            active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
+                                                        }`}
+                                                        strokeWidth={active ? 2.2 : 1.8}
+                                                    />
+                                                    {hasUnread && (
+                                                        <span className="absolute top-0 right-0 flex h-2 w-2 items-center justify-center">
+                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white/85" />
+                                                        </span>
+                                                    )}
+                                                </span>
+
+                                                <span
+                                                    className={`text-[10.5px] leading-none tracking-[0.02em] transition-colors ${
+                                                        active ? 'font-semibold text-slate-900' : 'font-medium text-slate-500'
+                                                    }`}
+                                                >
+                                                    {item.name}
+                                                </span>
+                                            </Link>
+                                        </li>
                                     );
                                 })}
-                            </div>
+                            </ul>
                         </div>
                     </motion.nav>
                 )}

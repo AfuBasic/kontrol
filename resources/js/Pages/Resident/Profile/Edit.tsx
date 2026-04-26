@@ -22,11 +22,11 @@ import {
 } from 'lucide-react';
 import { type FormEventHandler, useState } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
 import type { SharedData } from '@/types';
 import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -49,6 +49,7 @@ interface Props {
 export default function Edit({ telegram, profile, stats }: Props) {
     const { auth, app_url } = usePage<SharedData>().props;
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | null>(null);
+    const { openExternalBilling } = useExternalBilling();
 
     const userInitials = auth.user?.name
         ?.split(' ')
@@ -58,7 +59,7 @@ export default function Edit({ telegram, profile, stats }: Props) {
         .slice(0, 2);
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Profile Hub" />
 
             <div className="flex flex-col gap-8 pb-32">
@@ -178,19 +179,7 @@ export default function Edit({ telegram, profile, stats }: Props) {
                                             ? `${auth.user.resident_subscription.plan_name} (${auth.user.resident_subscription.billing_interval}) • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
                                             : 'View your plan and status on the web'
                                     }
-                                    onClick={async () => {
-                                        try {
-                                            const response = await fetch(ResidentBillingController.generateMagicUrl.url());
-                                            const data = await response.json();
-                                            if (data.magic_url) {
-                                                window.open(data.magic_url, '_blank');
-                                            } else {
-                                                window.open(`${app_url}/resident/billing`, '_blank');
-                                            }
-                                        } catch (e) {
-                                            window.open(`${app_url}/resident/billing`, '_blank');
-                                        }
-                                    }}
+                                    onClick={openExternalBilling}
                                 />
                             </div>
                         </section>
@@ -231,7 +220,7 @@ export default function Edit({ telegram, profile, stats }: Props) {
                     <UpdatePasswordForm onSuccess={() => setActiveSheet(null)} />
                 </div>
             </MobileSheet>
-        </ResidentLayout>
+        </>
     );
 }
 

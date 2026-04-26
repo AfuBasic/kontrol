@@ -20,7 +20,6 @@ import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } f
 import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import AdminLayout from '@/Layouts/AdminLayout';
 import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';
 
 type Props = {
@@ -537,7 +536,7 @@ function TodayHighlights({ stats }: { stats: TodayStats }) {
 
 export default function Dashboard({ stats, chartData, recentActivity, recentPosts, todayStats }: Props) {
     return (
-        <AdminLayout>
+        <>
             <Head title="Dashboard" />
 
             {/* Welcome Header */}
@@ -616,6 +615,6 @@ export default function Dashboard({ stats, chartData, recentActivity, recentPost
                 <RecentActivityFeed activities={recentActivity} />
                 <RecentPostsFeed posts={recentPosts} />
             </div>
-        </AdminLayout>
+        </>
     );
 }

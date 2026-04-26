@@ -31,7 +31,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Dashboard" />
 
             <div className="flex flex-col gap-8 pb-32">
@@ -87,6 +87,6 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
             </div>
 
             <CreateCodeBottomSheet isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
-        </ResidentLayout>
+        </>
     );
 }

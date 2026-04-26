@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Invoice;
+use App\Services\Resident\AccessCodeService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -70,10 +71,20 @@ class HandleInertiaRequests extends Middleware
                         'data' => $n->data,
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ]),
-                    'resident_subscription' => ($user && $estate) ? $user->residentSubscription()->where('estate_id', $estate->id)->first()?->load('estate.subscriptionRecord.plan')?->only(['status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']) + [
-                        'plan_name' => $estate->subscriptionRecord?->plan?->name ?? 'Standard',
-                        'billing_interval' => $estate->subscriptionRecord?->billing_interval ?? 'monthly',
-                    ] : null,
+                    'resident_subscription' => ($user && $estate) ? (function () use ($user, $estate) {
+                        $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
+                        if (! $sub) {
+                            return null;
+                        }
+
+                        return array_merge(
+                            $sub->load('estate.subscriptionRecord.plan')->only(['status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']),
+                            [
+                                'plan_name' => $estate->subscriptionRecord?->plan?->name ?? 'Standard',
+                                'billing_interval' => $estate->subscriptionRecord?->billing_interval ?? 'monthly',
+                            ]
+                        );
+                    })() : null,
                 ] : null,
             ],
             'flash' => [
@@ -84,6 +95,8 @@ class HandleInertiaRequests extends Middleware
             'billing_enabled' => fn () => $estate && $estate->settings?->charge_type === 'estate',
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
+            'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],
+            'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
             'app_url' => url('/'),
         ];
     }

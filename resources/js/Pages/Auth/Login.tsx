@@ -3,8 +3,12 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import Toast from '@/Components/Toast';
+import AuthErrorSheet from '@/Components/AuthErrorSheet';
+import { useEffect } from 'react';
 
 interface LoginFlash {
     success?: string;
@@ -23,6 +27,13 @@ export default function Login() {
     const [googleError, setGoogleError] = useState('');
     const [showGoogleError, setShowGoogleError] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+            // Revert when leaving the page if needed, but for login we want it dark
+        }
+    }, []);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -96,21 +107,20 @@ export default function Login() {
 
             <div className="min-h-screen bg-slate-950 lg:flex lg:bg-white">
                 {/* Branded panel — full-width hero on mobile, left side on desktop */}
-                <div className="relative overflow-hidden bg-slate-950 lg:w-1/2 lg:flex lg:flex-col">
+                <div className="relative overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
                         <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-blue-500/40 via-indigo-500/25 to-transparent blur-[100px] lg:-top-32 lg:-right-24 lg:h-[520px] lg:w-[520px] lg:blur-[120px]" />
                         <div className="absolute -bottom-28 -left-16 h-[360px] w-[360px] rounded-full bg-linear-to-tr from-indigo-500/30 via-blue-500/15 to-transparent blur-[90px] lg:-bottom-24 lg:-left-24 lg:h-[420px] lg:w-[420px] lg:blur-[100px]" />
                         <div
                             className="absolute inset-0 opacity-[0.15] lg:opacity-[0.08]"
                             style={{
-                                backgroundImage:
-                                    'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)',
+                                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)',
                                 backgroundSize: '28px 28px',
                             }}
                         />
                     </div>
 
-                    <div className="relative z-10 flex flex-1 flex-col px-6 pt-10 pb-24 sm:px-8 lg:p-12">
+                    <div className="relative z-10 flex flex-1 flex-col px-6 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] pb-24 sm:px-8 lg:p-12">
                         {/* Logo */}
                         <Link href="/" className="inline-flex items-center gap-2.5">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-10 w-10 rounded-xl lg:h-9 lg:w-9" />
@@ -128,9 +138,7 @@ export default function Login() {
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                 Estate access, simplified
                             </span>
-                            <h1 className="mt-4 text-[2rem] leading-tight font-semibold tracking-tight text-white">
-                                Welcome back.
-                            </h1>
+                            <h1 className="mt-4 text-[2rem] leading-tight font-semibold tracking-tight text-white">Welcome back.</h1>
                             <p className="mt-2.5 max-w-xs text-sm leading-relaxed text-slate-400">
                                 Sign in to manage visitor codes, residents, and gate activity across your estate.
                             </p>
@@ -155,9 +163,7 @@ export default function Login() {
                             transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
                             className="hidden max-w-md lg:block"
                         >
-                            <h2 className="text-2xl font-semibold tracking-tight text-white">
-                                Access control your residents actually use.
-                            </h2>
+                            <h2 className="text-2xl font-semibold tracking-tight text-white">Access control your residents actually use.</h2>
                             <p className="mt-3 text-sm leading-relaxed text-slate-400">
                                 Residents generate visitor codes in seconds. Security validates them at the gate. Admins see every entry as it
                                 happens.
@@ -197,11 +203,19 @@ export default function Login() {
                             <motion.div
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6"
+                                className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:block lg:mt-6"
                             >
                                 {flash?.error || errors?.email}
                             </motion.div>
                         )}
+
+                        <AuthErrorSheet
+                            error={flash?.error || errors?.email || null}
+                            onClose={() => {
+                                // Clear errors if possible or just hide the sheet
+                                // Inertia errors are usually cleared on next request
+                            }}
+                        />
 
                         <motion.form
                             initial={{ opacity: 0, y: 12 }}
@@ -224,7 +238,6 @@ export default function Login() {
                                     autoComplete="email"
                                     autoFocus
                                 />
-                                {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
                             </div>
 
                             <div>
@@ -376,7 +389,7 @@ function AccessCodePreview() {
                         <p className="text-sm font-semibold text-white">For Chidi, driver</p>
                     </div>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-500/30 ring-inset">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                     Active
                 </span>
@@ -384,20 +397,22 @@ function AccessCodePreview() {
 
             <div className="mt-5 rounded-2xl bg-linear-to-br from-white to-slate-100 p-5 text-center">
                 <p className="text-[11px] font-medium tracking-[0.2em] text-slate-500 uppercase">Show at gate</p>
-                <p className="mt-1.5 font-mono text-3xl font-bold tracking-[0.35em] text-slate-900 blur-md select-none" aria-hidden="true">K7M2XQ</p>
+                <p className="mt-1.5 font-mono text-3xl font-bold tracking-[0.35em] text-slate-900 blur-md select-none" aria-hidden="true">
+                    K7M2XQ
+                </p>
                 <p className="mt-2 text-xs text-slate-500">Expires in 2h 14m · Single use</p>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-inset ring-white/10">
+                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-white/10 ring-inset">
                     <p className="text-[10px] font-medium tracking-wide text-slate-500 uppercase">Visitor</p>
                     <p className="text-xs font-semibold text-white">Musa</p>
                 </div>
-                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-inset ring-white/10">
+                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-white/10 ring-inset">
                     <p className="text-[10px] font-medium tracking-wide text-slate-500 uppercase">Arrives</p>
                     <p className="text-xs font-semibold text-white">Today</p>
                 </div>
-                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-inset ring-white/10">
+                <div className="rounded-xl bg-white/5 py-2.5 ring-1 ring-white/10 ring-inset">
                     <p className="text-[10px] font-medium tracking-wide text-slate-500 uppercase">Vehicle</p>
                     <p className="text-xs font-semibold text-white">LAG-284</p>
                 </div>

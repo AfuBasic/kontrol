@@ -35,7 +35,7 @@ class CheckResidentSubscriptions extends Command
         // 1. Trials that have ended
         ResidentSubscription::query()
             ->where('status', 'trial')
-            ->where('trial_ends_at', '<', now())
+            ->where('current_period_end', '<', now())
             ->chunkById(500, function ($subscriptions) use ($generationService) {
                 foreach ($subscriptions as $subscription) {
                     $subscription->update(['status' => 'past_due']);
@@ -80,7 +80,7 @@ class CheckResidentSubscriptions extends Command
         // 1. Trials ending within 3 days
         ResidentSubscription::query()
             ->where('status', 'trial')
-            ->whereBetween('trial_ends_at', [$now, $reminderThreshold])
+            ->whereBetween('current_period_end', [$now, $reminderThreshold])
             ->where(function ($q) {
                 $q->whereNull('last_reminded_at')
                     ->orWhere('last_reminded_at', '<', now()->subHours(24));

@@ -1,337 +1,193 @@
-import { useForm, usePage } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, ShieldX, User, Clock, Home as HomeIcon, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import { ChevronRight, ScanLine, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
-import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 
-interface ValidationResult {
-    valid: boolean;
-    status: string;
-    message: string;
-    visitor_name: string | null;
+type ActivityItem = {
+    id: number;
+    visitor_name: string;
     host_name: string | null;
-    purpose: string | null;
-    expires_at: string | null;
-    code_type: string | null;
-}
+    code: string | null;
+    verified_at: string | null;
+    verified_at_human: string | null;
+    type: string | null;
+};
+
+type Stats = {
+    expected_today: number;
+    validated_today: number;
+    active_codes: number;
+};
 
 interface PageProps {
-    estateName: string;
-    flash?: {
-        validation_result?: ValidationResult;
-    };
+    estateName?: string;
+    gateName?: string;
+    guardName?: string;
+    stats?: Stats;
+    recentActivity?: ActivityItem[];
     [key: string]: unknown;
 }
 
-export default function SecurityHome() {
-    const { estateName, flash } = usePage<PageProps>().props;
-    const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+const EMPTY_STATS: Stats = { expected_today: 0, validated_today: 0, active_codes: 0 };
 
-    const { data, setData, post, processing, reset, errors } = useForm({
-        code: '',
-    });
+export default function SecurityCommandCenter() {
+    const props = usePage<PageProps>().props;
+    const estateName = props.estateName ?? '';
+    const gateName = props.gateName ?? 'Main Entrance';
+    const guardName = props.guardName ?? '';
+    const stats = props.stats ?? EMPTY_STATS;
+    const recentActivity = props.recentActivity ?? [];
+    const [clock, setClock] = useState(formatClock());
 
-    // Handle flash validation result
     useEffect(() => {
-        if (flash?.validation_result) {
-            setValidationResult(flash.validation_result);
-            reset('code');
-
-            // Auto-clear result after 8 seconds for continuous workflow
-            const timer = setTimeout(() => {
-                handleReset();
-            }, 8000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [flash?.validation_result]);
-
-    // Auto-focus input on mount and after validation
-    useEffect(() => {
-        if (!validationResult && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [validationResult]);
-
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!data.code.trim()) return;
-
-        post(HomeController.validate.url(), {
-            preserveScroll: true,
-        });
-    }
-
-    function handleReset() {
-        setValidationResult(null);
-        reset('code');
-        setTimeout(() => inputRef.current?.focus(), 100);
-    }
-
-    function formatTime(dateString: string | null) {
-        if (!dateString) return 'Never';
-        const date = new Date(dateString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function getStatusMessage(result: ValidationResult): string {
-        if (result.valid) {
-            return result.code_type === 'long_lived' ? 'Permanent Access' : 'Access Granted';
-        }
-
-        switch (result.status) {
-            case 'not_found':
-                return 'Code Not Found';
-            case 'already_used':
-                return 'Already Used';
-            case 'expired':
-                return 'Code Expired';
-            case 'revoked':
-                return 'Code Revoked';
-            default:
-                return 'Access Denied';
-        }
-    }
+        const t = setInterval(() => setClock(formatClock()), 30000);
+        return () => clearInterval(t);
+    }, []);
 
     return (
         <SecurityLayout>
-            <div className="flex min-h-[calc(100vh-180px)] flex-col">
-                <AnimatePresence mode="wait">
-                    {!validationResult ? (
-                        // Input Screen
-                        <motion.div
-                            key="input"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex flex-1 flex-col items-center justify-center px-2"
-                        >
-                            {/* App Logo */}
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.1, duration: 0.3 }}
-                                className="mb-8"
-                            >
-                                <img src="/assets/images/icon.png" alt="Kontrol" className="h-20 w-20 object-contain" />
-                            </motion.div>
+            <Head title="Security Command Center" />
 
-                            {/* Title */}
-                            <motion.h1
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.15, duration: 0.3 }}
-                                className="mb-2 text-center text-2xl font-bold text-slate-900"
-                            >
-                                Verify Access
-                            </motion.h1>
-                            <motion.p
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2, duration: 0.3 }}
-                                className="mb-8 text-center text-sm text-slate-500"
-                            >
-                                Enter the visitor's access code
-                            </motion.p>
+            <div className="space-y-5">
+                {/* System status strip */}
+                <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-600 uppercase">System online</p>
+                            <p className="truncate text-xs text-slate-500">
+                                {gateName} · {estateName}
+                            </p>
+                        </div>
+                    </div>
+                    <span className="rounded-full border border-slate-200 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-600">
+                        {clock}
+                    </span>
+                </motion.div>
 
-                            {/* Input Form */}
-                            <motion.form
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.25, duration: 0.3 }}
-                                onSubmit={handleSubmit}
-                                className="w-full max-w-sm"
-                            >
-                                <div className="relative mb-4">
-                                    <input
-                                        ref={inputRef}
-                                        type="text"
-                                        inputMode="text"
-                                        autoCapitalize="characters"
-                                        autoCorrect="off"
-                                        spellCheck={false}
-                                        value={data.code}
-                                        onChange={(e) => setData('code', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-                                        placeholder="——————"
-                                        className="w-full rounded-2xl border-2 border-slate-200 bg-white px-6 py-5 text-center text-3xl font-bold tracking-[0.3em] text-slate-900 placeholder-slate-300 transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
-                                        maxLength={6}
-                                        autoComplete="off"
-                                        autoFocus
-                                    />
-                                    {data.code && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setData('code', '')}
-                                            className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </button>
-                                    )}
-                                </div>
+                {/* Greeting */}
+                <div className="px-1">
+                    <p className="text-xs font-medium text-slate-500">{greeting()}</p>
+                    <h1 className="text-xl font-semibold tracking-tight text-slate-900">{guardName}</h1>
+                </div>
 
-                                {errors.code && <p className="mb-4 text-center text-sm text-red-500">{errors.code}</p>}
+                {/* Primary action — full-bleed terminal CTA */}
+                <motion.button
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => router.visit(VerifyController.url())}
+                    className="group relative w-full overflow-hidden rounded-3xl bg-slate-950 px-5 py-5 text-left text-white shadow-[0_12px_28px_-12px_rgba(2,6,23,0.5)] transition active:scale-[0.99]"
+                >
+                    <div
+                        className="pointer-events-none absolute inset-0 opacity-30"
+                        style={{
+                            background:
+                                'radial-gradient(60% 40% at 100% 0%, #34d399 0%, transparent 65%), radial-gradient(40% 50% at 0% 100%, #6366f1 0%, transparent 60%)',
+                        }}
+                    />
+                    <div className="relative flex items-center gap-4">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur">
+                            <ScanLine className="h-6 w-6 text-emerald-300" strokeWidth={2.2} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-300/80 uppercase">Primary action</p>
+                            <p className="text-lg font-semibold tracking-tight">Validate access code</p>
+                            <p className="mt-0.5 text-xs text-slate-300">Open terminal · auto-validate on entry</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white" strokeWidth={2.2} />
+                    </div>
+                </motion.button>
 
-                                <button
-                                    type="submit"
-                                    disabled={processing || data.code.length < 4}
-                                    className="w-full rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 py-4 text-lg font-semibold text-white shadow-lg shadow-primary-500/30 transition-all hover:shadow-xl hover:shadow-primary-500/40 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
-                                >
-                                    {processing ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                    fill="none"
-                                                />
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                />
-                                            </svg>
-                                            Validating...
-                                        </span>
-                                    ) : (
-                                        'Validate Code'
-                                    )}
-                                </button>
-                            </motion.form>
-                        </motion.div>
+                {/* Live stats — 3-up */}
+                <div className="grid grid-cols-3 gap-2.5">
+                    <StatCard label="Expected" value={stats.expected_today} hint="today" />
+                    <StatCard label="Validated" value={stats.validated_today} hint="today" tone="emerald" />
+                    <StatCard label="Active" value={stats.active_codes} hint="codes" />
+                </div>
+
+                {/* Recent activity feed */}
+                <section className="rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                    <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                        <div>
+                            <h2 className="text-sm font-semibold text-slate-900">Recent activity</h2>
+                            <p className="text-[11px] text-slate-500">Last validations at this gate</p>
+                        </div>
+                        <span className="text-[10px] font-semibold tracking-[0.14em] text-slate-400 uppercase">Live</span>
+                    </header>
+
+                    {recentActivity.length === 0 ? (
+                        <div className="px-4 py-8 text-center">
+                            <p className="text-sm font-medium text-slate-700">No activity yet</p>
+                            <p className="mt-1 text-xs text-slate-500">Validations will appear here as visitors arrive.</p>
+                        </div>
                     ) : (
-                        // Result Screen
-                        <motion.div
-                            key="result"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex flex-1 flex-col items-center justify-center px-2"
-                        >
-                            {/* Status Card */}
-                            <div
-                                className={`mb-6 w-full max-w-sm overflow-hidden rounded-3xl shadow-2xl ${
-                                    validationResult.valid
-                                        ? 'bg-linear-to-br from-emerald-500 to-green-600 shadow-emerald-500/30'
-                                        : 'bg-linear-to-br from-red-500 to-rose-600 shadow-red-500/30'
-                                }`}
-                            >
-                                {/* Status Header */}
-                                <div className="px-6 pt-8 pb-6 text-center">
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                                        className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
-                                    >
-                                        {validationResult.valid ? (
-                                            <ShieldCheck className="h-10 w-10 text-white" strokeWidth={2} />
-                                        ) : (
-                                            <ShieldX className="h-10 w-10 text-white" strokeWidth={2} />
-                                        )}
-                                    </motion.div>
-                                    <motion.h2
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="text-2xl font-bold text-white"
-                                    >
-                                        {getStatusMessage(validationResult)}
-                                    </motion.h2>
-                                    {!validationResult.valid && (
-                                        <motion.p
-                                            initial={{ y: 10, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.25 }}
-                                            className="mt-1 text-sm text-white/80"
-                                        >
-                                            {validationResult.message}
-                                        </motion.p>
-                                    )}
-                                </div>
-
-                                {/* Details Section */}
-                                {(validationResult.visitor_name || validationResult.host_name) && (
-                                    <motion.div
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.3 }}
-                                        className="bg-white px-6 py-5"
-                                    >
-                                        <div className="space-y-4">
-                                            {validationResult.visitor_name && (
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                                                        <User className="h-5 w-5 text-slate-600" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Visitor</p>
-                                                        <p className="text-lg font-semibold text-slate-900">{validationResult.visitor_name}</p>
-                                                    </div>
-                                                </div>
+                        <ul className="divide-y divide-slate-100">
+                            {recentActivity.map((entry) => (
+                                <li key={entry.id} className="flex items-center gap-3 px-4 py-3">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                        <ShieldCheck className="h-4 w-4" strokeWidth={2.2} />
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-semibold text-slate-900">
+                                            {entry.visitor_name}
+                                            {entry.host_name && (
+                                                <span className="font-normal text-slate-500"> · {entry.host_name}</span>
                                             )}
-
-                                            {validationResult.host_name && (
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                                                        <HomeIcon className="h-5 w-5 text-slate-600" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Host</p>
-                                                        <p className="text-lg font-semibold text-slate-900">{validationResult.host_name}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {validationResult.purpose && (
-                                                <div className="rounded-xl bg-slate-50 px-4 py-3">
-                                                    <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">Purpose</p>
-                                                    <p className="mt-0.5 text-sm text-slate-700">{validationResult.purpose}</p>
-                                                </div>
-                                            )}
-
-                                            {validationResult.expires_at && validationResult.code_type !== 'long_lived' && (
-                                                <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                    <Clock className="h-4 w-4" />
-                                                    <span>Valid until {formatTime(validationResult.expires_at)}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-
-                            {/* Next Button */}
-                            <motion.button
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                onClick={handleReset}
-                                className="w-full max-w-sm rounded-2xl border-2 border-slate-200 bg-white py-4 text-lg font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
-                            >
-                                Scan Next Visitor
-                            </motion.button>
-
-                            {/* Auto-dismiss indicator */}
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.5 }}
-                                className="mt-4 text-xs text-slate-400"
-                            >
-                                Auto-resetting in a few seconds...
-                            </motion.p>
-                        </motion.div>
+                                        </p>
+                                        <p className="truncate text-[11px] text-slate-500">
+                                            {entry.code && <span className="font-mono tracking-wider">{entry.code}</span>}
+                                            {entry.code && entry.verified_at_human && <span> · </span>}
+                                            {entry.verified_at_human}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
                     )}
-                </AnimatePresence>
+                </section>
             </div>
         </SecurityLayout>
     );
 }
+
+function StatCard({
+    label,
+    value,
+    hint,
+    tone = 'slate',
+}: {
+    label: string;
+    value: number;
+    hint: string;
+    tone?: 'slate' | 'emerald';
+}) {
+    const accent = tone === 'emerald' ? 'text-emerald-600' : 'text-slate-900';
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-slate-500 uppercase">{label}</p>
+            <p className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${accent}`}>{value}</p>
+            <p className="text-[10px] text-slate-400">{hint}</p>
+        </div>
+    );
+}
+
+function formatClock() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function greeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+}
+

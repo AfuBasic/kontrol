@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Globe, Image as ImageIcon, MessageCircle, Shield, Users, Newspaper } from 'lucide-react';
+import { ChevronRight, Globe, Image as ImageIcon, MessageCircle, Newspaper, Shield, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
@@ -12,95 +12,87 @@ type Props = {
     posts: CursorPaginatedPosts;
 };
 
-function getAudienceIcon(audience: PostAudience) {
+const AUDIENCE_META: Record<PostAudience, { label: string; tone: string }> = {
+    residents: { label: 'Residents', tone: 'text-indigo-700 bg-indigo-50 ring-indigo-200' },
+    security: { label: 'Security', tone: 'text-emerald-700 bg-emerald-50 ring-emerald-200' },
+    all: { label: 'Everyone', tone: 'text-slate-700 bg-slate-100 ring-slate-200' },
+};
+
+function audienceIcon(audience: PostAudience) {
     switch (audience) {
         case 'residents':
-            return <Users className="h-3 w-3" />;
+            return Users;
         case 'security':
-            return <Shield className="h-3 w-3" />;
+            return Shield;
         default:
-            return <Globe className="h-3 w-3" />;
+            return Globe;
     }
 }
 
-function getAudienceLabel(audience: PostAudience) {
-    switch (audience) {
-        case 'residents':
-            return 'Residents';
-        case 'security':
-            return 'Security';
-        default:
-            return 'Everyone';
-    }
-}
-
-function FeedCard({ post, index: idx }: { post: EstateBoardPost; index: number }) {
+function FeedRow({ post }: { post: EstateBoardPost }) {
+    const audience = AUDIENCE_META[post.audience] ?? AUDIENCE_META.all;
+    const AudIcon = audienceIcon(post.audience);
     const hasMedia = post.media && post.media.length > 0;
     const firstImage = hasMedia ? post.media[0] : null;
+    const ts = post.published_at ?? post.created_at;
+    const preview = post.body.replace(/<[^>]*>/g, ' ').slice(0, 160);
 
     return (
-        <motion.article
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05, ease: 'easeOut' }}
-        >
+        <motion.li layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
             <Link
                 href={EstateBoardController.show.url({ post: post.hashid })}
-                className="block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 transition-all active:scale-[0.98]"
+                className="group flex gap-3 px-4 py-4 transition hover:bg-slate-50/70 active:bg-slate-100/60"
             >
-                {/* Image Header */}
-                {firstImage && (
-                    <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-                        <img src={firstImage.url} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        {post.media.length > 1 && (
-                            <div className="absolute right-3 bottom-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                                <ImageIcon className="h-3 w-3" />
-                                <span>{post.media.length}</span>
-                            </div>
-                        )}
-                    </div>
-                )}
+                {/* Timeline rail */}
+                <div className="flex flex-col items-center pt-1">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 ring-1 ring-slate-200/70">
+                        <AudIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    </span>
+                    <span className="mt-1 w-px flex-1 bg-slate-100" aria-hidden="true" />
+                </div>
 
-                {/* Content */}
-                <div className="p-4">
-                    {/* Audience Badge */}
-                    <div className="mb-2 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                            {getAudienceIcon(post.audience)}
-                            {getAudienceLabel(post.audience)}
+                <div className="min-w-0 flex-1 pb-1">
+                    <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase ring-1 ring-inset ${audience.tone}`}>
+                            {audience.label}
                         </span>
-                        <span className="text-[10px] text-slate-400">
-                            {post.published_at
-                                ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
-                                : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                        <span className="font-mono text-[10px] tracking-wider text-slate-400">
+                            {formatDistanceToNow(new Date(ts), { addSuffix: true })}
                         </span>
                     </div>
 
-                    {/* Title */}
-                    {post.title && <h2 className="mb-1.5 line-clamp-2 text-base font-semibold text-slate-900">{post.title}</h2>}
+                    {post.title && (
+                        <h2 className="mt-1.5 line-clamp-2 text-sm font-semibold tracking-tight text-slate-900">{post.title}</h2>
+                    )}
+                    <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500">{preview}</p>
 
-                    {/* Body Preview */}
-                    <div
-                        className="line-clamp-2 text-sm text-slate-600"
-                        dangerouslySetInnerHTML={{ __html: post.body.replace(/<[^>]*>/g, ' ').substring(0, 150) }}
-                    />
+                    {firstImage && (
+                        <div className="mt-2.5 flex items-center gap-2">
+                            <span className="relative h-12 w-16 overflow-hidden rounded-md bg-slate-100 ring-1 ring-slate-200">
+                                <img src={firstImage.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            </span>
+                            {post.media.length > 1 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                                    <ImageIcon className="h-3 w-3" strokeWidth={2.2} />
+                                    {post.media.length} attachments
+                                </span>
+                            )}
+                        </div>
+                    )}
 
-                    {/* Footer */}
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-50 pt-3">
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary-500 to-primary-700 text-[10px] font-semibold text-white">
-                                {post.author.name.charAt(0).toUpperCase()}
-                            </div>
-                            <span className="text-xs font-medium text-slate-700">{post.author.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            <span>{post.comments_count}</span>
-                        </div>
+                    <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-500">
+                        <span className="truncate">{post.author.name}</span>
+                        <span className="flex items-center gap-3">
+                            <span className="inline-flex items-center gap-1">
+                                <MessageCircle className="h-3 w-3" strokeWidth={2.2} />
+                                {post.comments_count}
+                            </span>
+                            <ChevronRight className="h-3.5 w-3.5 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" strokeWidth={2.2} />
+                        </span>
                     </div>
                 </div>
             </Link>
-        </motion.article>
+        </motion.li>
     );
 }
 
@@ -110,7 +102,6 @@ export default function FeedIndex({ posts }: Props) {
 
     const loadMore = useCallback(() => {
         if (!posts.next_page_url || isLoadingMore.current) return;
-
         isLoadingMore.current = true;
         router.get(
             posts.next_page_url,
@@ -129,58 +120,47 @@ export default function FeedIndex({ posts }: Props) {
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting) {
-                    loadMore();
-                }
+                if (entries[0].isIntersecting) loadMore();
             },
             { threshold: 0.1 },
         );
-
-        if (loadMoreRef.current) {
-            observer.observe(loadMoreRef.current);
-        }
-
+        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
         return () => observer.disconnect();
     }, [loadMore]);
 
     return (
         <SecurityLayout>
-            <Head title="Feed" />
+            <Head title="Feed · Security" />
 
-            {/* Page Header */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-5">
-                <h1 className="text-xl font-bold text-slate-900">Announcements</h1>
-                <p className="mt-0.5 text-sm text-slate-500">Estate news and updates</p>
-            </motion.div>
+            <header className="mb-4">
+                <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Feed</p>
+                <h1 className="text-xl font-semibold tracking-tight text-slate-900">Estate updates</h1>
+            </header>
 
-            {/* Posts Feed */}
             {posts.data.length > 0 ? (
-                <div className="space-y-4">
-                    {posts.data.map((post, idx) => (
-                        <FeedCard key={post.id} post={post} index={idx} />
-                    ))}
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                    <ul className="divide-y divide-slate-100">
+                        {posts.data.map((post) => (
+                            <FeedRow key={post.id} post={post} />
+                        ))}
+                    </ul>
 
-                    {/* Load More Trigger */}
                     {posts.next_page_url && (
-                        <div ref={loadMoreRef} className="flex justify-center py-6">
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+                        <div ref={loadMoreRef} className="flex justify-center border-t border-slate-100 py-5">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500" />
                         </div>
                     )}
                 </div>
             ) : (
-                /* Empty State */
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                    className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 text-center shadow-sm ring-1 ring-slate-100"
-                >
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-                        <Newspaper className="h-8 w-8 text-slate-400" />
-                    </div>
-                    <h3 className="text-base font-semibold text-slate-900">No announcements</h3>
-                    <p className="mt-1 max-w-xs px-4 text-sm text-slate-500">Check back later for updates from estate management.</p>
-                </motion.div>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-14 text-center">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                        <Newspaper className="h-5 w-5" strokeWidth={2} />
+                    </span>
+                    <p className="mt-3 text-sm font-semibold text-slate-900">No updates yet</p>
+                    <p className="mt-1 max-w-xs px-4 text-xs text-slate-500">
+                        Estate management and security alerts will appear here as they're posted.
+                    </p>
+                </div>
             )}
         </SecurityLayout>
     );

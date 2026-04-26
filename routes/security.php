@@ -5,6 +5,7 @@ use App\Http\Controllers\Security\EstateBoardController;
 use App\Http\Controllers\Security\HomeController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
+use App\Http\Controllers\Security\VerifyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,9 +19,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('role:security')->group(function (): void {
-    // Home - Access Code Validation (Primary Screen)
+    // Home - Command Center
     Route::get('/', HomeController::class)->name('security.home');
-    Route::post('/validate', [HomeController::class, 'validate'])->name('security.validate');
+
+    // Verify - Access Code Validation Terminal
+    Route::get('/verify', VerifyController::class)->name('security.verify');
+    Route::post('/verify/validate', [VerifyController::class, 'validate'])->name('security.verify.validate');
+    Route::post('/verify/decision', [VerifyController::class, 'decision'])->name('security.verify.decision');
 
     // Estate Board (Feed)
     Route::prefix('feed')->name('security.feed.')->group(function (): void {
