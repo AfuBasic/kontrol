@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Jobs\SendSmsAlert;
 use App\Models\SosEvent;
 use App\Models\User;
-use App\Services\SMS\SmsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -22,7 +22,7 @@ class ProcessSOSAlert implements ShouldQueue
 
     public function __construct(public SosEvent $sosEvent) {}
 
-    public function handle(SmsService $smsService): void
+    public function handle(): void
     {
         $this->sosEvent->update(['status' => 'processing']);
 
@@ -30,10 +30,10 @@ class ProcessSOSAlert implements ShouldQueue
         $estate = $this->sosEvent->estate;
         $address = $user->profile?->address ?? 'N/A';
 
-        // 1. Notify Security (High Priority - SMS)
+        // 1. Notify Security (High Priority)
         $securityPersonnel = User::withRole('security', $estate->id)->active()->get();
 
-        $securityMessage = "🚨 SOS ALERT\n";
+        $securityMessage = "SOS ALERT\n";
         $securityMessage .= "Resident: {$user->name}\n";
         $securityMessage .= "Address: {$address}\n";
         $securityMessage .= "Estate: {$estate->name}\n";
@@ -41,24 +41,16 @@ class ProcessSOSAlert implements ShouldQueue
         $securityMessage .= 'Respond immediately.';
 
         foreach ($securityPersonnel as $security) {
-            // Send SMS
+            // Queue SMS
             if ($security->profile?->phone) {
-                try {
-                    $smsService->send($security->profile->phone, $securityMessage);
-                } catch (\Exception $e) {
-                    Log::error("Failed to send SOS SMS to security {$security->id}: " . $e->getMessage());
-                }
+                SendSmsAlert::dispatch($security->profile->phone, $securityMessage);
             }
 
-            // Send Mobile Push/Telegram/WebPush
-            try {
-                $security->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
-            } catch (\Exception $e) {
-                Log::error("Failed to send SOS notification to security {$security->id}: " . $e->getMessage());
-            }
+            // Queue Mobile Push/Telegram/WebPush (Queued automatically by Notification class)
+            $security->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
         }
 
-        // 2. Notify Emergency Contacts (Medium Priority - SMS)
+        // 2. Notify Emergency Contacts (Medium Priority)
         $contacts = $user->emergencyContacts;
 
         $contactMessage = "🚨 SOS ALERT\n";
@@ -67,30 +59,18 @@ class ProcessSOSAlert implements ShouldQueue
         $contactMessage .= 'Security has been notified. Please check immediately.';
 
         foreach ($contacts as $contact) {
-            try {
-                $smsService->send($contact->phone, $contactMessage);
-            } catch (\Exception $e) {
-                Log::error("Failed to send SOS SMS to contact {$contact->id}: " . $e->getMessage());
-            }
+            SendSmsAlert::dispatch($contact->phone, $contactMessage);
         }
 
-        // 3. Notify Estate Admins (Information Priority - Email & Push)
+        // 3. Notify Estate Admins (Information Priority)
         $admins = User::withRole('admin', $estate->id)->active()->get();
         
         foreach ($admins as $admin) {
-            // Send Email
-            try {
-                Mail::to($admin->email)->send(new \App\Mail\Admin\SosAlertMail($this->sosEvent));
-            } catch (\Exception $e) {
-                Log::error("Failed to send SOS Email to admin {$admin->id}: " . $e->getMessage());
-            }
+            // Queue Email
+            Mail::to($admin->email)->queue(new \App\Mail\Admin\SosAlertMail($this->sosEvent));
 
-            // Send Mobile Push/Telegram/WebPush
-            try {
-                $admin->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
-            } catch (\Exception $e) {
-                Log::error("Failed to send SOS notification to admin {$admin->id}: " . $e->getMessage());
-            }
+            // Queue Mobile Push/Telegram/WebPush
+            $admin->notify(new \App\Notifications\Admin\SosIntrusionNotification($this->sosEvent));
         }
 
         $this->sosEvent->update(['status' => 'completed']);

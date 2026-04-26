@@ -70,8 +70,8 @@ class SosController extends Controller
     {
         $user = Auth::user();
 
-        // Ensure user is authorized for this estate
-        if (! $user->hasRole('security') || $user->getCurrentEstateId() !== $sosEvent->estate_id) {
+        // Ensure user is authorized for this estate and has correct role
+        if (! $user->hasRole(['security', 'admin']) || $user->getCurrentEstateId() !== $sosEvent->estate_id) {
             abort(403);
         }
 
@@ -81,6 +81,6 @@ class SosController extends Controller
             'acknowledged_by' => $user->id,
         ]);
 
-        return response()->json(['message' => 'SOS alert acknowledged']);
+        return back()->with('success', 'SOS alert acknowledged');
     }
 }

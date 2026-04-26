@@ -662,6 +662,11 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
             </div>
 
+            <p className="px-2 text-[10px] font-bold leading-relaxed text-slate-400 italic">
+                * By saving this contact, you authorize the estate's safety team to contact and share incident
+                details with this individual during emergency SOS events.
+            </p>
+
             <button
                 type="submit"
                 disabled={processing}
