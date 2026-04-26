@@ -36,15 +36,13 @@ class ResidentSubscriptionService
         }
 
         // No trial available, put in grace period (past_due)
-        $graceDays = $settings->grace_period_days ?? 2;
-
         return ResidentSubscription::create([
             'user_id' => $user->id,
             'estate_id' => $estate->id,
             'status' => 'past_due',
             'trial_ends_at' => null,
             'current_period_start' => $now,
-            'current_period_end' => $now->copy()->addDays($graceDays),
+            'current_period_end' => $now,
         ]);
     }
 }

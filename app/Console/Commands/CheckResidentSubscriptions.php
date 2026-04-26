@@ -2,13 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ResidentSubscription;
-use App\Notifications\ResidentSubscriptionExpiredNotification;
-use App\Notifications\ResidentSubscriptionExpiringNotification;
-use App\Notifications\ResidentTrialEndingNotification;
 use App\Jobs\Billing\ProcessSubscriptionReminderJob;
+use App\Models\ResidentSubscription;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class CheckResidentSubscriptions extends Command
 {
@@ -38,14 +34,13 @@ class CheckResidentSubscriptions extends Command
             ->where('status', 'trial')
             ->where('trial_ends_at', '<', now())
             ->update(['status' => 'past_due']);
-        
+
         if ($trialExpiredCount > 0) {
             $this->warn("Marked {$trialExpiredCount} expired trials as past_due.");
         }
 
         // 2. BULK UPDATE: Active subscriptions past grace period
-        // We allow 2 days of grace after current_period_end
-        $graceThreshold = now()->subDays(2);
+        $graceThreshold = now();
         $activeExpiredCount = ResidentSubscription::query()
             ->where('status', 'active')
             ->where('current_period_end', '<', $graceThreshold)
@@ -71,9 +66,9 @@ class CheckResidentSubscriptions extends Command
         ResidentSubscription::query()
             ->where('status', 'trial')
             ->whereBetween('trial_ends_at', [$now, $reminderThreshold])
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('last_reminded_at')
-                  ->orWhere('last_reminded_at', '<', now()->subHours(24));
+                    ->orWhere('last_reminded_at', '<', now()->subHours(24));
             })
             ->chunkById(1000, function ($subscriptions) {
                 foreach ($subscriptions as $subscription) {
@@ -85,9 +80,9 @@ class CheckResidentSubscriptions extends Command
         ResidentSubscription::query()
             ->where('status', 'active')
             ->whereBetween('current_period_end', [$now, $reminderThreshold])
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('last_reminded_at')
-                  ->orWhere('last_reminded_at', '<', now()->subHours(24));
+                    ->orWhere('last_reminded_at', '<', now()->subHours(24));
             })
             ->chunkById(1000, function ($subscriptions) {
                 foreach ($subscriptions as $subscription) {

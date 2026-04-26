@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ResidentSubscription extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'estate_id',
@@ -65,14 +66,17 @@ class ResidentSubscription extends Model
 
     public function isActive(): bool
     {
-        // Must have an active or trial status AND the period must not have ended
-        if (in_array($this->status, ['active', 'trial'])) {
-            return $this->current_period_end && $this->current_period_end->isFuture();
-        }
+        // Must have an active, trial or past due status
+        if (in_array($this->status, ['active', 'trial', 'past_due'])) {
+            // If still within the paid/trial period
+            if ($this->current_period_end && $this->current_period_end->isFuture()) {
+                return true;
+            }
 
-        // If past due, they are active only if still within the grace period (period end is in future)
-        if ($this->status === 'past_due') {
-            return $this->current_period_end && $this->current_period_end->isFuture();
+            // If past due but still within the grace period (from estate settings)
+            $graceDays = $this->estate->settings->grace_period_days ?? 2;
+
+            return $this->current_period_end && now()->lessThan($this->current_period_end->copy()->addDays($graceDays));
         }
 
         return false;
@@ -94,7 +98,12 @@ class ResidentSubscription extends Model
             return true;
         }
 
-        // Past due but period end is in the past = fully expired/blocked
-        return $this->status === 'past_due' && $this->current_period_end && $this->current_period_end->isPast();
+        if (in_array($this->status, ['active', 'trial', 'past_due'])) {
+            $graceDays = $this->estate->settings->grace_period_days ?? 2;
+
+            return $this->current_period_end && now()->greaterThanOrEqualTo($this->current_period_end->copy()->addDays($graceDays));
+        }
+
+        return false;
     }
 }

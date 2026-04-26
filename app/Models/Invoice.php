@@ -29,6 +29,7 @@ class Invoice extends Model
         'paid_at',
         'notified_at',
         'last_sent_email_at',
+        'metadata',
     ];
 
     protected $casts = [

@@ -19,7 +19,9 @@ class PaymentFailedMail extends Mailable implements ShouldQueue
      */
     public function __construct(
         public Invoice $invoice,
-        public string $reason = 'Your payment method could not be charged.'
+        public string $reason = 'Your payment method could not be charged.',
+        public int $attempts = 1,
+        public int $maxAttempts = 3
     ) {
         $this->onQueue('mail');
     }

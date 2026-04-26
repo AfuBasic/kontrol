@@ -13,7 +13,11 @@
         <p style="margin-bottom: 0; color: #be123c;" class="bold">{{ $reason }}</p>
     </div>
 
-    <p>To keep your access active and avoid service interruptions, please update your payment method or ensure your card has sufficient funds. We will attempt to charge your card again automatically in 24 hours.</p>
+    @if($attempts < $maxAttempts)
+        <p>To keep your access active and avoid service interruptions, please update your payment method or ensure your card has sufficient funds. We will attempt to charge your card again automatically in 24 hours.</p>
+    @else
+        <p>This was our <span class="bold">final attempt</span> to charge your card automatically. To keep your access active and avoid service interruptions, you must now <span class="bold">manually</span> pay this invoice from your dashboard.</p>
+    @endif
     
     <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
         <p style="margin-bottom: 8px; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Invoice Details</p>

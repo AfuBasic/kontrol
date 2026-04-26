@@ -49,6 +49,7 @@ class ProcessAutoBilling extends Command
 
         if ($eligibleResidentIds->isEmpty()) {
             $this->line('No eligible residents found for auto-billing.');
+
             return;
         }
 
@@ -61,6 +62,11 @@ class ProcessAutoBilling extends Command
                     // Safety check: skip if recently attempted (within 23 hours)
                     $lastAttempt = $invoice->metadata['last_attempt_at'] ?? null;
                     if ($lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
+                        continue;
+                    }
+
+                    // Stop auto-charging after 3 failed attempts
+                    if (($invoice->metadata['attempts'] ?? 0) >= 3) {
                         continue;
                     }
 
@@ -78,7 +84,7 @@ class ProcessAutoBilling extends Command
             ->whereIn('status', ['pending', 'overdue'])
             ->whereHas('estate.subscriptionRecord', function ($q) {
                 $q->where('billing_preference', 'auto')
-                  ->whereNotNull('paystack_authorization_code');
+                    ->whereNotNull('paystack_authorization_code');
             })
             ->chunkById(100, function ($invoices) {
                 foreach ($invoices as $invoice) {
