@@ -18,7 +18,6 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $estate = $this->estateContext->getEstate();
-
         return Inertia::render('Resident/Home', [
             'stats' => $this->accessCodeService->getHomeStats(),
             'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [

@@ -4,13 +4,12 @@ import { Link } from '@inertiajs/react';
 
 interface Props {
     expectedToday: number;
-    activeNow: number;
     lastActivity?: string;
     onAction?: () => void;
 }
 
-export default function CommandCenter({ expectedToday, activeNow, lastActivity, onAction }: Props) {
-    const hasData = expectedToday > 0 || activeNow > 0;
+export default function CommandCenter({ expectedToday, lastActivity, onAction }: Props) {
+    const hasData = expectedToday > 0;
 
     return (
         <motion.div
@@ -63,10 +62,6 @@ export default function CommandCenter({ expectedToday, activeNow, lastActivity, 
                                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                     You're <span className="text-white/40 italic">all clear</span> for now
                                 </motion.span>
-                            ) : activeNow > 0 ? (
-                                <>
-                                    {activeNow} {activeNow === 1 ? 'visitor' : 'visitors'} <span className="text-white/40">at the gate</span>
-                                </>
                             ) : (
                                 <>
                                     {expectedToday} {expectedToday === 1 ? 'visitor' : 'visitors'} <span className="text-white/40">scheduled</span>
@@ -87,14 +82,10 @@ export default function CommandCenter({ expectedToday, activeNow, lastActivity, 
                     </div>
                 </div>
 
-                <div className="mb-10 grid grid-cols-2 gap-4">
+                <div className="mb-10 grid grid-cols-1 gap-4">
                     <div className="rounded-[24px] bg-white/[0.03] p-5 ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.06]">
-                        <p className="mb-1 text-[10px] font-bold tracking-wider text-white/30 uppercase">Expected</p>
+                        <p className="mb-1 text-[10px] font-bold tracking-wider text-white/30 uppercase">Expected Today</p>
                         <p className="text-2xl font-black text-white">{expectedToday}</p>
-                    </div>
-                    <div className="rounded-[24px] bg-white/[0.03] p-5 ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.06]">
-                        <p className="mb-1 text-[10px] font-bold tracking-wider text-white/30 uppercase">Inside</p>
-                        <p className="text-2xl font-black text-white">{activeNow}</p>
                     </div>
                 </div>
 

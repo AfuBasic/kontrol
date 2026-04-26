@@ -25,7 +25,6 @@ import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 
 export default function Home({ auth, stats, activeCodes, recentActivity, estateName }: Props) {
     // Calculate live data for Command Center
-    const activeNow = activeCodes.filter((c) => c.status === 'used').length;
     const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
     const lastActivityTime = recentActivity[0]?.time;
 
@@ -44,12 +43,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 />
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
-                <CommandCenter
-                    expectedToday={expectedToday}
-                    activeNow={activeNow}
-                    lastActivity={lastActivityTime}
-                    onAction={() => setIsCreateModalOpen(true)}
-                />
+                <CommandCenter expectedToday={expectedToday} lastActivity={lastActivityTime} onAction={() => setIsCreateModalOpen(true)} />
 
                 {/* 3. QUICK ACTIONS STRIP */}
                 <section>

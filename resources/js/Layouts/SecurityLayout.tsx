@@ -9,6 +9,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Security/Noti
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
+import SosAlertOverlay from '@/Components/SosAlertOverlay';
 
 interface Props {
     children: ReactNode;
@@ -256,6 +257,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                     )}
                 </AnimatePresence>
             </div>
+            <SosAlertOverlay />
         </PullToRefresh>
     );
 }

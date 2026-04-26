@@ -9,6 +9,7 @@ import SosController from '@/actions/App/Http/Controllers/Resident/SosController
 interface SosAlert {
     id: number;
     resident_name: string;
+    resident_phone: string;
     address: string;
     estate_name: string;
     triggered_at: string;
@@ -43,14 +44,14 @@ export default function SosAlertOverlay() {
         const estateId = auth.user.current_estate_id;
         const channel = window.Echo.private(`estates.${estateId}.security`);
 
-        channel.listen('SosTriggered', (event: SosAlert) => {
+        channel.listen('.sos.triggered', (event: SosAlert) => {
             setActiveAlert(event);
             playAlertSound();
             triggerHaptics();
         });
 
         return () => {
-            channel.stopListening('SosTriggered');
+            channel.stopListening('.sos.triggered');
         };
     }, [auth?.user?.current_estate_id, playAlertSound, triggerHaptics]);
 
@@ -108,7 +109,7 @@ export default function SosAlertOverlay() {
                         >
                             <ShieldAlert className="h-10 w-10 text-white" />
                         </motion.div>
-                        <h2 className="text-3xl font-black tracking-tight">EMERGENCY ALERT</h2>
+                        <h2 className="text-3xl font-black tracking-tight">INTRUSION ALERT</h2>
                         <p className="mt-2 text-red-100 font-bold uppercase tracking-widest text-xs">Resident SOS Triggered</p>
                     </div>
 
@@ -120,12 +121,18 @@ export default function SosAlertOverlay() {
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50">
                                     <div className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
                                 </div>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Resident & Location</p>
                                     <p className="mt-1 text-xl font-black text-slate-900">{activeAlert.resident_name}</p>
                                     <p className="text-slate-600 font-bold">{activeAlert.address}</p>
                                     <p className="text-indigo-600 text-sm font-black mt-1 uppercase">{activeAlert.estate_name}</p>
                                 </div>
+                                <button 
+                                    onClick={() => callResident(activeAlert.resident_phone)}
+                                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 active:scale-95"
+                                >
+                                    <Phone className="h-5 w-5" />
+                                </button>
                             </div>
 
                             {/* Emergency Contacts */}
@@ -160,7 +167,7 @@ export default function SosAlertOverlay() {
                                 className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 py-4 font-black text-slate-400 active:scale-95"
                             >
                                 <XCircle className="h-5 w-5" />
-                                DISMISS
+                                CLOSE ALERT
                             </button>
                             <button
                                 onClick={handleAcknowledge}

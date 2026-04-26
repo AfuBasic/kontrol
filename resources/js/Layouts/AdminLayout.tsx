@@ -794,7 +794,7 @@ export default function AdminLayout({ children }: Props) {
                 }}
             />
 
-            {auth.user?.roles?.includes('security') && <SosAlertOverlay />}
+            {auth.user && <SosAlertOverlay />}
         </div>
     );
 }

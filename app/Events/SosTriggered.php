@@ -17,6 +17,14 @@ class SosTriggered implements ShouldBroadcastNow
     public function __construct(public SosEvent $sosEvent) {}
 
     /**
+     * The event's broadcast name.
+     */
+    public function broadcastAs(): string
+    {
+        return 'sos.triggered';
+    }
+
+    /**
      * Get the channels the event should broadcast on.
      *
      * @return array<int, Channel>
@@ -33,6 +41,7 @@ class SosTriggered implements ShouldBroadcastNow
         return [
             'id' => $this->sosEvent->id,
             'resident_name' => $this->sosEvent->user->name,
+            'resident_phone' => $this->sosEvent->user->phone,
             'address' => $this->sosEvent->user->profile?->address ?? 'N/A',
             'estate_name' => $this->sosEvent->estate->name,
             'triggered_at' => $this->sosEvent->triggered_at->toIso8601String(),
