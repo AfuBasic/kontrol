@@ -69,19 +69,49 @@ stdout_logfile=/var/log/worker-phpfpm.log
 stderr_logfile=/var/log/worker-phpfpm.log
 '''
 
-"worker-laravel.conf" = '''
-[program:worker-laravel]
+"worker-default.conf" = '''
+[program:worker-default]
 process_name=%(program_name)s_%(process_num)02d
-command=bash -c 'exec php /app/artisan queue:work --sleep=3 --tries=3 --max-time=3600'
+command=bash -c 'exec php /app/artisan queue:work --queue=default --sleep=3 --tries=3 --max-time=3600'
 autostart=true
 autorestart=true
 stopasgroup=true
 killasgroup=true
-numprocs=2 # To reduce memory/CPU usage, change to 2.
+numprocs=1
 startsecs=0
 stopwaitsecs=3600
-stdout_logfile=/var/log/worker-laravel.log
-stderr_logfile=/var/log/worker-laravel.log
+stdout_logfile=/var/log/worker-default.log
+stderr_logfile=/var/log/worker-default.log
+'''
+
+"worker-payments.conf" = '''
+[program:worker-payments]
+process_name=%(program_name)s_%(process_num)02d
+command=bash -c 'exec php /app/artisan queue:work --queue=payments --sleep=1 --tries=3 --max-time=3600'
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+numprocs=2
+startsecs=0
+stopwaitsecs=3600
+stdout_logfile=/var/log/worker-payments.log
+stderr_logfile=/var/log/worker-payments.log
+'''
+
+"worker-mail.conf" = '''
+[program:worker-mail]
+process_name=%(program_name)s_%(process_num)02d
+command=bash -c 'exec php /app/artisan queue:work --queue=mail --sleep=5 --tries=2 --max-time=3600'
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+numprocs=1
+startsecs=0
+stopwaitsecs=3600
+stdout_logfile=/var/log/worker-mail.log
+stderr_logfile=/var/log/worker-mail.log
 '''
 
 "worker-reverb.conf" = '''

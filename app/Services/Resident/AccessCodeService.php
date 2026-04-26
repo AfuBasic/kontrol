@@ -4,6 +4,7 @@ namespace App\Services\Resident;
 
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
+use App\Models\AccessLog;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\User;
@@ -30,6 +31,14 @@ class AccessCodeService
     {
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
+        $subscription = $user->residentSubscription;
+
+        // Block if subscription is expired/invalid (only if estate charges residents)
+        if ($estate->settings->charge_type === 'residents' && (! $subscription || ! $subscription->isActive())) {
+            throw ValidationException::withMessages([
+                'subscription' => ['Your subscription has expired or is inactive. Please visit the billing section to restore access.'],
+            ]);
+        }
 
         $type = $data['type'] ?? 'single_use';
         $expiresAt = null;
@@ -438,7 +447,7 @@ class AccessCodeService
     /**
      * Get usage history for an access code with cursor pagination.
      *
-     * @return CursorPaginator<\App\Models\AccessLog>
+     * @return CursorPaginator<AccessLog>
      */
     public function getUsageHistory(AccessCode $accessCode, ?string $dateFilter = null, int $perPage = 15): CursorPaginator
     {

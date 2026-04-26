@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Actions\Auth\GenerateMagicLoginUrlAction;
+use App\Actions\Billing\InitializeCardSetupAction;
 use App\Actions\Billing\InitializeInvoicePaymentAction;
 use App\Actions\Billing\PaymentInitializationException;
 use App\Http\Controllers\Controller;
@@ -9,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\ResidentSubscription;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\EstateContextService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -147,5 +150,32 @@ class BillingController extends Controller
         }
 
         return $this->pay($invoice, $initialize);
+    }
+
+    public function setupPaymentMethod(InitializeCardSetupAction $action): RedirectResponse|SymfonyResponse
+    {
+        $user = auth()->user();
+
+        try {
+            $redirectUrl = $action->execute(
+                $user,
+                route('resident.billing.payment.callback')
+            );
+
+            return Inertia::location($redirectUrl);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to initialize card setup: '.$e->getMessage());
+        }
+    }
+
+    public function generateMagicUrl(GenerateMagicLoginUrlAction $action): JsonResponse
+    {
+        $user = auth()->user();
+        $url = $action->execute($user, route('resident.billing.index', [], false));
+
+        return response()->json([
+            'status' => 'success',
+            'magic_url' => $url,
+        ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Actions\Billing\RecordPaymentAction;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Services\Billing\BillingFinalizationService;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,7 +15,7 @@ class PaystackWebhookController extends Controller
     public function __invoke(
         Request $request,
         PaystackService $paystackService,
-        RecordPaymentAction $recordPaymentAction,
+        BillingFinalizationService $finalizationService,
     ): Response {
         $payload = $request->getContent();
         $signature = $request->header('X-Paystack-Signature');
@@ -33,33 +34,19 @@ class PaystackWebhookController extends Controller
 
             if ($reference) {
                 try {
-                    $invoice = Invoice::where('invoice_number', $reference)->first();
+                    // Strip the -AUTO-XXXX-XX-XX suffix if it exists
+                    $cleanReference = preg_replace('/-AUTO-\d{4}-\d{2}-\d{2}$/', '', $reference);
+                    $invoice = Invoice::where('invoice_number', $cleanReference)->first();
 
                     if ($invoice && ! $invoice->isPaid()) {
-                        // Use idempotency key from request to prevent duplicate processing
-                        $idempotencyKey = request()->header('X-Paystack-Webhook-ID') ?? 'webhook_'.$reference.'_'.$data['id'];
-
-                        // Record payment with comprehensive safety checks
-                        // This handles idempotency, preventing double-processing of webhook retries
-                        $recordPaymentAction->execute(
-                            $invoice,
-                            $reference,
-                            $idempotencyKey
-                        );
+                        $finalizationService->finalizeSuccess($invoice, [
+                            'reference' => $reference,
+                            'payment_method' => $data['channel'] ?? 'card',
+                            'customer_email' => $data['customer']['email'] ?? null,
+                        ]);
                     }
                 } catch (\Exception $e) {
-                    // Log webhook processing error but still return 200
-                    // Paystack will retry failed webhooks
-                    if ($invoice) {
-                        activity()
-                            ->on($invoice->estate)
-                            ->withProperties([
-                                'event' => $event,
-                                'reference' => $reference,
-                                'error' => $e->getMessage(),
-                            ])
-                            ->log('Webhook payment processing failed');
-                    }
+                    \Log::error("Webhook processing error for reference {$reference}: " . $e->getMessage());
                 }
             }
         }

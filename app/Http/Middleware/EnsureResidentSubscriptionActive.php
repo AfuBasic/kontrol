@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Estate;
+use App\Services\ResidentSubscriptionService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +32,7 @@ class EnsureResidentSubscriptionActive
 
             // If no subscription exists, create one (grace period by default)
             if (! $subscription) {
-                $service = app(\App\Services\ResidentSubscriptionService::class);
+                $service = app(ResidentSubscriptionService::class);
                 $subscription = $service->createForUser($user, $estate);
             }
 

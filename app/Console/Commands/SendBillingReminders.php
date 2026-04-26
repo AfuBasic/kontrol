@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Mail;
 
 class SendBillingReminders extends Command
 {
-    protected $signature = 'app:send-billing-reminders';
+    protected $signature = 'kontrol:send-billing-reminders';
 
     protected $description = 'Send billing reminders for invoices due in 7 days';
 

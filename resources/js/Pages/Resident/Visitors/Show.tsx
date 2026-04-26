@@ -105,6 +105,16 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         );
     }
 
+    const [shareCopied, setShareCopied] = useState(false);
+
+    async function handleShare() {
+        const result = await shareAccessCode(accessCode);
+        if (result?.method === 'copy' && result.success) {
+            setShareCopied(true);
+            setTimeout(() => setShareCopied(false), 3000);
+        }
+    }
+
     const isLongLived = accessCode.type === 'long_lived';
 
     return (
@@ -223,10 +233,14 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                 {copied ? 'Copied!' : 'Copy'}
                             </button>
                             <button
-                                onClick={() => shareAccessCode(accessCode)}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-5 py-3.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98]"
+                                onClick={handleShare}
+                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 px-5 py-3.5 text-sm font-semibold transition-all active:scale-[0.98] ${
+                                    shareCopied
+                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                }`}
                             >
-                                Share
+                                {shareCopied ? 'Copied!' : 'Share'}
                             </button>
                         </div>
 

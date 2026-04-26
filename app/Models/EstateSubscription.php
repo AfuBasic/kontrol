@@ -37,6 +37,8 @@ class EstateSubscription extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'billing_preference' => 'string',
+        'paystack_authorization_code' => 'encrypted',
+        'paystack_customer_code' => 'encrypted',
     ];
 
     /**

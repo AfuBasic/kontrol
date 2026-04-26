@@ -37,6 +37,7 @@ const navItems: NavItem[] = [
     { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
     { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
     { name: 'Billing', href: '/zeus/billing', icon: Cog6ToothIcon },
+    { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
     { name: 'Estates', href: '/zeus/estates', icon: AdjustmentsHorizontalIcon },
 ];
 

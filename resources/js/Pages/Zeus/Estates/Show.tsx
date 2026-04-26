@@ -2,31 +2,20 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { 
-    UsersIcon, 
-    CreditCardIcon, 
-    CalendarIcon, 
-    ArrowLeftIcon,
-    ShieldCheckIcon,
-    BanknotesIcon,
-    ClockIcon,
-    CheckBadgeIcon,
-    InformationCircleIcon
-} from '@heroicons/react/24/outline';
-
-interface Plan {
-    id: number;
-    name: string;
-    price: number;
-    billing_interval: string;
-}
-
-interface EstateSubscription {
-    id: number;
-    plan: Plan;
-    billing_preference: 'auto' | 'manual';
-    status: string;
-    next_billing_at?: string;
-}
+    Users, 
+    CreditCard, 
+    ArrowLeft,
+    ShieldCheck,
+    Banknote,
+    Clock,
+    BadgeCheck,
+    Info,
+    TrendingUp,
+    ArrowUpRight,
+    Activity,
+    DollarSign,
+    Calendar
+} from 'lucide-react';
 
 interface Estate {
     id: number;
@@ -35,273 +24,280 @@ interface Estate {
     address: string | null;
     status: 'active' | 'inactive';
     created_at: string;
-    subscription_record?: EstateSubscription;
+    subscription_record?: {
+        plan?: { name: string; billing_interval: string };
+        status: string;
+    };
     settings?: {
         charge_type: 'estate' | 'residents';
-        free_trial_days: number;
-        grace_period_days: number;
     };
 }
 
-interface Invoice {
-    id: number;
-    invoice_number: string;
-    amount: number;
-    formatted_amount: string;
-    status: string;
-    created_at: string;
-    plan?: { name: string };
-    user?: { name: string; email: string };
+interface Analytics {
+    total_revenue: number;
+    monthly_revenue: number;
+    outstanding_amount: number;
+    success_rate: number;
 }
 
-interface ResidentStats {
-    total: number;
-    active: number;
-    trial: number;
-    past_due: number;
-    expired: number;
+interface Transaction {
+    id: number;
+    paystack_reference: string;
+    amount: number;
+    status: string;
+    payment_method: string | null;
+    created_at: string;
+    invoice?: {
+        user?: { name: string; email: string };
+    };
+}
+
+interface Resident {
+    id: number;
+    user: { name: string; email: string };
+    status: string;
+    last_payment_at: string | null;
+    last_amount: number;
+    next_due: string | null;
 }
 
 interface Props {
     estate: Estate;
-    residentStats: ResidentStats;
-    recentInvoices: Invoice[];
+    residentStats: { total: number; active: number; trial: number; past_due: number; expired: number };
+    analytics: Analytics;
+    recentTransactions: Transaction[];
+    residents: Resident[];
     admin: { name: string; email: string } | null;
 }
 
-export default function EstateShow({ estate, residentStats, recentInvoices, admin }: Props) {
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '—';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+export default function EstateShow({ estate, residentStats, analytics, recentTransactions, residents, admin }: Props) {
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN'
+        }).format(amount / 100);
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'paid':
-            case 'active':
-                return 'bg-green-50 text-green-700 ring-green-200';
-            case 'pending':
-            case 'trial':
-                return 'bg-blue-50 text-blue-700 ring-blue-200';
-            case 'overdue':
-            case 'past_due':
-                return 'bg-red-50 text-red-700 ring-red-200';
-            default:
-                return 'bg-gray-50 text-gray-700 ring-gray-200';
-        }
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return '—';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
     };
 
     return (
         <ZeusLayout>
             <Head title={`Estate: ${estate.name}`} />
 
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="mb-8"
+            {/* Back Link */}
+            <Link
+                href="/zeus/estates"
+                className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >
-                <Link
-                    href="/zeus/estates"
-                    className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-                >
-                    <ArrowLeftIcon className="h-4 w-4" />
-                    Back to Estates
-                </Link>
-                <div className="flex items-center justify-between">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Estates
+            </Link>
+
+            {/* Estate Header Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm"
+            >
+                <div className="flex flex-col items-start justify-between gap-6 border-b border-slate-50 p-8 sm:flex-row sm:items-center">
                     <div>
-                        <div className="mb-1 flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${estate.status === 'active' ? 'bg-green-500' : 'bg-slate-300'}`} />
-                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                {estate.status} Estate
+                        <div className="mb-2 flex items-center gap-2">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
+                                estate.status === 'active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-slate-50 text-slate-700 ring-slate-200'
+                            }`}>
+                                {estate.status}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold tracking-widest text-indigo-700 uppercase ring-1 ring-inset ring-indigo-200">
+                                {estate.subscription_record?.plan?.name || 'No Plan'}
                             </span>
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight text-slate-900">{estate.name}</h1>
-                        <p className="mt-1 text-slate-500">{estate.address || 'No address provided'}</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{estate.name}</h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            {estate.settings?.charge_type === 'estate' ? 'Estate pays bulk' : 'Residents pay individual'} · Created {formatDate(estate.created_at)}
+                        </p>
                     </div>
+
                     <div className="flex gap-3">
                         <Link
                             href={`/zeus/estates/${estate.id}/edit`}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                         >
-                            Edit Settings
+                            Edit Estate
                         </Link>
+                        <button className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95">
+                            Manage Plan
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 divide-x divide-slate-50 bg-slate-50/30 sm:grid-cols-4">
+                    <div className="px-8 py-6">
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Residents</p>
+                        <p className="mt-1 text-xl font-bold text-slate-900">{residentStats.total}</p>
+                    </div>
+                    <div className="px-8 py-6">
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Active</p>
+                        <p className="mt-1 text-xl font-bold text-emerald-600">{residentStats.active}</p>
+                    </div>
+                    <div className="px-8 py-6">
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Revenue (MTD)</p>
+                        <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(analytics.monthly_revenue)}</p>
+                    </div>
+                    <div className="px-8 py-6">
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Outstanding</p>
+                        <p className="mt-1 text-xl font-bold text-rose-600">{formatCurrency(analytics.outstanding_amount)}</p>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Stats Grid */}
-            <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                {[
-                    { label: 'Total Residents', value: residentStats.total, icon: UsersIcon, color: 'indigo' },
-                    { label: 'Active', value: residentStats.active, icon: CheckBadgeIcon, color: 'green' },
-                    { label: 'In Trial', value: residentStats.trial, icon: ClockIcon, color: 'blue' },
-                    { label: 'Past Due', value: residentStats.past_due, icon: ExclamationTriangleIcon, color: 'amber' },
-                    { label: 'Expired', value: residentStats.expired, icon: ShieldCheckIcon, color: 'red' },
-                ].map((stat, i) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
-                    >
-                        <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-${stat.color}-50 text-${stat.color}-600`}>
-                            <stat.icon className="h-6 w-6" />
-                        </div>
-                        <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                        <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                    </motion.div>
-                ))}
-            </div>
-
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                {/* Left Column: Details */}
-                <div className="space-y-8 lg:col-span-1">
-                    {/* Subscription Card */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm"
-                    >
-                        <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
-                            <CreditCardIcon className="h-5 w-5 text-indigo-600" />
-                            Subscription Details
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-slate-50 pb-4">
-                                <span className="text-sm text-slate-500">Current Plan</span>
-                                <span className="text-sm font-bold text-slate-900">
-                                    {estate.subscription_record?.plan?.name || 'N/A'}
-                                </span>
+                {/* Left: Analytics & Contacts */}
+                <div className="space-y-8">
+                    {/* Analytics Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <TrendingUp className="h-4 w-4" />
                             </div>
-                            <div className="flex items-center justify-between border-b border-slate-50 pb-4">
-                                <span className="text-sm text-slate-500">Billing Interval</span>
-                                <span className="text-sm font-bold text-slate-900 capitalize">
-                                    {estate.subscription_record?.plan?.billing_interval || 'N/A'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between border-b border-slate-50 pb-4">
-                                <span className="text-sm text-slate-500">Charge Model</span>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 ring-1 ring-slate-100">
-                                    {estate.settings?.charge_type === 'estate' ? 'Estate Bulk' : 'Individual Residents'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-500">Next Billing</span>
-                                <span className="text-sm font-bold text-slate-900">
-                                    {formatDate(estate.subscription_record?.next_billing_at)}
-                                </span>
-                            </div>
+                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Lifetime Rev</p>
+                            <p className="mt-1 text-lg font-bold text-slate-900">{formatCurrency(analytics.total_revenue)}</p>
                         </div>
-                    </motion.div>
+                        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                <Activity className="h-4 w-4" />
+                            </div>
+                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Success Rate</p>
+                            <p className="mt-1 text-lg font-bold text-slate-900">{analytics.success_rate}%</p>
+                        </div>
+                    </div>
 
-                    {/* Admin Contact Card */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm"
-                    >
-                        <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900">
-                            <InformationCircleIcon className="h-5 w-5 text-indigo-600" />
+                    {/* Primary Admin */}
+                    <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                        <h3 className="mb-6 flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                            <Info className="h-4 w-4 text-indigo-600" />
                             Primary Admin
                         </h3>
                         {admin ? (
                             <div className="space-y-4">
                                 <div>
-                                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Full Name</p>
-                                    <p className="text-sm font-bold text-slate-900">{admin.name}</p>
+                                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Name</p>
+                                    <p className="text-sm font-semibold text-slate-900">{admin.name}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Email Address</p>
-                                    <p className="text-sm font-bold text-slate-900">{admin.email}</p>
+                                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Email</p>
+                                    <p className="text-sm font-semibold text-slate-900">{admin.email}</p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="rounded-xl bg-slate-50 p-4 text-center">
-                                <p className="text-sm font-medium text-slate-500">No active admin found.</p>
-                            </div>
+                            <p className="text-sm text-slate-500 italic">No admin assigned yet.</p>
                         )}
-                    </motion.div>
+                    </div>
                 </div>
 
-                {/* Right Column: Invoices */}
+                {/* Right: Resident Payment Status */}
                 <div className="lg:col-span-2">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7 }}
-                        className="rounded-3xl border border-slate-100 bg-white shadow-sm"
-                    >
+                    <div className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
                         <div className="flex items-center justify-between border-b border-slate-50 px-8 py-6">
-                            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                                <BanknotesIcon className="h-5 w-5 text-indigo-600" />
-                                Recent Invoices
+                            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                                <Users className="h-4 w-4 text-indigo-600" />
+                                Resident Payment Status
                             </h3>
-                            <Link href="/zeus/subscriptions" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-                                View Full History
-                            </Link>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full text-left">
                                 <thead className="bg-slate-50/50">
                                     <tr>
-                                        <th className="px-8 py-4 text-left text-[10px] font-bold tracking-widest text-slate-400 uppercase">Number</th>
-                                        <th className="px-8 py-4 text-left text-[10px] font-bold tracking-widest text-slate-400 uppercase">Target</th>
-                                        <th className="px-8 py-4 text-left text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount</th>
-                                        <th className="px-8 py-4 text-left text-[10px] font-bold tracking-widest text-slate-400 uppercase">Status</th>
-                                        <th className="px-8 py-4 text-left text-[10px] font-bold tracking-widest text-slate-400 uppercase">Date</th>
+                                        <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident</th>
+                                        <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Status</th>
+                                        <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Last Payment</th>
+                                        <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Next Due</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
-                                    {recentInvoices.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="px-8 py-12 text-center text-sm text-slate-500">
-                                                No invoices generated for this estate yet.
+                                    {residents.map((resident) => (
+                                        <tr key={resident.id} className="transition-colors hover:bg-slate-50/50">
+                                            <td className="px-8 py-4">
+                                                <div className="text-sm font-semibold text-slate-900">{resident.user.name}</div>
+                                                <div className="text-[11px] text-slate-400">{resident.user.email}</div>
+                                            </td>
+                                            <td className="px-8 py-4">
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
+                                                    resident.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                                                }`}>
+                                                    {resident.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-4 text-sm font-medium text-slate-900">
+                                                {formatCurrency(resident.last_amount)}
+                                                <div className="text-[10px] text-slate-400">{formatDate(resident.last_payment_at)}</div>
+                                            </td>
+                                            <td className="px-8 py-4 text-sm font-medium text-slate-600">
+                                                {formatDate(resident.next_due)}
                                             </td>
                                         </tr>
-                                    ) : (
-                                        recentInvoices.map((invoice) => (
-                                            <tr key={invoice.id} className="transition-colors hover:bg-slate-50/50">
-                                                <td className="px-8 py-4 text-sm font-bold text-slate-900">{invoice.invoice_number}</td>
-                                                <td className="px-8 py-4">
-                                                    <div className="text-sm font-medium text-slate-900">
-                                                        {invoice.user?.name || 'Estate Bulk'}
-                                                    </div>
-                                                    <div className="text-xs text-slate-400">
-                                                        {invoice.user?.email || 'Admin Billing'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-4 text-sm font-bold text-slate-900">{invoice.formatted_amount}</td>
-                                                <td className="px-8 py-4">
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${getStatusColor(invoice.status)}`}>
-                                                        {invoice.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-4 text-sm text-slate-500">{formatDate(invoice.created_at)}</td>
-                                            </tr>
-                                        ))
-                                    )}
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
-                    </motion.div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Estate Transactions Table */}
+            <div className="mt-8 rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between border-b border-slate-50 px-8 py-6">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        <Banknote className="h-4 w-4 text-indigo-600" />
+                        Estate Transactions
+                    </h3>
+                    <Link href="/zeus/transactions" className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                        View All <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50/50">
+                            <tr>
+                                <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Date</th>
+                                <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident</th>
+                                <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount</th>
+                                <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Status</th>
+                                <th className="px-8 py-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {recentTransactions.map((tx) => (
+                                <tr key={tx.id} className="transition-colors hover:bg-slate-50/50">
+                                    <td className="px-8 py-4 text-sm font-medium text-slate-600">
+                                        {new Date(tx.created_at).toLocaleString()}
+                                    </td>
+                                    <td className="px-8 py-4">
+                                        <div className="text-sm font-semibold text-slate-900">{tx.invoice?.user?.name || '—'}</div>
+                                    </td>
+                                    <td className="px-8 py-4 text-sm font-bold text-slate-900">{formatCurrency(tx.amount)}</td>
+                                    <td className="px-8 py-4">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
+                                            tx.status === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                        }`}>
+                                            {tx.status === 'success' ? 'Paid' : tx.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-8 py-4 text-xs font-mono text-slate-400">
+                                        {tx.paystack_reference}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </ZeusLayout>
-    );
-}
-
-function ExclamationTriangleIcon(props: any) {
-    return (
-        <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-        </svg>
     );
 }

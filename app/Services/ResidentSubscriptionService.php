@@ -31,7 +31,7 @@ class ResidentSubscriptionService
                 'status' => 'trial',
                 'trial_ends_at' => $now->copy()->addDays($trialDays),
                 'current_period_start' => $now,
-                'current_period_end' => $now->copy()->addDays($trialDays)->addMonth(),
+                'current_period_end' => $now->copy()->addDays($trialDays),
             ]);
         }
 

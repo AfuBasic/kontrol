@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\InviteRegistrationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginOtpController;
+use App\Http\Controllers\Auth\MagicLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -54,6 +55,11 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/join/{token}', [InviteRegistrationController::class, 'store'])->name('invite.join.store');
 
 });
+
+// Magic Login
+Route::get('/auth/magic-login/{token}', [MagicLoginController::class, 'show'])
+    ->middleware('signed')
+    ->name('auth.magic-login');
 
 // Email Verification
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])

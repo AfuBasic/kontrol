@@ -8,6 +8,7 @@ use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\ReferrerController;
 use App\Http\Controllers\Zeus\SubscriptionController;
+use App\Http\Controllers\Zeus\TransactionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
 use App\Http\Middleware\Zeus\RedirectIfZeusAuthenticated;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         // Subscriptions management
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::patch('/subscriptions/{estate}', [SubscriptionController::class, 'override'])->name('subscriptions.override');
+
+        // Global Transactions
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
 
         // Billing configuration
         Route::get('/billing', fn () => inertia('zeus/billing/index'))->name('billing.index');

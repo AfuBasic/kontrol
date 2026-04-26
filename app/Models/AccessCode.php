@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -102,9 +103,9 @@ class AccessCode extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<AccessLog, $this>
+     * @return HasMany<AccessLog, $this>
      */
-    public function accessLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function accessLogs(): HasMany
     {
         return $this->hasMany(AccessLog::class);
     }

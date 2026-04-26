@@ -304,4 +304,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->fcm_token;
     }
+
+    /**
+     * Check if the user has a payment method (authorization code) on file.
+     */
+    public function hasPaymentMethod(): bool
+    {
+        return $this->residentSubscription()->whereNotNull('paystack_authorization_code')->exists();
+    }
 }

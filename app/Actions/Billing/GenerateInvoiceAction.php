@@ -7,9 +7,11 @@ use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Mail\Resident\NewInvoiceMail;
 use App\Services\BillingCycleService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class GenerateInvoiceAction
@@ -132,6 +134,11 @@ class GenerateInvoiceAction
 
             // Dispatch event
             InvoiceGenerated::dispatch($invoice);
+
+            // Send notification to resident
+            if ($invoice->user_id && $invoice->user) {
+                Mail::to($invoice->user->email)->send(new NewInvoiceMail($invoice));
+            }
 
             return $invoice;
         });

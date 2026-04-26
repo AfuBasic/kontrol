@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\BillingService;
 use App\Services\EstateContextService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +31,7 @@ class BillingController extends Controller
         ]);
     }
 
-    public function updatePreference(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function updatePreference(Request $request): RedirectResponse
     {
         $request->validate([
             'billing_preference' => 'required|in:auto,manual',

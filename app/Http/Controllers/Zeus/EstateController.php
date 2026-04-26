@@ -11,7 +11,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\StoreEstateRequest;
 use App\Http\Requests\Zeus\UpdateEstateRequest;
 use App\Models\Estate;
+use App\Models\Invoice;
+use App\Models\PaymentTransaction;
 use App\Models\Plan;
+use App\Models\ResidentSubscription;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,11 +65,48 @@ class EstateController extends Controller
             'expired' => $estate->residentSubscriptions()->where('status', 'expired')->count(),
         ];
 
-        $recentInvoices = \App\Models\Invoice::where('estate_id', $estate->id)
-            ->with(['user:id,name,email', 'plan:id,name'])
+        // Financial Analytics
+        $totalRevenue = PaymentTransaction::where('estate_id', $estate->id)
+            ->where('status', 'success')
+            ->sum('amount');
+
+        $monthlyRevenue = PaymentTransaction::where('estate_id', $estate->id)
+            ->where('status', 'success')
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum('amount');
+
+        $outstandingAmount = Invoice::where('estate_id', $estate->id)
+            ->whereIn('status', ['pending', 'overdue'])
+            ->sum('amount');
+
+        $totalAttempts = PaymentTransaction::where('estate_id', $estate->id)->count();
+        $successfulAttempts = PaymentTransaction::where('estate_id', $estate->id)->where('status', 'success')->count();
+        $successRate = $totalAttempts > 0 ? round(($successfulAttempts / $totalAttempts) * 100, 1) : 100;
+
+        $recentTransactions = PaymentTransaction::where('estate_id', $estate->id)
+            ->with(['invoice.user:id,name,email'])
             ->latest()
             ->limit(10)
             ->get();
+
+        $residents = ResidentSubscription::where('estate_id', $estate->id)
+            ->with('user:id,name,email')
+            ->get()
+            ->map(function ($sub) use ($estate) {
+                $lastInvoice = Invoice::where('user_id', $sub->user_id)
+                    ->where('estate_id', $estate->id)
+                    ->latest()
+                    ->first();
+
+                return [
+                    'id' => $sub->id,
+                    'user' => $sub->user,
+                    'status' => $sub->status,
+                    'last_payment_at' => $sub->last_paid_at?->toDateString(),
+                    'last_amount' => $lastInvoice?->amount ?? 0,
+                    'next_due' => $sub->current_period_end?->toDateString(),
+                ];
+            });
 
         $admin = $estate->users()
             ->wherePivot('status', 'accepted')
@@ -78,7 +118,14 @@ class EstateController extends Controller
         return Inertia::render('Zeus/Estates/Show', [
             'estate' => $estate,
             'residentStats' => $residentStats,
-            'recentInvoices' => $recentInvoices,
+            'analytics' => [
+                'total_revenue' => $totalRevenue,
+                'monthly_revenue' => $monthlyRevenue,
+                'outstanding_amount' => $outstandingAmount,
+                'success_rate' => $successRate,
+            ],
+            'recentTransactions' => $recentTransactions,
+            'residents' => $residents,
             'admin' => $admin,
         ]);
     }

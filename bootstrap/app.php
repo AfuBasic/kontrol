@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -8,8 +9,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
 use Sentry\Laravel\Integration;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -55,16 +58,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Local fallback: Load all routes without domain restrictions
                 // Both public and app routes accessible on localhost
                 Route::middleware('web')
-                    ->group(base_path('routes/public.php'));
-
-                Route::middleware('web')
                     ->group(base_path('routes/app.php'));
+
+                Route::middleware('api')
+                    ->prefix('api')
+                    ->group(base_path('routes/api.php'));
             }
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \Illuminate\Session\Middleware\AuthenticateSession::class,
+            AuthenticateSession::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
@@ -76,8 +80,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'guest' => RedirectIfAuthenticated::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'resident.active' => \App\Http\Middleware\EnsureResidentSubscriptionActive::class,
+            'permission' => PermissionMiddleware::class,
+            'resident.active' => EnsureResidentSubscriptionActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

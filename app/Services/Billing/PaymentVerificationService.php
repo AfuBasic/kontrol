@@ -6,9 +6,12 @@ use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Services\BillingCycleService;
+use App\Services\Billing\BillingFinalizationService;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Exception;
 
 class PaymentVerificationService
 {
@@ -106,14 +109,15 @@ class PaymentVerificationService
                 ]);
             }
 
-            // 8. MARK INVOICE AS PAID - This is the critical state change
-            $invoice->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-                'paystack_reference' => $paystackReference,
+            // 8. FINALIZE PAYMENT - Centralized logic for all payment types
+            $finalizationService = app(BillingFinalizationService::class);
+            $finalizationService->finalizeSuccess($invoice, [
+                'reference' => $paystackReference,
+                'payment_method' => $verification['channel'] ?? 'card',
+                'customer_email' => $verification['customer']['email'] ?? null,
             ]);
 
-            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING
+            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING (Only for first card setup or preference)
             if ($verification['status'] === 'success' && ! empty($verification['authorization']['authorization_code'])) {
                 $auth = $verification['authorization'];
                 $customer = $verification['customer'];
@@ -126,8 +130,7 @@ class PaymentVerificationService
                 ];
 
                 if ($invoice->user_id) {
-                    // Resident individual billing
-                    $residentSubscription = \App\Models\ResidentSubscription::where('user_id', $invoice->user_id)
+                    $residentSubscription = ResidentSubscription::where('user_id', $invoice->user_id)
                         ->where('estate_id', $invoice->estate_id)
                         ->first();
 
@@ -135,34 +138,10 @@ class PaymentVerificationService
                         $residentSubscription->update($authData);
                     }
                 } else {
-                    // Estate bulk billing
                     $estateSubscription = $invoice->estate->subscriptionRecord;
                     if ($estateSubscription && $estateSubscription->billing_preference === 'auto') {
                         $estateSubscription->update($authData);
                     }
-                }
-            }
-
-            // 8.2 ADVANCE RESIDENT SUBSCRIPTION PERIOD
-            if ($invoice->user_id) {
-                $residentSubscription = ResidentSubscription::where('user_id', $invoice->user_id)
-                    ->where('estate_id', $invoice->estate_id)
-                    ->first();
-
-                if ($residentSubscription) {
-                    $estateSub = $invoice->estate->subscriptionRecord;
-                    $interval = $estateSub->billing_interval ?? 'monthly';
-
-                    // Advance period: Start = previous end, End = start + interval
-                    $newStart = $invoice->billing_period_start ?? $residentSubscription->current_period_end ?? now();
-                    $newEnd = $invoice->billing_period_end ?? $this->billingCycleService->calculatePeriodEnd($newStart, $interval);
-
-                    $residentSubscription->update([
-                        'status' => 'active',
-                        'current_period_start' => $newStart,
-                        'current_period_end' => $newEnd,
-                        'last_paid_at' => now(),
-                    ]);
                 }
             }
 
@@ -297,6 +276,81 @@ class PaymentVerificationService
     }
 
     /**
+     * Verify and record a card setup payment, then process a refund.
+     */
+    public function verifyAndRecordCardSetup(string $paystackReference): PaymentTransaction
+    {
+        return DB::transaction(function () use ($paystackReference) {
+            // 1. Find transaction
+            $transaction = PaymentTransaction::where('paystack_reference', $paystackReference)->firstOrFail();
+
+            if ($transaction->isRecorded()) {
+                return $transaction;
+            }
+
+            // 2. Verify with Paystack
+            $verification = $this->verifyPaymentWithRetry($paystackReference);
+
+            if ($verification['status'] !== 'success') {
+                $transaction->update([
+                    'status' => 'failed',
+                    'error_code' => 'PAYMENT_NOT_SUCCESSFUL',
+                ]);
+
+                return $transaction;
+            }
+
+            // 3. Record transaction
+            $transaction->update([
+                'status' => 'success',
+                'payment_method' => $verification['payment_method'] ?? null,
+                'customer_email' => $verification['customer_email'] ?? null,
+                'verified_at' => now(),
+            ]);
+
+            // 4. Save authorization code
+            if (! empty($verification['authorization']['authorization_code'])) {
+                $auth = $verification['authorization'];
+                $customer = $verification['customer'];
+
+                $authData = [
+                    'paystack_authorization_code' => $auth['authorization_code'],
+                    'paystack_customer_code' => $customer['customer_code'] ?? null,
+                    'card_brand' => $auth['brand'] ?? null,
+                    'card_last4' => $auth['last4'] ?? null,
+                ];
+
+                $residentSubscription = ResidentSubscription::where('user_id', $transaction->user_id)
+                    ->where('estate_id', $transaction->estate_id)
+                    ->first();
+
+                if ($residentSubscription) {
+                    $residentSubscription->update($authData);
+                }
+            }
+
+            // 5. Mark as recorded
+            $transaction->update(['recorded_at' => now()]);
+
+            // 6. PROCESS REFUND
+            try {
+                $this->paystackService->refund($paystackReference, null, 'Card setup verification refund');
+
+                $metadata = $transaction->metadata ?? [];
+                $metadata['refunded_at'] = now()->toDateTimeString();
+                $transaction->update(['metadata' => $metadata]);
+            } catch (Exception $e) {
+                Log::error('Auto-refund failed for card setup', [
+                    'reference' => $paystackReference,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            return $transaction;
+        });
+    }
+
+    /**
      * Get payment transaction history for an invoice (audit trail).
      */
     public function getPaymentHistory(Invoice $invoice)
@@ -321,7 +375,7 @@ class PaymentVerificationService
     public function retryFailedPayment(PaymentTransaction $transaction): PaymentTransaction
     {
         if (! $this->canRetryPayment($transaction)) {
-            throw new \Exception('Payment cannot be retried');
+            throw new Exception('Payment cannot be retried');
         }
 
         return $this->verifyAndRecordPayment(

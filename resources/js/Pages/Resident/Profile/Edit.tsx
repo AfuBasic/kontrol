@@ -25,6 +25,7 @@ import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import MobileSheet from '@/Components/MobileSheet';
 import type { SharedData } from '@/types';
+import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -166,9 +167,19 @@ export default function Edit({ telegram, profile, stats }: Props) {
                                     icon={<CreditCard className="h-5 w-5" />}
                                     label="Manage Account on Web"
                                     description="View your plan and status on the web"
-                                    onClick={() =>
-                                        window.open(`${app_url}/resident/billing`, 'BillingHub', 'width=500,height=800,resizable=yes,scrollbars=yes')
-                                    }
+                                    onClick={async () => {
+                                        try {
+                                            const response = await fetch(ResidentBillingController.generateMagicUrl.url());
+                                            const data = await response.json();
+                                            if (data.magic_url) {
+                                                window.open(data.magic_url, '_blank');
+                                            } else {
+                                                window.open(`${app_url}/resident/billing`, '_blank');
+                                            }
+                                        } catch (e) {
+                                            window.open(`${app_url}/resident/billing`, '_blank');
+                                        }
+                                    }}
                                 />
                             </div>
                         </section>

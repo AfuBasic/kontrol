@@ -10,6 +10,7 @@ class PaymentTransaction extends Model
     protected $fillable = [
         'invoice_id',
         'estate_id',
+        'user_id',
         'paystack_reference',
         'provider',
         'idempotency_key',

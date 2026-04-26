@@ -8,7 +8,6 @@ import {
     ClockIcon,
     ExclamationTriangleIcon,
     ArrowLeftIcon,
-    LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -96,6 +95,95 @@ const TONE_STYLES: Record<StatusMeta['tone'], { dot: string; pill: string; ring:
     danger: { dot: 'bg-rose-500', pill: 'bg-rose-50 text-rose-700 ring-rose-200', ring: 'ring-rose-100' },
 };
 
+type StatusBannerProps = {
+    hasOutstanding: boolean;
+    needsAttention: boolean;
+    statusKey: SubscriptionStatus;
+    statusLabel: string;
+    statusDescription: string;
+    outstanding: Props['outstanding'];
+    isNative: boolean;
+    paying: boolean;
+    onPay: () => void;
+    onOpenWeb: () => void;
+};
+
+function StatusBanner({
+    hasOutstanding,
+    needsAttention,
+    statusKey,
+    statusLabel,
+    statusDescription,
+    outstanding,
+    isNative,
+    paying,
+    onPay,
+    onOpenWeb,
+}: StatusBannerProps) {
+    if (!hasOutstanding && !needsAttention) {
+        return null;
+    }
+
+    const isCritical = statusKey === 'expired';
+    const accent = isCritical
+        ? { iconBg: 'bg-rose-100', icon: 'text-rose-600', surface: 'bg-rose-50/70 border-rose-200/70' }
+        : { iconBg: 'bg-amber-100', icon: 'text-amber-700', surface: 'bg-amber-50/60 border-amber-200/70' };
+
+    const title = hasOutstanding ? `${outstanding.formatted_amount} outstanding` : statusLabel;
+
+    const subtext = hasOutstanding
+        ? `${outstanding.invoice_count === 1 ? '1 unpaid invoice' : `${outstanding.invoice_count} unpaid invoices`} · ${
+              statusKey === 'past_due' || statusKey === 'expired' ? 'Access is currently limited' : 'Settle to clear your account'
+          }`
+        : statusDescription;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            role="status"
+            className={`mb-4 flex items-center gap-3 rounded-2xl border ${accent.surface} px-4 py-3`}
+        >
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${accent.iconBg} ${accent.icon}`}>
+                <ExclamationTriangleIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </span>
+
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
+                <p className="truncate text-xs text-slate-500">{subtext}</p>
+            </div>
+
+            {isNative ? (
+                <button
+                    type="button"
+                    onClick={onOpenWeb}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                    Open Web
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3" strokeWidth={2.2} />
+                </button>
+            ) : hasOutstanding ? (
+                <button
+                    type="button"
+                    onClick={onPay}
+                    disabled={paying}
+                    className="inline-flex shrink-0 items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+                >
+                    {paying ? 'Redirecting…' : `Pay ${outstanding.formatted_amount}`}
+                </button>
+            ) : (
+                <button
+                    type="button"
+                    onClick={onOpenWeb}
+                    className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                    Manage
+                </button>
+            )}
+        </motion.div>
+    );
+}
+
 export default function ResidentBillingPage({ subscription, estatePlan, recentInvoices, outstanding }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [paying, setPaying] = useState(false);
@@ -119,23 +207,35 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         router.patch(ResidentBillingController.updatePreference.url(), { billing_preference: next }, { preserveScroll: true });
     };
 
-    const openWebApp = () => {
-        const url = `${window.location.origin}/resident/billing`;
-        window.open(url, '_blank');
+    const openWebApp = async () => {
+        try {
+            const response = await fetch(ResidentBillingController.generateMagicUrl.url());
+            const data = await response.json();
+
+            if (data.magic_url) {
+                window.open(data.magic_url, '_blank');
+            } else {
+                window.open(`${window.location.origin}/resident/billing`, '_blank');
+            }
+        } catch (error) {
+            console.error('Failed to generate magic URL', error);
+            window.open(`${window.location.origin}/resident/billing`, '_blank');
+        }
     };
 
-    const handlePayOutstanding = () => {
-        router.post(ResidentBillingController.payOutstanding.url());
+    const handleAction = () => {
+        if (paying) return;
+        setPaying(true);
+
+        if (outstanding.amount > 0) {
+            router.post(ResidentBillingController.payOutstanding.url(), {}, { onFinish: () => setPaying(false) });
+        } else {
+            router.post(ResidentBillingController.setupPaymentMethod.url(), {}, { onFinish: () => setPaying(false) });
+        }
     };
 
     const handlePayInvoice = (invoiceId: number) => {
         router.post(ResidentBillingController.pay.url(invoiceId));
-    };
-
-    const payOutstanding = () => {
-        if (paying) return;
-        setPaying(true);
-        router.post(ResidentBillingController.payOutstanding.url(), {}, { onFinish: () => setPaying(false) });
     };
 
     return (
@@ -160,99 +260,18 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
             </header>
 
             <main className="mx-auto max-w-2xl px-5 py-6 sm:px-8 sm:py-10">
-                {/* Outstanding card — primary call to action when there's money owed */}
-                {hasOutstanding && (
-                    <motion.section
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-5 overflow-hidden rounded-3xl bg-slate-900 text-white shadow-[0_8px_32px_-12px_rgba(15,23,42,0.4)]"
-                    >
-                        <div className="relative px-6 py-6 sm:px-8 sm:py-7">
-                            <div
-                                className="pointer-events-none absolute inset-0 opacity-[0.18]"
-                                style={{
-                                    background:
-                                        'radial-gradient(80% 60% at 0% 0%, #f59e0b 0%, transparent 60%), radial-gradient(60% 50% at 100% 100%, #6366f1 0%, transparent 55%)',
-                                }}
-                            />
-                            <div className="relative">
-                                <div className="flex items-center gap-2 text-amber-300">
-                                    <ExclamationTriangleIcon className="h-4 w-4" strokeWidth={2.2} />
-                                    <span className="text-[11px] font-semibold tracking-[0.14em] uppercase">Outstanding balance</span>
-                                </div>
-
-                                <p className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{outstanding.formatted_amount}</p>
-                                <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
-                                    {outstanding.invoice_count === 1
-                                        ? 'You have 1 unpaid invoice.'
-                                        : `You have ${outstanding.invoice_count} unpaid invoices.`}{' '}
-                                    {statusKey === 'past_due' ? 'Settle now to keep your access uninterrupted.' : 'Settle now to clear your account.'}
-                                </p>
-
-                                <div className="mt-5 flex flex-wrap items-center gap-3">
-                                    {isNative ? (
-                                        <button
-                                            onClick={openWebApp}
-                                            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
-                                        >
-                                            Open Kontrol Web to pay
-                                            <ArrowTopRightOnSquareIcon className="h-4 w-4" strokeWidth={2.2} />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={payOutstanding}
-                                            disabled={paying}
-                                            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60"
-                                        >
-                                            <LockClosedIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                            {paying ? 'Redirecting…' : `Pay ${outstanding.formatted_amount}`}
-                                        </button>
-                                    )}
-                                    {!isNative && (
-                                        <span className="text-[11px] font-medium text-slate-400">
-                                            You'll be redirected to Paystack to complete payment.
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </motion.section>
-                )}
-
-                {/* Action banner — only when something needs attention */}
-                {needsAttention && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`mb-5 flex items-start gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-4 ring-1 ${tone.ring}`}
-                    >
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                            <ExclamationTriangleIcon className="h-4 w-4" strokeWidth={2.2} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-amber-900">{status.label}</p>
-                            <p className="mt-0.5 text-sm leading-relaxed text-amber-800/90">{status.description(formatDate(periodEnd))}</p>
-
-                            {isNative ? (
-                                <button
-                                    onClick={openWebApp}
-                                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
-                                >
-                                    Open Kontrol Web
-                                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handlePayOutstanding}
-                                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
-                                >
-                                    Pay {outstanding.formatted_amount} now
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
+                <StatusBanner
+                    hasOutstanding={hasOutstanding}
+                    needsAttention={needsAttention}
+                    statusKey={statusKey}
+                    statusLabel={status.label}
+                    statusDescription={status.description(formatDate(periodEnd))}
+                    outstanding={outstanding}
+                    isNative={isNative}
+                    paying={paying}
+                    onPay={handleAction}
+                    onOpenWeb={openWebApp}
+                />
 
                 {/* Plan card */}
                 <motion.section
@@ -351,10 +370,14 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                         </button>
                                     ) : (
                                         <button
-                                            onClick={handlePayOutstanding}
+                                            onClick={handleAction}
                                             className="mt-3 inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
                                         >
-                                            {outstanding.amount > 0 ? `Pay ${outstanding.formatted_amount} to save card` : 'Set up payment method'}
+                                            {paying
+                                                ? 'Processing...'
+                                                : outstanding.amount > 0
+                                                  ? `Pay ${outstanding.formatted_amount} to save card`
+                                                  : 'Set up payment method'}
                                         </button>
                                     )}
                                 </div>

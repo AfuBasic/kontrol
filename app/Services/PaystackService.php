@@ -142,6 +142,60 @@ class PaystackService
     }
 
     /**
+     * Initialize a generic payment transaction.
+     */
+    public function initializeTransaction(string $email, int $amount, string $callbackUrl, array $metadata = [], ?string $reference = null): array
+    {
+        $response = $this->client->post('/transaction/initialize', [
+            'email' => $email,
+            'amount' => $amount,
+            'reference' => $reference,
+            'callback_url' => $callbackUrl,
+            'metadata' => $metadata,
+        ]);
+
+        if (! $response->successful()) {
+            throw new \Exception('Paystack initialization failed: '.$response->body());
+        }
+
+        $data = $response->json();
+
+        return [
+            'authorization_url' => $data['data']['authorization_url'] ?? null,
+            'access_code' => $data['data']['access_code'] ?? null,
+            'reference' => $data['data']['reference'] ?? null,
+        ];
+    }
+
+    /**
+     * Process a refund via Paystack.
+     *
+     * @throws \Exception
+     */
+    public function refund(string $transactionIdOrReference, ?int $amount = null, ?string $customerNote = null): array
+    {
+        $payload = [
+            'transaction' => $transactionIdOrReference,
+        ];
+
+        if ($amount !== null) {
+            $payload['amount'] = $amount;
+        }
+
+        if ($customerNote !== null) {
+            $payload['customer_note'] = $customerNote;
+        }
+
+        $response = $this->client->post('/refund', $payload);
+
+        if (! $response->successful()) {
+            throw new \Exception('Paystack refund failed: '.$response->body());
+        }
+
+        return $response->json('data');
+    }
+
+    /**
      * Validate a Paystack webhook signature using HMAC-SHA512.
      */
     public function validateWebhookSignature(string $payload, string $signature): bool

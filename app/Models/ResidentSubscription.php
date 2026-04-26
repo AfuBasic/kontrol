@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ResidentSubscription extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'estate_id',
@@ -35,6 +37,8 @@ class ResidentSubscription extends Model
             'last_paid_at' => 'datetime',
             'last_reminded_at' => 'datetime',
             'billing_preference' => 'string',
+            'paystack_authorization_code' => 'encrypted',
+            'paystack_customer_code' => 'encrypted',
         ];
     }
 
@@ -61,10 +65,12 @@ class ResidentSubscription extends Model
 
     public function isActive(): bool
     {
-        if ($this->status === 'active' || $this->status === 'trial') {
-            return true;
+        // Must have an active or trial status AND the period must not have ended
+        if (in_array($this->status, ['active', 'trial'])) {
+            return $this->current_period_end && $this->current_period_end->isFuture();
         }
 
+        // If past due, they are active only if still within the grace period (period end is in future)
         if ($this->status === 'past_due') {
             return $this->current_period_end && $this->current_period_end->isFuture();
         }
@@ -72,13 +78,23 @@ class ResidentSubscription extends Model
         return false;
     }
 
-    public function isPastDue(): bool
+    public function isTrial(): bool
+    {
+        return $this->status === 'trial' && $this->current_period_end && $this->current_period_end->isFuture();
+    }
+
+    public function isGracePeriod(): bool
     {
         return $this->status === 'past_due' && $this->current_period_end && $this->current_period_end->isFuture();
     }
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired' || ($this->status === 'past_due' && $this->current_period_end && $this->current_period_end->isPast());
+        if ($this->status === 'expired') {
+            return true;
+        }
+
+        // Past due but period end is in the past = fully expired/blocked
+        return $this->status === 'past_due' && $this->current_period_end && $this->current_period_end->isPast();
     }
 }

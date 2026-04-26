@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Resident\UpdateProfileRequest;
+use App\Models\AccessCode;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class ProfileController extends Controller
                 'address' => $user->profile?->address ?? '',
             ],
             'stats' => [
-                'active_codes_count' => \App\Models\AccessCode::where('user_id', $user->id)->active()->count(),
+                'active_codes_count' => AccessCode::where('user_id', $user->id)->active()->count(),
                 'household_members_count' => $user->householdMembers()->count(),
                 'last_activity' => $user->notifications()->latest()->first()?->created_at?->diffForHumans() ?? 'No recent activity',
             ],

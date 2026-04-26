@@ -4,6 +4,7 @@ import { CreditCard, AlertCircle, Clock, Shield } from 'lucide-react';
 import type { ResidentSubscription } from '@/types/auth';
 import { usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
+import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 interface SubscriptionBannerProps {
     subscription: ResidentSubscription;
@@ -12,11 +13,28 @@ interface SubscriptionBannerProps {
 export default function SubscriptionBanner({ subscription }: SubscriptionBannerProps) {
     const { app_url: appUrl } = usePage<SharedData>().props;
 
-    if (!subscription) return null;
+    if (!subscription) {
+        return null;
+    }
 
     const { status, trial_ends_at, current_period_end } = subscription;
 
-    // 1. ACCOUNT INACTIVE / EXPIRED (STATUS-DRIVEN)
+    const openWebPortal = async () => {
+        try {
+            const response = await fetch(ResidentBillingController.generateMagicUrl.url());
+            const data = await response.json();
+            if (data.magic_url) {
+                // Use _blank to ensure it opens in the system browser and avoids window name collision issues
+                window.open(data.magic_url, '_blank');
+            } else {
+                window.open(`${appUrl}/resident/billing`, '_blank');
+            }
+        } catch (e) {
+            window.open(`${appUrl}/resident/billing`, '_blank');
+        }
+    };
+
+    // 1. ACCOUNT INACTIVE / EXPIRED
     if (status === 'past_due' && current_period_end) {
         const periodEnd = new Date(current_period_end);
         const msLeft = periodEnd.getTime() - new Date().getTime();
@@ -24,74 +42,29 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
 
         if (isInactive) {
             return (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mx-4 mb-6 overflow-hidden rounded-[24px] bg-slate-900 p-5 text-white shadow-2xl shadow-slate-900/20"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-indigo-400 ring-1 ring-white/10">
-                            <Shield size={24} strokeWidth={2.5} />
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-base font-black tracking-tight">Account Inactive</h4>
-                                <button
-                                    onClick={() => window.open(`${appUrl}/resident/billing`, 'BillingHub', 'width=500,height=800,resizable=yes,scrollbars=yes')}
-                                    className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-600/20 active:scale-95"
-                                >
-                                    Open Web Portal
-                                </button>
-                            </div>
-                            <p className="mt-0.5 text-xs leading-relaxed font-medium text-slate-400">
-                                Your access is currently limited. Manage your account status on the Kontrol web platform.
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
+                <Banner
+                    title="Account inactive"
+                    description="Access limited"
+                    cta="Open web"
+                    onCtaClick={openWebPortal}
+                    variant="inactive"
+                />
             );
         }
 
-        let timeLeftText = '';
+        // GRACE PERIOD
         const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
         const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-        if (days > 0) {
-            timeLeftText = `${days}d ${hours}h left`;
-        } else if (hours > 0) {
-            timeLeftText = `${hours}h ${minutes}m left`;
-        } else {
-            timeLeftText = `${minutes}m left`;
-        }
+        const timeLeftText = days > 0 ? `Ends in ${days}d` : `Ends in ${hours}h`;
 
         return (
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mx-4 mb-6 overflow-hidden rounded-[24px] border border-amber-100 bg-amber-50 p-5 shadow-sm"
-            >
-                <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-600 text-white shadow-lg shadow-amber-600/20">
-                        <Clock size={24} strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-base font-black tracking-tight text-amber-900">Grace Period</h4>
-                            {timeLeftText && (
-                                <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[8px] font-black tracking-widest text-white uppercase">
-                                    {timeLeftText}
-                                </span>
-                            )}
-                        </div>
-                        <p className="mt-0.5 text-xs leading-relaxed font-bold text-amber-700/70">
-                            Your grace period is currently active.
-                            <br />
-                            Update your preferences on the Kontrol web portal.
-                        </p>
-                    </div>
-                </div>
-            </motion.div>
+            <Banner
+                title="Grace period"
+                description={timeLeftText}
+                cta="Open web"
+                onCtaClick={openWebPortal}
+                variant="grace"
+            />
         );
     }
 
@@ -100,27 +73,15 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
         const trialEnd = new Date(trial_ends_at);
         const daysLeft = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
-        if (daysLeft <= 3) {
-            return (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mx-4 mb-6 overflow-hidden rounded-[24px] border border-indigo-100 bg-indigo-50 p-4"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                            <Clock size={20} />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="text-sm font-bold text-indigo-900">Trial Period Ending</h4>
-                            <p className="mt-0.5 text-xs leading-relaxed text-indigo-700/80">
-                                Your trial ends in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}. Manage your account on the Kontrol web platform.
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
-            );
-        }
+        return (
+            <Banner
+                title="Trial period"
+                description={daysLeft <= 0 ? 'Ends today' : `Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
+                cta="Open web"
+                onCtaClick={openWebPortal}
+                variant={daysLeft <= 3 ? 'grace' : 'active'}
+            />
+        );
     }
 
     // 3. ACCOUNT STATUS INFO
@@ -130,27 +91,69 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
 
         if (daysLeft <= 3) {
             return (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mx-4 mb-6 overflow-hidden rounded-[24px] border border-amber-100 bg-amber-50 p-4"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                            <Shield size={20} />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="text-sm font-bold text-amber-900">Account Status Update</h4>
-                            <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">
-                                Your current plan will be updated in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}. 
-                                View details on the Kontrol web platform.
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
+                <Banner
+                    title="Active"
+                    description="All systems normal"
+                    variant="active"
+                />
             );
         }
     }
 
     return null;
+}
+
+interface BannerProps {
+    title: string;
+    description: string;
+    cta?: string;
+    onCtaClick?: () => void;
+    variant: 'inactive' | 'grace' | 'active';
+}
+
+function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
+    const backgroundColors = {
+        inactive: 'rgba(255, 59, 48, 0.06)',
+        grace: 'rgba(255, 149, 0, 0.06)',
+        active: 'rgba(52, 199, 89, 0.06)',
+    };
+
+    const dotColors = {
+        inactive: 'bg-[#FF3B30]',
+        grace: 'bg-[#FF9500]',
+        active: 'bg-[#34C759]',
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ backgroundColor: backgroundColors[variant] }}
+            className="mx-4 mb-6 flex h-[48px] items-center rounded-[12px] px-[14px] py-[10px]"
+        >
+            {/* Status Dot */}
+            <div className={`mr-[10px] h-2 w-2 shrink-0 rounded-full ${dotColors[variant]}`} />
+
+            {/* Text Block */}
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                <span className="shrink-0 text-[14px] font-medium tracking-tight text-[#1C1C1E]">
+                    {title}
+                </span>
+                <span className="shrink-0 text-[12px] text-[#6B7280]">·</span>
+                <span className="truncate text-[12px] font-medium text-[#6B7280]">
+                    {description}
+                </span>
+            </div>
+
+            {/* CTA */}
+            {cta && (
+                <button
+                    onClick={onCtaClick}
+                    className="ml-auto shrink-0 pl-4 text-[13px] font-medium text-[#6366F1] transition-opacity active:opacity-60"
+                >
+                    {cta} →
+                </button>
+            )}
+        </motion.div>
+    );
 }

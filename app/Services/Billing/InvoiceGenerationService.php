@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Actions\Billing\GenerateInvoiceAction;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\ResidentSubscription;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -23,46 +24,39 @@ class InvoiceGenerationService
         // Count active residents first
         $activeResidents = $this->countActiveResidents($estate);
 
-        \Log::info('InvoiceGenerationService::getOrCreatePendingInvoice', [
-            'estate_id' => $estate->id,
-            'active_residents_count' => $activeResidents,
-        ]);
-
         // GUARD: Never generate or return invoices for estates with 0 residents
         if ($activeResidents < 1) {
-            \Log::info('No residents, returning null');
-
             return null;
         }
 
-        // Check if estate has a pending invoice
-        $pendingInvoice = Invoice::where('estate_id', $estate->id)
-            ->where('status', 'pending')
+        // Check if estate has an unpaid invoice (pending or overdue)
+        $unpaidInvoice = Invoice::where('estate_id', $estate->id)
+            ->whereIn('status', ['pending', 'overdue'])
             ->latest('created_at')
             ->first();
 
-        // If no pending invoice but residents exist, generate one
-        if (! $pendingInvoice) {
+        // If no unpaid invoice but residents exist, generate one
+        if (! $unpaidInvoice) {
             return $this->generateInvoiceAction->execute($estate, false);
         }
 
-        // If pending invoice exists, refresh the resident count and amount
-        if ($pendingInvoice && $pendingInvoice->status === 'pending') {
+        // If unpaid invoice exists, refresh the resident count and amount
+        if ($unpaidInvoice) {
             // Don't generate if resident count drops to 0
             if ($activeResidents === 0) {
                 return null;
             }
 
-            $newAmount = ($pendingInvoice->plan->price ?? 0) * $activeResidents;
+            $newAmount = ($unpaidInvoice->plan->price ?? 0) * $activeResidents;
 
-            $pendingInvoice->update([
+            $unpaidInvoice->update([
                 'resident_count' => $activeResidents,
                 'amount' => $newAmount,
             ]);
 
-            $pendingInvoice->refresh();
+            $unpaidInvoice->refresh();
 
-            return $pendingInvoice;
+            return $unpaidInvoice;
         }
 
         return null;
@@ -71,41 +65,41 @@ class InvoiceGenerationService
     /**
      * Get or create a pending invoice for a resident.
      */
-    public function getOrCreatePendingInvoiceForResident(\App\Models\ResidentSubscription $subscription): ?Invoice
+    public function getOrCreatePendingInvoiceForResident(ResidentSubscription $subscription): ?Invoice
     {
-        // Check if resident has a pending invoice
-        $pendingInvoice = Invoice::where('user_id', $subscription->user_id)
+        // Check if resident has an unpaid invoice (pending or overdue)
+        $unpaidInvoice = Invoice::where('user_id', $subscription->user_id)
             ->where('estate_id', $subscription->estate_id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'overdue'])
             ->latest('created_at')
             ->first();
 
-        // If no pending invoice, generate one only if they are due or past due
-        if (! $pendingInvoice) {
-            $isDue = $subscription->status === 'past_due' || 
-                     $subscription->status === 'expired' || 
+        // If no unpaid invoice, generate one only if they are due or past due
+        if (! $unpaidInvoice) {
+            $isDue = $subscription->status === 'past_due' ||
+                     $subscription->status === 'expired' ||
                      ($subscription->current_period_end && $subscription->current_period_end->isPast()) ||
                      ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
 
             if ($isDue) {
                 return $this->generateInvoiceAction->executeForResident($subscription);
             }
-            
+
             return null;
         }
 
-        // If pending invoice exists, ensure amount is updated to current estate plan price
+        // If unpaid invoice exists, ensure amount is updated to current estate plan price
         $estateSub = $subscription->estate->subscriptionRecord;
         if ($estateSub && $estateSub->plan) {
             $newAmount = $estateSub->plan->price;
 
-            if ($pendingInvoice->amount !== $newAmount) {
-                $pendingInvoice->update(['amount' => $newAmount]);
-                $pendingInvoice->refresh();
+            if ($unpaidInvoice->amount !== $newAmount) {
+                $unpaidInvoice->update(['amount' => $newAmount]);
+                $unpaidInvoice->refresh();
             }
         }
 
-        return $pendingInvoice;
+        return $unpaidInvoice;
     }
 
     /**

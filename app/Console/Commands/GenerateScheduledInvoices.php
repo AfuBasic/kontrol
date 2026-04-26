@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class GenerateScheduledInvoices extends Command
 {
-    protected $signature = 'app:generate-scheduled-invoices';
+    protected $signature = 'kontrol:generate-scheduled-invoices';
 
     protected $description = 'Generate invoices for estates with billing due today';
 

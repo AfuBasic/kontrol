@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\Invoice;
+use App\Models\ResidentSubscription;
 use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
 use App\Services\BillingCycleService;
@@ -119,9 +120,9 @@ class BillingService
             'card_last4' => $subscription->card_last4,
             'residents_rate' => $subscription->plan->price,
             'resident_payment_stats' => [
-                'paid' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->where('status', 'active')->count(),
-                'pending' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due'])->count(),
-                'expired' => \App\Models\ResidentSubscription::where('estate_id', $estate->id)->where('status', 'expired')->count(),
+                'paid' => ResidentSubscription::where('estate_id', $estate->id)->where('status', 'active')->count(),
+                'pending' => ResidentSubscription::where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due'])->count(),
+                'expired' => ResidentSubscription::where('estate_id', $estate->id)->where('status', 'expired')->count(),
             ],
         ];
     }

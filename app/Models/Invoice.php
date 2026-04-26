@@ -40,6 +40,7 @@ class Invoice extends Model
         'paid_at' => 'datetime',
         'notified_at' => 'datetime',
         'last_sent_email_at' => 'datetime',
+        'metadata' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -107,9 +108,7 @@ class Invoice extends Model
             return false;
         }
 
-        $graceEndDate = $this->due_date->addDays(5);
-
-        return now()->lessThanOrEqualTo($graceEndDate);
+        return now()->lessThanOrEqualTo($this->due_date);
     }
 
     public function canSendEmail(): bool
