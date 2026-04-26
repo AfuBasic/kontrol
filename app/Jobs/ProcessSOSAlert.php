@@ -25,6 +25,7 @@ class ProcessSOSAlert implements ShouldQueue
 
     public function handle(): void
     {
+
         $this->sosEvent->update(['status' => 'processing']);
 
         $user = $this->sosEvent->user;
@@ -36,6 +37,7 @@ class ProcessSOSAlert implements ShouldQueue
 
         // 1. Notify Security (High Priority)
         $securityPersonnel = User::withRole('security', $estate->id)->active()->get();
+        Log::error("SOS Alert: Found {$securityPersonnel->count()} security personnel for estate {$estate->id}");
 
         $securityMessage = "SOS ALERT\n";
         $securityMessage .= "Resident: {$user->name}\n";
@@ -70,10 +72,6 @@ class ProcessSOSAlert implements ShouldQueue
         $admins = User::withRole('admin', $estate->id)->active()->get();
 
         foreach ($admins as $admin) {
-            // Queue Email
-            Mail::to($admin->email)->queue(new SosAlertMail($this->sosEvent));
-
-            // Queue Mobile Push/Telegram/WebPush
             $admin->notify(new SosIntrusionNotification($this->sosEvent));
         }
 

@@ -3,6 +3,7 @@
 namespace App\Notifications\Admin;
 
 use App\Channels\TelegramChannel;
+use App\Mail\Admin\SosAlertMail;
 use App\Models\SosEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,7 +29,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database'];
+        $channels = ['database', 'mail'];
 
         if ($notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
@@ -43,6 +44,14 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
         }
 
         return $channels;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): SosAlertMail
+    {
+        return (new SosAlertMail($this->sosEvent))->to($notifiable->email);
     }
 
     /**
