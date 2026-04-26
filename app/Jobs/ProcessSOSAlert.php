@@ -33,7 +33,7 @@ class ProcessSOSAlert implements ShouldQueue
         // 1. Notify Security (High Priority - SMS)
         $securityPersonnel = User::withRole('security', $estate->id)->active()->get();
 
-        $securityMessage = "🚨 INTRUSION ALERT\n";
+        $securityMessage = "🚨 SOS ALERT\n";
         $securityMessage .= "Resident: {$user->name}\n";
         $securityMessage .= "Address: {$address}\n";
         $securityMessage .= "Estate: {$estate->name}\n";

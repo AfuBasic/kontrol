@@ -51,7 +51,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title("🚨 INTRUSION ALERT")
+            ->title("🚨 SOS ALERT")
             ->body("SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}")
             ->icon('/assets/images/app-icon.png')
             ->badge('/assets/images/app-icon.png')
@@ -73,7 +73,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     {
         return (new FcmMessage(
             notification: new FcmNotification(
-                title: "🚨 INTRUSION ALERT",
+                title: "🚨 SOS ALERT",
                 body: "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}",
             )
         ))
@@ -111,7 +111,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
         $user = $this->sosEvent->user;
         $address = $user->profile?->address ?? 'N/A';
         
-        $text = "<b>🚨 INTRUSION ALERT</b>\n\n";
+        $text = "<b>🚨 SOS ALERT</b>\n\n";
         $text .= "<b>Resident:</b> {$user->name}\n";
         $text .= "<b>Phone:</b> {$user->phone}\n";
         $text .= "<b>Location:</b> {$this->sosEvent->estate->name} ({$address})\n\n";
@@ -130,7 +130,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'INTRUSION ALERT',
+            'title' => 'SOS ALERT',
             'message' => "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}",
             'sos_event_id' => $this->sosEvent->id,
             'type' => 'sos_intrusion',

@@ -21,7 +21,7 @@ class SosAlertMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "🚨 INTRUSION ALERT: SOS Triggered in {$this->sosEvent->estate->name}",
+            subject: "🚨 SOS ALERT: Triggered in {$this->sosEvent->estate->name}",
         );
     }
 

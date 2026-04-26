@@ -84,108 +84,131 @@ export default function SosAlertOverlay() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 backdrop-blur-xl p-4"
+                className="fixed inset-0 z-[9999] flex flex-col bg-slate-900"
             >
-                {/* Pulsing Background Grid */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-                    <motion.div 
-                        animate={{ opacity: [0.1, 0.4, 0.1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="absolute inset-0 bg-red-600" 
-                    />
-                </div>
+                {/* Emergency Pulse Background */}
+                <motion.div 
+                    animate={{ 
+                        backgroundColor: ['#450a0a', '#991b1b', '#450a0a'],
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 opacity-40" 
+                />
 
-                <motion.div
-                    initial={{ scale: 0.9, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-4 ring-red-600/50"
-                >
-                    {/* Header Banner */}
-                    <div className="bg-red-600 px-8 py-10 text-center text-white">
+                <div className="relative flex flex-1 flex-col overflow-hidden">
+                    {/* Top Emergency Header */}
+                    <div className="pt-safe flex flex-col items-center justify-center bg-red-600 px-6 py-10 text-white shadow-2xl">
                         <motion.div
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ duration: 0.8, repeat: Infinity }}
-                            className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-white/20 mb-4"
+                            animate={{ scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] }}
+                            transition={{ duration: 0.5, repeat: Infinity }}
+                            className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white text-red-600 shadow-[0_0_50px_rgba(255,255,255,0.4)]"
                         >
-                            <ShieldAlert className="h-10 w-10 text-white" />
+                            <ShieldAlert className="h-12 w-12" strokeWidth={3} />
                         </motion.div>
-                        <h2 className="text-3xl font-black tracking-tight">INTRUSION ALERT</h2>
-                        <p className="mt-2 text-red-100 font-bold uppercase tracking-widest text-xs">Resident SOS Triggered</p>
+                        <h2 className="text-4xl font-black tracking-tighter sm:text-5xl">SOS ALERT</h2>
+                        <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-black/20 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em]">
+                            <span className="relative flex h-2 w-2">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-white"></span>
+                            </span>
+                            Live Emergency
+                        </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-8">
-                        <div className="space-y-6">
-                            {/* Resident Details */}
-                            <div className="flex items-start gap-4 border-b border-gray-100 pb-6">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50">
-                                    <div className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
+                    {/* Content Area - Scrollable */}
+                    <div className="flex-1 overflow-y-auto px-6 py-8">
+                        <div className="mx-auto max-w-xl space-y-8">
+                            {/* Resident Card */}
+                            <div className="overflow-hidden rounded-[2rem] bg-white p-1 shadow-2xl">
+                                <div className="flex items-center gap-4 bg-slate-50 p-6">
+                                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
+                                        <div className="flex h-full w-full items-center justify-center text-2xl font-black text-slate-300">
+                                            {activeAlert.resident_name.charAt(0)}
+                                        </div>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Emergency From</p>
+                                        <h3 className="truncate text-2xl font-black text-slate-900">{activeAlert.resident_name}</h3>
+                                        <p className="truncate text-sm font-bold text-red-600">{activeAlert.address}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => callResident(activeAlert.resident_phone)}
+                                        className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-200 active:scale-90"
+                                    >
+                                        <Phone className="h-6 w-6" fill="currentColor" />
+                                    </button>
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Resident & Location</p>
-                                    <p className="mt-1 text-xl font-black text-slate-900">{activeAlert.resident_name}</p>
-                                    <p className="text-slate-600 font-bold">{activeAlert.address}</p>
-                                    <p className="text-indigo-600 text-sm font-black mt-1 uppercase">{activeAlert.estate_name}</p>
+                                <div className="px-6 py-4">
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-tight">
+                                        <span>Estate: {activeAlert.estate_name}</span>
+                                        <span>{new Date(activeAlert.triggered_at).toLocaleTimeString()}</span>
+                                    </div>
                                 </div>
-                                <button 
-                                    onClick={() => callResident(activeAlert.resident_phone)}
-                                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 active:scale-95"
-                                >
-                                    <Phone className="h-5 w-5" />
-                                </button>
                             </div>
 
-                            {/* Emergency Contacts */}
-                            <div>
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Emergency Contacts</p>
+                            {/* Emergency Contacts Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="text-sm font-black text-white/60 uppercase tracking-widest">Emergency Contacts</h3>
+                                    <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-white/40">
+                                        {activeAlert.emergency_contacts.length} listed
+                                    </span>
+                                </div>
+                                
                                 <div className="grid gap-3">
                                     {activeAlert.emergency_contacts.map((contact, idx) => (
-                                        <div key={idx} className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
-                                            <div>
-                                                <p className="font-black text-slate-900 text-sm">{contact.name}</p>
-                                                <p className="text-xs font-bold text-slate-500">{contact.phone}</p>
+                                        <motion.div 
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.1 * idx }}
+                                            className="flex items-center justify-between rounded-[1.5rem] bg-white/5 p-4 backdrop-blur-md ring-1 ring-white/10"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="truncate font-black text-white">{contact.name}</p>
+                                                <p className="text-xs font-bold text-white/50">{contact.phone}</p>
                                             </div>
                                             <button 
                                                 onClick={() => callResident(contact.phone)}
-                                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 text-indigo-600 active:scale-95"
+                                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-90"
                                             >
-                                                <Phone className="h-4 w-4" />
+                                                <Phone className="h-5 w-5" />
                                             </button>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                     {activeAlert.emergency_contacts.length === 0 && (
-                                        <p className="text-sm font-bold text-slate-400 italic">No emergency contacts listed.</p>
+                                        <div className="rounded-2xl bg-white/5 p-8 text-center ring-1 ring-white/10">
+                                            <p className="text-sm font-bold text-white/30 italic">No emergency contacts registered.</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Action Buttons */}
-                        <div className="mt-10 grid grid-cols-2 gap-4">
+                    {/* Bottom Action Footer */}
+                    <div className="pb-safe mt-auto border-t border-white/10 bg-slate-900/80 p-6 backdrop-blur-2xl">
+                        <div className="mx-auto flex max-w-xl gap-4">
                             <button
                                 onClick={() => setActiveAlert(null)}
-                                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 py-4 font-black text-slate-400 active:scale-95"
+                                className="flex-1 rounded-2xl bg-white/5 py-5 text-sm font-black text-white/40 transition-all hover:bg-white/10 active:scale-95"
                             >
-                                <XCircle className="h-5 w-5" />
                                 CLOSE ALERT
                             </button>
                             <button
                                 onClick={handleAcknowledge}
                                 disabled={isAcknowledging}
-                                className="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 font-black text-white shadow-lg shadow-indigo-100 active:scale-95 disabled:opacity-50"
+                                className="flex-[2] rounded-2xl bg-red-600 py-5 text-sm font-black text-white shadow-2xl shadow-red-900/40 transition-all hover:bg-red-500 active:scale-95 disabled:opacity-50"
                             >
                                 {isAcknowledging ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                                 ) : (
-                                    <>
-                                        <CheckCircle2 className="h-5 w-5" />
-                                        RESPONDED
-                                    </>
+                                    'MARK AS RESPONDED'
                                 )}
                             </button>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </motion.div>
         </AnimatePresence>
     );

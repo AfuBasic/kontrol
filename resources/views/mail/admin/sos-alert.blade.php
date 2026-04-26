@@ -5,7 +5,7 @@
         <div style="display: inline-block; padding: 12px; background-color: #fee2e2; border-radius: 50%; margin-bottom: 16px;">
             <img src="https://img.icons8.com/ios-filled/100/dc2626/shield-alert.png" width="48" height="48" alt="Alert">
         </div>
-        <h1 style="color: #dc2626; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">INTRUSION ALERT</h1>
+        <h1 style="color: #dc2626; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">SOS ALERT</h1>
         <p style="color: #64748b; margin-top: 8px; font-weight: 600;">Emergency SOS Triggered in {{ $estateName }}</p>
     </div>
 

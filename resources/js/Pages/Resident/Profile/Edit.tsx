@@ -491,6 +491,25 @@ function EmergencyContactsManager({
 
     return (
         <div className="space-y-6 pb-12">
+            {/* Legal / Privacy Notice */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-[32px] bg-indigo-50/50 p-6 ring-1 ring-indigo-100/50 backdrop-blur-sm"
+            >
+                <div className="flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100">
+                        <Shield className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-[11px] font-black tracking-widest text-indigo-900 uppercase">Safety & Privacy Notice</p>
+                        <p className="text-xs font-bold text-indigo-600/70 leading-relaxed">
+                            By adding emergency contacts, you acknowledge and agree that their names and phone numbers will be shared with the estate's security personnel and administrators during an active SOS event to facilitate a rapid response.
+                        </p>
+                    </div>
+                </div>
+            </motion.div>
+
             {/* Header Area with Add Button */}
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
