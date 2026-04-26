@@ -29,6 +29,8 @@ class ResidentSubscription extends Model
     /**
      * @return array<string, string>
      */
+    protected $appends = ['is_active', 'is_grace_period'];
+
     protected function casts(): array
     {
         return [
@@ -54,6 +56,16 @@ class ResidentSubscription extends Model
     /**
      * @return BelongsTo<Estate, $this>
      */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->isActive();
+    }
+
+    public function getIsGracePeriodAttribute(): bool
+    {
+        return $this->isGracePeriod();
+    }
+
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
@@ -89,15 +101,22 @@ class ResidentSubscription extends Model
 
     public function isGracePeriod(): bool
     {
-        return $this->status === 'past_due' && $this->current_period_end && $this->current_period_end->isFuture();
+        if ($this->status !== 'past_due') {
+            return false;
+        }
+
+        if (! $this->current_period_end) {
+            return false;
+        }
+
+        $graceDays = $this->estate->settings->grace_period_days ?? 2;
+
+        return $this->current_period_end->isPast() &&
+               now()->lessThan($this->current_period_end->copy()->addDays($graceDays));
     }
 
     public function isExpired(): bool
     {
-        if ($this->status === 'expired') {
-            return true;
-        }
-
         if (in_array($this->status, ['active', 'trial', 'past_due'])) {
             $graceDays = $this->estate->settings->grace_period_days ?? 2;
 

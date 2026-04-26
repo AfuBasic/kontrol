@@ -70,7 +70,10 @@ class HandleInertiaRequests extends Middleware
                         'data' => $n->data,
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ]),
-                    'resident_subscription' => ($user && $estate) ? $user->residentSubscription()->where('estate_id', $estate->id)->first()?->only(['status', 'trial_ends_at', 'current_period_end']) : null,
+                    'resident_subscription' => ($user && $estate) ? $user->residentSubscription()->where('estate_id', $estate->id)->first()?->load('estate.subscriptionRecord.plan')?->only(['status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']) + [
+                        'plan_name' => $estate->subscriptionRecord?->plan?->name ?? 'Standard',
+                        'billing_interval' => $estate->subscriptionRecord?->billing_interval ?? 'monthly',
+                    ] : null,
                 ] : null,
             ],
             'flash' => [

@@ -4,68 +4,33 @@ import { CreditCard, AlertCircle, Clock, Shield } from 'lucide-react';
 import type { ResidentSubscription } from '@/types/auth';
 import { usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
-import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface SubscriptionBannerProps {
     subscription: ResidentSubscription;
 }
 
 export default function SubscriptionBanner({ subscription }: SubscriptionBannerProps) {
-    const { app_url: appUrl } = usePage<SharedData>().props;
+    const { openExternalBilling } = useExternalBilling();
 
     if (!subscription) {
         return null;
     }
 
-    const { status, trial_ends_at, current_period_end } = subscription;
+    const { status, trial_ends_at, current_period_end, is_active, is_grace_period } = subscription;
 
-    const openWebPortal = async () => {
-        try {
-            const response = await fetch(ResidentBillingController.generateMagicUrl.url());
-            const data = await response.json();
-            if (data.magic_url) {
-                // Use _blank to ensure it opens in the system browser and avoids window name collision issues
-                window.open(data.magic_url, '_blank');
-            } else {
-                window.open(`${appUrl}/resident/billing`, '_blank');
-            }
-        } catch (e) {
-            window.open(`${appUrl}/resident/billing`, '_blank');
-        }
-    };
-
-    // 1. ACCOUNT INACTIVE / EXPIRED
-    if (status === 'past_due' && current_period_end) {
-        const periodEnd = new Date(current_period_end);
-        const msLeft = periodEnd.getTime() - new Date().getTime();
-        const isInactive = msLeft <= 0;
-
-        if (isInactive) {
-            return (
-                <Banner
-                    title="Account inactive"
-                    description="Access limited"
-                    cta="Open web"
-                    onCtaClick={openWebPortal}
-                    variant="inactive"
-                />
-            );
+    // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
+    if (status === 'past_due') {
+        if (is_grace_period) {
+            // In grace period, current_period_end is the PAST billing date.
+            // We should show how much of the grace period is left.
+            // But for simplicity, we can just show "Overdue" or "Grace period".
+            return <Banner title="Overdue" description="Grace period active" cta="Open web" onCtaClick={openExternalBilling} variant="grace" />;
         }
 
-        // GRACE PERIOD
-        const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const timeLeftText = days > 0 ? `Ends in ${days}d` : `Ends in ${hours}h`;
-
-        return (
-            <Banner
-                title="Grace period"
-                description={timeLeftText}
-                cta="Open web"
-                onCtaClick={openWebPortal}
-                variant="grace"
-            />
-        );
+        if (!is_active) {
+            return <Banner title="Account inactive" description="Access limited" cta="Open web" onCtaClick={openExternalBilling} variant="inactive" />;
+        }
     }
 
     // 2. TRIAL STATUS
@@ -78,27 +43,13 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 title="Trial period"
                 description={daysLeft <= 0 ? 'Ends today' : `Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
                 cta="Open web"
-                onCtaClick={openWebPortal}
+                onCtaClick={openExternalBilling}
                 variant={daysLeft <= 3 ? 'grace' : 'active'}
             />
         );
     }
 
-    // 3. ACCOUNT STATUS INFO
-    if (status === 'active' && current_period_end) {
-        const periodEnd = new Date(current_period_end);
-        const daysLeft = Math.ceil((periodEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysLeft <= 3) {
-            return (
-                <Banner
-                    title="Active"
-                    description="All systems normal"
-                    variant="active"
-                />
-            );
-        }
-    }
+    // 3. ACCOUNT STATUS INFO (Removed for regular active status as per user request)
 
     return null;
 }
@@ -136,13 +87,9 @@ function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
 
             {/* Text Block */}
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                <span className="shrink-0 text-[14px] font-medium tracking-tight text-[#1C1C1E]">
-                    {title}
-                </span>
+                <span className="shrink-0 text-[14px] font-medium tracking-tight text-[#1C1C1E]">{title}</span>
                 <span className="shrink-0 text-[12px] text-[#6B7280]">·</span>
-                <span className="truncate text-[12px] font-medium text-[#6B7280]">
-                    {description}
-                </span>
+                <span className="truncate text-[12px] font-medium text-[#6B7280]">{description}</span>
             </div>
 
             {/* CTA */}

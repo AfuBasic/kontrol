@@ -349,9 +349,12 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                                                className={`group relative overflow-hidden rounded-[32px] border p-5 transition-all active:scale-[0.98] ${
+                                                className={`group relative overflow-hidden rounded-[32px] border p-5 transition-all active:scale-[0.98] cursor-pointer ${
                                                     isUnread ? 'border-indigo-100 bg-white shadow-md' : 'border-slate-100 bg-white shadow-sm'
                                                 }`}
+                                                onClick={() => {
+                                                    window.dispatchEvent(new CustomEvent('show-notification-detail', { detail: notification }));
+                                                }}
                                             >
                                                 {isUnread && (
                                                     <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-linear-to-b from-indigo-500 to-indigo-600" />

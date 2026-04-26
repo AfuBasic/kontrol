@@ -14,7 +14,7 @@ class ProcessAutoBilling extends Command
      *
      * @var string
      */
-    protected $signature = 'kontrol:process-auto-billing';
+    protected $signature = 'kontrol:process-auto-billing {--force : Force processing even if recently attempted}';
 
     /**
      * The console command description.
@@ -59,9 +59,9 @@ class ProcessAutoBilling extends Command
             ->whereIn('status', ['pending', 'overdue'])
             ->chunkById(500, function ($invoices) {
                 foreach ($invoices as $invoice) {
-                    // Safety check: skip if recently attempted (within 23 hours)
+                    // Safety check: skip if recently attempted (within 23 hours) unless forced
                     $lastAttempt = $invoice->metadata['last_attempt_at'] ?? null;
-                    if ($lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
+                    if (!$this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
                         continue;
                     }
 
@@ -88,9 +88,9 @@ class ProcessAutoBilling extends Command
             })
             ->chunkById(100, function ($invoices) {
                 foreach ($invoices as $invoice) {
-                    // Safety check: skip if recently attempted
+                    // Safety check: skip if recently attempted unless forced
                     $lastAttempt = $invoice->metadata['last_attempt_at'] ?? null;
-                    if ($lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
+                    if (!$this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
                         continue;
                     }
 

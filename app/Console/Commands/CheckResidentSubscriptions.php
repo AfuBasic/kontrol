@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\Billing\ProcessSubscriptionReminderJob;
 use App\Models\ResidentSubscription;
+use App\Services\Billing\InvoiceGenerationService;
 use Illuminate\Console\Command;
 
 class CheckResidentSubscriptions extends Command
@@ -29,26 +30,40 @@ class CheckResidentSubscriptions extends Command
     {
         $this->info('Starting optimized resident subscription check...');
 
-        // 1. BULK UPDATE: Trials that have ended
-        $trialExpiredCount = ResidentSubscription::query()
+        $generationService = app(InvoiceGenerationService::class);
+
+        // 1. Trials that have ended
+        ResidentSubscription::query()
             ->where('status', 'trial')
             ->where('trial_ends_at', '<', now())
-            ->update(['status' => 'past_due']);
+            ->chunkById(500, function ($subscriptions) use ($generationService) {
+                foreach ($subscriptions as $subscription) {
+                    $subscription->update(['status' => 'past_due']);
+                    // Generate invoice for the resident
+                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
+                }
+            });
 
-        if ($trialExpiredCount > 0) {
-            $this->warn("Marked {$trialExpiredCount} expired trials as past_due.");
-        }
-
-        // 2. BULK UPDATE: Active subscriptions past grace period
-        $graceThreshold = now();
-        $activeExpiredCount = ResidentSubscription::query()
+        // 2. Active subscriptions past grace period
+        ResidentSubscription::query()
             ->where('status', 'active')
-            ->where('current_period_end', '<', $graceThreshold)
-            ->update(['status' => 'past_due']);
+            ->where('current_period_end', '<', now())
+            ->chunkById(500, function ($subscriptions) use ($generationService) {
+                foreach ($subscriptions as $subscription) {
+                    $subscription->update(['status' => 'past_due']);
+                    // Generate invoice for the resident
+                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
+                }
+            });
 
-        if ($activeExpiredCount > 0) {
-            $this->warn("Marked {$activeExpiredCount} expired active subscriptions as past_due.");
-        }
+        // 3. Catch-all: Ensure all past_due residents have an invoice
+        ResidentSubscription::query()
+            ->where('status', 'past_due')
+            ->chunkById(500, function ($subscriptions) use ($generationService) {
+                foreach ($subscriptions as $subscription) {
+                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
+                }
+            });
 
         // 3. QUEUED REMINDERS: Fetch only those needing reminders (O(actionable) instead of O(N))
         $this->dispatchReminders();

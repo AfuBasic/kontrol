@@ -8,6 +8,7 @@ use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\EstateContactController;
 use App\Http\Controllers\Resident\HomeController;
 use App\Http\Controllers\Resident\HouseholdMemberController;
+use App\Http\Controllers\Resident\NotificationController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\PaymentCallbackController;
 use App\Http\Controllers\Resident\ProfileController;
@@ -40,8 +41,10 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('resident.profile.update');
     Route::put('/password', [PasswordController::class, 'update'])->name('resident.password.update');
 
-    // Activity feed
+    // Activity feed & Notifications
     Route::get('/activity', ActivityController::class)->name('resident.activity');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('resident.notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('resident.notifications.read-all');
 
     // Estate Contacts
     Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');

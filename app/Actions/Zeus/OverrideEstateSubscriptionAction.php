@@ -18,15 +18,27 @@ class OverrideEstateSubscriptionAction
         return DB::transaction(function () use ($estate, $data) {
             $plan = Plan::findOrFail($data['plan_id']);
 
-            $subscription = $estate->subscriptionRecord() ?? new EstateSubscription(['estate_id' => $estate->id]);
+            $subscription = $estate->subscriptionRecord;
 
-            $subscription->update([
+            if (! $subscription) {
+                $subscription = new EstateSubscription(['estate_id' => $estate->id]);
+            }
+
+            $subscription->fill([
                 'plan_id' => $plan->id,
-                'status' => $data['status'],
-                'billing_interval' => $data['billing_interval'],
+                'billing_interval' => $plan->billing_interval,
                 'overridden_by' => Auth::id(),
                 'override_notes' => $data['notes'] ?? null,
             ]);
+
+            // Only update status if provided in data
+            if (isset($data['status'])) {
+                $subscription->status = $data['status'];
+            } elseif (! $subscription->exists) {
+                $subscription->status = 'active';
+            }
+
+            $subscription->save();
 
             return $subscription;
         });

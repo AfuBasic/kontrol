@@ -18,6 +18,7 @@ import {
     Eye,
     EyeOff,
     CreditCard,
+    Crown,
 } from 'lucide-react';
 import { type FormEventHandler, useState } from 'react';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
@@ -85,13 +86,19 @@ export default function Edit({ telegram, profile, stats }: Props) {
 
                         <div className="mt-6">
                             <h1 className="text-2xl font-black tracking-tight">{auth.user?.name}</h1>
-                            <div className="mt-2 flex items-center justify-center gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black tracking-widest text-indigo-300 uppercase ring-1 ring-white/10">
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 px-4">
+                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-300 uppercase ring-1 ring-white/10">
                                     <Shield className="h-3 w-3" />
                                     Resident
                                 </span>
-                                <span className="text-xs font-bold text-slate-400">{auth.user?.email}</span>
+                                {auth.user?.resident_subscription && (
+                                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-400/20 px-3 py-1.5 text-[10px] font-black tracking-widest text-amber-100 uppercase ring-1 ring-amber-400/30 backdrop-blur-sm">
+                                        <Crown className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                        {auth.user.resident_subscription.plan_name} • {auth.user.resident_subscription.billing_interval.replace('-', ' ')}
+                                    </span>
+                                )}
                             </div>
+                            <span className="mt-3 block text-xs font-bold text-slate-400">{auth.user?.email}</span>
                         </div>
                     </div>
                 </motion.div>
@@ -165,8 +172,12 @@ export default function Edit({ telegram, profile, stats }: Props) {
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200">
                                 <SettingsRow
                                     icon={<CreditCard className="h-5 w-5" />}
-                                    label="Manage Account on Web"
-                                    description="View your plan and status on the web"
+                                    label="Subscription Details"
+                                    description={
+                                        auth.user?.resident_subscription
+                                            ? `${auth.user.resident_subscription.plan_name} (${auth.user.resident_subscription.billing_interval}) • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
+                                            : 'View your plan and status on the web'
+                                    }
                                     onClick={async () => {
                                         try {
                                             const response = await fetch(ResidentBillingController.generateMagicUrl.url());

@@ -261,9 +261,15 @@
         <div class="details-grid">
             <div class="detail-section">
                 <h3>Bill To</h3>
-                <p class="company-name">{{ $invoice->estate->name }}</p>
-                <p>{{ $invoice->estate->location ?? 'Location not specified' }}</p>
-                <p>{{ $invoice->estate->email ?? 'Email not available' }}</p>
+                @if($invoice->user)
+                    <p class="company-name">{{ $invoice->user->name }}</p>
+                    <p>{{ $invoice->estate->name }}</p>
+                    <p>{{ $invoice->user->email }}</p>
+                @else
+                    <p class="company-name">{{ $invoice->estate->name }}</p>
+                    <p>{{ $invoice->estate->location ?? '' }}</p>
+                    <p>{{ $invoice->estate->email ?? '' }}</p>
+                @endif
             </div>
 
             <div class="detail-section">
@@ -279,10 +285,12 @@
                 <div class="date-label">Due Date</div>
                 <div class="date-value">{{ $invoice->due_date->format('M d, Y') }}</div>
             </div>
+            @if(!$invoice->user)
             <div class="date-item">
                 <div class="date-label">Residents Billed</div>
                 <div class="date-value">{{ $invoice->resident_count }}</div>
             </div>
+            @endif
             @if($invoice->paid_at)
             <div class="date-item">
                 <div class="date-label">Paid Date</div>
@@ -302,8 +310,14 @@
             <tbody>
                 <tr>
                     <td>
-                        <strong>{{ $invoice->plan?->name ?? 'Service' }}</strong>
-                        <div class="description">Billing for {{ $invoice->resident_count }} resident{{ $invoice->resident_count !== 1 ? 's' : '' }}</div>
+                        @if($invoice->user)
+                            <strong>Resident Subscription</strong>
+                        @else
+                            <strong>{{ $invoice->plan?->name ?? 'Service' }}</strong>
+                        @endif
+                        <div class="description">
+                            Kontrol Billing for the period of {{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}
+                        </div>
                     </td>
                     <td class="amount">{{ $invoice->formatted_amount }}</td>
                 </tr>

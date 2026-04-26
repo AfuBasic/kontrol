@@ -6,6 +6,10 @@ export type ResidentSubscription = {
     status: 'trial' | 'active' | 'past_due';
     trial_ends_at: string | null;
     current_period_end: string | null;
+    is_active: boolean;
+    is_grace_period: boolean;
+    plan_name: string;
+    billing_interval: string;
 };
 
 export type User = {

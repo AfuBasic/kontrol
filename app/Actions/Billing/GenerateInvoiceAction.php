@@ -7,11 +7,9 @@ use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\ResidentSubscription;
 use App\Models\User;
-use App\Mail\Resident\NewInvoiceMail;
+use App\Notifications\Resident\NewInvoiceNotification;
 use App\Services\BillingCycleService;
-use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class GenerateInvoiceAction
@@ -137,13 +135,12 @@ class GenerateInvoiceAction
 
             // Send notification to resident
             if ($invoice->user_id && $invoice->user) {
-                Mail::to($invoice->user->email)->send(new NewInvoiceMail($invoice));
+                $invoice->user->notify(new NewInvoiceNotification($invoice));
             }
 
             return $invoice;
         });
     }
-
 
     private function advanceSubscription($subscription, $periodStart, $nextDate): void
     {

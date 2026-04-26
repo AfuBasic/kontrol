@@ -5,10 +5,9 @@ namespace App\Services\Billing;
 use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
+use App\Notifications\Resident\InvoicePaidNotification;
 use App\Services\BillingCycleService;
-use App\Mail\Resident\InvoicePaidMail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class BillingFinalizationService
 {
@@ -46,7 +45,7 @@ class BillingFinalizationService
 
             // 4. Notify User (only if it's a resident invoice)
             if ($invoice->user_id && $invoice->user) {
-                Mail::to($invoice->user->email)->send(new InvoicePaidMail($invoice));
+                $invoice->user->notify(new InvoicePaidNotification($invoice));
             }
         });
     }
@@ -63,10 +62,10 @@ class BillingFinalizationService
 
             // Accurate capture: if they were overdue/trial, start from today.
             // Otherwise, start from the end of the previous period.
-            $newStart = ($subscription->status === 'trial' || $subscription->status === 'past_due') 
-                ? now() 
+            $newStart = ($subscription->status === 'trial' || $subscription->status === 'past_due')
+                ? now()
                 : ($subscription->current_period_end ?? now());
-            
+
             $newEnd = $this->billingCycleService->calculatePeriodEnd($newStart, $interval);
 
             $subscription->update([
@@ -83,8 +82,8 @@ class BillingFinalizationService
         $subscription = $invoice->estate->subscriptionRecord;
 
         if ($subscription) {
-            $newStart = ($subscription->status === 'trial' || $subscription->status === 'past_due') 
-                ? now() 
+            $newStart = ($subscription->status === 'trial' || $subscription->status === 'past_due')
+                ? now()
                 : ($subscription->next_billing_date ?? now());
 
             $newEnd = $this->billingCycleService->calculatePeriodEnd($newStart, $subscription->billing_interval);
@@ -109,7 +108,7 @@ class BillingFinalizationService
                 'status' => 'success',
                 'payment_method' => $paymentData['payment_method'] ?? 'card',
                 'customer_email' => $paymentData['customer_email'] ?? null,
-                'idempotency_key' => 'payment_' . ($paymentData['reference'] ?? $invoice->paystack_reference),
+                'idempotency_key' => 'payment_'.($paymentData['reference'] ?? $invoice->paystack_reference),
                 'verified_at' => now(),
                 'recorded_at' => now(),
             ]

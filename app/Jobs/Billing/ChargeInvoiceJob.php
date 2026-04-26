@@ -2,15 +2,14 @@
 
 namespace App\Jobs\Billing;
 
-use App\Mail\Resident\PaymentFailedMail;
 use App\Models\Invoice;
 use App\Models\ResidentSubscription;
+use App\Notifications\Resident\PaymentFailedNotification;
 use App\Services\Billing\BillingFinalizationService;
 use App\Services\PaystackService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ChargeInvoiceJob implements ShouldQueue
 {
@@ -59,15 +58,15 @@ class ChargeInvoiceJob implements ShouldQueue
         try {
             $email = $invoice->user->email ?? $invoice->estate->email ?? $invoice->estate->users()->first()?->email;
 
-            Log::info("Attempting auto-charge for invoice #{$invoice->id}", [
+            // 2. Generate an idempotent reference for this specific attempt
+            $attempts = ($invoice->metadata['attempts'] ?? 0) + 1;
+            $autoReference = $invoice->invoice_number.'-AUTO-'.now()->format('Y-m-d').'-'.$attempts;
+
+            Log::info("Attempting auto-charge for invoice #{$invoice->id} (Attempt #{$attempts})", [
                 'amount' => $invoice->amount,
                 'email' => $email,
+                'reference' => $autoReference,
             ]);
-
-            // Generate an idempotent reference for this specific invoice and date
-            // This ensures that retries within the same day use the SAME reference,
-            // allowing Paystack to prevent double-charging.
-            $autoReference = $invoice->invoice_number.'-AUTO-'.now()->format('Y-m-d');
 
             $result = $paystackService->chargeAuthorization(
                 $authCode,
@@ -90,13 +89,56 @@ class ChargeInvoiceJob implements ShouldQueue
             }
 
         } catch (\Exception $e) {
-            Log::error("Auto-charge exception for invoice #{$invoice->id}: ".$e->getMessage());
+            $errorMessage = $e->getMessage();
 
-            // Re-throw to trigger job retry logic if it's a network/API issue
-            // But if it's a 400 error from Paystack (e.g. invalid auth), we should catch it.
-            if (str_contains($e->getMessage(), '400') || str_contains($e->getMessage(), 'invalid')) {
-                $this->handleFailure($invoice, $e->getMessage());
+            // SPECIAL CASE: If we get a duplicate reference error, it might mean a previous
+            // attempt actually succeeded but we didn't record it. Let's verify.
+            if (str_contains(strtolower($errorMessage), 'duplicate')) {
+                Log::warning("Duplicate reference detected for invoice #{$invoice->id}. Verifying status...");
+                try {
+                    $verifyResult = $paystackService->verifyPayment($autoReference);
+                    if ($verifyResult['status'] === 'success') {
+                        $finalizationService->finalizeSuccess($invoice, [
+                            'reference' => $verifyResult['reference'],
+                            'payment_method' => 'card',
+                            'customer_email' => $email,
+                        ]);
+
+                        return;
+                    }
+                } catch (\Exception $ve) {
+                    Log::error('Verification failed for duplicate reference: '.$ve->getMessage());
+                }
+            }
+
+            Log::error("Auto-charge exception for invoice #{$invoice->id}: ".$errorMessage);
+
+            // If it's an API error that we shouldn't retry (invalid keys, duplicate reference, etc.)
+            // we handle it as a failure attempt so the user is notified.
+            $terminalErrorPatterns = ['invalid', '400', 'duplicate', 'reference', 'bad request', 'not found'];
+            $isTerminal = false;
+
+            foreach ($terminalErrorPatterns as $pattern) {
+                if (str_contains(strtolower($errorMessage), $pattern)) {
+                    $isTerminal = true;
+                    break;
+                }
+            }
+
+            if ($isTerminal) {
+                // Sanitize: If the error contains JSON, extract just the 'message' for the user
+                $cleanMessage = $errorMessage;
+                if (str_contains($errorMessage, '{')) {
+                    $jsonPart = substr($errorMessage, strpos($errorMessage, '{'));
+                    $decoded = json_decode($jsonPart, true);
+                    if (isset($decoded['message'])) {
+                        $cleanMessage = "Payment gateway error: " . $decoded['message'];
+                    }
+                }
+
+                $this->handleFailure($invoice, $cleanMessage);
             } else {
+                // Otherwise, re-throw to allow standard job retries (e.g. for timeouts/network issues)
                 throw $e;
             }
         }
@@ -142,7 +184,7 @@ class ChargeInvoiceJob implements ShouldQueue
 
         // Notify user of the failure
         if ($invoice->user_id && $invoice->user) {
-            Mail::to($invoice->user->email)->send(new PaymentFailedMail(
+            $invoice->user->notify(new PaymentFailedNotification(
                 $invoice,
                 $reason,
                 $metadata['attempts'] ?? 1,

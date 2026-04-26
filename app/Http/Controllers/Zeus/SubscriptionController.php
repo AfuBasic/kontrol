@@ -66,8 +66,6 @@ class SubscriptionController extends Controller
     {
         $validated = $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
-            'status' => ['required', 'in:trial,active,past_due,cancelled'],
-            'billing_interval' => ['required', 'in:monthly,annual'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 

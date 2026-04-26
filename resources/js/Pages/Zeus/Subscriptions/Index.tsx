@@ -183,7 +183,9 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                             <tr>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Account</th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Current Plan</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Engine State</th>
+                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">
+                                    Subscription Status
+                                </th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Billing</th>
                                 <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Term End</th>
                                 <th className="px-6 py-4 text-right text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Controls</th>
@@ -290,9 +292,9 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-2xl"
                     >
-                        <h2 className="mb-1 text-lg font-bold text-slate-900">Subscription Override</h2>
+                        <h2 className="mb-1 text-lg font-bold text-slate-900">Manage Subscription</h2>
                         <p className="mb-6 text-[13px] text-slate-500">
-                            Modifying access for <span className="font-bold text-slate-700">{overrideEstate.name}</span>
+                            Updating account status for <span className="font-bold text-slate-700">{overrideEstate.name}</span>
                         </p>
 
                         <form onSubmit={handleOverride} className="space-y-5">
@@ -312,42 +314,16 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Engine State</label>
-                                    <select
-                                        value={overrideData.status}
-                                        onChange={(e) => setOverrideData({ ...overrideData, status: e.target.value })}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                    >
-                                        <option value="trial">Trialing</option>
-                                        <option value="active">Active</option>
-                                        <option value="past_due">Past Due</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Billing Term</label>
-                                    <select
-                                        value={overrideData.billing_interval}
-                                        onChange={(e) => setOverrideData({ ...overrideData, billing_interval: e.target.value })}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                    >
-                                        <option value="monthly">Monthly</option>
-                                        <option value="annual">Annual</option>
-                                    </select>
-                                </div>
-                            </div>
-
                             <div>
-                                <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Override Logs</label>
+                                <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                    Administrative Notes
+                                </label>
                                 <textarea
                                     value={overrideData.notes}
                                     onChange={(e) => setOverrideData({ ...overrideData, notes: e.target.value })}
                                     rows={2}
                                     className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                    placeholder="Enter administrative notes..."
+                                    placeholder="Enter administrative notes regarding this override..."
                                 />
                             </div>
 
@@ -363,7 +339,7 @@ export default function SubscriptionsIndex({ estates, plans, filters }: Props) {
                                     type="submit"
                                     className="flex-1 rounded bg-slate-900 px-4 py-2.5 text-[12px] font-bold text-white transition-all hover:bg-slate-800 active:scale-95"
                                 >
-                                    Commit Override
+                                    Save Changes
                                 </button>
                             </div>
                         </form>

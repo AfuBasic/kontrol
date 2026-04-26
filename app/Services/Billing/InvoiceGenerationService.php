@@ -77,7 +77,6 @@ class InvoiceGenerationService
         // If no unpaid invoice, generate one only if they are due or past due
         if (! $unpaidInvoice) {
             $isDue = $subscription->status === 'past_due' ||
-                     $subscription->status === 'expired' ||
                      ($subscription->current_period_end && $subscription->current_period_end->isPast()) ||
                      ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
 
