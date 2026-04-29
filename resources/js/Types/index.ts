@@ -5,9 +5,21 @@ export type * from './security';
 
 import type { Auth } from './auth';
 
+export type EstatePlan = {
+    name: string;
+    status: string;
+    features: string[];
+    limits: {
+        max_residents: number | null;
+        max_security: number | null;
+        max_admins: number | null;
+    };
+};
+
 export type SharedData = {
     name: string;
     auth: Auth;
+    estate_plan: EstatePlan | null;
     flash: {
         success?: string;
         error?: string;
@@ -19,5 +31,4 @@ export type SharedData = {
     access_code_durations: Array<{ minutes: number; label: string }>;
     access_code_constraints: { min: number; max: number };
     app_url: string;
-    [key: string]: unknown;
 };

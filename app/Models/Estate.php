@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read \App\Models\EstateSubscription|null $subscriptionRecord
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * @property-read int|null $users_count
+ *
  * @method static \Database\Factories\EstateFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate newQuery()
@@ -43,6 +44,7 @@ use Illuminate\Support\Facades\DB;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereReferrerId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Estate extends Model
@@ -86,29 +88,29 @@ class Estate extends Model
             ->exists();
     }
 
+    /**
+     * Cache for active feature slugs to prevent redundant DB hits in a single request.
+     */
+    protected ?array $memoizedFeatures = null;
+
     public function hasFeature(string $featureSlug): bool
     {
-        $subscription = $this->subscriptionRecord;
-
-        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
-            return false;
-        }
-
-        return $subscription->plan->features()
-            ->where('slug', $featureSlug)
-            ->wherePivot('is_enabled', true)
-            ->exists();
+        return in_array($featureSlug, $this->getActiveFeatureSlugs());
     }
 
     public function getActiveFeatureSlugs(): array
     {
+        if ($this->memoizedFeatures !== null) {
+            return $this->memoizedFeatures;
+        }
+
         $subscription = $this->subscriptionRecord;
 
         if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
-            return [];
+            return $this->memoizedFeatures = [];
         }
 
-        return $subscription->plan->features()
+        return $this->memoizedFeatures = $subscription->plan->features()
             ->wherePivot('is_enabled', true)
             ->pluck('slug')
             ->toArray();

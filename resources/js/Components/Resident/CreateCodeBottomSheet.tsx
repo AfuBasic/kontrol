@@ -20,7 +20,10 @@ const purposes = [
 ];
 
 export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
-    const { auth, access_code_durations, access_code_constraints } = usePage<SharedData>().props;
+    const { auth, access_code_durations, access_code_constraints, estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const features = estate_plan?.features || [];
+    const hasFlexibleCodes = features.includes('flexible-code-types');
+    const hasAccessCodeGeneration = features.includes('access-code-generation');
     const [step, setStep] = useState<Step>('type');
     const form = useForm({
         type: 'single_use' as 'single_use' | 'long_lived',
@@ -135,27 +138,29 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                     </div>
                                                 </button>
 
-                                                <button
-                                                    onClick={() => form.setData('type', 'long_lived')}
-                                                    className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
-                                                        form.data.type === 'long_lived' 
-                                                            ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20' 
-                                                            : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-4 text-left">
-                                                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'long_lived' ? 'bg-amber-600 text-white' : 'bg-white text-amber-600'}`}>
-                                                            <Clock className="h-7 w-7" />
+                                                {hasFlexibleCodes && (
+                                                    <button
+                                                        onClick={() => form.setData('type', 'long_lived')}
+                                                        className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
+                                                            form.data.type === 'long_lived' 
+                                                                ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20' 
+                                                                : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-4 text-left">
+                                                            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'long_lived' ? 'bg-amber-600 text-white' : 'bg-white text-amber-600'}`}>
+                                                                <Clock className="h-7 w-7" />
+                                                            </div>
+                                                            <div>
+                                                                <p className={`font-bold ${form.data.type === 'long_lived' ? 'text-amber-900' : 'text-slate-900'}`}>Long-Term Access</p>
+                                                                <p className="text-sm font-medium text-slate-500">For regular staff or family</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className={`font-bold ${form.data.type === 'long_lived' ? 'text-amber-900' : 'text-slate-900'}`}>Long-Term Access</p>
-                                                            <p className="text-sm font-medium text-slate-500">For regular staff or family</p>
+                                                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'long_lived' ? 'border-amber-600 bg-amber-600' : 'border-slate-200'}`}>
+                                                            {form.data.type === 'long_lived' && <div className="h-2 w-2 rounded-full bg-white" />}
                                                         </div>
-                                                    </div>
-                                                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'long_lived' ? 'border-amber-600 bg-amber-600' : 'border-slate-200'}`}>
-                                                        {form.data.type === 'long_lived' && <div className="h-2 w-2 rounded-full bg-white" />}
-                                                    </div>
-                                                </button>
+                                                    </button>
+                                                )}
                                             </div>
 
                                             <div className="pt-4">

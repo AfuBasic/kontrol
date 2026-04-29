@@ -23,10 +23,26 @@ const actions = [
     },
 ];
 
+import { usePage } from '@inertiajs/react';
+import type { SharedData } from '@/types';
+
 export default function QuickActions() {
+    const { estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const features = estate_plan?.features || [];
+
+    const visibleActions = actions.filter((action) => {
+        if (action.name === 'Invite Family' && !features.includes('household-management')) {
+            return false;
+        }
+        if (action.name === 'View History' && !features.includes('access-code-generation')) {
+            return false;
+        }
+        return true;
+    });
+
     return (
         <div className="grid grid-cols-1 gap-4">
-            {actions.map((action, index) => (
+            {visibleActions.map((action, index) => (
                 <motion.div
                     key={action.name}
                     initial={{ opacity: 0, x: -20 }}

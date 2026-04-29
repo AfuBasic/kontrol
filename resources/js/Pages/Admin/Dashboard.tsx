@@ -16,6 +16,8 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } from 'lucide-react';
+import { useFeature } from '@/Hooks/useFeature';
+import FeatureGate from '@/Components/FeatureGate';
 
 import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
@@ -369,7 +371,10 @@ function RecentPostsFeed({ posts }: { posts: RecentPost[] }) {
                     </div>
                     <p className="text-sm font-medium text-gray-900">No posts yet</p>
                     <p className="mt-1 text-xs text-gray-500">Create your first announcement</p>
-                    <Link href={createPost.url()} className="native-button mt-4 bg-[#1F6FDB] px-6 text-white shadow-lg shadow-[#1F6FDB]/20 ring-1 ring-[#1F6FDB]/50 transition-all hover:bg-[#0A3D91] active:scale-95">
+                    <Link
+                        href={createPost.url()}
+                        className="native-button mt-4 bg-[#1F6FDB] px-6 text-white shadow-lg ring-1 shadow-[#1F6FDB]/20 ring-[#1F6FDB]/50 transition-all hover:bg-[#0A3D91] active:scale-95"
+                    >
                         <MegaphoneIcon className="h-5 w-5" />
                         Create Post
                     </Link>
@@ -387,6 +392,7 @@ function QuickActions() {
             icon: MegaphoneIcon,
             color: 'from-[#1F6FDB] to-[#0A3D91]',
             shadow: 'shadow-[#1F6FDB]/30',
+            feature: 'estate-board',
         },
         {
             label: 'Add Resident',
@@ -394,6 +400,7 @@ function QuickActions() {
             icon: UsersIcon,
             color: 'from-slate-800 to-slate-900',
             shadow: 'shadow-slate-200',
+            feature: 'resident-directory',
         },
         {
             label: 'Add Security',
@@ -401,8 +408,11 @@ function QuickActions() {
             icon: ShieldCheckIcon,
             color: 'from-slate-700 to-slate-800',
             shadow: 'shadow-slate-200',
+            feature: 'security-personnel-management',
         },
     ];
+
+    const visibleActions = actions.filter((a) => !a.feature || useFeature(a.feature));
 
     return (
         <motion.div
@@ -411,7 +421,7 @@ function QuickActions() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="grid gap-3 sm:flex sm:flex-wrap"
         >
-            {actions.map((action, idx) => (
+            {visibleActions.map((action, idx) => (
                 <motion.div
                     key={action.label}
                     initial={{ opacity: 0, y: 10 }}
@@ -579,41 +589,55 @@ export default function Dashboard({ stats, chartData, recentActivity, recentPost
 
             {/* Stats Grid */}
             <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                    title="Total Residents"
-                    value={stats.residents.total}
-                    subValue={`${stats.residents.active} active`}
-                    trend={stats.residents.trend}
-                    icon={UsersIcon}
-                    href={ResidentController.index.url()}
-                    delay={0}
-                />
-                <StatCard
-                    title="Security Personnel"
-                    value={stats.security.total}
-                    subValue={`${stats.security.active} on duty`}
-                    icon={ShieldCheckIcon}
-                    href={SecurityPersonnelController.index.url()}
-                    delay={0.05}
-                />
-                <StatCard
-                    title="Board Posts"
-                    value={stats.posts.total}
-                    subValue={`${stats.posts.published} published, ${stats.posts.draft} drafts`}
-                    trend={stats.posts.trend}
-                    icon={DocumentTextIcon}
-                    href={postsIndex.url()}
-                    delay={0.1}
-                />
+                <FeatureGate feature="resident-directory">
+                    <StatCard
+                        title="Total Residents"
+                        value={stats.residents.total}
+                        subValue={`${stats.residents.active} active`}
+                        trend={stats.residents.trend}
+                        icon={UsersIcon}
+                        href={ResidentController.index.url()}
+                        delay={0}
+                    />
+                </FeatureGate>
+                <FeatureGate feature="security-personnel-management">
+                    <StatCard
+                        title="Security Personnel"
+                        value={stats.security.total}
+                        subValue={`${stats.security.active} on duty`}
+                        icon={ShieldCheckIcon}
+                        href={SecurityPersonnelController.index.url()}
+                        delay={0.05}
+                    />
+                </FeatureGate>
+                <FeatureGate feature="estate-board">
+                    <StatCard
+                        title="Board Posts"
+                        value={stats.posts.total}
+                        subValue={`${stats.posts.published} published, ${stats.posts.draft} drafts`}
+                        trend={stats.posts.trend}
+                        icon={DocumentTextIcon}
+                        href={postsIndex.url()}
+                        delay={0.1}
+                    />
+                </FeatureGate>
                 <StatCard title="Comments" value={stats.comments.total} subValue="Total engagement" icon={ChatBubbleLeftRightIcon} delay={0.15} />
             </div>
 
             {/* Main Content Grid - Single column on mobile */}
             <div className="space-y-8">
-                <MiniChart data={chartData} />
-                <TodayHighlights stats={todayStats} />
-                <RecentActivityFeed activities={recentActivity} />
-                <RecentPostsFeed posts={recentPosts} />
+                <FeatureGate feature="estate-analytics-dashboard">
+                    <MiniChart data={chartData} />
+                </FeatureGate>
+                <FeatureGate feature="estate-analytics-dashboard">
+                    <TodayHighlights stats={todayStats} />
+                </FeatureGate>
+                <FeatureGate feature="activity-logs">
+                    <RecentActivityFeed activities={recentActivity} />
+                </FeatureGate>
+                <FeatureGate feature="estate-board">
+                    <RecentPostsFeed posts={recentPosts} />
+                </FeatureGate>
             </div>
         </>
     );

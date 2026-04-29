@@ -58,11 +58,12 @@ interface Props {
     }[];
 }
 
+import { useFeature } from '@/Hooks/useFeature';
+
 export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
-    const { auth, estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
-    const features = estate_plan?.features || [];
-    const hasTelegram = features.includes('telegram-bot-integration');
-    const hasHousehold = features.includes('household-management');
+    const { auth } = usePage<SharedData>().props;
+    const hasTelegram = useFeature('telegram-bot-integration');
+    const hasHousehold = useFeature('household-management');
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
     const { openExternalBilling } = useExternalBilling();
@@ -108,7 +109,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                     {userInitials}
                                 </div>
                             </div>
-                            <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 ring-4 ring-slate-900 shadow-lg">
+                            <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 shadow-lg ring-4 ring-slate-900">
                                 <Zap className="h-5 w-5 text-white" fill="currentColor" />
                             </div>
                         </div>
@@ -135,15 +136,15 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                 <div className="flex items-center rounded-[32px] bg-white py-6 shadow-sm ring-1 ring-slate-200">
                     <div className="flex-1 border-r border-slate-50 px-2 text-center">
                         <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Active Codes</p>
+                        <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Codes</p>
                     </div>
                     <div className="flex-1 border-r border-slate-50 px-2 text-center">
                         <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Family</p>
+                        <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
                     </div>
                     <div className="flex-1 px-2 text-center">
                         <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">SOS Contacts</p>
+                        <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">SOS Contacts</p>
                     </div>
                 </div>
 
@@ -229,51 +230,31 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                             <LogOut className="h-5 w-5" />
                             Sign Out Account
                         </Link>
+                    </div>
                 </div>
             </div>
-        </div>
             {/* PROFILE INFORMATION SHEET */}
-            <MobileSheet 
-                isOpen={activeSheet === 'profile'} 
-                onClose={() => setActiveSheet(null)} 
-                title="Profile Information"
-            >
+            <MobileSheet isOpen={activeSheet === 'profile'} onClose={() => setActiveSheet(null)} title="Profile Information">
                 <div className="p-1">
                     <ProfileForm profile={profile} onSuccess={() => setActiveSheet(null)} />
                 </div>
             </MobileSheet>
 
             {/* PASSWORD UPDATE SHEET */}
-            <MobileSheet 
-                isOpen={activeSheet === 'password'} 
-                onClose={() => setActiveSheet(null)} 
-                title="Account Security"
-            >
+            <MobileSheet isOpen={activeSheet === 'password'} onClose={() => setActiveSheet(null)} title="Account Security">
                 <div className="p-1">
                     <UpdatePasswordForm onSuccess={() => setActiveSheet(null)} />
                 </div>
             </MobileSheet>
 
             {/* EMERGENCY MANAGEMENT FLOW */}
-            <MobileSheet 
-                isOpen={activeSheet === 'emergency_management'} 
-                onClose={() => setActiveSheet(null)} 
-                title="SOS Contacts"
-            >
+            <MobileSheet isOpen={activeSheet === 'emergency_management'} onClose={() => setActiveSheet(null)} title="SOS Contacts">
                 <div className="p-1">
-                    <EmergencyContactsManager 
-                        contacts={emergency_contacts} 
-                        limit={CONTACT_LIMIT}
-                        onAddClick={() => setIsAddContactSheetOpen(true)}
-                    />
+                    <EmergencyContactsManager contacts={emergency_contacts} limit={CONTACT_LIMIT} onAddClick={() => setIsAddContactSheetOpen(true)} />
                 </div>
             </MobileSheet>
 
-            <MobileSheet 
-                isOpen={isAddContactSheetOpen} 
-                onClose={() => setIsAddContactSheetOpen(false)} 
-                title="New Emergency Contact"
-            >
+            <MobileSheet isOpen={isAddContactSheetOpen} onClose={() => setIsAddContactSheetOpen(false)} title="New Emergency Contact">
                 <div className="p-1">
                     <AddEmergencyContactForm onSuccess={() => setIsAddContactSheetOpen(false)} />
                 </div>
@@ -479,22 +460,14 @@ function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 /* ─── Emergency Contacts Management List ─── */
-function EmergencyContactsManager({ 
-    contacts, 
-    limit, 
-    onAddClick 
-}: { 
-    contacts: Props['emergency_contacts']; 
-    limit: number;
-    onAddClick: () => void;
-}) {
+function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: Props['emergency_contacts']; limit: number; onAddClick: () => void }) {
     const isLimitReached = contacts.length >= limit;
-    const [contactToDelete, setContactToDelete] = useState<{id: number, name: string} | null>(null);
+    const [contactToDelete, setContactToDelete] = useState<{ id: number; name: string } | null>(null);
 
     const handleDelete = () => {
         if (!contactToDelete) return;
         router.delete(EmergencyContactController.destroy.url(contactToDelete.id), {
-            onSuccess: () => setContactToDelete(null)
+            onSuccess: () => setContactToDelete(null),
         });
     };
 
@@ -512,8 +485,9 @@ function EmergencyContactsManager({
                     </div>
                     <div className="space-y-1">
                         <p className="text-[11px] font-black tracking-widest text-indigo-900 uppercase">Safety & Privacy Notice</p>
-                        <p className="text-xs font-bold text-indigo-600/70 leading-relaxed">
-                            By adding emergency contacts, you acknowledge and agree that their names and phone numbers will be shared with the estate's security personnel and administrators during an active SOS event to facilitate a rapid response.
+                        <p className="text-xs leading-relaxed font-bold text-indigo-600/70">
+                            By adding emergency contacts, you acknowledge and agree that their names and phone numbers will be shared with the
+                            estate's security personnel and administrators during an active SOS event to facilitate a rapid response.
                         </p>
                     </div>
                 </div>
@@ -527,7 +501,7 @@ function EmergencyContactsManager({
                         {contacts.length} / {limit} Contacts
                     </span>
                 </div>
-                
+
                 {!isLimitReached && (
                     <button
                         onClick={onAddClick}
@@ -552,7 +526,7 @@ function EmergencyContactsManager({
                         </div>
                         <p className="text-sm font-black text-slate-900">No emergency contacts</p>
                         <p className="mt-1 text-xs font-bold text-slate-400">Add people who should be alerted in emergencies.</p>
-                        
+
                         <button
                             onClick={onAddClick}
                             className="mt-8 flex w-full items-center justify-center gap-3 rounded-[24px] bg-slate-900 py-4 text-sm font-black text-white shadow-xl transition-all active:scale-[0.98]"
@@ -572,15 +546,17 @@ function EmergencyContactsManager({
                                 className="group flex items-center justify-between rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:ring-indigo-100"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-indigo-50 text-indigo-600 shadow-inner group-hover:bg-indigo-100 transition-colors">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-indigo-50 text-indigo-600 shadow-inner transition-colors group-hover:bg-indigo-100">
                                         <User className="h-7 w-7" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-black text-slate-900 leading-tight">{contact.name}</p>
+                                        <p className="text-base leading-tight font-black text-slate-900">{contact.name}</p>
                                         <div className="mt-1 flex items-center gap-2">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{contact.phone}</p>
+                                            <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">{contact.phone}</p>
                                             <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{contact.relationship || 'Contact'}</p>
+                                            <p className="text-[10px] font-bold tracking-wider text-indigo-500 uppercase">
+                                                {contact.relationship || 'Contact'}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -671,9 +647,9 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                 </div>
             </div>
 
-            <p className="px-2 text-[10px] font-bold leading-relaxed text-slate-400 italic">
-                * By saving this contact, you authorize the estate's safety team to contact and share incident
-                details with this individual during emergency SOS events.
+            <p className="px-2 text-[10px] leading-relaxed font-bold text-slate-400 italic">
+                * By saving this contact, you authorize the estate's safety team to contact and share incident details with this individual during
+                emergency SOS events.
             </p>
 
             <button

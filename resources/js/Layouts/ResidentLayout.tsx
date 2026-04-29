@@ -1,15 +1,15 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
 import type { SharedData } from '@/types';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
+import { useFeature } from '@/Hooks/useFeature';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
-import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -206,14 +206,27 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         return () => window.removeEventListener('show-notification-detail', handleDetailRequest);
     }, []);
 
+    const hasAccessCodes = useFeature('access-code-generation');
+    const hasVisitFeed = useFeature('real-time-visit-feed');
+
     const navItems = [
-        { name: 'Dashboard', href: '/resident/home', icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
-        { name: 'Visitors', href: '/resident/visitors', icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
-        { name: 'CREATE_CODE', href: '#', icon: () => null, show: true },
+        {
+            name: 'Dashboard',
+            href: '/resident/home',
+            icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            show: true,
+        },
+        {
+            name: 'Visitors',
+            href: '/resident/visitors',
+            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            show: hasAccessCodes,
+        },
+        { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
         {
             name: 'Feed',
             href: '/resident/activity',
-            show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData>().props.estate_plan?.features?.includes('real-time-visit-feed') ?? true),
+            show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasVisitFeed,
             icon: (active: boolean) => (
                 <div className="relative">
                     <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
@@ -225,8 +238,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 </div>
             ),
         },
-        { name: 'Profile', href: '/resident/profile', icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
-    ].filter(item => item.show !== false);
+        {
+            name: 'Profile',
+            href: '/resident/profile',
+            icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            show: true,
+        },
+    ].filter((item) => item.show !== false);
 
     return (
         <PullToRefresh>

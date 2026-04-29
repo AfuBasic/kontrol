@@ -6,9 +6,10 @@ interface Props {
     expectedToday: number;
     lastActivity?: string;
     onAction?: () => void;
+    canGenerate?: boolean;
 }
 
-export default function CommandCenter({ expectedToday, lastActivity, onAction }: Props) {
+export default function CommandCenter({ expectedToday, lastActivity, onAction, canGenerate = true }: Props) {
     const hasData = expectedToday > 0;
 
     return (
@@ -89,17 +90,19 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction }:
                     </div>
                 </div>
 
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={onAction}
-                    className="relative flex w-full items-center justify-center gap-3 rounded-[24px] bg-white py-5 text-lg font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none"
-                >
-                    <Plus className="h-6 w-6" strokeWidth={3} />
-                    Generate Access Code
-                    {/* Subtle button glow */}
-                    <div className="absolute inset-0 -z-10 rounded-[24px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
-                </motion.button>
+                {canGenerate && (
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={onAction}
+                        className="relative flex w-full items-center justify-center gap-3 rounded-[24px] bg-white py-5 text-lg font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none"
+                    >
+                        <Plus className="h-6 w-6" strokeWidth={3} />
+                        Generate Access Code
+                        {/* Subtle button glow */}
+                        <div className="absolute inset-0 -z-10 rounded-[24px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
+                    </motion.button>
+                )}
             </div>
         </motion.div>
     );

@@ -3,14 +3,39 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Set this to true for local development with Simulator/Emulator
 const isDev = true;
 
+// Tip: For Android Emulator, use 'http://10.0.2.2'. For Physical devices, use your Mac's Local IP.
+const devUrl = 'http://10.0.2.2';
+
 const config: CapacitorConfig = {
     appId: 'com.kontrol.app',
     appName: 'Kontrol',
     webDir: 'public',
+    // loggingBehavior: isDev ? 'debug' : 'none',
     server: {
-        url: isDev ? 'http://kontrol.test' : 'https://app.usekontrol.com',
+        url: isDev ? devUrl : 'https://app.usekontrol.com',
         cleartext: isDev,
-        allowNavigation: ['kontrol.test', 'app.kontrol.test'],
+        // The hostname ensures cookies and CSRF work correctly regardless of the 'url' IP
+        hostname: 'kontrol.test',
+        // Allow all subdomains for multi-tenancy
+        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com'],
+        // CRITICAL for Android: Must be 'https' to support modern browser features
+        androidScheme: 'https',
+    },
+    android: {
+        // Hardware acceleration is on by default in modern Capacitor,
+        // but we ensure the WebView background matches the app theme to prevent flickering.
+        backgroundColor: '#FFFFFF',
+        allowMixedContent: isDev,
+        captureInput: true,
+        buildOptions: {
+            releaseType: 'AAB',
+        },
+    },
+    ios: {
+        // 'never' allows the app to handle its own safe area padding via CSS env(safe-area-inset-*)
+        contentInset: 'never',
+        backgroundColor: '#FFFFFF',
+        allowsLinkPreview: true,
     },
     plugins: {
         FirebaseAuthentication: {
@@ -23,12 +48,21 @@ const config: CapacitorConfig = {
         },
         SplashScreen: {
             launchShowDuration: 0,
-            launchAutoHide: false, // Handled manually in app.tsx after custom loader is ready
+            launchAutoHide: false, // Handled manually in app.tsx
             backgroundColor: '#FFFFFF',
             androidScaleType: 'CENTER',
             showSpinner: false,
             splashFullScreen: true,
             splashImmersive: true,
+        },
+        Keyboard: {
+            resize: 'body', // Best for Android to prevent viewport jumping
+            style: 'DARK',
+            resizeOnFullScreen: true,
+        },
+        StatusBar: {
+            style: 'DARK',
+            backgroundColor: '#FFFFFF',
         },
     },
 };

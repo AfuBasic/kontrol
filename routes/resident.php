@@ -55,16 +55,17 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
     });
 
-    // Access Code Creation (household members can create codes)
-    Route::middleware('resident.active')->group(function (): void {
-        Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
-    });
-    Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
+    // Access Code Generation and Visitor Management
+    Route::middleware('check-estate-feature:access-code-generation')->group(function (): void {
+        Route::middleware('resident.active')->group(function (): void {
+            Route::post('/visitors', [AccessCodeController::class, 'store'])->name('resident.visitors.store');
+        });
+        Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
 
-    // Visitor Management (index, show, revoke)
-    Route::get('/visitors', [AccessCodeController::class, 'index'])->name('resident.visitors.index');
-    Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
-    Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
+        Route::get('/visitors', [AccessCodeController::class, 'index'])->name('resident.visitors.index');
+        Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
+        Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
+    });
 
     // Estate Board (read-only + comments)
     Route::prefix('estate-board')->name('resident.estate-board.')->middleware('check-estate-feature:interactive-notice-board')->group(function (): void {

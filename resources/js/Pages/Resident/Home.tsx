@@ -43,7 +43,12 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 />
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
-                <CommandCenter expectedToday={expectedToday} lastActivity={lastActivityTime} onAction={() => setIsCreateModalOpen(true)} />
+                <CommandCenter 
+                    expectedToday={expectedToday} 
+                    lastActivity={lastActivityTime} 
+                    onAction={() => setIsCreateModalOpen(true)} 
+                    canGenerate={auth?.user?.resident_subscription?.plan_name !== 'Standard' && ((usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('access-code-generation')) ?? true)}
+                />
 
                 {/* 3. QUICK ACTIONS STRIP */}
                 <section>
@@ -54,31 +59,37 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 </section>
 
                 {/* 4. VISITOR STATUS */}
-                <section>
-                    <div className="mb-4 flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Visitor Journey</h3>
-                    </div>
-                    <VisitorStatus activeCodes={activeCodes} />
-                </section>
+                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('access-code-generation') ?? true) && (
+                    <>
+                        <section>
+                            <div className="mb-4 flex items-center justify-between px-2">
+                                <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Visitor Journey</h3>
+                            </div>
+                            <VisitorStatus activeCodes={activeCodes} />
+                        </section>
 
-                {/* 5. DAILY METRICS */}
-                <section>
-                    <div className="mb-4 flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Today's Progress</h3>
-                    </div>
-                    <DailyMetrics stats={stats} />
-                </section>
+                        {/* 5. DAILY METRICS */}
+                        <section>
+                            <div className="mb-4 flex items-center justify-between px-2">
+                                <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Today's Progress</h3>
+                            </div>
+                            <DailyMetrics stats={stats} />
+                        </section>
+                    </>
+                )}
 
                 {/* 6. LIVE ACTIVITY FEED */}
-                <section>
-                    <div className="mb-4 flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Activity</h3>
-                        <Link href={resident.activity.url()} className="text-[10px] font-bold tracking-wider text-indigo-600 uppercase">
-                            View All
-                        </Link>
-                    </div>
-                    <LiveFeed activities={recentActivity} />
-                </section>
+                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('real-time-visit-feed') ?? true) && (
+                    <section>
+                        <div className="mb-4 flex items-center justify-between px-2">
+                            <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Activity</h3>
+                            <Link href={resident.activity.url()} className="text-[10px] font-bold tracking-wider text-indigo-600 uppercase">
+                                View All
+                            </Link>
+                        </div>
+                        <LiveFeed activities={recentActivity} />
+                    </section>
+                )}
             </div>
 
             <CreateCodeBottomSheet isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />

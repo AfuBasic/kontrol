@@ -15,7 +15,9 @@ import {
     UsersIcon,
     XMarkIcon,
     ClipboardDocumentListIcon,
+    MegaphoneIcon,
 } from '@heroicons/react/24/outline';
+import { useFeature } from '@/Hooks/useFeature';
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -53,15 +55,16 @@ type NavItem = {
     icon: React.ComponentType<{ className?: string }>;
     permission?: string;
     role?: string;
+    feature?: string;
     comingSoon?: boolean;
 };
 
 const baseNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Announcement', href: EstateBoardController.index.url(), icon: BuildingOffice2Icon },
-    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view' },
-    { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view' },
-    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view' },
+    { name: 'Announcement', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
+    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view', feature: 'resident-directory' },
+    { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view', feature: 'security-personnel-management' },
+    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
 
@@ -328,6 +331,11 @@ export default function AdminLayout({ children }: Props) {
             return false;
         }
 
+        // Feature Gating (Principal Engineer Pattern)
+        if (item.feature && !useFeature(item.feature)) {
+            return false;
+        }
+
         if (!item.permission) return true;
         if (isAdmin) return true;
         return userPermissions.includes(item.permission);
@@ -337,7 +345,7 @@ export default function AdminLayout({ children }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }] : primaryNav;
+    const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon, feature: 'automated-invoicing' }] : primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);
     const visibleSecondaryNav = filterNav(secondaryNav);
@@ -537,7 +545,7 @@ export default function AdminLayout({ children }: Props) {
                                                 <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
                                                 Profile
                                             </Link>
-                                            {isAdmin && (
+                                            {isAdmin && useFeature('activity-logs') && (
                                                 <Link
                                                     href={ActivityLogController.index.url()}
                                                     onClick={() => setUserMenuOpen(false)}

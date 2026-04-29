@@ -27,7 +27,9 @@ class ActivityController extends Controller
         // Mark all notifications as read when visiting the feed
         $user->unreadNotifications->markAsRead();
 
-        $posts = $estate ? EstateBoardPost::query()
+        $hasBoardFeature = $estate && $estate->hasFeature('interactive-notice-board');
+
+        $posts = $hasBoardFeature ? EstateBoardPost::query()
             ->forEstate($estate->id)
             ->published()
             ->forAudience([EstateBoardPostAudience::All, EstateBoardPostAudience::Residents])
