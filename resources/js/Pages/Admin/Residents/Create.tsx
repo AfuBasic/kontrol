@@ -2,8 +2,6 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, RefreshCw, Share2, Upload, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import ExcelJS from 'exceljs';
-import Papa from 'papaparse';
 import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import {
     store as inviteLinkStore,
@@ -103,7 +101,7 @@ export default function CreateResident({ inviteLink }: Props) {
     }
 
     // Handle file upload
-    const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -114,6 +112,7 @@ export default function CreateResident({ inviteLink }: Props) {
         const isCsv = file.name.toLowerCase().endsWith('.csv');
 
         if (isCsv) {
+            const { default: Papa } = await import('papaparse');
             Papa.parse(file, {
                 header: false,
                 skipEmptyLines: true,
@@ -137,39 +136,46 @@ export default function CreateResident({ inviteLink }: Props) {
             });
         } else {
             // Assume XLSX
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const buffer = event.target?.result as ArrayBuffer;
-                    const workbook = new ExcelJS.Workbook();
-                    await workbook.xlsx.load(buffer);
+            try {
+                const { default: ExcelJS } = await import('exceljs');
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const buffer = event.target?.result as ArrayBuffer;
+                        const workbook = new ExcelJS.Workbook();
+                        await workbook.xlsx.load(buffer);
 
-                    const emails: string[] = [];
+                        const emails: string[] = [];
 
-                    workbook.eachSheet((sheet) => {
-                        sheet.eachRow((row) => {
-                            // exceljs row.values can be an array where index 0 is null/empty
-                            const values = Array.isArray(row.values) ? row.values.slice(1) : [];
-                            const email = extractEmailsFromRow(values);
-                            if (email && !emails.includes(email)) {
-                                emails.push(email);
-                            }
+                        workbook.eachSheet((sheet) => {
+                            sheet.eachRow((row) => {
+                                // exceljs row.values can be an array where index 0 is null/empty
+                                const values = Array.isArray(row.values) ? row.values.slice(1) : [];
+                                const email = extractEmailsFromRow(values);
+                                if (email && !emails.includes(email)) {
+                                    emails.push(email);
+                                }
+                            });
                         });
-                    });
 
-                    setExtractedEmails(emails);
+                        setExtractedEmails(emails);
+                        setIsProcessing(false);
+                    } catch (err) {
+                        console.error('Excel parse error:', err);
+                        setBulkError('Failed to parse Excel file. Please ensure it is a valid .xlsx file.');
+                        setIsProcessing(false);
+                    }
+                };
+                reader.onerror = () => {
+                    setBulkError('Failed to read file.');
                     setIsProcessing(false);
-                } catch (err) {
-                    console.error('Excel parse error:', err);
-                    setBulkError('Failed to parse Excel file. Please ensure it is a valid .xlsx file.');
-                    setIsProcessing(false);
-                }
-            };
-            reader.onerror = () => {
-                setBulkError('Failed to read file.');
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (err) {
+                console.error('Library load error:', err);
+                setBulkError('Failed to load processing libraries.');
                 setIsProcessing(false);
-            };
-            reader.readAsArrayBuffer(file);
+            }
         }
     }, []);
 
@@ -500,13 +506,7 @@ export default function CreateResident({ inviteLink }: Props) {
                                                 {fileName ? fileName : 'Click to upload or drag and drop'}
                                             </span>
                                             <span className="mt-1 text-xs text-gray-500">.xlsx, .csv</span>
-                                            <input
-                                                id="file-upload"
-                                                type="file"
-                                                accept=".xlsx,.csv"
-                                                onChange={handleFileUpload}
-                                                className="hidden"
-                                            />
+                                            <input id="file-upload" type="file" accept=".xlsx,.csv" onChange={handleFileUpload} className="hidden" />
                                         </label>
                                     </div>
 

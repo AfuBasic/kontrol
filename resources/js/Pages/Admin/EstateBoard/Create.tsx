@@ -1,12 +1,13 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, lazy, Suspense } from 'react';
 
 import { index, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import MarkdownEditor from '@/Components/MarkdownEditor';
-import AdminLayout from '@/Layouts/AdminLayout';
 import type { PostAudience, PostStatus } from '@/types';
+
+// Dynamic Imports
+const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
 
 type FormData = {
     title: string;
@@ -124,14 +125,16 @@ export default function CreatePost() {
                         <label htmlFor="body" className="mb-1 block text-sm font-medium text-gray-700">
                             Content <span className="text-red-500">*</span>
                         </label>
-                        <MarkdownEditor
-                            id="body"
-                            value={data.body}
-                            onChange={(value) => setData('body', value)}
-                            placeholder="Write your announcement..."
-                            title={data.title}
-                            error={errors.body}
-                        />
+                        <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-slate-100" />}>
+                            <MarkdownEditor
+                                id="body"
+                                value={data.body}
+                                onChange={(value) => setData('body', value)}
+                                placeholder="Write your announcement..."
+                                title={data.title}
+                                error={errors.body}
+                            />
+                        </Suspense>
                         <p className="mt-1 text-xs text-gray-500">Use the toolbar for formatting. AI enhancement available after 20 characters.</p>
                     </div>
 

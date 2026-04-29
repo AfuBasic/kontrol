@@ -1,20 +1,20 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 import type { SharedData } from '@/types';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import { useFeature } from '@/Hooks/useFeature';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
-import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
-import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
-import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import SosButton from '@/Components/SosButton';
+import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
+import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
+import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 
 interface Props {
     children: ReactNode;
@@ -331,10 +331,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     </div>
                 )}
 
-                {/* Code Creation Sheet */}
+                {/* Modals and Sheets */}
                 <CreateCodeBottomSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />
-
-                {/* Notification Detail Sheet */}
                 <NotificationDetailSheet notification={selectedNotification} onClose={() => setSelectedNotification(null)} />
 
                 {/* Toast Notification */}

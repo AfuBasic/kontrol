@@ -27,7 +27,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database'];
+        $channels = ['database', 'broadcast'];
 
         // Add WebPush channel if user has push subscriptions
         if ($notifiable->pushSubscriptions()->exists()) {

@@ -14,11 +14,10 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import GlobalLoading from './Components/GlobalLoading';
 import AppLoader from './Components/AppLoader';
 
-// Pre-hide splash screen logic or other initializations
-
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
 import AdminLayout from './Layouts/AdminLayout';
+import SecurityLayout from './Layouts/SecurityLayout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -32,6 +31,12 @@ const AdminLayoutWrapper = (page: React.ReactNode) => (
     <AdminLayout>
         <AnimatedLayout>{page}</AnimatedLayout>
     </AdminLayout>
+);
+
+const SecurityLayoutWrapper = (page: React.ReactNode) => (
+    <SecurityLayout>
+        <AnimatedLayout>{page}</AnimatedLayout>
+    </SecurityLayout>
 );
 
 const DefaultLayoutWrapper = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
@@ -48,6 +53,8 @@ createInertiaApp({
                 pageModule.default.layout = ResidentLayoutWrapper;
             } else if (name.startsWith('Admin/')) {
                 pageModule.default.layout = AdminLayoutWrapper;
+            } else if (name.startsWith('Security/')) {
+                pageModule.default.layout = SecurityLayoutWrapper;
             } else {
                 pageModule.default.layout = DefaultLayoutWrapper;
             }

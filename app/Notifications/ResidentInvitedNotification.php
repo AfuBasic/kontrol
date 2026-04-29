@@ -27,7 +27,7 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database'];
+        $channels = ['database', 'broadcast'];
 
         if ($notifiable->fcm_token) {
             $channels[] = FcmChannel::class;

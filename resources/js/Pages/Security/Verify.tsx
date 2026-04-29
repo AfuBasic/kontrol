@@ -277,86 +277,106 @@ type ResultPanelProps = {
     onReset: () => void;
 };
 
-function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
+function ResultPanel({ result, onReset }: ResultPanelProps) {
     const valid = result.valid;
-    const accent = valid
-        ? { bar: 'bg-emerald-400', surface: 'bg-emerald-500/10 border-emerald-400/40', icon: 'text-emerald-400', headline: 'text-emerald-300' }
-        : { bar: 'bg-rose-400', surface: 'bg-rose-500/10 border-rose-400/40', icon: 'text-rose-400', headline: 'text-rose-300' };
-
-    const headline = STATUS_LABELS[result.status] ?? (valid ? 'Valid' : 'Invalid code');
     const expiry = formatExpiry(result.expires_at);
+
+    if (!valid) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-1 flex-col items-center justify-center text-center"
+            >
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/10 text-rose-500 ring-1 ring-rose-500/20">
+                    <ShieldX className="h-10 w-10" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Invalid Code</h2>
+                <p className="mt-2 text-slate-400">{result.message}</p>
+                <button
+                    onClick={onReset}
+                    className="mt-8 flex items-center gap-2 text-sm font-semibold text-rose-400 transition hover:text-rose-300"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Try another code
+                </button>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
+            exit={{ opacity: 0, y: -10 }}
             className="flex flex-1 flex-col"
-            role="status"
-            aria-live="polite"
         >
-            <div className={`overflow-hidden rounded-2xl border ${accent.surface}`}>
-                <div className={`h-1 w-full ${accent.bar}`} />
-                <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900/60 ${accent.icon}`}>
-                        {valid ? <ShieldCheck className="h-5 w-5" strokeWidth={2.2} /> : <ShieldX className="h-5 w-5" strokeWidth={2.2} />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                        <p className={`text-xs font-semibold tracking-[0.16em] uppercase ${accent.headline}`}>{valid ? 'Valid' : 'Invalid'}</p>
-                        <p className="truncate text-base font-semibold text-white">{headline}</p>
+            <div className="flex flex-1 flex-col items-center justify-center p-4">
+                {/* Card */}
+                <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[#1F2937] bg-[#111827] shadow-2xl">
+                    <div className="flex flex-col items-center px-8 pt-12 pb-8">
+                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#10B981] text-[#10B981]">
+                            <ShieldCheck className="h-12 w-12" strokeWidth={1.5} />
+                        </div>
+                        
+                        <h2 className="text-3xl font-bold tracking-tight text-white">Code Valid</h2>
+                        <div className="mt-3 text-center">
+                            <p className="text-slate-400">The verification code is valid.</p>
+                            <p className="text-slate-400">Access approved.</p>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-[#1F2937] p-2">
+                        <div className="divide-y divide-[#1F2937]/50">
+                            {result.host_name && (
+                                <DetailRow 
+                                    icon={<HomeIcon className="h-5 w-5" strokeWidth={1.5} />} 
+                                    label="Host" 
+                                    value={result.host_name} 
+                                />
+                            )}
+                            {result.purpose && (
+                                <DetailRow 
+                                    icon={<User className="h-5 w-5" strokeWidth={1.5} />} 
+                                    label="Purpose" 
+                                    value={result.purpose} 
+                                />
+                            )}
+                            {expiry && result.code_type !== 'long_lived' && (
+                                <DetailRow 
+                                    icon={<Clock className="h-5 w-5" strokeWidth={1.5} />} 
+                                    label="Expires in" 
+                                    value={expiry} 
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="px-8 pt-6 pb-10">
+                        <button
+                            type="button"
+                            onClick={onReset}
+                            className="flex items-center gap-3 text-base font-semibold text-[#10B981] transition hover:opacity-80 active:scale-[0.98]"
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                            Verify another code
+                        </button>
                     </div>
                 </div>
-
-                {valid && (result.visitor_name || result.host_name) && (
-                    <div className="grid grid-cols-1 gap-px bg-slate-800/80 sm:grid-cols-2">
-                        {result.visitor_name && (
-                            <DetailRow icon={<User className="h-4 w-4" strokeWidth={2.2} />} label="Visitor" value={result.visitor_name} />
-                        )}
-                        {result.host_name && (
-                            <DetailRow icon={<HomeIcon className="h-4 w-4" strokeWidth={2.2} />} label="Host" value={result.host_name} />
-                        )}
-                        {result.purpose && <DetailRow label="Purpose" value={result.purpose} className="sm:col-span-2" />}
-                        {expiry && result.code_type !== 'long_lived' && (
-                            <DetailRow
-                                icon={<Clock className="h-4 w-4" strokeWidth={2.2} />}
-                                label="Expires in"
-                                value={expiry}
-                                className="sm:col-span-2"
-                            />
-                        )}
-                    </div>
-                )}
-
-                {!valid && (
-                    <div className="border-t border-slate-800/60 bg-slate-900/40 px-5 py-3 text-sm text-slate-300 sm:px-6">{result.message}</div>
-                )}
-            </div>
-
-            {/* Actions */}
-            <div className="mt-5 flex items-center gap-3">
-                <button
-                    type="button"
-                    onClick={onReset}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition active:scale-[0.99] ${
-                        valid ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-white text-slate-900 hover:bg-slate-100'
-                    }`}
-                >
-                    <RotateCcw className="h-4 w-4" strokeWidth={2.4} />
-                    {valid ? 'Verify another' : 'Try again'}
-                </button>
             </div>
         </motion.div>
     );
 }
 
-function DetailRow({ icon, label, value, className }: { icon?: React.ReactNode; label: string; value: string; className?: string }) {
+function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
-        <div className={`flex items-center gap-3 bg-slate-900/40 px-5 py-3 sm:px-6 ${className ?? ''}`}>
-            {icon && <span className="text-slate-500">{icon}</span>}
+        <div className="flex items-center gap-4 px-6 py-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/50 text-slate-500">
+                {icon}
+            </div>
             <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold tracking-[0.16em] text-slate-500 uppercase">{label}</p>
-                <p className="truncate text-sm font-semibold text-white">{value}</p>
+                <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
+                <p className="truncate text-base font-semibold text-white">{value}</p>
             </div>
         </div>
     );

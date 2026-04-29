@@ -1,7 +1,7 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 import '@/echo';
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
@@ -9,10 +9,10 @@ import NotificationController from '@/actions/App/Http/Controllers/Security/Noti
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
-import SosAlertOverlay from '@/Components/SosAlertOverlay';
+import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import axios from 'axios';
+import SosAlertOverlay from '@/Components/SosAlertOverlay';
 
 const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

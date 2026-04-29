@@ -38,12 +38,17 @@ import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/Se
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
-import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification';
-import Toast from '@/Components/Toast'; // Added import
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import type { SharedData } from '@/types';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification';
+import Toast from '@/Components/Toast';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
+import MobileBottomNav from '@/Components/Admin/MobileBottomNav';
+import PullToRefresh from '@/Components/PullToRefresh';
+
+// Dynamic Imports
+// const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
 
 interface Props {
     children: ReactNode;
@@ -72,8 +77,7 @@ const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
-import MobileBottomNav from '@/Components/Admin/MobileBottomNav';
-import PullToRefresh from '@/Components/PullToRefresh';
+
 
 export default function AdminLayout({ children }: Props) {
     const page = usePage<
@@ -95,6 +99,7 @@ export default function AdminLayout({ children }: Props) {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const [toastUrl, setToastUrl] = useState<string | null>(null);
+    const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
     useForceLogout(auth?.user?.id);
@@ -177,6 +182,11 @@ export default function AdminLayout({ children }: Props) {
                 setToastMessage(notification.message);
                 setToastType(notification.type || 'info');
                 setToastUrl(notification.action_url || notification.url || null);
+                setLastReceivedNotification({
+                    id: notification.id,
+                    data: notification,
+                    created_at_human: 'Just now',
+                });
                 setShowToast(true);
 
                 setUnreadCount((prev) => prev + 1);
@@ -252,6 +262,10 @@ export default function AdminLayout({ children }: Props) {
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
                         console.info('Native push received in foreground:', notification);
+                        setToastMessage(notification.body || 'New notification received');
+                        setToastType('info');
+                        setLastReceivedNotification(notification);
+                        setShowToast(true);
                         router.reload({ only: ['auth'] });
                     });
 
@@ -795,7 +809,16 @@ export default function AdminLayout({ children }: Props) {
                 show={showToast}
                 message={toastMessage}
                 type={toastType}
-                onClick={toastUrl ? () => router.visit(toastUrl) : undefined}
+                onClick={() => {
+                    const data = lastReceivedNotification?.data;
+                    const type = data?.type;
+                    const targetUrl = toastUrl || data?.action_url || data?.url;
+
+                    if (targetUrl && type !== 'visitor_arrived') {
+                        router.visit(targetUrl);
+                    }
+                    setShowToast(false);
+                }}
                 onClose={() => {
                     setShowToast(false);
                     setToastUrl(null);
