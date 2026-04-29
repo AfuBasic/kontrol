@@ -105,10 +105,14 @@ export default function SecurityVerify() {
         if (submittedFor.current === code) return;
         submittedFor.current = code;
         setSubmitting(true);
-        router.post(VerifyController.validate.url(), { code }, {
-            preserveScroll: true,
-            onFinish: () => setSubmitting(false),
-        });
+        router.post(
+            VerifyController.validate.url(),
+            { code },
+            {
+                preserveScroll: true,
+                onFinish: () => setSubmitting(false),
+            },
+        );
     }, []);
 
     const updateDigit = (index: number, raw: string) => {
@@ -174,11 +178,7 @@ export default function SecurityVerify() {
             reset();
             return;
         }
-        router.post(
-            VerifyController.decision.url(),
-            { decision, code },
-            { preserveScroll: true, onFinish: reset },
-        );
+        router.post(VerifyController.decision.url(), { decision, code }, { preserveScroll: true, onFinish: reset });
     };
 
     return (
@@ -202,8 +202,7 @@ export default function SecurityVerify() {
                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Security Terminal</p>
                         <p className="truncate text-sm font-semibold text-white">
-                            {gateName} <span className="text-slate-500">·</span>{' '}
-                            <span className="font-normal text-slate-400">{estateName}</span>
+                            {gateName} <span className="text-slate-500">·</span> <span className="font-normal text-slate-400">{estateName}</span>
                         </p>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1">
@@ -256,15 +255,13 @@ export default function SecurityVerify() {
                                         autoComplete="off"
                                         maxLength={CODE_LENGTH}
                                         disabled={submitting}
-                                        className="h-14 w-11 rounded-xl border border-slate-700 bg-slate-900/80 text-center font-mono text-2xl font-semibold tracking-tight text-white shadow-inner shadow-black/30 caret-emerald-400 transition-all focus:border-emerald-400 focus:bg-slate-900 focus:ring-4 focus:ring-emerald-400/15 focus:outline-none disabled:opacity-60 sm:h-16 sm:w-14 sm:text-3xl"
+                                        className="h-14 w-11 rounded-xl border border-slate-700 bg-slate-900/80 text-center font-mono text-2xl font-semibold tracking-tight text-white caret-emerald-400 shadow-inner shadow-black/30 transition-all focus:border-emerald-400 focus:bg-slate-900 focus:ring-4 focus:ring-emerald-400/15 focus:outline-none disabled:opacity-60 sm:h-16 sm:w-14 sm:text-3xl"
                                         aria-label={`Code character ${i + 1}`}
                                     />
                                 ))}
                             </div>
 
-                            <p className="mt-5 text-xs text-slate-500">
-                                {submitting ? 'Validating…' : 'Validates automatically · paste supported'}
-                            </p>
+                            <p className="mt-5 text-xs text-slate-500">{submitting ? 'Validating…' : 'Validates automatically · paste supported'}</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -303,16 +300,10 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                 <div className={`h-1 w-full ${accent.bar}`} />
                 <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
                     <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900/60 ${accent.icon}`}>
-                        {valid ? (
-                            <ShieldCheck className="h-5 w-5" strokeWidth={2.2} />
-                        ) : (
-                            <ShieldX className="h-5 w-5" strokeWidth={2.2} />
-                        )}
+                        {valid ? <ShieldCheck className="h-5 w-5" strokeWidth={2.2} /> : <ShieldX className="h-5 w-5" strokeWidth={2.2} />}
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className={`text-xs font-semibold tracking-[0.16em] uppercase ${accent.headline}`}>
-                            {valid ? 'Valid' : 'Invalid'}
-                        </p>
+                        <p className={`text-xs font-semibold tracking-[0.16em] uppercase ${accent.headline}`}>{valid ? 'Valid' : 'Invalid'}</p>
                         <p className="truncate text-base font-semibold text-white">{headline}</p>
                     </div>
                 </div>
@@ -325,11 +316,14 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                         {result.host_name && (
                             <DetailRow icon={<HomeIcon className="h-4 w-4" strokeWidth={2.2} />} label="Host" value={result.host_name} />
                         )}
-                        {result.purpose && (
-                            <DetailRow label="Purpose" value={result.purpose} className="sm:col-span-2" />
-                        )}
+                        {result.purpose && <DetailRow label="Purpose" value={result.purpose} className="sm:col-span-2" />}
                         {expiry && result.code_type !== 'long_lived' && (
-                            <DetailRow icon={<Clock className="h-4 w-4" strokeWidth={2.2} />} label="Expires in" value={expiry} className="sm:col-span-2" />
+                            <DetailRow
+                                icon={<Clock className="h-4 w-4" strokeWidth={2.2} />}
+                                label="Expires in"
+                                value={expiry}
+                                className="sm:col-span-2"
+                            />
                         )}
                     </div>
                 )}
@@ -341,32 +335,22 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
 
             {/* Actions */}
             <div className="mt-5 flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={onReset}
-                        className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition active:scale-[0.99] ${
-                            valid ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-white text-slate-900 hover:bg-slate-100'
-                        }`}
-                    >
-                        <RotateCcw className="h-4 w-4" strokeWidth={2.4} />
-                        {valid ? 'Verify another' : 'Try again'}
-                    </button>
+                <button
+                    type="button"
+                    onClick={onReset}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition active:scale-[0.99] ${
+                        valid ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-white text-slate-900 hover:bg-slate-100'
+                    }`}
+                >
+                    <RotateCcw className="h-4 w-4" strokeWidth={2.4} />
+                    {valid ? 'Verify another' : 'Try again'}
+                </button>
             </div>
         </motion.div>
     );
 }
 
-function DetailRow({
-    icon,
-    label,
-    value,
-    className,
-}: {
-    icon?: React.ReactNode;
-    label: string;
-    value: string;
-    className?: string;
-}) {
+function DetailRow({ icon, label, value, className }: { icon?: React.ReactNode; label: string; value: string; className?: string }) {
     return (
         <div className={`flex items-center gap-3 bg-slate-900/40 px-5 py-3 sm:px-6 ${className ?? ''}`}>
             {icon && <span className="text-slate-500">{icon}</span>}
