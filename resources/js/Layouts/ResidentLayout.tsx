@@ -207,12 +207,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     }, []);
 
     const navItems = [
-        { name: 'Dashboard', href: '/resident/home', icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
-        { name: 'Visitors', href: '/resident/visitors', icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
-        { name: 'CREATE_CODE', href: '#', icon: () => null },
+        { name: 'Dashboard', href: '/resident/home', icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
+        { name: 'Visitors', href: '/resident/visitors', icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
+        { name: 'CREATE_CODE', href: '#', icon: () => null, show: true },
         {
             name: 'Feed',
             href: '/resident/activity',
+            show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData>().props.estate_plan?.features?.includes('real-time-visit-feed') ?? true),
             icon: (active: boolean) => (
                 <div className="relative">
                     <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
@@ -224,8 +225,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 </div>
             ),
         },
-        { name: 'Profile', href: '/resident/profile', icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} /> },
-    ];
+        { name: 'Profile', href: '/resident/profile', icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />, show: true },
+    ].filter(item => item.show !== false);
 
     return (
         <PullToRefresh>

@@ -33,6 +33,7 @@ type Props = {
         plan_name: string;
         active_residents: number;
         residents_rate: number;
+        billing_interval: string;
         trial_days: number;
         resident_payment_stats: {
             paid: number;
@@ -136,7 +137,7 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                         <div className="mt-6 flex items-center gap-6 text-sm font-medium text-gray-500">
                                             <div className="flex items-center gap-2">
                                                 <UsersIcon className="h-5 w-5 text-indigo-500" />
-                                                <span>{overview.active_residents} Active Residents</span>
+                                                <span>{overview.active_residents} Active Resident{overview.active_residents === 1 ? '' : 's'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <ClockIcon className="h-5 w-5 text-indigo-500" />
@@ -145,7 +146,9 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <p className="text-sm font-bold text-gray-400">Monthly Rate</p>
+                                        <p className="text-sm font-bold text-gray-400 capitalize">
+                                            {overview.billing_interval === 'annually' ? 'Annual' : overview.billing_interval === 'monthly' ? 'Monthly' : overview.billing_interval || 'Monthly'} Rate
+                                        </p>
                                         <p className="text-4xl font-black text-indigo-600">{formatCurrency(overview.residents_rate ?? 0)}</p>
                                         <p className="text-xs font-medium text-gray-400">per resident</p>
                                     </div>

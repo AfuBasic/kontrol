@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: Props) {
     const [toastUrl, setToastUrl] = useState<string | null>(null);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
-    useForceLogout(auth.user!.id);
+    useForceLogout(auth?.user?.id);
 
     // Local state for instant updates
     const [unreadCount, setUnreadCount] = useState(auth.user?.unread_notifications_count || 0);

@@ -101,6 +101,7 @@ class BillingService
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
                 'residents_rate' => $subscription->plan->price,
+                'billing_interval' => $subscription->plan->billing_interval,
                 'resident_payment_stats' => $residentPaymentStats,
                 'trial_days' => $trialDays,
             ];
@@ -132,6 +133,7 @@ class BillingService
             'card_brand' => $subscription->card_brand,
             'card_last4' => $subscription->card_last4,
             'residents_rate' => $subscription->plan->price,
+            'billing_interval' => $subscription->plan->billing_interval,
             'resident_payment_stats' => $residentPaymentStats,
             'trial_days' => $trialDays,
         ];

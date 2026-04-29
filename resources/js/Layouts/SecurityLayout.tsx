@@ -65,7 +65,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
     const page = usePage<PageProps>();
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
-    useForceLogout(auth.user.id);
+    useForceLogout(auth?.user?.id);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');

@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { Loader2, Check, Copy, ExternalLink, X, CheckCircle } from 'lucide-react';
 import { useState, useCallback, useRef, useEffect } from 'react';
+import axios from 'axios';
 import resident from '@/routes/resident';
 
 interface Props {
@@ -100,28 +101,15 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
         setCopied(false);
 
         try {
-            const response = await fetch(resident.telegram.generateOtp.url(), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate code');
-            }
+            const response = await axios.post(resident.telegram.generateOtp.url());
+            const data = response.data;
 
             setOtpData({
                 otp: data.otp,
                 expires_at: data.expires_at,
             });
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to generate code');
+        } catch (err: any) {
+            setError(err.response?.data?.error || err.message || 'Failed to generate code');
         } finally {
             setIsLoading(false);
         }

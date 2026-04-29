@@ -43,13 +43,17 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     Route::put('/password', [PasswordController::class, 'update'])->name('resident.password.update');
 
     // Activity feed & Notifications
-    Route::get('/activity', ActivityController::class)->name('resident.activity');
+    Route::middleware('check-estate-feature:real-time-visit-feed')->group(function (): void {
+        Route::get('/activity', ActivityController::class)->name('resident.activity');
+    });
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('resident.notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('resident.notifications.read-all');
 
     // Estate Contacts
-    Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');
-    Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
+    Route::middleware('check-estate-feature:estate-contacts')->group(function (): void {
+        Route::get('/contacts', [EstateContactController::class, 'index'])->name('resident.contacts.index');
+        Route::get('/contacts/json', [EstateContactController::class, 'apiIndex'])->name('resident.contacts.json');
+    });
 
     // Access Code Creation (household members can create codes)
     Route::middleware('resident.active')->group(function (): void {
@@ -63,7 +67,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
 
     // Estate Board (read-only + comments)
-    Route::prefix('estate-board')->name('resident.estate-board.')->group(function (): void {
+    Route::prefix('estate-board')->name('resident.estate-board.')->middleware('check-estate-feature:interactive-notice-board')->group(function (): void {
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
         Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
 
@@ -75,7 +79,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     });
 
     // Telegram Account Linking
-    Route::prefix('telegram')->name('resident.telegram.')->group(function (): void {
+    Route::prefix('telegram')->name('resident.telegram.')->middleware('check-estate-feature:telegram-bot-integration')->group(function (): void {
         Route::post('/generate-otp', [TelegramLinkController::class, 'generateOtp'])->name('generate-otp');
         Route::delete('/unlink', [TelegramLinkController::class, 'unlink'])->name('unlink');
         Route::get('/status', [TelegramLinkController::class, 'status'])->name('status');
@@ -107,7 +111,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 // ──────────────────────────────────────────────────────────────
 Route::middleware('role:resident')->group(function (): void {
     // Household Management
-    Route::prefix('household')->name('resident.household.')->group(function (): void {
+    Route::prefix('household')->name('resident.household.')->middleware('check-estate-feature:household-management')->group(function (): void {
         Route::get('/', [HouseholdMemberController::class, 'index'])->name('index');
         Route::middleware('resident.active')->post('/', [HouseholdMemberController::class, 'store'])->name('store');
         Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');

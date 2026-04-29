@@ -59,7 +59,10 @@ interface Props {
 }
 
 export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const features = estate_plan?.features || [];
+    const hasTelegram = features.includes('telegram-bot-integration');
+    const hasHousehold = features.includes('household-management');
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
     const { openExternalBilling } = useExternalBilling();
@@ -163,15 +166,19 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                 description="Update your account password"
                                 onClick={() => setActiveSheet('password')}
                             />
-                            <div className="mx-6 h-px bg-slate-50" />
-                            <Link href="/resident/household" className="block">
-                                <SettingsRow
-                                    icon={<Users className="h-5 w-5" />}
-                                    label="Household Management"
-                                    description="Manage family members"
-                                    onClick={() => {}}
-                                />
-                            </Link>
+                            {hasHousehold && (
+                                <>
+                                    <div className="mx-6 h-px bg-slate-50" />
+                                    <Link href="/resident/household" className="block">
+                                        <SettingsRow
+                                            icon={<Users className="h-5 w-5" />}
+                                            label="Household Management"
+                                            description="Manage family members"
+                                            onClick={() => {}}
+                                        />
+                                    </Link>
+                                </>
+                            )}
                             <div className="mx-6 h-px bg-slate-50" />
                             <SettingsRow
                                 icon={<Shield className="h-5 w-5" />}
@@ -202,12 +209,14 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     )}
 
                     {/* Integrations */}
-                    <section>
-                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Notifications</h2>
-                        <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                            <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
-                        </div>
-                    </section>
+                    {hasTelegram && (
+                        <section>
+                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Notifications</h2>
+                            <div className="overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                                <TelegramLinkToggle linked={telegram.linked} botUsername={telegram.bot_username} />
+                            </div>
+                        </section>
+                    )}
 
                     {/* Logout */}
                     <div className="px-2">
