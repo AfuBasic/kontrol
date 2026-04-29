@@ -12,6 +12,59 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property int $id
+ * @property int $estate_id
+ * @property int $user_id
+ * @property string $code
+ * @property string $type
+ * @property AccessCodeSource $source
+ * @property string|null $visitor_name
+ * @property string|null $visitor_phone
+ * @property string|null $purpose
+ * @property AccessCodeStatus $status
+ * @property \Carbon\CarbonImmutable|null $expires_at
+ * @property \Carbon\CarbonImmutable|null $used_at
+ * @property \Carbon\CarbonImmutable|null $revoked_at
+ * @property int|null $verified_by
+ * @property string|null $notes
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AccessLog> $accessLogs
+ * @property-read int|null $access_logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \App\Models\Estate $estate
+ * @property-read string $time_remaining
+ * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $verifiedBy
+ * @method static Builder<static>|AccessCode active()
+ * @method static Builder<static>|AccessCode expiredButNotMarked()
+ * @method static Builder<static>|AccessCode forEstate(int $estateId)
+ * @method static Builder<static>|AccessCode forUser(int $userId)
+ * @method static Builder<static>|AccessCode newModelQuery()
+ * @method static Builder<static>|AccessCode newQuery()
+ * @method static Builder<static>|AccessCode query()
+ * @method static Builder<static>|AccessCode search(?string $term = null)
+ * @method static Builder<static>|AccessCode whereCode($value)
+ * @method static Builder<static>|AccessCode whereCreatedAt($value)
+ * @method static Builder<static>|AccessCode whereEstateId($value)
+ * @method static Builder<static>|AccessCode whereExpiresAt($value)
+ * @method static Builder<static>|AccessCode whereId($value)
+ * @method static Builder<static>|AccessCode whereNotes($value)
+ * @method static Builder<static>|AccessCode wherePurpose($value)
+ * @method static Builder<static>|AccessCode whereRevokedAt($value)
+ * @method static Builder<static>|AccessCode whereSource($value)
+ * @method static Builder<static>|AccessCode whereStatus($value)
+ * @method static Builder<static>|AccessCode whereType($value)
+ * @method static Builder<static>|AccessCode whereUpdatedAt($value)
+ * @method static Builder<static>|AccessCode whereUsedAt($value)
+ * @method static Builder<static>|AccessCode whereUserId($value)
+ * @method static Builder<static>|AccessCode whereVerifiedBy($value)
+ * @method static Builder<static>|AccessCode whereVisitorName($value)
+ * @method static Builder<static>|AccessCode whereVisitorPhone($value)
+ * @mixin \Eloquent
+ */
 class AccessCode extends Model
 {
     use HasFactory;

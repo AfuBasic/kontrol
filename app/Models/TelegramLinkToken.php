@@ -7,6 +7,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $token
+ * @property \Carbon\CarbonImmutable $expires_at
+ * @property \Carbon\CarbonImmutable|null $used_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \App\Models\User $user
+ * @method static Builder<static>|TelegramLinkToken forUser(int $userId)
+ * @method static Builder<static>|TelegramLinkToken newModelQuery()
+ * @method static Builder<static>|TelegramLinkToken newQuery()
+ * @method static Builder<static>|TelegramLinkToken query()
+ * @method static Builder<static>|TelegramLinkToken valid()
+ * @method static Builder<static>|TelegramLinkToken whereCreatedAt($value)
+ * @method static Builder<static>|TelegramLinkToken whereExpiresAt($value)
+ * @method static Builder<static>|TelegramLinkToken whereId($value)
+ * @method static Builder<static>|TelegramLinkToken whereToken($value)
+ * @method static Builder<static>|TelegramLinkToken whereUpdatedAt($value)
+ * @method static Builder<static>|TelegramLinkToken whereUsedAt($value)
+ * @method static Builder<static>|TelegramLinkToken whereUserId($value)
+ * @mixin \Eloquent
+ */
 class TelegramLinkToken extends Model
 {
     use HasFactory;

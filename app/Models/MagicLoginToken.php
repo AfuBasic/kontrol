@@ -7,6 +7,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $token
+ * @property string|null $destination_url
+ * @property \Carbon\CarbonImmutable $expires_at
+ * @property \Carbon\CarbonImmutable|null $used_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \App\Models\User $user
+ * @method static Builder<static>|MagicLoginToken newModelQuery()
+ * @method static Builder<static>|MagicLoginToken newQuery()
+ * @method static Builder<static>|MagicLoginToken query()
+ * @method static Builder<static>|MagicLoginToken valid()
+ * @method static Builder<static>|MagicLoginToken whereCreatedAt($value)
+ * @method static Builder<static>|MagicLoginToken whereDestinationUrl($value)
+ * @method static Builder<static>|MagicLoginToken whereExpiresAt($value)
+ * @method static Builder<static>|MagicLoginToken whereId($value)
+ * @method static Builder<static>|MagicLoginToken whereToken($value)
+ * @method static Builder<static>|MagicLoginToken whereUpdatedAt($value)
+ * @method static Builder<static>|MagicLoginToken whereUsedAt($value)
+ * @method static Builder<static>|MagicLoginToken whereUserId($value)
+ * @mixin \Eloquent
+ */
 class MagicLoginToken extends Model
 {
     use HasFactory;

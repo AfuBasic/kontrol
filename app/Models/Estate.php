@@ -11,6 +11,40 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property int|null $referrer_id
+ * @property string $email
+ * @property string|null $address
+ * @property string $status
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \App\Models\EstateInviteLink|null $inviteLink
+ * @property-read \App\Models\Referrer|null $referrer
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResidentSubscription> $residentSubscriptions
+ * @property-read int|null $resident_subscriptions_count
+ * @property-read \App\Models\EstateSettings $settings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SosEvent> $sosEvents
+ * @property-read int|null $sos_events_count
+ * @property-read \App\Models\Plan|null $subscription
+ * @property-read \App\Models\EstateSubscription|null $subscriptionRecord
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read int|null $users_count
+ * @method static \Database\Factories\EstateFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereReferrerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Estate extends Model
 {
     use HasFactory;
@@ -50,6 +84,109 @@ class Estate extends Model
             ->where('model_has_roles.estate_id', $this->id)
             ->where('roles.name', 'admin')
             ->exists();
+    }
+
+    public function hasFeature(string $featureSlug): bool
+    {
+        $subscription = $this->subscriptionRecord;
+
+        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+            return false;
+        }
+
+        return $subscription->plan->features()
+            ->where('slug', $featureSlug)
+            ->wherePivot('is_enabled', true)
+            ->exists();
+    }
+
+    public function getActiveFeatureSlugs(): array
+    {
+        $subscription = $this->subscriptionRecord;
+
+        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+            return [];
+        }
+
+        return $subscription->plan->features()
+            ->wherePivot('is_enabled', true)
+            ->pluck('slug')
+            ->toArray();
+    }
+
+    public function getFeatureLimit(string $featureSlug): ?string
+    {
+        $subscription = $this->subscriptionRecord;
+
+        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+            return '0';
+        }
+
+        $feature = $subscription->plan->features()
+            ->where('slug', $featureSlug)
+            ->wherePivot('is_enabled', true)
+            ->first();
+
+        return $feature ? $feature->pivot->limit : '0';
+    }
+
+    public function canAddMoreResidents(): bool
+    {
+        $limit = $this->subscriptionRecord?->plan?->max_residents;
+        if ($limit === null) {
+            return true;
+        }
+
+        // Count active residents
+        $currentResidents = $this->users()
+            ->wherePivot('status', 'accepted')
+            ->count();
+
+        return $currentResidents < $limit;
+    }
+
+    public function canAddMoreAdmins(): bool
+    {
+        $limit = $this->subscriptionRecord?->plan?->max_admins;
+        if ($limit === null) {
+            return true;
+        }
+
+        $currentAdmins = DB::table('estate_users_membership')
+            ->join('model_has_roles', function ($join) {
+                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('estate_users_membership.estate_id', $this->id)
+            ->where('estate_users_membership.status', 'accepted')
+            ->where('model_has_roles.estate_id', $this->id)
+            ->where('roles.name', 'admin')
+            ->count();
+
+        return $currentAdmins < $limit;
+    }
+
+    public function canAddMoreSecurity(): bool
+    {
+        $limit = $this->subscriptionRecord?->plan?->max_security;
+        if ($limit === null) {
+            return true;
+        }
+
+        $currentSecurity = DB::table('estate_users_membership')
+            ->join('model_has_roles', function ($join) {
+                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('estate_users_membership.estate_id', $this->id)
+            ->where('estate_users_membership.status', 'accepted')
+            ->where('model_has_roles.estate_id', $this->id)
+            ->where('roles.name', 'security')
+            ->count();
+
+        return $currentSecurity < $limit;
     }
 
     /**

@@ -13,6 +13,45 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property int $id
+ * @property int $estate_id
+ * @property int $user_id
+ * @property string|null $title
+ * @property string $body
+ * @property EstateBoardPostStatus $status
+ * @property EstateBoardPostAudience $audience
+ * @property \Carbon\CarbonImmutable|null $published_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \App\Models\User $author
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateBoardComment> $comments
+ * @property-read int|null $comments_count
+ * @property-read \App\Models\Estate $estate
+ * @property-read string $hashid
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateBoardPostMedia> $media
+ * @property-read int|null $media_count
+ * @method static \Database\Factories\EstateBoardPostFactory factory($count = null, $state = [])
+ * @method static Builder<static>|EstateBoardPost forAudience(array $audiences)
+ * @method static Builder<static>|EstateBoardPost forEstate(int $estateId)
+ * @method static Builder<static>|EstateBoardPost newModelQuery()
+ * @method static Builder<static>|EstateBoardPost newQuery()
+ * @method static Builder<static>|EstateBoardPost published()
+ * @method static Builder<static>|EstateBoardPost query()
+ * @method static Builder<static>|EstateBoardPost whereAudience($value)
+ * @method static Builder<static>|EstateBoardPost whereBody($value)
+ * @method static Builder<static>|EstateBoardPost whereCreatedAt($value)
+ * @method static Builder<static>|EstateBoardPost whereEstateId($value)
+ * @method static Builder<static>|EstateBoardPost whereId($value)
+ * @method static Builder<static>|EstateBoardPost wherePublishedAt($value)
+ * @method static Builder<static>|EstateBoardPost whereStatus($value)
+ * @method static Builder<static>|EstateBoardPost whereTitle($value)
+ * @method static Builder<static>|EstateBoardPost whereUpdatedAt($value)
+ * @method static Builder<static>|EstateBoardPost whereUserId($value)
+ * @mixin \Eloquent
+ */
 class EstateBoardPost extends Model
 {
     use HasFactory;

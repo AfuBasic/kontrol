@@ -40,6 +40,57 @@ function initialsOf(name: string) {
         .toUpperCase();
 }
 
+class WebAudioSiren {
+    private ctx: AudioContext | null = null;
+    private osc: OscillatorNode | null = null;
+    private gain: GainNode | null = null;
+    private interval: any = null;
+    private isPlaying = false;
+
+    play() {
+        if (this.isPlaying) return Promise.resolve();
+        this.isPlaying = true;
+        try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContextClass) return Promise.resolve();
+            this.ctx = new AudioContextClass();
+            this.osc = this.ctx.createOscillator();
+            this.gain = this.ctx.createGain();
+            this.osc.type = 'square';
+            this.osc.connect(this.gain);
+            this.gain.connect(this.ctx.destination);
+            
+            this.gain.gain.value = 0.15; // Set volume
+            this.osc.frequency.value = 880;
+            this.osc.start();
+
+            let high = false;
+            this.interval = setInterval(() => {
+                if (this.osc && this.ctx) {
+                    // Classic high-low siren
+                    this.osc.frequency.setValueAtTime(high ? 880 : 660, this.ctx.currentTime);
+                    high = !high;
+                }
+            }, 500);
+        } catch (e) {}
+        return Promise.resolve();
+    }
+
+    pause() {
+        this.isPlaying = false;
+        if (this.interval) clearInterval(this.interval);
+        if (this.osc) {
+            try { this.osc.stop(); } catch(e) {}
+            this.osc.disconnect();
+            this.osc = null;
+        }
+        if (this.ctx) {
+            this.ctx.close().catch(() => {});
+            this.ctx = null;
+        }
+    }
+}
+
 export default function SosAlertOverlay() {
     const { auth } = usePage<any>().props;
     const estateId = auth?.user?.current_estate_id;
@@ -48,7 +99,7 @@ export default function SosAlertOverlay() {
     const [isAcknowledging, setIsAcknowledging] = useState(false);
     const [muted, setMuted] = useState(false);
     const [now, setNow] = useState(() => Date.now());
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const audioRef = useRef<{ play: () => Promise<any>; pause: () => void } | null>(null);
 
     // Tick once a second for the live elapsed counter
     useEffect(() => {
@@ -61,9 +112,8 @@ export default function SosAlertOverlay() {
     useEffect(() => {
         if (!estateId) return;
 
-        const audio = new Audio('/assets/sounds/sos_alert.mp3');
-        audio.loop = true;
-        audioRef.current = audio;
+        // Generate siren using device's built-in Web Audio API
+        audioRef.current = new WebAudioSiren();
 
         const channel = window.Echo.private(`estates.${estateId}.security`).listen(
             '.sos.triggered',

@@ -5,6 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $estate_id
+ * @property string $token
+ * @property bool $is_active
+ * @property int $usage_count
+ * @property int|null $max_usages Maximum number of users allowed to use this link (null for unlimited)
+ * @property bool $requires_approval Whether residents joining via this link require admin approval
+ * @property \Carbon\CarbonImmutable|null $expires_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \App\Models\Estate $estate
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereEstateId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereMaxUsages($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereRequiresApproval($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereUsageCount($value)
+ * @mixin \Eloquent
+ */
 class EstateInviteLink extends Model
 {
     protected $fillable = [

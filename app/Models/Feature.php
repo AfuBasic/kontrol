@@ -6,6 +6,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property string $group AI, Notifications, Integrations, Core
+ * @property string|null $suggested_plan
+ * @property bool $is_global Available to all plans
+ * @property bool $is_active
+ * @property int $sort_order
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Plan> $plans
+ * @property-read int|null $plans_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature byGroup(string $group)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereIsGlobal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSuggestedPlan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Feature extends Model
 {
     use HasFactory;

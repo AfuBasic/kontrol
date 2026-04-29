@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckEstateFeature;
 use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -85,6 +86,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => RedirectIfAuthenticated::class,
             'permission' => PermissionMiddleware::class,
             'resident.active' => EnsureResidentSubscriptionActive::class,
+            'feature' => CheckEstateFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

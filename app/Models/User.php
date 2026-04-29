@@ -16,6 +16,73 @@ use Illuminate\Support\Facades\URL;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $user_type
+ * @property string|null $google_id
+ * @property string|null $telegram_chat_id
+ * @property string|null $fcm_token
+ * @property \Carbon\CarbonImmutable|null $email_verified_at
+ * @property string|null $password
+ * @property string|null $remember_token
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property \Carbon\CarbonImmutable|null $suspended_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EmergencyContact> $emergencyContacts
+ * @property-read int|null $emergency_contacts_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Estate> $estates
+ * @property-read int|null $estates_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\HouseholdMember> $householdMembers
+ * @property-read int|null $household_members_count
+ * @property-read \App\Models\HouseholdMember|null $householdOf
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read int|null $permissions_count
+ * @property-read \App\Models\UserProfile|null $profile
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \NotificationChannels\WebPush\PushSubscription> $pushSubscriptions
+ * @property-read int|null $push_subscriptions_count
+ * @property-read \App\Models\ResidentSubscription|null $residentSubscription
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SosEvent> $sosEvents
+ * @property-read int|null $sos_events_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TrustedDevice> $trustedDevices
+ * @property-read int|null $trusted_devices_count
+ * @method static Builder<static>|User acceptedInvitation()
+ * @method static Builder<static>|User active()
+ * @method static Builder<static>|User affiliates()
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static Builder<static>|User forEstate(int $estateId)
+ * @method static Builder<static>|User newModelQuery()
+ * @method static Builder<static>|User newQuery()
+ * @method static Builder<static>|User pendingInvitation()
+ * @method static Builder<static>|User permission($permissions, $without = false)
+ * @method static Builder<static>|User query()
+ * @method static Builder<static>|User regularUsers()
+ * @method static Builder<static>|User role($roles, $guard = null, $without = false)
+ * @method static Builder<static>|User suspended()
+ * @method static Builder<static>|User whereCreatedAt($value)
+ * @method static Builder<static>|User whereEmail($value)
+ * @method static Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static Builder<static>|User whereFcmToken($value)
+ * @method static Builder<static>|User whereGoogleId($value)
+ * @method static Builder<static>|User whereId($value)
+ * @method static Builder<static>|User whereName($value)
+ * @method static Builder<static>|User wherePassword($value)
+ * @method static Builder<static>|User whereRememberToken($value)
+ * @method static Builder<static>|User whereSuspendedAt($value)
+ * @method static Builder<static>|User whereTelegramChatId($value)
+ * @method static Builder<static>|User whereUpdatedAt($value)
+ * @method static Builder<static>|User whereUserType($value)
+ * @method static Builder<static>|User withRole(string $roleName, ?int $estateId)
+ * @method static Builder<static>|User withTelegram()
+ * @method static Builder<static>|User withoutPermission($permissions)
+ * @method static Builder<static>|User withoutRole($roles, $guard = null)
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

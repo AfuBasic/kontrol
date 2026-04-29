@@ -6,6 +6,49 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $estate_id
+ * @property string $status
+ * @property string $billing_preference
+ * @property string|null $paystack_authorization_code
+ * @property string|null $paystack_customer_code
+ * @property string|null $card_brand
+ * @property string|null $card_last4
+ * @property \Carbon\CarbonImmutable|null $trial_ends_at
+ * @property \Carbon\CarbonImmutable|null $current_period_start
+ * @property \Carbon\CarbonImmutable|null $current_period_end
+ * @property \Carbon\CarbonImmutable|null $last_paid_at
+ * @property \Carbon\CarbonImmutable|null $last_reminded_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \App\Models\Estate $estate
+ * @property-read \Illuminate\Database\Eloquent\Relations\BelongsTo<Estate, $this> $is_active
+ * @property-read bool $is_grace_period
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\ResidentSubscriptionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereBillingPreference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCardBrand($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCardLast4($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCurrentPeriodEnd($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCurrentPeriodStart($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereEstateId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereLastPaidAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereLastRemindedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription wherePaystackAuthorizationCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription wherePaystackCustomerCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereTrialEndsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereUserId($value)
+ * @mixin \Eloquent
+ */
 class ResidentSubscription extends Model
 {
     use HasFactory;

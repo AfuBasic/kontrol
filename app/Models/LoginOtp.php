@@ -6,6 +6,28 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $code
+ * @property string|null $ip_address
+ * @property string $user_agent_hash
+ * @property \Carbon\CarbonImmutable $expires_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property-read \App\Models\User $user
+ * @method static Builder<static>|LoginOtp newModelQuery()
+ * @method static Builder<static>|LoginOtp newQuery()
+ * @method static Builder<static>|LoginOtp query()
+ * @method static Builder<static>|LoginOtp valid()
+ * @method static Builder<static>|LoginOtp whereCode($value)
+ * @method static Builder<static>|LoginOtp whereCreatedAt($value)
+ * @method static Builder<static>|LoginOtp whereExpiresAt($value)
+ * @method static Builder<static>|LoginOtp whereId($value)
+ * @method static Builder<static>|LoginOtp whereIpAddress($value)
+ * @method static Builder<static>|LoginOtp whereUserAgentHash($value)
+ * @method static Builder<static>|LoginOtp whereUserId($value)
+ * @mixin \Eloquent
+ */
 class LoginOtp extends Model
 {
     public $timestamps = false;

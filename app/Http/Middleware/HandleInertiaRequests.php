@@ -87,6 +87,16 @@ class HandleInertiaRequests extends Middleware
                     })() : null,
                 ] : null,
             ],
+            'estate_plan' => fn () => $estate ? [
+                'name' => $estate->subscriptionRecord?->plan?->name ?? 'Free Tier',
+                'status' => $estate->subscriptionRecord?->status ?? 'none',
+                'features' => $estate->getActiveFeatureSlugs(),
+                'limits' => [
+                    'max_residents' => $estate->subscriptionRecord?->plan?->max_residents,
+                    'max_security' => $estate->subscriptionRecord?->plan?->max_security,
+                    'max_admins' => $estate->subscriptionRecord?->plan?->max_admins,
+                ],
+            ] : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

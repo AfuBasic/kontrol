@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Estate> $estates
+ * @property-read int|null $estates_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Affiliate active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Affiliate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Affiliate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Affiliate query()
+ * @mixin \Eloquent
+ */
 class Affiliate extends Model
 {
     use HasFactory;

@@ -31,6 +31,7 @@ class BillingService
             $this->initializeTrialService->initializeForEstate($estate);
         }
 
+        /** @var \App\Models\EstateSubscription|null $subscription */
         $subscription = $estate->subscriptionRecord;
 
         if (! $subscription) {
@@ -46,7 +47,7 @@ class BillingService
             ];
         }
 
-        $residentRole = Role::where('name', 'resident')
+        $residentRole = Role::query()->where('name', 'resident')
             ->where('guard_name', 'web')
             ->whereNull('estate_id')
             ->first();
@@ -66,13 +67,23 @@ class BillingService
         }
         $upcomingAmount = ($subscription->plan->price ?? 0) * $activeResidents;
 
-        $outstandingInvoices = Invoice::where('estate_id', $estate->id)
+        $outstandingInvoices = Invoice::query()->where('estate_id', $estate->id)
             ->whereIn('status', ['pending', 'overdue'])
             ->count();
 
-        $hasOverdue = Invoice::where('estate_id', $estate->id)
+        $hasOverdue = Invoice::query()->where('estate_id', $estate->id)
             ->where('status', 'overdue')
             ->exists();
+
+        $residentPaymentStats = [
+            'paid' => ResidentSubscription::query()->where('estate_id', $estate->id)->where('status', 'active')->count(),
+            'pending' => ResidentSubscription::query()->where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due', 'pending'])->count(),
+            'expired' => ResidentSubscription::query()->where('estate_id', $estate->id)->whereIn('status', ['expired', 'cancelled'])->count(),
+        ];
+        
+        /** @var \App\Models\EstateSettings|null $settings */
+        $settings = $estate->settings;
+        $trialDays = $settings->free_trial_days ?? 0;
 
         // Handle trial vs active subscription
         if ($subscription->status === 'trial' && $subscription->trial_ends_at) {
@@ -90,6 +101,8 @@ class BillingService
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
                 'residents_rate' => $subscription->plan->price,
+                'resident_payment_stats' => $residentPaymentStats,
+                'trial_days' => $trialDays,
             ];
         }
 
@@ -119,11 +132,8 @@ class BillingService
             'card_brand' => $subscription->card_brand,
             'card_last4' => $subscription->card_last4,
             'residents_rate' => $subscription->plan->price,
-            'resident_payment_stats' => [
-                'paid' => ResidentSubscription::where('estate_id', $estate->id)->where('status', 'active')->count(),
-                'pending' => ResidentSubscription::where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due'])->count(),
-                'expired' => ResidentSubscription::where('estate_id', $estate->id)->where('status', 'expired')->count(),
-            ],
+            'resident_payment_stats' => $residentPaymentStats,
+            'trial_days' => $trialDays,
         ];
     }
 
@@ -134,7 +144,7 @@ class BillingService
     {
         $estate = $this->estateContext->getEstate();
 
-        $query = Invoice::where('estate_id', $estate->id)
+        $query = Invoice::query()->where('estate_id', $estate->id)
             ->with('plan')
             ->orderBy('created_at', 'desc');
 
@@ -152,7 +162,7 @@ class BillingService
     {
         $estate = $this->estateContext->getEstate();
 
-        $query = Invoice::where('estate_id', $estate->id)
+        $query = Invoice::query()->where('estate_id', $estate->id)
             ->where('status', 'paid')
             ->with('plan')
             ->orderBy('paid_at', 'desc');
@@ -167,7 +177,7 @@ class BillingService
     {
         $estate = $this->estateContext->getEstate();
 
-        return Invoice::where('estate_id', $estate->id)
+        return Invoice::query()->where('estate_id', $estate->id)
             ->where('status', 'overdue')
             ->exists();
     }

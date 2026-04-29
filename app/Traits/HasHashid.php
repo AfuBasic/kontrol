@@ -34,18 +34,29 @@ trait HasHashid
 
     /**
      * Find a model by its hashid.
+     *
+     * @param string $hashid
+     * @return static|null
      */
-    public static function findByHashid(string $hashid): ?static
+    public static function findByHashid(string $hashid)
     {
         $id = static::decodeHashid($hashid);
 
-        return $id ? static::find($id) : null;
+        /** @var static|null $model */
+        $model = $id ? static::find($id) : null;
+        
+        return $model;
     }
 
     /**
      * Find a model by its hashid or fail.
+     *
+     * @param string $hashid
+     * @return static
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public static function findByHashidOrFail(string $hashid): static
+    public static function findByHashidOrFail(string $hashid)
     {
         $id = static::decodeHashid($hashid);
 
@@ -53,7 +64,10 @@ trait HasHashid
             abort(404);
         }
 
-        return static::findOrFail($id);
+        /** @var static $model */
+        $model = static::findOrFail($id);
+        
+        return $model;
     }
 
     /**
@@ -69,8 +83,9 @@ trait HasHashid
      *
      * @param  mixed  $value
      * @param  string|null  $field
+     * @return \Illuminate\Database\Eloquent\Model|null
      */
-    public function resolveRouteBinding($value, $field = null): ?static
+    public function resolveRouteBinding($value, $field = null)
     {
         if ($field && $field !== 'hashid') {
             return parent::resolveRouteBinding($value, $field);

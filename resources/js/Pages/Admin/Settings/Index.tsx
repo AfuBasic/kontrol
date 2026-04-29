@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2 } from 'lucide-react';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
@@ -50,6 +50,7 @@ function formatDuration(minutes: number): string {
 }
 
 export default function Settings({ settings }: Props) {
+    const { estate_plan } = usePage<any>().props;
     const { data, setData, put, processing, errors } = useForm({
         access_codes_enabled: settings.access_codes_enabled,
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
@@ -99,6 +100,27 @@ export default function Settings({ settings }: Props) {
             >
                 <h1 className="text-2xl font-semibold text-gray-900">Estate Settings</h1>
                 <p className="mt-1 text-gray-500">Configure access code behavior and estate-wide preferences.</p>
+            </motion.div>
+
+            {/* Current Plan Overview */}
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.02, ease: 'easeOut' }}
+                className="mb-6 flex flex-col justify-between rounded-xl border border-primary-200 bg-primary-50 p-6 sm:flex-row sm:items-center"
+            >
+                <div>
+                    <h2 className="text-lg font-medium text-primary-900">Current Plan: {estate_plan?.name || 'Free Tier'}</h2>
+                    <p className="mt-1 text-sm text-primary-700">Upgrade your plan to unlock more features for the estate.</p>
+                </div>
+                <div className="mt-4 sm:mt-0">
+                    <Link
+                        href="/admin/billing"
+                        className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
+                    >
+                        View Plans & Upgrade
+                    </Link>
+                </div>
             </motion.div>
 
             <form onSubmit={handleSubmit}>
