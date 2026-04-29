@@ -144,7 +144,6 @@ createInertiaApp({
                             }
 
                             if (path) {
-                                console.info('Deep Link Detected, Navigating to:', path);
                                 router.visit(path, {
                                     onFinish: () => {
                                         // Hide splash ONLY after the deep link page has loaded

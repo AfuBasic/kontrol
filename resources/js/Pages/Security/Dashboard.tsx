@@ -4,7 +4,7 @@ import SecurityLayout from '@/Layouts/SecurityLayout';
 
 export default function Dashboard() {
     return (
-        <SecurityLayout>
+        <>
             <Head title="Security Dashboard" />
 
             {/* Page Header */}

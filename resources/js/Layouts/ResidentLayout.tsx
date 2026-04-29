@@ -127,6 +127,26 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     await PushNotifications.register();
 
+                    // Create notification channel for Android
+                    if (Capacitor.getPlatform() === 'android') {
+                        await PushNotifications.createChannel({
+                            id: 'default',
+                            name: 'Default',
+                            description: 'Default notification channel',
+                            importance: 5,
+                            visibility: 1,
+                            vibration: true,
+                        });
+                        await PushNotifications.createChannel({
+                            id: 'kontrol_v1_alerts',
+                            name: 'Kontrol Alerts',
+                            description: 'Important security alerts',
+                            importance: 5,
+                            visibility: 1,
+                            vibration: true,
+                        });
+                    }
+
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
                         axios
@@ -134,19 +154,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 token: token.value,
                                 platform: Capacitor.getPlatform(),
                             })
-                            .catch((err) => {
-                                console.error('Failed to sync native push token:', err);
-                            });
+
                     });
 
-                    PushNotifications.addListener('registrationError', (error) => {
-                        console.error('Native push registration error:', error);
-                    });
+
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        console.info('Native push received in foreground:', notification);
                         setLastReceivedNotification(notification);
-                        setToastMessage(notification.body || 'New notification received');
+                        setToastMessage(notification.body || notification.title || 'New notification received');
                         setShowToast(true);
                         setTimeout(() => setShowToast(false), 5000);
                         router.reload({ only: ['auth', 'unreadCount'] });

@@ -1,10 +1,7 @@
-import { Capacitor } from '@capacitor/core';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 
 const CODE_LENGTH = 6;
@@ -29,15 +26,6 @@ interface PageProps {
     [key: string]: unknown;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-    granted: 'Valid · Let in',
-    not_found: 'Code not found',
-    already_used: 'Already used',
-    expired: 'Expired',
-    revoked: 'Revoked',
-    inactive: 'Inactive',
-};
-
 function formatExpiry(iso: string | null) {
     if (!iso) return null;
     const date = new Date(iso);
@@ -55,38 +43,13 @@ function formatExpiry(iso: string | null) {
     return `${mins}m`;
 }
 
-function formatClock() {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
 export default function SecurityVerify() {
-    const { estateName, gateName, flash } = usePage<PageProps>().props;
+    const { flash } = usePage<PageProps>().props;
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<ValidationResult | null>(null);
-    const [clock, setClock] = useState(formatClock());
     const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
     const submittedFor = useRef<string | null>(null);
-
-    useEffect(() => {
-        const t = setInterval(() => setClock(formatClock()), 30000);
-        return () => clearInterval(t);
-    }, []);
-
-    // Match the OS status bar to the dark terminal chrome.
-    // Native: light icons via Capacitor StatusBar.
-    // Web: <meta name="theme-color"> is handled in <Head>.
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) return;
-        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-        return () => {
-            StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-        };
-    }, []);
-
-    const goBack = useCallback(() => {
-        router.visit(HomeController.url());
-    }, []);
 
     useEffect(() => {
         if (flash?.validation_result) {
@@ -122,7 +85,6 @@ export default function SecurityVerify() {
             .slice(0, CODE_LENGTH);
 
         if (sanitized.length > 1) {
-            // Paste handling — distribute across boxes
             const next = Array(CODE_LENGTH).fill('');
             for (let i = 0; i < Math.min(sanitized.length, CODE_LENGTH); i++) {
                 next[i] = sanitized[i];
@@ -182,40 +144,10 @@ export default function SecurityVerify() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
-            <Head title="Verify Access · Security">
-                <meta name="theme-color" content="#020617" />
-            </Head>
+        <>
+            <Head title="Verify Access · Security" />
 
-            {/* Terminal header — pt-safe is on the header itself so the safe-area
-                inset is part of its own height. The status bar overlays this padded
-                strip and our slate-950 chrome shows through behind it. */}
-            <header className="pt-safe sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-md">
-                <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-3">
-                    <button
-                        onClick={goBack}
-                        className="rounded-full p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                        aria-label="Back to command center"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
-                    </button>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Security Terminal</p>
-                        <p className="truncate text-sm font-semibold text-white">
-                            {gateName} <span className="text-slate-500">·</span> <span className="font-normal text-slate-400">{estateName}</span>
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1">
-                        <span className="relative flex h-1.5 w-1.5">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        </span>
-                        <span className="text-[10px] font-semibold text-emerald-300">{clock}</span>
-                    </div>
-                </div>
-            </header>
-
-            <main className="pb-safe mx-auto flex w-full max-w-xl flex-1 flex-col px-5 pt-8 pb-6 sm:px-8">
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col pt-8 pb-6 sm:px-8">
                 <AnimatePresence mode="wait">
                     {result ? (
                         <ResultPanel
@@ -266,9 +198,16 @@ export default function SecurityVerify() {
                     )}
                 </AnimatePresence>
             </main>
-        </div>
+        </>
     );
 }
+
+// Set custom layout properties if needed (e.g., variant="dark")
+SecurityVerify.layout = (page: React.ReactNode) => (
+    <SecurityLayout variant="dark">
+        {page}
+    </SecurityLayout>
+);
 
 type ResultPanelProps = {
     result: ValidationResult;
@@ -312,7 +251,6 @@ function ResultPanel({ result, onReset }: ResultPanelProps) {
             className="flex flex-1 flex-col"
         >
             <div className="flex flex-1 flex-col items-center justify-center p-4">
-                {/* Card */}
                 <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[#1F2937] bg-[#111827] shadow-2xl">
                     <div className="flex flex-col items-center px-8 pt-12 pb-8">
                         <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#10B981] text-[#10B981]">

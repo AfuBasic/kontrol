@@ -20,7 +20,7 @@ import {
 import { useFeature } from '@/Hooks/useFeature';
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -41,14 +41,13 @@ import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import type { SharedData } from '@/types';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
-import PendingInvoiceNotification from '@/Components/PendingInvoiceNotification';
-import Toast from '@/Components/Toast';
-import SosAlertOverlay from '@/Components/SosAlertOverlay';
-import MobileBottomNav from '@/Components/Admin/MobileBottomNav';
-import PullToRefresh from '@/Components/PullToRefresh';
 
 // Dynamic Imports
-// const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
+const PendingInvoiceNotification = lazy(() => import('@/Components/PendingInvoiceNotification'));
+const Toast = lazy(() => import('@/Components/Toast'));
+const SosAlertOverlay = lazy(() => import('@/Components/SosAlertOverlay'));
+const MobileBottomNav = lazy(() => import('@/Components/Admin/MobileBottomNav'));
+const PullToRefresh = lazy(() => import('@/Components/PullToRefresh'));
 
 interface Props {
     children: ReactNode;
@@ -68,7 +67,13 @@ const baseNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
     { name: 'Announcement', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
     { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view', feature: 'resident-directory' },
-    { name: 'Security', href: SecurityPersonnelController.index.url(), icon: ShieldCheckIcon, permission: 'security.view', feature: 'security-personnel-management' },
+    {
+        name: 'Security',
+        href: SecurityPersonnelController.index.url(),
+        icon: ShieldCheckIcon,
+        permission: 'security.view',
+        feature: 'security-personnel-management',
+    },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
@@ -76,8 +81,6 @@ const baseNav: NavItem[] = [
 const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
-
-
 
 export default function AdminLayout({ children }: Props) {
     const page = usePage<
@@ -248,12 +251,14 @@ export default function AdminLayout({ children }: Props) {
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
-                        axios.post('/push/subscribe', {
-                            token: token.value,
-                            platform: Capacitor.getPlatform(),
-                        }).catch(err => {
-                            console.error('Failed to sync native push token:', err);
-                        });
+                        axios
+                            .post('/push/subscribe', {
+                                token: token.value,
+                                platform: Capacitor.getPlatform(),
+                            })
+                            .catch((err) => {
+                                console.error('Failed to sync native push token:', err);
+                            });
                     });
 
                     PushNotifications.addListener('registrationError', (error) => {
@@ -359,7 +364,9 @@ export default function AdminLayout({ children }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon, feature: 'automated-invoicing' }] : primaryNav;
+    const navWithBilling = billing_enabled
+        ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon, feature: 'automated-invoicing' }]
+        : primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);
     const visibleSecondaryNav = filterNav(secondaryNav);
@@ -379,28 +386,30 @@ export default function AdminLayout({ children }: Props) {
                         >
                             <Bars3Icon className="h-6 w-6" />
                         </button>
-                        
+
                         <Link href={DashboardController.url()} className="flex items-center gap-2">
                             <img src="/assets/images/app-icon.png" alt="Kontrol" className="h-7 w-auto" />
                             <span className="text-xl font-black tracking-tighter text-[#0A3D91] uppercase">Kontrol</span>
                         </Link>
 
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] ring-1 ring-slate-200 shadow-sm">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
                             <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                         </div>
                     </div>
                 </header>
 
-                <PullToRefresh>
-                    <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
-                        <div className="p-4">
-                            <PendingInvoiceNotification invoice={pendingInvoice} />
-                            {children}
-                        </div>
-                    </main>
-                </PullToRefresh>
+                <Suspense fallback={null}>
+                    <PullToRefresh>
+                        <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
+                            <div className="p-4">
+                                <PendingInvoiceNotification invoice={pendingInvoice} />
+                                {children}
+                            </div>
+                        </main>
+                    </PullToRefresh>
 
-                <MobileBottomNav url={url} unreadNotifications={unreadCount} />
+                    <MobileBottomNav url={url} unreadNotifications={unreadCount} />
+                </Suspense>
             </div>
 
             {/* Desktop View Structure */}
@@ -705,7 +714,7 @@ export default function AdminLayout({ children }: Props) {
                             initial={{ x: -280 }}
                             animate={{ x: 0 }}
                             exit={{ x: -280 }}
-                            className="fixed inset-y-0 left-0 z-70 flex w-72 flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] pt-safe md:hidden"
+                            className="pt-safe fixed inset-y-0 left-0 z-70 flex w-72 flex-col bg-linear-to-b from-[#0A3D91] to-[#041E4A] md:hidden"
                         >
                             <div className="flex h-16 items-center justify-end px-4">
                                 <button
@@ -744,15 +753,15 @@ export default function AdminLayout({ children }: Props) {
                                 <Link href={ProfileController.edit.url()} className="flex items-center gap-3 px-4 py-3 text-white/70">
                                     <UserCircleIcon className="h-5 w-5" /> Profile
                                 </Link>
-                                    <button
-                                        onClick={() => {
-                                            setMobileMenuOpen(false);
-                                            setShowLogoutConfirmation(true);
-                                        }}
-                                        className="flex w-full items-center gap-3 px-4 py-3 text-white/70"
-                                    >
-                                        <ArrowLeftStartOnRectangleIcon className="h-5 w-5" /> Sign Out
-                                    </button>
+                                <button
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        setShowLogoutConfirmation(true);
+                                    }}
+                                    className="flex w-full items-center gap-3 px-4 py-3 text-white/70"
+                                >
+                                    <ArrowLeftStartOnRectangleIcon className="h-5 w-5" /> Sign Out
+                                </button>
                             </div>
                         </motion.aside>
                     </>
@@ -775,7 +784,7 @@ export default function AdminLayout({ children }: Props) {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/20 bg-white/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-black/5"
+                            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/20 bg-white/80 p-8 shadow-2xl ring-1 ring-black/5 backdrop-blur-2xl"
                         >
                             <div className="mb-6 flex justify-center">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500 ring-4 ring-red-50/50">
@@ -789,13 +798,13 @@ export default function AdminLayout({ children }: Props) {
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={handleLogout}
-                                    className="flex h-12 items-center justify-center rounded-2xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/20 transition-all active:scale-95 hover:bg-red-600"
+                                    className="flex h-12 items-center justify-center rounded-2xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
                                 >
                                     Yes, Sign Out
                                 </button>
                                 <button
                                     onClick={() => setShowLogoutConfirmation(false)}
-                                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 transition-all active:scale-95 hover:bg-slate-200"
+                                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
                                 >
                                     Cancel
                                 </button>
@@ -805,27 +814,29 @@ export default function AdminLayout({ children }: Props) {
                 )}
             </AnimatePresence>
 
-            <Toast
-                show={showToast}
-                message={toastMessage}
-                type={toastType}
-                onClick={() => {
-                    const data = lastReceivedNotification?.data;
-                    const type = data?.type;
-                    const targetUrl = toastUrl || data?.action_url || data?.url;
+            <Suspense fallback={null}>
+                <Toast
+                    show={showToast}
+                    message={toastMessage}
+                    type={toastType}
+                    onClick={() => {
+                        const data = lastReceivedNotification?.data;
+                        const type = data?.type;
+                        const targetUrl = toastUrl || data?.action_url || data?.url;
 
-                    if (targetUrl && type !== 'visitor_arrived') {
-                        router.visit(targetUrl);
-                    }
-                    setShowToast(false);
-                }}
-                onClose={() => {
-                    setShowToast(false);
-                    setToastUrl(null);
-                }}
-            />
+                        if (targetUrl && type !== 'visitor_arrived') {
+                            router.visit(targetUrl);
+                        }
+                        setShowToast(false);
+                    }}
+                    onClose={() => {
+                        setShowToast(false);
+                        setToastUrl(null);
+                    }}
+                />
 
-            {auth.user && userRoles.includes('security') && <SosAlertOverlay />}
+                {auth.user && userRoles.includes('security') && <SosAlertOverlay />}
+            </Suspense>
         </div>
     );
 }

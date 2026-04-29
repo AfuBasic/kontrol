@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, User as UserIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 
 type NotificationType = 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
 type Severity = 'critical' | 'warning' | 'info';
@@ -129,7 +128,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
     const sections: Severity[] = ['critical', 'warning', 'info'];
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Alerts · Security" />
 
             {/* Header */}
@@ -179,7 +178,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                     )}
                 </div>
             )}
-        </SecurityLayout>
+        </>
     );
 }
 

@@ -75,11 +75,13 @@ const navItems = [
     },
 ];
 
-export default function SecurityLayout({ children, hideNav = false }: Props) {
+export default function SecurityLayout({ children, hideNav = false, variant = 'light' }: Props & { variant?: 'light' | 'dark' }) {
     const page = usePage<PageProps>();
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
+
     useForceLogout(auth?.user?.id);
+
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
@@ -139,7 +141,6 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                     }
 
                     if (permStatus.receive !== 'granted') {
-                        console.warn('Push notification permission not granted (Native)');
                         return;
                     }
 
@@ -147,22 +148,13 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
-                        axios
-                            .post('/push/subscribe', {
-                                token: token.value,
-                                platform: Capacitor.getPlatform(),
-                            })
-                            .catch((err) => {
-                                console.error('Failed to sync native push token:', err);
-                            });
-                    });
-
-                    PushNotifications.addListener('registrationError', (error) => {
-                        console.error('Native push registration error:', error);
+                        axios.post('/push/subscribe', {
+                            token: token.value,
+                            platform: Capacitor.getPlatform(),
+                        });
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        console.info('Native push received in foreground:', notification);
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || 'New alert received');
                         setToastType('success');
@@ -205,7 +197,6 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                             });
 
                             await axios.post('/push/subscribe', subscription.toJSON());
-                            console.info('WebPush subscription synced successfully');
                         } catch (subErr) {
                             console.error('Failed to subscribe to WebPush:', subErr);
                         }
@@ -247,31 +238,40 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
         return !otherItemsMatch;
     };
 
+    const isDark = variant === 'dark';
+
     return (
         <PullToRefresh>
-            <div className="flex min-h-screen flex-col bg-slate-50">
-                {/* Safe area spacer - fills status bar area with background */}
-                <div className="pt-safe fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl" aria-hidden="true" />
-
-                {/* Minimal Header */}
+            <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+                {/* Single Header with Safe Area integrated */}
                 <motion.header
+                    id="kontrol-security-header"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="mt-safe sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-xl"
+                    className={`pt-safe sticky top-0 z-40 border-b backdrop-blur-xl ${
+                        isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
+                    }`}
                 >
                     <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
                         <Link href={HomeController.url()} className="flex items-center gap-2.5">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                             <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-slate-900">Security</span>
-                                {estateName && <span className="text-[10px] leading-tight text-slate-500">{estateName}</span>}
+                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
+                                {estateName && (
+                                    <span className={`text-[10px] leading-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{estateName}</span>
+                                )}
                             </div>
                         </Link>
 
-                        {/* User Avatar */}
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-primary-100 to-primary-200 text-xs font-semibold text-primary-700">
+                            <div
+                                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
+                                    isDark
+                                        ? 'bg-slate-800 text-slate-300 ring-1 ring-slate-700'
+                                        : 'bg-linear-to-br from-primary-100 to-primary-200 text-primary-700'
+                                }`}
+                            >
                                 {auth?.user?.name
                                     ?.split(' ')
                                     .map((n) => n[0])

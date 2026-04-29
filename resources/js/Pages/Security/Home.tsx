@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ChevronRight, ScanLine, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 
 type ActivityItem = {
     id: number;
@@ -47,7 +46,7 @@ export default function SecurityCommandCenter() {
     }, []);
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Security Command Center" />
 
             <div className="space-y-5">
@@ -155,7 +154,7 @@ export default function SecurityCommandCenter() {
                     )}
                 </section>
             </div>
-        </SecurityLayout>
+        </>
     );
 }
 
@@ -190,4 +189,3 @@ function greeting() {
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
 }
-

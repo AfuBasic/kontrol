@@ -4,7 +4,6 @@ import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pe
 import { useEffect, useState } from 'react';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 
 interface Props {
     user: {
@@ -33,7 +32,7 @@ export default function ProfilePage({ user, estateName }: Props) {
         .toUpperCase();
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Profile · Security" />
 
             <header className="mb-4">
@@ -129,7 +128,7 @@ export default function ProfilePage({ user, estateName }: Props) {
             </section>
 
             <EditSheet open={editOpen} onClose={() => setEditOpen(false)} user={user} />
-        </SecurityLayout>
+        </>
     );
 }
 
