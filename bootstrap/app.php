@@ -87,6 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'resident.active' => EnsureResidentSubscriptionActive::class,
             'feature' => CheckEstateFeature::class,
+            'check-estate-feature' => CheckEstateFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

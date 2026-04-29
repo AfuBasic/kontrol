@@ -341,44 +341,17 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
 
             {/* Actions */}
             <div className="mt-5 flex items-center gap-3">
-                {valid ? (
-                    <>
-                        <button
-                            type="button"
-                            onClick={onAdmit}
-                            className="flex-1 rounded-2xl bg-emerald-500 py-3.5 text-sm font-bold tracking-wide text-emerald-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-[0.99]"
-                        >
-                            Admit
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onReject}
-                            className="flex-1 rounded-2xl border border-rose-500/40 bg-rose-500/10 py-3.5 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/20"
-                        >
-                            Reject
-                        </button>
-                    </>
-                ) : (
                     <button
                         type="button"
                         onClick={onReset}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-bold text-slate-900 transition hover:bg-slate-100 active:scale-[0.99]"
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition active:scale-[0.99] ${
+                            valid ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-white text-slate-900 hover:bg-slate-100'
+                        }`}
                     >
                         <RotateCcw className="h-4 w-4" strokeWidth={2.4} />
-                        Try again
+                        {valid ? 'Verify another' : 'Try again'}
                     </button>
-                )}
             </div>
-
-            {valid && (
-                <button
-                    type="button"
-                    onClick={onReset}
-                    className="mt-3 self-center text-xs font-medium text-slate-500 transition hover:text-slate-300"
-                >
-                    Cancel & verify another
-                </button>
-            )}
         </motion.div>
     );
 }

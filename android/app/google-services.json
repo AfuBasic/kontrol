@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "481153520794",
+    "project_id": "kontrol-64905",
+    "storage_bucket": "kontrol-64905.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481153520794:android:87f21ea5190d133d81fb23",
+        "android_client_info": {
+          "package_name": "com.kontrol.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "481153520794-pc89ft1dv7u0rhl6tdddvag114fcu90a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdtK8oFSvChDxQ95O9XHe5iPVw922yqow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "481153520794-pc89ft1dv7u0rhl6tdddvag114fcu90a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "481153520794-siil1iei9jb3riosfqalvms1sgro1ir4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kontrol.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

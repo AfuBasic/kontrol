@@ -125,7 +125,6 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
                     'notification' => [
                         'color' => '#0A3D91',
                         'sound' => 'default',
-                        'icon' => 'notification_icon',
                     ],
                 ],
                 'apns' => [

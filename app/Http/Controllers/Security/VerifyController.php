@@ -38,6 +38,13 @@ class VerifyController extends Controller
             verifiedBy: $user,
         );
 
+        if ($result['valid']) {
+            return back()->with([
+                'success' => "Access Granted: {$result['visitor_name']} admitted successfully.",
+                'validation_result' => $result,
+            ]);
+        }
+
         return back()->with('validation_result', $result);
     }
 

@@ -145,13 +145,21 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
                         console.info('Native push received in foreground:', notification);
-                        router.reload({ only: ['auth'] });
+                        setLastReceivedNotification(notification);
+                        setToastMessage(notification.body || 'New notification received');
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 5000);
+                        router.reload({ only: ['auth', 'unreadCount'] });
                     });
 
                     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
                         const data = notification.notification.data;
                         const targetUrl = data?.action_url || data?.url;
-                        if (targetUrl) {
+                        const type = data?.type;
+
+                        // Only navigate if it's NOT a visitor arrival (which doesn't need "details")
+                        // and if we aren't already on that page.
+                        if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
                             router.visit(targetUrl);
                         }
                     });
@@ -338,10 +346,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             exit={{ opacity: 0, y: 100 }}
                             className="fixed bottom-32 left-1/2 z-50 w-full max-w-xs -translate-x-1/2 px-4"
                             onClick={() => {
-                                if (lastReceivedNotification) {
-                                    handleNotificationClick(lastReceivedNotification);
-                                    setShowToast(false);
+                                const data = lastReceivedNotification?.data;
+                                const type = data?.type;
+                                const targetUrl = data?.action_url || data?.url;
+
+                                // Skip navigation for visitor arrivals to prevent reloads
+                                if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
+                                    router.visit(targetUrl);
                                 }
+                                setShowToast(false);
                             }}
                         >
                             <div className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-2xl ring-1 ring-slate-100 backdrop-blur-xl transition-all active:scale-95">

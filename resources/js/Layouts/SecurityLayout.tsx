@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -10,6 +10,20 @@ import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileCo
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import axios from 'axios';
+
+const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+};
 
 interface Props {
     children: ReactNode;
@@ -70,6 +84,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+    const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
 
     // Sync unread count when props change
     useEffect(() => {
@@ -110,6 +125,107 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
             setTimeout(() => setShowToast(false), 3000);
         }
     }, [flash]);
+
+    // Push Notification Setup
+    useEffect(() => {
+        const setupPush = async () => {
+            try {
+                // PATH 1: Native Platform (Capacitor FCM)
+                if (Capacitor.isNativePlatform()) {
+                    let permStatus = await PushNotifications.checkPermissions();
+
+                    if (permStatus.receive === 'prompt') {
+                        permStatus = await PushNotifications.requestPermissions();
+                    }
+
+                    if (permStatus.receive !== 'granted') {
+                        console.warn('Push notification permission not granted (Native)');
+                        return;
+                    }
+
+                    await PushNotifications.register();
+
+                    // Registration listeners
+                    PushNotifications.addListener('registration', (token) => {
+                        axios
+                            .post('/push/subscribe', {
+                                token: token.value,
+                                platform: Capacitor.getPlatform(),
+                            })
+                            .catch((err) => {
+                                console.error('Failed to sync native push token:', err);
+                            });
+                    });
+
+                    PushNotifications.addListener('registrationError', (error) => {
+                        console.error('Native push registration error:', error);
+                    });
+
+                    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        console.info('Native push received in foreground:', notification);
+                        setLastReceivedNotification(notification);
+                        setToastMessage(notification.body || 'New alert received');
+                        setToastType('success');
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 5000);
+                        router.reload({ only: ['auth', 'unreadCount'] });
+                    });
+
+                    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+                        const data = notification.notification.data;
+                        const targetUrl = data?.action_url || data?.url;
+                        const type = data?.type;
+
+                        // Only navigate for critical alerts (like SOS) and if the path is different
+                        if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
+                            router.visit(targetUrl);
+                        }
+                    });
+                }
+                // PATH 2: Web Platform (Browser WebPush)
+                else if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/',
+                    });
+
+                    await navigator.serviceWorker.ready;
+
+                    let permission = Notification.permission;
+                    if (permission === 'default') {
+                        permission = await Notification.requestPermission();
+                    }
+
+                    const webpush_public_key = page.props.webpush_public_key as string;
+
+                    if (permission === 'granted' && webpush_public_key) {
+                        try {
+                            const subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(webpush_public_key),
+                            });
+
+                            await axios.post('/push/subscribe', subscription.toJSON());
+                            console.info('WebPush subscription synced successfully');
+                        } catch (subErr) {
+                            console.error('Failed to subscribe to WebPush:', subErr);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Push notification setup failed:', err);
+            }
+        };
+
+        if (auth?.user?.id) {
+            setupPush();
+        }
+
+        return () => {
+            if (Capacitor.isNativePlatform()) {
+                PushNotifications.removeAllListeners();
+            }
+        };
+    }, [auth?.user?.id, page.props.webpush_public_key]);
 
     const isActive = (item: (typeof navItems)[0]) => {
         // Check for exact match first
@@ -167,9 +283,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                     </div>
                 </motion.header>
 
-                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
-                    {children}
-                </main>
+                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">{children}</main>
 
                 {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
                 {!hideNav && (
@@ -179,10 +293,7 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                         transition={{ duration: 0.25, delay: 0.05 }}
                         className="pb-safe fixed inset-x-0 bottom-0 z-40 bg-white/85 backdrop-blur-xl"
                     >
-                        <div
-                            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80"
-                            aria-hidden="true"
-                        />
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
                         <div className="mx-auto max-w-lg px-2">
                             <ul className="grid grid-cols-4 items-stretch">
                                 {navItems.map((item) => {
@@ -244,10 +355,20 @@ export default function SecurityLayout({ children, hideNav = false }: Props) {
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 50 }}
-                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md"
+                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md cursor-pointer"
+                            onClick={() => {
+                                const data = lastReceivedNotification?.data;
+                                const type = data?.type;
+                                const targetUrl = data?.action_url || data?.url;
+
+                                if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
+                                    router.visit(targetUrl);
+                                }
+                                setShowToast(false);
+                            }}
                         >
                             <div
-                                className={`rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg ${
+                                className={`rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg transition-all active:scale-95 ${
                                     toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                                 }`}
                             >
