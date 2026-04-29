@@ -14,12 +14,12 @@ const config: CapacitorConfig = {
     server: {
         url: isDev ? devUrl : 'https://app.usekontrol.com',
         cleartext: isDev,
-        // The hostname ensures cookies and CSRF work correctly regardless of the 'url' IP
-        hostname: 'kontrol.test',
-        // Allow all subdomains for multi-tenancy
-        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com'],
-        // CRITICAL for Android: Must be 'https' to support modern browser features
-        androidScheme: 'https',
+        // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
+        hostname: isDev ? '10.0.2.2' : 'app.usekontrol.com',
+        // Allow all subdomains and the emulator IP for local development
+        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', '10.0.2.2'],
+        // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
+        androidScheme: isDev ? 'http' : 'https',
     },
     android: {
         // Hardware acceleration is on by default in modern Capacitor,
