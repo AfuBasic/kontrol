@@ -46,4 +46,12 @@ class NotificationController extends Controller
 
         return back();
     }
+
+    public function clearAll(): RedirectResponse
+    {
+        $user = Auth::user();
+        $this->fetchNotificationsAction->clearAll($user);
+
+        return back();
+    }
 }

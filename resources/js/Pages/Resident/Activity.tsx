@@ -1,7 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BellOff, Clock, User, Zap, Shield, Key, LogIn, ChevronRight, Activity as ActivityIcon, Megaphone } from 'lucide-react';
+import { Bell, BellOff, Clock, User, Zap, Shield, Key, LogIn, ChevronRight, Activity as ActivityIcon, Megaphone, CheckCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import type { ActivityItem } from '@/types/access-code';
 
 type Props = {
@@ -322,6 +323,37 @@ export default function Activity({ activities, posts = [], notifications = [], u
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.3 }}
                         >
+                            {/* Quick Actions */}
+                            {notifications && notifications.length > 0 && (
+                                <div className="mb-6 flex gap-3">
+                                    <button
+                                        onClick={() => {
+                                            if (unreadCount === 0) return;
+                                            router.post(NotificationController.markAllAsRead.url(), {}, { preserveScroll: true });
+                                        }}
+                                        disabled={unreadCount === 0}
+                                        className={`flex flex-1 items-center justify-center gap-2 rounded-[22px] py-3.5 text-[10px] font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 ${
+                                            unreadCount > 0 
+                                                ? 'bg-slate-900 text-white shadow-lg' 
+                                                : 'bg-slate-100 text-slate-400'
+                                        }`}
+                                    >
+                                        <CheckCircle className="h-3.5 w-3.5" strokeWidth={3} />
+                                        Read all
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (!confirm('Clear all notifications?')) return;
+                                            router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true });
+                                        }}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-[22px] bg-white py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-100"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={3} />
+                                        Clear
+                                    </button>
+                                </div>
+                            )}
+
                             {/* ... same notifications logic as before ... */}
                             {notifications && notifications.length > 0 ? (
                                 <div className="space-y-4">

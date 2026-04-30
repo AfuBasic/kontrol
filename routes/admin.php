@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\InviteLinkController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\PaymentCallbackController;
 use App\Http\Controllers\Admin\PaymentHistoryController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
@@ -110,9 +111,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Notifications
-    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
     // Admin User management (manage other admins)
     Route::middleware('role:admin')->group(function (): void {

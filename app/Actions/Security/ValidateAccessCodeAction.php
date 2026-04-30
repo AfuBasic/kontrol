@@ -36,7 +36,7 @@ class ValidateAccessCodeAction
         $accessCode = AccessCode::query()
             ->forEstate($estateId)
             ->where('code', $code)
-            ->with('user:id,name,email')
+            ->with('user:id,name,email,fcm_token')
             ->first();
 
         if (! $accessCode) {

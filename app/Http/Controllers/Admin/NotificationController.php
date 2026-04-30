@@ -58,4 +58,14 @@ class NotificationController extends Controller
 
         return back();
     }
+
+    /**
+     * Clear all notifications.
+     */
+    public function clearAll(Request $request)
+    {
+        $request->user()->notifications()->delete();
+
+        return back();
+    }
 }

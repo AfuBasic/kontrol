@@ -48,6 +48,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     });
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('resident.notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('resident.notifications.read-all');
+    Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('resident.notifications.clear-all');
 
     // Estate Contacts
     Route::middleware('check-estate-feature:estate-contacts')->group(function (): void {

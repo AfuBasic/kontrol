@@ -28,4 +28,14 @@ class NotificationController extends Controller
 
         return back();
     }
+
+    /**
+     * Clear all notifications for the resident.
+     */
+    public function clearAll(Request $request): RedirectResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return back();
+    }
 }

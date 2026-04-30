@@ -5,7 +5,6 @@ import { ChevronRight, Globe, MessageCircle, Newspaper, Pin, Shield, Users } fro
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
@@ -193,7 +192,7 @@ export default function FeedIndex({ posts }: Props) {
     const sections: ReturnType<typeof bucketFor>[] = ['today', 'yesterday', 'thisWeek', 'earlier'];
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Feed · Security" />
 
             {/* Header */}
@@ -270,7 +269,7 @@ export default function FeedIndex({ posts }: Props) {
             ) : (
                 <EmptyState filter={filter} />
             )}
-        </SecurityLayout>
+        </>
     );
 }
 

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +13,6 @@ use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources as Fcm;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
-
 class VisitorArrivedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -38,6 +38,11 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
             $channels[] = FcmChannel::class;
         }
 
+        // Add Telegram channel if user has Telegram linked
+        if ($notifiable->hasTelegramLinked()) {
+            $channels[] = TelegramChannel::class;
+        }
+
         return $channels;
     }
 
@@ -47,13 +52,17 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
-        $visitorName = $this->accessCode->name ?? 'A visitor';
+        $visitorName = $this->accessCode->visitor_name;
+        
+        $message = $visitorName 
+            ? "{$visitorName} has arrived at the security post of {$estateName}."
+            : "A visitor has arrived at the security post of {$estateName}.";
 
         return [
             'title' => 'Visitor Arrived',
-            'message' => "{$visitorName} has arrived at the gate of {$estateName}.",
+            'message' => $message,
             'access_code' => $this->accessCode->code,
-            'visitor_name' => $visitorName,
+            'visitor_name' => $visitorName ?? 'A visitor',
             'estate_name' => $estateName,
             'type' => 'visitor_arrived',
             'action_url' => '/resident',
@@ -102,6 +111,46 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
                     'sound' => 'default',
                     'channel_id' => 'kontrol_v1_alerts',
                 ],
+            ])
+            ->custom([
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'alert' => [
+                                'title' => $data['title'],
+                                'body' => $data['message'],
+                            ],
+                            'sound' => 'default',
+                            'badge' => 1,
+                            'category' => 'visitor_arrived',
+                        ],
+                    ],
+                ],
             ]);
+    }
+
+    /**
+     * Get the telegram representation of the notification.
+     * 
+     * @return array{text: string, keyboard?: array}
+     */
+    public function toTelegram(object $notifiable): array
+    {
+        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
+        $visitorName = $this->accessCode->visitor_name;
+        $code = $this->accessCode->code;
+
+        $visitorDisplay = $visitorName ? "<b>{$visitorName}</b>" : "A visitor";
+
+        $text = "🔔 <b>Visitor Arrived</b>\n\n"
+            ."Hi <b>{$notifiable->name}</b>,\n"
+            ."{$visitorDisplay} has just arrived at the security post of <b>{$estateName}</b>.\n\n"
+            ."🎫 Code: <code>{$code}</code>\n"
+            ."📍 Location: {$this->accessCode->estate?->address}\n\n"
+            ."<i>Access granted via Security Terminal.</i>";
+
+        return [
+            'text' => $text,
+        ];
     }
 }

@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, User as UserIcon } from 'lucide-react';
+import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, Trash2, User as UserIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 
@@ -116,6 +116,18 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
         );
     };
 
+    const handleClearAll = () => {
+        if (items.length === 0) return;
+        if (!confirm('Are you sure you want to delete all notifications? This cannot be undone.')) return;
+        setItems([]);
+        setLocalUnread(0);
+        router.post(
+            NotificationController.clearAll.url(),
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
     const handleLoadMore = () => {
         if (safePagination.current_page >= safePagination.last_page) return;
         router.get(
@@ -132,21 +144,39 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
             <Head title="Alerts · Security" />
 
             {/* Header */}
-            <header className="mb-5 flex items-end justify-between">
-                <div>
-                    <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Alerts</p>
-                    <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-                        {localUnread > 0 ? `${localUnread} unread` : 'All caught up'}
-                    </h1>
+            <header className="mb-6">
+                <div className="flex items-end justify-between">
+                    <div>
+                        <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Alerts</p>
+                        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+                            {localUnread > 0 ? `${localUnread} unread` : 'Notifications'}
+                        </h1>
+                    </div>
                 </div>
-                {localUnread > 0 && (
-                    <button
-                        onClick={handleMarkAll}
-                        disabled={markingAll}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                    >
-                        {markingAll ? 'Marking…' : 'Mark all read'}
-                    </button>
+
+                {/* Quick Actions Card */}
+                {items.length > 0 && (
+                    <div className="mt-5 flex gap-2.5">
+                        <button
+                            onClick={handleMarkAll}
+                            disabled={markingAll || localUnread === 0}
+                            className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition active:scale-[0.98] disabled:opacity-40 ${
+                                localUnread > 0 
+                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm' 
+                                    : 'border-slate-200 bg-white text-slate-400'
+                            }`}
+                        >
+                            <CheckCircle className="h-4 w-4" strokeWidth={2.2} />
+                            {markingAll ? 'Marking…' : 'Read all'}
+                        </button>
+                        <button
+                            onClick={handleClearAll}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3 text-xs font-semibold text-slate-700 transition hover:bg-rose-50 hover:text-rose-600 active:scale-[0.98]"
+                        >
+                            <Trash2 className="h-4 w-4" strokeWidth={2.2} />
+                            Clear all
+                        </button>
+                    </div>
                 )}
             </header>
 

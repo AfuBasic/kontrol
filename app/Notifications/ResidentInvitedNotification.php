@@ -97,6 +97,20 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
                     'sound' => 'default',
                     'channel_id' => 'kontrol_v1_alerts',
                 ],
+            ])
+            ->custom([
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'alert' => [
+                                'title' => $data['title'],
+                                'body' => $data['message'],
+                            ],
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
             ]);
     }
 }

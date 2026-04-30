@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Admin;
 
+use App\Channels\TelegramChannel;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -35,7 +36,17 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail', FcmChannel::class];
+        $channels = ['database', 'broadcast', 'mail'];
+
+        if ($notifiable->fcm_token) {
+            $channels[] = FcmChannel::class;
+        }
+
+        if ($notifiable->telegram_chat_id) {
+            $channels[] = TelegramChannel::class;
+        }
+
+        return $channels;
     }
 
     public function toFcm(object $notifiable): FcmMessage
@@ -107,6 +118,23 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
             'message' => "{$this->resident->name} has requested to join {$this->estateName}.",
             'action_url' => route('admin.residents.approvals.index'),
             'type' => 'info',
+        ];
+    }
+    /**
+     * Get the Telegram representation of the notification.
+     *
+     * @return array{text: string, keyboard?: array}
+     */
+    public function toTelegram(object $notifiable): array
+    {
+        $text = "👤 <b>New Resident Request</b>\n\n"
+            ."<b>Name:</b> {$this->resident->name}\n"
+            ."<b>Estate:</b> {$this->estateName}\n"
+            ."<b>Email:</b> {$this->resident->email}\n\n"
+            ."Please review and approve this request in the admin portal.";
+
+        return [
+            'text' => $text,
         ];
     }
 }

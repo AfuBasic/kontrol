@@ -1,4 +1,4 @@
-import { BellIcon, CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { BellIcon, CheckCircleIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -6,6 +6,7 @@ import {
     index,
     markAllAsRead as markAllAsReadAction,
     markAsRead as markAsReadAction,
+    clearAll as clearAllAction,
 } from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { SharedData } from '@/types';
@@ -66,6 +67,11 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
         router.post(markAllAsReadAction.url());
     };
 
+    const clearAll = () => {
+        if (!confirm('Are you sure you want to delete all notifications?')) return;
+        router.post(clearAllAction.url());
+    };
+
     return (
         <>
             <Head title={`Notifications - ${name}`} />
@@ -75,13 +81,20 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                     <h1 className="text-2xl font-semibold text-gray-900">Notifications</h1>
                     <p className="mt-1 text-sm text-gray-500">View and manage your system notifications.</p>
                 </div>
-                <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+                <div className="mt-4 flex items-center gap-2 sm:mt-0 sm:ml-16 sm:flex-none">
                     <button
                         onClick={markAllAsRead}
                         className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
                     >
                         <CheckCircleIcon className="h-5 w-5 text-gray-400" />
-                        Mark all as read
+                        Mark all read
+                    </button>
+                    <button
+                        onClick={clearAll}
+                        className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-rose-50 hover:ring-rose-200"
+                    >
+                        <TrashIcon className="h-5 w-5 text-rose-400" />
+                        Clear all
                     </button>
                 </div>
             </div>

@@ -1,6 +1,5 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 
 export default function Dashboard() {
     return (
@@ -79,6 +78,6 @@ export default function Dashboard() {
                     <p className="mt-1 text-sm text-gray-500">Entry logs and alerts will appear here.</p>
                 </div>
             </motion.div>
-        </SecurityLayout>
+        </>
     );
 }

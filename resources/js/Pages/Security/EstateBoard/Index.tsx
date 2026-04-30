@@ -5,7 +5,6 @@ import { Globe, Image as ImageIcon, MessageCircle, Shield, Users } from 'lucide-
 import { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
@@ -155,7 +154,7 @@ export default function EstateBoardIndex({ posts }: Props) {
     }, [loadMore]);
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Estate Board" />
 
             {/* Page Header */}
@@ -198,6 +197,6 @@ export default function EstateBoardIndex({ posts }: Props) {
                     <p className="mt-1 max-w-sm text-sm text-gray-500">Check back later for updates from the estate management.</p>
                 </motion.div>
             )}
-        </SecurityLayout>
+        </>
     );
 }

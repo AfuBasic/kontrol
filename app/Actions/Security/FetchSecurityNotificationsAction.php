@@ -44,12 +44,17 @@ class FetchSecurityNotificationsAction
         return true;
     }
 
-    /**
-     * Mark all notifications as read.
-     */
     public function markAllAsRead(User $user): void
     {
         $user->unreadNotifications->markAsRead();
+    }
+
+    /**
+     * Clear all notifications for a user.
+     */
+    public function clearAll(User $user): void
+    {
+        $user->notifications()->delete();
     }
 
     /**

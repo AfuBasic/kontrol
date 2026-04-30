@@ -149,15 +149,11 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
-                        axios
-                            .post('/push/subscribe', {
-                                token: token.value,
-                                platform: Capacitor.getPlatform(),
-                            })
-
+                        axios.post('/push/subscribe', {
+                            token: token.value,
+                            platform: Capacitor.getPlatform(),
+                        });
                     });
-
-
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
                         setLastReceivedNotification(notification);

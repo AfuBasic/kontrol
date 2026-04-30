@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
 import EstateBoardCommentController from '@/actions/App/Http/Controllers/Security/EstateBoardCommentController';
-import SecurityLayout from '@/Layouts/SecurityLayout';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
@@ -153,7 +152,7 @@ export default function FeedShow({ post, comments }: Props) {
     }
 
     return (
-        <SecurityLayout>
+        <>
             <Head title={post.title || 'Post'} />
 
             {/* Back Button */}
@@ -288,6 +287,6 @@ export default function FeedShow({ post, comments }: Props) {
                     </div>
                 )}
             </motion.div>
-        </SecurityLayout>
+        </>
     );
 }

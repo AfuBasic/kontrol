@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
+import SecurityLayout from '@/Layouts/SecurityLayout';
 
 const CODE_LENGTH = 6;
 

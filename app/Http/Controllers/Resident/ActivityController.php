@@ -21,12 +21,8 @@ class ActivityController extends Controller
         $user = Auth::user();
         $estate = $user->estates()->wherePivot('status', 'accepted')->first();
 
-        // Capture count before marking as read so we can show it on the tab
+        // Capture unread count for the tab
         $unreadCount = $user->unreadNotifications()->count();
-
-        // Mark all notifications as read when visiting the feed
-        $user->unreadNotifications->markAsRead();
-
         $hasBoardFeature = $estate && $estate->hasFeature('interactive-notice-board');
 
         $posts = $hasBoardFeature ? EstateBoardPost::query()
