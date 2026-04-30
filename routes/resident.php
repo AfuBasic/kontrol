@@ -87,17 +87,6 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::get('/status', [TelegramLinkController::class, 'status'])->name('status');
     });
 
-    // Billing
-    Route::prefix('billing')->name('resident.billing.')->group(function (): void {
-        Route::get('/', [BillingController::class, 'index'])->name('index');
-        Route::patch('/preference', [BillingController::class, 'updatePreference'])->name('preference.update');
-        Route::post('/pay', [BillingController::class, 'payOutstanding'])->name('pay-outstanding');
-        Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
-        Route::post('/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('invoices.pay');
-        Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
-        Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
-    });
-
     // SOS Emergency
     Route::post('/sos/trigger', [SosController::class, 'trigger'])->name('resident.sos.trigger');
 
@@ -109,9 +98,20 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 });
 
 // ──────────────────────────────────────────────────────────────
-// Primary resident only: household management
+// Primary resident only: billing & household management
 // ──────────────────────────────────────────────────────────────
 Route::middleware('role:resident')->group(function (): void {
+    // Billing
+    Route::prefix('billing')->name('resident.billing.')->group(function (): void {
+        Route::get('/', [BillingController::class, 'index'])->name('index');
+        Route::patch('/preference', [BillingController::class, 'updatePreference'])->name('preference.update');
+        Route::post('/pay', [BillingController::class, 'payOutstanding'])->name('pay-outstanding');
+        Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
+        Route::post('/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('invoices.pay');
+        Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
+        Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
+    });
+
     // Household Management
     Route::prefix('household')->name('resident.household.')->middleware('check-estate-feature:household-management')->group(function (): void {
         Route::get('/', [HouseholdMemberController::class, 'index'])->name('index');

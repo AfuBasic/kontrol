@@ -28,16 +28,24 @@ class EnsureResidentSubscriptionActive
         $estate = $estateId ? Estate::find($estateId) : $user->estates()->first();
 
         if ($estate && $estate->settings->charge_type === 'residents') {
-            $subscription = $user->residentSubscription()->where('estate_id', $estate->id)->first();
+            // Determine whose subscription we are checking
+            $subject = $user;
+            if ($user->isHouseholdMember() && $user->householdOf) {
+                $subject = $user->householdOf->primaryResident;
+            }
 
-            // If no subscription exists, create one (grace period by default)
-            if (! $subscription) {
+            $subscription = $subject->residentSubscription()->where('estate_id', $estate->id)->first();
+
+            // If no subscription exists for primary resident, create one (grace period by default)
+            if (! $subscription && $subject->isPrimaryResident()) {
                 $service = app(ResidentSubscriptionService::class);
-                $subscription = $service->createForUser($user, $estate);
+                $subscription = $service->createForUser($subject, $estate);
             }
 
             if (! $subscription || ! $subscription->isActive()) {
-                $message = 'Your access is currently limited due to an inactive subscription. Please visit the billing section to restore access.';
+                $message = $user->isHouseholdMember()
+                    ? 'Your access is currently limited because the primary resident\'s subscription is inactive.'
+                    : 'Your access is currently limited due to an inactive subscription. Please visit the billing section to restore access.';
 
                 if ($request->expectsJson()) {
                     return response()->json(['message' => $message], 403);

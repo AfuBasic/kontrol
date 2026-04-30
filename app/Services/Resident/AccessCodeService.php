@@ -31,12 +31,22 @@ class AccessCodeService
     {
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
-        $subscription = $user->residentSubscription;
+        // Determine whose subscription we are checking
+        $subject = $user;
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
+
+        $subscription = $subject->residentSubscription;
 
         // Block if subscription is expired/invalid (only if estate charges residents)
         if ($estate->settings->charge_type === 'residents' && (! $subscription || ! $subscription->isActive())) {
+            $message = $user->isHouseholdMember()
+                ? 'Access is currently limited because the primary resident\'s subscription is inactive.'
+                : 'Your subscription has expired or is inactive. Please visit the billing section to restore access.';
+
             throw ValidationException::withMessages([
-                'subscription' => ['Your subscription has expired or is inactive. Please visit the billing section to restore access.'],
+                'subscription' => [$message],
             ]);
         }
 
@@ -59,14 +69,6 @@ class AccessCodeService
             }
 
             $expiresAt = now()->addMinutes($minutes);
-        }
-
-        // Enforce Daily Limit
-        $usage = $this->getDailyUsageAndLimit();
-        if ($usage['limit'] !== null && $usage['used'] >= $usage['limit']) {
-            throw ValidationException::withMessages([
-                'daily_limit' => ['You have reached your daily access code limit of '.$usage['limit'].' codes.'],
-            ]);
         }
 
         return AccessCode::create([
@@ -355,7 +357,7 @@ class AccessCodeService
 
         return [
             'used' => $used,
-            'limit' => $settings->access_code_daily_limit_per_resident,
+            'limit' => null,
         ];
     }
 

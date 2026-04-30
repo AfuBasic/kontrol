@@ -1,6 +1,20 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BellOff, Clock, User, Zap, Shield, Key, LogIn, ChevronRight, Activity as ActivityIcon, Megaphone, CheckCircle, Trash2 } from 'lucide-react';
+import {
+    Bell,
+    BellOff,
+    Clock,
+    User,
+    Zap,
+    Shield,
+    Key,
+    LogIn,
+    ChevronRight,
+    Activity as ActivityIcon,
+    Megaphone,
+    CheckCircle,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import type { ActivityItem } from '@/types/access-code';
@@ -111,13 +125,8 @@ export default function Activity({ activities, posts = [], notifications = [], u
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
                 <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-blue-500/5 blur-[60px]" />
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    transition={{ duration: 0.4 }}
-                    className="relative z-10"
-                >
-                    <div className="flex items-center gap-3 mb-1">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="relative z-10">
+                    <div className="mb-1 flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 shadow-lg">
                             <ActivityIcon className="h-4 w-4 text-white" strokeWidth={3} />
                         </div>
@@ -174,7 +183,9 @@ export default function Activity({ activities, posts = [], notifications = [], u
                         <span className="relative z-10 flex items-center gap-2">
                             Alerts
                             {unreadCount > 0 && (
-                                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${activeTab === 'notifications' ? 'bg-white text-slate-900' : 'bg-red-500 text-white'}`}>
+                                <span
+                                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${activeTab === 'notifications' ? 'bg-white text-slate-900' : 'bg-red-500 text-white'}`}
+                                >
                                     {unreadCount > 99 ? '99+' : unreadCount}
                                 </span>
                             )}
@@ -187,10 +198,10 @@ export default function Activity({ activities, posts = [], notifications = [], u
             <div className="px-6 pb-32">
                 <AnimatePresence mode="wait">
                     {activeTab === 'posts' && (
-                        <motion.div 
+                        <motion.div
                             key="posts-tab"
-                            initial={{ opacity: 0, y: 10 }} 
-                            animate={{ opacity: 1, y: 0 }} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-6"
                         >
@@ -205,36 +216,35 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                     >
                                         {post.media?.[0] && (
                                             <div className="aspect-video w-full overflow-hidden">
-                                                <img 
-                                                    src={post.media[0].url} 
-                                                    alt="" 
-                                                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" 
+                                                <img
+                                                    src={post.media[0].url}
+                                                    alt=""
+                                                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                                                 />
                                             </div>
                                         )}
                                         <div className="p-8">
                                             <div className="mb-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-black">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">
                                                         {post.author?.name?.[0]}
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-slate-900">{post.author?.name}</p>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                            {new Date(post.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                            {new Date(post.published_at).toLocaleDateString(undefined, {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                            })}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <span className="rounded-full bg-slate-50 px-3 py-1 text-[8px] font-black uppercase tracking-widest text-slate-400 ring-1 ring-slate-200">
+                                                <span className="rounded-full bg-slate-50 px-3 py-1 text-[8px] font-black tracking-widest text-slate-400 uppercase ring-1 ring-slate-200">
                                                     Post
                                                 </span>
                                             </div>
-                                            <h2 className="mb-3 text-2xl font-black tracking-tight text-slate-900 leading-tight">
-                                                {post.title}
-                                            </h2>
-                                            <p className="text-base font-medium text-slate-500 leading-relaxed">
-                                                {post.body}
-                                            </p>
+                                            <h2 className="mb-3 text-2xl leading-tight font-black tracking-tight text-slate-900">{post.title}</h2>
+                                            <p className="text-base leading-relaxed font-medium text-slate-500">{post.body}</p>
                                         </div>
                                     </motion.div>
                                 ))
@@ -244,17 +254,19 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                         <Megaphone className="h-10 w-10" strokeWidth={1.5} />
                                     </div>
                                     <h3 className="text-xl font-black text-slate-900">No estate news</h3>
-                                    <p className="mt-2 text-sm font-medium text-slate-400 max-w-[200px]">Important announcements from your estate will appear here.</p>
+                                    <p className="mt-2 max-w-[200px] text-sm font-medium text-slate-400">
+                                        Important announcements from your estate will appear here.
+                                    </p>
                                 </div>
                             )}
                         </motion.div>
                     )}
 
                     {activeTab === 'feed' && (
-                        <motion.div 
+                        <motion.div
                             key="feed-tab"
-                            initial={{ opacity: 0, x: -10 }} 
-                            animate={{ opacity: 1, x: 0 }} 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 10 }}
                             transition={{ duration: 0.3 }}
                         >
@@ -278,10 +290,14 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                     >
                                                         {getActivityIcon(activity.type)}
                                                         <div className="flex-1 pt-1">
-                                                            <p className="font-bold text-slate-900 leading-tight">{activity.message}</p>
-                                                            {activity.detail && <p className="mt-1 text-sm font-medium text-slate-400">{activity.detail}</p>}
+                                                            <p className="leading-tight font-bold text-slate-900">{activity.message}</p>
+                                                            {activity.detail && (
+                                                                <p className="mt-1 text-sm font-medium text-slate-400">{activity.detail}</p>
+                                                            )}
                                                             <div className="mt-3 flex flex-wrap items-center gap-2">
-                                                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">{activity.time}</span>
+                                                                <span className="text-[10px] font-black tracking-tighter text-slate-300 uppercase">
+                                                                    {activity.time}
+                                                                </span>
                                                                 {activity.code && (
                                                                     <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-indigo-600 ring-1 ring-indigo-500/10">
                                                                         {activity.code}
@@ -295,7 +311,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center">
-                                                            <ChevronRight className="h-5 w-5 text-slate-200 group-hover:text-slate-400 transition-colors" />
+                                                            <ChevronRight className="h-5 w-5 text-slate-200 transition-colors group-hover:text-slate-400" />
                                                         </div>
                                                     </motion.div>
                                                 ))}
@@ -316,10 +332,10 @@ export default function Activity({ activities, posts = [], notifications = [], u
                     )}
 
                     {activeTab === 'notifications' && (
-                        <motion.div 
+                        <motion.div
                             key="notif-tab"
-                            initial={{ opacity: 0, x: 10 }} 
-                            animate={{ opacity: 1, x: 0 }} 
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.3 }}
                         >
@@ -332,10 +348,8 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                             router.post(NotificationController.markAllAsRead.url(), {}, { preserveScroll: true });
                                         }}
                                         disabled={unreadCount === 0}
-                                        className={`flex flex-1 items-center justify-center gap-2 rounded-[22px] py-3.5 text-[10px] font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 ${
-                                            unreadCount > 0 
-                                                ? 'bg-slate-900 text-white shadow-lg' 
-                                                : 'bg-slate-100 text-slate-400'
+                                        className={`flex flex-1 items-center justify-center gap-2 rounded-[22px] py-3.5 text-[10px] font-black tracking-widest uppercase transition-all active:scale-[0.98] disabled:opacity-40 ${
+                                            unreadCount > 0 ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'
                                         }`}
                                     >
                                         <CheckCircle className="h-3.5 w-3.5" strokeWidth={3} />
@@ -346,7 +360,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                             if (!confirm('Clear all notifications?')) return;
                                             router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true });
                                         }}
-                                        className="flex flex-1 items-center justify-center gap-2 rounded-[22px] bg-white py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-100"
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-[22px] bg-white py-3.5 text-[10px] font-black tracking-widest text-slate-900 uppercase shadow-sm ring-1 ring-slate-200 transition-all hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-100 active:scale-[0.98]"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" strokeWidth={3} />
                                         Clear
@@ -362,7 +376,9 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                         const notificationType = notification.data?.type || notification.type;
 
                                         let icon = <Bell className="h-6 w-6" />;
-                                        let themeClass = isUnread ? 'from-indigo-500/10 to-transparent ring-indigo-500/20' : 'bg-slate-50 ring-slate-200';
+                                        let themeClass = isUnread
+                                            ? 'from-indigo-500/10 to-transparent ring-indigo-500/20'
+                                            : 'bg-slate-50 ring-slate-200';
                                         let iconColor = isUnread ? 'text-indigo-600' : 'text-slate-400';
 
                                         if (notificationType?.includes('VisitorArrived') || notification.data?.visitor_name) {
@@ -380,7 +396,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                                                className={`group relative overflow-hidden rounded-[32px] border p-5 transition-all active:scale-[0.98] cursor-pointer ${
+                                                className={`group relative cursor-pointer overflow-hidden rounded-[32px] border p-5 transition-all active:scale-[0.98] ${
                                                     isUnread ? 'border-indigo-100 bg-white shadow-md' : 'border-slate-100 bg-white shadow-sm'
                                                 }`}
                                                 onClick={() => {
@@ -392,17 +408,21 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                 )}
 
                                                 <div className="flex gap-5">
-                                                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-linear-to-br ring-1 ${themeClass} ${iconColor}`}>
+                                                    <div
+                                                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-linear-to-br ring-1 ${themeClass} ${iconColor}`}
+                                                    >
                                                         {icon}
                                                     </div>
 
                                                     <div className="flex-1 pt-1">
                                                         <div className="flex items-start justify-between">
-                                                            <h3 className={`font-bold leading-tight ${isUnread ? 'text-slate-900' : 'text-slate-600'}`}>
+                                                            <h3
+                                                                className={`leading-tight font-bold ${isUnread ? 'text-slate-900' : 'text-slate-600'}`}
+                                                            >
                                                                 {title}
                                                             </h3>
                                                             {isUnread && (
-                                                                <span className="shrink-0 rounded-full bg-indigo-500 px-2 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white">
+                                                                <span className="shrink-0 rounded-full bg-indigo-500 px-2 py-0.5 text-[8px] font-black tracking-tighter text-white uppercase">
                                                                     New
                                                                 </span>
                                                             )}
@@ -410,7 +430,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                                         <p className="mt-1 line-clamp-2 text-sm font-medium text-slate-400">{message}</p>
                                                         <div className="mt-3 flex items-center gap-2">
                                                             <Clock className="h-3.5 w-3.5 text-slate-300" />
-                                                            <span className="text-[10px] font-black uppercase tracking-tighter text-slate-300">
+                                                            <span className="text-[10px] font-black tracking-tighter text-slate-300 uppercase">
                                                                 {new Date(notification.created_at).toLocaleDateString(undefined, {
                                                                     month: 'short',
                                                                     day: 'numeric',
@@ -430,8 +450,10 @@ export default function Activity({ activities, posts = [], notifications = [], u
                                     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
                                         <BellOff className="h-10 w-10" strokeWidth={1.5} />
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900">Inbox is empty</h3>
-                                    <p className="mt-2 text-sm font-medium text-slate-400 max-w-[200px]">We'll alert you here when something needs your attention.</p>
+                                    <h3 className="text-xl font-black text-slate-900">All Clear</h3>
+                                    <p className="mt-2 max-w-[200px] text-sm font-medium text-slate-400">
+                                        We'll alert you here when something needs your attention.
+                                    </p>
                                 </div>
                             )}
                         </motion.div>

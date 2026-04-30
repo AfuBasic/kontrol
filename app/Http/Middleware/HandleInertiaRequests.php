@@ -72,7 +72,12 @@ class HandleInertiaRequests extends Middleware
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ]),
                     'resident_subscription' => ($user && $estate) ? (function () use ($user, $estate) {
-                        $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
+                        $subject = $user;
+                        if ($user->isHouseholdMember() && $user->householdOf) {
+                            $subject = $user->householdOf->primaryResident;
+                        }
+
+                        $sub = $subject->residentSubscription()->where('estate_id', $estate->id)->first();
                         if (! $sub) {
                             return null;
                         }
@@ -82,6 +87,7 @@ class HandleInertiaRequests extends Middleware
                             [
                                 'plan_name' => $estate->subscriptionRecord?->plan?->name ?? 'Standard',
                                 'billing_interval' => $estate->subscriptionRecord?->billing_interval ?? 'monthly',
+                                'is_household_member' => $user->isHouseholdMember(),
                             ]
                         );
                     })() : null,
