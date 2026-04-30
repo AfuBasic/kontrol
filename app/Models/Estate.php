@@ -112,7 +112,10 @@ class Estate extends Model
 
         return $this->memoizedFeatures = $subscription->plan->features()
             ->wherePivot('is_enabled', true)
-            ->wherePivot('limit', '!=', '0')
+            ->where(function ($query) {
+                $query->where('plan_features.limit', '!=', '0')
+                    ->orWhereNull('plan_features.limit');
+            })
             ->pluck('slug')
             ->toArray();
     }

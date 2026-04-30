@@ -53,16 +53,17 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
     {
         $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
         $visitorName = $this->accessCode->visitor_name;
+        $code = $this->accessCode->code;
         
         $message = $visitorName 
-            ? "{$visitorName} has arrived at the security post of {$estateName}."
-            : "A visitor has arrived at the security post of {$estateName}.";
+            ? "{$visitorName} has arrived at the security post."
+            : "Your visitor with code {$code} has arrived at the security post.";
 
         return [
             'title' => 'Visitor Arrived',
             'message' => $message,
-            'access_code' => $this->accessCode->code,
-            'visitor_name' => $visitorName ?? 'A visitor',
+            'access_code' => $code,
+            'visitor_name' => $visitorName ?? 'Your visitor',
             'estate_name' => $estateName,
             'type' => 'visitor_arrived',
             'action_url' => '/resident',
@@ -136,17 +137,18 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
      */
     public function toTelegram(object $notifiable): array
     {
-        $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
         $visitorName = $this->accessCode->visitor_name;
         $code = $this->accessCode->code;
+        $address = $this->accessCode->estate?->address;
 
-        $visitorDisplay = $visitorName ? "<b>{$visitorName}</b>" : "A visitor";
+        $description = $visitorName 
+            ? "<b>{$visitorName}</b> has arrived at the security post."
+            : "Your visitor with code <code>{$code}</code> has arrived at the security post.";
 
         $text = "🔔 <b>Visitor Arrived</b>\n\n"
             ."Hi <b>{$notifiable->name}</b>,\n"
-            ."{$visitorDisplay} has just arrived at the security post of <b>{$estateName}</b>.\n\n"
-            ."🎫 Code: <code>{$code}</code>\n"
-            ."📍 Location: {$this->accessCode->estate?->address}\n\n"
+            ."{$description}\n\n"
+            .($address ? "📍 Location: {$address}\n\n" : "")
             ."<i>Access granted via Security Terminal.</i>";
 
         return [
