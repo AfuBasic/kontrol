@@ -28,6 +28,7 @@ interface Plan {
     max_security: number | null;
     max_admins: number | null;
     is_active: boolean;
+    household_member_limit: string | null;
     features: number[];
 }
 
@@ -59,6 +60,7 @@ export default function EditPlan({ plan, features }: Props) {
         max_residents: plan.max_residents ? String(plan.max_residents) : '',
         max_security: plan.max_security ? String(plan.max_security) : '',
         max_admins: plan.max_admins ? String(plan.max_admins) : '',
+        household_member_limit: plan.household_member_limit ? String(plan.household_member_limit) : '',
         features: plan.features,
     });
 
@@ -99,19 +101,7 @@ export default function EditPlan({ plan, features }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-
-        // Convert empty strings to null for nullable fields
-        const submitData = {
-            ...data,
-            badge: data.badge || null,
-            max_residents: data.max_residents ? Number(data.max_residents) : null,
-            max_security: data.max_security ? Number(data.max_security) : null,
-            max_admins: data.max_admins ? Number(data.max_admins) : null,
-        };
-
-        put(`/zeus/plans/${plan.id}`, {
-            data: submitData,
-        } as any);
+        put(`/zeus/plans/${plan.id}`);
     }
 
     return (
@@ -244,7 +234,20 @@ export default function EditPlan({ plan, features }: Props) {
                                         value={data.max_admins}
                                         onChange={(e) => setData('max_admins', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        placeholder="Unlimited"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Household Limit</label>
+                                    <input
+                                        type="number"
+                                        value={data.household_member_limit}
+                                        onChange={(e) => setData('household_member_limit', e.target.value)}
+                                        className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        placeholder="0 to disable"
+                                    />
+                                    <p className="mt-1 text-[10px] text-gray-400">Set to 0 to hide household features.</p>
                                 </div>
                             </div>
                         </div>

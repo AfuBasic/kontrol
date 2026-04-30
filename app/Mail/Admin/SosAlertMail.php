@@ -28,17 +28,21 @@ class SosAlertMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         $user = $this->sosEvent->user;
-        $profile = $user->profile;
+        $subject = $user;
+
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
 
         return new Content(
             view: 'mail.admin.sos-alert',
             with: [
                 'residentName' => $user->name,
-                'residentPhone' => $user->phone,
-                'address' => $profile?->address ?? 'N/A',
+                'residentPhone' => $user->profile?->phone ?? 'N/A',
+                'address' => $subject->profile?->address ?? 'N/A',
                 'estateName' => $this->sosEvent->estate->name,
                 'triggeredAt' => $this->sosEvent->triggered_at->format('H:i • M d, Y'),
-                'emergencyContacts' => $user->emergencyContacts,
+                'emergencyContacts' => $subject->emergencyContacts,
             ],
         );
     }

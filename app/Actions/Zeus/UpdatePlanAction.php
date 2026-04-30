@@ -25,11 +25,25 @@ class UpdatePlanAction
             if ($features !== null) {
                 $plan->features()->detach();
                 if (! empty($features)) {
-                    $features = Feature::whereIn('id', $features)->get();
-                    foreach ($features as $feature) {
+                    $featuresList = Feature::whereIn('id', $features)->get();
+
+                    // Ensure household-management is included if a limit is provided
+                    if (isset($data['household_member_limit'])) {
+                        $householdFeature = Feature::where('slug', 'household-management')->first();
+                        if ($householdFeature && ! $featuresList->contains('id', $householdFeature->id)) {
+                            $featuresList->push($householdFeature);
+                        }
+                    }
+
+                    foreach ($featuresList as $feature) {
+                        $limit = null;
+                        if ($feature->slug === 'household-management') {
+                            $limit = isset($data['household_member_limit']) ? (string) $data['household_member_limit'] : null;
+                        }
+
                         $plan->features()->attach($feature->id, [
                             'is_enabled' => true,
-                            'limit' => null,
+                            'limit' => $limit,
                         ]);
                     }
                 }

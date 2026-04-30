@@ -37,6 +37,7 @@ class PlanController extends Controller
                 'max_security' => $plan->max_security,
                 'max_admins' => $plan->max_admins,
                 'is_active' => $plan->is_active,
+                'household_member_limit' => $plan->features->where('slug', 'household-management')->first()?->pivot?->limit,
                 'features_count' => $plan->features->count(),
                 'subscriptions_count' => $plan->subscriptions()->count(),
             ]);
@@ -83,6 +84,7 @@ class PlanController extends Controller
                     'max_residents' => $plan->max_residents,
                     'max_security' => $plan->max_security,
                     'max_admins' => $plan->max_admins,
+                    'household_member_limit' => $plan->features->where('slug', 'household-management')->first()?->pivot?->limit,
                     'features' => $plan->features->pluck('id')->toArray(),
                 ];
             }
@@ -136,6 +138,7 @@ class PlanController extends Controller
                 'max_security' => $plan->max_security,
                 'max_admins' => $plan->max_admins,
                 'is_active' => $plan->is_active,
+                'household_member_limit' => $plan->features->where('slug', 'household-management')->first()?->pivot?->limit,
                 'features' => $plan->features->pluck('id')->toArray(),
             ],
             'features' => $features,

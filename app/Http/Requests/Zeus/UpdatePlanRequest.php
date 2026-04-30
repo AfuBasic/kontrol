@@ -34,6 +34,7 @@ class UpdatePlanRequest extends FormRequest
             'max_residents' => ['nullable', 'integer', 'min:1'],
             'max_security' => ['nullable', 'integer', 'min:1'],
             'max_admins' => ['nullable', 'integer', 'min:1'],
+            'household_member_limit' => ['nullable', 'integer', 'min:0'],
             'features' => ['nullable', 'array'],
             'features.*' => ['integer', 'exists:features,id'],
         ];
@@ -47,7 +48,7 @@ class UpdatePlanRequest extends FormRequest
         $validated = parent::validated($key, $default);
 
         // Ensure nullable fields are included even if they're null
-        $nullableFields = ['description', 'badge', 'max_residents', 'max_security', 'max_admins'];
+        $nullableFields = ['description', 'badge', 'max_residents', 'max_security', 'max_admins', 'household_member_limit'];
         foreach ($nullableFields as $field) {
             if ($this->has($field) && ! isset($validated[$field])) {
                 $validated[$field] = $this->input($field);

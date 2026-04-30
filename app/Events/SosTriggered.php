@@ -38,14 +38,21 @@ class SosTriggered implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
+        $user = $this->sosEvent->user;
+        $subject = $user;
+
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
+
         return [
             'id' => $this->sosEvent->id,
-            'resident_name' => $this->sosEvent->user->name,
-            'resident_phone' => $this->sosEvent->user->phone,
-            'address' => $this->sosEvent->user->profile?->address ?? 'N/A',
+            'resident_name' => $user->name, // Keep the trigger's name
+            'resident_phone' => $user->profile?->phone ?? 'N/A',
+            'address' => $subject->profile?->address ?? 'N/A',
             'estate_name' => $this->sosEvent->estate->name,
             'triggered_at' => $this->sosEvent->triggered_at->toIso8601String(),
-            'emergency_contacts' => $this->sosEvent->user->emergencyContacts->map(fn ($c) => [
+            'emergency_contacts' => $subject->emergencyContacts->map(fn ($c) => [
                 'name' => $c->name,
                 'phone' => $c->phone,
             ]),

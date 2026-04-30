@@ -1,5 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { useState } from 'react';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
@@ -7,9 +6,7 @@ import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
 import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
 import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
 import QuickActions from '@/Components/Resident/Dashboard/QuickActions';
-import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 
 import type { SharedData } from '@/types';
@@ -27,7 +24,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
     const userRoles = auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth?.user?.resident_subscription?.parent_resident_name;
-    const { estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const { estate_plan } = usePage<SharedData & { estate_plan: { features: string[] } | null }>().props;
     const hasAccessCodeGen = estate_plan?.features?.includes('access-code-generation') ?? true;
     const hasLiveFeed = estate_plan?.features?.includes('real-time-visit-feed') ?? true;
 

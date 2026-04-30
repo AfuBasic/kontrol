@@ -48,6 +48,11 @@ class HouseholdMemberController extends Controller
         $user = $request->user();
         $estate = $user->getCurrentEstate();
 
+        if (! $estate->canAddMoreHouseholdMembers($user)) {
+            $limit = $estate->getFeatureLimit('household-management');
+            return back()->with('error', "You have reached your limit of {$limit} household members for this plan.");
+        }
+
         app(CreateHouseholdMemberAction::class)->execute(
             $request->validated(),
             $estate,

@@ -112,6 +112,7 @@ class Estate extends Model
 
         return $this->memoizedFeatures = $subscription->plan->features()
             ->wherePivot('is_enabled', true)
+            ->wherePivot('limit', '!=', '0')
             ->pluck('slug')
             ->toArray();
     }
@@ -189,6 +190,31 @@ class Estate extends Model
             ->count();
 
         return $currentSecurity < $limit;
+    }
+
+    public function canAddMoreHouseholdMembers(User $primaryResident): bool
+    {
+        $limit = $this->getFeatureLimit('household-management');
+
+        // If limit is null or empty, it's unlimited. If it's '0', it's disabled.
+        if ($limit === null || $limit === '') {
+            return true;
+        }
+
+        $limitInt = (int) $limit;
+        if ($limitInt === 0 && ! $this->hasFeature('household-management')) {
+            return false;
+        }
+
+        if ($limitInt === 0) {
+            return true; // If feature is enabled but limit is '0', treat as unlimited or handled by feature check
+        }
+
+        $currentMembers = $primaryResident->householdMembers()
+            ->where('estate_id', $this->id)
+            ->count();
+
+        return $currentMembers < $limitInt;
     }
 
     /**

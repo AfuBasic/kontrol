@@ -78,6 +78,11 @@ class ProcessSOSAlert implements ShouldQueue
             $admin->notify(new SosIntrusionNotification($this->sosEvent));
         }
 
+        // 4. Notify Primary Resident (if triggered by a household member)
+        if ($user->isHouseholdMember() && $subject->id !== $user->id) {
+            $subject->notify(new SosIntrusionNotification($this->sosEvent));
+        }
+
         // Reset team ID after processing
         setPermissionsTeamId(null);
 

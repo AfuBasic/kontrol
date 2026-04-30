@@ -60,11 +60,11 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title("🚨 SOS ALERT")
+            ->title('🚨 SOS ALERT')
             ->body("SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}")
             ->icon('/assets/images/app-icon.png')
             ->badge('/assets/images/app-icon.png')
-            ->tag('sos-alert-' . $this->sosEvent->id)
+            ->tag('sos-alert-'.$this->sosEvent->id)
             ->data([
                 'url' => $notifiable->hasRole('admin') ? '/admin' : '/security',
                 'sos_event_id' => $this->sosEvent->id,
@@ -82,7 +82,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     {
         return (new FcmMessage(
             notification: new FcmNotification(
-                title: "🚨 SOS ALERT",
+                title: '🚨 SOS ALERT',
                 body: "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}",
             )
         ))
@@ -118,13 +118,20 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
     public function toTelegram(object $notifiable): array
     {
         $user = $this->sosEvent->user;
-        $address = $user->profile?->address ?? 'N/A';
-        
+        $subject = $user;
+
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
+
+        $address = $subject->profile?->address ?? 'N/A';
+        $phone = $user->profile?->phone ?? 'N/A';
+
         $text = "<b>🚨 SOS ALERT</b>\n\n";
         $text .= "<b>Resident:</b> {$user->name}\n";
-        $text .= "<b>Phone:</b> {$user->phone}\n";
+        $text .= "<b>Phone:</b> {$phone}\n";
         $text .= "<b>Location:</b> {$this->sosEvent->estate->name} ({$address})\n\n";
-        $text .= "Respond immediately.";
+        $text .= 'Respond immediately.';
 
         return [
             'text' => $text,

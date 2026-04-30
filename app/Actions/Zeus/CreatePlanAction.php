@@ -24,10 +24,24 @@ class CreatePlanAction
             // Attach features to plan
             if (! empty($features)) {
                 $featureRecords = Feature::whereIn('id', $features)->get();
+                
+                // Ensure household-management is included if a limit is provided
+                if (isset($data['household_member_limit'])) {
+                    $householdFeature = Feature::where('slug', 'household-management')->first();
+                    if ($householdFeature && ! $featureRecords->contains('id', $householdFeature->id)) {
+                        $featureRecords->push($householdFeature);
+                    }
+                }
+
                 foreach ($featureRecords as $feature) {
+                    $limit = null;
+                    if ($feature->slug === 'household-management') {
+                        $limit = isset($data['household_member_limit']) ? (string) $data['household_member_limit'] : null;
+                    }
+
                     $plan->features()->attach($feature->id, [
                         'is_enabled' => true,
-                        'limit' => null,
+                        'limit' => $limit,
                     ]);
                 }
             }

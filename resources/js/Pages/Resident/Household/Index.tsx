@@ -22,7 +22,9 @@ interface Props {
 }
 
 export default function HouseholdIndex({ members }: Props) {
-    const { flash, auth } = usePage<SharedData>().props;
+    const { flash, auth, estate_plan } = usePage<SharedData>().props;
+    const limit = estate_plan?.limits?.max_household_members;
+    const isAtLimit = limit !== null && members.length >= (limit ?? 0);
     const [showForm, setShowForm] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [memberToDelete, setMemberToDelete] = useState<HouseholdMember | null>(null);
@@ -88,9 +90,19 @@ export default function HouseholdIndex({ members }: Props) {
                         <p className="mt-1 text-sm font-bold text-slate-400">Share community access with your loved ones</p>
                     </div>
                     <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setShowForm(!showForm)}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-100 transition-all hover:bg-indigo-700"
+                        whileTap={isAtLimit ? { scale: 1 } : { scale: 0.95 }}
+                        onClick={() => {
+                            if (isAtLimit) {
+                                // Optional: Show a toast or notification
+                                return;
+                            }
+                            setShowForm(!showForm);
+                        }}
+                        className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-xl transition-all ${
+                            isAtLimit 
+                                ? 'bg-slate-300 cursor-not-allowed shadow-none' 
+                                : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'
+                        }`}
                     >
                         <UserPlus className="h-6 w-6" />
                     </motion.button>
@@ -241,7 +253,12 @@ export default function HouseholdIndex({ members }: Props) {
                 ) : (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between px-2">
-                            <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Household Members ({members.length})</h3>
+                            <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                Household Members ({members.length}{limit !== null ? ` / ${limit}` : ''})
+                            </h3>
+                            {isAtLimit && (
+                                <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>
+                            )}
                         </div>
                         {members.map((member, index) => (
                             <motion.div

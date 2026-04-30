@@ -104,6 +104,7 @@ class HandleInertiaRequests extends Middleware
                     'max_residents' => $estate->subscriptionRecord?->plan?->max_residents,
                     'max_security' => $estate->subscriptionRecord?->plan?->max_security,
                     'max_admins' => $estate->subscriptionRecord?->plan?->max_admins,
+                    'max_household_members' => ($limit = $estate->getFeatureLimit('household-management')) !== null ? (int) $limit : null,
                 ],
             ] : null,
             'flash' => [

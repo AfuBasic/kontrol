@@ -13,6 +13,7 @@ export type EstatePlan = {
         max_residents: number | null;
         max_security: number | null;
         max_admins: number | null;
+        max_household_members: number | null;
     };
 };
 

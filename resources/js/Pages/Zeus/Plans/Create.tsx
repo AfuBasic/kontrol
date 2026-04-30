@@ -58,6 +58,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
         max_residents: '',
         max_security: '',
         max_admins: '',
+        household_member_limit: '',
         features: [] as number[],
     });
 
@@ -80,6 +81,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                 max_residents: copyPlan.max_residents?.toString() || '',
                 max_security: copyPlan.max_security?.toString() || '',
                 max_admins: copyPlan.max_admins?.toString() || '',
+                household_member_limit: (copyPlan as any).household_member_limit?.toString() || '',
                 features: copyPlan.features,
             });
             setSelectedColor(copyPlan.color);
@@ -120,19 +122,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-
-        // Convert empty strings to null for nullable fields
-        const submitData = {
-            ...data,
-            badge: data.badge || null,
-            max_residents: data.max_residents ? Number(data.max_residents) : null,
-            max_security: data.max_security ? Number(data.max_security) : null,
-            max_admins: data.max_admins ? Number(data.max_admins) : null,
-        };
-
-        post('/zeus/plans', {
-            data: submitData,
-        } as any); // Inertia's useForm post second arg is options, but data can be overridden in some versions or we can just use transform
+        post('/zeus/plans');
     }
 
     return (
@@ -288,8 +278,20 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                         value={data.max_admins}
                                         onChange={(e) => setData('max_admins', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-                                        placeholder="Leave empty for unlimited"
+                                        placeholder="Unlimited"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Household Limit</label>
+                                    <input
+                                        type="number"
+                                        value={data.household_member_limit}
+                                        onChange={(e) => setData('household_member_limit', e.target.value)}
+                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                                        placeholder="0 to disable"
+                                    />
+                                    <p className="mt-1 text-[10px] text-gray-400">Set to 0 to hide household features.</p>
                                 </div>
                             </div>
                         </div>
