@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { router, usePage, Link } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, X, AlertTriangle, CheckCircle2, Loader2, Calendar, Hash, Check, Clock, Shield, Users, ChevronRight } from 'lucide-react';
-import SosController from '@/actions/App/Http/Controllers/Resident/SosController';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
+import SosController from '@/actions/App/Http/Controllers/Resident/SosController';
 import type { SharedData } from '@/types';
 
 interface Props {

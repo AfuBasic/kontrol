@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({

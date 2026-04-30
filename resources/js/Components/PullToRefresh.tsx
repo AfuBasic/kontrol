@@ -1,7 +1,7 @@
+import { SparklesIcon } from '@heroicons/react/24/outline';
 import { router } from '@inertiajs/react';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { SparklesIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     children: React.ReactNode;

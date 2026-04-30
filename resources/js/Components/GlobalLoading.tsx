@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function GlobalLoading() {
     const [loading, setLoading] = useState(false);

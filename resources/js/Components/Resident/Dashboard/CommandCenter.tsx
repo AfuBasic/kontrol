@@ -1,6 +1,6 @@
-import { Plus, Users, Clock, ArrowRight, Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import { Plus, Users, Clock, ArrowRight, Activity } from 'lucide-react';
 
 interface Props {
     expectedToday: number;

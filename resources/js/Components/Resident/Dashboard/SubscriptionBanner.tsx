@@ -1,10 +1,10 @@
-import React from 'react';
+import { usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { CreditCard, AlertCircle, Clock, Shield } from 'lucide-react';
-import type { ResidentSubscription } from '@/types/auth';
-import { usePage } from '@inertiajs/react';
-import type { SharedData } from '@/types';
+import React from 'react';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
+import type { SharedData } from '@/types';
+import type { ResidentSubscription } from '@/types/auth';
 
 interface SubscriptionBannerProps {
     subscription: ResidentSubscription;
@@ -17,19 +17,32 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
         return null;
     }
 
-    const { status, trial_ends_at, current_period_end, is_active, is_grace_period } = subscription;
+    const { status, trial_ends_at, current_period_end, is_active, is_grace_period, is_household_member } = subscription;
 
     // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
     if (status === 'past_due') {
         if (is_grace_period) {
-            // In grace period, current_period_end is the PAST billing date.
-            // We should show how much of the grace period is left.
-            // But for simplicity, we can just show "Overdue" or "Grace period".
-            return <Banner title="Overdue" description="Grace period active" cta="Open web" onCtaClick={openExternalBilling} variant="grace" />;
+            return (
+                <Banner
+                    title="Overdue"
+                    description="Grace period active"
+                    cta={!is_household_member ? 'Open web' : undefined}
+                    onCtaClick={openExternalBilling}
+                    variant="grace"
+                />
+            );
         }
 
         if (!is_active) {
-            return <Banner title="Account inactive" description="Access limited" cta="Open web" onCtaClick={openExternalBilling} variant="inactive" />;
+            return (
+                <Banner
+                    title="Account inactive"
+                    description="Access limited"
+                    cta={!is_household_member ? 'Open web' : undefined}
+                    onCtaClick={openExternalBilling}
+                    variant="inactive"
+                />
+            );
         }
     }
 
@@ -42,7 +55,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
             <Banner
                 title="Trial period"
                 description={daysLeft <= 0 ? 'Ends today' : `Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
-                cta="Open web"
+                cta={!is_household_member ? 'Open web' : undefined}
                 onCtaClick={openExternalBilling}
                 variant={daysLeft <= 3 ? 'grace' : 'active'}
             />

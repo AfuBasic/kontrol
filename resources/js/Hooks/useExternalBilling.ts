@@ -1,9 +1,9 @@
-import { usePage } from '@inertiajs/react';
-import type { SharedData } from '@/types';
-import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
-import axios from 'axios';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { usePage } from '@inertiajs/react';
+import axios from 'axios';
+import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import type { SharedData } from '@/types';
 
 export function useExternalBilling() {
     const { app_url: appUrl } = usePage<SharedData>().props;

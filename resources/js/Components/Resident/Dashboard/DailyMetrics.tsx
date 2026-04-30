@@ -1,5 +1,5 @@
-import { HomeStats } from '@/types/access-code';
 import { motion } from 'framer-motion';
+import type { HomeStats } from '@/types/access-code';
 
 interface Props {
     stats: HomeStats;

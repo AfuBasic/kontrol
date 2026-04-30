@@ -1,14 +1,15 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
-import ResidentLayout from '@/Layouts/ResidentLayout';
-import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
+import { useState } from 'react';
+import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
-import QuickActions from '@/Components/Resident/Dashboard/QuickActions';
-import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
 import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
+import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
 import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
+import QuickActions from '@/Components/Resident/Dashboard/QuickActions';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
+import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 
 import type { SharedData } from '@/types';
@@ -20,15 +21,19 @@ type Props = SharedData & {
     estateName: string;
 };
 
-import { useState } from 'react';
-import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
+import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 
 export default function Home({ auth, stats, activeCodes, recentActivity, estateName }: Props) {
-    // Calculate live data for Command Center
-    const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
-    const lastActivityTime = recentActivity[0]?.time;
+    const userRoles = auth?.user?.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
+    const parentResidentName = auth?.user?.resident_subscription?.parent_resident_name;
+    const { estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const hasAccessCodeGen = estate_plan?.features?.includes('access-code-generation') ?? true;
+    const hasLiveFeed = estate_plan?.features?.includes('real-time-visit-feed') ?? true;
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
+    const lastActivityTime = recentActivity[0]?.time;
 
     return (
         <>
@@ -40,6 +45,8 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                     userName={auth?.user?.name ?? 'Resident'}
                     estateName={estateName}
                     unreadCount={auth?.user?.unread_notifications_count ?? 0}
+                    isHouseholdMember={isHouseholdMember}
+                    parentResidentName={parentResidentName}
                 />
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
@@ -47,7 +54,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                     expectedToday={expectedToday} 
                     lastActivity={lastActivityTime} 
                     onAction={() => setIsCreateModalOpen(true)} 
-                    canGenerate={auth?.user?.resident_subscription?.plan_name !== 'Standard' && ((usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('access-code-generation')) ?? true)}
+                    canGenerate={auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasAccessCodeGen}
                 />
 
                 {/* 3. QUICK ACTIONS STRIP */}
@@ -59,7 +66,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 </section>
 
                 {/* 4. VISITOR STATUS */}
-                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('access-code-generation') ?? true) && (
+                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasAccessCodeGen && (
                     <>
                         <section>
                             <div className="mb-4 flex items-center justify-between px-2">
@@ -79,7 +86,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 )}
 
                 {/* 6. LIVE ACTIVITY FEED */}
-                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && (usePage<SharedData & { estate_plan: any }>().props.estate_plan?.features?.includes('real-time-visit-feed') ?? true) && (
+                {auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasLiveFeed && (
                     <section>
                         <div className="mb-4 flex items-center justify-between px-2">
                             <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Activity</h3>

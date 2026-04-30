@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import type { AccessCode } from '@/types/access-code';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import type { AccessCode } from '@/types/access-code';
 
 import { shareAccessCode } from '@/Utils/share';
 

@@ -2,7 +2,6 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, ArrowLeft, Mail, Phone, Calendar, Search, MapPin, Loader2, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
 import {
     index as approvalIndex,
     approve as approvalApprove,
@@ -10,6 +9,7 @@ import {
 } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { index as residentsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Resident {
     id: number;

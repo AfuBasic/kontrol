@@ -1,6 +1,5 @@
 import { Head, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ZeusLayout from '@/Layouts/ZeusLayout';
 import { 
     Search, 
     Filter, 
@@ -23,6 +22,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import { useState } from 'react';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Transaction {
     id: number;

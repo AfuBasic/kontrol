@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import { Bell, CreditCard, Info, AlertTriangle, ChevronRight, ExternalLink } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
-import { motion } from 'framer-motion';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface NotificationData {

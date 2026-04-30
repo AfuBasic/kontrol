@@ -2,20 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Mail\Admin\SosAlertMail;
 use App\Models\SosEvent;
 use App\Models\User;
 use App\Notifications\Admin\SosIntrusionNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ProcessSOSAlert implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use Queueable;
 
     public int $tries = 3;
 
@@ -30,7 +26,14 @@ class ProcessSOSAlert implements ShouldQueue
 
         $user = $this->sosEvent->user;
         $estate = $this->sosEvent->estate;
-        $address = $user->profile?->address ?? 'N/A';
+
+        // For household members, we use the parent resident's address and profile data
+        $subject = $user;
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
+
+        $address = $subject->profile->address ?? 'N/A';
 
         // Set Spatie permissions team ID for this estate to ensure roles are correctly scoped
         setPermissionsTeamId($estate->id);
@@ -43,7 +46,7 @@ class ProcessSOSAlert implements ShouldQueue
         $securityMessage .= "Resident: {$user->name}\n";
         $securityMessage .= "Address: {$address}\n";
         $securityMessage .= "Estate: {$estate->name}\n";
-        $securityMessage .= "Phone: {$user->phone}\n";
+        $securityMessage .= "Phone: {$user->profile?->phone}\n";
         $securityMessage .= 'Respond immediately.';
 
         foreach ($securityPersonnel as $security) {
@@ -57,7 +60,7 @@ class ProcessSOSAlert implements ShouldQueue
         }
 
         // 2. Notify Emergency Contacts (Medium Priority)
-        $contacts = $user->emergencyContacts;
+        $contacts = $subject->emergencyContacts;
 
         $contactMessage = "🚨 SOS ALERT\n";
         $contactMessage .= "{$user->name} triggered an emergency alert.\n";

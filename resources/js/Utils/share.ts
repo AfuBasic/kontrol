@@ -1,7 +1,7 @@
-import type { AccessCode } from '@/types/access-code';
-import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import type { AccessCode } from '@/types/access-code';
 
 /**
  * Robust sharing utility that prioritizes native mobile sharing via Capacitor,

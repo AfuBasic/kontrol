@@ -1,7 +1,7 @@
+import { UserIcon, LinkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AffiliateLayout from '@/Layouts/AffiliateLayout';
-import { UserIcon, LinkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     user: {

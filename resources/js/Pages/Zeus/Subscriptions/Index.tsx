@@ -1,8 +1,8 @@
+import { UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Estate {
     id: number;

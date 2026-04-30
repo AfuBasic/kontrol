@@ -1,7 +1,7 @@
-import { AccessCode } from '@/types/access-code';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, User, ChevronRight } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import type { AccessCode } from '@/types/access-code';
 
 interface Props {
     activeCodes: AccessCode[];

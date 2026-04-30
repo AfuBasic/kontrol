@@ -10,6 +10,8 @@ export type ResidentSubscription = {
     is_grace_period: boolean;
     plan_name: string;
     billing_interval: string;
+    parent_resident_name?: string | null;
+    is_household_member?: boolean;
 };
 
 export type User = {

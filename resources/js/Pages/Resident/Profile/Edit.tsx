@@ -4,16 +4,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     User,
     Lock,
-    Bell,
     Shield,
     ChevronRight,
     LogOut,
-    Mail,
-    Home,
-    MapPin,
     Zap,
     Users,
-    Activity,
     UserCircle,
     Eye,
     EyeOff,
@@ -24,14 +19,10 @@ import {
     Plus,
 } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
-import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
-import resident from '@/routes/resident';
-import MobileSheet from '@/Components/MobileSheet';
-import ConfirmationModal from '@/Components/ConfirmationModal';
-import type { SharedData } from '@/types';
-import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
-import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import MobileSheet from '@/Components/MobileSheet';
+import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface Props {
@@ -59,14 +50,24 @@ interface Props {
 }
 
 import { useFeature } from '@/Hooks/useFeature';
+import resident from '@/routes/resident';
+import type { SharedData } from '@/types';
 
 export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
+    const userRoles = auth.user?.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
+    const parentResidentName = auth.user?.resident_subscription?.parent_resident_name;
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const { openExternalBilling } = useExternalBilling();
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
 
     const CONTACT_LIMIT = 5;
 
@@ -128,6 +129,11 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                     </span>
                                 )}
                             </div>
+                            {isHouseholdMember && parentResidentName && (
+                                <p className="mt-4 text-xs font-bold text-slate-400">
+                                    Household member of <span className="text-white">{parentResidentName}</span>
+                                </p>
+                            )}
                         </div>
                     </div>
                 </motion.div>
@@ -138,14 +144,18 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                         <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
                         <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Codes</p>
                     </div>
-                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
-                        <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
-                        <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
-                    </div>
-                    <div className="flex-1 px-2 text-center">
-                        <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
-                        <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">SOS Contacts</p>
-                    </div>
+                    {!isHouseholdMember && (
+                        <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                            <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
+                            <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
+                        </div>
+                    )}
+                    {!isHouseholdMember && (
+                        <div className="flex-1 px-2 text-center">
+                            <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
+                            <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">SOS Contacts</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* 3. SETTINGS HUB */}
@@ -167,7 +177,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                 description="Update your account password"
                                 onClick={() => setActiveSheet('password')}
                             />
-                            {hasHousehold && (
+                            {hasHousehold && !isHouseholdMember && (
                                 <>
                                     <div className="mx-6 h-px bg-slate-50" />
                                     <Link href="/resident/household" className="block">
@@ -180,13 +190,17 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                     </Link>
                                 </>
                             )}
-                            <div className="mx-6 h-px bg-slate-50" />
-                            <SettingsRow
-                                icon={<Shield className="h-5 w-5" />}
-                                label="Emergency Contacts"
-                                description="Manage SOS alert recipients"
-                                onClick={() => setActiveSheet('emergency_management')}
-                            />
+                            {!isHouseholdMember && (
+                                <>
+                                    <div className="mx-6 h-px bg-slate-50" />
+                                    <SettingsRow
+                                        icon={<Shield className="h-5 w-5" />}
+                                        label="Emergency Contacts"
+                                        description="Manage SOS alert recipients"
+                                        onClick={() => setActiveSheet('emergency_management')}
+                                    />
+                                </>
+                            )}
                         </div>
                     </section>
 
@@ -221,15 +235,13 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
 
                     {/* Logout */}
                     <div className="px-2">
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
+                        <button
+                            onClick={() => setShowLogoutConfirmation(true)}
                             className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
                         >
                             <LogOut className="h-5 w-5" />
                             Sign Out Account
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -259,6 +271,16 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     <AddEmergencyContactForm onSuccess={() => setIsAddContactSheetOpen(false)} />
                 </div>
             </MobileSheet>
+
+            <ConfirmationModal
+                isOpen={showLogoutConfirmation}
+                onClose={() => setShowLogoutConfirmation(false)}
+                onConfirm={handleLogout}
+                title="Sign Out"
+                message="Are you sure you want to sign out of your account?"
+                confirmLabel="Sign Out"
+                type="danger"
+            />
         </>
     );
 }
@@ -316,7 +338,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
     const userRoles = user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
+    const { data, setData, patch, errors, processing } = useForm({
         name: user?.name ?? '',
         unit_number: profile.unit_number || '',
         address: profile.address || '',

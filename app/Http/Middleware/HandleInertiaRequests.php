@@ -71,10 +71,12 @@ class HandleInertiaRequests extends Middleware
                         'data' => $n->data,
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ]),
-                    'resident_subscription' => ($user && $estate) ? (function () use ($user, $estate) {
+                    'resident_subscription' => ($estate) ? (function () use ($user, $estate) {
                         $subject = $user;
+                        $parentName = null;
                         if ($user->isHouseholdMember() && $user->householdOf) {
                             $subject = $user->householdOf->primaryResident;
+                            $parentName = $subject->name;
                         }
 
                         $sub = $subject->residentSubscription()->where('estate_id', $estate->id)->first();
@@ -85,17 +87,18 @@ class HandleInertiaRequests extends Middleware
                         return array_merge(
                             $sub->load('estate.subscriptionRecord.plan')->only(['status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']),
                             [
-                                'plan_name' => $estate->subscriptionRecord?->plan?->name ?? 'Standard',
-                                'billing_interval' => $estate->subscriptionRecord?->billing_interval ?? 'monthly',
+                                'plan_name' => $estate->subscriptionRecord->plan->name ?? 'Standard',
+                                'billing_interval' => $estate->subscriptionRecord->billing_interval ?? 'monthly',
                                 'is_household_member' => $user->isHouseholdMember(),
+                                'parent_resident_name' => $parentName,
                             ]
                         );
                     })() : null,
                 ] : null,
             ],
             'estate_plan' => fn () => $estate ? [
-                'name' => $estate->subscriptionRecord?->plan?->name ?? 'Free Tier',
-                'status' => $estate->subscriptionRecord?->status ?? 'none',
+                'name' => $estate->subscriptionRecord->plan->name ?? 'Free Tier',
+                'status' => $estate->subscriptionRecord->status ?? 'none',
                 'features' => $estate->getActiveFeatureSlugs(),
                 'limits' => [
                     'max_residents' => $estate->subscriptionRecord?->plan?->max_residents,
@@ -109,7 +112,7 @@ class HandleInertiaRequests extends Middleware
                 'sos_success' => fn () => $request->session()->get('sos_success'),
                 'validation_result' => fn () => $request->session()->get('validation_result'),
             ],
-            'billing_enabled' => fn () => $estate && $estate->settings?->charge_type === 'estate',
+            'billing_enabled' => fn () => $estate && $estate->settings->charge_type === 'estate',
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
             'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],

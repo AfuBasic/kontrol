@@ -17,6 +17,7 @@ class SosController extends Controller
      */
     public function trigger(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $estate = $user->getCurrentEstate();
 
@@ -56,10 +57,15 @@ class SosController extends Controller
         // Queue processing (SMS, etc.)
         ProcessSOSAlert::dispatch($sosEvent);
 
+        $subject = $user;
+        if ($user->isHouseholdMember() && $user->householdOf) {
+            $subject = $user->householdOf->primaryResident;
+        }
+
         return back()->with('sos_success', [
-            'id' => '#' . now()->getTimestamp(),
+            'id' => '#'.now()->getTimestamp(),
             'time' => now()->format('H:i • M d, Y'),
-            'has_emergency_contacts' => $user->emergencyContacts()->exists(),
+            'has_emergency_contacts' => $subject->emergencyContacts()->exists(),
         ]);
     }
 
@@ -68,6 +74,7 @@ class SosController extends Controller
      */
     public function acknowledge(SosEvent $sosEvent)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Ensure user is authorized for this estate and has correct role

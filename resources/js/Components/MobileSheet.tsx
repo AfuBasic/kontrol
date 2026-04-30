@@ -1,6 +1,7 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { ReactNode, Fragment } from 'react';
 import { X } from 'lucide-react';
+import type { ReactNode} from 'react';
+import { Fragment } from 'react';
 
 interface Props {
     isOpen: boolean;

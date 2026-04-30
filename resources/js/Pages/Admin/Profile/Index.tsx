@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, EyeOff } from 'lucide-react';
 
 interface Props {
     user: {

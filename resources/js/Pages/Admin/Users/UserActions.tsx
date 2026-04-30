@@ -4,8 +4,8 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
 import { destroy, edit } from '@/actions/App/Http/Controllers/Admin/UserController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import { usePermission } from '@/Hooks/usePermission';
 import MobileSheet from '@/Components/MobileSheet';
+import { usePermission } from '@/Hooks/usePermission';
 
 type User = {
     id: number;

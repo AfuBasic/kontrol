@@ -1,8 +1,8 @@
+import { ChevronLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { ChevronLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Feature {
     id: number;

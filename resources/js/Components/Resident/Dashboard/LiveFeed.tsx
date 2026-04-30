@@ -1,7 +1,7 @@
-import { ActivityItem } from '@/types/access-code';
+import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Check, Clock, X, Info, Zap, ShieldCheck, DoorOpen, LogOut } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import type { ActivityItem } from '@/types/access-code';
 
 interface Props {
     activities: ActivityItem[];

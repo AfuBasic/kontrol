@@ -1,15 +1,17 @@
-import { Bell, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import { Bell, Search } from 'lucide-react';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
 
 interface Props {
     userName: string;
     estateName: string;
     unreadCount: number;
+    isHouseholdMember?: boolean;
+    parentResidentName?: string | null;
 }
 
-export default function DashboardHeader({ userName, estateName, unreadCount }: Props) {
+export default function DashboardHeader({ userName, estateName, unreadCount, isHouseholdMember, parentResidentName }: Props) {
     const firstName = userName.split(' ')[0];
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -34,7 +36,7 @@ export default function DashboardHeader({ userName, estateName, unreadCount }: P
                 transition={{ delay: 0.2 }}
                 className="text-sm font-medium text-slate-500"
             >
-                {estateName}
+                {estateName} {isHouseholdMember && parentResidentName && `· Household of ${parentResidentName}`}
             </motion.p>
         </motion.div>
     );

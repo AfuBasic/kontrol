@@ -1,14 +1,14 @@
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { Capacitor } from '@capacitor/core';
-import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
-import Toast from '@/Components/Toast';
-import AuthErrorSheet from '@/Components/AuthErrorSheet';
 import { useEffect } from 'react';
+import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
+import AuthErrorSheet from '@/Components/AuthErrorSheet';
+import Toast from '@/Components/Toast';
 
 interface LoginFlash {
     success?: string;

@@ -1,8 +1,8 @@
-import ForgotPasswordController from '@/actions/App/Http/Controllers/Auth/ForgotPasswordController';
-import Toast from '@/Components/Toast';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import ForgotPasswordController from '@/actions/App/Http/Controllers/Auth/ForgotPasswordController';
+import Toast from '@/Components/Toast';
 
 export default function ForgotPassword() {
     const { flash } = usePage<{ flash: { success?: string } }>().props;

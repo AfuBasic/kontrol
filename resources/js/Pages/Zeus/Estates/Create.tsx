@@ -1,8 +1,8 @@
+import { CheckIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ZeusLayout from '@/Layouts/ZeusLayout';
-import { CheckIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 
 type Feature = {
     id: number;

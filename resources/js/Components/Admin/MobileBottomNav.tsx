@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import { 
     Squares2X2Icon, 
     UsersIcon, 
@@ -6,12 +5,13 @@ import {
     Cog6ToothIcon,
     BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
+import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
 interface Props {
     url: string;

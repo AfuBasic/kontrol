@@ -1,7 +1,7 @@
+import { CurrencyDollarIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { CurrencyDollarIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 export default function BillingIndex() {
     return (

@@ -1,8 +1,8 @@
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 
 function smoothScrollTo(selector: string) {
     const element = document.querySelector(selector);

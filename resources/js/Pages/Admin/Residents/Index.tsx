@@ -3,9 +3,9 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LinkIcon, Mail, Trash2, MapPin, Phone, User, Loader2, Check } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
+import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ResidentActions from '@/Components/Admin/ResidentActions';
 import ResidentsSkeleton from '@/Components/Admin/ResidentsSkeleton';
 

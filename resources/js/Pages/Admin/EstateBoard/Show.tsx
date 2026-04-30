@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Edit, Globe, MessageCircle, Send, Shield, Trash2, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { index, edit } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Admin/EstateBoardCommentController';
+import { index, edit } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 

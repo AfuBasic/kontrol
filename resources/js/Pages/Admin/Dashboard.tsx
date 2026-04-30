@@ -1,5 +1,3 @@
-import { Head, Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import {
     ArrowTrendingDownIcon,
     ArrowTrendingUpIcon,
@@ -15,13 +13,15 @@ import {
     ArrowRightIcon,
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { Head, Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } from 'lucide-react';
-import { useFeature } from '@/Hooks/useFeature';
-import FeatureGate from '@/Components/FeatureGate';
 
 import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import FeatureGate from '@/Components/FeatureGate';
+import { useFeature } from '@/Hooks/useFeature';
 import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';
 
 type Props = {

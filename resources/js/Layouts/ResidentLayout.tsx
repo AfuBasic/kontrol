@@ -1,20 +1,21 @@
-import { Link, usePage, router } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
-import { ReactNode, useEffect, useState, lazy, Suspense } from 'react';
-import type { SharedData } from '@/types';
-import PullToRefresh from '@/Components/PullToRefresh';
-import { useForceLogout } from '@/Hooks/useForceLogout';
-import { useFeature } from '@/Hooks/useFeature';
-import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Link, usePage, router } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
+import { useEffect, useState, lazy, Suspense } from 'react';
+import type { ReactNode} from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
-import SosButton from '@/Components/SosButton';
+import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
+import SosButton from '@/Components/SosButton';
+import { useFeature } from '@/Hooks/useFeature';
+import { useForceLogout } from '@/Hooks/useForceLogout';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import type { SharedData } from '@/types';
 
 interface Props {
     children: ReactNode;

@@ -1,7 +1,7 @@
+import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     affiliate: {

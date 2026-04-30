@@ -1,8 +1,8 @@
+import { HandRaisedIcon, PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { HandRaisedIcon, PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Affiliate {
     id: number;

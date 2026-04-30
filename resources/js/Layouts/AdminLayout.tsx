@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import {
     ArrowLeftStartOnRectangleIcon,
     Bars3Icon,
@@ -17,14 +19,10 @@ import {
     ClipboardDocumentListIcon,
     MegaphoneIcon,
 } from '@heroicons/react/24/outline';
-import { useFeature } from '@/Hooks/useFeature';
 import { Link, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
-import { useForceLogout } from '@/Hooks/useForceLogout';
-import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
-import axios from 'axios';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
@@ -38,9 +36,11 @@ import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/Se
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { useFeature } from '@/Hooks/useFeature';
+import { useForceLogout } from '@/Hooks/useForceLogout';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import type { SharedData } from '@/types';
-import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
 // Dynamic Imports
 const PendingInvoiceNotification = lazy(() => import('@/Components/PendingInvoiceNotification'));

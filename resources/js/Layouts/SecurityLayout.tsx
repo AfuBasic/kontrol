@@ -8,11 +8,11 @@ import HomeController from '@/actions/App/Http/Controllers/Security/HomeControll
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import PullToRefresh from '@/Components/PullToRefresh';
+import SosAlertOverlay from '@/Components/SosAlertOverlay';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import SosAlertOverlay from '@/Components/SosAlertOverlay';
 
 const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

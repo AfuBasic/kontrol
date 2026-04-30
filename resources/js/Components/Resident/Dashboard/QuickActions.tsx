@@ -1,8 +1,8 @@
-import { UserPlus, History, Shield, HelpCircle, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Link } from '@inertiajs/react';
-import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
+import { motion } from 'framer-motion';
+import { UserPlus, History, Shield, HelpCircle, ArrowRight } from 'lucide-react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
+import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 
 const actions = [
     {
@@ -27,11 +27,13 @@ import { usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
 
 export default function QuickActions() {
-    const { estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const { estate_plan, auth } = usePage<SharedData & { estate_plan: any }>().props;
     const features = estate_plan?.features || [];
+    const userRoles = auth?.user?.roles ?? [];
+    const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
 
     const visibleActions = actions.filter((action) => {
-        if (action.name === 'Invite Family' && !features.includes('household-management')) {
+        if (action.name === 'Invite Family' && (isHouseholdMember || !features.includes('household-management'))) {
             return false;
         }
         if (action.name === 'View History' && !features.includes('access-code-generation')) {

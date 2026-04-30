@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, User, Phone, MessageSquare, Clock, ShieldCheck, Zap } from 'lucide-react';
-import { router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import type { SharedData } from '@/types';
 

@@ -1,7 +1,8 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createRoot } from 'react-dom/client';
 import { router } from '@inertiajs/react';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import './echo';
 import { Capacitor } from '@capacitor/core';
@@ -9,14 +10,13 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
-import { useState, useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
-import GlobalLoading from './Components/GlobalLoading';
 import AppLoader from './Components/AppLoader';
+import GlobalLoading from './Components/GlobalLoading';
 
+import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
-import AdminLayout from './Layouts/AdminLayout';
 import SecurityLayout from './Layouts/SecurityLayout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

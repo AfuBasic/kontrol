@@ -1,8 +1,8 @@
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface Plan {
     id: number;

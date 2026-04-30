@@ -1,7 +1,7 @@
-import LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
 
 interface Props {
     email: string;

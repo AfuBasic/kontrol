@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import ZeusLayout from '@/Layouts/ZeusLayout';
 import { 
     Users, 
     CreditCard, 
@@ -16,6 +15,7 @@ import {
     DollarSign,
     Calendar
 } from 'lucide-react';
+import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Estate {
     id: number;

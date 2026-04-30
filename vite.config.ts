@@ -21,15 +21,15 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
-    server: {
-        host: '0.0.0.0',
-        hmr: {
-            host: process.env.VITE_HMR_HOST || 'localhost',
-        },
-        watch: {
-            usePolling: false,
-        },
-    },
+    // server: {
+    //     host: '0.0.0.0',
+    //     hmr: {
+    //         host: process.env.VITE_HMR_HOST || 'localhost',
+    //     },
+    //     watch: {
+    //         usePolling: false,
+    //     },
+    // },
     esbuild: {
         jsx: 'automatic',
     },

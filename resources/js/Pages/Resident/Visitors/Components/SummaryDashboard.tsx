@@ -1,5 +1,5 @@
-import { Users, Calendar, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Users, Calendar, Activity } from 'lucide-react';
 
 interface Props {
     activeCount: number;

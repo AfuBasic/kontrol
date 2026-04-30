@@ -2,12 +2,12 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, RefreshCw, Share2, Upload, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import {
     store as inviteLinkStore,
     regenerate as inviteLinkRegenerate,
     toggle as inviteLinkToggle,
 } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
+import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 // Wayfinder actions are used for routing

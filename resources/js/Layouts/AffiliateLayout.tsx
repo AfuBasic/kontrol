@@ -10,9 +10,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
 import Toast from '@/Components/Toast';
+import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
-import usePathFromUrl from '@/Hooks/usePathFromUrl';
 
 interface Props {
     children: ReactNode;
