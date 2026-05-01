@@ -51,6 +51,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $sos_events_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TrustedDevice> $trustedDevices
  * @property-read int|null $trusted_devices_count
+ *
  * @method static Builder<static>|User acceptedInvitation()
  * @method static Builder<static>|User active()
  * @method static Builder<static>|User affiliates()
@@ -81,6 +82,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static Builder<static>|User withTelegram()
  * @method static Builder<static>|User withoutPermission($permissions)
  * @method static Builder<static>|User withoutRole($roles, $guard = null)
+ *
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements MustVerifyEmail
@@ -182,6 +184,34 @@ class User extends Authenticatable implements MustVerifyEmail
     public function householdOf(): HasOne
     {
         return $this->hasOne(HouseholdMember::class, 'household_member_id');
+    }
+
+    /**
+     * Get all user IDs associated with this user's household (Primary + Members).
+     *
+     * @return array<int>
+     */
+    public function getHouseholdUserIds(): array
+    {
+        if ($this->isHouseholdMember()) {
+            $household = $this->householdOf;
+            if (! $household) {
+                return [$this->id];
+            }
+
+            $primaryId = $household->primary_resident_id;
+            $memberIds = HouseholdMember::where('primary_resident_id', $primaryId)
+                ->pluck('household_member_id')
+                ->toArray();
+
+            return array_unique(array_merge([$primaryId], $memberIds));
+        }
+
+        $memberIds = $this->householdMembers()
+            ->pluck('household_member_id')
+            ->toArray();
+
+        return array_unique(array_merge([$this->id], $memberIds));
     }
 
     /**

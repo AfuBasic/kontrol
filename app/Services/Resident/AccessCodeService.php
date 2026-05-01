@@ -95,9 +95,11 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
+        $userIds = $user->getHouseholdUserIds();
+
         return AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->active()
             ->search($search)
             ->orderBy('expires_at')
@@ -114,9 +116,11 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
+        $userIds = $user->getHouseholdUserIds();
+
         $query = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->where(function ($q) {
                 $q->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
                     ->orWhere(fn ($sq) => $sq->where('status', AccessCodeStatus::Active)
@@ -145,9 +149,11 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
+        $userIds = $user->getHouseholdUserIds();
+
         return AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->orderByDesc('created_at')
             ->get();
     }
@@ -160,9 +166,11 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
+        $userIds = $user->getHouseholdUserIds();
+
         return AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->find($id);
     }
 
@@ -184,10 +192,12 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
-        // Get IDs of codes belonging to this user/estate to filter activities
+        $userIds = $user->getHouseholdUserIds();
+
+        // Get IDs of codes belonging to this household/estate to filter activities
         $codeIds = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->pluck('id');
 
         $activities = Activity::query()
@@ -310,29 +320,37 @@ class AccessCodeService
 
         $today = Carbon::today();
 
+        $userIds = $user->getHouseholdUserIds();
+
         $activeCodes = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->active()
             ->count();
 
-        $codesToday = AccessCode::query()
+        // Codes created today
+        $createdToday = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->whereDate('created_at', $today)
             ->count();
 
+        // Visitors who actually arrived today
         $visitorsToday = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->where('status', AccessCodeStatus::Used)
             ->whereDate('used_at', $today)
             ->count();
 
+        // Total expected = Those who already arrived today + those still active (regardless of when created)
+        $totalExpected = $visitorsToday + $activeCodes;
+
         return [
             'active_codes' => $activeCodes,
-            'codes_today' => $codesToday,
+            'created_today' => $createdToday,
             'visitors_today' => $visitorsToday,
+            'total_expected' => $totalExpected,
         ];
     }
 
@@ -349,9 +367,11 @@ class AccessCodeService
 
         $today = Carbon::today();
 
+        $userIds = $user->getHouseholdUserIds();
+
         $used = AccessCode::query()
             ->forEstate($estate->id)
-            ->forUser($user->id)
+            ->whereIn('user_id', $userIds)
             ->whereDate('created_at', $today)
             ->count();
 

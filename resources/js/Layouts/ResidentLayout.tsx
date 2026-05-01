@@ -5,7 +5,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
 import { useEffect, useState, lazy, Suspense } from 'react';
-import type { ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
@@ -351,28 +351,32 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 <AnimatePresence>
                     {showToast && (
                         <motion.div
-                            initial={{ opacity: 0, y: 100 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 100 }}
-                            className="fixed bottom-32 left-1/2 z-50 w-full max-w-xs -translate-x-1/2 px-4"
-                            onClick={() => {
-                                const data = lastReceivedNotification?.data;
-                                const type = data?.type;
-                                const targetUrl = data?.action_url || data?.url;
-
-                                // Skip navigation for visitor arrivals to prevent reloads
-                                if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
-                                    router.visit(targetUrl);
+                            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 200, transition: { duration: 0.2 } }}
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.8}
+                            onDragEnd={(_, info) => {
+                                if (Math.abs(info.offset.x) > 100) {
+                                    setShowToast(false);
                                 }
-                                setShowToast(false);
                             }}
+                            className="fixed bottom-32 left-1/2 z-50 w-full max-w-xs -translate-x-1/2 px-4"
                         >
-                            <div className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-2xl ring-1 ring-slate-100 backdrop-blur-xl transition-all active:scale-95">
+                            <motion.div
+                                onClick={() => setShowToast(false)}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-2xl ring-1 ring-slate-100 backdrop-blur-xl transition-all"
+                            >
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                                     <Bell className="h-5 w-5" />
                                 </div>
-                                <p className="text-sm font-bold">{toastMessage}</p>
-                            </div>
+                                <div className="flex-1">
+                                    <p className="text-sm leading-tight font-bold">{toastMessage}</p>
+                                    <p className="mt-0.5 text-[10px] font-medium text-slate-400">Tap to dismiss · Swipe to hide</p>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>

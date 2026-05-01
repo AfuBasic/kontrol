@@ -6,27 +6,29 @@ interface Props {
 }
 
 export default function DailyMetrics({ stats }: Props) {
-    const total = stats.codes_today || 1; // Avoid division by zero
-    const arrivalRate = (stats.visitors_today / total) * 100;
+    const total = stats.total_expected || stats.visitors_today || 1; // Use total expected for accurate rate
+    const arrivalRate = Math.min((stats.visitors_today / total) * 100, 100);
 
     return (
         <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">
             <h3 className="mb-6 text-lg font-bold tracking-tight text-slate-900">Today's Overview</h3>
-            
+
             <div className="space-y-6">
                 <div>
                     <div className="mb-2 flex items-end justify-between">
                         <div>
-                            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Arrival Rate</p>
-                            <p className="text-2xl font-black text-slate-900">{stats.visitors_today} / {stats.codes_today}</p>
+                            <p className="text-sm font-bold tracking-wider text-slate-500 uppercase">Arrival Rate</p>
+                            <p className="text-2xl font-black text-slate-900">
+                                {stats.visitors_today} / {total}
+                            </p>
                         </div>
                         <p className="text-sm font-bold text-indigo-600">{Math.round(arrivalRate)}%</p>
                     </div>
                     <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                        <motion.div 
+                        <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${arrivalRate}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
+                            transition={{ duration: 1, ease: 'easeOut' }}
                             className="h-full bg-linear-to-r from-indigo-500 to-blue-500"
                         />
                     </div>
@@ -34,14 +36,14 @@ export default function DailyMetrics({ stats }: Props) {
 
                 <div className="grid grid-cols-2 gap-6 pt-2">
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Codes</p>
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Active Codes</p>
                         <div className="mt-1 flex items-baseline gap-1">
                             <p className="text-2xl font-black text-slate-900">{stats.active_codes}</p>
-                            <span className="text-xs font-bold text-emerald-500">+2</span>
+                            <span className="text-[10px] font-bold text-slate-300">Remaining</span>
                         </div>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Completed</p>
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Completed</p>
                         <div className="mt-1 flex items-baseline gap-1">
                             <p className="text-2xl font-black text-slate-900">{stats.visitors_today}</p>
                             <span className="text-xs font-bold text-slate-300">Today</span>

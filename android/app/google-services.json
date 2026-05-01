@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "481153520794-rnccbuhe6i62i4o4mrsb7a3vd228070n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kontrol.app",
+            "certificate_hash": "0831da14cb0ddf7fcb5595efa9786c588a7f4933"
+          }
+        },
+        {
           "client_id": "481153520794-pc89ft1dv7u0rhl6tdddvag114fcu90a.apps.googleusercontent.com",
           "client_type": 3
         }

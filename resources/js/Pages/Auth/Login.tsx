@@ -45,7 +45,13 @@ export default function Login() {
         setGoogleError('');
 
         try {
-            const result = await FirebaseAuthentication.signInWithGoogle();
+            // Force sign out first to clear any ghost sessions/partially logged in states
+            await FirebaseAuthentication.signOut().catch(() => {});
+
+            const result = await FirebaseAuthentication.signInWithGoogle({
+                useCredentialManager: false,
+            });
+
             const idToken = result.credential?.idToken;
 
             if (idToken) {
@@ -203,7 +209,7 @@ export default function Login() {
                             <motion.div
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:block lg:mt-6"
+                                className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6 lg:block"
                             >
                                 {flash?.error || errors?.email}
                             </motion.div>

@@ -8,38 +8,60 @@ interface Props {
 }
 
 export default function SummaryDashboard({ activeCount, expectedToday, totalToday }: Props) {
+    const totalExpected = activeCount + expectedToday;
+    const arrivalRate = totalExpected > 0 ? (activeCount / totalExpected) * 100 : 0;
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center rounded-[32px] bg-white py-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200"
-        >
-            {/* Inside Stat */}
-            <div className="group flex-1 border-r border-slate-50 px-2 text-center">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 transition-transform group-hover:scale-110">
-                    <Users className="h-5 w-5" fill="currentColor" />
+        <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">
+            <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-bold tracking-tight text-slate-900">Today's Overview</h3>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                    <Activity className="h-4 w-4" />
                 </div>
-                <p className="text-xl font-black text-slate-900">{activeCount}</p>
-                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Inside</p>
             </div>
 
-            {/* Expected Stat */}
-            <div className="group flex-1 border-r border-slate-50 px-2 text-center">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-transform group-hover:scale-110">
-                    <Calendar className="h-5 w-5" />
+            <div className="space-y-6">
+                <div>
+                    <div className="mb-2 flex items-end justify-between">
+                        <div>
+                            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Arrival Rate</p>
+                            <p className="mt-1 text-2xl font-black text-slate-900">
+                                {activeCount} / {totalExpected}
+                            </p>
+                        </div>
+                        <p className="text-sm font-black text-indigo-600">{Math.round(arrivalRate)}%</p>
+                    </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-slate-50 ring-1 ring-slate-100/50">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${arrivalRate}%` }}
+                            transition={{ duration: 1, ease: 'easeOut' }}
+                            className="h-full bg-linear-to-r from-indigo-500 to-blue-500"
+                        />
+                    </div>
                 </div>
-                <p className="text-xl font-black text-slate-900">{expectedToday}</p>
-                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Expected</p>
-            </div>
 
-            {/* Total Today Stat */}
-            <div className="group flex-1 px-2 text-center">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition-transform group-hover:scale-110">
-                    <Activity className="h-5 w-5" />
+                <div className="grid grid-cols-2 gap-6 pt-2">
+                    <div className="group">
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Inside</p>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-slate-900 transition-transform group-hover:scale-105">{activeCount}</p>
+                            <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+                                <Users className="h-2.5 w-2.5" fill="currentColor" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="group">
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Expected</p>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-slate-900 transition-transform group-hover:scale-105">{expectedToday}</p>
+                            <div className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                                <Calendar className="h-2.5 w-2.5" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p className="text-xl font-black text-slate-900">{totalToday}</p>
-                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Today</p>
             </div>
-        </motion.div>
+        </div>
     );
 }

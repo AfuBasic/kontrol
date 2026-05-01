@@ -24,8 +24,9 @@ export type DurationOption = {
 
 export type HomeStats = {
     active_codes: number;
-    codes_today: number;
+    created_today: number;
     visitors_today: number;
+    total_expected: number;
 };
 
 export type ActivityItem = {

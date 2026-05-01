@@ -13,6 +13,7 @@ use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources as Fcm;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
+
 class VisitorArrivedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -54,8 +55,8 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $estateName = $this->accessCode->estate?->name ?? 'Your Estate';
         $visitorName = $this->accessCode->visitor_name;
         $code = $this->accessCode->code;
-        
-        $message = $visitorName 
+
+        $message = $visitorName
             ? "{$visitorName} has arrived at the security post."
             : "Your visitor with code {$code} has arrived at the security post.";
 
@@ -66,7 +67,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
             'visitor_name' => $visitorName ?? 'Your visitor',
             'estate_name' => $estateName,
             'type' => 'visitor_arrived',
-            'action_url' => '/resident',
+            'action_url' => '/resident/home',
         ];
     }
 
@@ -132,7 +133,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
 
     /**
      * Get the telegram representation of the notification.
-     * 
+     *
      * @return array{text: string, keyboard?: array}
      */
     public function toTelegram(object $notifiable): array
@@ -141,15 +142,15 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $code = $this->accessCode->code;
         $address = $this->accessCode->estate?->address;
 
-        $description = $visitorName 
+        $description = $visitorName
             ? "<b>{$visitorName}</b> has arrived at the security post."
             : "Your visitor with code <code>{$code}</code> has arrived at the security post.";
 
         $text = "🔔 <b>Visitor Arrived</b>\n\n"
             ."Hi <b>{$notifiable->name}</b>,\n"
             ."{$description}\n\n"
-            .($address ? "📍 Location: {$address}\n\n" : "")
-            ."<i>Access granted via Security Terminal.</i>";
+            .($address ? "📍 Location: {$address}\n\n" : '')
+            .'<i>Access granted via Security Terminal.</i>';
 
         return [
             'text' => $text,
