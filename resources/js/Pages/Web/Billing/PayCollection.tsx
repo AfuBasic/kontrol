@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User } from 'lucide-react';
 import { useState } from 'react';
+import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 type Collection = {
     name: string;
@@ -57,7 +58,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
 
         try {
             // 1. Initiate payment on backend to get reference
-            const response = await fetch(route('web.billing.collection.initiate', assignment.id), {
+            const response = await fetch(CollectionPaymentController.initiate.url(assignment.id), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

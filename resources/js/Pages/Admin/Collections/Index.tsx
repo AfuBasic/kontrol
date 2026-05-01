@@ -14,6 +14,8 @@ type Collection = {
     recurring_interval: string | null;
     status: 'draft' | 'active' | 'archived';
     assignments_count: number;
+    targets_count: number;
+    applies_to: 'all' | 'target';
     created_at: string;
 };
 
@@ -22,9 +24,10 @@ type Props = {
         data: Collection[];
         links: any[];
     };
+    totalResidents: number;
 };
 
-export default function CollectionsIndex({ collections }: Props) {
+export default function CollectionsIndex({ collections, totalResidents }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -87,7 +90,10 @@ export default function CollectionsIndex({ collections }: Props) {
                                 <div className="flex items-center gap-4 border-t border-slate-50 pt-4 text-sm font-bold text-slate-500">
                                     <div className="flex items-center gap-1.5">
                                         <Users className="h-4 w-4" />
-                                        {collection.assignments_count} Residents
+                                        {collection.status === 'active' 
+                                            ? collection.assignments_count 
+                                            : (collection.applies_to === 'all' ? totalResidents : collection.targets_count)
+                                        } Residents
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Calendar className="h-4 w-4" />
@@ -96,6 +102,7 @@ export default function CollectionsIndex({ collections }: Props) {
                                 </div>
                                 
                                 <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
+                                {collection.status === 'draft' && (
                                     <Link
                                         href={edit.url(collection.id)}
                                         onClick={(e) => e.stopPropagation()}
@@ -104,6 +111,7 @@ export default function CollectionsIndex({ collections }: Props) {
                                     >
                                         <Edit2 className="h-4 w-4" />
                                     </Link>
+                                )}
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
                                         <ArrowRight className="h-5 w-5" />
                                     </div>

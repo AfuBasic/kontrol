@@ -14,6 +14,8 @@ type Collection = {
     status: 'draft' | 'active' | 'archived';
     start_date: string;
     grace_days: number;
+    applies_to: 'all' | 'target';
+    targets_count?: number;
     created_at: string;
 };
 
@@ -29,9 +31,10 @@ type Stats = {
 type Props = {
     collection: Collection;
     stats: Stats;
+    totalResidents: number;
 };
 
-export default function ShowCollection({ collection, stats }: Props) {
+export default function ShowCollection({ collection, stats, totalResidents }: Props) {
     const { post, delete: destroyCall, processing } = useForm();
 
     const formatCurrency = (amount: number) => {
@@ -91,20 +94,24 @@ export default function ShowCollection({ collection, stats }: Props) {
                                 Publish & Generate
                             </button>
                         )}
-                        <Link
-                            href={edit.url(collection.id)}
-                            className="flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95"
-                        >
-                            Edit
-                        </Link>
-                        <button
-                            onClick={handleDelete}
-                            disabled={processing}
-                            className="flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-rose-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-rose-50 active:scale-95 disabled:opacity-50"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                        </button>
+                        {collection.status === 'draft' && (
+                            <>
+                                <Link
+                                    href={edit.url(collection.id)}
+                                    className="flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={processing}
+                                    className="flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-rose-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-rose-50 active:scale-95 disabled:opacity-50"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -115,7 +122,12 @@ export default function ShowCollection({ collection, stats }: Props) {
                             <Users className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Residents</div>
-                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.total_assignments}</div>
+                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">
+                            {collection.status === 'active' 
+                                ? (stats.total_assignments ?? 0) 
+                                : (collection.applies_to === 'all' ? (totalResidents ?? 0) : (collection.targets_count ?? 0))
+                            }
+                        </div>
                     </div>
 
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -123,7 +135,7 @@ export default function ShowCollection({ collection, stats }: Props) {
                             <TrendingUp className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Paid</div>
-                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.paid_count}</div>
+                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.paid_count ?? 0}</div>
                     </div>
 
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -131,7 +143,7 @@ export default function ShowCollection({ collection, stats }: Props) {
                             <Clock className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Pending</div>
-                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.pending_count}</div>
+                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.pending_count ?? 0}</div>
                     </div>
 
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -139,7 +151,7 @@ export default function ShowCollection({ collection, stats }: Props) {
                             <AlertCircle className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Overdue</div>
-                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.overdue_count}</div>
+                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-900">{stats.overdue_count ?? 0}</div>
                     </div>
                 </div>
 

@@ -220,12 +220,34 @@ class ResidentController extends Controller
         $this->authorize('residents.delete');
 
         $validated = $request->validate([
-            'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['required', 'integer'],
+            'ids' => ['required_if:all,false', 'array'],
+            'all' => ['sometimes', 'boolean'],
+            'filters' => ['sometimes', 'array'],
         ]);
 
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['ids'], $estate);
+        $ids = $validated['ids'] ?? [];
+
+        if ($request->boolean('all')) {
+            $query = User::query()
+                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id));
+
+            if ($request->filled('filters.search')) {
+                $search = $request->input('filters.search');
+                $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%"));
+            }
+
+            if ($request->filled('filters.status')) {
+                $status = $request->input('filters.status');
+                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)
+                    ->where('estate_users_membership.status', $status));
+            }
+
+            $ids = $query->pluck('users.id')->toArray();
+        }
+
+        $result = $action->execute($ids, $estate);
 
         $total = $result['deleted'] + $result['detached'];
 

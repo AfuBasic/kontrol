@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Calendar, Clock, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import MoneyInput from '@/Components/MoneyInput';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 
 type Resident = {
@@ -109,22 +110,13 @@ export default function CreateCollection({ residents }: Props) {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Amount (₦)</label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-8">
-                                        <span className="font-bold text-slate-400">₦</span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.amount}
-                                        onChange={(e) => setData('amount', e.target.value)}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 pl-14 pr-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
-                                        placeholder="0.00"
-                                        required
-                                    />
-                                </div>
-                                {errors.amount && <p className="mt-2 text-sm font-bold text-red-500">{errors.amount}</p>}
+                                <MoneyInput
+                                    label="Amount (₦)"
+                                    value={data.amount}
+                                    onChange={(val) => setData('amount', val)}
+                                    error={errors.amount}
+                                    required
+                                />
                             </div>
 
                             <div>
@@ -197,19 +189,12 @@ export default function CreateCollection({ residents }: Props) {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Late Fee (₦ - Optional)</label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-8">
-                                        <span className="font-bold text-slate-400">₦</span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        value={data.late_fee}
-                                        onChange={(e) => setData('late_fee', e.target.value)}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 pl-14 pr-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
-                                        placeholder="0.00"
-                                    />
-                                </div>
+                                <MoneyInput
+                                    label="Late Fee (₦ - Optional)"
+                                    value={data.late_fee}
+                                    onChange={(val) => setData('late_fee', val)}
+                                    error={errors.late_fee}
+                                />
                             </div>
                         </div>
                     </div>
@@ -295,13 +280,57 @@ export default function CreateCollection({ residents }: Props) {
                                         <p className="text-xs font-bold text-slate-500">
                                             {data.targets.length} residents selected
                                         </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setData('targets', residents.map(r => r.id))}
-                                            className="text-xs font-black tracking-widest text-[#1F6FDB] uppercase hover:underline"
-                                        >
-                                            Select All
-                                        </button>
+                                        <div className="flex flex-wrap gap-3">
+                                            <AnimatePresence mode="popLayout">
+                                                {/* Search-specific Select All */}
+                                                {searchQuery && filteredResidents.length > 0 && !filteredResidents.every(r => data.targets.includes(r.id)) && (
+                                                    <motion.button
+                                                        key="select-matches"
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newTargets = Array.from(new Set([...data.targets, ...filteredResidents.map(r => r.id)]));
+                                                            setData('targets', newTargets);
+                                                        }}
+                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+                                                    >
+                                                        Select {filteredResidents.length} Matches
+                                                    </motion.button>
+                                                )}
+
+                                                {/* Global Select All */}
+                                                {data.targets.length < residents.length && !searchQuery && (
+                                                    <motion.button
+                                                        key="select-all"
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
+                                                        type="button"
+                                                        onClick={() => setData('targets', residents.map((r) => r.id))}
+                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+                                                    >
+                                                        Select All ({residents.length})
+                                                    </motion.button>
+                                                )}
+
+                                                {/* Global Unselect All */}
+                                                {data.targets.length > 0 && (
+                                                    <motion.button
+                                                        key="unselect-all"
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
+                                                        type="button"
+                                                        onClick={() => setData('targets', [])}
+                                                        className="text-[10px] font-black tracking-widest text-rose-500 uppercase bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                                                    >
+                                                        Unselect All
+                                                    </motion.button>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
                                 </motion.div>
                             ) : (

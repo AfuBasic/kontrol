@@ -7,15 +7,22 @@ export default function GlobalLoading() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        let timeout: ReturnType<typeof setTimeout>;
+        let timeout: ReturnType<typeof setTimeout> | null = null;
 
         const start = () => {
-            // Short delay to avoid flickering on fast transitions
-            timeout = setTimeout(() => setLoading(true), 150);
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+            timeout = setTimeout(() => {
+                setLoading(true);
+            }, 150);
         };
 
         const end = () => {
-            clearTimeout(timeout);
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
             setLoading(false);
         };
 
@@ -24,6 +31,9 @@ export default function GlobalLoading() {
         const errorListener = router.on('error', end);
 
         return () => {
+            if (timeout) {
+                clearTimeout(timeout);
+            }
             startListener();
             finishListener();
             errorListener();

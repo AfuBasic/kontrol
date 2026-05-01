@@ -249,8 +249,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeWithRole(Builder $query, string $roleName, ?int $estateId): Builder
     {
-        return $query->whereHas('roles', function ($q) use ($roleName, $estateId) {
-            $q->where('name', $roleName)
+        return $query->whereExists(function ($query) use ($roleName, $estateId) {
+            $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                ->from('model_has_roles')
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->whereColumn('model_has_roles.model_id', 'users.id')
+                ->where('model_has_roles.model_type', User::class)
+                ->where('roles.name', $roleName)
                 ->where('model_has_roles.estate_id', $estateId);
         });
     }

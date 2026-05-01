@@ -5,14 +5,16 @@ namespace App\Services\Admin;
 use App\Jobs\Admin\PublishCollectionJob;
 use App\Models\Collection;
 use App\Models\Estate;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class CollectionService
 {
-    public function getCollections(Estate $estate)
+    public function getCollections(Estate $estate): LengthAwarePaginator
     {
         return Collection::where('estate_id', $estate->id)
-            ->withCount('assignments')
+            ->withCount(['assignments', 'targets'])
             ->latest()
             ->paginate(15);
     }
@@ -37,10 +39,10 @@ class CollectionService
             ]);
 
             if ($collection->applies_to === 'target' && isset($data['targets'])) {
-                foreach ($data['targets'] as $target) {
+                foreach ($data['targets'] as $targetId) {
                     $collection->targets()->create([
-                        'target_type' => $target['type'],
-                        'target_id' => $target['id'],
+                        'target_type' => User::class,
+                        'target_id' => $targetId,
                     ]);
                 }
             }
@@ -67,10 +69,10 @@ class CollectionService
 
             if ($collection->applies_to === 'target' && isset($data['targets'])) {
                 $collection->targets()->delete();
-                foreach ($data['targets'] as $target) {
+                foreach ($data['targets'] as $targetId) {
                     $collection->targets()->create([
-                        'target_type' => $target['type'],
-                        'target_id' => $target['id'],
+                        'target_type' => User::class,
+                        'target_id' => $targetId,
                     ]);
                 }
             }
@@ -93,11 +95,11 @@ class CollectionService
             ->where('collection_id', $collection->id)
             ->selectRaw('
                 COUNT(*) as total_assignments,
-                SUM(CASE WHEN status = "paid" THEN 1 ELSE 0 END) as paid_count,
-                SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count,
-                SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as overdue_count,
-                SUM(amount_due) as total_expected,
-                SUM(amount_paid) as total_collected
+                COALESCE(SUM(CASE WHEN status = "paid" THEN 1 ELSE 0 END), 0) as paid_count,
+                COALESCE(SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END), 0) as pending_count,
+                COALESCE(SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END), 0) as overdue_count,
+                COALESCE(SUM(amount_due), 0) as total_expected,
+                COALESCE(SUM(amount_paid), 0) as total_collected
             ')
             ->first();
 

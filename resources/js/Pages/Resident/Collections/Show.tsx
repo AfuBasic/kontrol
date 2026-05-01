@@ -1,7 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ArrowUpRight, ExternalLink } from 'lucide-react';
-import MobileLayout from '@/Layouts/MobileLayout';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
+import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 type Collection = {
     id: number;
@@ -45,7 +46,7 @@ export default function CollectionShow({ assignment }: Props) {
     };
 
     // The payment URL will be the web billing page
-    const paymentUrl = route('web.billing.collection.show', assignment.id);
+    const paymentUrl = CollectionPaymentController.show.url(assignment.id);
 
     return (
         <div className="flex flex-col gap-8 pb-32">
@@ -155,7 +156,7 @@ export default function CollectionShow({ assignment }: Props) {
     );
 }
 
-CollectionShow.layout = (page: any) => <MobileLayout children={page} />;
+CollectionShow.layout = (page: any) => <ResidentLayout children={page} />;
 
 function CheckCircle2(props: any) {
     return (

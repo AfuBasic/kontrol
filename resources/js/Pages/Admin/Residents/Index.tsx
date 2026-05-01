@@ -50,15 +50,18 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [allSelected, setAllSelected] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const debouncedSearch = useDebounce(search, 300);
 
-    // Clear selection when page changes
+    // Clear selection when page changes (unless globally selected)
     useEffect(() => {
-        setSelectedIds([]);
-    }, [residents?.current_page]);
+        if (!allSelected) {
+            setSelectedIds([]);
+        }
+    }, [residents?.current_page, allSelected]);
 
     // Debounce search
     useEffect(() => {
@@ -83,30 +86,43 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
 
     const toggleSelectAll = useCallback(() => {
         if (!residents?.data) return;
-        if (selectedIds.length === residents.data.length) {
+        if (selectedIds.length === residents.data.length || allSelected) {
             setSelectedIds([]);
+            setAllSelected(false);
         } else {
             setSelectedIds(residents.data.map((r) => r.id));
         }
-    }, [selectedIds.length, residents?.data]);
+    }, [selectedIds.length, residents?.data, allSelected]);
 
     const toggleSelect = useCallback((id: number) => {
+        setAllSelected(false);
         setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
     }, []);
 
+    const selectAllAcrossPages = () => {
+        setAllSelected(true);
+        // We don't necessarily need all IDs if the backend supports a "select all" flag for bulk actions
+        // But for UI feedback, we can show the total count
+    };
+
     const handleBulkDelete = useCallback(() => {
-        if (selectedIds.length === 0) return;
+        if (selectedIds.length === 0 && !allSelected) return;
 
         setIsDeleting(true);
         router.delete(bulkDelete.url(), {
-            data: { ids: selectedIds },
+            data: { 
+                ids: selectedIds,
+                all: allSelected,
+                filters: { search, status }
+            },
             onSuccess: () => {
                 setSelectedIds([]);
+                setAllSelected(false);
                 setShowDeleteConfirm(false);
             },
             onFinish: () => setIsDeleting(false),
         });
-    }, [selectedIds]);
+    }, [selectedIds, allSelected, search, status]);
 
     const isAllSelected = (residents?.data?.length ?? 0) > 0 && selectedIds.length === (residents?.data?.length ?? 0);
     const isSomeSelected = selectedIds.length > 0 && selectedIds.length < (residents?.data?.length ?? 0);
@@ -247,26 +263,56 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="mb-4 flex items-center justify-between rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
+                        className="mb-4 flex flex-col rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
                     >
-                        <span className="text-sm font-medium text-primary-800">{selectedIds.length} resident(s) selected</span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedIds([])}
-                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                            >
-                                Clear
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Selected
-                            </button>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-black tracking-tight text-primary-900">
+                                {allSelected ? residents.total : selectedIds.length} resident(s) selected
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedIds([]);
+                                        setAllSelected(false);
+                                    }}
+                                    className="rounded-lg px-3 py-1.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-100"
+                                >
+                                    Unselect All
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete Selected
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Intelligent Cross-Page Selection */}
+                        <AnimatePresence>
+                            {isAllSelected && residents.total > residents.data.length && !allSelected && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="border-t border-primary-200 pt-3 mt-3"
+                                >
+                                    <p className="text-center text-xs font-medium text-primary-700">
+                                        All {residents.data.length} residents on this page are selected.{' '}
+                                        <button
+                                            type="button"
+                                            onClick={selectAllAcrossPages}
+                                            className="font-black text-primary-900 underline decoration-primary-900/30 underline-offset-4 hover:decoration-primary-900"
+                                        >
+                                            Select all {residents.total} residents in the estate
+                                        </button>
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </motion.div>
                 )}
             </AnimatePresence>

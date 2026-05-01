@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, ChevronRight, Clock, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
-import MobileLayout from '@/Layouts/MobileLayout';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 
 type Collection = {
@@ -168,4 +168,4 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
     );
 }
 
-CollectionsIndex.layout = (page: any) => <MobileLayout children={page} />;
+CollectionsIndex.layout = (page: any) => <ResidentLayout children={page} />;
