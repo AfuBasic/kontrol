@@ -3,7 +3,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
+import { Bell, Home, Users, LayoutGrid, User, Plus, Wallet } from 'lucide-react';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -257,6 +257,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     )}
                 </div>
             ),
+        },
+        {
+            name: 'Bills',
+            href: '/resident/dues',
+            icon: (active: boolean) => <Wallet className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            show: true,
         },
         {
             name: 'Profile',

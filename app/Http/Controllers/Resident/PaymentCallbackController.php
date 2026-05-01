@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentTransaction;
 use App\Services\Billing\PaymentVerificationService;
 use App\Services\PaystackService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -53,7 +54,7 @@ class PaymentCallbackController extends Controller
 
             return redirect()->route('resident.billing.index')
                 ->with('success', 'Payment recorded successfully!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             activity()->withProperties([
                 'reference' => $reference,
                 'error' => $e->getMessage(),

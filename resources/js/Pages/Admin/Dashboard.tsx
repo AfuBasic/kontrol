@@ -12,6 +12,7 @@ import {
     UsersIcon,
     ArrowRightIcon,
     CheckCircleIcon,
+    BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -20,6 +21,7 @@ import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } f
 import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import FeatureGate from '@/Components/FeatureGate';
 import { useFeature } from '@/Hooks/useFeature';
 import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';
@@ -409,6 +411,14 @@ function QuickActions() {
             color: 'from-slate-700 to-slate-800',
             shadow: 'shadow-slate-200',
             feature: 'security-personnel-management',
+        },
+        {
+            label: 'Collections',
+            href: CollectionController.index.url(),
+            icon: BanknotesIcon,
+            color: 'from-emerald-600 to-emerald-800',
+            shadow: 'shadow-emerald-200',
+            feature: 'smart-billing-config',
         },
     ];
 

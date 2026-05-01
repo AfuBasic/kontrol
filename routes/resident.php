@@ -3,6 +3,7 @@
 use App\Http\Controllers\Resident\AccessCodeController;
 use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\BillingController;
+use App\Http\Controllers\Resident\CollectionController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\EstateContactController;
@@ -110,6 +111,12 @@ Route::middleware('role:resident')->group(function (): void {
         Route::post('/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('invoices.pay');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
         Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
+    });
+
+    // Estate Collections (Dues)
+    Route::prefix('dues')->name('resident.collections.')->middleware('check-estate-feature:smart-billing-config')->group(function (): void {
+        Route::get('/', [CollectionController::class, 'index'])->name('index');
+        Route::get('/{assignment}', [CollectionController::class, 'show'])->name('show');
     });
 
     // Household Management

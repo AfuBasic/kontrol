@@ -56,6 +56,7 @@ class Estate extends Model
         'email',
         'address',
         'status',
+        'billing_mode',
     ];
 
     /**
@@ -281,5 +282,21 @@ class Estate extends Model
     public function sosEvents(): HasMany
     {
         return $this->hasMany(SosEvent::class);
+    }
+
+    /**
+     * @return HasMany<Collection, $this>
+     */
+    public function collections(): HasMany
+    {
+        return $this->hasMany(Collection::class);
+    }
+
+    /**
+     * @return HasMany<CollectionAssignment, $this>
+     */
+    public function collectionAssignments(): HasMany
+    {
+        return $this->hasMany(CollectionAssignment::class);
     }
 }

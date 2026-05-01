@@ -18,6 +18,7 @@ import {
     XMarkIcon,
     ClipboardDocumentListIcon,
     MegaphoneIcon,
+    BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
@@ -26,6 +27,7 @@ import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
+import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
@@ -73,6 +75,12 @@ const baseNav: NavItem[] = [
         icon: ShieldCheckIcon,
         permission: 'security.view',
         feature: 'security-personnel-management',
+    },
+    {
+        name: 'Collections',
+        href: CollectionController.index.url(),
+        icon: BanknotesIcon,
+        feature: 'smart-billing-config',
     },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },

@@ -2,14 +2,15 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
 use App\Http\Controllers\Admin\InviteLinkController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PaymentCallbackController;
 use App\Http\Controllers\Admin\PaymentHistoryController;
-use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
@@ -133,5 +134,17 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send')->middleware('feature:automated-invoicing');
         Route::get('/history', [PaymentHistoryController::class, 'index'])->name('history')->middleware('feature:financial-audit');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
+    });
+
+    // Collections (Resident dues management)
+    Route::prefix('collections')->name('collections.')->middleware('feature:smart-billing-config')->group(function (): void {
+        Route::get('/', [CollectionController::class, 'index'])->name('index');
+        Route::get('/create', [CollectionController::class, 'create'])->name('create');
+        Route::post('/', [CollectionController::class, 'store'])->name('store');
+        Route::get('/{collection}', [CollectionController::class, 'show'])->name('show');
+        Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->name('edit');
+        Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
+        Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->name('publish');
+        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
     });
 });

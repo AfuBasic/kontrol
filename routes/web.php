@@ -119,3 +119,7 @@ Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegr
 | CSRF protection is disabled for this route in bootstrap/app.php.
 */
 Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
+
+// Web-based Collection Payments
+Route::get('/billing/collection/{assignment}', [\App\Http\Controllers\Web\CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
+Route::post('/billing/collection/{assignment}/initiate', [\App\Http\Controllers\Web\CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');

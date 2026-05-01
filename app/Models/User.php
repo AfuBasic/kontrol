@@ -425,4 +425,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(SosEvent::class);
     }
+
+    /**
+     * @return HasMany<CollectionAssignment, $this>
+     */
+    public function collectionAssignments(): HasMany
+    {
+        return $this->hasMany(CollectionAssignment::class);
+    }
 }

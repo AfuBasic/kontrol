@@ -11,6 +11,9 @@ use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Policies\EstateBoardCommentPolicy;
 use App\Policies\EstateBoardPostPolicy;
+use App\Services\SMS\BulkSmsNigeriaProvider;
+use App\Services\SMS\SMSProvider;
+use App\Services\SMS\SmsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
@@ -28,10 +31,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(\App\Services\SMS\SMSProvider::class, \App\Services\SMS\BulkSmsNigeriaProvider::class);
-
-        $this->app->singleton(\App\Services\SMS\SmsService::class, function ($app) {
-            return new \App\Services\SMS\SmsService($app->make(\App\Services\SMS\SMSProvider::class));
+        $this->app->singleton(SMSProvider::class, BulkSmsNigeriaProvider::class);
+        $this->app->singleton(SmsService::class, function ($app) {
+            return new SmsService($app->make(SMSProvider::class));
         });
     }
 

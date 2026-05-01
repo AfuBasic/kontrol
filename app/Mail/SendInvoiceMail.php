@@ -10,6 +10,8 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use PdfStudio\Laravel\Facades\Pdf;
 
 class SendInvoiceMail extends Mailable implements ShouldQueue
@@ -48,9 +50,9 @@ class SendInvoiceMail extends Mailable implements ShouldQueue
                 Attachment::fromData(fn () => $pdfResult->content(), "Invoice-{$this->invoice->invoice_number}.pdf")
                     ->withMime('application/pdf'),
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // If PDF generation fails, send email without attachment
-            \Log::error('Failed to generate invoice PDF', [
+            Log::error('Failed to generate invoice PDF', [
                 'invoice_id' => $this->invoice->id,
                 'error' => $e->getMessage(),
             ]);
