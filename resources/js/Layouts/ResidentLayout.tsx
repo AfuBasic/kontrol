@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, LayoutGrid, User, Plus } from 'lucide-react';
 import { useEffect, useState, lazy, Suspense } from 'react';

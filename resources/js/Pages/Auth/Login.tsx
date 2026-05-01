@@ -41,6 +41,12 @@ export default function Login() {
     }
 
     async function handleGoogleSignIn() {
+        if (!Capacitor.isNativePlatform()) {
+            // Web flow: Use standard Laravel Socialite redirect
+            window.location.href = '/auth/google';
+            return;
+        }
+
         setGoogleLoading(true);
         setGoogleError('');
 
@@ -111,7 +117,7 @@ export default function Login() {
         <>
             <Head title="Sign in" />
 
-            <div className="min-h-screen bg-slate-950 lg:flex lg:bg-white">
+            <div className="min-h-screen bg-white lg:flex">
                 {/* Branded panel — full-width hero on mobile, left side on desktop */}
                 <div className="relative overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">

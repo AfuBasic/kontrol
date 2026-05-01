@@ -1,19 +1,16 @@
-import { createInertiaApp } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import './echo';
-import { Capacitor } from '@capacitor/core';
-import { App as CapacitorApp } from '@capacitor/app';
-import { SplashScreen } from '@capacitor/splash-screen';
-import { StatusBar, Style } from '@capacitor/status-bar';
 
-import { PushNotifications } from '@capacitor/push-notifications';
 import AppLoader from './Components/AppLoader';
 import GlobalLoading from './Components/GlobalLoading';
-
 import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
@@ -66,7 +63,7 @@ createInertiaApp({
         const root = createRoot(el);
 
         function AppWrapper() {
-            const [isBooting, setIsBooting] = useState(true);
+            const [isBooting, setIsBooting] = useState(Capacitor.isNativePlatform());
             const [isExiting, setIsExiting] = useState(false);
 
             useEffect(() => {

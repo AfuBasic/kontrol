@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
@@ -23,6 +24,23 @@ const PERMISSIONS = [
 export default function ProfilePage({ user, estateName }: Props) {
     const [editOpen, setEditOpen] = useState(false);
     const [logoutConfirm, setLogoutConfirm] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            if (Capacitor.isNativePlatform()) {
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+                await FirebaseAuthentication.signOut().catch(() => {});
+            }
+            router.post('/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            setLoggingOut(false);
+            window.location.href = '/login';
+        }
+    };
 
     const initials = user.name
         .split(' ')
@@ -111,16 +129,19 @@ export default function ProfilePage({ user, estateName }: Props) {
                         <p className="px-1 text-xs text-rose-800">End your security session on this device?</p>
                         <div className="mt-2.5 flex gap-2">
                             <button
-                                onClick={() => setLogoutConfirm(false)}
-                                className="flex-1 rounded-full border border-slate-200 bg-white py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                                onClick={() => !loggingOut && setLogoutConfirm(false)}
+                                disabled={loggingOut}
+                                className="flex-1 rounded-full border border-slate-200 bg-white py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={() => router.post(LoginController.destroy.url())}
-                                className="flex-1 rounded-full bg-rose-600 py-2 text-xs font-semibold text-white transition hover:bg-rose-500"
+                                onClick={handleLogout}
+                                disabled={loggingOut}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-rose-600 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-70"
                             >
-                                Log out
+                                {loggingOut && <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                                {loggingOut ? 'Logging out...' : 'Log out'}
                             </button>
                         </div>
                     </div>

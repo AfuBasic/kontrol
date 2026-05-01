@@ -4,7 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const isDev = true;
 
 // Tip: For Android Emulator, use 'http://10.0.2.2:5173'. For Physical devices, use your Mac's Local IP.
-const devUrl = 'http://10.0.2.2:5173';
+const devUrl = 'http://10.0.2.2';
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.app',
@@ -42,7 +42,7 @@ const config: CapacitorConfig = {
             providers: ['google.com'],
             skipNativeAuth: false,
             google: {
-                webClientId: '642588363209-ju96lbs3lvhb0stpvf0q9j5i9m2vselh.apps.googleusercontent.com',
+                webClientId: '481153520794-pc89ft1dv7u0rhl6tdddvag114fcu90a.apps.googleusercontent.com',
                 forceCodeForRefreshToken: true,
             },
         },

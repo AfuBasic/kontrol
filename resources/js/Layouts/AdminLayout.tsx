@@ -104,6 +104,7 @@ export default function AdminLayout({ children }: Props) {
     const [toastUrl, setToastUrl] = useState<string | null>(null);
     const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
     useForceLogout(auth?.user?.id);
 
@@ -331,8 +332,20 @@ export default function AdminLayout({ children }: Props) {
     const userRoles = auth.user?.roles ?? [];
     const isAdmin = userRoles.includes('admin');
 
-    function handleLogout() {
-        router.post(LoginController.destroy.url());
+    async function handleLogout() {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            if (Capacitor.isNativePlatform()) {
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+                await FirebaseAuthentication.signOut().catch(() => {});
+            }
+            router.post('/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            setLoggingOut(false);
+            window.location.href = '/login';
+        }
     }
 
     function isCurrentPath(href: string) {
@@ -798,13 +811,16 @@ export default function AdminLayout({ children }: Props) {
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={handleLogout}
-                                    className="flex h-12 items-center justify-center rounded-2xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+                                    disabled={loggingOut}
+                                    className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95 disabled:opacity-70"
                                 >
-                                    Yes, Sign Out
+                                    {loggingOut && <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                                    {loggingOut ? 'Signing Out...' : 'Yes, Sign Out'}
                                 </button>
                                 <button
-                                    onClick={() => setShowLogoutConfirmation(false)}
-                                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
+                                    onClick={() => !loggingOut && setShowLogoutConfirmation(false)}
+                                    disabled={loggingOut}
+                                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95 disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>

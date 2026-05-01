@@ -1,23 +1,8 @@
+import { Capacitor } from '@capacitor/core';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    User,
-    Lock,
-    Shield,
-    ChevronRight,
-    LogOut,
-    Zap,
-    Users,
-    UserCircle,
-    Eye,
-    EyeOff,
-    CreditCard,
-    Crown,
-    X,
-    Loader2,
-    Plus,
-} from 'lucide-react';
+import { User, Lock, Shield, ChevronRight, LogOut, Zap, Users, UserCircle, Eye, EyeOff, CreditCard, Crown, X, Loader2, Plus } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -63,10 +48,23 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
     const { openExternalBilling } = useExternalBilling();
 
-    const handleLogout = () => {
-        router.post('/logout');
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            if (Capacitor.isNativePlatform()) {
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+                await FirebaseAuthentication.signOut().catch(() => {});
+            }
+            router.post('/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            setLoggingOut(false);
+            window.location.href = '/login';
+        }
     };
 
     const CONTACT_LIMIT = 5;
@@ -274,12 +272,13 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
 
             <ConfirmationModal
                 isOpen={showLogoutConfirmation}
-                onClose={() => setShowLogoutConfirmation(false)}
+                onClose={() => !loggingOut && setShowLogoutConfirmation(false)}
                 onConfirm={handleLogout}
                 title="Sign Out"
                 message="Are you sure you want to sign out of your account?"
                 confirmLabel="Sign Out"
                 type="danger"
+                isLoading={loggingOut}
             />
         </>
     );

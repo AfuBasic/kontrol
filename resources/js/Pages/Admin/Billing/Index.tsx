@@ -137,7 +137,9 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                         <div className="mt-6 flex items-center gap-6 text-sm font-medium text-gray-500">
                                             <div className="flex items-center gap-2">
                                                 <UsersIcon className="h-5 w-5 text-indigo-500" />
-                                                <span>{overview.active_residents} Active Resident{overview.active_residents === 1 ? '' : 's'}</span>
+                                                <span>
+                                                    {overview.active_residents} Active Resident{overview.active_residents === 1 ? '' : 's'}
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <ClockIcon className="h-5 w-5 text-indigo-500" />
@@ -147,21 +149,16 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                     </div>
                                     <div className="flex flex-col items-end">
                                         <p className="text-sm font-bold text-gray-400 capitalize">
-                                            {overview.billing_interval === 'annually' ? 'Annual' : overview.billing_interval === 'monthly' ? 'Monthly' : overview.billing_interval || 'Monthly'} Rate
+                                            {overview.billing_interval === 'annually'
+                                                ? 'Annual'
+                                                : overview.billing_interval === 'monthly'
+                                                  ? 'Monthly'
+                                                  : overview.billing_interval || 'Monthly'}{' '}
+                                            Rate
                                         </p>
                                         <p className="text-4xl font-black text-indigo-600">{formatCurrency(overview.residents_rate ?? 0)}</p>
                                         <p className="text-xs font-medium text-gray-400">per resident</p>
                                     </div>
-                                </div>
-
-                                <div className="mt-8 border-t border-gray-100 pt-6">
-                                    <button
-                                        onClick={() => alert('The plan upgrade flow will be implemented here soon!')}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl transition-all hover:bg-indigo-500"
-                                    >
-                                        <ArrowUpCircleIcon className="h-5 w-5" />
-                                        Upgrade Estate Plan
-                                    </button>
                                 </div>
                             </motion.div>
 
@@ -248,35 +245,39 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="bg-gray-50/50 text-xs font-bold tracking-wider text-gray-400 uppercase">
-                                        <th className="px-8 py-4">Resident</th>
-                                        <th className="px-8 py-4">Amount</th>
-                                        <th className="px-8 py-4">Date</th>
-                                        <th className="px-8 py-4">Status</th>
-                                        <th className="px-8 py-4 text-right">Action</th>
+                                    <tr className="bg-gray-50/50 text-[10px] font-bold tracking-wider text-gray-400 uppercase sm:text-xs">
+                                        <th className="px-4 py-4 sm:px-8">Resident / Amount</th>
+                                        <th className="hidden px-4 py-4 sm:table-cell sm:px-8">Date</th>
+                                        <th className="px-4 py-4 sm:px-8">Status</th>
+                                        <th className="px-4 py-4 text-right sm:px-8">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {transactions.data.length > 0 ? (
                                         transactions.data.map((tx) => (
                                             <tr key={tx.id} className="transition-colors hover:bg-indigo-50/30">
-                                                <td className="px-8 py-5 whitespace-nowrap">
-                                                    <p className="text-sm font-bold text-gray-900">{tx.user ? tx.user.name : 'Unknown'}</p>
-                                                    <p className="text-xs font-medium text-gray-500">{tx.user?.email}</p>
+                                                <td className="px-4 py-5 whitespace-nowrap sm:px-8">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-gray-900">{tx.user ? tx.user.name : 'Unknown'}</span>
+                                                        <span className="text-xs font-bold text-indigo-600 sm:hidden">
+                                                            {formatCurrency(tx.amount)}
+                                                        </span>
+                                                        <span className="hidden text-xs font-medium text-gray-500 sm:block">{tx.user?.email}</span>
+                                                    </div>
                                                 </td>
-                                                <td className="px-8 py-5 text-sm font-medium whitespace-nowrap text-gray-600">
+                                                <td className="hidden px-4 py-5 text-sm font-medium whitespace-nowrap text-gray-600 sm:table-cell sm:px-8">
                                                     {formatCurrency(tx.amount)}
                                                 </td>
-                                                <td className="px-8 py-5 text-sm font-medium whitespace-nowrap text-gray-500">
+                                                <td className="hidden px-4 py-5 text-sm font-medium whitespace-nowrap text-gray-500 sm:table-cell sm:px-8">
                                                     {new Date(tx.recorded_at || tx.created_at).toLocaleDateString('en-US', {
                                                         month: 'short',
                                                         day: 'numeric',
                                                         year: 'numeric',
                                                     })}
                                                 </td>
-                                                <td className="px-8 py-5 whitespace-nowrap">
+                                                <td className="px-4 py-5 whitespace-nowrap sm:px-8">
                                                     <span
-                                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs ${
                                                             tx.status === 'success'
                                                                 ? 'bg-emerald-100 text-emerald-700'
                                                                 : tx.status === 'failed'
@@ -284,17 +285,17 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                                                   : 'bg-amber-100 text-amber-700'
                                                         }`}
                                                     >
-                                                        {tx.status === 'success' && <CheckBadgeIcon className="h-3.5 w-3.5" />}
-                                                        {tx.status === 'failed' && <ExclamationCircleIcon className="h-3.5 w-3.5" />}
+                                                        {tx.status === 'success' && <CheckBadgeIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+                                                        {tx.status === 'failed' && <ExclamationCircleIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
                                                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                                                     </span>
                                                 </td>
-                                                <td className="px-8 py-5 text-right whitespace-nowrap">
+                                                <td className="px-4 py-5 text-right whitespace-nowrap sm:px-8">
                                                     <button
                                                         onClick={() => setSelectedTx(tx)}
-                                                        className="text-sm font-bold text-indigo-600 hover:text-indigo-700 focus:outline-none"
+                                                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 focus:outline-none sm:text-sm"
                                                     >
-                                                        View Details
+                                                        Details
                                                     </button>
                                                 </td>
                                             </tr>
