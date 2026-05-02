@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Cache;
  * @property int $free_trial_days
  * @property int $grace_period_days
  * @property-read \App\Models\Estate $estate
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings query()
@@ -43,6 +44,7 @@ use Illuminate\Support\Facades\Cache;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings whereGracePeriodDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EstateSettings extends Model
@@ -61,6 +63,11 @@ class EstateSettings extends Model
         'free_trial_enabled',
         'free_trial_days',
         'grace_period_days',
+        'bank_name',
+        'bank_code',
+        'account_number',
+        'account_name',
+        'paystack_subaccount_code',
     ];
 
     /**

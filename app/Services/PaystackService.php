@@ -196,6 +196,49 @@ class PaystackService
     }
 
     /**
+     * Get list of banks from Paystack.
+     */
+    public function getBanks(): array
+    {
+        $response = $this->client->get('/bank', ['country' => 'nigeria']);
+
+        return $response->successful() ? $response->json('data') : [];
+    }
+
+    /**
+     * Create a subaccount on Paystack.
+     */
+    public function createSubaccount(array $data): array
+    {
+        $response = $this->client->post('/subaccount', [
+            'business_name' => $data['business_name'],
+            'settlement_bank' => $data['settlement_bank'],
+            'account_number' => $data['account_number'],
+            'percentage_charge' => $data['percentage_charge'] ?? 1.0, // Platform fee
+        ]);
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to create Paystack subaccount: '.$response->body());
+        }
+
+        return $response->json('data');
+    }
+
+    /**
+     * Update a subaccount on Paystack.
+     */
+    public function updateSubaccount(string $subaccountCode, array $data): array
+    {
+        $response = $this->client->put("/subaccount/{$subaccountCode}", $data);
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to update Paystack subaccount: '.$response->body());
+        }
+
+        return $response->json('data');
+    }
+
+    /**
      * Validate a Paystack webhook signature using HMAC-SHA512.
      */
     public function validateWebhookSignature(string $payload, string $signature): bool

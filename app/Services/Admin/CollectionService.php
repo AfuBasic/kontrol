@@ -4,11 +4,13 @@ namespace App\Services\Admin;
 
 use App\Jobs\Admin\PublishCollectionJob;
 use App\Models\Collection;
+use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Notifications\Resident\CollectionReminderNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CollectionService
 {
@@ -170,5 +172,33 @@ class CollectionService
         $callback();
 
         return ob_get_clean();
+    }
+
+    public function recordPayment(CollectionAssignment $assignment, array $data): void
+    {
+        DB::transaction(function () use ($assignment, $data) {
+            $amount = (int) ($data['amount'] * 100);
+            $assignment->amount_paid += $amount;
+
+            if ($assignment->amount_paid >= $assignment->amount_due) {
+                $assignment->status = 'paid';
+                $assignment->paid_at = now();
+            } else {
+                $assignment->status = 'partial';
+            }
+
+            $assignment->save();
+
+            // Create a payment record for tracking
+            $assignment->payments()->create([
+                'estate_id' => $assignment->estate_id,
+                'user_id' => $assignment->user_id,
+                'amount' => $amount,
+                'payment_method' => $data['method'] ?? 'manual',
+                'status' => 'success',
+                'reference' => 'MANUAL-'.strtoupper(Str::random(8)),
+                'paid_at' => now(),
+            ]);
+        });
     }
 }

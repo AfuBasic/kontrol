@@ -14,6 +14,8 @@ import {
     Download,
     Info,
     User,
+    CreditCard,
+    ShieldCheck,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { index, publish, edit, remind, exportMethod } from '@/actions/App/Http/Controllers/Admin/CollectionController';
@@ -67,15 +69,23 @@ type Props = {
     stats: Stats;
     assignments: Assignment[];
     totalResidents: number;
+    settlement: {
+        bank_name: string | null;
+        paystack_subaccount_code: string | null;
+    };
 };
 
-export default function ShowCollection({ collection, stats, assignments = [], totalResidents }: Props) {
+export default function ShowCollection({ collection, stats, assignments = [], totalResidents, settlement }: Props) {
     const { post, processing } = useForm();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'partial'>('all');
     const [showConfig, setShowConfig] = useState(false);
     const [isRemindModalOpen, setIsRemindModalOpen] = useState(false);
     const [isReminding, setIsReminding] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+    const [recordData, setRecordData] = useState({ amount: '', method: 'bank_transfer' });
+    const [isRecording, setIsRecording] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -110,6 +120,28 @@ export default function ShowCollection({ collection, stats, assignments = [], to
         window.location.href = exportMethod.url(collection.id);
     };
 
+    const handleRecordPayment = () => {
+        if (!selectedAssignment || !recordData.amount) return;
+
+        setIsRecording(true);
+        router.post(
+            route('admin.collections.assignments.record-payment', selectedAssignment.id),
+            {
+                amount: recordData.amount,
+                method: recordData.method,
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsRecording(false);
+                    setIsRecordModalOpen(false);
+                    setSelectedAssignment(null);
+                    setRecordData({ amount: '', method: 'bank_transfer' });
+                },
+            },
+        );
+    };
+
     const filteredAssignments = useMemo(() => {
         return assignments.filter((a) => {
             const matchesSearch =
@@ -130,6 +162,31 @@ export default function ShowCollection({ collection, stats, assignments = [], to
             <Head title={`${collection.name} - Collections`} />
 
             <div className="space-y-8">
+                {/* Settlement Alert */}
+                {!settlement.paystack_subaccount_code && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
+                        <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                                    <ShieldCheck className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900">Settlement not configured</h4>
+                                    <p className="text-xs font-medium text-slate-500">
+                                        Setup your estate's bank account to receive payments directly.
+                                    </p>
+                                </div>
+                            </div>
+                            <Link
+                                href={route('admin.settings')}
+                                className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                            >
+                                Configure Banking
+                            </Link>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* 🥇 1. HEADER (SMART SUMMARY) */}
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex flex-col gap-2">
@@ -484,6 +541,22 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                                             </td>
                                             <td className="px-6 py-5 text-right sm:px-8 sm:py-6">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    {a.status !== 'paid' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedAssignment(a);
+                                                                setRecordData({
+                                                                    ...recordData,
+                                                                    amount: ((a.amount_due - a.amount_paid) / 100).toString(),
+                                                                });
+                                                                setIsRecordModalOpen(true);
+                                                            }}
+                                                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-emerald-500 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
+                                                            title="Record Payment"
+                                                        >
+                                                            <CreditCard className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                     <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-slate-900">
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </button>
@@ -520,6 +593,42 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                 type="info"
                 isLoading={isReminding}
             />
+            <ConfirmationModal
+                isOpen={isRecordModalOpen}
+                onClose={() => setIsRecordModalOpen(false)}
+                onConfirm={handleRecordPayment}
+                title="Record Manual Payment"
+                message={`Record a manual payment for ${selectedAssignment?.user.name}. This will update their status and contribution.`}
+                confirmLabel="Record Payment"
+                cancelLabel="Cancel"
+                type="info"
+                isLoading={isRecording}
+            >
+                <div className="mt-4 space-y-4">
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Amount (NGN)</label>
+                        <input
+                            type="number"
+                            value={recordData.amount}
+                            onChange={(e) => setRecordData({ ...recordData, amount: e.target.value })}
+                            className="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-sm font-bold focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="0.00"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Payment Method</label>
+                        <select
+                            value={recordData.method}
+                            onChange={(e) => setRecordData({ ...recordData, method: e.target.value })}
+                            className="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-sm font-bold focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </ConfirmationModal>
         </>
     );
 }

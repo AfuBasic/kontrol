@@ -97,6 +97,8 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::get('/settings/banks', [SettingsController::class, 'banks'])->name('settings.banks');
+        Route::post('/settings/banking', [SettingsController::class, 'updateBanking'])->name('settings.update-banking');
 
         // Activity Log
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')->middleware('feature:activity-logs');
@@ -147,6 +149,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->name('publish');
         Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->name('remind');
         Route::get('/{collection}/export', [CollectionController::class, 'export'])->name('export');
+        Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->name('assignments.record-payment');
         Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
     });
 });

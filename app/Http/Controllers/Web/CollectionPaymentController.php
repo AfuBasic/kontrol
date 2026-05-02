@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
+use App\Models\EstateSettings;
 use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -39,10 +40,13 @@ class CollectionPaymentController extends Controller
             'status' => 'initiated',
         ]);
 
+        $settings = EstateSettings::forEstate($assignment->estate_id);
+
         return response()->json([
             'reference' => $payment->reference,
             'email' => $user->email,
             'amount' => $payment->amount,
+            'subaccount' => $settings->paystack_subaccount_code,
         ]);
     }
 

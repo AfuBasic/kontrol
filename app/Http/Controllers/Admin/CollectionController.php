@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
+use App\Models\CollectionAssignment;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
@@ -57,11 +59,17 @@ class CollectionController extends Controller
         $estate = $this->estateContext->getEstate();
         $stats = $this->collectionService->getCollectionStats($collection);
 
+        $settings = EstateSettings::forEstate($estate->id);
+
         return Inertia::render('Admin/Collections/Show', [
             'collection' => $collection,
             'stats' => $stats,
             'assignments' => $collection->assignments()->with('user')->latest()->get(),
             'totalResidents' => User::forEstate($estate->id)->withRole('resident', $estate->id)->count(),
+            'settlement' => [
+                'bank_name' => $settings->bank_name,
+                'paystack_subaccount_code' => $settings->paystack_subaccount_code,
+            ],
         ]);
     }
 
@@ -115,6 +123,18 @@ class CollectionController extends Controller
         }, "Collection-{$collection->id}-Activity.csv", [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    public function recordPayment(Request $request, CollectionAssignment $assignment): RedirectResponse
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'method' => 'required|string',
+        ]);
+
+        $this->collectionService->recordPayment($assignment, $request->all());
+
+        return back()->with('success', 'Payment recorded successfully.');
     }
 
     public function destroy(Collection $collection): RedirectResponse

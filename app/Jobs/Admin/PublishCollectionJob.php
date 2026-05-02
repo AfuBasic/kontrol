@@ -43,6 +43,15 @@ class PublishCollectionJob implements ShouldQueue
             ? Carbon::parse($collection->start_date)->format($collection->recurring_interval === 'monthly' ? 'Y-m' : 'Y')
             : null;
 
+        $today = Carbon::today();
+        $status = 'pending';
+
+        if ($graceUntil && $dueDate->lt($today) && $graceUntil->gte($today)) {
+            $status = 'grace';
+        } elseif ($dueDate->lt($today)) {
+            $status = 'overdue';
+        }
+
         foreach ($userIds as $userId) {
             CollectionAssignment::firstOrCreate(
                 [
@@ -54,7 +63,7 @@ class PublishCollectionJob implements ShouldQueue
                     'estate_id' => $estate->id,
                     'amount_due' => $collection->amount,
                     'amount_paid' => 0,
-                    'status' => 'pending',
+                    'status' => $status,
                     'due_date' => $dueDate,
                     'grace_until' => $graceUntil,
                 ]

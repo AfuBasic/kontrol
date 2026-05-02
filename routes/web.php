@@ -8,17 +8,21 @@ use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\MagicLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Web\CollectionPaymentController;
 use App\Http\Controllers\Webhooks\PaystackWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return to_route('login');
-})->name('home');
+Route::get('/', [LandingController::class, 'home'])->name('landing.home');
+Route::get('/features', [LandingController::class, 'features'])->name('landing.features');
+Route::get('/billing', [LandingController::class, 'billing'])->name('landing.billing');
+Route::get('/safety', [LandingController::class, 'security'])->name('landing.safety');
+Route::get('/for-estates', [LandingController::class, 'forEstates'])->name('landing.for-estates');
+Route::get('/mobile', [LandingController::class, 'mobile'])->name('landing.mobile');
+Route::get('/pricing', [LandingController::class, 'pricing'])->name('landing.pricing');
 
 /*
 |--------------------------------------------------------------------------
@@ -76,8 +80,8 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 | Legal Pages
 |--------------------------------------------------------------------------
 */
-Route::get('/privacy', fn () => Inertia::render('legal/privacy'))->name('privacy');
-Route::get('/terms', fn () => Inertia::render('legal/terms'))->name('terms');
+Route::get('/privacy', [LandingController::class, 'privacy'])->name('landing.privacy');
+Route::get('/terms', [LandingController::class, 'terms'])->name('landing.terms');
 
 /*
 |--------------------------------------------------------------------------
