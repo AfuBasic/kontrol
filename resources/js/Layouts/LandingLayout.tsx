@@ -33,19 +33,18 @@ export default function LandingLayout({ children }: Props) {
             {/* --- NAVIGATION --- */}
             <nav
                 className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-                    isScrolled 
-                        ? 'bg-white/80 py-4 shadow-sm backdrop-blur-xl border-b border-slate-100' 
-                        : 'bg-transparent py-6'
+                    isScrolled ? 'border-b border-slate-100 bg-white/80 py-4 shadow-sm backdrop-blur-xl' : 'bg-transparent py-6'
                 }`}
             >
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <Link href={landing.home().url} className="flex items-center gap-2 group">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 text-white transition-transform group-hover:rotate-12">
-                                <Shield className="h-6 w-6" />
-                            </div>
-                            <span className="text-xl font-bold tracking-tight text-primary-900 uppercase">Kontrol</span>
+                        <Link href={landing.home().url} className="group flex items-center">
+                            <img 
+                                src="/assets/images/kontrol-logo-horizontal.png" 
+                                alt="Kontrol Logo" 
+                                className="h-12 w-auto transition-transform group-hover:scale-105" 
+                            />
                         </Link>
 
                         {/* Desktop Links */}
@@ -61,14 +60,14 @@ export default function LandingLayout({ children }: Props) {
                             ))}
                             <Link
                                 href={login().url}
-                                className="rounded-xl bg-primary-700 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-700/20 transition-all hover:bg-primary-800 hover:scale-105 active:scale-95"
+                                className="rounded-xl bg-primary-700 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-700/20 transition-all hover:scale-105 hover:bg-primary-800 active:scale-95"
                             >
                                 Sign In
                             </Link>
                         </div>
 
                         {/* Mobile Toggle */}
-                        <button 
+                        <button
                             onClick={() => setIsMenuOpen(true)}
                             className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 md:hidden"
                         >
@@ -94,11 +93,11 @@ export default function LandingLayout({ children }: Props) {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed right-0 top-0 z-[70] h-full w-[280px] bg-white p-6 shadow-2xl md:hidden"
+                            className="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white p-6 shadow-2xl md:hidden"
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-lg font-bold text-primary-900 uppercase">Menu</span>
-                                <button 
+                                <button
                                     onClick={() => setIsMenuOpen(false)}
                                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600"
                                 >
@@ -111,7 +110,7 @@ export default function LandingLayout({ children }: Props) {
                                         key={link.name}
                                         href={link.href}
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center justify-between text-lg font-bold text-slate-900 group"
+                                        className="group flex items-center justify-between text-lg font-bold text-slate-900"
                                     >
                                         {link.name}
                                         <ChevronRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-1" />
@@ -130,9 +129,7 @@ export default function LandingLayout({ children }: Props) {
             </AnimatePresence>
 
             {/* --- MAIN CONTENT --- */}
-            <main className="relative z-10">
-                {children}
-            </main>
+            <main className="relative z-10">{children}</main>
 
             {/* --- FOOTER --- */}
             <footer className="bg-slate-50 pt-24 pb-12">
@@ -140,20 +137,29 @@ export default function LandingLayout({ children }: Props) {
                     <div className="grid gap-12 lg:grid-cols-4">
                         {/* Brand */}
                         <div className="lg:col-span-1">
-                            <Link href={landing.home().url} className="flex items-center gap-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
-                                    <Shield className="h-5 w-5" />
-                                </div>
-                                <span className="text-lg font-bold tracking-tight text-primary-900 uppercase">Kontrol</span>
+                            <Link href={landing.home().url} className="flex items-center">
+                                <img 
+                                    src="/assets/images/kontrol-logo-horizontal.png" 
+                                    alt="Kontrol Logo" 
+                                    className="h-10 w-auto" 
+                                />
                             </Link>
-                            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500">
+                            <p className="mt-4 text-sm leading-relaxed font-medium text-slate-500">
                                 The all-in-one residential ecosystem for modern estate operations, security, and financial transparency.
                             </p>
                             <div className="mt-6 flex gap-4">
-                                <a href="#" className="text-slate-400 hover:text-primary-600 transition-colors"><Twitter className="h-5 w-5" /></a>
-                                <a href="#" className="text-slate-400 hover:text-primary-600 transition-colors"><Linkedin className="h-5 w-5" /></a>
-                                <a href="#" className="text-slate-400 hover:text-primary-600 transition-colors"><Facebook className="h-5 w-5" /></a>
-                                <a href="#" className="text-slate-400 hover:text-primary-600 transition-colors"><Github className="h-5 w-5" /></a>
+                                <a href="#" className="text-slate-400 transition-colors hover:text-primary-600">
+                                    <Twitter className="h-5 w-5" />
+                                </a>
+                                <a href="#" className="text-slate-400 transition-colors hover:text-primary-600">
+                                    <Linkedin className="h-5 w-5" />
+                                </a>
+                                <a href="#" className="text-slate-400 transition-colors hover:text-primary-600">
+                                    <Facebook className="h-5 w-5" />
+                                </a>
+                                <a href="#" className="text-slate-400 transition-colors hover:text-primary-600">
+                                    <Github className="h-5 w-5" />
+                                </a>
                             </div>
                         </div>
 
@@ -162,37 +168,100 @@ export default function LandingLayout({ children }: Props) {
                             <div>
                                 <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase">Product</h4>
                                 <ul className="mt-4 space-y-3">
-                                    <li><Link href={landing.features().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Features</Link></li>
-                                    <li><Link href={landing.safety().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Security</Link></li>
-                                    <li><Link href={landing.billing().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Collections</Link></li>
-                                    <li><Link href={landing.mobile().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Mobile App</Link></li>
+                                    <li>
+                                        <Link
+                                            href={landing.features().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Features
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={landing.safety().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Security
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={landing.billing().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Collections
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={landing.mobile().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Mobile App
+                                        </Link>
+                                    </li>
                                 </ul>
                             </div>
                             <div>
                                 <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase">Platform</h4>
                                 <ul className="mt-4 space-y-3">
-                                    <li><Link href={landing.forEstates().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">For Estates</Link></li>
-                                    <li><Link href={landing.pricing().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Pricing</Link></li>
-                                    <li><Link href={login().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Admin Login</Link></li>
+                                    <li>
+                                        <Link
+                                            href={landing.forEstates().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            For Estates
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={landing.pricing().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Pricing
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={login().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Admin Login
+                                        </Link>
+                                    </li>
                                 </ul>
                             </div>
                             <div>
                                 <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase">Legal</h4>
                                 <ul className="mt-4 space-y-3">
-                                    <li><Link href={landing.privacy().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Privacy Policy</Link></li>
-                                    <li><Link href={landing.terms().url} className="text-sm font-bold text-slate-600 hover:text-primary-600 transition-colors">Terms of Service</Link></li>
+                                    <li>
+                                        <Link
+                                            href={landing.privacy().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Privacy Policy
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href={landing.terms().url}
+                                            className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                        >
+                                            Terms of Service
+                                        </Link>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-16 border-t border-slate-200 pt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-16 flex flex-col gap-4 border-t border-slate-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs font-bold text-slate-400 uppercase">
                             © {new Date().getFullYear()} Kontrol Technologies Ltd. All rights reserved.
                         </p>
                         <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System Operational</span>
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">System Operational</span>
                         </div>
                     </div>
                 </div>
