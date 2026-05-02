@@ -39,7 +39,7 @@ export default function Mobile() {
     ];
 
     return (
-        <LandingLayout>
+        <LandingLayout isDark={true}>
             <SEO 
                 title="A Native-Like Mobile Experience" 
                 description="Kontrol is built for the palm of your hand. Experience fast, fluid, and reliable estate management through our premium mobile-first platform."

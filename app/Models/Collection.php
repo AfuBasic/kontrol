@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,7 +57,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Collection extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUlids;
+
+    public function getRouteKeyName(): string
+    {
+        return 'ulid';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('ulid', $value)
+            ->orWhere('id', $value)
+            ->firstOrFail();
+    }
 
     protected $fillable = [
         'estate_id',

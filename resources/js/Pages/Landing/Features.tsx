@@ -61,7 +61,7 @@ const FeatureDetail = ({ title, description, icon: Icon, color, image, reversed 
 
 export default function Features() {
     return (
-        <LandingLayout>
+        <LandingLayout isDark={true}>
             <SEO 
                 title="Powerful Features for Modern Estates" 
                 description="Explore Kontrol's robust suite of tools: from visitor access codes and SOS emergency alerts to automated collection tracking and household management."

@@ -8,10 +8,12 @@ import {
     ClockIcon,
     ExclamationTriangleIcon,
     ArrowLeftIcon,
+    ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
@@ -43,6 +45,8 @@ type Props = {
     } | null;
     recentInvoices: {
         data: Invoice[];
+        next_page_url: string | null;
+        total: number;
     };
     outstanding: {
         amount: number;
@@ -187,6 +191,7 @@ function StatusBanner({
 export default function ResidentBillingPage({ subscription, estatePlan, recentInvoices, outstanding }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [paying, setPaying] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
 
     useEffect(() => {
         setIsNative(Capacitor.isNativePlatform());
@@ -236,6 +241,23 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
 
     const handlePayInvoice = (invoiceId: number) => {
         router.post(ResidentBillingController.pay.url(invoiceId));
+    };
+
+    const loadMore = () => {
+        if (recentInvoices.next_page_url && !isLoadingMore) {
+            setIsLoadingMore(true);
+            router.get(
+                recentInvoices.next_page_url,
+                {},
+                {
+                    preserveScroll: true,
+                    only: ['recentInvoices'],
+                    // @ts-expect-error - merge is a new Inertia v2 feature
+                    merge: true,
+                    onFinish: () => setIsLoadingMore(false),
+                },
+            );
+        }
     };
 
     return (
@@ -422,47 +444,68 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     </div>
 
                     {recentInvoices.data.length > 0 ? (
-                        <ul className="divide-y divide-slate-100">
-                            {recentInvoices.data.map((invoice) => {
-                                const paid = invoice.status === 'paid';
-                                return (
-                                    <li key={invoice.id} className="flex items-center justify-between px-6 py-3.5 sm:px-8">
-                                        <div className="flex items-center gap-3">
-                                            <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                                                    paid ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                                }`}
-                                            >
-                                                {paid ? (
-                                                    <CheckCircleIcon className="h-4 w-4" strokeWidth={2.2} />
-                                                ) : (
-                                                    <ClockIcon className="h-4 w-4" strokeWidth={2.2} />
-                                                )}
-                                            </span>
+                        <>
+                            <ul className="divide-y divide-slate-100">
+                                {recentInvoices.data.map((invoice) => {
+                                    const paid = invoice.status === 'paid';
+                                    return (
+                                        <li key={invoice.id} className="flex items-center justify-between px-6 py-3.5 sm:px-8">
                                             <div className="flex items-center gap-3">
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-slate-900">{invoice.formatted_amount}</p>
-                                                    <p className="text-xs text-slate-500">
-                                                        {formatDate(invoice.created_at)} · {invoice.invoice_number}
-                                                    </p>
+                                                <span
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                                                        paid ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                                    }`}
+                                                >
+                                                    {paid ? (
+                                                        <CheckCircleIcon className="h-4 w-4" strokeWidth={2.2} />
+                                                    ) : (
+                                                        <ClockIcon className="h-4 w-4" strokeWidth={2.2} />
+                                                    )}
+                                                </span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-slate-900">{invoice.formatted_amount}</p>
+                                                        <p className="text-xs text-slate-500">
+                                                            {formatDate(invoice.created_at)} · {invoice.invoice_number}
+                                                        </p>
+                                                    </div>
+                                                    {!paid && !isNative && (
+                                                        <button
+                                                            onClick={() => handlePayInvoice(invoice.id)}
+                                                            className="ml-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold text-white transition hover:bg-slate-800"
+                                                        >
+                                                            Pay
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                {!paid && !isNative && (
-                                                    <button
-                                                        onClick={() => handlePayInvoice(invoice.id)}
-                                                        className="ml-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold text-white transition hover:bg-slate-800"
-                                                    >
-                                                        Pay
-                                                    </button>
-                                                )}
                                             </div>
-                                        </div>
-                                        <span className={`text-xs font-medium ${paid ? 'text-emerald-700' : 'text-amber-700'}`}>
-                                            {paid ? 'Paid' : invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
-                                        </span>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                                            <span className={`text-xs font-medium ${paid ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                                {paid ? 'Paid' : invoice.status === 'overdue' ? 'Overdue' : 'Pending'}
+                                            </span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+
+                            {recentInvoices.next_page_url && (
+                                <div className="border-t border-slate-100 p-4 sm:p-6">
+                                    <button
+                                        onClick={loadMore}
+                                        disabled={isLoadingMore}
+                                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 py-3 text-[11px] font-black tracking-widest text-slate-600 uppercase transition-all hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
+                                    >
+                                        {isLoadingMore ? (
+                                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                        ) : (
+                                            <>
+                                                Load More
+                                                <ChevronDownIcon className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center px-6 py-10 text-center sm:px-8">
                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">

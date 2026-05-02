@@ -3,21 +3,12 @@
 /**
  * Public Marketing Routes
  *
- * These routes serve the public marketing site (usekontrol.com).
- *
- * Responsibilities:
- * - Landing page
- * - Legal pages (privacy, terms)
- * - Estate applications
- *
- * NO authenticated features belong here.
- * NO dashboards or app functionality.
+ * These routes serve the public marketing site (kontrol.test).
  */
 
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Public\ApplicationController;
-use App\Http\Controllers\Public\LandingController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +16,13 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', LandingController::class)->name('public.home');
+Route::get('/', [LandingController::class, 'home'])->name('landing.home');
+Route::get('/features', [LandingController::class, 'features'])->name('landing.features');
+Route::get('/billing', [LandingController::class, 'billing'])->name('landing.billing');
+Route::get('/safety', [LandingController::class, 'security'])->name('landing.safety');
+Route::get('/for-estates', [LandingController::class, 'forEstates'])->name('landing.for-estates');
+Route::get('/mobile', [LandingController::class, 'mobile'])->name('landing.mobile');
+Route::get('/pricing', [LandingController::class, 'pricing'])->name('landing.pricing');
 
 /*
 |--------------------------------------------------------------------------
@@ -41,5 +38,5 @@ Route::post('/apply', [ApplicationController::class, 'store'])->name('public.app
 |--------------------------------------------------------------------------
 */
 
-Route::get('/privacy', fn () => Inertia::render('Public/Privacy'))->name('public.privacy');
-Route::get('/terms', fn () => Inertia::render('Public/Terms'))->name('public.terms');
+Route::get('/privacy', [LandingController::class, 'privacy'])->name('landing.privacy');
+Route::get('/terms', [LandingController::class, 'terms'])->name('landing.terms');

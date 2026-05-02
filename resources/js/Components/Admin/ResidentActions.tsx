@@ -9,6 +9,7 @@ import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
 
 type Resident = {
+    ulid: string;
     id: number;
     name: string;
     suspended_at: string | null;
@@ -106,13 +107,13 @@ export default function ResidentActions({ resident }: Props) {
 
         switch (modalConfig.type) {
             case 'delete':
-                router.delete(destroy.url({ resident: resident.id }), options);
+                router.delete(destroy.url({ resident: resident.ulid }), options);
                 break;
             case 'suspend':
-                router.patch(suspend.url({ resident: resident.id }), {}, options);
+                router.patch(suspend.url({ resident: resident.ulid }), {}, options);
                 break;
             case 'reset':
-                router.post(resetPassword.url({ resident: resident.id }), {}, options);
+                router.post(resetPassword.url({ resident: resident.ulid }), {}, options);
                 break;
         }
     };
@@ -160,7 +161,7 @@ export default function ResidentActions({ resident }: Props) {
             {/* Edit */}
             {can('residents.edit') && (
                 <Link
-                    href={edit.url({ resident: resident.id })}
+                    href={edit.url({ resident: resident.ulid })}
                     className={`flex w-full items-center gap-3 transition-all ${
                         isMobile
                             ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95'

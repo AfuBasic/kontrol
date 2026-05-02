@@ -6,6 +6,7 @@ import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Collection = {
+    ulid: string;
     id: number;
     name: string;
     description: string | null;
@@ -58,8 +59,8 @@ export default function CollectionsIndex({ collections, totalResidents }: Props)
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {collections.data.map((collection) => (
                             <Link
-                                key={collection.id}
-                                href={show.url(collection.id)}
+                                key={collection.ulid}
+                                href={show.url(collection.ulid)}
                                 className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 active:scale-[0.98]"
                             >
                                 <div className="mb-4 flex items-start justify-between">
@@ -104,7 +105,7 @@ export default function CollectionsIndex({ collections, totalResidents }: Props)
                                 <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
                                 {collection.status === 'draft' && (
                                     <Link
-                                        href={edit.url(collection.id)}
+                                        href={edit.url(collection.ulid)}
                                         onClick={(e) => e.stopPropagation()}
                                         className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-100"
                                         title="Edit Collection"

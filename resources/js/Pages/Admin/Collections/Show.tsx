@@ -18,12 +18,14 @@ import {
     ShieldCheck,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { index, publish, edit, remind, exportMethod } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { index, publish, edit, remind, exportMethod, recordPayment } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import settings from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Collection = {
+    ulid: string;
     id: number;
     name: string;
     description: string | null;
@@ -50,6 +52,7 @@ type Stats = {
 };
 
 type Assignment = {
+    ulid: string;
     id: number;
     user: {
         id: number;
@@ -64,21 +67,33 @@ type Assignment = {
     created_at: string;
 };
 
+type PaginatedAssignments = {
+    data: Assignment[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+    current_page: number;
+    last_page: number;
+    total: number;
+};
+
 type Props = {
     collection: Collection;
     stats: Stats;
-    assignments: Assignment[];
+    assignments: PaginatedAssignments;
     totalResidents: number;
+    filters: {
+        search?: string;
+        status?: string;
+    };
     settlement: {
         bank_name: string | null;
         paystack_subaccount_code: string | null;
     };
 };
 
-export default function ShowCollection({ collection, stats, assignments = [], totalResidents, settlement }: Props) {
+export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement }: Props) {
     const { post, processing } = useForm();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'partial'>('all');
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [showConfig, setShowConfig] = useState(false);
     const [isRemindModalOpen, setIsRemindModalOpen] = useState(false);
     const [isReminding, setIsReminding] = useState(false);
@@ -104,7 +119,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
     const handleRemind = () => {
         setIsReminding(true);
         router.post(
-            remind.url(collection.id),
+            remind.url(collection.ulid),
             {},
             {
                 preserveScroll: true,
@@ -117,7 +132,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
     };
 
     const handleExport = () => {
-        window.location.href = exportMethod.url(collection.id);
+        window.location.href = exportMethod.url(collection.ulid);
     };
 
     const handleRecordPayment = () => {
@@ -125,7 +140,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
 
         setIsRecording(true);
         router.post(
-            route('admin.collections.assignments.record-payment', selectedAssignment.id),
+            recordPayment.url(selectedAssignment.ulid),
             {
                 amount: recordData.amount,
                 method: recordData.method,
@@ -142,18 +157,29 @@ export default function ShowCollection({ collection, stats, assignments = [], to
         );
     };
 
-    const filteredAssignments = useMemo(() => {
-        return assignments.filter((a) => {
-            const matchesSearch =
-                a.user.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.user.email.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
-            return matchesSearch && matchesStatus;
-        });
-    }, [assignments, searchQuery, statusFilter]);
+    const handleFilterChange = (newStatus: string) => {
+        setStatusFilter(newStatus);
+        router.get(
+            router.page.url,
+            { search: searchQuery, status: newStatus },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
+
+    const handleSearchChange = (newSearch: string) => {
+        setSearchQuery(newSearch);
+        router.get(
+            router.page.url,
+            { search: newSearch, status: statusFilter },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
+
+    const filteredAssignments = assignments.data;
 
     const handlePublish = () => {
         if (confirm('Are you sure you want to publish this collection? This will generate assignments for residents.')) {
-            post(publish.url(collection.id));
+            post(publish.url(collection.ulid));
         }
     };
 
@@ -178,7 +204,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                                 </div>
                             </div>
                             <Link
-                                href={route('admin.settings')}
+                                href={settings.index.url()}
                                 className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                             >
                                 Configure Banking
@@ -434,7 +460,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                                 {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
                                     <button
                                         key={f}
-                                        onClick={() => setStatusFilter(f)}
+                                        onClick={() => handleFilterChange(f)}
                                         className={`rounded-xl px-3 py-2 text-[9px] font-bold tracking-widest whitespace-nowrap uppercase transition-all sm:px-4 sm:text-[10px] ${
                                             statusFilter === f ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
                                         }`}
@@ -446,7 +472,7 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                         </div>
                         <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                             <div className="flex-1">
-                                <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search residents..." />
+                                <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents..." />
                             </div>
                             <div className="flex gap-2">
                                 <button
@@ -579,6 +605,34 @@ export default function ShowCollection({ collection, stats, assignments = [], to
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {assignments.last_page > 1 && (
+                        <div className="flex items-center justify-between border-t border-slate-50 px-6 py-4 sm:px-8">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                Page <span className="text-slate-900">{assignments.current_page}</span> of{' '}
+                                <span className="text-slate-900">{assignments.last_page}</span>
+                            </p>
+                            <div className="flex gap-2">
+                                {assignments.links.map((link, i) => (
+                                    <Link
+                                        key={i}
+                                        href={link.url || '#'}
+                                        preserveScroll
+                                        preserveState
+                                        className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-3 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-slate-900 text-white shadow-lg'
+                                                : link.url
+                                                  ? 'bg-white text-slate-400 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                                                  : 'cursor-not-allowed opacity-30 text-slate-300'
+                                        }`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

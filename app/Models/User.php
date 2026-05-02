@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -88,7 +89,19 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, HasUlids;
+
+    public function getRouteKeyName(): string
+    {
+        return 'ulid';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('ulid', $value)
+            ->orWhere('id', $value)
+            ->firstOrFail();
+    }
 
     /**
      * The attributes that are mass assignable.

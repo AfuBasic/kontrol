@@ -7,9 +7,10 @@ import landing from '@/routes/landing';
 
 interface Props {
     children: ReactNode;
+    isDark?: boolean;
 }
 
-export default function LandingLayout({ children }: Props) {
+export default function LandingLayout({ children, isDark = false }: Props) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
@@ -28,20 +29,26 @@ export default function LandingLayout({ children }: Props) {
         { name: 'Pricing', href: landing.pricing().url },
     ];
 
+    const isHeaderTransparent = !isScrolled && isDark;
+
     return (
         <div className="min-h-screen bg-white font-sans text-slate-900">
             {/* --- NAVIGATION --- */}
-            <nav
-                className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-                    isScrolled ? 'border-b border-slate-100 bg-white/80 py-4 shadow-sm backdrop-blur-xl' : 'bg-transparent py-6'
+            <header 
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+                    isScrolled 
+                        ? 'bg-white/80 backdrop-blur-md shadow-sm py-4' 
+                        : isHeaderTransparent 
+                            ? 'bg-transparent py-6' 
+                            : 'bg-white/80 backdrop-blur-md py-6'
                 }`}
             >
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <Link href={landing.home().url} className="group flex items-center">
+                        <Link href={landing.home().url} className="flex items-center group">
                             <img 
-                                src="/assets/images/kontrol-logo-horizontal.png" 
+                                src={isHeaderTransparent ? "/assets/images/kontrol-white-logo.png" : "/assets/images/kontrol-logo-horizontal.png"} 
                                 alt="Kontrol Logo" 
                                 className="h-12 w-auto transition-transform group-hover:scale-105" 
                             />
@@ -53,7 +60,9 @@ export default function LandingLayout({ children }: Props) {
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="text-sm font-bold text-slate-600 transition-colors hover:text-primary-600"
+                                    className={`text-sm font-bold transition-colors ${
+                                        isHeaderTransparent ? 'text-white/90 hover:text-white' : 'text-slate-600 hover:text-primary-600'
+                                    }`}
                                 >
                                     {link.name}
                                 </Link>
@@ -67,15 +76,17 @@ export default function LandingLayout({ children }: Props) {
                         </div>
 
                         {/* Mobile Toggle */}
-                        <button
+                        <button 
                             onClick={() => setIsMenuOpen(true)}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 md:hidden"
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors md:hidden ${
+                                isHeaderTransparent ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-600'
+                            }`}
                         >
                             <Menu className="h-6 w-6" />
                         </button>
                     </div>
                 </div>
-            </nav>
+            </header>
 
             {/* --- MOBILE DRAWER --- */}
             <AnimatePresence>
@@ -138,11 +149,7 @@ export default function LandingLayout({ children }: Props) {
                         {/* Brand */}
                         <div className="lg:col-span-1">
                             <Link href={landing.home().url} className="flex items-center">
-                                <img 
-                                    src="/assets/images/kontrol-logo-horizontal.png" 
-                                    alt="Kontrol Logo" 
-                                    className="h-10 w-auto" 
-                                />
+                                <img src="/assets/images/kontrol-logo-horizontal.png" alt="Kontrol Logo" className="h-10 w-auto" />
                             </Link>
                             <p className="mt-4 text-sm leading-relaxed font-medium text-slate-500">
                                 The all-in-one residential ecosystem for modern estate operations, security, and financial transparency.

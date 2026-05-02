@@ -3,21 +3,26 @@
 /**
  * Application Routes
  *
- * Entry point for the authenticated SaaS application (app.usekontrol.com).
- * This file orchestrates all application route files under the app domain.
- *
- * Each route file is self-contained with its own middleware definitions.
+ * Entry point for the authenticated SaaS application (app.kontrol.test).
  */
 
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| Application Root Redirect
+|--------------------------------------------------------------------------
+| Any visit to the app domain root should always go to login.
+*/
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Core Application Routes (from web.php)
 |--------------------------------------------------------------------------
-| Authentication, legal pages, push notifications, invitations, webhooks
 */
-
 require base_path('routes/web.php');
 
 /*
@@ -25,7 +30,6 @@ require base_path('routes/web.php');
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('admin')->group(base_path('routes/admin.php'));
 
 /*
@@ -33,7 +37,6 @@ Route::prefix('admin')->group(base_path('routes/admin.php'));
 | Security Personnel Routes
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('security')->group(base_path('routes/security.php'));
 
 /*
@@ -41,7 +44,6 @@ Route::prefix('security')->group(base_path('routes/security.php'));
 | Resident Routes
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('resident')->group(base_path('routes/resident.php'));
 
 /*
@@ -49,7 +51,6 @@ Route::prefix('resident')->group(base_path('routes/resident.php'));
 | Affiliate Routes
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('affiliate')->group(base_path('routes/affiliate.php'));
 
 /*
@@ -57,5 +58,4 @@ Route::prefix('affiliate')->group(base_path('routes/affiliate.php'));
 | Zeus Super-Admin Routes
 |--------------------------------------------------------------------------
 */
-
 require base_path('routes/zeus.php');

@@ -8,21 +8,12 @@ use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\MagicLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
-use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Web\CollectionPaymentController;
 use App\Http\Controllers\Webhooks\PaystackWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/', [LandingController::class, 'home'])->name('landing.home');
-Route::get('/features', [LandingController::class, 'features'])->name('landing.features');
-Route::get('/billing', [LandingController::class, 'billing'])->name('landing.billing');
-Route::get('/safety', [LandingController::class, 'security'])->name('landing.safety');
-Route::get('/for-estates', [LandingController::class, 'forEstates'])->name('landing.for-estates');
-Route::get('/mobile', [LandingController::class, 'mobile'])->name('landing.mobile');
-Route::get('/pricing', [LandingController::class, 'pricing'])->name('landing.pricing');
 
 /*
 |--------------------------------------------------------------------------
@@ -77,14 +68,6 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 
 /*
 |--------------------------------------------------------------------------
-| Legal Pages
-|--------------------------------------------------------------------------
-*/
-Route::get('/privacy', [LandingController::class, 'privacy'])->name('landing.privacy');
-Route::get('/terms', [LandingController::class, 'terms'])->name('landing.terms');
-
-/*
-|--------------------------------------------------------------------------
 | Push Notification Subscription Routes
 |--------------------------------------------------------------------------
 */
@@ -109,23 +92,17 @@ Route::prefix('invitation')->name('invitation.')->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Telegram Webhook Route
+| External Webhooks (Telegram, Paystack)
 |--------------------------------------------------------------------------
-| This route handles incoming webhooks from Telegram Bot API.
-| CSRF protection is disabled for this route in bootstrap/app.php.
 */
 Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
+Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
 
 /*
 |--------------------------------------------------------------------------
-| Paystack Webhook Route
+| Web-based Collection Payments
 |--------------------------------------------------------------------------
-| This route handles incoming webhooks from Paystack payment gateway.
-| CSRF protection is disabled for this route in bootstrap/app.php.
 */
-Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
-
-// Web-based Collection Payments
 Route::get('/billing/collection/{assignment}', [CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
 Route::post('/billing/collection/{assignment}/initiate', [CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');
 Route::post('/billing/collection/verify/{reference}', [CollectionPaymentController::class, 'verify'])->name('web.billing.collection.verify');

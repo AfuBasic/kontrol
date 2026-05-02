@@ -34,7 +34,7 @@ export default function Security() {
     ];
 
     return (
-        <LandingLayout>
+        <LandingLayout isDark={true}>
             <SEO
                 title="Advanced Estate Security & SOS System"
                 description="Your safety is our priority. Kontrol provides a high-reliability SOS system that connects residents to estate security instantly during emergencies."

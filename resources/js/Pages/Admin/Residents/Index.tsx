@@ -16,6 +16,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 // Wayfinder actions are used for routing instead of global route()
 
 type Resident = {
+    ulid: string;
     id: number;
     name: string;
     email: string;
@@ -329,7 +330,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                 {residents.data.map((resident) => (
                                     <motion.div
                                         layout
-                                        key={resident.id}
+                                        key={resident.ulid}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         className={`group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all active:bg-slate-50 ${
@@ -431,7 +432,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                 <tbody className="divide-y divide-slate-100 bg-white">
                                     {residents.data.map((resident) => (
                                         <tr
-                                            key={resident.id}
+                                            key={resident.ulid}
                                             className={`transition-colors hover:bg-slate-50/50 ${selectedIds.includes(resident.id) ? 'bg-blue-50/50' : ''}`}
                                         >
                                             {can('residents.delete') && (

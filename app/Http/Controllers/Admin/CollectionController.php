@@ -52,7 +52,7 @@ class CollectionController extends Controller
             ->with('success', 'Collection created successfully.');
     }
 
-    public function show(Collection $collection): Response
+    public function show(Request $request, Collection $collection): Response
     {
         $this->authorizeCollection($collection);
         $collection->load(['targets', 'creator'])->loadCount('targets');
@@ -61,11 +61,25 @@ class CollectionController extends Controller
 
         $settings = EstateSettings::forEstate($estate->id);
 
+        $query = $collection->assignments()->with('user')->latest();
+
+        if ($request->has('search')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%");
+            });
+        }
+
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
         return Inertia::render('Admin/Collections/Show', [
             'collection' => $collection,
             'stats' => $stats,
-            'assignments' => $collection->assignments()->with('user')->latest()->get(),
+            'assignments' => $query->paginate(10)->withQueryString(),
             'totalResidents' => User::forEstate($estate->id)->withRole('resident', $estate->id)->count(),
+            'filters' => $request->only(['search', 'status']),
             'settlement' => [
                 'bank_name' => $settings->bank_name,
                 'paystack_subaccount_code' => $settings->paystack_subaccount_code,
