@@ -2,9 +2,9 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Calendar, Clock, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
-import MoneyInput from '@/Components/MoneyInput';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import MoneyInput from '@/Components/MoneyInput';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {
     id: number;
@@ -24,6 +24,7 @@ export default function CreateCollection({ residents }: Props) {
         billing_type: 'one_time',
         recurring_interval: 'monthly',
         start_date: '',
+        due_at: '',
         due_day: 1,
         grace_days: 0,
         late_fee: '',
@@ -165,7 +166,7 @@ export default function CreateCollection({ residents }: Props) {
 
                             <div>
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                    {data.billing_type === 'recurring' ? 'First Due Date' : 'Due Date'}
+                                    Start Date
                                 </label>
                                 <input
                                     type="date"
@@ -176,6 +177,38 @@ export default function CreateCollection({ residents }: Props) {
                                 />
                                 {errors.start_date && <p className="mt-2 text-sm font-bold text-red-500">{errors.start_date}</p>}
                             </div>
+
+                            {data.billing_type === 'one_time' ? (
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                                        Due Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={data.due_at}
+                                        onChange={(e) => setData('due_at', e.target.value)}
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        required
+                                    />
+                                    {errors.due_at && <p className="mt-2 text-sm font-bold text-red-500">{errors.due_at}</p>}
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                                        Due Day (of Month)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={data.due_day}
+                                        onChange={(e) => setData('due_day', parseInt(e.target.value))}
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        min="1"
+                                        max="28"
+                                        required
+                                    />
+                                    {errors.due_day && <p className="mt-2 text-sm font-bold text-red-500">{errors.due_day}</p>}
+                                </div>
+                            )}
 
                             <div>
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Grace Period (Days)</label>

@@ -27,6 +27,8 @@ export type SharedData = {
         validation_result?: unknown;
         sos_success?: { id: string; time: string; has_emergency_contacts: boolean };
     };
+    errors: Record<string, string>;
+    unreadCount?: number;
     billing_enabled?: boolean;
     has_overdue_invoice?: boolean;
     access_code_durations: Array<{ minutes: number; label: string }>;

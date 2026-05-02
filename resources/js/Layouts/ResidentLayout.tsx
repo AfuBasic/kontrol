@@ -228,6 +228,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const hasAccessCodes = useFeature('access-code-generation');
     const hasVisitFeed = useFeature('real-time-visit-feed');
+    const hasPaymentCollection = useFeature('payment-collection');
 
     const navItems = [
         {
@@ -262,7 +263,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             name: 'Bills',
             href: '/resident/dues',
             icon: (active: boolean) => <Wallet className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
-            show: true,
+            show: hasPaymentCollection,
         },
         {
             name: 'Profile',

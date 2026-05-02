@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CollectionController extends Controller
 {
@@ -59,6 +60,7 @@ class CollectionController extends Controller
         return Inertia::render('Admin/Collections/Show', [
             'collection' => $collection,
             'stats' => $stats,
+            'assignments' => $collection->assignments()->with('user')->latest()->get(),
             'totalResidents' => User::forEstate($estate->id)->withRole('resident', $estate->id)->count(),
         ]);
     }
@@ -93,6 +95,26 @@ class CollectionController extends Controller
         $this->collectionService->publishCollection($collection);
 
         return back()->with('success', 'Collection published and assignments generated.');
+    }
+
+    public function remind(Collection $collection): RedirectResponse
+    {
+        $this->authorizeCollection($collection);
+        $count = $this->collectionService->sendReminders($collection);
+
+        return back()->with('success', "{$count} reminders sent successfully.");
+    }
+
+    public function export(Collection $collection): StreamedResponse
+    {
+        $this->authorizeCollection($collection);
+        $csvData = $this->collectionService->exportActivity($collection);
+
+        return response()->streamDownload(function () use ($csvData) {
+            echo $csvData;
+        }, "Collection-{$collection->id}-Activity.csv", [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     public function destroy(Collection $collection): RedirectResponse

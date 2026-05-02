@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 type Collection = {
@@ -43,7 +43,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-    const amountToPay = assignment.amount_due - assignment.amount_paid;
+    const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -69,6 +69,12 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
             const { reference, email, amount } = await response.json();
 
             // 2. Open Paystack Popup
+            if (!window.PaystackPop) {
+                alert('Payment gateway is not ready. Please refresh the page.');
+                setIsProcessing(false);
+                return;
+            }
+
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
                 email: email,
@@ -78,12 +84,21 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                     setIsProcessing(false);
                 },
                 callback: (response: any) => {
-                    setPaymentStatus('success');
-                    setIsProcessing(false);
-                    // Redirect back to mobile app or success page after a delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
+                    // 3. Verify payment on backend for immediate feedback
+                    fetch(CollectionPaymentController.verify.url(response.reference), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                        },
+                    }).then(() => {
+                        setPaymentStatus('success');
+                        setIsProcessing(false);
+                        // Redirect back to mobile app or success page after a delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    });
                 },
             });
 
@@ -126,10 +141,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 py-12 sm:px-6 lg:px-8">
-            <Head>
-                <title>Pay for {assignment.collection.name}</title>
-                <script src="https://js.paystack.co/v1/inline.js"></script>
-            </Head>
+            <Head title={`Pay for ${assignment.collection.name}`} />
 
             <div className="w-full max-w-4xl overflow-hidden rounded-[3rem] bg-white shadow-2xl ring-1 shadow-slate-200/50 ring-slate-100 lg:flex">
                 {/* Left Side: Summary */}
@@ -195,24 +207,45 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                             </p>
                         </div>
 
-                        <button
-                            onClick={handlePayment}
-                            disabled={isProcessing}
-                            className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-3xl bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
-                        >
-                            {isProcessing ? (
-                                <Loader2 className="h-6 w-6 animate-spin" />
-                            ) : (
-                                <>
-                                    Complete Payment
-                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                </>
-                            )}
-                        </button>
+                        {amountToPay > 0 ? (
+                            <button
+                                onClick={handlePayment}
+                                disabled={isProcessing}
+                                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-3xl bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                            >
+                                {isProcessing ? (
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                ) : (
+                                    <>
+                                        Complete Payment
+                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                    </>
+                                )}
+                            </button>
+                        ) : (
+                            <div className="flex w-full items-center justify-center gap-3 rounded-3xl bg-emerald-500 py-6 text-lg font-black text-white shadow-2xl shadow-emerald-500/30">
+                                <CheckCircle2 className="h-6 w-6" />
+                                Payment Completed
+                            </div>
+                        )}
 
-                        <div className="flex flex-col items-center gap-4 pt-4">
-                            <img src="https://paystack.com/assets/payment/cards.png" alt="Paystack Secure" className="h-6 opacity-50 grayscale" />
-                            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Secure Payment Gateway</p>
+                        <div className="flex flex-col items-center gap-3 pt-4">
+                            <div className="flex items-center gap-2">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    className="h-3.5 w-3.5 text-emerald-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                <span className="text-xs font-medium text-slate-400">Secure Payment Gateway</span>
+                            </div>
+                            <p className="text-[10px] font-medium text-slate-300">Automated transaction system</p>
                         </div>
                     </div>
                 </div>

@@ -58,6 +58,9 @@
 
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+        <!-- Paystack Inline JS -->
+        <script src="https://js.paystack.co/v1/inline.js"></script>
+
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

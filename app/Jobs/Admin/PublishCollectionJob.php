@@ -25,7 +25,16 @@ class PublishCollectionJob implements ShouldQueue
 
         $userIds = $this->getTargetUserIds($collection, $estate);
 
-        $dueDate = $collection->start_date;
+        $dueDate = $collection->due_at;
+
+        if ($collection->isRecurring()) {
+            $dueDate = Carbon::parse($collection->start_date)->day($collection->due_day);
+        }
+
+        if (! $dueDate) {
+            $dueDate = $collection->start_date;
+        }
+
         $graceUntil = $collection->grace_days > 0
             ? Carbon::parse($dueDate)->addDays($collection->grace_days)
             : null;
@@ -63,11 +72,9 @@ class PublishCollectionJob implements ShouldQueue
 
         $userIds = [];
         foreach ($collection->targets as $target) {
-            if ($target->target_type === 'user') {
+            if ($target->target_type === User::class || $target->target_type === 'user') {
                 $userIds[] = $target->target_id;
             }
-            // Add block/unit logic here if needed,
-            // e.g., finding all residents in a specific block
         }
 
         return array_unique($userIds);

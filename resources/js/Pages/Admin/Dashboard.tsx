@@ -18,10 +18,10 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } from 'lucide-react';
 
+import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import FeatureGate from '@/Components/FeatureGate';
 import { useFeature } from '@/Hooks/useFeature';
 import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';

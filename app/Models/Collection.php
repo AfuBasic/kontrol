@@ -66,6 +66,7 @@ class Collection extends Model
         'billing_type',
         'recurring_interval',
         'start_date',
+        'due_at',
         'due_day',
         'grace_days',
         'late_fee',
@@ -78,6 +79,7 @@ class Collection extends Model
     {
         return [
             'start_date' => 'date',
+            'due_at' => 'date',
             'amount' => 'integer',
             'late_fee' => 'integer',
             'due_day' => 'integer',

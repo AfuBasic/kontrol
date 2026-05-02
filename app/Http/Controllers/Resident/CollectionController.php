@@ -26,8 +26,8 @@ class CollectionController extends Controller
             ->get();
 
         $summary = [
-            'outstanding' => $assignments->whereIn('status', ['pending', 'overdue', 'grace', 'partial']),
-            'paid' => $assignments->where('status', 'paid'),
+            'outstanding' => $assignments->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])->values(),
+            'paid' => $assignments->where('status', 'paid')->values(),
         ];
 
         return Inertia::render('Resident/Collections/Index', [

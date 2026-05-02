@@ -53,5 +53,8 @@ return [
         'api_token' => env('BULKSMS_NIGERIA_API_TOKEN'),
         'sender_id' => env('BULKSMS_NIGERIA_SENDER_ID', 'KONTROL'),
     ],
-
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+    ],
 ];

@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ArrowUpRight, ExternalLink } from 'lucide-react';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 
 type Collection = {
     id: number;

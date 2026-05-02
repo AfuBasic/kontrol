@@ -1,9 +1,9 @@
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, Users, Calendar, ArrowRight, MoreVertical } from 'lucide-react';
-import AdminLayout from '@/Layouts/AdminLayout';
-import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { Edit2 } from 'lucide-react';
+import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type Collection = {
     id: number;

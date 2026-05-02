@@ -53,6 +53,7 @@ const PullToRefresh = lazy(() => import('@/Components/PullToRefresh'));
 
 interface Props {
     children: ReactNode;
+    title?: string;
 }
 
 type NavItem = {
@@ -80,7 +81,7 @@ const baseNav: NavItem[] = [
         name: 'Collections',
         href: CollectionController.index.url(),
         icon: BanknotesIcon,
-        feature: 'smart-billing-config',
+        feature: 'payment-collection',
     },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
@@ -90,7 +91,7 @@ const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
-export default function AdminLayout({ children }: Props) {
+export default function AdminLayout({ children, title }: Props) {
     const page = usePage<
         SharedData & {
             flash: { success?: string; error?: string };
@@ -119,6 +120,24 @@ export default function AdminLayout({ children }: Props) {
     // Local state for instant updates
     const [unreadCount, setUnreadCount] = useState(auth.user?.unread_notifications_count || 0);
     const [notifications, setNotifications] = useState(auth.user?.notifications || []);
+
+    const hasPaymentCollection = useFeature('payment-collection');
+    const hasEstateBoard = useFeature('estate-board');
+    const hasResidentDirectory = useFeature('resident-directory');
+    const hasSecurityPersonnel = useFeature('security-personnel-management');
+    const hasRoleManagement = useFeature('user-access-control');
+    const hasActivityLogs = useFeature('activity-logs');
+    const hasAutomatedInvoicing = useFeature('automated-invoicing');
+
+    const featureFlags: Record<string, boolean> = {
+        'payment-collection': hasPaymentCollection,
+        'estate-board': hasEstateBoard,
+        'resident-directory': hasResidentDirectory,
+        'security-personnel-management': hasSecurityPersonnel,
+        'user-access-control': hasRoleManagement,
+        'activity-logs': hasActivityLogs,
+        'automated-invoicing': hasAutomatedInvoicing,
+    };
 
     // Sync local state with props when page reloads/updates
     useEffect(() => {
@@ -372,7 +391,7 @@ export default function AdminLayout({ children }: Props) {
         }
 
         // Feature Gating (Principal Engineer Pattern)
-        if (item.feature && !useFeature(item.feature)) {
+        if (item.feature && featureFlags[item.feature] === false) {
             return false;
         }
 
@@ -589,7 +608,7 @@ export default function AdminLayout({ children }: Props) {
                                                 <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
                                                 Profile
                                             </Link>
-                                            {isAdmin && useFeature('activity-logs') && (
+                                            {isAdmin && hasActivityLogs && (
                                                 <Link
                                                     href={ActivityLogController.index.url()}
                                                     onClick={() => setUserMenuOpen(false)}
@@ -623,7 +642,7 @@ export default function AdminLayout({ children }: Props) {
                     <header className="mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
-                            <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">Dashboard</span>
+                            <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
                         </div>
                         <div className="relative">
                             <button

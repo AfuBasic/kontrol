@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
+use App\Http\Controllers\Web\CollectionPaymentController;
 use App\Http\Controllers\Webhooks\PaystackWebhookController;
 use App\Http\Controllers\Zeus\InvitationController;
 use Illuminate\Support\Facades\Route;
@@ -121,5 +122,6 @@ Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegr
 Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
 
 // Web-based Collection Payments
-Route::get('/billing/collection/{assignment}', [\App\Http\Controllers\Web\CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
-Route::post('/billing/collection/{assignment}/initiate', [\App\Http\Controllers\Web\CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');
+Route::get('/billing/collection/{assignment}', [CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
+Route::post('/billing/collection/{assignment}/initiate', [CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');
+Route::post('/billing/collection/verify/{reference}', [CollectionPaymentController::class, 'verify'])->name('web.billing.collection.verify');

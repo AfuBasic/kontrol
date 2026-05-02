@@ -70,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                         'id' => $n->id,
                         'data' => $n->data,
                         'created_at_human' => $n->created_at->diffForHumans(),
-                    ]),
+                    ])->values()->all(),
                     'resident_subscription' => ($estate) ? (function () use ($user, $estate) {
                         $subject = $user;
                         $parentName = null;
@@ -96,7 +96,7 @@ class HandleInertiaRequests extends Middleware
                     })() : null,
                 ] : null,
             ],
-            'estate_plan' => fn () => $estate ? [
+            'estate_plan' => $estate ? [
                 'name' => $estate->subscriptionRecord->plan->name ?? 'Free Tier',
                 'status' => $estate->subscriptionRecord->status ?? 'none',
                 'features' => $estate->getActiveFeatureSlugs(),
@@ -106,18 +106,19 @@ class HandleInertiaRequests extends Middleware
                     'max_admins' => $estate->subscriptionRecord?->plan?->max_admins,
                     'max_household_members' => ($limit = $estate->getFeatureLimit('household-management')) !== null ? (int) $limit : null,
                 ],
-            ] : null,
+            ] : (object) [],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'sos_success' => fn () => $request->session()->get('sos_success'),
-                'validation_result' => fn () => $request->session()->get('validation_result'),
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'sos_success' => $request->session()->get('sos_success'),
+                'validation_result' => $request->session()->get('validation_result'),
             ],
-            'billing_enabled' => fn () => $estate && $estate->settings->charge_type === 'estate',
+            'billing_enabled' => fn () => $estate ? ($estate->settings->charge_type === 'estate') : false,
             'has_overdue_invoice' => fn () => $estate ? Invoice::where('estate_id', $estate->id)->where('status', 'overdue')->exists() : false,
             'webpush_public_key' => config('webpush.vapid.public_key'),
             'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],
             'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
+            'unreadCount' => fn () => $user ? $user->unreadNotifications()->count() : 0,
             'app_url' => url('/'),
         ];
     }

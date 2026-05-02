@@ -137,7 +137,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Collections (Resident dues management)
-    Route::prefix('collections')->name('collections.')->middleware('feature:smart-billing-config')->group(function (): void {
+    Route::prefix('collections')->name('collections.')->middleware('feature:payment-collection')->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
         Route::get('/create', [CollectionController::class, 'create'])->name('create');
         Route::post('/', [CollectionController::class, 'store'])->name('store');
@@ -145,6 +145,8 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->name('edit');
         Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
         Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->name('publish');
+        Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->name('remind');
+        Route::get('/{collection}/export', [CollectionController::class, 'export'])->name('export');
         Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
     });
 });
