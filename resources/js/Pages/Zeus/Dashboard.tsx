@@ -194,7 +194,7 @@ export default function Dashboard({ stats, applications }: Props) {
                                         <h3 className="truncate text-base font-bold text-white">{app.estate_name}</h3>
                                         <span
                                             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-tight uppercase ${
-                                                app.status === 'pending' ? 'bg-warning-500/20 text-warning-300' : 'bg-primary-500/20 text-primary-300'
+                                                app.status === 'pending' ? 'text-warning-300 bg-warning-500/20' : 'bg-primary-500/20 text-primary-300'
                                             }`}
                                         >
                                             {app.status === 'pending' ? 'Pending' : 'Contacted'}

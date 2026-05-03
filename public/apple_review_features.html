@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>Kontrol - Application Features Overview</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <style>
+            :root {
+                --primary: #1f6fdb;
+                --primary-dark: #154e9a;
+                --primary-glow: rgba(31, 111, 219, 0.3);
+                --slate-50: #f8fafc;
+                --slate-100: #f1f5f9;
+                --slate-200: #e2e8f0;
+                --slate-300: #cbd5e1;
+                --slate-700: #334155;
+                --slate-800: #1e293b;
+                --slate-900: #0f172a;
+                --slate-950: #020617;
+                --success: #10b981;
+                --warning: #f59e0b;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    'Inter',
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Roboto,
+                    sans-serif;
+                background-color: var(--slate-950);
+                color: var(--slate-300);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .container {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 4rem 2rem;
+            }
+
+            header {
+                text-align: center;
+                margin-bottom: 5rem;
+            }
+
+            .logo {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .logo-icon {
+                width: 48px;
+                height: 48px;
+                background: linear-gradient(135deg, var(--primary), #6366f1);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                box-shadow: 0 0 20px var(--primary-glow);
+            }
+
+            h1 {
+                font-size: 3rem;
+                font-weight: 800;
+                color: white;
+                letter-spacing: -0.02em;
+                margin-bottom: 1rem;
+            }
+
+            .subtitle {
+                font-size: 1.25rem;
+                color: var(--slate-400);
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .section {
+                margin-bottom: 5rem;
+            }
+
+            .section-header {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 2.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .section-header h2 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: white;
+            }
+
+            .section-header i {
+                color: var(--primary);
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 2rem;
+            }
+
+            .card {
+                background: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 24px;
+                padding: 2rem;
+                backdrop-filter: blur(12px);
+                transition: all 0.3s ease;
+            }
+
+            .card:hover {
+                border-color: rgba(31, 111, 219, 0.3);
+                transform: translateY(-4px);
+                box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+            }
+
+            .card-icon {
+                width: 40px;
+                height: 40px;
+                background: rgba(31, 111, 219, 0.1);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary);
+                margin-bottom: 1.5rem;
+            }
+
+            .card h3 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: white;
+                margin-bottom: 1rem;
+            }
+
+            .card ul {
+                list-style: none;
+            }
+
+            .card li {
+                position: relative;
+                padding-left: 1.5rem;
+                margin-bottom: 0.75rem;
+                font-size: 0.95rem;
+                color: var(--slate-400);
+            }
+
+            .card li::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 10px;
+                width: 6px;
+                height: 6px;
+                background-color: var(--primary);
+                border-radius: 50%;
+            }
+
+            .highlight {
+                color: var(--primary);
+                font-weight: 600;
+            }
+
+            footer {
+                text-align: center;
+                padding-top: 4rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                color: var(--slate-500);
+                font-size: 0.9rem;
+            }
+
+            @media (max-width: 768px) {
+                h1 {
+                    font-size: 2.25rem;
+                }
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                </div>
+                <h1>Kontrol Features</h1>
+                <p class="subtitle">
+                    A comprehensive overview of the Kontrol Estate Management Ecosystem designed for security, efficiency, and community.
+                </p>
+            </header>
+
+            <!-- Admin Module -->
+            <div class="section">
+                <div class="section-header">
+                    <i data-lucide="layout-dashboard" size="28"></i>
+                    <h2>Admin Module (Estate Management)</h2>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="users"></i></div>
+                        <h3>Resident Management</h3>
+                        <ul>
+                            <li>
+                                <span class="highlight">Approval Portal:</span> Structured workflow for reviewing and managing resident applications.
+                            </li>
+                            <li>
+                                <span class="highlight">Secure Invitations:</span> Generate unique, time-limited links for direct resident onboarding.
+                            </li>
+                            <li><span class="highlight">Resident Directory:</span> Full database with status tracking and household details.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="credit-card"></i></div>
+                        <h3>Financial Management</h3>
+                        <ul>
+                            <li><span class="highlight">Automated Invoicing:</span> Periodic billing based on resident count and chosen tiers.</li>
+                            <li><span class="highlight">Integrated Payments:</span> Secure payment processing via Paystack gateway.</li>
+                            <li><span class="highlight">Financial Audits:</span> Real-time tracking of successful and pending transactions.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="megaphone"></i></div>
+                        <h3>Communication Hub</h3>
+                        <ul>
+                            <li><span class="highlight">Estate Board:</span> Broadcast announcements with media support to all residents.</li>
+                            <li><span class="highlight">Moderation:</span> Manage resident engagement and community discussions.</li>
+                            <li><span class="highlight">Staff Management:</span> Registry for gatehouse personnel and security monitors.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resident Module -->
+            <div class="section">
+                <div class="section-header">
+                    <i data-lucide="home" size="28"></i>
+                    <h2>Resident Module (App Experience)</h2>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="key"></i></div>
+                        <h3>Visitor Management</h3>
+                        <ul>
+                            <li><span class="highlight">Access Codes:</span> Generate secure 6-digit codes for guest entry.</li>
+                            <li><span class="highlight">Flexible Access:</span> Support for one-time guest codes or recurring visitor access.</li>
+                            <li><span class="highlight">Visit History:</span> Real-time feed showing visitor entry and exit times.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="message-square"></i></div>
+                        <h3>Community Engagement</h3>
+                        <ul>
+                            <li><span class="highlight">Interactive Notices:</span> View estate news and participate in community discussions.</li>
+                            <li><span class="highlight">Emergency Contacts:</span> Quick access to management and local emergency services.</li>
+                            <li><span class="highlight">Household Control:</span> Manage family members and dependents under one account.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="bot"></i></div>
+                        <h3>Advanced Connectivity</h3>
+                        <ul>
+                            <li><span class="highlight">Telegram Integration:</span> Generate codes and receive alerts via Telegram.</li>
+                            <li>
+                                <span class="highlight">Real-time Notifications:</span> Instant push alerts for guest arrivals and security events.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Module -->
+            <div class="section">
+                <div class="section-header">
+                    <i data-lucide="shield" size="28"></i>
+                    <h2>Security Module (Gatehouse)</h2>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-icon"><i data-lucide="scan"></i></div>
+                        <h3>Validation & Entry</h3>
+                        <ul>
+                            <li><span class="highlight">Code Scanner:</span> Instantly verify visitor access codes at the gate.</li>
+                            <li><span class="highlight">Digital Logs:</span> Automated time-stamped entry/exit logs replacing paper books.</li>
+                            <li><span class="highlight">Situational Awareness:</span> Live rolling feed of expected and active visitors.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>&copy; 2026 Kontrol Platform. All rights reserved.</p>
+                <p style="margin-top: 0.5rem">Designed for maximum security and community management excellence.</p>
+            </footer>
+        </div>
+
+        <script>
+            lucide.createIcons();
+        </script>
+    </body>
+</html>
