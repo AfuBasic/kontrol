@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { index, publish, edit, remind, exportMethod, recordPayment } from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import settings from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -88,9 +88,10 @@ type Props = {
         bank_name: string | null;
         paystack_subaccount_code: string | null;
     };
+    hasBanking: boolean;
 };
 
-export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement }: Props) {
+export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement, hasBanking }: Props) {
     const { post, processing } = useForm();
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
@@ -204,7 +205,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                                 </div>
                             </div>
                             <Link
-                                href={settings.index.url()}
+                                href={ProfileController.edit.url()}
                                 className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                             >
                                 Configure Banking

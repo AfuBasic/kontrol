@@ -239,6 +239,23 @@ class PaystackService
     }
 
     /**
+     * Resolve account number via Paystack.
+     */
+    public function resolveAccountNumber(string $accountNumber, string $bankCode): array
+    {
+        $response = $this->client->get('/bank/resolve', [
+            'account_number' => $accountNumber,
+            'bank_code' => $bankCode,
+        ]);
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to resolve account: '.$response->body());
+        }
+
+        return $response->json('data');
+    }
+
+    /**
      * Validate a Paystack webhook signature using HMAC-SHA512.
      */
     public function validateWebhookSignature(string $payload, string $signature): bool

@@ -98,7 +98,12 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::get('/settings/banks', [SettingsController::class, 'banks'])->name('settings.banks');
-        Route::post('/settings/banking', [SettingsController::class, 'updateBanking'])->name('settings.update-banking');
+        
+        // Settlement Banking
+        Route::prefix('settlement')->name('settlement.')->group(function (): void {
+            Route::post('/resolve', [App\Http\Controllers\Admin\SettlementController::class, 'resolve'])->name('resolve');
+            Route::post('/update', [App\Http\Controllers\Admin\SettlementController::class, 'update'])->name('update');
+        });
 
         // Activity Log
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')->middleware('feature:activity-logs');
