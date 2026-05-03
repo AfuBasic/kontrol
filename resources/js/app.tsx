@@ -98,7 +98,9 @@ createInertiaApp({
 
             return (
                 <>
-                    <App {...props} />
+                    <div style={{ display: isBooting ? 'none' : 'block' }}>
+                        <App {...props} />
+                    </div>
                     {isBooting && <AppLoader isExiting={isExiting} />}
                     <GlobalLoading />
                 </>
@@ -159,13 +161,25 @@ createInertiaApp({
                     // First-load splash screen dismissal is now handled in AppWrapper
                 } catch (err) {
                     console.warn('Native bridge initialization failed:', err);
-                    // Even on failure, try to hide splash
-                    setTimeout(() => {
-                        // SplashScreen.hide().catch(() => {});
-                    }, 1000);
                 }
             })();
         }
+
+        // Global 419 (Session Expired) Handling for Mobile UX
+        router.on('error', (event) => {
+            const errors = event.detail.errors as any;
+            if (errors?.status === 419 || (typeof errors === 'string' && errors.includes('419'))) {
+                window.location.reload();
+            }
+        });
+
+        // Intercept 419 response specifically if it comes as a page load failure
+        router.on('invalid', (event) => {
+            if (event.detail.response.status === 419) {
+                event.preventDefault();
+                window.location.reload();
+            }
+        });
     },
     progress: {
         color: '#4B5563',

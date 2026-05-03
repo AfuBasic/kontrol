@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Models;
+use App\Traits\GeneratesUlid;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,12 +68,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Invoice extends Model
 {
-    use HasFactory, HasUlids;
-
-    public function getRouteKeyName(): string
-    {
-        return 'ulid';
-    }
+    use HasFactory, GeneratesUlid;
 
     public function resolveRouteBinding($value, $field = null)
     {

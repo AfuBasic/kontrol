@@ -248,7 +248,6 @@ export default function Login() {
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                     placeholder="you@example.com"
                                     autoComplete="email"
-                                    autoFocus
                                 />
                             </div>
 
@@ -257,7 +256,11 @@ export default function Login() {
                                     <label htmlFor="password" className="text-sm font-medium text-slate-700">
                                         Password
                                     </label>
-                                    <Link href="/forgot-password" university-logo-link="true" className="text-xs font-medium text-primary-600 hover:text-primary-700">
+                                    <Link
+                                        href="/forgot-password"
+                                        university-logo-link="true"
+                                        className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                                    >
                                         Forgot password?
                                     </Link>
                                 </div>

@@ -61,7 +61,10 @@ export default function SecurityVerify() {
 
     useEffect(() => {
         if (!result) {
-            inputsRef.current[0]?.focus();
+            const timer = setTimeout(() => {
+                inputsRef.current[0]?.focus();
+            }, 1000);
+            return () => clearTimeout(timer);
         }
     }, [result]);
 

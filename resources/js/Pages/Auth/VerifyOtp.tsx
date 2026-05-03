@@ -18,7 +18,10 @@ export default function VerifyOtp({ email }: Props) {
     const digits = data.code.padEnd(6, ' ').split('');
 
     useEffect(() => {
-        inputRefs.current[0]?.focus();
+        const timer = setTimeout(() => {
+            inputRefs.current[0]?.focus();
+        }, 1000);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {

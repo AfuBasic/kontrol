@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\GeneratesUlid;
 
 use App\Mail\Auth\PasswordResetMail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -13,7 +14,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -89,12 +89,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, HasUlids;
-
-    public function getRouteKeyName(): string
-    {
-        return 'ulid';
-    }
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, GeneratesUlid;
 
     public function resolveRouteBinding($value, $field = null)
     {

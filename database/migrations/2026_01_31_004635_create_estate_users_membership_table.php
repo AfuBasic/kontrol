@@ -12,8 +12,8 @@ return new class extends Migration
     {
         Schema::create('estate_users_membership', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Estate::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignId('estate_id')->constrained('estates')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['pending', 'accepted'])->default('pending');
             $table->timestamps();
 

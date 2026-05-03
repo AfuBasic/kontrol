@@ -165,7 +165,7 @@ export default function HouseholdIndex({ members }: Props) {
                                 <input
                                     id="name"
                                     type="text"
-                                    autoFocus
+                                    
                                     value={form.data.name}
                                     onChange={(e) => form.setData('name', e.target.value)}
                                     placeholder="e.g. Jane Doe"

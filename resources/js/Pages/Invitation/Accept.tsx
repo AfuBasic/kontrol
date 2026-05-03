@@ -80,7 +80,7 @@ export default function AcceptInvitation({ user }: Props) {
                                                 onChange={(e) => setData('password', e.target.value)}
                                                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 transition-all focus:border-[#1F6FDB] focus:bg-white/10 focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                                 placeholder="Create a strong password"
-                                                autoFocus
+                                                
                                             />
                                             <button
                                                 type="button"
