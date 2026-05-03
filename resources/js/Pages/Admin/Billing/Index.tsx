@@ -88,7 +88,7 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
 
             <div className="min-h-screen bg-[#F8FAFC] pb-20">
                 {/* Gradient Header Section */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-800 to-fuchsia-900 px-6 pt-16 pb-32">
+                <div className="relative overflow-hidden bg-linear-to-br from-primary-700 via-primary-800 to-primary-900 px-6 pt-16 pb-32">
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-white blur-3xl" />
                         <div className="absolute top-1/2 -right-24 h-96 w-96 rounded-full bg-indigo-400 blur-3xl" />

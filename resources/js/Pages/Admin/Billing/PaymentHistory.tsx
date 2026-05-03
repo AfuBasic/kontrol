@@ -64,7 +64,7 @@ export default function PaymentHistoryPage({ payments }: Props) {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-6"
+                        className="mb-8 rounded-2xl border border-success-100 bg-linear-to-br from-success-50 to-teal-50 p-6"
                     >
                         <div className="flex items-center gap-4">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
@@ -98,7 +98,7 @@ export default function PaymentHistoryPage({ payments }: Props) {
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-100 bg-gradient-to-r from-gray-50/80 to-white">
+                                        <tr className="border-b border-gray-100 bg-linear-to-r from-gray-50/80 to-white">
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700">Invoice</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700">Plan</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700">Amount</th>

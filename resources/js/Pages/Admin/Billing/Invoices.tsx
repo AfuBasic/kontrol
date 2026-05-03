@@ -44,9 +44,9 @@ type Props = {
 
 function StatusBadge({ status }: { status: string }) {
     const styles = {
-        pending: 'bg-yellow-50 text-yellow-700 border border-yellow-200/80',
-        paid: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
-        overdue: 'bg-red-50 text-red-700 border border-red-200/80',
+        pending: 'bg-warning-50 text-warning-700 border border-warning-200/80',
+        paid: 'bg-success-50 text-success-700 border border-success-200/80',
+        overdue: 'bg-error-50 text-error-700 border border-error-200/80',
     };
 
     const labels = {
@@ -109,7 +109,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('pending')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'pending'
-                                    ? 'border border-yellow-200 bg-yellow-100 text-yellow-700'
+                                    ? 'border border-warning-200 bg-warning-100 text-warning-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
@@ -119,7 +119,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('paid')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'paid'
-                                    ? 'border border-emerald-200 bg-emerald-100 text-emerald-700'
+                                    ? 'border border-success-200 bg-success-100 text-success-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
@@ -129,7 +129,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('overdue')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'overdue'
-                                    ? 'border border-red-200 bg-red-100 text-red-700'
+                                    ? 'border border-error-200 bg-error-100 text-error-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >

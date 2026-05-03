@@ -99,7 +99,7 @@ export default function Dashboard({ stats, applications }: Props) {
             >
                 <div>
                     <div className="mb-1 flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary-500 shadow-lg shadow-primary-500/50" />
                         <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">System Overview</span>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -133,7 +133,7 @@ export default function Dashboard({ stats, applications }: Props) {
                     {
                         label: 'Active Channels',
                         value: stats.active,
-                        color: 'text-blue-600',
+                        color: 'text-primary-600',
                     },
                     {
                         label: 'Inactive',
@@ -143,12 +143,12 @@ export default function Dashboard({ stats, applications }: Props) {
                     {
                         label: 'Incoming Apps',
                         value: applications.length,
-                        color: 'text-amber-600',
+                        color: 'text-warning-600',
                     },
                 ].map((stat, index) => (
                     <div
                         key={stat.label}
-                        className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/3"
+                        className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 transition-all hover:border-primary-200 hover:shadow-xl hover:shadow-primary-900/3"
                     >
                         <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
                             <span className="text-6xl font-bold select-none">{index + 1}</span>
@@ -169,7 +169,7 @@ export default function Dashboard({ stats, applications }: Props) {
                 >
                     <div className="flex items-center justify-between overflow-hidden rounded-t-lg border-b border-white/5 px-6 py-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded bg-amber-500/20 text-amber-500">
+                            <div className="flex h-8 w-8 items-center justify-center rounded bg-warning-500/20 text-warning-500">
                                 <SparklesIcon className="h-4 w-4" />
                             </div>
                             <div>
@@ -177,7 +177,7 @@ export default function Dashboard({ stats, applications }: Props) {
                                 <p className="text-[11px] text-slate-400">Incoming estate applications for validation</p>
                             </div>
                         </div>
-                        <span className="rounded bg-blue-600 px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase">Action Required</span>
+                        <span className="rounded bg-primary-600 px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase">Action Required</span>
                     </div>
 
                     <div className="divide-y divide-white/5 overflow-visible rounded-b-lg">
@@ -194,7 +194,7 @@ export default function Dashboard({ stats, applications }: Props) {
                                         <h3 className="truncate text-base font-bold text-white">{app.estate_name}</h3>
                                         <span
                                             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-tight uppercase ${
-                                                app.status === 'pending' ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-500/20 text-blue-300'
+                                                app.status === 'pending' ? 'bg-warning-500/20 text-warning-300' : 'bg-primary-500/20 text-primary-300'
                                             }`}
                                         >
                                             {app.status === 'pending' ? 'Pending' : 'Contacted'}

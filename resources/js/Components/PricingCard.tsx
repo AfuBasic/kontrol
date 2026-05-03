@@ -205,13 +205,13 @@ function FeaturedCard({
     return (
         <div className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-slate-950 p-8 shadow-[0_30px_80px_-20px_rgba(15,23,42,0.5)] lg:-my-4">
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
+                <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary-700/15 blur-3xl" />
             </div>
 
             <div className="relative">
                 <div className="absolute -top-5 left-0">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-linear-to-r from-blue-500 to-indigo-500 px-3 py-1 text-[10px] font-semibold tracking-[0.15em] text-white uppercase shadow-lg shadow-blue-500/30">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-linear-to-r from-primary-500 to-primary-700 px-3 py-1 text-[10px] font-semibold tracking-[0.15em] text-white uppercase shadow-lg shadow-primary-500/30">
                         <span className="flex h-1.5 w-1.5 rounded-full bg-white" />
                         {plan.badge || 'Most popular'}
                     </span>
@@ -291,7 +291,7 @@ function FeaturedCard({
 }
 
 function FeatureRow({ label, included, variant }: { label: string; included: boolean; variant: 'light' | 'dark' }) {
-    const includedIconClass = variant === 'light' ? 'text-blue-600' : 'text-blue-400';
+    const includedIconClass = variant === 'light' ? 'text-primary-600' : 'text-primary-400';
     const excludedIconClass = variant === 'light' ? 'text-slate-300' : 'text-slate-600';
     const includedTextClass = variant === 'light' ? 'text-slate-700' : 'text-slate-200';
     const excludedTextClass = variant === 'light' ? 'text-slate-400' : 'text-slate-500';

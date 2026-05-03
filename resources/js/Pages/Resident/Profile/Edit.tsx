@@ -103,7 +103,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
 
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="group relative">
-                            <div className="h-28 w-28 rounded-[32px] bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-2xl ring-4 ring-white/10">
+                            <div className="h-28 w-28 rounded-[32px] bg-linear-to-br from-primary-500 to-primary-700 p-1 shadow-2xl ring-4 ring-white/10">
                                 <div className="flex h-full w-full items-center justify-center rounded-[28px] bg-slate-900 text-4xl font-black">
                                     {userInitials}
                                 </div>
