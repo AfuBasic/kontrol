@@ -139,4 +139,19 @@ class EstateSubscription extends Model
         return $query->where('status', 'trial')
             ->where('trial_ends_at', '>', now());
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $model) {
+            if ($model->isDirty(['status', 'plan_id'])) {
+                \Illuminate\Support\Facades\Cache::forget("estate_features:{$model->estate_id}");
+                $model->estate->clearMemoizedFeatures();
+            }
+        });
+
+        static::deleted(function (self $model) {
+            \Illuminate\Support\Facades\Cache::forget("estate_features:{$model->estate_id}");
+            $model->estate->clearMemoizedFeatures();
+        });
+    }
 }

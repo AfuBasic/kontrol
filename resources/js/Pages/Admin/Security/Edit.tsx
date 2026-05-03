@@ -4,6 +4,7 @@ import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/Sec
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type SecurityPerson = {
+    ulid: string;
     id: number;
     name: string;
     email: string;
@@ -24,12 +25,12 @@ export default function EditSecurity({ security }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        put(update.url({ security: security.id }));
+        put(update.url({ security: security.ulid }));
     }
 
     function handleDelete() {
         if (confirm('Are you sure you want to remove this security personnel? This action cannot be undone.')) {
-            router.delete(destroy.url({ security: security.id }));
+            router.delete(destroy.url({ security: security.ulid }));
         }
     }
 

@@ -109,4 +109,15 @@ class Plan extends Model
     {
         return '₦'.number_format($this->price / 100, 2);
     }
+
+    /**
+     * Check if the plan has a specific feature enabled.
+     */
+    public function hasFeature(string $slug): bool
+    {
+        return $this->features()
+            ->where('slug', $slug)
+            ->wherePivot('is_enabled', true)
+            ->exists();
+    }
 }

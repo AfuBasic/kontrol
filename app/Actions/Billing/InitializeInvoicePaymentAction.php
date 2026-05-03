@@ -40,6 +40,14 @@ class InitializeInvoicePaymentAction
             throw new PaymentInitializationException('Invoice is already paid.', 'already_paid');
         }
 
+        if ($invoice->amount <= 0) {
+            throw new PaymentInitializationException('Invoice amount must be positive to initialize payment.', 'invalid_amount');
+        }
+
+        if ($invoice->estate->subscriptionRecord?->status === 'cancelled') {
+            throw new PaymentInitializationException('Estate subscription is cancelled. Payments are no longer accepted.', 'subscription_cancelled');
+        }
+
         Log::info('InitializeInvoicePaymentAction::execute', ['invoice_id' => $invoice->id]);
 
         $existing = PaymentTransaction::where('invoice_id', $invoice->id)

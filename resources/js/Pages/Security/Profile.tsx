@@ -68,7 +68,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                         <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
                         <p className="truncate text-xs text-slate-500">{user.email}</p>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-emerald-700 uppercase ring-1 ring-inset ring-emerald-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-success-700 uppercase ring-1 ring-inset ring-success-200">
                         <ShieldCheck className="h-3 w-3" strokeWidth={2.4} />
                         Security
                     </span>
@@ -89,7 +89,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                 <ul className="divide-y divide-slate-100">
                     {PERMISSIONS.map((p) => (
                         <li key={p} className="flex items-center gap-3 px-4 py-2.5">
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-success-600">
                                 <Check className="h-3 w-3" strokeWidth={2.6} />
                             </span>
                             <span className="text-xs text-slate-700">{p}</span>
@@ -119,14 +119,14 @@ export default function ProfilePage({ user, estateName }: Props) {
                 {!logoutConfirm ? (
                     <button
                         onClick={() => setLogoutConfirm(true)}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50/50 active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-error-600 transition hover:bg-error-50/50 active:scale-[0.99]"
                     >
                         <LogOut className="h-4 w-4" strokeWidth={2.4} />
                         Log out
                     </button>
                 ) : (
-                    <div className="rounded-2xl border border-rose-200/70 bg-rose-50/60 p-3">
-                        <p className="px-1 text-xs text-rose-800">End your security session on this device?</p>
+                    <div className="rounded-2xl border border-error-200/70 bg-error-50/60 p-3">
+                        <p className="px-1 text-xs text-error-800">End your security session on this device?</p>
                         <div className="mt-2.5 flex gap-2">
                             <button
                                 onClick={() => !loggingOut && setLogoutConfirm(false)}
@@ -138,7 +138,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                             <button
                                 onClick={handleLogout}
                                 disabled={loggingOut}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-rose-600 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-70"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-error-600 py-2 text-xs font-semibold text-white transition hover:bg-error-500 disabled:opacity-70"
                             >
                                 {loggingOut && <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
                                 {loggingOut ? 'Logging out...' : 'Log out'}
@@ -315,7 +315,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                             )}
 
                             {recentlySuccessful && (
-                                <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                                <div className="flex items-center gap-2 rounded-xl bg-success-50 px-3 py-2 text-xs font-medium text-success-700 ring-1 ring-inset ring-success-200">
                                     <Check className="h-3.5 w-3.5" strokeWidth={2.4} />
                                     Profile updated
                                 </div>
@@ -350,7 +350,7 @@ function FormField({ label, error, children }: { label: string; error?: string; 
         <label className="block">
             <span className="mb-1.5 block text-[11px] font-semibold tracking-wider text-slate-500 uppercase">{label}</span>
             {children}
-            {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+            {error && <p className="mt-1 text-xs text-error-600">{error}</p>}
         </label>
     );
 }

@@ -16,18 +16,46 @@ class CheckEstateFeature
     public function handle(Request $request, Closure $next, string $featureSlug): Response
     {
         $user = $request->user();
-
         if (! $user) {
             abort(403, 'Unauthorized.');
         }
 
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
+        // Get the current estate from context service (more robust than first())
+        try {
+            $estate = app(\App\Services\EstateContextService::class)->getEstate();
+        } catch (\Exception $e) {
+            abort(403, 'No estate access.');
+        }
 
-        if (! $estate || ! $estate->hasFeature($featureSlug)) {
+        if (! $estate) {
+            abort(403, 'No estate access.');
+        }
+
+        // Check resident's personal subscription if in resident billing mode
+        if ($user->user_type === 'resident' && $estate->settings->charge_type === 'residents') {
+            $subject = $user;
+            if ($user->isHouseholdMember() && $user->householdOf) {
+                $subject = $user->householdOf->primaryResident;
+            }
+
+            $residentSub = $subject->residentSubscription()
+                ->where('estate_id', $estate->id)
+                ->first();
+
+            // If subscription exists and has a plan, check the plan's features
+            if ($residentSub && $residentSub->plan_id) {
+                if (! $residentSub->hasFeature($featureSlug)) {
+                    abort(403, 'Feature not available on your current plan tier.');
+                }
+            } elseif (! $estate->hasFeature($featureSlug)) {
+                // Fallback to estate features if no resident plan set yet
+                abort(403, 'Feature locked. Upgrade your plan to access this feature.');
+            }
+        } elseif (! $estate->hasFeature($featureSlug)) {
+            // Estate admins/security/affiliates use estate-level features
             if ($request->wantsJson()) {
                 return response()->json(['message' => 'Feature locked. Upgrade your plan to access this feature.'], 403);
             }
-            // For Inertia we could flash a message and redirect, or just abort 403
             abort(403, 'Feature locked. Upgrade your plan to access this feature.');
         }
 

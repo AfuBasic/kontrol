@@ -38,6 +38,7 @@ class UserController extends Controller
 
         $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
             ->through(fn ($user) => [
+                'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
@@ -100,6 +101,7 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => [
+                'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,

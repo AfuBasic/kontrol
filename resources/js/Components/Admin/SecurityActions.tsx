@@ -8,6 +8,7 @@ import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
 
 type SecurityPerson = {
+    ulid: string;
     id: number;
     name: string;
     suspended_at: string | null;
@@ -67,13 +68,13 @@ export default function SecurityActions({ security }: Props) {
 
         switch (modalConfig.type) {
             case 'delete':
-                router.delete(destroy.url({ security: security.id }), options);
+                router.delete(destroy.url({ security: security.ulid }), options);
                 break;
             case 'suspend':
-                router.patch(suspend.url({ security: security.id }), {}, options);
+                router.patch(suspend.url({ security: security.ulid }), {}, options);
                 break;
             case 'reset':
-                router.post(resetPassword.url({ security: security.id }), {}, options);
+                router.post(resetPassword.url({ security: security.ulid }), {}, options);
                 break;
         }
     };
@@ -120,7 +121,7 @@ export default function SecurityActions({ security }: Props) {
                 <div className={isMobile ? '' : 'contents'}>
                     {isMobile ? (
                         <Link
-                            href={edit.url({ security: security.id })}
+                            href={edit.url({ security: security.ulid })}
                             className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
                         >
                             <PencilIcon className="h-6 w-6 text-slate-400" />
@@ -128,7 +129,7 @@ export default function SecurityActions({ security }: Props) {
                         </Link>
                     ) : (
                         <Link
-                            href={edit.url({ security: security.id })}
+                            href={edit.url({ security: security.ulid })}
                             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
                         >
                             <PencilIcon className="h-4 w-4" />

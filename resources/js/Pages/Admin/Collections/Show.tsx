@@ -161,7 +161,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
     const handleFilterChange = (newStatus: string) => {
         setStatusFilter(newStatus);
         router.get(
-            router.page.url,
+            window.location.pathname,
             { search: searchQuery, status: newStatus },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -170,7 +170,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
     const handleSearchChange = (newSearch: string) => {
         setSearchQuery(newSearch);
         router.get(
-            router.page.url,
+            window.location.pathname,
             { search: newSearch, status: statusFilter },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -291,7 +291,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                                 Publish Now
                             </button>
                             <Link
-                                href={edit.url(collection.id)}
+                                href={edit.url(collection.ulid)}
                                 className="flex flex-1 items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-700 active:scale-95 sm:flex-none"
                             >
                                 Edit

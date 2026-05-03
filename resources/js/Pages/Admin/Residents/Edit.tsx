@@ -4,6 +4,7 @@ import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/Res
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {
+    ulid: string;
     id: number;
     name: string;
     email: string;
@@ -26,12 +27,12 @@ export default function EditResident({ resident }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        put(update.url({ resident: resident.id }));
+        put(update.url({ resident: resident.ulid }));
     }
 
     function handleDelete() {
         if (confirm('Are you sure you want to remove this resident? This action cannot be undone.')) {
-            router.delete(destroy.url({ resident: resident.id }));
+            router.delete(destroy.url({ resident: resident.ulid }));
         }
     }
 

@@ -5,6 +5,7 @@ import UserForm from './UserForm';
 
 type Props = {
     user: {
+        ulid: string;
         id: number;
         name: string;
         email: string;
@@ -21,7 +22,7 @@ export default function Edit({ user, roles }: Props) {
                 user={user}
                 title="Edit Administrator"
                 description="Update the details of this administrator."
-                submitUrl={user?.id ? update.url({ user: user.id }) : ''}
+                submitUrl={user?.ulid ? update.url({ user: user.ulid }) : ''}
                 method="put"
                 submitText="Save Changes"
                 cancelUrl={index.url()}

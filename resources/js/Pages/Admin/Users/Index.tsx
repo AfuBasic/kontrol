@@ -9,6 +9,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import UserActions from './UserActions';
 
 type User = {
+    ulid: string;
     id: number;
     name: string;
     email: string;

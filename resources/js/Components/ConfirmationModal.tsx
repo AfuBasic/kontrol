@@ -14,6 +14,7 @@ interface Props {
     cancelLabel?: string;
     type?: ModalType;
     isLoading?: boolean;
+    children?: React.ReactNode;
 }
 
 export default function ConfirmationModal({
@@ -26,33 +27,34 @@ export default function ConfirmationModal({
     cancelLabel = 'Cancel',
     type = 'danger',
     isLoading = false,
+    children,
 }: Props) {
     const getColors = () => {
         switch (type) {
             case 'danger':
                 return {
-                    iconBg: 'bg-red-100',
-                    iconColor: 'text-red-600',
-                    buttonBg: 'bg-red-600',
-                    buttonHover: 'hover:bg-red-700',
-                    focusRing: 'focus:ring-red-500',
+                    iconBg: 'bg-error-50',
+                    iconColor: 'text-error-600',
+                    buttonBg: 'bg-error-600',
+                    buttonHover: 'hover:bg-error-700',
+                    focusRing: 'focus:ring-error-500',
                 };
             case 'warning':
                 return {
-                    iconBg: 'bg-yellow-100',
-                    iconColor: 'text-yellow-600',
-                    buttonBg: 'bg-yellow-600',
-                    buttonHover: 'hover:bg-yellow-700',
-                    focusRing: 'focus:ring-yellow-500',
+                    iconBg: 'bg-warning-50',
+                    iconColor: 'text-warning-600',
+                    buttonBg: 'bg-warning-600',
+                    buttonHover: 'hover:bg-warning-700',
+                    focusRing: 'focus:ring-warning-500',
                 };
             case 'info':
             default:
                 return {
-                    iconBg: 'bg-blue-100',
-                    iconColor: 'text-blue-600',
-                    buttonBg: 'bg-blue-600',
-                    buttonHover: 'hover:bg-blue-700',
-                    focusRing: 'focus:ring-blue-500',
+                    iconBg: 'bg-primary-50',
+                    iconColor: 'text-primary-600',
+                    buttonBg: 'bg-primary-600',
+                    buttonHover: 'hover:bg-primary-700',
+                    focusRing: 'focus:ring-primary-500',
                 };
         }
     };
@@ -112,6 +114,7 @@ export default function ConfirmationModal({
                                         </Dialog.Title>
                                         <div className="mt-2">
                                             <p className="text-sm text-gray-500">{message}</p>
+                                            {children}
                                         </div>
                                     </div>
                                 </div>

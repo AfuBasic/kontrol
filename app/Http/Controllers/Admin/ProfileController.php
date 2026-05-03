@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,9 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function __construct() {}
+    public function __construct(
+        protected PaystackService $paystackService
+    ) {}
 
     public function edit(Request $request): Response
     {

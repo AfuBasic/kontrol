@@ -20,6 +20,7 @@ type AssignmentUser = {
 };
 
 type Assignment = {
+    ulid: string;
     id: number;
     amount_due: number;
     amount_paid: number;
@@ -58,7 +59,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
 
         try {
             // 1. Initiate payment on backend to get reference
-            const response = await fetch(CollectionPaymentController.initiate.url(assignment.id), {
+            const response = await fetch(CollectionPaymentController.initiate.url(assignment.ulid), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

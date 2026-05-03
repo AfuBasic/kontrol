@@ -112,26 +112,36 @@ class Estate extends Model
         return in_array($featureSlug, $this->getActiveFeatureSlugs());
     }
 
+    /**
+     * Clear the in-request memoized features.
+     */
+    public function clearMemoizedFeatures(): void
+    {
+        $this->memoizedFeatures = null;
+    }
+
     public function getActiveFeatureSlugs(): array
     {
         if ($this->memoizedFeatures !== null) {
             return $this->memoizedFeatures;
         }
 
-        $subscription = $this->subscriptionRecord;
+        return $this->memoizedFeatures = \Illuminate\Support\Facades\Cache::remember(
+            "estate_features:{$this->id}",
+            now()->addMinutes(15),
+            function () {
+                $subscription = $this->subscriptionRecord;
 
-        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
-            return $this->memoizedFeatures = [];
-        }
+                if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+                    return [];
+                }
 
-        return $this->memoizedFeatures = $subscription->plan->features()
-            ->wherePivot('is_enabled', true)
-            ->where(function ($query) {
-                $query->where('plan_features.limit', '!=', '0')
-                    ->orWhereNull('plan_features.limit');
-            })
-            ->pluck('slug')
-            ->toArray();
+                return $subscription->plan->features()
+                    ->wherePivot('is_enabled', true)
+                    ->pluck('slug')
+                    ->toArray();
+            }
+        );
     }
 
     public function getFeatureLimit(string $featureSlug): ?string

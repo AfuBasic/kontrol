@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Events\Login;
+use App\Listeners\WarmEstateSettings;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -119,5 +121,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(InvoiceGenerated::class, SendInvoiceEmail::class);
         Event::listen(InvoiceGenerated::class, SendInvoiceGeneratedNotification::class);
         Event::listen(PaymentReceived::class, SendPaymentReceivedNotification::class);
+        Event::listen(Login::class, WarmEstateSettings::class);
     }
 }

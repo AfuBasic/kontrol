@@ -10,6 +10,7 @@ import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type SecurityPerson = {
+    ulid: string;
     id: number;
     name: string;
     email: string;

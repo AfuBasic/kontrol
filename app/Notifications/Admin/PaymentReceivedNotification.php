@@ -3,7 +3,7 @@
 namespace App\Notifications\Admin;
 
 use App\Models\Invoice;
-use Illuminate\Broadcasting\BroadcastMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class PaymentReceivedNotification extends Notification

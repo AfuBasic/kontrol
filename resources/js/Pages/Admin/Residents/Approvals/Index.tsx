@@ -12,6 +12,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Resident {
+    ulid: string;
     id: number;
     name: string;
     email: string;
@@ -38,17 +39,17 @@ interface Props {
 
 export default function ApprovalsIndex({ residents, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
-    const [processingId, setProcessingId] = useState<number | null>(null);
+    const [processingId, setProcessingId] = useState<string | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
         type: 'approve' | 'reject';
-        residentId: number | null;
+        residentUlid: string | null;
         residentName: string;
     }>({
         isOpen: false,
         type: 'approve',
-        residentId: null,
+        residentUlid: null,
         residentName: '',
     });
 
@@ -78,7 +79,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         setModalConfig({
             isOpen: true,
             type: 'approve',
-            residentId: resident.id,
+            residentUlid: resident.ulid,
             residentName: resident.name,
         });
     };
@@ -87,22 +88,22 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         setModalConfig({
             isOpen: true,
             type: 'reject',
-            residentId: resident.id,
+            residentUlid: resident.ulid,
             residentName: resident.name,
         });
     };
 
     const confirmAction = () => {
-        if (!modalConfig.residentId) return;
-
-        const id = modalConfig.residentId;
+        if (!modalConfig.residentUlid) return;
+    
+        const ulid = modalConfig.residentUlid;
         const action = modalConfig.type === 'approve' ? approvalApprove : approvalReject;
-
-        setProcessingId(id);
+    
+        setProcessingId(ulid);
         setModalConfig((prev) => ({ ...prev, isOpen: false }));
-
+    
         router.post(
-            action.url({ id }),
+            action.url({ user: ulid }),
             {},
             {
                 onFinish: () => setProcessingId(null),
@@ -161,7 +162,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 font-black text-blue-600 shadow-inner">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 font-black text-primary-600 shadow-inner">
                                                     {resident.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
@@ -191,7 +192,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                         <div className="mt-5 flex items-center gap-3">
                                             <button
                                                 onClick={() => handleReject(resident)}
-                                                disabled={processingId === resident.id}
+                                                disabled={processingId === resident.ulid}
                                                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 py-3.5 text-sm font-bold text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 <X className="h-4 w-4" />
@@ -199,10 +200,10 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             </button>
                                             <button
                                                 onClick={() => handleApprove(resident)}
-                                                disabled={processingId === resident.id}
-                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                disabled={processingId === resident.ulid}
+                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-primary-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
-                                                {processingId === resident.id ? (
+                                                {processingId === resident.ulid ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
                                                     <Check className="h-4 w-4" />
@@ -243,7 +244,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             >
                                                 <td className="px-6 py-5 whitespace-nowrap">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 font-bold text-blue-600">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 font-bold text-primary-600">
                                                             {resident.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
@@ -279,17 +280,17 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                     <div className="flex justify-end gap-2.5">
                                                         <button
                                                             onClick={() => handleReject(resident)}
-                                                            disabled={processingId === resident.id}
+                                                            disabled={processingId === resident.ulid}
                                                             className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 shadow-sm transition-all hover:bg-rose-50 active:scale-95 disabled:opacity-50"
                                                         >
                                                             <X className="h-5 w-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleApprove(resident)}
-                                                            disabled={processingId === resident.id}
-                                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                                                            disabled={processingId === resident.ulid}
+                                                            className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
                                                         >
-                                                            {processingId === resident.id ? (
+                                                            {processingId === resident.ulid ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                             ) : (
                                                                 <Check className="h-4 w-4" />

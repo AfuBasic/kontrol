@@ -88,6 +88,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'resident.active' => EnsureResidentSubscriptionActive::class,
             'feature' => CheckEstateFeature::class,
             'check-estate-feature' => CheckEstateFeature::class,
+            'validate-estate' => \App\Http\Middleware\ValidateEstateContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

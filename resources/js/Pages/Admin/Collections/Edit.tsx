@@ -18,6 +18,7 @@ type CollectionTarget = {
 };
 
 type Collection = {
+    ulid: string;
     id: number;
     name: string;
     description: string | null;
@@ -79,7 +80,7 @@ export default function EditCollection({ collection, residents }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(update.url(collection.id));
+        put(update.url(collection.ulid));
     };
 
     return (
@@ -89,7 +90,7 @@ export default function EditCollection({ collection, residents }: Props) {
             <div className="mx-auto max-w-4xl">
                 <div className="mb-8">
                     <Link
-                        href={show.url(collection.id)}
+                        href={show.url(collection.ulid)}
                         className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-900"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -409,7 +410,7 @@ export default function EditCollection({ collection, residents }: Props) {
 
                     <div className="flex items-center justify-end gap-6 pt-4">
                         <Link
-                            href={show.url(collection.id)}
+                            href={show.url(collection.ulid)}
                             className="text-sm font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
                         >
                             Cancel Changes

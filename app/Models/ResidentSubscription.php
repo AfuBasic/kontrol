@@ -69,6 +69,7 @@ class ResidentSubscription extends Model
     protected $fillable = [
         'user_id',
         'estate_id',
+        'plan_id',
         'status',
         'billing_preference',
         'paystack_authorization_code',
@@ -98,6 +99,7 @@ class ResidentSubscription extends Model
             'billing_preference' => 'string',
             'paystack_authorization_code' => 'encrypted',
             'paystack_customer_code' => 'encrypted',
+            'plan_id' => 'integer',
         ];
     }
 
@@ -107,6 +109,14 @@ class ResidentSubscription extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 
     /**
@@ -180,5 +190,17 @@ class ResidentSubscription extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Check if the subscription plan has a specific feature.
+     */
+    public function hasFeature(string $slug): bool
+    {
+        if (! $this->plan) {
+            return false;
+        }
+
+        return $this->plan->hasFeature($slug);
     }
 }

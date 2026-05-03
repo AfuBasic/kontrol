@@ -8,6 +8,7 @@ import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
 
 type User = {
+    ulid: string;
     id: number;
     name: string;
     email: string;
@@ -22,7 +23,7 @@ export default function UserActions({ user }: { user: User }) {
     const [confirmingDeletion, setConfirmingDeletion] = useState(false);
     
     const handleDelete = () => {
-        router.delete(destroy.url({ user: user.id }), {
+        router.delete(destroy.url({ user: user.ulid }), {
             preserveScroll: true,
             onSuccess: () => setConfirmingDeletion(false),
         });
@@ -36,7 +37,7 @@ export default function UserActions({ user }: { user: User }) {
                 <div className={isMobile ? '' : 'p-1 contents'}>
                     {isMobile ? (
                         <Link
-                            href={edit.url({ user: user.id })}
+                            href={edit.url({ user: user.ulid })}
                             className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
                         >
                             <PencilSquareIcon className="h-6 w-6 text-slate-400" />
@@ -46,7 +47,7 @@ export default function UserActions({ user }: { user: User }) {
                         <Menu.Item>
                             {({ active }) => (
                                 <Link
-                                    href={edit.url({ user: user.id })}
+                                    href={edit.url({ user: user.ulid })}
                                     className={`${
                                         active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
                                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`}

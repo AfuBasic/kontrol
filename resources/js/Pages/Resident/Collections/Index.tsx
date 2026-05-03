@@ -4,11 +4,13 @@ import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionC
 import ResidentLayout from '@/Layouts/ResidentLayout';
 
 type Collection = {
+    ulid: string;
     id: number;
     name: string;
 };
 
 type Assignment = {
+    ulid: string;
     id: number;
     collection_id: number;
     amount_due: number;
@@ -38,10 +40,10 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
 
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case 'paid': return 'bg-emerald-100 text-emerald-700';
-            case 'overdue': return 'bg-rose-100 text-rose-700';
-            case 'grace': return 'bg-blue-100 text-blue-700';
-            default: return 'bg-amber-100 text-amber-700';
+            case 'paid': return 'bg-success-50 text-success-700';
+            case 'overdue': return 'bg-error-50 text-error-700';
+            case 'grace': return 'bg-primary-50 text-primary-700';
+            default: return 'bg-warning-50 text-warning-700';
         }
     };
 
@@ -94,12 +96,12 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                         summary.outstanding.map((assignment) => (
                             <Link
                                 key={assignment.id}
-                                href={show.url(assignment.id)}
+                                href={show.url(assignment.ulid)}
                                 className="group flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-                                        assignment.status === 'overdue' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-500'
+                                        assignment.status === 'overdue' ? 'bg-error-50 text-error-500' : 'bg-warning-50 text-warning-500'
                                     }`}>
                                         {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
                                     </div>
@@ -122,7 +124,7 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                         ))
                     ) : (
                         <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-inset ring-slate-100">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-500 shadow-sm mb-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-success-500 shadow-sm mb-4">
                                 <CheckCircle2 className="h-8 w-8" />
                             </div>
                             <p className="text-sm font-bold text-slate-900">All caught up!</p>
@@ -143,11 +145,11 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                         {summary.paid.slice(0, 3).map((assignment) => (
                             <Link
                                 key={assignment.id}
-                                href={show.url(assignment.id)}
+                                href={show.url(assignment.ulid)}
                                 className="flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 opacity-70"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                     <div>
@@ -157,7 +159,7 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                                 </div>
                                 <div className="text-right">
                                     <div className="font-bold text-slate-900 text-sm">{formatCurrency(assignment.amount_paid)}</div>
-                                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Paid</p>
+                                    <p className="text-[10px] font-bold text-success-500 uppercase tracking-widest">Paid</p>
                                 </div>
                             </Link>
                         ))}

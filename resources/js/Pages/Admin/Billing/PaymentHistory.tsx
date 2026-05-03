@@ -7,6 +7,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 
 type Payment = {
     id: number;
+    invoice_ulid: string;
     invoice_number: string;
     amount: number;
     formatted_amount: string;
@@ -116,7 +117,7 @@ export default function PaymentHistoryPage({ payments }: Props) {
                                             >
                                                 <td className="px-6 py-4">
                                                     <Link
-                                                        href={InvoiceController.show.url(payment.id)}
+                                                        href={InvoiceController.show.url(payment.invoice_ulid)}
                                                         className="text-sm font-semibold text-primary-600 hover:text-primary-700"
                                                     >
                                                         {payment.invoice_number}

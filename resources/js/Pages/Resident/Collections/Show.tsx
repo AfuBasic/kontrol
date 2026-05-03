@@ -5,6 +5,7 @@ import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/Coll
 import ResidentLayout from '@/Layouts/ResidentLayout';
 
 type Collection = {
+    ulid: string;
     id: number;
     name: string;
     description: string | null;
@@ -12,6 +13,7 @@ type Collection = {
 };
 
 type Assignment = {
+    ulid: string;
     id: number;
     collection_id: number;
     amount_due: number;
@@ -46,7 +48,7 @@ export default function CollectionShow({ assignment }: Props) {
     };
 
     // The payment URL will be the web billing page
-    const paymentUrl = CollectionPaymentController.show.url(assignment.id);
+    const paymentUrl = CollectionPaymentController.show.url(assignment.ulid);
 
     return (
         <div className="flex flex-col gap-8 pb-32">

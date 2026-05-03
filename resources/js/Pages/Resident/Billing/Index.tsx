@@ -19,6 +19,7 @@ import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/B
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
 
 type Invoice = {
+    ulid: string;
     id: number;
     invoice_number: string;
     amount: number;
@@ -52,7 +53,7 @@ type Props = {
         amount: number;
         formatted_amount: string;
         invoice_count: number;
-        next_invoice_id: number | null;
+        next_invoice_ulid: string | null;
     };
 };
 
@@ -239,8 +240,8 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         }
     };
 
-    const handlePayInvoice = (invoiceId: number) => {
-        router.post(ResidentBillingController.pay.url(invoiceId));
+    const handlePayInvoice = (invoiceUlid: string) => {
+        router.post(ResidentBillingController.pay.url(invoiceUlid));
     };
 
     const loadMore = () => {
@@ -471,7 +472,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                                     </div>
                                                     {!paid && !isNative && (
                                                         <button
-                                                            onClick={() => handlePayInvoice(invoice.id)}
+                                                            onClick={() => handlePayInvoice(invoice.ulid)}
                                                             className="ml-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold text-white transition hover:bg-slate-800"
                                                         >
                                                             Pay

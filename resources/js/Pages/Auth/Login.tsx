@@ -121,8 +121,8 @@ export default function Login() {
                 {/* Branded panel — full-width hero on mobile, left side on desktop */}
                 <div className="relative overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
-                        <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-blue-500/40 via-indigo-500/25 to-transparent blur-[100px] lg:-top-32 lg:-right-24 lg:h-[520px] lg:w-[520px] lg:blur-[120px]" />
-                        <div className="absolute -bottom-28 -left-16 h-[360px] w-[360px] rounded-full bg-linear-to-tr from-indigo-500/30 via-blue-500/15 to-transparent blur-[90px] lg:-bottom-24 lg:-left-24 lg:h-[420px] lg:w-[420px] lg:blur-[100px]" />
+                        <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-primary-500/40 via-indigo-500/25 to-transparent blur-[100px] lg:-top-32 lg:-right-24 lg:h-[520px] lg:w-[520px] lg:blur-[120px]" />
+                        <div className="absolute -bottom-28 -left-16 h-[360px] w-[360px] rounded-full bg-linear-to-tr from-indigo-500/30 via-primary-500/15 to-transparent blur-[90px] lg:-bottom-24 lg:-left-24 lg:h-[420px] lg:w-[420px] lg:blur-[100px]" />
                         <div
                             className="absolute inset-0 opacity-[0.15] lg:opacity-[0.08]"
                             style={{
@@ -245,7 +245,7 @@ export default function Login() {
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                     placeholder="you@example.com"
                                     autoComplete="email"
                                     autoFocus
@@ -257,7 +257,7 @@ export default function Login() {
                                     <label htmlFor="password" className="text-sm font-medium text-slate-700">
                                         Password
                                     </label>
-                                    <Link href="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                                    <Link href="/forgot-password" university-logo-link="true" className="text-xs font-medium text-primary-600 hover:text-primary-700">
                                         Forgot password?
                                     </Link>
                                 </div>
@@ -267,7 +267,7 @@ export default function Login() {
                                         type={showPassword ? 'text' : 'password'}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                         placeholder="Enter your password"
                                         autoComplete="current-password"
                                     />
@@ -288,7 +288,7 @@ export default function Login() {
                                     type="checkbox"
                                     checked={data.remember}
                                     onChange={(e) => setData('remember', e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                 />
                                 <span className="text-sm text-slate-600">Keep me signed in</span>
                             </label>
@@ -387,7 +387,7 @@ function AccessCodePreview() {
         <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] backdrop-blur-sm">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-primary-500 to-primary-700 text-white">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path
                                 strokeLinecap="round"

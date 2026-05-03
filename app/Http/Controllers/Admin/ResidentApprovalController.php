@@ -35,6 +35,7 @@ class ResidentApprovalController extends Controller
         $residents = $this->residentService
             ->getPaginatedResidents(15, $filters)
             ->through(fn ($user) => [
+                'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,

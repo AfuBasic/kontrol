@@ -39,6 +39,7 @@ class SecurityPersonnelController extends Controller
         $security = $this->securityService
             ->getPaginatedSecurity(15, $filters)
             ->through(fn ($user) => [
+                'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
@@ -90,6 +91,7 @@ class SecurityPersonnelController extends Controller
 
         return Inertia::render('Admin/Security/Edit', [
             'security' => [
+                'ulid' => $security->ulid,
                 'id' => $security->id,
                 'name' => $security->name,
                 'email' => $security->email,

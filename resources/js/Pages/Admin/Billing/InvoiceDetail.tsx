@@ -41,6 +41,7 @@ type PaymentTransaction = {
 };
 
 type Invoice = {
+    ulid: string;
     id: number;
     invoice_number: string;
     amount: number;
@@ -216,7 +217,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
     const handlePayment = () => {
         setPayLoading(true);
         router.post(
-            InvoiceController.pay.url(invoice.id),
+            InvoiceController.pay.url(invoice.ulid),
             {},
             {
                 onSuccess: () => {
@@ -234,7 +235,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
     const handleConfirmPayment = () => {
         setConfirmPaymentLoading(true);
         router.post(
-            InvoiceController.confirmPayment.url(invoice.id),
+            InvoiceController.confirmPayment.url(invoice.ulid),
             {},
             {
                 onSuccess: () => {
@@ -252,7 +253,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
     const handleSendInvoice = () => {
         setSendInvoiceLoading(true);
         router.post(
-            InvoiceController.sendInvoice.url(invoice.id),
+            InvoiceController.sendInvoice.url(invoice.ulid),
             {},
             {
                 onSuccess: () => {

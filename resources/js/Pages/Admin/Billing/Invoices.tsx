@@ -6,6 +6,7 @@ import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceContr
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Invoice = {
+    ulid: string;
     id: number;
     invoice_number: string;
     amount: number;
@@ -169,7 +170,7 @@ export default function InvoicesPage({ invoices }: Props) {
                                             >
                                                 <td className="px-6 py-4">
                                                     <Link
-                                                        href={InvoiceController.show.url(invoice.id)}
+                                                        href={InvoiceController.show.url(invoice.ulid)}
                                                         className="text-sm font-semibold text-primary-600 hover:text-primary-700"
                                                     >
                                                         {invoice.invoice_number}
@@ -200,7 +201,7 @@ export default function InvoicesPage({ invoices }: Props) {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <Link
-                                                        href={InvoiceController.show.url(invoice.id)}
+                                                        href={InvoiceController.show.url(invoice.ulid)}
                                                         className="text-sm font-medium text-primary-600 hover:text-primary-700"
                                                     >
                                                         View
