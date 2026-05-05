@@ -82,6 +82,7 @@ class AccessCodeController extends Controller
             'visitor_name' => ['nullable', 'string', 'max:255', 'required_if:type,long_lived'],
             'visitor_phone' => ['nullable', 'string', 'max:20'],
             'purpose' => ['nullable', 'string', 'max:255'],
+            'has_vehicle' => ['nullable', 'boolean'],
             'duration_minutes' => ['nullable', 'integer', 'required_if:type,single_use'], // We can allow bypassing min/max here if we trust the service to clamp it, or replicate validation. Let's trust service for now or add min/max rules dynamically if needed, but simple integer check is safe enough for logic.
         ]);
 

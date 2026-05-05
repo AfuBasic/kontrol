@@ -8,6 +8,7 @@ type SecurityPerson = {
     id: number;
     name: string;
     email: string;
+    email_verified_at: string | null;
     phone: string | null;
     badge_number: string | null;
 };
@@ -17,8 +18,10 @@ type Props = {
 };
 
 export default function EditSecurity({ security }: Props) {
+    const isVerified = !!security.email_verified_at;
     const { data, setData, put, processing, errors } = useForm({
         name: security.name,
+        email: security.email,
         phone: security.phone || '',
         badge_number: security.badge_number || '',
     });
@@ -57,16 +60,26 @@ export default function EditSecurity({ security }: Props) {
                     className="rounded-xl border border-gray-200 bg-white p-6"
                 >
                     <div className="space-y-6">
-                        {/* Email (read-only) */}
+                        {/* Email */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Email Address</label>
                             <input
                                 type="email"
-                                value={security.email}
-                                disabled
-                                className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                disabled={isVerified}
+                                className={`mt-1 block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-1 focus:outline-none ${
+                                    isVerified
+                                        ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
+                                        : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
+                                }`}
                             />
-                            <p className="mt-1 text-xs text-gray-400">Email cannot be changed after invitation.</p>
+                            <p className="mt-1 text-xs text-gray-400">
+                                {isVerified
+                                    ? 'Email is verified and cannot be changed for security.'
+                                    : "You can edit the email address because the personnel hasn't verified it yet."}
+                            </p>
+                            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
 
                         {/* Name */}

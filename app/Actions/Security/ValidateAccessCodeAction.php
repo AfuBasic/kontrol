@@ -3,12 +3,8 @@
 namespace App\Actions\Security;
 
 use App\Enums\AccessCodeStatus;
-use App\Events\Resident\VisitorArrivedBroadcast;
 use App\Models\AccessCode;
-use App\Models\AccessLog;
 use App\Models\EstateSettings;
-use App\Models\User;
-use App\Notifications\VisitorArrivedNotification;
 
 class ValidateAccessCodeAction
 {
@@ -23,20 +19,20 @@ class ValidateAccessCodeAction
      *     host_name: string|null,
      *     purpose: string|null,
      *     expires_at: string|null,
-     *     code_type: string|null
+     *     code_type: string|null,
+     *     has_vehicle: bool
      * }
      */
-    public function execute(string $code, int $estateId, User $verifiedBy): array
+    public function execute(string $code, int $estateId): array
     {
-        // Fetch Settings early to use for grace period and single-use checks
+        // Fetch Settings early to use for grace period
         $settings = EstateSettings::forEstate($estateId);
         $gracePeriod = $settings->access_code_grace_period_minutes ?? 0;
-        $forceSingleUse = $settings->access_code_single_use;
 
         $accessCode = AccessCode::query()
             ->forEstate($estateId)
             ->where('code', $code)
-            ->with('user:id,name,email,fcm_token')
+            ->with('user:id,name,email')
             ->first();
 
         if (! $accessCode) {
@@ -52,7 +48,6 @@ class ValidateAccessCodeAction
         }
 
         // Check expiration with grace period
-        // If expires_at is present AND currently past (expires_at + grace_period), then it's expired.
         if ($accessCode->status === AccessCodeStatus::Expired) {
             return $this->denied('Code has expired', 'expired', $accessCode);
         }
@@ -65,86 +60,24 @@ class ValidateAccessCodeAction
             return $this->denied('Code is not active', 'inactive', $accessCode);
         }
 
-        // Mark as used only if estate setting enforces single-use AND it's a single-use code
-        // When access_code_single_use is false, single-use codes remain reusable until expiration
-        $shouldMarkUsed = $forceSingleUse && $accessCode->type === 'single_use';
-
-        if ($shouldMarkUsed) {
-            $accessCode->markAsUsed($verifiedBy);
-        } else {
-            // For long-lived codes, just update verification info and last used timestamp
-            $accessCode->updateQuietly([
-                'verified_by' => $verifiedBy->id,
-                'used_at' => now(),
-            ]);
-
-            activity()
-                ->performedOn($accessCode)
-                ->causedBy($verifiedBy)
-                ->log('Access code used');
-        }
-
-        // Create Access Log
-        AccessLog::create([
-            'estate_id' => $estateId,
-            'access_code_id' => $accessCode->id,
-            'verified_by' => $verifiedBy->id,
-            'verified_at' => now(),
-            'meta' => [
-                'visitor_name' => $accessCode->visitor_name,
-                'host_id' => $accessCode->user_id,
-                'enforced_single_use' => $forceSingleUse,
-                'original_type' => $accessCode->type,
-            ],
-        ]);
-
-        // Notify Resident
-        $accessCode->user->notify(new VisitorArrivedNotification($accessCode));
-
-        // Broadcast real-time notification
-        VisitorArrivedBroadcast::dispatch($accessCode->user, $accessCode);
-
         return $this->granted($accessCode);
     }
 
-    /**
-     * @return array{
-     *     valid: bool,
-     *     status: string,
-     *     message: string,
-     *     visitor_name: string|null,
-     *     host_name: string|null,
-     *     purpose: string|null,
-     *     expires_at: string|null,
-     *     code_type: string|null
-     * }
-     */
     private function granted(AccessCode $accessCode): array
     {
         return [
             'valid' => true,
             'status' => 'granted',
-            'message' => 'Access granted',
+            'message' => 'Access code is valid',
             'visitor_name' => $accessCode->visitor_name,
             'host_name' => $accessCode->user?->name,
             'purpose' => $accessCode->purpose,
             'expires_at' => $accessCode->expires_at?->toIso8601String(),
             'code_type' => $accessCode->type,
+            'has_vehicle' => (bool) $accessCode->has_vehicle,
         ];
     }
 
-    /**
-     * @return array{
-     *     valid: bool,
-     *     status: string,
-     *     message: string,
-     *     visitor_name: string|null,
-     *     host_name: string|null,
-     *     purpose: string|null,
-     *     expires_at: string|null,
-     *     code_type: string|null
-     * }
-     */
     private function denied(string $message, string $status, ?AccessCode $accessCode = null): array
     {
         return [
@@ -156,6 +89,7 @@ class ValidateAccessCodeAction
             'purpose' => $accessCode?->purpose,
             'expires_at' => $accessCode?->expires_at?->toIso8601String(),
             'code_type' => $accessCode?->type,
+            'has_vehicle' => (bool) $accessCode?->has_vehicle,
         ];
     }
 }

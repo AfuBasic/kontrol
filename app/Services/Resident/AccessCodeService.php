@@ -81,6 +81,7 @@ class AccessCodeService
             'purpose' => $data['purpose'] ?? null,
             'status' => AccessCodeStatus::Active,
             'expires_at' => $expiresAt,
+            'has_vehicle' => $data['has_vehicle'] ?? false,
             'notes' => $data['notes'] ?? null,
         ]);
     }

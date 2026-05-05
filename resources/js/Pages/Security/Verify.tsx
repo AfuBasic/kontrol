@@ -16,6 +16,7 @@ type ValidationResult = {
     purpose: string | null;
     expires_at: string | null;
     code_type: string | null;
+    has_vehicle: boolean;
 };
 
 interface PageProps {
@@ -138,13 +139,20 @@ export default function SecurityVerify() {
         setTimeout(() => inputsRef.current[0]?.focus(), 50);
     };
 
-    const recordDecision = (decision: 'admit' | 'reject') => {
+    const recordDecision = (decision: 'admit' | 'reject', extraData: any = {}) => {
         const code = submittedFor.current;
         if (!code) {
             reset();
             return;
         }
-        router.post(VerifyController.decision.url(), { decision, code }, { preserveScroll: true, onFinish: reset });
+        router.post(VerifyController.decision.url(), { 
+            decision, 
+            code,
+            ...extraData 
+        }, { 
+            preserveScroll: true, 
+            onFinish: reset 
+        });
     };
 
     return (
@@ -157,8 +165,8 @@ export default function SecurityVerify() {
                         <ResultPanel
                             key="result"
                             result={result}
-                            onAdmit={() => recordDecision('admit')}
-                            onReject={() => recordDecision('reject')}
+                            onAdmit={(data) => recordDecision('admit', data)}
+                            onReject={(data) => recordDecision('reject', data)}
                             onReset={reset}
                         />
                     ) : (
@@ -215,12 +223,12 @@ SecurityVerify.layout = (page: React.ReactNode) => (
 
 type ResultPanelProps = {
     result: ValidationResult;
-    onAdmit: () => void;
-    onReject: () => void;
+    onAdmit: (data?: any) => void;
+    onReject: (data?: any) => void;
     onReset: () => void;
 };
 
-function ResultPanel({ result, onReset }: ResultPanelProps) {
+function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
 
@@ -295,10 +303,25 @@ function ResultPanel({ result, onReset }: ResultPanelProps) {
                     </div>
 
                     <div className="px-8 pt-6 pb-10">
+                        <VehicleForm 
+                            show={result.has_vehicle} 
+                            onSubmit={(data) => onAdmit(data)} 
+                        />
+
+                        {!result.has_vehicle && (
+                            <button
+                                type="button"
+                                onClick={() => onAdmit()}
+                                className="w-full rounded-2xl bg-[#10B981] py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                            >
+                                Admit Visitor
+                            </button>
+                        )}
+
                         <button
                             type="button"
                             onClick={onReset}
-                            className="flex items-center gap-3 text-base font-semibold text-[#10B981] transition hover:opacity-80 active:scale-[0.98]"
+                            className="mt-4 flex w-full items-center justify-center gap-3 text-base font-semibold text-slate-500 transition hover:text-slate-400 active:scale-[0.98]"
                         >
                             <ArrowLeft className="h-5 w-5" />
                             Verify another code
@@ -307,6 +330,62 @@ function ResultPanel({ result, onReset }: ResultPanelProps) {
                 </div>
             </div>
         </motion.div>
+    );
+}
+
+function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) => void }) {
+    const [data, setData] = useState({
+        vehicle_make: '',
+        vehicle_model: '',
+        vehicle_plate_number: '',
+    });
+
+    if (!show) return null;
+
+    return (
+        <div className="space-y-6 pt-2">
+            <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
+                <div className="flex items-center gap-3 text-blue-400">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25a9 9 0 0 0-9-9h-2.25a4.5 4.5 0 0 0-4.5 4.5v5.25m18.375 3h-1.125m-17.25 0h1.125m17.25-4.5V15H5.25v-.75m15 0a3.75 3.75 0 0 0-3.75-3.75h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                    </svg>
+                    <p className="text-sm font-bold uppercase tracking-wider">Vehicle Details Required</p>
+                </div>
+            </div>
+
+            <div className="grid gap-4">
+                <input
+                    type="text"
+                    placeholder="Car Make (e.g. Toyota)"
+                    value={data.vehicle_make}
+                    onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
+                />
+                <input
+                    type="text"
+                    placeholder="Car Model (e.g. Camry)"
+                    value={data.vehicle_model}
+                    onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
+                />
+                <input
+                    type="text"
+                    placeholder="Plate Number"
+                    value={data.vehicle_plate_number}
+                    onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
+                />
+            </div>
+
+            <button
+                type="button"
+                onClick={() => onSubmit(data)}
+                disabled={!data.vehicle_make || !data.vehicle_plate_number}
+                className="w-full rounded-2xl bg-[#10B981] py-5 text-lg font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            >
+                Admit with Vehicle
+            </button>
+        </div>
     );
 }
 

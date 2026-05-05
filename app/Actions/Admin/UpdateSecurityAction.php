@@ -15,7 +15,13 @@ class UpdateSecurityAction
     public function execute(User $security, array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($security, $data, $estate) {
-            $security->update(['name' => $data['name']]);
+            $userUpdate = ['name' => $data['name']];
+
+            if (isset($data['email']) && ! $security->email_verified_at) {
+                $userUpdate['email'] = $data['email'];
+            }
+
+            $security->update($userUpdate);
 
             $metadata = $security->profile?->metadata ?? [];
             if (isset($data['badge_number'])) {

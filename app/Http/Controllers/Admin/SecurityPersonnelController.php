@@ -95,6 +95,7 @@ class SecurityPersonnelController extends Controller
                 'id' => $security->id,
                 'name' => $security->name,
                 'email' => $security->email,
+                'email_verified_at' => $security->email_verified_at,
                 'phone' => $security->profile?->phone,
                 'badge_number' => $security->profile?->metadata['badge_number'] ?? null,
             ],
@@ -109,6 +110,13 @@ class SecurityPersonnelController extends Controller
         $this->authorize('security.edit');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($security->id),
+            ],
             'phone' => ['nullable', 'string', 'max:20'],
             'badge_number' => ['nullable', 'string', 'max:50'],
         ]);

@@ -30,6 +30,7 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
         visitor_name: '',
         visitor_phone: '',
         purpose: 'Guest',
+        has_vehicle: false,
         duration_minutes: access_code_durations?.[0]?.minutes || access_code_constraints?.min || 60,
     });
 
@@ -223,6 +224,32 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                         className="w-full rounded-2xl bg-slate-50 py-4.5 pl-14 pr-6 font-bold text-slate-900 outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 transition-all"
                                                     />
                                                 </div>
+
+                                                {/* Vehicle Toggle */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => form.setData('has_vehicle', !form.data.has_vehicle)}
+                                                    className={`flex w-full items-center justify-between rounded-2xl p-4.5 transition-all ${
+                                                        form.data.has_vehicle 
+                                                            ? 'bg-blue-50 ring-2 ring-blue-500/20' 
+                                                            : 'bg-slate-50 ring-1 ring-slate-100'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`rounded-xl p-2 ${form.data.has_vehicle ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25a9 9 0 0 0-9-9h-2.25a4.5 4.5 0 0 0-4.5 4.5v5.25m18.375 3h-1.125m-17.25 0h1.125m17.25-4.5V15H5.25v-.75m15 0a3.75 3.75 0 0 0-3.75-3.75h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <p className="text-sm font-bold text-slate-900">Arriving with a vehicle?</p>
+                                                            <p className="text-xs font-medium text-slate-500">Security will record car details</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`h-6 w-10 rounded-full transition-colors relative ${form.data.has_vehicle ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                                                        <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${form.data.has_vehicle ? 'left-5' : 'left-1'}`} />
+                                                    </div>
+                                                </button>
                                             </div>
 
                                             <div className="flex gap-4">

@@ -14,6 +14,7 @@ class VerifyController extends Controller
 {
     public function __construct(
         protected ValidateAccessCodeAction $validateAccessCodeAction,
+        protected \App\Actions\Security\RecordCheckInAction $recordCheckInAction,
     ) {}
 
     public function __invoke(): Response
@@ -40,7 +41,7 @@ class VerifyController extends Controller
 
         if ($result['valid']) {
             return back()->with([
-                'success' => "Access Granted: {$result['visitor_name']} admitted successfully.",
+                'success' => "Code Verified: Found access code for {$result['visitor_name']}.",
                 'validation_result' => $result,
             ]);
         }
@@ -51,9 +52,11 @@ class VerifyController extends Controller
     public function decision(Request $request): RedirectResponse
     {
         $request->validate([
-            'decision' => 'required|in:admit,reject',
-            'code' => 'required|string',
             'reason' => 'nullable|string|max:500',
+            'access_log_id' => 'nullable|exists:access_logs,id',
+            'vehicle_make' => 'nullable|string|max:255',
+            'vehicle_model' => 'nullable|string|max:255',
+            'vehicle_plate_number' => 'nullable|string|max:255',
         ]);
 
         $user = auth()->user();
@@ -68,6 +71,15 @@ class VerifyController extends Controller
                 'reason' => $request->input('reason'),
             ])
             ->log('Security guard recorded entry decision');
+
+        if ($request->input('decision') === 'admit') {
+            $this->recordCheckInAction->execute(
+                code: $request->input('code'),
+                estateId: $estate->id,
+                verifiedBy: $user,
+                vehicleData: $request->only(['vehicle_make', 'vehicle_model', 'vehicle_plate_number'])
+            );
+        }
 
         return back();
     }

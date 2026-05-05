@@ -86,6 +86,7 @@ class AccessCode extends Model
         'used_at',
         'revoked_at',
         'verified_by',
+        'has_vehicle',
         'notes',
     ];
 
@@ -100,6 +101,7 @@ class AccessCode extends Model
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
             'revoked_at' => 'datetime',
+            'has_vehicle' => 'boolean',
         ];
     }
 

@@ -39,6 +39,9 @@ class AccessLog extends Model
         'access_code_id',
         'verified_by',
         'verified_at',
+        'vehicle_make',
+        'vehicle_model',
+        'vehicle_plate_number',
         'meta',
     ];
 
