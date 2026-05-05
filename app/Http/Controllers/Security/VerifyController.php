@@ -36,7 +36,6 @@ class VerifyController extends Controller
         $result = $this->validateAccessCodeAction->execute(
             code: $request->validated('code'),
             estateId: $estate->id,
-            verifiedBy: $user,
         );
 
         if ($result['valid']) {
