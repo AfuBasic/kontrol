@@ -1,10 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // Set this to true for local development with Simulator/Emulator
-const isDev = true;
+const isDev = false;
 
 // Tip: For Android Emulator, use 'http://10.0.2.2:5173'. For Physical devices, use your Mac's Local IP.
-const devUrl = 'http://app.kontrol.test';
+const devUrl = 'http://10.0.2.2';
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.app',
