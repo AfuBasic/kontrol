@@ -33,7 +33,7 @@ class DashboardService
             ->forEstate($estateId)
             ->withRole('resident', $estateId)
             ->selectRaw('count(*) as total')
-            ->selectRaw('sum(case when suspended_at is null then 1 else 0 end) as active')
+            ->selectRaw('sum(case when suspended_at is null and email_verified_at is not null then 1 else 0 end) as active')
             ->toBase()
             ->first();
 
@@ -42,7 +42,7 @@ class DashboardService
             ->forEstate($estateId)
             ->withRole('security', $estateId)
             ->selectRaw('count(*) as total')
-            ->selectRaw('sum(case when suspended_at is null then 1 else 0 end) as active')
+            ->selectRaw('sum(case when suspended_at is null and email_verified_at is not null then 1 else 0 end) as active')
             ->toBase()
             ->first();
 

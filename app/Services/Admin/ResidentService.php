@@ -36,7 +36,7 @@ class ResidentService
                 if ($status === 'suspended') {
                     $query->whereNotNull('suspended_at');
                 } elseif ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->active()
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'pending') {
                     $query->whereNull('suspended_at')

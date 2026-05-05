@@ -24,6 +24,7 @@ type Resident = {
     unit_number: string | null;
     status: 'pending' | 'accepted';
     suspended_at: string | null;
+    email_verified_at: string | null;
     created_at: string;
 };
 
@@ -368,12 +369,14 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest uppercase ${
                                                         resident.suspended_at
                                                             ? 'bg-rose-100 text-rose-700'
-                                                            : resident.status === 'accepted'
-                                                              ? 'bg-emerald-100 text-emerald-700'
-                                                              : 'bg-amber-100 text-amber-700'
+                                                            : !resident.email_verified_at
+                                                              ? 'bg-slate-100 text-slate-700'
+                                                              : resident.status === 'accepted'
+                                                                ? 'bg-emerald-100 text-emerald-700'
+                                                                : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
-                                                    {resident.suspended_at ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    {resident.suspended_at ? 'Suspended' : !resident.email_verified_at ? 'Inactive' : resident.status === 'accepted' ? 'Active' : 'Pending'}
                                                 </span>
                                                 <ResidentActions resident={resident} />
                                             </div>
@@ -470,12 +473,14 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black tracking-widest uppercase ${
                                                         resident.suspended_at
                                                             ? 'bg-rose-100 text-rose-700'
-                                                            : resident.status === 'accepted'
-                                                              ? 'bg-emerald-100 text-emerald-700'
-                                                              : 'bg-amber-100 text-amber-700'
+                                                            : !resident.email_verified_at
+                                                              ? 'bg-slate-100 text-slate-700'
+                                                              : resident.status === 'accepted'
+                                                                ? 'bg-emerald-100 text-emerald-700'
+                                                                : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
-                                                    {resident.suspended_at ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    {resident.suspended_at ? 'Suspended' : !resident.email_verified_at ? 'Inactive' : resident.status === 'accepted' ? 'Active' : 'Pending'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">

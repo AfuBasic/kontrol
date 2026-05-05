@@ -47,6 +47,7 @@ class ResidentController extends Controller
                 'unit_number' => $user->profile?->unit_number,
                 'status' => $user->estates->first()?->pivot?->status ?? 'pending',
                 'suspended_at' => $user->suspended_at,
+                'email_verified_at' => $user->email_verified_at,
                 'created_at' => $user->created_at->format('M d, Y'),
             ]));
 

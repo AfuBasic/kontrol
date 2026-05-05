@@ -310,7 +310,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->whereNull('suspended_at');
+        return $query->whereNull('suspended_at')->whereNotNull('email_verified_at');
     }
 
     /**
@@ -446,5 +446,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function collectionAssignments(): HasMany
     {
         return $this->hasMany(CollectionAssignment::class);
+    }
+
+    /**
+     * Check if the user has verified their email.
+     */
+    public function isVerified(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    /**
+     * Check if the user is currently active (not suspended and verified).
+     */
+    public function isActive(): bool
+    {
+        return $this->suspended_at === null && $this->isVerified();
     }
 }

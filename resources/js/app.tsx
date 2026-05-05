@@ -38,6 +38,8 @@ const SecurityLayoutWrapper = (page: React.ReactNode) => (
 
 const DefaultLayoutWrapper = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
 
+import AppErrorBoundary from './Components/ErrorBoundary/AppErrorBoundary';
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: async (name) => {
@@ -97,13 +99,13 @@ createInertiaApp({
             }, []);
 
             return (
-                <>
+                <AppErrorBoundary>
                     <div style={{ display: isBooting ? 'none' : 'block' }}>
                         <App {...props} />
                     </div>
                     {isBooting && <AppLoader isExiting={isExiting} />}
                     <GlobalLoading />
-                </>
+                </AppErrorBoundary>
             );
         }
 
