@@ -45,7 +45,7 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Could not resolve account: ' . $e->getMessage(),
+                'message' => 'Could not resolve account: '.$e->getMessage(),
             ], 422);
         }
     }

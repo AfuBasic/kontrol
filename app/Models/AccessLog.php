@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\AccessCode $accessCode
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\User $verifier
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog query()
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog whereVerifiedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog whereVerifiedBy($value)
+ *
  * @mixin \Eloquent
  */
 class AccessLog extends Model

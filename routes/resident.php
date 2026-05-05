@@ -4,6 +4,7 @@ use App\Http\Controllers\Resident\AccessCodeController;
 use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\BillingController;
 use App\Http\Controllers\Resident\CollectionController;
+use App\Http\Controllers\Resident\EmergencyContactController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\EstateContactController;
@@ -93,8 +94,8 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 
     // Emergency Contacts Management
     Route::prefix('emergency-contacts')->name('resident.emergency-contacts.')->group(function (): void {
-        Route::post('/', [\App\Http\Controllers\Resident\EmergencyContactController::class, 'store'])->name('store');
-        Route::delete('/{emergencyContact}', [\App\Http\Controllers\Resident\EmergencyContactController::class, 'destroy'])->name('destroy');
+        Route::post('/', [EmergencyContactController::class, 'store'])->name('store');
+        Route::delete('/{emergencyContact}', [EmergencyContactController::class, 'destroy'])->name('destroy');
     });
 });
 

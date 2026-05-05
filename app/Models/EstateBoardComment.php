@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\EstateBoardPost $post
  * @property-read \Illuminate\Database\Eloquent\Collection<int, EstateBoardComment> $replies
  * @property-read int|null $replies_count
+ *
  * @method static \Database\Factories\EstateBoardCommentFactory factory($count = null, $state = [])
  * @method static Builder<static>|EstateBoardComment newModelQuery()
  * @method static Builder<static>|EstateBoardComment newQuery()
@@ -42,6 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|EstateBoardComment whereUserId($value)
  * @method static Builder<static>|EstateBoardComment withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|EstateBoardComment withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class EstateBoardComment extends Model

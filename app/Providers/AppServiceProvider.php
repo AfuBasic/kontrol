@@ -7,6 +7,7 @@ use App\Events\Billing\PaymentReceived;
 use App\Listeners\Billing\SendInvoiceEmail;
 use App\Listeners\Billing\SendInvoiceGeneratedNotification;
 use App\Listeners\Billing\SendPaymentReceivedNotification;
+use App\Listeners\WarmEstateSettings;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Policies\EstateBoardCommentPolicy;
@@ -15,6 +16,7 @@ use App\Services\SMS\BulkSmsNigeriaProvider;
 use App\Services\SMS\SMSProvider;
 use App\Services\SMS\SmsService;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +24,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Auth\Events\Login;
-use App\Listeners\WarmEstateSettings;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -66,7 +66,7 @@ class AppServiceProvider extends ServiceProvider
             // If the host is an Expose or Ngrok tunnel
             if (str_contains($host, 'sharedwithexpose.com') || str_contains($host, 'ngrok-free.app')) {
                 $protocol = request()->isSecure() ? 'https://' : 'http://';
-                $url = $protocol . $host;
+                $url = $protocol.$host;
 
                 // Dynamically update app URL and Sanctum/CORS stateful domains
                 config(['app.url' => $url]);

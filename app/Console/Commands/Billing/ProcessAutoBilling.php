@@ -61,7 +61,7 @@ class ProcessAutoBilling extends Command
                 foreach ($invoices as $invoice) {
                     // Safety check: skip if recently attempted (within 23 hours) unless forced
                     $lastAttempt = $invoice->metadata['last_attempt_at'] ?? null;
-                    if (!$this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
+                    if (! $this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
                         continue;
                     }
 
@@ -90,7 +90,7 @@ class ProcessAutoBilling extends Command
                 foreach ($invoices as $invoice) {
                     // Safety check: skip if recently attempted unless forced
                     $lastAttempt = $invoice->metadata['last_attempt_at'] ?? null;
-                    if (!$this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
+                    if (! $this->option('force') && $lastAttempt && now()->parse($lastAttempt)->greaterThan(now()->subHours(23))) {
                         continue;
                     }
 

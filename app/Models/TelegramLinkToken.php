@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\User $user
+ *
  * @method static Builder<static>|TelegramLinkToken forUser(int $userId)
  * @method static Builder<static>|TelegramLinkToken newModelQuery()
  * @method static Builder<static>|TelegramLinkToken newQuery()
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|TelegramLinkToken whereUpdatedAt($value)
  * @method static Builder<static>|TelegramLinkToken whereUsedAt($value)
  * @method static Builder<static>|TelegramLinkToken whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class TelegramLinkToken extends Model

@@ -38,6 +38,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read string $time_remaining
  * @property-read \App\Models\User $user
  * @property-read \App\Models\User|null $verifiedBy
+ *
  * @method static Builder<static>|AccessCode active()
  * @method static Builder<static>|AccessCode expiredButNotMarked()
  * @method static Builder<static>|AccessCode forEstate(int $estateId)
@@ -63,6 +64,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static Builder<static>|AccessCode whereVerifiedBy($value)
  * @method static Builder<static>|AccessCode whereVisitorName($value)
  * @method static Builder<static>|AccessCode whereVisitorPhone($value)
+ *
  * @mixin \Eloquent
  */
 class AccessCode extends Model

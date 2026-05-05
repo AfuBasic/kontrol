@@ -80,6 +80,7 @@ class TransactionController extends Controller
         }
 
         $success = PaymentTransaction::where('status', 'success')->count();
+
         return round(($success / $total) * 100, 1);
     }
 }

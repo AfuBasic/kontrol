@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read string $formatted_price
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateSubscription> $subscriptions
  * @property-read int|null $subscriptions_count
+ *
  * @method static \Database\Factories\PlanFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan newQuery()
@@ -51,6 +52,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereVisibility($value)
+ *
  * @mixin \Eloquent
  */
 class Plan extends Model

@@ -98,7 +98,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::get('/settings/banks', [SettingsController::class, 'banks'])->name('settings.banks');
-        
+
         // Settlement Banking
         Route::prefix('settlement')->name('settlement.')->group(function (): void {
             Route::post('/resolve', [App\Http\Controllers\Admin\SettlementController::class, 'resolve'])->name('resolve');

@@ -132,7 +132,7 @@ class ChargeInvoiceJob implements ShouldQueue
                     $jsonPart = substr($errorMessage, strpos($errorMessage, '{'));
                     $decoded = json_decode($jsonPart, true);
                     if (isset($decoded['message'])) {
-                        $cleanMessage = "Payment gateway error: " . $decoded['message'];
+                        $cleanMessage = 'Payment gateway error: '.$decoded['message'];
                     }
                 }
 

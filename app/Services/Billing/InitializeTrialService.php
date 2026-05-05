@@ -40,8 +40,8 @@ class InitializeTrialService
             // Check if any invoices exist for this estate
             $hasInvoices = Invoice::where('estate_id', $estate->id)->exists();
 
-            if ($isTrialEnabled && $now->isBefore($trialEndsAt)) {
-                // Still in trial period and trial is enabled
+            if ($isTrialEnabled && $now->isBefore($trialEndsAt) && ($settings->charge_type !== 'residents')) {
+                // Still in trial period and trial is enabled (and estate pays)
                 $subscription->update([
                     'status' => 'trial',
                     'trial_ends_at' => $trialEndsAt,
@@ -49,18 +49,15 @@ class InitializeTrialService
                     'next_billing_date' => null,
                 ]);
             } else {
-                // Trial period has expired or is disabled
-                if (! $hasInvoices) {
-                    // Generate first invoice retroactively
+                // Trial period has expired, is disabled, or estate doesn't pay (residents pay)
+                $subscription->update([
+                    'status' => 'active',
+                    'trial_ends_at' => ($settings->charge_type === 'residents') ? null : $trialEndsAt,
+                ]);
+
+                if (! $hasInvoices && ($settings->charge_type !== 'residents')) {
+                    // Generate first invoice retroactively if estate pays
                     $this->generateInvoiceAction->execute($estate, isFirstInvoice: true);
-                } else {
-                    // Just update subscription to active if not already
-                    if ($subscription->status === 'trial') {
-                        $subscription->update([
-                            'status' => 'active',
-                            'trial_ends_at' => $trialEndsAt,
-                        ]);
-                    }
                 }
             }
 

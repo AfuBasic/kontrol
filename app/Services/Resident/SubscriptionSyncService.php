@@ -41,6 +41,7 @@ class SubscriptionSyncService
                 $subscription->update(['plan_id' => $estatePlanId]);
                 Log::info("Synced resident {$user->id} to estate plan {$estatePlanId} (Estate Pays mode)");
             }
+
             return;
         }
 
@@ -52,7 +53,7 @@ class SubscriptionSyncService
             $subscription->update(['plan_id' => $estatePlanId]);
             Log::info("Initialized resident {$user->id} with estate default plan {$estatePlanId}");
         }
-        
+
         // Note: We don't automatically upgrade/downgrade paid residents if the estate upgrades,
         // as they are billed individually. They must choose to upgrade.
     }

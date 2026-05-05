@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\GeneratesUlid;
 
+use App\Traits\GeneratesUlid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,7 +52,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class CollectionAssignment extends Model
 {
-    use HasFactory, GeneratesUlid;
+    use GeneratesUlid, HasFactory;
 
     public function resolveRouteBinding($value, $field = null)
     {

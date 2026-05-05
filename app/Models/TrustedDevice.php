@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable $last_used_at
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice query()
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice whereLastUsedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice whereUserAgentHash($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class TrustedDevice extends Model

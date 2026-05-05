@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Estate> $estates
  * @property-read int|null $estates_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer newQuery()
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Referrer whereWebsite($value)
+ *
  * @mixin \Eloquent
  */
 class Referrer extends Model

@@ -41,6 +41,7 @@ class SubscriptionController extends Controller
 
                 return [
                     'id' => $estate->id,
+                    'ulid' => $estate->ulid,
                     'name' => $estate->name,
                     'email' => $estate->email,
                     'plan_id' => $sub?->plan_id,

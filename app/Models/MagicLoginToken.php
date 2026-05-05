@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\User $user
+ *
  * @method static Builder<static>|MagicLoginToken newModelQuery()
  * @method static Builder<static>|MagicLoginToken newQuery()
  * @method static Builder<static>|MagicLoginToken query()
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|MagicLoginToken whereUpdatedAt($value)
  * @method static Builder<static>|MagicLoginToken whereUsedAt($value)
  * @method static Builder<static>|MagicLoginToken whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class MagicLoginToken extends Model

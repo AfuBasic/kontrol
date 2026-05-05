@@ -6,12 +6,11 @@ use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Services\BillingCycleService;
-use App\Services\Billing\BillingFinalizationService;
 use App\Services\PaystackService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Exception;
 
 class PaymentVerificationService
 {

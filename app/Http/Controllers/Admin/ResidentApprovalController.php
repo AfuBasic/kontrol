@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Mail\Resident\WelcomeMail;
+use App\Models\User;
 use App\Notifications\ResidentApproved;
 use App\Notifications\ResidentRejected;
 use App\Services\Admin\ResidentService;

@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Models;
-use App\Traits\GeneratesUlid;
 
 use App\Mail\Auth\PasswordResetMail;
+use App\Traits\GeneratesUlid;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -89,7 +90,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, GeneratesUlid;
+    use GeneratesUlid, HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
     public function resolveRouteBinding($value, $field = null)
     {
@@ -258,7 +259,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeWithRole(Builder $query, string $roleName, ?int $estateId): Builder
     {
         return $query->whereExists(function ($query) use ($roleName, $estateId) {
-            $query->select(\Illuminate\Support\Facades\DB::raw(1))
+            $query->select(DB::raw(1))
                 ->from('model_has_roles')
                 ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
                 ->whereColumn('model_has_roles.model_id', 'users.id')

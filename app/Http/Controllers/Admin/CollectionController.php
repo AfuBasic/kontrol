@@ -9,6 +9,7 @@ use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
+use App\Services\PaystackService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class CollectionController extends Controller
     public function __construct(
         private EstateContextService $estateContext,
         private CollectionService $collectionService,
-        private \App\Services\PaystackService $paystackService,
+        private PaystackService $paystackService,
     ) {}
 
     public function index(): Response

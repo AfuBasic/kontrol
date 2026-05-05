@@ -5,10 +5,8 @@ namespace App\Actions\Billing;
 use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
-use App\Models\EstateSubscription;
 use App\Services\Billing\PaymentVerificationService;
 use App\Services\PaystackService;
-use App\Actions\Billing\RecordPaymentAction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -85,7 +83,7 @@ class InitializeInvoicePaymentAction
         if ($authorizationCode) {
             try {
                 $email = $invoice->user->email ?? $invoice->estate->email ?? $invoice->estate->users()->first()?->email;
-                
+
                 $chargeResult = $this->paystackService->chargeAuthorization(
                     $authorizationCode,
                     $email,
@@ -98,7 +96,7 @@ class InitializeInvoicePaymentAction
                     $this->recordPaymentAction->execute(
                         $invoice,
                         $chargeResult['reference'],
-                        'manual_charge_' . $chargeResult['reference']
+                        'manual_charge_'.$chargeResult['reference']
                     );
 
                     return InitializePaymentResult::flash(
@@ -110,7 +108,7 @@ class InitializeInvoicePaymentAction
             } catch (\Exception $e) {
                 Log::warning('Manual charge via saved card failed, falling back to standard checkout', [
                     'invoice_id' => $invoice->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -237,10 +235,12 @@ class InitializeInvoicePaymentAction
             $sub = ResidentSubscription::where('user_id', $invoice->user_id)
                 ->where('estate_id', $invoice->estate_id)
                 ->first();
+
             return $sub?->paystack_authorization_code;
         }
 
         $estateSub = $invoice->estate->subscriptionRecord;
+
         return $estateSub?->paystack_authorization_code;
     }
 }

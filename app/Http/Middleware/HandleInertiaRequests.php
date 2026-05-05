@@ -59,11 +59,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
+                    'ulid' => $user->ulid,
                     'name' => $user->name,
                     'email' => $user->email,
                     'permissions' => $permissions,
                     'roles' => $roles,
                     'current_estate_id' => $estate?->id,
+                    'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
@@ -85,7 +87,7 @@ class HandleInertiaRequests extends Middleware
                         }
 
                         return array_merge(
-                            $sub->load('estate.subscriptionRecord.plan')->only(['status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']),
+                            $sub->load('estate.subscriptionRecord.plan')->only(['ulid', 'status', 'trial_ends_at', 'current_period_end', 'is_active', 'is_grace_period']),
                             [
                                 'plan_name' => $estate->subscriptionRecord->plan->name ?? 'Standard',
                                 'billing_interval' => $estate->subscriptionRecord->billing_interval ?? 'monthly',

@@ -7,6 +7,7 @@ use App\Models\Estate;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -44,7 +45,12 @@ class CreateEstateAction
 
             // 4. Assign admin role scoped to this estate
             setPermissionsTeamId($estate->id);
-            Role::firstOrCreate(['name' => 'admin', 'estate_id' => $estate->id, 'guard_name' => 'web']);
+            $adminRole = Role::firstOrCreate(['name' => 'admin', 'estate_id' => $estate->id, 'guard_name' => 'web']);
+
+            // Sync all permissions to the new estate-specific admin role
+            $allPermissions = PermissionSeeder::getAllPermissionNames();
+            $adminRole->syncPermissions($allPermissions);
+
             $user->assignRole('admin');
 
             // 5. Create the subscription

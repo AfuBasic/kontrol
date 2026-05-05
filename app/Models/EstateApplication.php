@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property int|null $plan_id
  * @property-read \App\Models\Plan|null $plan
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication query()
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereReviewedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EstateApplication extends Model

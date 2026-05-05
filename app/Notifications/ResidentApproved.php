@@ -89,26 +89,26 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
                 body: $data['message'],
             )
         ))
-        ->data([
-            'action_url' => $data['action_url'],
-            'type' => $data['type'],
-        ])
-        ->custom([
-            'android' => [
-                'notification' => [
-                    'color' => '#0A3D91',
-                    'sound' => 'default',
-                    'icon' => 'notification_icon',
-                ],
-            ],
-            'apns' => [
-                'payload' => [
-                    'aps' => [
+            ->data([
+                'action_url' => $data['action_url'],
+                'type' => $data['type'],
+            ])
+            ->custom([
+                'android' => [
+                    'notification' => [
+                        'color' => '#0A3D91',
                         'sound' => 'default',
+                        'icon' => 'notification_icon',
                     ],
                 ],
-            ],
-        ]);
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                        ],
+                    ],
+                ],
+            ]);
     }
 
     /**

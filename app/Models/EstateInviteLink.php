@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\Estate $estate
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink query()
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateInviteLink whereUsageCount($value)
+ *
  * @mixin \Eloquent
  */
 class EstateInviteLink extends Model

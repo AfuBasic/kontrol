@@ -29,7 +29,7 @@ class SendSmsAlert implements ShouldQueue
         try {
             $smsService->send($this->phone, $this->message);
         } catch (\Exception $e) {
-            Log::error("Failed to send SOS SMS to {$this->phone}: " . $e->getMessage());
+            Log::error("Failed to send SOS SMS to {$this->phone}: ".$e->getMessage());
             throw $e;
         }
     }

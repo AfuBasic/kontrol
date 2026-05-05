@@ -32,6 +32,7 @@ class HouseholdMemberController extends Controller
         return Inertia::render('Resident/Household/Index', [
             'members' => $members->map(fn (HouseholdMember $hm) => [
                 'id' => $hm->id,
+                'ulid' => $hm->member->ulid,
                 'name' => $hm->member->name,
                 'email' => $hm->member->email,
                 'status' => $hm->member->estates->first()?->pivot?->status ?? 'pending',
@@ -50,6 +51,7 @@ class HouseholdMemberController extends Controller
 
         if (! $estate->canAddMoreHouseholdMembers($user)) {
             $limit = $estate->getFeatureLimit('household-management');
+
             return back()->with('error', "You have reached your limit of {$limit} household members for this plan.");
         }
 

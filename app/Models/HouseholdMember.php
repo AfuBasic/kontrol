@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\User $member
  * @property-read \App\Models\User $primaryResident
+ *
  * @method static \Database\Factories\HouseholdMemberFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|HouseholdMember newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|HouseholdMember newQuery()
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|HouseholdMember whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|HouseholdMember wherePrimaryResidentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|HouseholdMember whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class HouseholdMember extends Model

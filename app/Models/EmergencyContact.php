@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact query()
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact whereRelationship($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmergencyContact whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class EmergencyContact extends Model

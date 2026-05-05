@@ -23,6 +23,7 @@ class ProfileController extends Controller
         return Inertia::render('Security/Profile', [
             'user' => [
                 'id' => $user->id,
+                'ulid' => $user->ulid,
                 'name' => $user->name,
                 'email' => $user->email,
             ],

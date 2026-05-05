@@ -405,7 +405,7 @@ export default function AdminLayout({ children, title }: Props) {
     }
 
     const navWithBilling = billing_enabled
-        ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon, feature: 'automated-invoicing' }]
+        ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }]
         : primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);

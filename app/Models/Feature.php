@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Plan> $plans
  * @property-read int|null $plans_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature byGroup(string $group)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature newModelQuery()
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSuggestedPlan($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Feature extends Model

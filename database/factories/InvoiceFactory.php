@@ -18,7 +18,7 @@ class InvoiceFactory extends Factory
             'estate_id' => Estate::factory(),
             'user_id' => User::factory(),
             'plan_id' => Plan::factory(),
-            'invoice_number' => 'KTRL-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'invoice_number' => 'KTRL-'.$this->faker->unique()->numberBetween(1000, 9999),
             'amount' => 500000,
             'resident_count' => 1,
             'billing_period_start' => now(),

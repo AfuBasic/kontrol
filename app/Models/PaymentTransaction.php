@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\Invoice|null $invoice
  * @property-read \App\Models\User|null $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction failed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction newQuery()
@@ -55,6 +56,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereVerifiedAt($value)
+ *
  * @mixin \Eloquent
  */
 class PaymentTransaction extends Model

@@ -108,6 +108,8 @@ class DashboardService
                 'total' => $totalComments,
             ],
             'estate' => [
+                'id' => $estate->id,
+                'ulid' => $estate->ulid,
                 'name' => $estate->name,
                 'address' => $estate->address,
             ],
@@ -173,7 +175,7 @@ class DashboardService
                     $q->where('estate_id', $estate->id);
                 });
             })
-            ->with('causer:id,name,email')
+            ->with('causer:id,ulid,name,email')
             ->latest()
             ->take($limit)
             ->get()
@@ -201,7 +203,7 @@ class DashboardService
 
         return EstateBoardPost::forEstate($estate->id)
             ->published()
-            ->with(['author:id,name', 'media'])
+            ->with(['author:id,ulid,name', 'media'])
             ->withCount('comments')
             ->latest('published_at')
             ->take($limit)

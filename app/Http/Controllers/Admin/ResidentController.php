@@ -40,6 +40,7 @@ class ResidentController extends Controller
             ->getPaginatedResidents(15, $filters)
             ->through(fn ($user) => [
                 'id' => $user->id,
+                'ulid' => $user->ulid,
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->profile?->phone,
@@ -109,6 +110,7 @@ class ResidentController extends Controller
         return Inertia::render('Admin/Residents/Edit', [
             'resident' => [
                 'id' => $resident->id,
+                'ulid' => $resident->ulid,
                 'name' => $resident->name,
                 'email' => $resident->email,
                 'phone' => $resident->profile?->phone,

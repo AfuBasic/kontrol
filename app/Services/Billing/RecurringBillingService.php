@@ -1,9 +1,8 @@
 <?php
 
 namespace App\Services\Billing;
-    
-use App\Actions\Billing\RecordPaymentAction;
 
+use App\Actions\Billing\RecordPaymentAction;
 use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\ResidentSubscription;

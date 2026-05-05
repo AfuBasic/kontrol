@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\Plan $plan
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription active()
  * @method static \Database\Factories\EstateSubscriptionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription newModelQuery()
@@ -51,6 +53,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereTrialEndsAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EstateSubscription extends Model
@@ -144,13 +147,13 @@ class EstateSubscription extends Model
     {
         static::saved(function (self $model) {
             if ($model->isDirty(['status', 'plan_id'])) {
-                \Illuminate\Support\Facades\Cache::forget("estate_features:{$model->estate_id}");
+                Cache::forget("estate_features:{$model->estate_id}");
                 $model->estate->clearMemoizedFeatures();
             }
         });
 
         static::deleted(function (self $model) {
-            \Illuminate\Support\Facades\Cache::forget("estate_features:{$model->estate_id}");
+            Cache::forget("estate_features:{$model->estate_id}");
             $model->estate->clearMemoizedFeatures();
         });
     }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\EstateContextService;
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,8 +24,8 @@ class CheckEstateFeature
 
         // Get the current estate from context service (more robust than first())
         try {
-            $estate = app(\App\Services\EstateContextService::class)->getEstate();
-        } catch (\Exception $e) {
+            $estate = app(EstateContextService::class)->getEstate();
+        } catch (Exception $e) {
             abort(403, 'No estate access.');
         }
 

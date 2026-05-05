@@ -99,7 +99,7 @@ class EstateController extends Controller
             ->get();
 
         $rawResidents = ResidentSubscription::where('estate_id', $estate->id)
-            ->with('user:id,name,email')
+            ->with('user:id,ulid,name,email')
             ->get();
 
         $userIds = $rawResidents->pluck('user_id')->unique()->toArray();
@@ -108,13 +108,14 @@ class EstateController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->groupBy('user_id')
-            ->map(fn($invoices) => $invoices->first());
+            ->map(fn ($invoices) => $invoices->first());
 
         $residents = $rawResidents->map(function ($sub) use ($lastInvoices) {
             $lastInvoice = $lastInvoices->get($sub->user_id);
 
             return [
                 'id' => $sub->id,
+                'ulid' => $sub->ulid,
                 'user' => $sub->user,
                 'status' => $sub->status,
                 'last_payment_at' => $sub->last_paid_at?->toDateString(),
@@ -165,7 +166,7 @@ class EstateController extends Controller
     {
         return Inertia::render('Zeus/Estates/Edit', [
             'estate' => array_merge(
-                $estate->only(['id', 'name', 'email', 'address', 'status']),
+                $estate->only(['id', 'ulid', 'name', 'email', 'address', 'status']),
                 ['admin_accepted' => $estate->hasAcceptedAdmin()],
                 ['charge_type' => $estate->settings?->charge_type ?? 'residents'],
                 ['free_trial_enabled' => $estate->settings?->free_trial_enabled ?? true],

@@ -2,14 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\EstateContextService;
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ValidateEstateContext
 {
     public function __construct(
-        private \App\Services\EstateContextService $estateContextService,
+        private EstateContextService $estateContextService,
     ) {}
 
     /**
@@ -28,7 +30,7 @@ class ValidateEstateContext
         // Get the user's current estate from context
         try {
             $estate = $this->estateContextService->getEstate();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             abort(403, 'No estate access');
         }
 

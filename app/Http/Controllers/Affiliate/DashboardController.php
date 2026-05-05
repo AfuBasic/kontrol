@@ -16,6 +16,7 @@ class DashboardController extends Controller
         return Inertia::render('Affiliate/Dashboard', [
             'user' => [
                 'id' => $user->id,
+                'ulid' => $user->ulid,
                 'name' => $user->name,
                 'email' => $user->email,
             ],

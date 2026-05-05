@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \App\Models\User|null $acknowledgedBy
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent query()
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent whereTriggeredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class SosEvent extends Model

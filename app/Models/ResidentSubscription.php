@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\GeneratesUlid;
 
+use App\Traits\GeneratesUlid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \Illuminate\Database\Eloquent\Relations\BelongsTo<Estate, $this> $is_active
  * @property-read bool $is_grace_period
  * @property-read \App\Models\User $user
+ *
  * @method static \Database\Factories\ResidentSubscriptionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newQuery()
@@ -48,11 +49,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereTrialEndsAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class ResidentSubscription extends Model
 {
-    use HasFactory, GeneratesUlid;
+    use GeneratesUlid, HasFactory;
 
     public function resolveRouteBinding($value, $field = null)
     {

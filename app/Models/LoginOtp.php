@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable $expires_at
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property-read \App\Models\User $user
+ *
  * @method static Builder<static>|LoginOtp newModelQuery()
  * @method static Builder<static>|LoginOtp newQuery()
  * @method static Builder<static>|LoginOtp query()
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|LoginOtp whereIpAddress($value)
  * @method static Builder<static>|LoginOtp whereUserAgentHash($value)
  * @method static Builder<static>|LoginOtp whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class LoginOtp extends Model

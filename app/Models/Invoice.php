@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\GeneratesUlid;
 
+use App\Traits\GeneratesUlid;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Plan $plan
  * @property-read \App\Models\EstateSubscription|null $subscription
  * @property-read \App\Models\User|null $user
+ *
  * @method static \Database\Factories\InvoiceFactory factory($count = null, $state = [])
  * @method static Builder<static>|Invoice newModelQuery()
  * @method static Builder<static>|Invoice newQuery()
@@ -64,11 +65,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder<static>|Invoice whereStatus($value)
  * @method static Builder<static>|Invoice whereUpdatedAt($value)
  * @method static Builder<static>|Invoice whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class Invoice extends Model
 {
-    use HasFactory, GeneratesUlid;
+    use GeneratesUlid, HasFactory;
 
     public function resolveRouteBinding($value, $field = null)
     {

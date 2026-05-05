@@ -21,9 +21,6 @@ class EstateService
     }
 
     /**
-     * @param string|null $search
-     * @param string|null $status
-     * @param int $perPage
      * @return LengthAwarePaginator<int, Estate>
      */
     public function getPaginatedEstates(?string $search = null, ?string $status = null, int $perPage = 10): LengthAwarePaginator

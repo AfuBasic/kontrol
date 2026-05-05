@@ -33,6 +33,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read string $hashid
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateBoardPostMedia> $media
  * @property-read int|null $media_count
+ *
  * @method static \Database\Factories\EstateBoardPostFactory factory($count = null, $state = [])
  * @method static Builder<static>|EstateBoardPost forAudience(array $audiences)
  * @method static Builder<static>|EstateBoardPost forEstate(int $estateId)
@@ -50,6 +51,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static Builder<static>|EstateBoardPost whereTitle($value)
  * @method static Builder<static>|EstateBoardPost whereUpdatedAt($value)
  * @method static Builder<static>|EstateBoardPost whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class EstateBoardPost extends Model

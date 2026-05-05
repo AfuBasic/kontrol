@@ -60,6 +60,7 @@ class InvoiceController extends Controller
         // Share pending invoice globally for the notification banner
         Inertia::share('pendingInvoice', [
             'id' => $invoice->id,
+            'ulid' => $invoice->ulid,
             'invoice_number' => $invoice->invoice_number,
             'amount' => $invoice->amount,
             'status' => $invoice->status,

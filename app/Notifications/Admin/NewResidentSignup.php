@@ -57,20 +57,20 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
         )))
             ->data(['url' => route('admin.residents.approvals.index')])
             ->custom([
-            'android' => [
-                'notification' => [
-                    'click_action' => 'TOP_STORY_ACTIVITY',
-                ],
-            ],
-            'apns' => [
-                'payload' => [
-                    'aps' => [
-                        'badge' => $notifiable->unreadNotifications()->count(),
-                        'sound' => 'default',
+                'android' => [
+                    'notification' => [
+                        'click_action' => 'TOP_STORY_ACTIVITY',
                     ],
                 ],
-            ],
-        ]);
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'badge' => $notifiable->unreadNotifications()->count(),
+                            'sound' => 'default',
+                        ],
+                    ],
+                ],
+            ]);
     }
 
     /**
@@ -120,6 +120,7 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
             'type' => 'info',
         ];
     }
+
     /**
      * Get the Telegram representation of the notification.
      *
@@ -131,7 +132,7 @@ class NewResidentSignup extends Notification implements ShouldBroadcast, ShouldQ
             ."<b>Name:</b> {$this->resident->name}\n"
             ."<b>Estate:</b> {$this->estateName}\n"
             ."<b>Email:</b> {$this->resident->email}\n\n"
-            ."Please review and approve this request in the admin portal.";
+            .'Please review and approve this request in the admin portal.';
 
         return [
             'text' => $text,

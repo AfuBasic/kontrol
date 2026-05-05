@@ -35,7 +35,6 @@ trait HasHashid
     /**
      * Find a model by its hashid.
      *
-     * @param string $hashid
      * @return static|null
      */
     public static function findByHashid(string $hashid)
@@ -44,14 +43,13 @@ trait HasHashid
 
         /** @var static|null $model */
         $model = $id ? static::find($id) : null;
-        
+
         return $model;
     }
 
     /**
      * Find a model by its hashid or fail.
      *
-     * @param string $hashid
      * @return static
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
@@ -66,7 +64,7 @@ trait HasHashid
 
         /** @var static $model */
         $model = static::findOrFail($id);
-        
+
         return $model;
     }
 

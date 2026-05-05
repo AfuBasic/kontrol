@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\Estate $estate
  * @property-read \App\Models\EstateBoardPost $post
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia query()
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia whereUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateBoardPostMedia whereWidth($value)
+ *
  * @mixin \Eloquent
  */
 class EstateBoardPostMedia extends Model

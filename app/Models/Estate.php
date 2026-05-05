@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\GeneratesUlid;
 
+use App\Traits\GeneratesUlid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -50,7 +51,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Estate extends Model
 {
-    use HasFactory, GeneratesUlid;
+    use GeneratesUlid, HasFactory;
 
     public function resolveRouteBinding($value, $field = null)
     {
@@ -121,13 +122,13 @@ class Estate extends Model
             return $this->memoizedFeatures;
         }
 
-        return $this->memoizedFeatures = \Illuminate\Support\Facades\Cache::remember(
+        return $this->memoizedFeatures = Cache::remember(
             "estate_features:{$this->id}",
             now()->addMinutes(15),
             function () {
                 $subscription = $this->subscriptionRecord;
 
-                if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+                if (! $subscription || $subscription->isCancelled()) {
                     return [];
                 }
 
@@ -143,7 +144,7 @@ class Estate extends Model
     {
         $subscription = $this->subscriptionRecord;
 
-        if (! $subscription || (! $subscription->isActive() && ! $subscription->isOnTrial())) {
+        if (! $subscription || $subscription->isCancelled()) {
             return '0';
         }
 

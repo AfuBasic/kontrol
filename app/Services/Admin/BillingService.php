@@ -80,7 +80,7 @@ class BillingService
             'pending' => ResidentSubscription::query()->where('estate_id', $estate->id)->whereIn('status', ['trial', 'past_due', 'pending'])->count(),
             'expired' => ResidentSubscription::query()->where('estate_id', $estate->id)->whereIn('status', ['expired', 'cancelled'])->count(),
         ];
-        
+
         /** @var \App\Models\EstateSettings|null $settings */
         $settings = $estate->settings;
         $trialDays = $settings->free_trial_days ?? 0;
