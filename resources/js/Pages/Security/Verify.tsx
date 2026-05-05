@@ -1,6 +1,6 @@
 import { Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -159,7 +159,7 @@ export default function SecurityVerify() {
         <>
             <Head title="Verify Access · Security" />
 
-            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col pt-8 pb-6 sm:px-8">
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col pt-8 pb-6 px-4 sm:px-8">
                 <AnimatePresence mode="wait">
                     {result ? (
                         <ResultPanel
@@ -176,12 +176,12 @@ export default function SecurityVerify() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.15 }}
-                            className="flex flex-1 flex-col items-center justify-center"
+                            className="flex flex-1 flex-col items-center justify-center pt-10"
                         >
-                            <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Enter visitor access code</p>
-                            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white">Validate code</h1>
+                            <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Verification Terminal</p>
+                            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Enter Access Code</h1>
 
-                            <div className="mt-8 flex items-center gap-2 sm:gap-3" role="group" aria-label="Access code">
+                            <div className="mt-12 flex items-center gap-2 sm:gap-4" role="group" aria-label="Access code">
                                 {digits.map((digit, i) => (
                                     <input
                                         key={i}
@@ -199,13 +199,22 @@ export default function SecurityVerify() {
                                         autoComplete="off"
                                         maxLength={CODE_LENGTH}
                                         disabled={submitting}
-                                        className="h-14 w-11 rounded-xl border border-slate-700 bg-slate-900/80 text-center font-mono text-2xl font-semibold tracking-tight text-white caret-emerald-400 shadow-inner shadow-black/30 transition-all focus:border-emerald-400 focus:bg-slate-900 focus:ring-4 focus:ring-emerald-400/15 focus:outline-none disabled:opacity-60 sm:h-16 sm:w-14 sm:text-3xl"
+                                        className="h-16 w-12 rounded-2xl border-2 border-slate-200 bg-white text-center font-mono text-3xl font-black tracking-tight text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none disabled:opacity-60 sm:h-20 sm:w-16 sm:text-4xl"
                                         aria-label={`Code character ${i + 1}`}
                                     />
                                 ))}
                             </div>
 
-                            <p className="mt-5 text-xs text-slate-500">{submitting ? 'Validating…' : 'Validates automatically · paste supported'}</p>
+                            <div className="mt-10 flex flex-col items-center gap-1">
+                                {submitting ? (
+                                    <div className="flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                        <span className="text-sm font-bold text-slate-500">Validating...</span>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm font-medium text-slate-400">Code validates automatically as you type</p>
+                                )}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -214,9 +223,8 @@ export default function SecurityVerify() {
     );
 }
 
-// Set custom layout properties if needed (e.g., variant="dark")
 SecurityVerify.layout = (page: React.ReactNode) => (
-    <SecurityLayout variant="dark">
+    <SecurityLayout variant="light">
         {page}
     </SecurityLayout>
 );
@@ -237,16 +245,17 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center text-center"
+                className="flex flex-1 flex-col items-center justify-center text-center pt-10"
             >
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/10 text-rose-500 ring-1 ring-rose-500/20">
-                    <ShieldX className="h-10 w-10" />
+                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-rose-50 text-rose-500 ring-4 ring-rose-500/5">
+                    <ShieldX className="h-12 w-12" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Invalid Code</h2>
-                <p className="mt-2 text-slate-400">{result.message}</p>
+                <h2 className="text-3xl font-black tracking-tight text-slate-900">Invalid Code</h2>
+                <p className="mt-3 text-lg font-medium text-slate-500 max-w-xs">{result.message}</p>
+                
                 <button
                     onClick={onReset}
-                    className="mt-8 flex items-center gap-2 text-sm font-semibold text-rose-400 transition hover:text-rose-300"
+                    className="mt-12 flex items-center gap-3 rounded-2xl bg-slate-100 px-8 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Try another code
@@ -263,38 +272,37 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
             className="flex flex-1 flex-col"
         >
             <div className="flex flex-1 flex-col items-center justify-center p-4">
-                <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[#1F2937] bg-[#111827] shadow-2xl">
+                <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl">
                     <div className="flex flex-col items-center px-8 pt-12 pb-8">
-                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#10B981] text-[#10B981]">
-                            <ShieldCheck className="h-12 w-12" strokeWidth={1.5} />
+                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-500/5">
+                            <ShieldCheck className="h-12 w-12" strokeWidth={2} />
                         </div>
                         
-                        <h2 className="text-3xl font-bold tracking-tight text-white">Code Valid</h2>
-                        <div className="mt-3 text-center">
-                            <p className="text-slate-400">The verification code is valid.</p>
-                            <p className="text-slate-400">Access approved.</p>
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900">Access Granted</h2>
+                        <div className="mt-2 text-center">
+                            <p className="text-base font-medium text-slate-500">Visitor verification successful.</p>
                         </div>
                     </div>
 
-                    <div className="border-t border-[#1F2937] p-2">
-                        <div className="divide-y divide-[#1F2937]/50">
+                    <div className="border-t border-slate-100 bg-slate-50/50 p-2">
+                        <div className="divide-y divide-slate-100">
+                            {result.visitor_name && (
+                                <DetailRow 
+                                    icon={<User className="h-5 w-5" strokeWidth={2} />} 
+                                    label="Visitor" 
+                                    value={result.visitor_name} 
+                                />
+                            )}
                             {result.host_name && (
                                 <DetailRow 
-                                    icon={<HomeIcon className="h-5 w-5" strokeWidth={1.5} />} 
+                                    icon={<HomeIcon className="h-5 w-5" strokeWidth={2} />} 
                                     label="Host" 
                                     value={result.host_name} 
                                 />
                             )}
-                            {result.purpose && (
-                                <DetailRow 
-                                    icon={<User className="h-5 w-5" strokeWidth={1.5} />} 
-                                    label="Purpose" 
-                                    value={result.purpose} 
-                                />
-                            )}
                             {expiry && result.code_type !== 'long_lived' && (
                                 <DetailRow 
-                                    icon={<Clock className="h-5 w-5" strokeWidth={1.5} />} 
+                                    icon={<Clock className="h-5 w-5" strokeWidth={2} />} 
                                     label="Expires in" 
                                     value={expiry} 
                                 />
@@ -302,7 +310,7 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                         </div>
                     </div>
 
-                    <div className="px-8 pt-6 pb-10">
+                    <div className="px-8 pt-8 pb-10">
                         <VehicleForm 
                             show={result.has_vehicle} 
                             onSubmit={(data) => onAdmit(data)} 
@@ -312,7 +320,7 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                             <button
                                 type="button"
                                 onClick={() => onAdmit()}
-                                className="w-full rounded-2xl bg-[#10B981] py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                                className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98]"
                             >
                                 Admit Visitor
                             </button>
@@ -321,9 +329,9 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                         <button
                             type="button"
                             onClick={onReset}
-                            className="mt-4 flex w-full items-center justify-center gap-3 text-base font-semibold text-slate-500 transition hover:text-slate-400 active:scale-[0.98]"
+                            className="mt-6 flex w-full items-center justify-center gap-3 text-sm font-black text-slate-400 transition-all hover:text-slate-600 active:scale-[0.98]"
                         >
-                            <ArrowLeft className="h-5 w-5" />
+                            <ArrowLeft className="h-4 w-4" />
                             Verify another code
                         </button>
                     </div>
@@ -344,44 +352,48 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
 
     return (
         <div className="space-y-6 pt-2">
-            <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
-                <div className="flex items-center gap-3 text-blue-400">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25a9 9 0 0 0-9-9h-2.25a4.5 4.5 0 0 0-4.5 4.5v5.25m18.375 3h-1.125m-17.25 0h1.125m17.25-4.5V15H5.25v-.75m15 0a3.75 3.75 0 0 0-3.75-3.75h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
-                    </svg>
-                    <p className="text-sm font-bold uppercase tracking-wider">Vehicle Details Required</p>
+            <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 p-4">
+                <div className="flex items-center gap-3 text-indigo-600">
+                    <Car className="h-5 w-5" />
+                    <p className="text-xs font-black uppercase tracking-widest">Vehicle Details Required</p>
                 </div>
             </div>
 
-            <div className="grid gap-4">
-                <input
-                    type="text"
-                    placeholder="Car Make (e.g. Toyota)"
-                    value={data.vehicle_make}
-                    onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
-                />
-                <input
-                    type="text"
-                    placeholder="Car Model (e.g. Camry)"
-                    value={data.vehicle_model}
-                    onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
-                />
-                <input
-                    type="text"
-                    placeholder="Plate Number"
-                    value={data.vehicle_plate_number}
-                    onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-5 py-4 font-semibold text-white outline-none ring-emerald-500/30 focus:ring-2"
-                />
+            <div className="space-y-4">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Vehicle Make (e.g. Toyota)"
+                        value={data.vehicle_make}
+                        onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
+                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    />
+                </div>
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Vehicle Model (e.g. Camry)"
+                        value={data.vehicle_model}
+                        onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
+                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    />
+                </div>
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Plate Number"
+                        value={data.vehicle_plate_number}
+                        onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
+                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    />
+                </div>
             </div>
 
             <button
                 type="button"
                 onClick={() => onSubmit(data)}
                 disabled={!data.vehicle_make || !data.vehicle_plate_number}
-                className="w-full rounded-2xl bg-[#10B981] py-5 text-lg font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
             >
                 Admit with Vehicle
             </button>
@@ -392,12 +404,12 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
 function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
         <div className="flex items-center gap-4 px-6 py-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/50 text-slate-500">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-100">
                 {icon}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{label}</p>
-                <p className="truncate text-base font-semibold text-white">{value}</p>
+                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{label}</p>
+                <p className="truncate text-base font-bold text-slate-900 leading-tight">{value}</p>
             </div>
         </div>
     );

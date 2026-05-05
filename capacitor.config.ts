@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // Set this to true for local development with Simulator/Emulator
-const isDev = false;
+const isDev = true;
 
 // Tip: For Android Emulator, use 'http://10.0.2.2:5173'. For Physical devices, use your Mac's Local IP.
 const devUrl = 'http://10.0.2.2';
@@ -24,7 +24,7 @@ const config: CapacitorConfig = {
     android: {
         // Hardware acceleration is on by default in modern Capacitor,
         // but we ensure the WebView background matches the app theme to prevent flickering.
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#020617',
         allowMixedContent: isDev,
         captureInput: true,
         buildOptions: {
@@ -34,7 +34,7 @@ const config: CapacitorConfig = {
     ios: {
         // 'never' allows the app to handle its own safe area padding via CSS env(safe-area-inset-*)
         contentInset: 'never',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#020617',
         allowsLinkPreview: true,
     },
     plugins: {

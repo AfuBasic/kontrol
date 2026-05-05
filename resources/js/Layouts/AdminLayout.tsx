@@ -37,6 +37,7 @@ import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController'
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
+import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
@@ -83,6 +84,7 @@ const baseNav: NavItem[] = [
         icon: BanknotesIcon,
         feature: 'payment-collection',
     },
+    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];

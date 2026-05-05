@@ -1,7 +1,8 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ChevronRight, ScanLine, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 
 type ActivityItem = {
@@ -120,7 +121,12 @@ export default function SecurityCommandCenter() {
                             <h2 className="text-sm font-semibold text-slate-900">Recent activity</h2>
                             <p className="text-[11px] text-slate-500">Last validations at this gate</p>
                         </div>
-                        <span className="text-[10px] font-semibold tracking-[0.14em] text-slate-400 uppercase">Live</span>
+                        <Link 
+                            href={HistoryController.index.url()}
+                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
+                        >
+                            View all
+                        </Link>
                     </header>
 
                     {recentActivity.length === 0 ? (

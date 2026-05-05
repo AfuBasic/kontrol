@@ -48,6 +48,9 @@ class PermissionSeeder extends Seeder
             'users.edit' => 'Edit existing users',
             'users.delete' => 'Delete users',
         ],
+        'visitors' => [
+            'visitors.view' => 'View visitor logs and entry history',
+        ],
     ];
 
     /**

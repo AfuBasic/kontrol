@@ -3,6 +3,7 @@
 use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Security\EstateBoardCommentController;
 use App\Http\Controllers\Security\EstateBoardController;
+use App\Http\Controllers\Security\HistoryController;
 use App\Http\Controllers\Security\HomeController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
@@ -27,6 +28,9 @@ Route::middleware('role:security')->group(function (): void {
     Route::get('/verify', VerifyController::class)->name('security.verify');
     Route::post('/verify/validate', [VerifyController::class, 'validate'])->name('security.verify.validate');
     Route::post('/verify/decision', [VerifyController::class, 'decision'])->name('security.verify.decision');
+
+    // Access History
+    Route::get('/history', [HistoryController::class, 'index'])->name('security.history');
 
     // Estate Board (Feed)
     Route::prefix('feed')->name('security.feed.')->group(function (): void {

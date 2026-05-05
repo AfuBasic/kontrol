@@ -84,6 +84,11 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::resource('residents', ResidentController::class)->except(['show'])->middleware('feature:resident-directory');
     });
 
+    // Visitor Logs
+    Route::prefix('visitors')->name('visitors.')->group(function (): void {
+        Route::get('/', [\App\Http\Controllers\Admin\VisitorLogController::class, 'index'])->name('index');
+    });
+
     // Security Personnel management
     Route::middleware(['permission:security.view', 'feature:security-personnel-management'])->group(function (): void {
         // Explicit routes must come before resource to avoid {security} matching "bulk-delete"

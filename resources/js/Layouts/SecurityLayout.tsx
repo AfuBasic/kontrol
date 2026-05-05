@@ -1,9 +1,10 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Newspaper, Bell, User } from 'lucide-react';
+import { Home, Newspaper, Bell, User, History } from 'lucide-react';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 import '@/echo';
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
+import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
@@ -60,6 +61,12 @@ const navItems = [
         href: EstateBoardController.index.url(),
         icon: Newspaper,
         matchPaths: ['/security/feed'],
+    },
+    {
+        name: 'History',
+        href: HistoryController.index.url(),
+        icon: History,
+        matchPaths: ['/security/history'],
     },
     {
         name: 'Alerts',
@@ -295,7 +302,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     >
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
                         <div className="mx-auto max-w-lg px-2">
-                            <ul className="grid grid-cols-4 items-stretch">
+                            <ul className="grid grid-cols-5 items-stretch">
                                 {navItems.map((item) => {
                                     const active = isActive(item);
                                     const Icon = item.icon;
