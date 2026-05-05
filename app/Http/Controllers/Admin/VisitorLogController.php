@@ -99,7 +99,7 @@ class VisitorLogController extends Controller
             ->get();
 
         return Inertia::render('Admin/Visitors/Index', [
-            'logs' => $logs,
+            'logs' => Inertia::scroll(fn () => $logs),
             'filters' => $filters,
             'hosts' => $hosts,
         ]);
