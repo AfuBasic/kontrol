@@ -15,7 +15,10 @@ class UpdateResidentAction
     public function execute(User $resident, array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($resident, $data, $estate) {
-            $resident->update(['name' => $data['name']]);
+            $resident->update([
+                'name' => $data['name'],
+                'email' => $data['email'] ?? $resident->email,
+            ]);
 
             $resident->profile()->updateOrCreate(
                 ['user_id' => $resident->id],

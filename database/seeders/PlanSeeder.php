@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Feature;
 use App\Models\Plan;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PlanSeeder extends Seeder
 {
@@ -13,6 +14,11 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('plan_features')->truncate();
+        Plan::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $plans = [
             [
                 'name' => 'Basic Plan',
@@ -164,27 +170,24 @@ class PlanSeeder extends Seeder
             $features = $planData['features'];
             unset($planData['features']);
 
-            $plan = Plan::create($planData);
+            $plan = Plan::updateOrCreate(['slug' => $planData['slug']], $planData);
 
             if (! empty($features)) {
                 $featureRecords = Feature::whereIn('id', $features)->get();
+                $syncData = [];
                 foreach ($featureRecords as $feature) {
                     $limit = null;
 
                     if ($feature->slug === 'household-management') {
-                        $limit = match (true) {
-                            str_contains($plan->slug, 'basic') => '3',
-                            str_contains($plan->slug, 'growth') => '8',
-                            str_contains($plan->slug, 'pro') => null,
-                            default => null,
-                        };
+                        $limit = '3';
                     }
 
-                    $plan->features()->attach($feature->id, [
+                    $syncData[$feature->id] = [
                         'is_enabled' => true,
                         'limit' => $limit,
-                    ]);
+                    ];
                 }
+                $plan->features()->sync($syncData);
             }
         }
     }

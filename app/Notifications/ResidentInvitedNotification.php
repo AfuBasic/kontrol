@@ -2,10 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Models\Estate;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources as Fcm;
@@ -14,13 +17,39 @@ use NotificationChannels\WebPush\WebPushMessage;
 
 class ResidentInvitedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     public function __construct(
-        public string $estateName,
-        public string $inviterName,
+        public string|Estate $estate,
+        public string|User $inviter,
         public string $role = 'resident'
     ) {}
+
+    protected function estateName(): string
+    {
+        if ($this->estate instanceof Estate) {
+            return $this->estate->name;
+        }
+
+        if (is_object($this->estate) && isset($this->estate->name)) {
+            return (string) $this->estate->name;
+        }
+
+        return (string) $this->estate;
+    }
+
+    protected function inviterName(): string
+    {
+        if ($this->inviter instanceof User) {
+            return $this->inviter->name;
+        }
+
+        if (is_object($this->inviter) && isset($this->inviter->name)) {
+            return (string) $this->inviter->name;
+        }
+
+        return (string) $this->inviter;
+    }
 
     /**
      * @return array<int, string>
@@ -47,9 +76,9 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
     {
         return [
             'title' => 'Estate Invitation',
-            'message' => "You have been invited by {$this->inviterName} to join {$this->estateName} as a {$this->role}.",
-            'estate_name' => $this->estateName,
-            'inviter_name' => $this->inviterName,
+            'message' => "You have been invited by {$this->inviterName()} to join {$this->estateName()} as a {$this->role}.",
+            'estate_name' => $this->estateName(),
+            'inviter_name' => $this->inviterName(),
             'role' => $this->role,
             'type' => 'estate_invitation',
             'action_url' => '/admin/residents',

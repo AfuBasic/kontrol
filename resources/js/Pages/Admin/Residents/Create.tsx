@@ -8,9 +8,6 @@ import {
     toggle as inviteLinkToggle,
 } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import AdminLayout from '@/Layouts/AdminLayout';
-
-// Wayfinder actions are used for routing
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 

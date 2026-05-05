@@ -11,11 +11,16 @@ class ResetResidentPasswordAction
 {
     public function execute(User $resident, Estate $estate): void
     {
-        // 1. Reset password
-        $resident->update(['password' => null]);
+        // 1. Reset password and verification status
+        $resident->update([
+            'password' => null,
+            'email_verified_at' => null,
+        ]);
 
-        // 2. Set status to pending for the current estate
-        $resident->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
+        // 2. We DO NOT change the pivot status to pending here.
+        // This keeps the resident as "accepted" in the estate, so they don't
+        // reappear in the "Pending Applications" list, while their null
+        // email_verified_at will naturally show them as "Inactive" in the UI.
 
         // 3. Resend invitation email
         event(new ResidentCreated($resident, $estate, true));

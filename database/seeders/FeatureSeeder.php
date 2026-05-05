@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Feature;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class FeatureSeeder extends Seeder
 {
@@ -12,6 +13,10 @@ class FeatureSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Feature::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $features = [
             // Admin Module - Basic
             ['name' => 'Approval Portal', 'slug' => 'approval-portal', 'description' => 'Manage resident approvals and invitations', 'group' => 'admin', 'suggested_plan' => 'basic', 'is_global' => true, 'is_active' => true],
@@ -54,7 +59,7 @@ class FeatureSeeder extends Seeder
         ];
 
         foreach ($features as $feature) {
-            Feature::create($feature);
+            Feature::updateOrCreate(['slug' => $feature['slug']], $feature);
         }
     }
 }

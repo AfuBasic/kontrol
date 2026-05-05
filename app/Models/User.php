@@ -92,13 +92,6 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use GeneratesUlid, HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
-    public function resolveRouteBinding($value, $field = null)
-    {
-        return $this->where('ulid', $value)
-            ->orWhere('id', $value)
-            ->firstOrFail();
-    }
-
     /**
      * The attributes that are mass assignable.
      *

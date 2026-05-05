@@ -6,8 +6,8 @@ interface Props {
 }
 
 export default function DailyMetrics({ stats }: Props) {
-    const total = stats.total_expected || stats.visitors_today || 1; // Use total expected for accurate rate
-    const arrivalRate = Math.min((stats.visitors_today / total) * 100, 100);
+    const total = stats.total_expected || stats.visitors_today || 0;
+    const arrivalRate = total > 0 ? Math.min((stats.visitors_today / total) * 100, 100) : 0;
 
     return (
         <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">

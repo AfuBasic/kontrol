@@ -16,6 +16,7 @@ use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -114,6 +115,7 @@ class ResidentController extends Controller
                 'ulid' => $resident->ulid,
                 'name' => $resident->name,
                 'email' => $resident->email,
+                'email_verified_at' => $resident->email_verified_at,
                 'phone' => $resident->profile?->phone,
                 'unit_number' => $resident->profile?->unit_number,
                 'address' => $resident->profile?->address,
@@ -132,6 +134,17 @@ class ResidentController extends Controller
         $this->authorize('residents.edit');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($resident->id),
+                function ($attribute, $value, $fail) use ($resident) {
+                    if ($resident->email_verified_at && $value !== $resident->email) {
+                        $fail('The email address cannot be changed once the resident has verified their account.');
+                    }
+                },
+            ],
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -182,7 +195,7 @@ class ResidentController extends Controller
      */
     public function resetPassword(User $resident, ResetResidentPasswordAction $action): RedirectResponse
     {
-        $this->authorize('residents.ResetPassword');
+        $this->authorize('residents.reset-password');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
