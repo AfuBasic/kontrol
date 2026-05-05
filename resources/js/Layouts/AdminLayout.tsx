@@ -178,9 +178,9 @@ export default function AdminLayout({ children, title }: Props) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             channel.listen('.resident.created', (e: any) => {
                 console.info('ResidentCreated event received:', e);
-                
-                const message = typeof e.message === 'string' ? e.message : (typeof e === 'string' ? e : JSON.stringify(e));
-                
+
+                const message = typeof e.message === 'string' ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
+
                 // Prevent duplicate toast if it matches current flash message
                 if (flash?.success === message) {
                     return;
@@ -222,9 +222,9 @@ export default function AdminLayout({ children, title }: Props) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             userChannel.notification((notification: any) => {
                 console.info('User notification received:', notification);
-                
+
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
-                
+
                 // Avoid showing notification if it's likely a duplicate of a recent broadcast
                 if (flash?.success === message) {
                     return;
@@ -424,9 +424,7 @@ export default function AdminLayout({ children, title }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    const navWithBilling = billing_enabled
-        ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }]
-        : primaryNav;
+    const navWithBilling = primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);
     const visibleSecondaryNav = filterNav(secondaryNav);
