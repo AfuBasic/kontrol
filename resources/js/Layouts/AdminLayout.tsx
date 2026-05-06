@@ -424,7 +424,7 @@ export default function AdminLayout({ children, title }: Props) {
         return items.filter((item) => canAccess(item));
     }
 
-    const navWithBilling = primaryNav;
+    const navWithBilling = billing_enabled ? [...primaryNav, { name: 'Billing', href: BillingController.url(), icon: CreditCardIcon }] : primaryNav;
 
     const visiblePrimaryNav = filterNav(navWithBilling);
     const visibleSecondaryNav = filterNav(secondaryNav);
