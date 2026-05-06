@@ -29,7 +29,11 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database', 'mail'];
+        $channels = ['database'];
+
+        if ($notifiable->hasRole('admin')) {
+            $channels[] = 'mail';
+        }
 
         if ($notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;

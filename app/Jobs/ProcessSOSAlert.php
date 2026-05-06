@@ -50,11 +50,6 @@ class ProcessSOSAlert implements ShouldQueue
         $securityMessage .= 'Respond immediately.';
 
         foreach ($securityPersonnel as $security) {
-            // Queue SMS
-            if ($security->profile?->phone) {
-                SendSmsAlert::dispatch($security->profile->phone, $securityMessage);
-            }
-
             // Queue Mobile Push/Telegram/WebPush (Queued automatically by Notification class)
             $security->notify(new SosIntrusionNotification($this->sosEvent));
         }
@@ -62,7 +57,7 @@ class ProcessSOSAlert implements ShouldQueue
         // 2. Notify Emergency Contacts (Medium Priority)
         $contacts = $subject->emergencyContacts;
 
-        $contactMessage = "🚨 SOS ALERT\n";
+        $contactMessage = "SOS ALERT\n";
         $contactMessage .= "{$user->name} triggered an emergency alert.\n";
         $contactMessage .= "Location: {$estate->name} ({$address})\n";
         $contactMessage .= 'Security has been notified. Please check immediately.';
