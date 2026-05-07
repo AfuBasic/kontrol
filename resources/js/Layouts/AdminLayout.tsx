@@ -50,7 +50,6 @@ const PendingInvoiceNotification = lazy(() => import('@/Components/PendingInvoic
 const Toast = lazy(() => import('@/Components/Toast'));
 const SosAlertOverlay = lazy(() => import('@/Components/SosAlertOverlay'));
 const MobileBottomNav = lazy(() => import('@/Components/Admin/MobileBottomNav'));
-const PullToRefresh = lazy(() => import('@/Components/PullToRefresh'));
 
 interface Props {
     children: ReactNode;
@@ -461,14 +460,12 @@ export default function AdminLayout({ children, title }: Props) {
                 </header>
 
                 <Suspense fallback={null}>
-                    <PullToRefresh>
-                        <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
-                            <div className="p-4">
-                                <PendingInvoiceNotification invoice={pendingInvoice} />
-                                {children}
-                            </div>
-                        </main>
-                    </PullToRefresh>
+                    <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
+                        <div className="p-4">
+                            <PendingInvoiceNotification invoice={pendingInvoice} />
+                            {children}
+                        </div>
+                    </main>
 
                     <MobileBottomNav url={url} unreadNotifications={unreadCount} />
                 </Suspense>

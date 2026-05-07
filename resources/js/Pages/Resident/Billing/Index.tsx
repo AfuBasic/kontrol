@@ -82,9 +82,9 @@ const STATUS_MAP: Record<SubscriptionStatus, StatusMeta> = {
         description: (date) => `Your trial ends on ${date}.`,
     },
     past_due: {
-        label: 'Payment overdue',
+        label: 'Settlement overdue',
         tone: 'warning',
-        description: () => 'Your last payment did not go through. Update your payment to keep your access.',
+        description: () => 'Your last transaction did not go through. Update your info to keep your access.',
     },
     expired: {
         label: 'Subscription expired',
@@ -109,7 +109,7 @@ type StatusBannerProps = {
     outstanding: Props['outstanding'];
     isNative: boolean;
     paying: boolean;
-    onPay: () => void;
+    onSettle: () => void;
     onOpenWeb: () => void;
 };
 
@@ -122,7 +122,7 @@ function StatusBanner({
     outstanding,
     isNative,
     paying,
-    onPay,
+    onSettle,
     onOpenWeb,
 }: StatusBannerProps) {
     if (!hasOutstanding && !needsAttention) {
@@ -170,11 +170,11 @@ function StatusBanner({
             ) : hasOutstanding ? (
                 <button
                     type="button"
-                    onClick={onPay}
+                    onClick={onSettle}
                     disabled={paying}
                     className="inline-flex shrink-0 items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
                 >
-                    {paying ? 'Redirecting…' : `Pay ${outstanding.formatted_amount}`}
+                    {paying ? 'Redirecting…' : `Settle ${outstanding.formatted_amount}`}
                 </button>
             ) : (
                 <button
@@ -240,7 +240,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         }
     };
 
-    const handlePayInvoice = (invoiceUlid: string) => {
+    const handleSettleInvoice = (invoiceUlid: string) => {
         router.post(ResidentBillingController.pay.url(invoiceUlid));
     };
 
@@ -277,7 +277,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     </button>
                     <div className="min-w-0 flex-1">
                         <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Billing</h1>
-                        <p className="text-sm text-slate-500">Manage your plan and payment details.</p>
+                        <p className="text-sm text-slate-500">Manage your plan and settlement details.</p>
                     </div>
                 </div>
             </header>
@@ -292,7 +292,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     outstanding={outstanding}
                     isNative={isNative}
                     paying={paying}
-                    onPay={handleAction}
+                    onSettle={handleAction}
                     onOpenWeb={openWebApp}
                 />
 
@@ -350,7 +350,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     className="mt-5 rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                 >
                     <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 sm:px-8">
-                        <h3 className="text-sm font-semibold text-slate-900">Payment method</h3>
+                        <h3 className="text-sm font-semibold text-slate-900">Settlement method</h3>
                         {subscription.has_saved_card && !isNative && (
                             <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700">Update</button>
                         )}
@@ -399,8 +399,8 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                             {paying
                                                 ? 'Processing...'
                                                 : outstanding.amount > 0
-                                                  ? `Pay ${outstanding.formatted_amount} to save card`
-                                                  : 'Set up payment method'}
+                                                  ? `Settle ${outstanding.formatted_amount} to save card`
+                                                  : 'Set up settlement method'}
                                         </button>
                                     )}
                                 </div>
@@ -433,7 +433,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     </div>
                 </motion.section>
 
-                {/* Payment history */}
+                {/* Transaction history */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -441,7 +441,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     className="mt-5 rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                 >
                     <div className="border-b border-slate-100 px-6 py-4 sm:px-8">
-                        <h3 className="text-sm font-semibold text-slate-900">Payment history</h3>
+                        <h3 className="text-sm font-semibold text-slate-900">Transaction history</h3>
                     </div>
 
                     {recentInvoices.data.length > 0 ? (
@@ -472,10 +472,10 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                                     </div>
                                                     {!paid && !isNative && (
                                                         <button
-                                                            onClick={() => handlePayInvoice(invoice.ulid)}
+                                                            onClick={() => handleSettleInvoice(invoice.ulid)}
                                                             className="ml-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold text-white transition hover:bg-slate-800"
                                                         >
-                                                            Pay
+                                                            Settle
                                                         </button>
                                                     )}
                                                 </div>
@@ -513,14 +513,14 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                 <SparklesIcon className="h-5 w-5" strokeWidth={2} />
                             </span>
                             <p className="mt-3 text-sm font-medium text-slate-900">Nothing here yet</p>
-                            <p className="mt-1 text-xs text-slate-500">Your invoices will appear here once your first payment is made.</p>
+                            <p className="mt-1 text-xs text-slate-500">Your invoices will appear here once your first transaction is made.</p>
                         </div>
                     )}
                 </motion.section>
 
                 <p className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400">
                     <ShieldCheckIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
-                    Secured by Paystack
+                    Secured by Gateway
                 </p>
             </main>
         </div>

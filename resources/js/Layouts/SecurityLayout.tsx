@@ -8,7 +8,6 @@ import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryCo
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
-import PullToRefresh from '@/Components/PullToRefresh';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import axios from 'axios';
@@ -258,144 +257,142 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const isDark = variant === 'dark';
 
     return (
-        <PullToRefresh>
-            <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
-                {/* Single Header with Safe Area integrated */}
-                <motion.header
-                    id="kontrol-security-header"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className={`pt-safe sticky top-0 z-40 border-b backdrop-blur-xl ${
-                        isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
-                    }`}
-                >
-                    <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-                        <Link href={HomeController.url()} className="flex items-center gap-2.5">
-                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
-                            <div className="flex flex-col">
-                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
-                                {estateName && (
-                                    <span className={`text-[10px] leading-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{estateName}</span>
-                                )}
-                            </div>
-                        </Link>
+        <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+            {/* Single Header with Safe Area integrated */}
+            <motion.header
+                id="kontrol-security-header"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className={`pt-safe sticky top-0 z-40 border-b backdrop-blur-xl ${
+                    isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
+                }`}
+            >
+                <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+                    <Link href={HomeController.url()} className="flex items-center gap-2.5">
+                        <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
+                        <div className="flex flex-col">
+                            <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
+                            {estateName && (
+                                <span className={`text-[10px] leading-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{estateName}</span>
+                            )}
+                        </div>
+                    </Link>
 
-                        <div className="flex items-center gap-3">
-                            <div
-                                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
-                                    isDark
-                                        ? 'bg-slate-800 text-slate-300 ring-1 ring-slate-700'
-                                        : 'bg-linear-to-br from-primary-100 to-primary-200 text-primary-700'
-                                }`}
-                            >
-                                {auth?.user?.name
-                                    ?.split(' ')
-                                    .map((n) => n[0])
-                                    .join('')
-                                    .slice(0, 2)
-                                    .toUpperCase() || '?'}
-                            </div>
+                    <div className="flex items-center gap-3">
+                        <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
+                                isDark
+                                    ? 'bg-slate-800 text-slate-300 ring-1 ring-slate-700'
+                                    : 'bg-linear-to-br from-primary-100 to-primary-200 text-primary-700'
+                            }`}
+                        >
+                            {auth?.user?.name
+                                ?.split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .slice(0, 2)
+                                .toUpperCase() || '?'}
                         </div>
                     </div>
-                </motion.header>
+                </div>
+            </motion.header>
 
-                <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">{children}</main>
+            <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">{children}</main>
 
-                {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
-                {!hideNav && (
-                    <motion.nav
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, delay: 0.05 }}
-                        className="pb-safe fixed inset-x-0 bottom-0 z-40 bg-white/85 backdrop-blur-xl"
-                    >
-                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
-                        <div className="mx-auto max-w-lg px-2">
-                            <ul className="grid grid-cols-5 items-stretch">
-                                {navItems.map((item) => {
-                                    const active = isActive(item);
-                                    const Icon = item.icon;
-                                    const hasUnread = item.name === 'Alerts' && unreadCount > 0;
+            {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
+            {!hideNav && (
+                <motion.nav
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: 0.05 }}
+                    className="pb-safe fixed inset-x-0 bottom-0 z-40 bg-white/85 backdrop-blur-xl"
+                >
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
+                    <div className="mx-auto max-w-lg px-2">
+                        <ul className="grid grid-cols-5 items-stretch">
+                            {navItems.map((item) => {
+                                const active = isActive(item);
+                                const Icon = item.icon;
+                                const hasUnread = item.name === 'Alerts' && unreadCount > 0;
 
-                                    return (
-                                        <li key={item.name} className="relative">
-                                            <Link
-                                                href={item.href}
-                                                aria-current={active ? 'page' : undefined}
-                                                className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
-                                            >
-                                                {/* Animated top accent — morphs between active tabs */}
-                                                {active && (
-                                                    <motion.span
-                                                        layoutId="security-nav-indicator"
-                                                        className="absolute inset-x-5 top-0 h-[2px] rounded-b-full bg-slate-900"
-                                                        transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                                                    />
-                                                )}
+                                return (
+                                    <li key={item.name} className="relative">
+                                        <Link
+                                            href={item.href}
+                                            aria-current={active ? 'page' : undefined}
+                                            className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
+                                        >
+                                            {/* Animated top accent — morphs between active tabs */}
+                                            {active && (
+                                                <motion.span
+                                                    layoutId="security-nav-indicator"
+                                                    className="absolute inset-x-5 top-0 h-[2px] rounded-b-full bg-slate-900"
+                                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                                />
+                                            )}
 
-                                                <span className="relative inline-flex h-7 w-7 items-center justify-center transition-transform duration-150 group-active:scale-90">
-                                                    <Icon
-                                                        className={`h-[22px] w-[22px] transition-colors ${
-                                                            active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
-                                                        }`}
-                                                        strokeWidth={active ? 2.2 : 1.8}
-                                                    />
-                                                    {hasUnread && (
-                                                        <span className="absolute top-0 right-0 flex h-2 w-2 items-center justify-center">
-                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
-                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white/85" />
-                                                        </span>
-                                                    )}
-                                                </span>
-
-                                                <span
-                                                    className={`text-[10.5px] leading-none tracking-[0.02em] transition-colors ${
-                                                        active ? 'font-semibold text-slate-900' : 'font-medium text-slate-500'
+                                            <span className="relative inline-flex h-7 w-7 items-center justify-center transition-transform duration-150 group-active:scale-90">
+                                                <Icon
+                                                    className={`h-[22px] w-[22px] transition-colors ${
+                                                        active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
                                                     }`}
-                                                >
-                                                    {item.name}
-                                                </span>
-                                            </Link>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-                    </motion.nav>
-                )}
+                                                    strokeWidth={active ? 2.2 : 1.8}
+                                                />
+                                                {hasUnread && (
+                                                    <span className="absolute top-0 right-0 flex h-2 w-2 items-center justify-center">
+                                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white/85" />
+                                                    </span>
+                                                )}
+                                            </span>
 
-                {/* Toast Notification */}
-                <AnimatePresence>
-                    {showToast && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 50 }}
-                            className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md cursor-pointer"
-                            onClick={() => {
-                                const data = lastReceivedNotification?.data;
-                                const type = data?.type;
-                                const targetUrl = data?.action_url || data?.url;
+                                            <span
+                                                className={`text-[10.5px] leading-none tracking-[0.02em] transition-colors ${
+                                                    active ? 'font-semibold text-slate-900' : 'font-medium text-slate-500'
+                                                }`}
+                                            >
+                                                {item.name}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </motion.nav>
+            )}
 
-                                if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
-                                    router.visit(targetUrl);
-                                }
-                                setShowToast(false);
-                            }}
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className="fixed right-4 bottom-28 left-4 z-50 mx-auto max-w-md cursor-pointer"
+                        onClick={() => {
+                            const data = lastReceivedNotification?.data;
+                            const type = data?.type;
+                            const targetUrl = data?.action_url || data?.url;
+
+                            if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {
+                                router.visit(targetUrl);
+                            }
+                            setShowToast(false);
+                        }}
+                    >
+                        <div
+                            className={`rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg transition-all active:scale-95 ${
+                                toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+                            }`}
                         >
-                            <div
-                                className={`rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg transition-all active:scale-95 ${
-                                    toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-                                }`}
-                            >
-                                {toastMessage}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                            {toastMessage}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <SosAlertOverlay />
-        </PullToRefresh>
+        </div>
     );
 }

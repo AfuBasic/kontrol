@@ -7,7 +7,6 @@ import { Bell, Home, Users, LayoutGrid, User, Plus, Wallet } from 'lucide-react'
 import { useEffect, useState, lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
-import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
@@ -277,8 +276,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     ].filter((item) => item.show !== false);
 
     return (
-        <PullToRefresh>
-            <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
+        <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
                 {/* Header - Conditional Light Premium Header */}
                 {!hideHeader && (
                     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
@@ -391,6 +389,5 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     )}
                 </AnimatePresence>
             </div>
-        </PullToRefresh>
     );
 }
