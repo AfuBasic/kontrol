@@ -116,9 +116,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 // PATH 1: Native Platform (Capacitor FCM)
                 if (Capacitor.isNativePlatform()) {
                     let permStatus = await PushNotifications.checkPermissions();
+                    console.info('Initial push permission status:', permStatus.receive);
 
                     if (permStatus.receive === 'prompt') {
+                        console.info('Requesting push permissions...');
                         permStatus = await PushNotifications.requestPermissions();
+                        console.info('Push permission request result:', permStatus.receive);
                     }
 
                     if (permStatus.receive !== 'granted') {
@@ -150,13 +153,19 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
+                        console.info('Push registration successful, token:', token.value);
                         axios.post('/push/subscribe', {
                             token: token.value,
                             platform: Capacitor.getPlatform(),
                         });
                     });
 
+                    PushNotifications.addListener('registrationError', (error) => {
+                        console.error('Push registration error:', error.error);
+                    });
+
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        console.info('Push notification received:', notification);
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || notification.title || 'New notification received');
                         setShowToast(true);

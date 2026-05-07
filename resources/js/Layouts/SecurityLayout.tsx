@@ -142,12 +142,16 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 // PATH 1: Native Platform (Capacitor FCM)
                 if (Capacitor.isNativePlatform()) {
                     let permStatus = await PushNotifications.checkPermissions();
+                    console.info('Initial push permission status:', permStatus.receive);
 
                     if (permStatus.receive === 'prompt') {
+                        console.info('Requesting push permissions...');
                         permStatus = await PushNotifications.requestPermissions();
+                        console.info('Push permission request result:', permStatus.receive);
                     }
 
                     if (permStatus.receive !== 'granted') {
+                        console.warn('Push notification permission not granted (Native)');
                         return;
                     }
 
@@ -155,13 +159,19 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
+                        console.info('Native push registration successful, token:', token.value);
                         axios.post('/push/subscribe', {
                             token: token.value,
                             platform: Capacitor.getPlatform(),
                         });
                     });
 
+                    PushNotifications.addListener('registrationError', (error) => {
+                        console.error('Native push registration error:', error.error);
+                    });
+
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        console.info('Native push received in foreground:', notification);
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || 'New alert received');
                         setToastType('success');

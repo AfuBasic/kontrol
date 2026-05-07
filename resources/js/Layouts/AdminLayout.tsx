@@ -285,9 +285,12 @@ export default function AdminLayout({ children, title }: Props) {
                 // PATH 1: Native Platform (Capacitor FCM)
                 if (Capacitor.isNativePlatform()) {
                     let permStatus = await PushNotifications.checkPermissions();
+                    console.info('Initial push permission status:', permStatus.receive);
 
                     if (permStatus.receive === 'prompt') {
+                        console.info('Requesting push permissions...');
                         permStatus = await PushNotifications.requestPermissions();
+                        console.info('Push permission request result:', permStatus.receive);
                     }
 
                     if (permStatus.receive !== 'granted') {
@@ -299,6 +302,7 @@ export default function AdminLayout({ children, title }: Props) {
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
+                        console.info('Native push registration successful, token:', token.value);
                         axios
                             .post('/push/subscribe', {
                                 token: token.value,
@@ -310,7 +314,7 @@ export default function AdminLayout({ children, title }: Props) {
                     });
 
                     PushNotifications.addListener('registrationError', (error) => {
-                        console.error('Native push registration error:', error);
+                        console.error('Native push registration error:', error.error);
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
