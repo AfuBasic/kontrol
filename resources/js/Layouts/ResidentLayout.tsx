@@ -269,12 +269,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             ),
         },
         {
-            name: 'Bills',
-            href: '/resident/dues',
-            icon: (active: boolean) => <Wallet className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
-            show: hasPaymentCollection,
-        },
-        {
             name: 'Profile',
             href: '/resident/profile',
             icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,

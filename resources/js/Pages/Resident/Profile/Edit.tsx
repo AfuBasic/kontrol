@@ -2,7 +2,24 @@ import { Capacitor } from '@capacitor/core';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { User, Lock, Shield, ChevronRight, LogOut, Zap, Users, UserCircle, Eye, EyeOff, CreditCard, Crown, X, Loader2, Plus } from 'lucide-react';
+import {
+    User,
+    Lock,
+    Shield,
+    ChevronRight,
+    LogOut,
+    Zap,
+    Users,
+    UserCircle,
+    Eye,
+    EyeOff,
+    CreditCard,
+    Crown,
+    X,
+    Loader2,
+    Plus,
+    Wallet,
+} from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -42,6 +59,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
+    const hasPaymentCollection = useFeature('payment-collection');
     const userRoles = auth.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth.user?.resident_subscription?.parent_resident_name;
@@ -205,18 +223,31 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     {/* Billing Section */}
                     {auth.user?.roles?.includes('resident') && (
                         <section>
-                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Subscription</h2>
+                            <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
                                 <SettingsRow
                                     icon={<CreditCard className="h-5 w-5" />}
-                                    label="Estate Billing"
+                                    label="App Subscription"
                                     description={
                                         auth.user?.resident_subscription
                                             ? `${auth.user.resident_subscription.plan_name} • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
-                                            : 'Manage your payments'
+                                            : 'Manage your app subscription'
                                     }
                                     onClick={openExternalBilling}
                                 />
+                                {hasPaymentCollection && (
+                                    <>
+                                        <div className="mx-6 h-px bg-slate-50" />
+                                        <Link href="/resident/dues" className="block">
+                                            <SettingsRow
+                                                icon={<Wallet className="h-5 w-5" />}
+                                                label="Estate Collections"
+                                                description="Review and resolve estate dues"
+                                                onClick={() => {}}
+                                            />
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </section>
                     )}
