@@ -7,7 +7,7 @@ const isDev = false;
 const devUrl = 'http://app.kontrol.test';
 
 const config: CapacitorConfig = {
-    appId: 'com.kontrol.app',
+    appId: 'com.kontrol.hq',
     appName: 'Kontrol',
     webDir: 'public',
     // loggingBehavior: isDev ? 'debug' : 'none',
@@ -38,6 +38,9 @@ const config: CapacitorConfig = {
         allowsLinkPreview: true,
     },
     plugins: {
+        PushNotifications: {
+            presentationOptions: ['badge', 'sound', 'alert'],
+        },
         FirebaseAuthentication: {
             providers: ['google.com'],
             skipNativeAuth: false,
