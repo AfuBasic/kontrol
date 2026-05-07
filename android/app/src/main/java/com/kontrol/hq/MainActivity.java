@@ -1,4 +1,4 @@
-package com.kontrol.app;
+package com.kontrol.hq;
 
 import com.getcapacitor.BridgeActivity;
 

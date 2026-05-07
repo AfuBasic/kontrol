@@ -3,7 +3,7 @@
         "apps": [],
         "details": [
             {
-                "appID": "YOURTeamID.com.kontrol.app",
+                "appID": "YOURTeamID.com.kontrol.hq",
                 "paths": [
                     "/invitation/*",
                     "/join/*",

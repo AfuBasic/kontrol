@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:481153520794:android:87f21ea5190d133d81fb23",
+        "mobilesdk_app_id": "1:481153520794:android:c5cbffebabb2625e81fb23",
         "android_client_info": {
-          "package_name": "com.kontrol.app"
+          "package_name": "com.kontrol.hq"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "481153520794-rnccbuhe6i62i4o4mrsb7a3vd228070n.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kontrol.app",
-            "certificate_hash": "0831da14cb0ddf7fcb5595efa9786c588a7f4933"
-          }
-        },
         {
           "client_id": "481153520794-pc89ft1dv7u0rhl6tdddvag114fcu90a.apps.googleusercontent.com",
           "client_type": 3
@@ -39,10 +31,10 @@
               "client_type": 3
             },
             {
-              "client_id": "481153520794-siil1iei9jb3riosfqalvms1sgro1ir4.apps.googleusercontent.com",
+              "client_id": "481153520794-a8c7kb8ovsuune9aa1siqel2qmik8eu9.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.kontrol.app"
+                "bundle_id": "com.kontrol.hq"
               }
             }
           ]

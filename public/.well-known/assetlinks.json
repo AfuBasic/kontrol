@@ -5,7 +5,7 @@
         ],
         "target": {
             "namespace": "android_app",
-            "package_name": "com.kontrol.app",
+            "package_name": "com.kontrol.hq",
             "sha256_cert_fingerprints": [
                 "PLACEHOLDER_SHA256_FINGERPRINT"
             ]
