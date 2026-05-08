@@ -8,6 +8,9 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 class ResidentAcceptedInvitation extends Notification implements ShouldBroadcast, ShouldQueue
 {
@@ -27,7 +30,13 @@ class ResidentAcceptedInvitation extends Notification implements ShouldBroadcast
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        $channels = ['database', 'broadcast'];
+
+        if ($notifiable->fcm_token) {
+            $channels[] = FcmChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
@@ -49,15 +58,51 @@ class ResidentAcceptedInvitation extends Notification implements ShouldBroadcast
     }
 
     /**
+     * Get the FCM representation of the notification.
+     */
+    public function toFcm(object $notifiable): FcmMessage
+    {
+        $data = $this->notificationData();
+
+        return FcmMessage::create()
+            ->notification(FcmNotification::create()
+                ->title($this->isPasswordReset ? 'Security Alert' : 'Invitation Accepted')
+                ->body($data['message'])
+            )
+            ->data([
+                'title' => $this->isPasswordReset ? 'Security Alert' : 'Invitation Accepted',
+                'body' => $data['message'],
+                'type' => 'invitation_accepted',
+                'action_url' => $data['action_url'],
+            ])
+            ->custom([
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'channel_id' => 'kontrol_v1_admin_alerts',
+                        'sound' => 'default',
+                        'color' => '#0A3D91',
+                    ],
+                ],
+            ]);
+    }
+
+    /**
      * Get the notification data payload.
      *
      * @return array<string, mixed>
      */
     protected function notificationData(): array
     {
+        $roleLabel = match (true) {
+            $this->resident->hasRole('security') => 'Security',
+            $this->resident->hasRole('household_member') => 'Household Member',
+            default => 'Resident',
+        };
+
         $message = $this->isPasswordReset
-            ? "Resident {$this->resident->name} has reset their password."
-            : "Resident {$this->resident->name} has accepted the invitation.";
+            ? "{$roleLabel} {$this->resident->name} has reset their password."
+            : "{$roleLabel} {$this->resident->name} has accepted the invitation.";
 
         return [
             'message' => $message,

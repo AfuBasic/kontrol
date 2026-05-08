@@ -6,7 +6,9 @@ use App\Channels\TelegramChannel;
 use App\Mail\Admin\SosAlertMail;
 use App\Models\SosEvent;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
@@ -14,7 +16,7 @@ use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class SosIntrusionNotification extends Notification implements ShouldQueue
+class SosIntrusionNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -29,7 +31,7 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database'];
+        $channels = ['database', 'broadcast'];
 
         if ($notifiable->hasRole('admin')) {
             $channels[] = 'mail';
@@ -84,36 +86,65 @@ class SosIntrusionNotification extends Notification implements ShouldQueue
      */
     public function toFcm(object $notifiable): FcmMessage
     {
-        return (new FcmMessage(
-            notification: new FcmNotification(
-                title: '🚨 SOS ALERT',
-                body: "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}",
+        $title = '🚨 SOS ALERT';
+        $body = "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}";
+        $url = $notifiable->hasRole('admin') ? '/admin' : '/security';
+
+        return FcmMessage::create()
+            ->notification(FcmNotification::create()
+                ->title($title)
+                ->body($body)
             )
-        ))
             ->data([
-                'action_url' => $notifiable->hasRole('admin') ? '/admin' : '/security',
+                'title' => $title,
+                'body' => $body,
+                'action_url' => $url,
                 'sos_event_id' => (string) $this->sosEvent->id,
                 'type' => 'sos_intrusion',
+                'priority' => 'high',
             ])
             ->custom([
                 'android' => [
+                    'priority' => 'high', // Root of android config, critical for sound/display
                     'notification' => [
                         'color' => '#dc2626',
                         'sound' => 'default',
-                        'priority' => 'high',
                         'channel_id' => 'sos_alerts',
+                        'sticky' => true,
+                        'visibility' => 'public',
+                        'ticker' => $title,
                     ],
                 ],
                 'apns' => [
+                    'headers' => [
+                        'apns-priority' => '10',
+                        'apns-push-type' => 'alert',
+                    ],
                     'payload' => [
                         'aps' => [
+                            'alert' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
                             'sound' => 'default',
                             'badge' => 1,
-                            'critical' => 1,
+                            'critical-alert' => [
+                                'name' => 'default',
+                                'volume' => 1.0,
+                                'critical' => 1,
+                            ],
                         ],
                     ],
                 ],
             ]);
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
     }
 
     /**

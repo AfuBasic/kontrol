@@ -58,6 +58,7 @@ class AccessCodeController extends Controller
                 'created_at' => $code->created_at->toISOString(),
             ]),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
+            'visitorStats' => $this->accessCodeService->getHomeStats(),
         ]);
     }
 

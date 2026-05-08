@@ -312,7 +312,7 @@ class AccessCodeService
     /**
      * Get stats for the current user's home screen.
      *
-     * @return array{active_codes: int, codes_today: int, visitors_today: int}
+     * @return array{active_codes: int, created_today: int, visitors_today: int, total_expected: int}
      */
     public function getHomeStats(): array
     {
@@ -323,7 +323,8 @@ class AccessCodeService
 
         $userIds = $user->getHouseholdUserIds();
 
-        $activeCodes = AccessCode::query()
+        // Active codes = Status is Active and not expired
+        $activeCodesCount = AccessCode::query()
             ->forEstate($estate->id)
             ->whereIn('user_id', $userIds)
             ->active()
@@ -336,22 +337,30 @@ class AccessCodeService
             ->whereDate('created_at', $today)
             ->count();
 
-        // Visitors who actually arrived today
+        // Visitors who actually arrived today (at least once)
         $visitorsToday = AccessCode::query()
             ->forEstate($estate->id)
             ->whereIn('user_id', $userIds)
-            ->where('status', AccessCodeStatus::Used)
-            ->whereDate('used_at', $today)
+            ->whereHas('accessLogs', function ($q) use ($today) {
+                $q->whereDate('verified_at', $today);
+            })
             ->count();
 
-        // Total expected = Those who already arrived today + those still active (regardless of when created)
-        $totalExpected = $visitorsToday + $activeCodes;
+        // Expected Today = Active codes that HAVE NOT arrived today
+        $expectedToday = AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $userIds)
+            ->active()
+            ->whereDoesntHave('accessLogs', function ($q) use ($today) {
+                $q->whereDate('verified_at', $today);
+            })
+            ->count();
 
         return [
-            'active_codes' => $activeCodes,
+            'active_codes' => $activeCodesCount,
             'created_today' => $createdToday,
             'visitors_today' => $visitorsToday,
-            'total_expected' => $totalExpected,
+            'expected_today' => $expectedToday,
         ];
     }
 

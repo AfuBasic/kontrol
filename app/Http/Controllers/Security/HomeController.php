@@ -26,6 +26,9 @@ class HomeController extends Controller
                     ->orWhereDate('expires_at', '>=', $today);
             })
             ->whereDate('created_at', '>=', $today->copy()->subDay())
+            ->whereDoesntHave('accessLogs', function ($q) use ($today) {
+                $q->whereDate('verified_at', $today);
+            })
             ->count();
 
         $validatedTodayCount = AccessLog::query()

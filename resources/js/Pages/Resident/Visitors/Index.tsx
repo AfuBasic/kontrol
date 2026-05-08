@@ -21,11 +21,17 @@ type Props = {
         used: number;
         limit: number | null;
     };
+    visitorStats: {
+        active_codes: number;
+        created_today: number;
+        visitors_today: number;
+        expected_today: number;
+    };
 };
 
 type Tab = 'active' | 'long_lived' | 'history';
 
-export default function Visitors({ activeCodes, historyCodes, filters, dailyUsage }: Props) {
+export default function Visitors({ activeCodes, historyCodes, filters, dailyUsage, visitorStats }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const [activeTab, setActiveTab] = useState<Tab>('active');
@@ -129,8 +135,8 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                     <p className="mt-1 text-sm font-bold text-slate-400">Manage community flow and visitor permissions</p>
                 </div>
                 <SummaryDashboard
-                    activeCount={oneTimeCodes.filter((c) => c.status === 'used').length}
-                    expectedToday={oneTimeCodes.filter((c) => c.status === 'active').length}
+                    activeCount={visitorStats.visitors_today}
+                    expectedToday={visitorStats.expected_today}
                     totalToday={dailyUsage.used}
                 />
             </motion.div>
