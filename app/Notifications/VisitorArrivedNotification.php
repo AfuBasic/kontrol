@@ -10,7 +10,10 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
-use NotificationChannels\Fcm\Resources as Fcm;
+use NotificationChannels\Fcm\Resources\AndroidConfig;
+use NotificationChannels\Fcm\Resources\AndroidNotification;
+use NotificationChannels\Fcm\Resources\ApnsConfig;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
@@ -92,41 +95,43 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
     {
         $data = $this->toArray($notifiable);
 
+        $androidConfig = AndroidConfig::create()
+            ->setNotification(
+                AndroidNotification::create()
+                    ->setChannelId('kontrol_v1_alerts')
+                    ->setSound('default')
+                    ->setColor('#0A3D91')
+            );
+
+        $apnsConfig = ApnsConfig::create()
+            ->setPayload([
+                'aps' => [
+                    'alert' => [
+                        'title' => $data['title'],
+                        'body' => $data['message'],
+                    ],
+                    'sound' => 'default',
+                    'badge' => 1,
+                    'category' => 'visitor_arrived',
+                ],
+            ]);
+
         return FcmMessage::create()
-            ->setNotification(Fcm\Notification::create()
+            ->notification(FcmNotification::create()
                 ->title($data['title'])
                 ->body($data['message'])
             )
-            ->setData([
+            ->data([
                 'title' => (string) $data['title'],
                 'body' => (string) $data['message'],
                 'action_url' => '/resident',
                 'access_code_id' => (string) $this->accessCode->id,
                 'type' => 'visitor_arrived',
             ])
-            ->setAndroid(
-                Fcm\AndroidConfig::create()
-                    ->setNotification(
-                        Fcm\AndroidNotification::create()
-                            ->setChannelId('kontrol_v1_alerts')
-                            ->setSound('default')
-                            ->setColor('#0A3D91')
-                    )
-            )
-            ->setApns(
-                Fcm\ApnsConfig::create()
-                    ->setPayload([
-                        'aps' => [
-                            'alert' => [
-                                'title' => $data['title'],
-                                'body' => $data['message'],
-                            ],
-                            'sound' => 'default',
-                            'badge' => 1,
-                            'category' => 'visitor_arrived',
-                        ],
-                    ])
-            );
+            ->custom([
+                'android' => $androidConfig->toArray(),
+                'apns'    => $apnsConfig->toArray(),
+            ]);
     }
 
     /**

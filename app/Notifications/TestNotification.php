@@ -60,35 +60,37 @@ class TestNotification extends Notification implements ShouldQueue
 
     public function toFcm(object $notifiable): FcmMessage
     {
-        return FcmMessage::create()
+        $androidConfig = AndroidConfig::create()
             ->setNotification(
+                AndroidNotification::create()
+                    ->setChannelId('kontrol_v1_alerts')
+                    ->setSound('default')
+                    ->setColor('#0A3D91')
+            );
+
+        $apnsConfig = ApnsConfig::create()
+            ->setPayload([
+                'aps' => [
+                    'alert' => [
+                        'title' => $this->title,
+                        'body'  => $this->message,
+                    ],
+                    'sound' => 'default',
+                    'badge' => 1,
+                    'mutable-content' => 1,
+                ],
+            ]);
+
+        return FcmMessage::create()
+            ->notification(
                 FcmNotification::create()
                     ->title($this->title)
                     ->body($this->message)
             )
-            ->setData($this->toArray($notifiable))
-            ->setAndroid(
-                AndroidConfig::create()
-                    ->setNotification(
-                        AndroidNotification::create()
-                            ->setChannelId('kontrol_v1_alerts')
-                            ->setSound('default')
-                            ->setColor('#0A3D91')
-                    )
-            )
-            ->setApns(
-                ApnsConfig::create()
-                    ->setPayload([
-                        'aps' => [
-                            'alert' => [
-                                'title' => $this->title,
-                                'body'  => $this->message,
-                            ],
-                            'sound' => 'default',
-                            'badge' => 1,
-                            'mutable-content' => 1,
-                        ],
-                    ])
-            );
+            ->data($this->toArray($notifiable))
+            ->custom([
+                'android' => $androidConfig->toArray(),
+                'apns'    => $apnsConfig->toArray(),
+            ]);
     }
 }
