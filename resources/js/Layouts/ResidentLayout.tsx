@@ -151,19 +151,30 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         });
                     }
 
-                    // Registration listeners
                     PushNotifications.addListener('registration', async () => {
+                        console.info('Push registration successful with Apple/Google');
+                        syncFcmToken();
+                    });
+
+                    // Initial sync
+                    const syncFcmToken = async () => {
                         try {
+                            await FirebaseMessaging.requestPermissions();
                             const { token } = await FirebaseMessaging.getToken();
-                            console.info('Firebase FCM Token received:', token);
+                            console.info('Firebase FCM Token synced:', token);
                             axios.post('/push/subscribe', {
                                 token: token,
                                 platform: Capacitor.getPlatform(),
                             });
                         } catch (error) {
-                            console.error('Failed to get FCM token:', error);
+                            console.error('Failed to sync FCM token:', error);
                         }
-                    });
+                    };
+
+                    // Trigger sync immediately if we already have permissions
+                    if (permStatus.receive === 'granted') {
+                        syncFcmToken();
+                    }
 
                     PushNotifications.addListener('registrationError', (error) => {
                         console.error('Push registration error:', error.error);
