@@ -17,12 +17,8 @@ export default function DashboardHeader({ userName, estateName, unreadCount, isH
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="py-4"
-        >
-            <motion.h1 
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="py-4">
+            <motion.h1
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
@@ -30,7 +26,7 @@ export default function DashboardHeader({ userName, estateName, unreadCount, isH
             >
                 {greeting}, {firstName}
             </motion.h1>
-            <motion.p 
+            <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}

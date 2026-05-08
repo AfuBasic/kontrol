@@ -69,7 +69,6 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                 className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                 placeholder="e.g. Jane Doe"
                                 required
-                                
                                 autoComplete="name"
                             />
                             {errors.name && <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>}

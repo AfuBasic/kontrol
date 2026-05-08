@@ -40,10 +40,14 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
 
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case 'paid': return 'bg-success-50 text-success-700';
-            case 'overdue': return 'bg-error-50 text-error-700';
-            case 'grace': return 'bg-primary-50 text-primary-700';
-            default: return 'bg-warning-50 text-warning-700';
+            case 'paid':
+                return 'bg-success-50 text-success-700';
+            case 'overdue':
+                return 'bg-error-50 text-error-700';
+            case 'grace':
+                return 'bg-primary-50 text-primary-700';
+            default:
+                return 'bg-warning-50 text-warning-700';
         }
     };
 
@@ -56,7 +60,7 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
             {/* Header Section */}
             <section className="px-1">
                 <h1 className="text-3xl font-black tracking-tight text-slate-900">Billing</h1>
-                <p className="text-slate-500 font-medium mt-1">Manage your estate dues and levies.</p>
+                <p className="mt-1 font-medium text-slate-500">Manage your estate dues and levies.</p>
             </section>
 
             {/* Total Balance Card */}
@@ -65,22 +69,23 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                     <div className="relative z-10">
                         <p className="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Total Outstanding</p>
                         <h2 className="mt-2 text-4xl font-black tracking-tight">{formatCurrency(totalOutstanding)}</h2>
-                        
+
                         <div className="mt-8 flex items-center gap-3">
                             <div className="flex -space-x-2">
                                 {summary.outstanding.slice(0, 3).map((_, i) => (
-                                    <div key={i} className="h-8 w-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center">
+                                    <div
+                                        key={i}
+                                        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-slate-900 bg-slate-800"
+                                    >
                                         <Wallet className="h-4 w-4 text-slate-500" />
                                     </div>
                                 ))}
                             </div>
-                            <p className="text-xs font-bold text-slate-400">
-                                {summary.outstanding.length} pending obligations
-                            </p>
+                            <p className="text-xs font-bold text-slate-400">{summary.outstanding.length} pending obligations</p>
                         </div>
                     </div>
                     {/* Decorative Blobs */}
-                    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
+                    <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
                     <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
                 </div>
             </section>
@@ -100,22 +105,33 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                                 className="group flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-                                        assignment.status === 'overdue' ? 'bg-error-50 text-error-500' : 'bg-warning-50 text-warning-500'
-                                    }`}>
+                                    <div
+                                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                                            assignment.status === 'overdue' ? 'bg-error-50 text-error-500' : 'bg-warning-50 text-warning-500'
+                                        }`}
+                                    >
                                         {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
                                     </div>
                                     <div>
-                                        <h4 className="font-black text-slate-900 tracking-tight">{assignment.collection.name}</h4>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                            Due {new Date(assignment.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                        <p className="mt-0.5 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                            Due{' '}
+                                            {new Date(assignment.due_date).toLocaleDateString(undefined, {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-black text-slate-900 tracking-tight">{formatCurrency(assignment.amount_due - assignment.amount_paid)}</div>
+                                    <div className="font-black tracking-tight text-slate-900">
+                                        {formatCurrency(assignment.amount_due - assignment.amount_paid)}
+                                    </div>
                                     <div className="mt-1 flex justify-end">
-                                        <span className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${getStatusStyles(assignment.status)}`}>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${getStatusStyles(assignment.status)}`}
+                                        >
                                             {assignment.status}
                                         </span>
                                     </div>
@@ -123,12 +139,12 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                             </Link>
                         ))
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-inset ring-slate-100">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-success-500 shadow-sm mb-4">
+                        <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-success-500 shadow-sm">
                                 <CheckCircle2 className="h-8 w-8" />
                             </div>
                             <p className="text-sm font-bold text-slate-900">All caught up!</p>
-                            <p className="text-xs text-slate-500 mt-1">You have no outstanding dues.</p>
+                            <p className="mt-1 text-xs text-slate-500">You have no outstanding dues.</p>
                         </div>
                     )}
                 </div>
@@ -146,20 +162,22 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                             <Link
                                 key={assignment.id}
                                 href={show.url(assignment.ulid)}
-                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 opacity-70"
+                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-sm">{assignment.collection.name}</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{assignment.period || 'One-time'}</p>
+                                        <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                            {assignment.period || 'One-time'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-bold text-slate-900 text-sm">{formatCurrency(assignment.amount_paid)}</div>
-                                    <p className="text-[10px] font-bold text-success-500 uppercase tracking-widest">Paid</p>
+                                    <div className="text-sm font-bold text-slate-900">{formatCurrency(assignment.amount_paid)}</div>
+                                    <p className="text-[10px] font-bold tracking-widest text-success-500 uppercase">Paid</p>
                                 </div>
                             </Link>
                         ))}

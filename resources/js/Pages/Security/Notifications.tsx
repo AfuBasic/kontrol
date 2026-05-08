@@ -97,11 +97,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
     const handleMarkRead = (id: string) => {
         setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
         setLocalUnread((prev) => Math.max(0, prev - 1));
-        router.post(
-            NotificationController.markAsRead.url({ notification: id }),
-            {},
-            { preserveScroll: true, preserveState: true },
-        );
+        router.post(NotificationController.markAsRead.url({ notification: id }), {}, { preserveScroll: true, preserveState: true });
     };
 
     const handleMarkAll = () => {
@@ -121,11 +117,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
         if (!confirm('Are you sure you want to delete all notifications? This cannot be undone.')) return;
         setItems([]);
         setLocalUnread(0);
-        router.post(
-            NotificationController.clearAll.url(),
-            {},
-            { preserveScroll: true, preserveState: true },
-        );
+        router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true, preserveState: true });
     };
 
     const handleLoadMore = () => {
@@ -161,9 +153,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                             onClick={handleMarkAll}
                             disabled={markingAll || localUnread === 0}
                             className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition active:scale-[0.98] disabled:opacity-40 ${
-                                localUnread > 0 
-                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm' 
-                                    : 'border-slate-200 bg-white text-slate-400'
+                                localUnread > 0 ? 'border-slate-900 bg-slate-900 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-400'
                             }`}
                         >
                             <CheckCircle className="h-4 w-4" strokeWidth={2.2} />
@@ -187,14 +177,7 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
                     {sections.map((severity) => {
                         const list = grouped[severity];
                         if (list.length === 0) return null;
-                        return (
-                            <SeveritySection
-                                key={severity}
-                                severity={severity}
-                                items={list}
-                                onMarkRead={handleMarkRead}
-                            />
-                        );
+                        return <SeveritySection key={severity} severity={severity} items={list} onMarkRead={handleMarkRead} />;
                     })}
 
                     {safePagination.current_page < safePagination.last_page && (
@@ -212,39 +195,28 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
     );
 }
 
-function SeveritySection({
-    severity,
-    items,
-    onMarkRead,
-}: {
-    severity: Severity;
-    items: Notification[];
-    onMarkRead: (id: string) => void;
-}) {
+function SeveritySection({ severity, items, onMarkRead }: { severity: Severity; items: Notification[]; onMarkRead: (id: string) => void }) {
     const meta = SEVERITY_META[severity];
     const unread = items.filter((n) => !n.read).length;
 
     return (
         <section>
             <header className={`flex items-center gap-2 border-b ${meta.rule} pb-2`}>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase ring-1 ring-inset ${meta.pill}`}>
+                <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase ring-1 ring-inset ${meta.pill}`}
+                >
                     {meta.label}
                 </span>
-                <span className="text-[11px] text-slate-500">{items.length} {items.length === 1 ? 'alert' : 'alerts'}</span>
-                {unread > 0 && (
-                    <span className={`ml-auto text-[11px] font-semibold ${meta.tone}`}>{unread} unread</span>
-                )}
+                <span className="text-[11px] text-slate-500">
+                    {items.length} {items.length === 1 ? 'alert' : 'alerts'}
+                </span>
+                {unread > 0 && <span className={`ml-auto text-[11px] font-semibold ${meta.tone}`}>{unread} unread</span>}
             </header>
 
             <ul className="mt-2 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <AnimatePresence initial={false}>
                     {items.map((notification) => (
-                        <NotificationRow
-                            key={notification.id}
-                            notification={notification}
-                            severity={severity}
-                            onMarkRead={onMarkRead}
-                        />
+                        <NotificationRow key={notification.id} notification={notification} severity={severity} onMarkRead={onMarkRead} />
                     ))}
                 </AnimatePresence>
             </ul>
@@ -280,9 +252,7 @@ function NotificationRow({
                     <p className={`truncate text-sm ${notification.read ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}`}>
                         {notification.title}
                     </p>
-                    <span className="ml-auto shrink-0 font-mono text-[10px] tracking-wider text-slate-400">
-                        {notification.created_at_human}
-                    </span>
+                    <span className="ml-auto shrink-0 font-mono text-[10px] tracking-wider text-slate-400">{notification.created_at_human}</span>
                 </div>
                 <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500">{notification.message}</p>
 

@@ -35,9 +35,8 @@ export default function CreateCollection({ residents }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredResidents = useMemo(() => {
-        return residents.filter(r => 
-            r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.email.toLowerCase().includes(searchQuery.toLowerCase())
+        return residents.filter(
+            (r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.email.toLowerCase().includes(searchQuery.toLowerCase()),
         );
     }, [residents, searchQuery]);
 
@@ -91,7 +90,7 @@ export default function CreateCollection({ residents }: Props) {
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                     placeholder="e.g., Annual Security Levy"
                                     required
                                 />
@@ -104,7 +103,7 @@ export default function CreateCollection({ residents }: Props) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                     placeholder="Briefly explain what this collection is for..."
                                 />
                                 {errors.description && <p className="mt-2 text-sm font-bold text-red-500">{errors.description}</p>}
@@ -126,12 +125,12 @@ export default function CreateCollection({ residents }: Props) {
                                     <select
                                         value={data.billing_type}
                                         onChange={(e) => setData('billing_type', e.target.value as any)}
-                                        className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                     >
                                         <option value="one_time">One-time Payment</option>
                                         <option value="recurring">Recurring Bill</option>
                                     </select>
-                                    <ChevronDown className="pointer-events-none absolute right-6 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                    <ChevronDown className="pointer-events-none absolute top-1/2 right-6 h-5 w-5 -translate-y-1/2 text-slate-400" />
                                 </div>
                             </div>
                         </div>
@@ -154,25 +153,23 @@ export default function CreateCollection({ residents }: Props) {
                                         <select
                                             value={data.recurring_interval}
                                             onChange={(e) => setData('recurring_interval', e.target.value)}
-                                            className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                            className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                         >
                                             <option value="monthly">Monthly</option>
                                             <option value="yearly">Yearly</option>
                                         </select>
-                                        <ChevronDown className="pointer-events-none absolute right-6 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                        <ChevronDown className="pointer-events-none absolute top-1/2 right-6 h-5 w-5 -translate-y-1/2 text-slate-400" />
                                     </div>
                                 </div>
                             )}
 
                             <div>
-                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                    Start Date
-                                </label>
+                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Start Date</label>
                                 <input
                                     type="date"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                     required
                                 />
                                 {errors.start_date && <p className="mt-2 text-sm font-bold text-red-500">{errors.start_date}</p>}
@@ -180,14 +177,12 @@ export default function CreateCollection({ residents }: Props) {
 
                             {data.billing_type === 'one_time' ? (
                                 <div>
-                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                        Due Date
-                                    </label>
+                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Due Date</label>
                                     <input
                                         type="date"
                                         value={data.due_at}
                                         onChange={(e) => setData('due_at', e.target.value)}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                         required
                                     />
                                     {errors.due_at && <p className="mt-2 text-sm font-bold text-red-500">{errors.due_at}</p>}
@@ -201,7 +196,7 @@ export default function CreateCollection({ residents }: Props) {
                                         type="number"
                                         value={data.due_day}
                                         onChange={(e) => setData('due_day', parseInt(e.target.value))}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                         min="1"
                                         max="28"
                                         required
@@ -211,12 +206,14 @@ export default function CreateCollection({ residents }: Props) {
                             )}
 
                             <div>
-                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Grace Period (Days)</label>
+                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                                    Grace Period (Days)
+                                </label>
                                 <input
                                     type="number"
                                     value={data.grace_days}
                                     onChange={(e) => setData('grace_days', parseInt(e.target.value))}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-5 px-8 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                     min="0"
                                 />
                             </div>
@@ -245,12 +242,12 @@ export default function CreateCollection({ residents }: Props) {
                                 <select
                                     value={data.applies_to}
                                     onChange={(e) => setData('applies_to', e.target.value as any)}
-                                    className="appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pl-4 pr-10 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pr-10 pl-4 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
                                 >
                                     <option value="all">Everyone</option>
                                     <option value="target">Specific List</option>
                                 </select>
-                                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             </div>
                         </div>
 
@@ -262,7 +259,7 @@ export default function CreateCollection({ residents }: Props) {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="mb-6 relative">
+                                    <div className="relative mb-6">
                                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6">
                                             <Search className="h-4 w-4 text-slate-400" />
                                         </div>
@@ -270,7 +267,7 @@ export default function CreateCollection({ residents }: Props) {
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="block w-full rounded-2xl border-0 bg-slate-50 py-4 pl-14 pr-6 text-sm text-slate-900 ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                            className="block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-6 pl-14 text-sm text-slate-900 ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
                                             placeholder="Search residents by name or email..."
                                         />
                                     </div>
@@ -285,13 +282,15 @@ export default function CreateCollection({ residents }: Props) {
                                                         type="button"
                                                         onClick={() => toggleResident(resident.id)}
                                                         className={`flex items-center justify-between rounded-2xl p-4 transition-all ${
-                                                            isSelected 
-                                                                ? 'bg-white text-[#1F6FDB] shadow-sm ring-1 ring-[#1F6FDB]/30' 
+                                                            isSelected
+                                                                ? 'bg-white text-[#1F6FDB] shadow-sm ring-1 ring-[#1F6FDB]/30'
                                                                 : 'text-slate-600 hover:bg-white hover:shadow-sm'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}>
+                                                            <div
+                                                                className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}
+                                                            >
                                                                 <User className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
                                                             </div>
                                                             <div className="text-left">
@@ -310,28 +309,30 @@ export default function CreateCollection({ residents }: Props) {
                                         </div>
                                     </div>
                                     <div className="mt-4 flex items-center justify-between px-2">
-                                        <p className="text-xs font-bold text-slate-500">
-                                            {data.targets.length} residents selected
-                                        </p>
+                                        <p className="text-xs font-bold text-slate-500">{data.targets.length} residents selected</p>
                                         <div className="flex flex-wrap gap-3">
                                             <AnimatePresence mode="popLayout">
                                                 {/* Search-specific Select All */}
-                                                {searchQuery && filteredResidents.length > 0 && !filteredResidents.every(r => data.targets.includes(r.id)) && (
-                                                    <motion.button
-                                                        key="select-matches"
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.9 }}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newTargets = Array.from(new Set([...data.targets, ...filteredResidents.map(r => r.id)]));
-                                                            setData('targets', newTargets);
-                                                        }}
-                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-                                                    >
-                                                        Select {filteredResidents.length} Matches
-                                                    </motion.button>
-                                                )}
+                                                {searchQuery &&
+                                                    filteredResidents.length > 0 &&
+                                                    !filteredResidents.every((r) => data.targets.includes(r.id)) && (
+                                                        <motion.button
+                                                            key="select-matches"
+                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.9 }}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newTargets = Array.from(
+                                                                    new Set([...data.targets, ...filteredResidents.map((r) => r.id)]),
+                                                                );
+                                                                setData('targets', newTargets);
+                                                            }}
+                                                            className="rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-blue-100"
+                                                        >
+                                                            Select {filteredResidents.length} Matches
+                                                        </motion.button>
+                                                    )}
 
                                                 {/* Global Select All */}
                                                 {data.targets.length < residents.length && !searchQuery && (
@@ -341,8 +342,13 @@ export default function CreateCollection({ residents }: Props) {
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         exit={{ opacity: 0, scale: 0.9 }}
                                                         type="button"
-                                                        onClick={() => setData('targets', residents.map((r) => r.id))}
-                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+                                                        onClick={() =>
+                                                            setData(
+                                                                'targets',
+                                                                residents.map((r) => r.id),
+                                                            )
+                                                        }
+                                                        className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-slate-200"
                                                     >
                                                         Select All ({residents.length})
                                                     </motion.button>
@@ -357,7 +363,7 @@ export default function CreateCollection({ residents }: Props) {
                                                         exit={{ opacity: 0, scale: 0.9 }}
                                                         type="button"
                                                         onClick={() => setData('targets', [])}
-                                                        className="text-[10px] font-black tracking-widest text-rose-500 uppercase bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                                                        className="rounded-lg bg-rose-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-rose-500 uppercase transition-colors hover:bg-rose-100"
                                                     >
                                                         Unselect All
                                                     </motion.button>

@@ -21,7 +21,7 @@ export default function UserActions({ user }: { user: User }) {
     const { can } = usePermission();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [confirmingDeletion, setConfirmingDeletion] = useState(false);
-    
+
     const handleDelete = () => {
         router.delete(destroy.url({ user: user.ulid }), {
             preserveScroll: true,
@@ -34,7 +34,7 @@ export default function UserActions({ user }: { user: User }) {
     const ActionItems = ({ isMobile = false }) => (
         <div className={isMobile ? 'flex flex-col gap-3' : 'p-1'}>
             {can('users.edit') && (
-                <div className={isMobile ? '' : 'p-1 contents'}>
+                <div className={isMobile ? '' : 'contents p-1'}>
                     {isMobile ? (
                         <Link
                             href={edit.url({ user: user.ulid })}
@@ -62,7 +62,7 @@ export default function UserActions({ user }: { user: User }) {
             )}
 
             {can('users.delete') && (
-                <div className={isMobile ? '' : 'p-1 contents'}>
+                <div className={isMobile ? '' : 'contents p-1'}>
                     {isMobile ? (
                         <button
                             onClick={() => {

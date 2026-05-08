@@ -25,8 +25,12 @@ declare global {
 }
 
 function fmtElapsed(seconds: number) {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    const m = Math.floor(seconds / 60)
+        .toString()
+        .padStart(2, '0');
+    const s = Math.floor(seconds % 60)
+        .toString()
+        .padStart(2, '0');
     return `${m}:${s}`;
 }
 
@@ -59,7 +63,7 @@ class WebAudioSiren {
             this.osc.type = 'square';
             this.osc.connect(this.gain);
             this.gain.connect(this.ctx.destination);
-            
+
             this.gain.gain.value = 0.15; // Set volume
             this.osc.frequency.value = 880;
             this.osc.start();
@@ -80,7 +84,9 @@ class WebAudioSiren {
         this.isPlaying = false;
         if (this.interval) clearInterval(this.interval);
         if (this.osc) {
-            try { this.osc.stop(); } catch(e) {}
+            try {
+                this.osc.stop();
+            } catch (e) {}
             this.osc.disconnect();
             this.osc = null;
         }
@@ -115,26 +121,23 @@ export default function SosAlertOverlay() {
         // Generate siren using device's built-in Web Audio API
         audioRef.current = new WebAudioSiren();
 
-        const channel = window.Echo.private(`estates.${estateId}.security`).listen(
-            '.sos.triggered',
-            (event: SosAlert) => {
-                setActiveAlert(event);
-                setMuted(false);
-                setNow(Date.now());
+        const channel = window.Echo.private(`estates.${estateId}.security`).listen('.sos.triggered', (event: SosAlert) => {
+            setActiveAlert(event);
+            setMuted(false);
+            setNow(Date.now());
 
-                if (audioRef.current && !muted) {
-                    audioRef.current.play().catch(() => {});
-                }
+            if (audioRef.current && !muted) {
+                audioRef.current.play().catch(() => {});
+            }
 
-                if (Capacitor.isNativePlatform()) {
-                    Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
-                    setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {}), 400);
-                    setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {}), 800);
-                } else if ('vibrate' in navigator) {
-                    navigator.vibrate([500, 200, 500, 200, 500]);
-                }
-            },
-        );
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
+                setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {}), 400);
+                setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {}), 800);
+            } else if ('vibrate' in navigator) {
+                navigator.vibrate([500, 200, 500, 200, 500]);
+            }
+        });
 
         return () => {
             channel.stopListening('.sos.triggered');
@@ -209,15 +212,10 @@ export default function SosAlertOverlay() {
                 <main className="flex-1 overflow-y-auto px-5 pb-6 sm:px-6">
                     <ResidentHero alert={activeAlert} onCallResident={() => callNumber(activeAlert.resident_phone)} />
 
-                    {activeAlert.address && activeAlert.address !== 'N/A' && (
-                        <AddressCard address={activeAlert.address} />
-                    )}
+                    {activeAlert.address && activeAlert.address !== 'N/A' && <AddressCard address={activeAlert.address} />}
 
                     {activeAlert.emergency_contacts.length > 0 && (
-                        <ContactsList
-                            contacts={activeAlert.emergency_contacts}
-                            onCall={(phone) => callNumber(phone)}
-                        />
+                        <ContactsList contacts={activeAlert.emergency_contacts} onCall={(phone) => callNumber(phone)} />
                     )}
                 </main>
 
@@ -231,17 +229,7 @@ export default function SosAlertOverlay() {
     );
 }
 
-function Header({
-    elapsed,
-    estate,
-    muted,
-    onToggleMute,
-}: {
-    elapsed: string;
-    estate: string;
-    muted: boolean;
-    onToggleMute: () => void;
-}) {
+function Header({ elapsed, estate, muted, onToggleMute }: { elapsed: string; estate: string; muted: boolean; onToggleMute: () => void }) {
     return (
         <header className="pt-safe relative shrink-0 border-b border-rose-500/20 bg-rose-600">
             <div className="px-5 pt-3 pb-3 sm:px-6">
@@ -286,16 +274,14 @@ function ResidentHero({ alert, onCallResident }: { alert: SosAlert; onCallReside
                 <span className="text-[11px] font-semibold tracking-[0.16em] uppercase">Resident requested help</span>
             </div>
 
-            <h1 className="mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-                {alert.resident_name}
-            </h1>
+            <h1 className="mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">{alert.resident_name}</h1>
             {alert.resident_phone && (
                 <>
                     <p className="mt-1 font-mono text-sm tracking-wider text-slate-300 tabular-nums">{alert.resident_phone}</p>
                     <button
                         type="button"
                         onClick={onCallResident}
-                        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-500 px-4 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(244,63,94,0.5)] transition active:scale-[0.99] hover:bg-rose-400"
+                        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-500 px-4 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(244,63,94,0.5)] transition hover:bg-rose-400 active:scale-[0.99]"
                     >
                         <Phone className="h-5 w-5" strokeWidth={2.4} fill="currentColor" />
                         Call resident
@@ -330,19 +316,11 @@ function AddressCard({ address }: { address: string }) {
     );
 }
 
-function ContactsList({
-    contacts,
-    onCall,
-}: {
-    contacts: SosContact[];
-    onCall: (phone: string) => void;
-}) {
+function ContactsList({ contacts, onCall }: { contacts: SosContact[]; onCall: (phone: string) => void }) {
     return (
         <section>
             <header className="mb-2 flex items-end justify-between px-1">
-                <h2 className="text-[10px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
-                    Emergency contacts
-                </h2>
+                <h2 className="text-[10px] font-semibold tracking-[0.18em] text-slate-400 uppercase">Emergency contacts</h2>
                 <span className="text-[10px] font-medium text-slate-500 tabular-nums">{contacts.length}</span>
             </header>
 
@@ -360,15 +338,13 @@ function ContactsList({
                         </span>
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-white">{contact.name}</p>
-                            <p className="truncate font-mono text-[11px] tracking-wider text-slate-400 tabular-nums">
-                                {contact.phone}
-                            </p>
+                            <p className="truncate font-mono text-[11px] tracking-wider text-slate-400 tabular-nums">{contact.phone}</p>
                         </div>
                         <button
                             type="button"
                             onClick={() => onCall(contact.phone)}
                             aria-label={`Call ${contact.name}`}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 transition active:scale-90 hover:bg-emerald-500/25"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 transition hover:bg-emerald-500/25 active:scale-90"
                         >
                             <Phone className="h-4 w-4" strokeWidth={2.4} fill="currentColor" />
                         </button>
@@ -396,7 +372,7 @@ function Footer({
                         type="button"
                         onClick={onCallResident}
                         aria-label="Call resident"
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white transition active:scale-95 hover:bg-rose-400"
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white transition hover:bg-rose-400 active:scale-95"
                     >
                         <Phone className="h-5 w-5" strokeWidth={2.4} fill="currentColor" />
                     </button>
@@ -405,7 +381,7 @@ function Footer({
                     type="button"
                     onClick={onAcknowledge}
                     disabled={isAcknowledging}
-                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white text-sm font-semibold text-slate-900 transition active:scale-[0.99] hover:bg-slate-100 disabled:opacity-60"
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white text-sm font-semibold text-slate-900 transition hover:bg-slate-100 active:scale-[0.99] disabled:opacity-60"
                 >
                     {isAcknowledging ? (
                         <>

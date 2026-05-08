@@ -51,7 +51,7 @@ export async function shareAccessCode(accessCode: AccessCode) {
     if (Capacitor.isNativePlatform()) {
         try {
             await Clipboard.write({
-                string: text
+                string: text,
             });
             return { success: true, method: 'copy' };
         } catch (err) {
@@ -69,11 +69,11 @@ export async function shareAccessCode(accessCode: AccessCode) {
 
     // 5. Final Legacy Fallback: Hidden Textarea (for restricted WebViews)
     try {
-        const textArea = document.createElement("textarea");
+        const textArea = document.createElement('textarea');
         textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();

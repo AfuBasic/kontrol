@@ -175,7 +175,6 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }: StatCard
     );
 };
 
-
 export default function InvoiceDetailPage({ invoice }: Props) {
     const isPaid = invoice.status === 'paid';
     const isOverdue = invoice.status === 'overdue';
@@ -291,20 +290,8 @@ export default function InvoiceDetailPage({ invoice }: Props) {
 
                     {/* Stat Cards Grid */}
                     <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <StatCard
-                            title="Amount Due"
-                            value={invoice.formatted_amount}
-                            icon={BanknotesIcon}
-                            color="green"
-                            delay={0.05}
-                        />
-                        <StatCard
-                            title="Residents Billed"
-                            value={invoice.resident_count.toString()}
-                            icon={UsersIcon}
-                            color="blue"
-                            delay={0.1}
-                        />
+                        <StatCard title="Amount Due" value={invoice.formatted_amount} icon={BanknotesIcon} color="green" delay={0.05} />
+                        <StatCard title="Residents Billed" value={invoice.resident_count.toString()} icon={UsersIcon} color="blue" delay={0.1} />
                         <StatCard
                             title="Status"
                             value={invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
@@ -646,7 +633,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                                         disabled={sendInvoiceLoading || cooldownTime > 0}
                                         className={`group relative h-14 w-full rounded-2xl text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-[0.98] ${
                                             cooldownTime > 0
-                                                ? 'bg-gray-400 cursor-not-allowed opacity-60 shadow-gray-200'
+                                                ? 'cursor-not-allowed bg-gray-400 opacity-60 shadow-gray-200'
                                                 : 'bg-purple-600 shadow-purple-200 hover:bg-purple-700'
                                         } disabled:cursor-not-allowed`}
                                     >

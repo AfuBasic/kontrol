@@ -150,21 +150,11 @@ function RegularCard({
                         <FeatureRow key={item} label={item} included variant="light" />
                     ))}
                     {primaryFeatures.map((f) => (
-                        <FeatureRow
-                            key={f.id}
-                            label={f.name}
-                            included={plan.features.some((pf) => pf.id === f.id)}
-                            variant="light"
-                        />
+                        <FeatureRow key={f.id} label={f.name} included={plan.features.some((pf) => pf.id === f.id)} variant="light" />
                     ))}
                     {showAll &&
                         extraFeatures.map((f) => (
-                            <FeatureRow
-                                key={f.id}
-                                label={f.name}
-                                included={plan.features.some((pf) => pf.id === f.id)}
-                                variant="light"
-                            />
+                            <FeatureRow key={f.id} label={f.name} included={plan.features.some((pf) => pf.id === f.id)} variant="light" />
                         ))}
                 </ul>
                 {extraFeatures.length > 0 && (
@@ -224,7 +214,7 @@ function FeaturedCard({
 
                 <div className="mt-6 flex flex-col gap-2">
                     {savings && savings > 0 ? (
-                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-500/30 ring-inset">
                             Save {savings}%
                         </span>
                     ) : null}
@@ -249,21 +239,11 @@ function FeaturedCard({
                             <FeatureRow key={item} label={item} included variant="dark" />
                         ))}
                         {primaryFeatures.map((f) => (
-                            <FeatureRow
-                                key={f.id}
-                                label={f.name}
-                                included={plan.features.some((pf) => pf.id === f.id)}
-                                variant="dark"
-                            />
+                            <FeatureRow key={f.id} label={f.name} included={plan.features.some((pf) => pf.id === f.id)} variant="dark" />
                         ))}
                         {showAll &&
                             extraFeatures.map((f) => (
-                                <FeatureRow
-                                    key={f.id}
-                                    label={f.name}
-                                    included={plan.features.some((pf) => pf.id === f.id)}
-                                    variant="dark"
-                                />
+                                <FeatureRow key={f.id} label={f.name} included={plan.features.some((pf) => pf.id === f.id)} variant="dark" />
                             ))}
                     </ul>
                     {extraFeatures.length > 0 && (

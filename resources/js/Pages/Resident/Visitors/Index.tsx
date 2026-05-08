@@ -128,9 +128,9 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                     <h1 className="text-3xl font-black tracking-tight text-slate-900">Access Control</h1>
                     <p className="mt-1 text-sm font-bold text-slate-400">Manage community flow and visitor permissions</p>
                 </div>
-                <SummaryDashboard 
-                    activeCount={oneTimeCodes.filter(c => c.status === 'used').length}
-                    expectedToday={oneTimeCodes.filter(c => c.status === 'active').length}
+                <SummaryDashboard
+                    activeCount={oneTimeCodes.filter((c) => c.status === 'used').length}
+                    expectedToday={oneTimeCodes.filter((c) => c.status === 'active').length}
                     totalToday={dailyUsage.used}
                 />
             </motion.div>
@@ -160,12 +160,12 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                                     />
                                 )}
                                 <tab.icon className="relative z-10 h-3.5 w-3.5" strokeWidth={3} />
-                                <span className="relative z-10 whitespace-nowrap uppercase tracking-widest">{tab.label}</span>
+                                <span className="relative z-10 tracking-widest whitespace-nowrap uppercase">{tab.label}</span>
                             </button>
                         );
                     })}
                 </div>
-                
+
                 <div className="mt-4">
                     <SearchInput
                         value={queries[activeTab]}
@@ -209,7 +209,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex flex-col items-center justify-center rounded-[40px] bg-white py-16 px-8 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200"
+                            className="flex flex-col items-center justify-center rounded-[40px] bg-white px-8 py-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200"
                         >
                             <div className="relative mb-6">
                                 <div className="absolute inset-0 animate-pulse rounded-full bg-indigo-500/10 blur-3xl" />
@@ -218,12 +218,12 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                                 </div>
                             </div>
                             <h3 className="text-2xl font-black tracking-tight text-slate-900">
-                                {activeTab === 'active' ? "You're all clear" : "No history yet"}
+                                {activeTab === 'active' ? "You're all clear" : 'No history yet'}
                             </h3>
-                            <p className="mt-3 text-base font-bold leading-relaxed text-slate-400 max-w-xs mx-auto">
-                                {activeTab === 'active' 
-                                    ? "No active visitors right now. Everything is quiet at the gate." 
-                                    : "Your visitor activity and history will appear here once you start generating codes."}
+                            <p className="mx-auto mt-3 max-w-xs text-base leading-relaxed font-bold text-slate-400">
+                                {activeTab === 'active'
+                                    ? 'No active visitors right now. Everything is quiet at the gate.'
+                                    : 'Your visitor activity and history will appear here once you start generating codes.'}
                             </p>
                         </motion.div>
                     )}

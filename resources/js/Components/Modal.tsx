@@ -48,29 +48,29 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'md
                             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         >
-                            <Dialog.Panel className={`relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl transition-all sm:my-8 sm:w-full ${maxWidthClass} sm:p-6`}>
+                            <Dialog.Panel
+                                className={`relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-2xl transition-all sm:my-8 sm:w-full ${maxWidthClass} sm:p-6`}
+                            >
                                 <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                     <button
                                         type="button"
-                                        className="rounded-full p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        className="rounded-full p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
                                         onClick={onClose}
                                     >
                                         <span className="sr-only">Close</span>
                                         <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                                     </button>
                                 </div>
-                                
+
                                 {title && (
                                     <div className="mb-4">
-                                        <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-slate-900">
+                                        <Dialog.Title as="h3" className="text-xl leading-6 font-bold text-slate-900">
                                             {title}
                                         </Dialog.Title>
                                     </div>
                                 )}
 
-                                <div className="mt-2">
-                                    {children}
-                                </div>
+                                <div className="mt-2">{children}</div>
                             </Dialog.Panel>
                         </Transition.Child>
                     </div>

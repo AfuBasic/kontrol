@@ -7,7 +7,7 @@ import type { SharedData } from '@/types';
  */
 export function useFeature(slug: string): boolean {
     const { estate_plan } = usePage<SharedData>().props;
-    
+
     if (!estate_plan?.features) {
         return false;
     }

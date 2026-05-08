@@ -103,7 +103,10 @@ export default function SecurityCommandCenter() {
                             <p className="text-lg font-semibold tracking-tight">Validate access code</p>
                             <p className="mt-0.5 text-xs text-slate-300">Open terminal · auto-validate on entry</p>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white" strokeWidth={2.2} />
+                        <ChevronRight
+                            className="h-5 w-5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white"
+                            strokeWidth={2.2}
+                        />
                     </div>
                 </motion.button>
 
@@ -121,10 +124,7 @@ export default function SecurityCommandCenter() {
                             <h2 className="text-sm font-semibold text-slate-900">Recent activity</h2>
                             <p className="text-[11px] text-slate-500">Last validations at this gate</p>
                         </div>
-                        <Link 
-                            href={HistoryController.index.url()}
-                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
-                        >
+                        <Link href={HistoryController.index.url()} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">
                             View all
                         </Link>
                     </header>
@@ -144,9 +144,7 @@ export default function SecurityCommandCenter() {
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-slate-900">
                                             {entry.visitor_name}
-                                            {entry.host_name && (
-                                                <span className="font-normal text-slate-500"> · {entry.host_name}</span>
-                                            )}
+                                            {entry.host_name && <span className="font-normal text-slate-500"> · {entry.host_name}</span>}
                                         </p>
                                         <p className="truncate text-[11px] text-slate-500">
                                             {entry.code && <span className="font-mono tracking-wider">{entry.code}</span>}
@@ -164,17 +162,7 @@ export default function SecurityCommandCenter() {
     );
 }
 
-function StatCard({
-    label,
-    value,
-    hint,
-    tone = 'slate',
-}: {
-    label: string;
-    value: number;
-    hint: string;
-    tone?: 'slate' | 'emerald';
-}) {
+function StatCard({ label, value, hint, tone = 'slate' }: { label: string; value: number; hint: string; tone?: 'slate' | 'emerald' }) {
     const accent = tone === 'emerald' ? 'text-emerald-600' : 'text-slate-900';
     return (
         <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">

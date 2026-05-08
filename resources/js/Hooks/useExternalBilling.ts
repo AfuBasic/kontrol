@@ -10,7 +10,7 @@ export function useExternalBilling() {
 
     const openExternalBilling = async () => {
         const isNative = Capacitor.isNativePlatform();
-        
+
         // 1. Native Mobile Platform (iOS/Android)
         if (isNative) {
             let url = `${appUrl}/resident/billing`;
@@ -36,13 +36,15 @@ export function useExternalBilling() {
         // 2. Web Platform
         const newWindow = window.open('about:blank', '_blank');
         if (newWindow) {
-            newWindow.document.write('<p style="font-family: sans-serif; text-align: center; margin-top: 50px; color: #64748b;">Opening secure billing portal...</p>');
+            newWindow.document.write(
+                '<p style="font-family: sans-serif; text-align: center; margin-top: 50px; color: #64748b;">Opening secure billing portal...</p>',
+            );
         }
 
         try {
             const response = await axios.get(ResidentBillingController.generateMagicUrl.url());
             const data = response.data;
-            
+
             if (data.magic_url && newWindow) {
                 newWindow.location.href = data.magic_url;
             } else if (newWindow) {

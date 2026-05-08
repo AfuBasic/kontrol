@@ -191,9 +191,7 @@ export default function EditCollection({ collection, residents }: Props) {
                             )}
 
                             <div>
-                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                    Start Date
-                                </label>
+                                <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Start Date</label>
                                 <input
                                     type="date"
                                     value={data.start_date}
@@ -206,9 +204,7 @@ export default function EditCollection({ collection, residents }: Props) {
 
                             {data.billing_type === 'one_time' ? (
                                 <div>
-                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                        Due Date
-                                    </label>
+                                    <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Due Date</label>
                                     <input
                                         type="date"
                                         value={data.due_at}
@@ -344,22 +340,26 @@ export default function EditCollection({ collection, residents }: Props) {
                                         <div className="flex flex-wrap gap-3">
                                             <AnimatePresence mode="popLayout">
                                                 {/* Search-specific Select All */}
-                                                {searchQuery && filteredResidents.length > 0 && !filteredResidents.every(r => data.targets.includes(r.id)) && (
-                                                    <motion.button
-                                                        key="select-matches"
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.9 }}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newTargets = Array.from(new Set([...data.targets, ...filteredResidents.map(r => r.id)]));
-                                                            setData('targets', newTargets);
-                                                        }}
-                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-                                                    >
-                                                        Select {filteredResidents.length} Matches
-                                                    </motion.button>
-                                                )}
+                                                {searchQuery &&
+                                                    filteredResidents.length > 0 &&
+                                                    !filteredResidents.every((r) => data.targets.includes(r.id)) && (
+                                                        <motion.button
+                                                            key="select-matches"
+                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.9 }}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newTargets = Array.from(
+                                                                    new Set([...data.targets, ...filteredResidents.map((r) => r.id)]),
+                                                                );
+                                                                setData('targets', newTargets);
+                                                            }}
+                                                            className="rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-blue-100"
+                                                        >
+                                                            Select {filteredResidents.length} Matches
+                                                        </motion.button>
+                                                    )}
 
                                                 {/* Global Select All */}
                                                 {data.targets.length < residents.length && !searchQuery && (
@@ -369,8 +369,13 @@ export default function EditCollection({ collection, residents }: Props) {
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         exit={{ opacity: 0, scale: 0.9 }}
                                                         type="button"
-                                                        onClick={() => setData('targets', residents.map((r) => r.id))}
-                                                        className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+                                                        onClick={() =>
+                                                            setData(
+                                                                'targets',
+                                                                residents.map((r) => r.id),
+                                                            )
+                                                        }
+                                                        className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-slate-200"
                                                     >
                                                         Select All ({residents.length})
                                                     </motion.button>
@@ -385,7 +390,7 @@ export default function EditCollection({ collection, residents }: Props) {
                                                         exit={{ opacity: 0, scale: 0.9 }}
                                                         type="button"
                                                         onClick={() => setData('targets', [])}
-                                                        className="text-[10px] font-black tracking-widest text-rose-500 uppercase bg-rose-50 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                                                        className="rounded-lg bg-rose-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-rose-500 uppercase transition-colors hover:bg-rose-100"
                                                     >
                                                         Unselect All
                                                     </motion.button>

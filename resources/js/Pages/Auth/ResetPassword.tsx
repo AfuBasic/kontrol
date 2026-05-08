@@ -119,7 +119,6 @@ export default function ResetPassword({ token, email }: Props) {
                                         className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 pr-10 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                         placeholder="At least 8 characters"
                                         autoComplete="new-password"
-                                        
                                     />
                                     <button
                                         type="button"

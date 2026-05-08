@@ -103,16 +103,14 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                     </button>
                 </div>
 
-                <Link 
+                <Link
                     href={resident.visitors.show.url(code.id)}
                     className="mb-6 block rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-100 transition-all hover:bg-slate-100/80 active:scale-[0.99]"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase mb-1">Access Code</p>
-                            <p className="font-mono text-4xl font-black tracking-[0.15em] text-slate-900">
-                                {code.code}
-                            </p>
+                            <p className="mb-1 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Access Code</p>
+                            <p className="font-mono text-4xl font-black tracking-[0.15em] text-slate-900">{code.code}</p>
                         </div>
                         <motion.button
                             whileTap={{ scale: 0.9 }}

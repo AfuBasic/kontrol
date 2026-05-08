@@ -54,9 +54,7 @@ export default function AuthErrorSheet({ error, onClose }: Props) {
                             </div>
 
                             <h3 className="mb-2 text-xl font-bold text-slate-900">Unable to sign in</h3>
-                            <p className="mb-8 text-sm leading-relaxed text-slate-500">
-                                {error}
-                            </p>
+                            <p className="mb-8 text-sm leading-relaxed text-slate-500">{error}</p>
 
                             <button
                                 onClick={handleClose}

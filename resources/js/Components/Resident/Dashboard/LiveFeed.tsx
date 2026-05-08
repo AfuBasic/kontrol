@@ -13,31 +13,31 @@ function getActivityConfig(type: ActivityItem['type']) {
             return {
                 icon: <Plus className="h-5 w-5" />,
                 color: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
-                label: 'Code Generated'
+                label: 'Code Generated',
             };
         case 'used':
             return {
                 icon: <DoorOpen className="h-5 w-5" />,
                 color: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
-                label: 'Entry Granted'
+                label: 'Entry Granted',
             };
         case 'expired':
             return {
                 icon: <Clock className="h-5 w-5" />,
                 color: 'bg-slate-50 text-slate-400 ring-slate-100',
-                label: 'Code Expired'
+                label: 'Code Expired',
             };
         case 'revoked':
             return {
                 icon: <X className="h-5 w-5" />,
                 color: 'bg-rose-50 text-rose-600 ring-rose-100',
-                label: 'Access Revoked'
+                label: 'Access Revoked',
             };
         default:
             return {
                 icon: <Info className="h-5 w-5" />,
                 color: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
-                label: 'Event'
+                label: 'Event',
             };
     }
 }
@@ -56,10 +56,10 @@ export default function LiveFeed({ activities }: Props) {
                                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.98 }}
-                                    transition={{ 
-                                        duration: 0.4, 
+                                    transition={{
+                                        duration: 0.4,
                                         delay: index * 0.05,
-                                        ease: [0.23, 1, 0.32, 1] 
+                                        ease: [0.23, 1, 0.32, 1],
                                     }}
                                     className="group relative flex items-center justify-between overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-100 transition-all hover:shadow-lg hover:ring-indigo-100"
                                 >
@@ -72,22 +72,18 @@ export default function LiveFeed({ activities }: Props) {
                                         </div>
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                                     {config.label}
                                                 </span>
                                                 <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                                <span className="text-[10px] font-bold text-slate-300 uppercase">
-                                                    {activity.time}
-                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-300 uppercase">{activity.time}</span>
                                             </div>
-                                            <p className="mt-0.5 truncate text-sm font-black text-slate-900 leading-tight">
-                                                {activity.message}
-                                            </p>
+                                            <p className="mt-0.5 truncate text-sm leading-tight font-black text-slate-900">{activity.message}</p>
                                         </div>
                                     </div>
 
-                                    <div className="relative flex flex-col items-end shrink-0">
-                                        <div className="rounded-xl bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-tighter text-slate-400 ring-1 ring-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:ring-indigo-100 transition-all">
+                                    <div className="relative flex shrink-0 flex-col items-end">
+                                        <div className="rounded-xl bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-tighter text-slate-400 ring-1 ring-slate-100 transition-all group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
                                             #{activity.code}
                                         </div>
                                     </div>
@@ -96,16 +92,16 @@ export default function LiveFeed({ activities }: Props) {
                         })}
                     </div>
                 ) : (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="py-12 text-center bg-white rounded-[40px] border border-dashed border-slate-200"
+                        className="rounded-[40px] border border-dashed border-slate-200 bg-white py-12 text-center"
                     >
                         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-50 text-slate-300">
                             <Activity className="h-10 w-10 opacity-20" />
                         </div>
-                        <h4 className="text-lg font-black text-slate-900 tracking-tight">Quiet Neighborhood</h4>
-                        <p className="mt-2 text-xs font-bold text-slate-400 px-10 leading-relaxed max-w-xs mx-auto">
+                        <h4 className="text-lg font-black tracking-tight text-slate-900">Quiet Neighborhood</h4>
+                        <p className="mx-auto mt-2 max-w-xs px-10 text-xs leading-relaxed font-bold text-slate-400">
                             No visitor activity recorded recently. New events will appear here in real-time.
                         </p>
                     </motion.div>

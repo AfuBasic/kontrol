@@ -127,7 +127,8 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
                             <ChevronRight className="h-5 w-5" />
                         </button>
                     ) : (
-                        data.action_url && data.type !== 'visitor_arrived' && (
+                        data.action_url &&
+                        data.type !== 'visitor_arrived' && (
                             <button
                                 onClick={() => {
                                     window.location.href = data.action_url!;

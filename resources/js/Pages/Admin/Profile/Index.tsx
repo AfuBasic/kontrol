@@ -108,9 +108,9 @@ export default function Profile({ user }: Props) {
                                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                             </div>
 
-                            <div className="pt-4 border-t border-gray-100">
-                                <h3 className="mb-4 text-sm font-medium text-gray-900 italic text-gray-400">Change Password</h3>
-                                
+                            <div className="border-t border-gray-100 pt-4">
+                                <h3 className="mb-4 text-sm font-medium text-gray-400 text-gray-900 italic">Change Password</h3>
+
                                 <div className="space-y-4">
                                     {/* Password */}
                                     <div>

@@ -56,7 +56,7 @@ export default function AffiliateDashboard({ user }: Props) {
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                         <div className="mb-4 flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-600">Revenue</span>
-                            <div className="h-5 w-5 rounded bg-linear-to-br from-warning-400 to-warning-600"></div>
+                            <div className="from-warning-400 h-5 w-5 rounded bg-linear-to-br to-warning-600"></div>
                         </div>
                         <div className="space-y-2">
                             <p className="text-3xl font-bold text-gray-900">$0.00</p>
@@ -68,7 +68,7 @@ export default function AffiliateDashboard({ user }: Props) {
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                         <div className="mb-4 flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-600">Commission</span>
-                            <div className="h-5 w-5 rounded bg-linear-to-br from-success-400 to-success-600"></div>
+                            <div className="from-success-400 h-5 w-5 rounded bg-linear-to-br to-success-600"></div>
                         </div>
                         <div className="space-y-2">
                             <p className="text-3xl font-bold text-gray-900">TBD</p>

@@ -90,16 +90,17 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="flex flex-col items-center text-center py-8"
+                                    className="flex flex-col items-center py-8 text-center"
                                 >
-                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600 mb-6">
+                                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600">
                                         <ShieldCheck className="h-10 w-10" />
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-3">Access Restricted</h3>
-                                    <p className="text-slate-500 font-medium leading-relaxed mb-10 px-4">
-                                        Your subscription for this estate is currently inactive. Please visit the Kontrol web platform to manage your access.
+                                    <h3 className="mb-3 text-xl font-black text-slate-900">Access Restricted</h3>
+                                    <p className="mb-10 px-4 leading-relaxed font-medium text-slate-500">
+                                        Your subscription for this estate is currently inactive. Please visit the Kontrol web platform to manage your
+                                        access.
                                     </p>
-                                    <button 
+                                    <button
                                         onClick={resetAndClose}
                                         className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
                                     >
@@ -120,21 +121,29 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                 <button
                                                     onClick={() => form.setData('type', 'single_use')}
                                                     className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
-                                                        form.data.type === 'single_use' 
-                                                            ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
+                                                        form.data.type === 'single_use'
+                                                            ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
                                                             : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-4 text-left">
-                                                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'single_use' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600'}`}>
+                                                        <div
+                                                            className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'single_use' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600'}`}
+                                                        >
                                                             <Zap className="h-7 w-7" />
                                                         </div>
                                                         <div>
-                                                            <p className={`font-bold ${form.data.type === 'single_use' ? 'text-indigo-900' : 'text-slate-900'}`}>One-Time Visit</p>
+                                                            <p
+                                                                className={`font-bold ${form.data.type === 'single_use' ? 'text-indigo-900' : 'text-slate-900'}`}
+                                                            >
+                                                                One-Time Visit
+                                                            </p>
                                                             <p className="text-sm font-medium text-slate-500">Perfect for guests & deliveries</p>
                                                         </div>
                                                     </div>
-                                                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'single_use' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-200'}`}>
+                                                    <div
+                                                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${form.data.type === 'single_use' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-200'}`}
+                                                    >
                                                         {form.data.type === 'single_use' && <div className="h-2 w-2 rounded-full bg-white" />}
                                                     </div>
                                                 </button>
@@ -143,21 +152,29 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                     <button
                                                         onClick={() => form.setData('type', 'long_lived')}
                                                         className={`flex items-center justify-between rounded-3xl border p-6 transition-all active:scale-[0.98] ${
-                                                            form.data.type === 'long_lived' 
-                                                                ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20' 
+                                                            form.data.type === 'long_lived'
+                                                                ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20'
                                                                 : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-4 text-left">
-                                                            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'long_lived' ? 'bg-amber-600 text-white' : 'bg-white text-amber-600'}`}>
+                                                            <div
+                                                                className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${form.data.type === 'long_lived' ? 'bg-amber-600 text-white' : 'bg-white text-amber-600'}`}
+                                                            >
                                                                 <Clock className="h-7 w-7" />
                                                             </div>
                                                             <div>
-                                                                <p className={`font-bold ${form.data.type === 'long_lived' ? 'text-amber-900' : 'text-slate-900'}`}>Long-Term Access</p>
+                                                                <p
+                                                                    className={`font-bold ${form.data.type === 'long_lived' ? 'text-amber-900' : 'text-slate-900'}`}
+                                                                >
+                                                                    Long-Term Access
+                                                                </p>
                                                                 <p className="text-sm font-medium text-slate-500">For regular staff or family</p>
                                                             </div>
                                                         </div>
-                                                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${form.data.type === 'long_lived' ? 'border-amber-600 bg-amber-600' : 'border-slate-200'}`}>
+                                                        <div
+                                                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${form.data.type === 'long_lived' ? 'border-amber-600 bg-amber-600' : 'border-slate-200'}`}
+                                                        >
                                                             {form.data.type === 'long_lived' && <div className="h-2 w-2 rounded-full bg-white" />}
                                                         </div>
                                                     </button>
@@ -172,8 +189,8 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                             key={p.id}
                                                             onClick={() => form.setData('purpose', p.id)}
                                                             className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all ${
-                                                                form.data.purpose === p.id 
-                                                                    ? 'bg-slate-900 text-white shadow-lg' 
+                                                                form.data.purpose === p.id
+                                                                    ? 'bg-slate-900 text-white shadow-lg'
                                                                     : 'bg-slate-50 text-slate-600 ring-1 ring-slate-100'
                                                             }`}
                                                         >
@@ -185,7 +202,7 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                             </div>
 
                                             <div className="pt-6">
-                                                <button 
+                                                <button
                                                     onClick={() => setStep('details')}
                                                     className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all hover:bg-slate-800 active:scale-95"
                                                 >
@@ -210,8 +227,8 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                         type="text"
                                                         placeholder="Visitor Name"
                                                         value={form.data.visitor_name}
-                                                        onChange={e => form.setData('visitor_name', e.target.value)}
-                                                        className="w-full rounded-2xl bg-slate-50 py-4.5 pl-14 pr-6 font-bold text-slate-900 outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                        onChange={(e) => form.setData('visitor_name', e.target.value)}
+                                                        className="w-full rounded-2xl bg-slate-50 py-4.5 pr-6 pl-14 font-bold text-slate-900 ring-1 ring-slate-100 transition-all outline-none focus:ring-2 focus:ring-indigo-500"
                                                     />
                                                 </div>
                                                 <div className="relative">
@@ -220,8 +237,8 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                         type="tel"
                                                         placeholder="Phone Number (Optional)"
                                                         value={form.data.visitor_phone}
-                                                        onChange={e => form.setData('visitor_phone', e.target.value)}
-                                                        className="w-full rounded-2xl bg-slate-50 py-4.5 pl-14 pr-6 font-bold text-slate-900 outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                        onChange={(e) => form.setData('visitor_phone', e.target.value)}
+                                                        className="w-full rounded-2xl bg-slate-50 py-4.5 pr-6 pl-14 font-bold text-slate-900 ring-1 ring-slate-100 transition-all outline-none focus:ring-2 focus:ring-indigo-500"
                                                     />
                                                 </div>
 
@@ -230,15 +247,27 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                     type="button"
                                                     onClick={() => form.setData('has_vehicle', !form.data.has_vehicle)}
                                                     className={`flex w-full items-center justify-between rounded-2xl p-4.5 transition-all ${
-                                                        form.data.has_vehicle 
-                                                            ? 'bg-blue-50 ring-2 ring-blue-500/20' 
+                                                        form.data.has_vehicle
+                                                            ? 'bg-blue-50 ring-2 ring-blue-500/20'
                                                             : 'bg-slate-50 ring-1 ring-slate-100'
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`rounded-xl p-2 ${form.data.has_vehicle ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25a9 9 0 0 0-9-9h-2.25a4.5 4.5 0 0 0-4.5 4.5v5.25m18.375 3h-1.125m-17.25 0h1.125m17.25-4.5V15H5.25v-.75m15 0a3.75 3.75 0 0 0-3.75-3.75h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                                                        <div
+                                                            className={`rounded-xl p-2 ${form.data.has_vehicle ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'}`}
+                                                        >
+                                                            <svg
+                                                                className="h-5 w-5"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                strokeWidth={2}
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25a9 9 0 0 0-9-9h-2.25a4.5 4.5 0 0 0-4.5 4.5v5.25m18.375 3h-1.125m-17.25 0h1.125m17.25-4.5V15H5.25v-.75m15 0a3.75 3.75 0 0 0-3.75-3.75h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"
+                                                                />
                                                             </svg>
                                                         </div>
                                                         <div className="text-left">
@@ -246,20 +275,24 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                             <p className="text-xs font-medium text-slate-500">Security will record car details</p>
                                                         </div>
                                                     </div>
-                                                    <div className={`h-6 w-10 rounded-full transition-colors relative ${form.data.has_vehicle ? 'bg-blue-600' : 'bg-slate-200'}`}>
-                                                        <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${form.data.has_vehicle ? 'left-5' : 'left-1'}`} />
+                                                    <div
+                                                        className={`relative h-6 w-10 rounded-full transition-colors ${form.data.has_vehicle ? 'bg-blue-600' : 'bg-slate-200'}`}
+                                                    >
+                                                        <div
+                                                            className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${form.data.has_vehicle ? 'left-5' : 'left-1'}`}
+                                                        />
                                                     </div>
                                                 </button>
                                             </div>
 
                                             <div className="flex gap-4">
-                                                <button 
+                                                <button
                                                     onClick={() => setStep('type')}
                                                     className="flex-1 rounded-2xl bg-slate-100 py-4.5 font-black text-slate-600 transition-all active:scale-95"
                                                 >
                                                     Back
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => setStep('duration')}
                                                     className="flex-[2] rounded-2xl bg-slate-900 py-4.5 font-black text-white shadow-xl transition-all active:scale-95"
                                                 >
@@ -294,17 +327,14 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                             </div>
 
                                             <div className="space-y-4">
-                                                <button 
+                                                <button
                                                     onClick={submit}
                                                     disabled={form.processing}
                                                     className="flex w-full items-center justify-center gap-3 rounded-[28px] bg-linear-to-br from-indigo-500 to-indigo-700 py-6 text-xl font-black text-white shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                                 >
                                                     {form.processing ? 'Generating...' : 'Generate Access Code'}
                                                 </button>
-                                                <button 
-                                                    onClick={() => setStep('details')}
-                                                    className="w-full py-2 text-sm font-bold text-slate-400"
-                                                >
+                                                <button onClick={() => setStep('details')} className="w-full py-2 text-sm font-bold text-slate-400">
                                                     Go Back
                                                 </button>
                                             </div>

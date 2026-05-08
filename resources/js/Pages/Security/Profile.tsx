@@ -15,11 +15,7 @@ interface Props {
     estateName: string;
 }
 
-const PERMISSIONS = [
-    'Validate visitor access codes',
-    'Acknowledge & dismiss alerts',
-    'Read estate announcements',
-];
+const PERMISSIONS = ['Validate visitor access codes', 'Acknowledge & dismiss alerts', 'Read estate announcements'];
 
 export default function ProfilePage({ user, estateName }: Props) {
     const [editOpen, setEditOpen] = useState(false);
@@ -68,7 +64,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                         <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
                         <p className="truncate text-xs text-slate-500">{user.email}</p>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-success-700 uppercase ring-1 ring-inset ring-success-200">
+                    <span className="ring-success-200 inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-success-700 uppercase ring-1 ring-inset">
                         <ShieldCheck className="h-3 w-3" strokeWidth={2.4} />
                         Security
                     </span>
@@ -125,8 +121,8 @@ export default function ProfilePage({ user, estateName }: Props) {
                         Log out
                     </button>
                 ) : (
-                    <div className="rounded-2xl border border-error-200/70 bg-error-50/60 p-3">
-                        <p className="px-1 text-xs text-error-800">End your security session on this device?</p>
+                    <div className="border-error-200/70 rounded-2xl border bg-error-50/60 p-3">
+                        <p className="text-error-800 px-1 text-xs">End your security session on this device?</p>
                         <div className="mt-2.5 flex gap-2">
                             <button
                                 onClick={() => !loggingOut && setLogoutConfirm(false)}
@@ -153,17 +149,7 @@ export default function ProfilePage({ user, estateName }: Props) {
     );
 }
 
-function Field({
-    icon,
-    label,
-    value,
-    muted,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    muted?: boolean;
-}) {
+function Field({ icon, label, value, muted }: { icon: React.ReactNode; label: string; value: string; muted?: boolean }) {
     return (
         <div className="flex items-center gap-3 px-4 py-3">
             <span className="text-slate-500">{icon}</span>
@@ -175,17 +161,7 @@ function Field({
     );
 }
 
-function ActionRow({
-    icon,
-    label,
-    sub,
-    onClick,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    sub: string;
-    onClick: () => void;
-}) {
+function ActionRow({ icon, label, sub, onClick }: { icon: React.ReactNode; label: string; sub: string; onClick: () => void }) {
     return (
         <button
             type="button"
@@ -282,7 +258,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         placeholder="Leave blank to keep current"
-                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
                                     />
                                     <button
                                         type="button"
@@ -315,7 +291,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                             )}
 
                             {recentlySuccessful && (
-                                <div className="flex items-center gap-2 rounded-xl bg-success-50 px-3 py-2 text-xs font-medium text-success-700 ring-1 ring-inset ring-success-200">
+                                <div className="ring-success-200 flex items-center gap-2 rounded-xl bg-success-50 px-3 py-2 text-xs font-medium text-success-700 ring-1 ring-inset">
                                     <Check className="h-3.5 w-3.5" strokeWidth={2.4} />
                                     Profile updated
                                 </div>

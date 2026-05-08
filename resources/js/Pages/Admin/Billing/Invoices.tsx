@@ -109,7 +109,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('pending')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'pending'
-                                    ? 'border border-warning-200 bg-warning-100 text-warning-700'
+                                    ? 'border-warning-200 border bg-warning-100 text-warning-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
@@ -119,7 +119,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('paid')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'paid'
-                                    ? 'border border-success-200 bg-success-100 text-success-700'
+                                    ? 'border-success-200 border bg-success-100 text-success-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
@@ -129,7 +129,7 @@ export default function InvoicesPage({ invoices }: Props) {
                             onClick={() => setStatusFilter('overdue')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                                 statusFilter === 'overdue'
-                                    ? 'border border-error-200 bg-error-100 text-error-700'
+                                    ? 'border-error-200 border bg-error-100 text-error-700'
                                     : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >

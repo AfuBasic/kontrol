@@ -32,9 +32,9 @@ export default function AppLoader({ isExiting }: Props) {
             className="fixed inset-0 z-[10000] flex flex-col items-center justify-between bg-white px-6 py-20"
         >
             {/* Soft Ambient Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-40" 
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                <div
+                    className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 opacity-40"
                     style={{ background: 'radial-gradient(circle, rgba(241,245,249,1) 0%, rgba(255,255,255,0) 70%)' }}
                 />
             </div>
@@ -43,20 +43,20 @@ export default function AppLoader({ isExiting }: Props) {
             <div className="relative z-10 flex flex-1 items-center justify-center">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ 
+                    animate={{
                         scale: [1, 1.02, 1],
-                        opacity: 1 
+                        opacity: 1,
                     }}
                     transition={{
                         scale: {
                             duration: 4,
                             repeat: Infinity,
-                            ease: "easeInOut"
+                            ease: 'easeInOut',
                         },
                         opacity: {
                             duration: 1.2,
-                            ease: [0.16, 1, 0.3, 1]
-                        }
+                            ease: [0.16, 1, 0.3, 1],
+                        },
                     }}
                     className="relative"
                 >
@@ -65,7 +65,7 @@ export default function AppLoader({ isExiting }: Props) {
             </div>
 
             {/* Bottom: Subtle Loader */}
-            <div className="relative z-10 pb-safe flex flex-col items-center gap-4">
+            <div className="pb-safe relative z-10 flex flex-col items-center gap-4">
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -74,19 +74,19 @@ export default function AppLoader({ isExiting }: Props) {
                 >
                     {/* Reverted to Spinner as requested */}
                     <Loader2 className="h-6 w-6 animate-spin text-slate-300" strokeWidth={1.5} />
-                    
-                    <div className="h-12 mt-6 overflow-hidden">
+
+                    <div className="mt-6 h-12 overflow-hidden">
                         <AnimatePresence mode="wait">
                             <motion.p
                                 key={currentTip}
                                 initial={{ opacity: 0, y: 15, filter: 'blur(8px)' }}
                                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                                 exit={{ opacity: 0, y: -15, filter: 'blur(8px)' }}
-                                transition={{ 
+                                transition={{
                                     duration: 0.9,
-                                    ease: [0.22, 1, 0.36, 1] // Quintic ease for ultra-smoothness
+                                    ease: [0.22, 1, 0.36, 1], // Quintic ease for ultra-smoothness
                                 }}
-                                className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase text-center max-w-[280px] leading-relaxed"
+                                className="max-w-[280px] text-center text-[10px] leading-relaxed font-black tracking-[0.3em] text-slate-400 uppercase"
                             >
                                 {tips[currentTip]}
                             </motion.p>

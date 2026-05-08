@@ -87,49 +87,46 @@ export default function PendingInvoiceNotification({ invoice, onDismiss }: Props
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`${colors.bg} border ${colors.border} rounded-lg p-4 mb-6`}
+            className={`${colors.bg} border ${colors.border} mb-6 rounded-lg p-4`}
         >
             <div className="flex items-start gap-3">
                 {isUrgent && (
                     <motion.div
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className={`flex-shrink-0 mt-0.5 ${colors.icon}`}
+                        className={`mt-0.5 flex-shrink-0 ${colors.icon}`}
                     >
                         <BellAlertIcon className="h-5 w-5" />
                     </motion.div>
                 )}
                 {!isUrgent && (
-                    <div className={`flex-shrink-0 mt-0.5 ${colors.icon}`}>
+                    <div className={`mt-0.5 flex-shrink-0 ${colors.icon}`}>
                         <BellAlertIcon className="h-5 w-5" />
                     </div>
                 )}
 
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`font-semibold ${colors.text}`}>
-                            Invoice {invoice.invoice_number}
-                        </h3>
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${colors.badge}`}>
-                            {urgency.urgencyText}
-                        </span>
+                    <div className="mb-1 flex items-center gap-2">
+                        <h3 className={`font-semibold ${colors.text}`}>Invoice {invoice.invoice_number}</h3>
+                        <span className={`rounded px-2 py-1 text-xs font-bold ${colors.badge}`}>{urgency.urgencyText}</span>
                     </div>
-                    <p className={`text-sm ${colors.text} opacity-90 mb-3`}>
+                    <p className={`text-sm ${colors.text} mb-3 opacity-90`}>
                         Amount due: <span className="font-semibold">₦{(invoice.amount / 100).toLocaleString()}</span>
                         {invoice.due_date && (
                             <>
-                                {' '} • Due: <span className="font-semibold">{new Date(invoice.due_date).toLocaleDateString()}</span>
+                                {' '}
+                                • Due: <span className="font-semibold">{new Date(invoice.due_date).toLocaleDateString()}</span>
                             </>
                         )}
                     </p>
                     <Link
                         href={`/admin/billing/invoice`}
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                        className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                             isUrgent
-                                ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl active:scale-95'
+                                ? 'bg-red-600 text-white shadow-lg hover:bg-red-700 hover:shadow-xl active:scale-95'
                                 : isWarning
-                                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg active:scale-95'
-                                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg active:scale-95'
+                                  ? 'bg-amber-600 text-white shadow-md hover:bg-amber-700 hover:shadow-lg active:scale-95'
+                                  : 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg active:scale-95'
                         }`}
                     >
                         View Invoice
@@ -137,10 +134,7 @@ export default function PendingInvoiceNotification({ invoice, onDismiss }: Props
                 </div>
 
                 {onDismiss && (
-                    <button
-                        onClick={onDismiss}
-                        className={`flex-shrink-0 p-1 rounded-md transition-colors ${colors.text} hover:bg-black/10`}
-                    >
+                    <button onClick={onDismiss} className={`flex-shrink-0 rounded-md p-1 transition-colors ${colors.text} hover:bg-black/10`}>
                         <XMarkIcon className="h-5 w-5" />
                     </button>
                 )}

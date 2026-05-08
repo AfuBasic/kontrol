@@ -223,7 +223,10 @@ export default function CreateEstate({ plans }: Props) {
                                 {/* Trial Days (conditional) */}
                                 {data.free_trial_enabled && (
                                     <div>
-                                        <label htmlFor="free_trial_days" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                        <label
+                                            htmlFor="free_trial_days"
+                                            className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase"
+                                        >
                                             Trial Duration (Days)
                                         </label>
                                         <input
@@ -239,7 +242,9 @@ export default function CreateEstate({ plans }: Props) {
                                             Days from creation before first billing (1-365, default: 30)
                                         </p>
                                         {errors.free_trial_days && (
-                                            <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.free_trial_days}</p>
+                                            <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">
+                                                {errors.free_trial_days}
+                                            </p>
                                         )}
                                     </div>
                                 )}

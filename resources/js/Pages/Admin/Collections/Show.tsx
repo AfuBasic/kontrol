@@ -610,7 +610,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                     {/* Pagination Controls */}
                     {assignments.last_page > 1 && (
                         <div className="flex items-center justify-between border-t border-slate-50 px-6 py-4 sm:px-8">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
                                 Page <span className="text-slate-900">{assignments.current_page}</span> of{' '}
                                 <span className="text-slate-900">{assignments.last_page}</span>
                             </p>
@@ -626,7 +626,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                                                 ? 'bg-slate-900 text-white shadow-lg'
                                                 : link.url
                                                   ? 'bg-white text-slate-400 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'
-                                                  : 'cursor-not-allowed opacity-30 text-slate-300'
+                                                  : 'cursor-not-allowed text-slate-300 opacity-30'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />

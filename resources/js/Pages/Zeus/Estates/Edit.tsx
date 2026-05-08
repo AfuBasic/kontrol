@@ -199,7 +199,9 @@ export default function EditEstate({ estate }: Props) {
                                 onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
                                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                             />
-                            <p className="mt-1 text-xs text-gray-500">Number of days allowed for access if no trial exists or trial has ended (default: 2)</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Number of days allowed for access if no trial exists or trial has ended (default: 2)
+                            </p>
                             {errors.grace_period_days && <p className="mt-1 text-sm text-red-600">{errors.grace_period_days}</p>}
                         </div>
                     </div>

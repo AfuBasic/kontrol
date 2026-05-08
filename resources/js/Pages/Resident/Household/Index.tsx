@@ -99,9 +99,7 @@ export default function HouseholdIndex({ members }: Props) {
                             setShowForm(!showForm);
                         }}
                         className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-xl transition-all ${
-                            isAtLimit 
-                                ? 'bg-slate-300 cursor-not-allowed shadow-none' 
-                                : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'
+                            isAtLimit ? 'cursor-not-allowed bg-slate-300 shadow-none' : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'
                         }`}
                     >
                         <UserPlus className="h-6 w-6" />
@@ -135,15 +133,15 @@ export default function HouseholdIndex({ members }: Props) {
                 {/* Add Member Form - Premium Bottom Sheet */}
                 <MobileSheet isOpen={showForm} onClose={() => setShowForm(false)} title="Add Family Member">
                     {auth?.user?.resident_subscription?.status === 'past_due' ? (
-                        <div className="flex flex-col items-center text-center py-8">
-                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600 mb-6">
+                        <div className="flex flex-col items-center py-8 text-center">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600">
                                 <ShieldCheck className="h-10 w-10" />
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 mb-3">Access Restricted</h3>
-                            <p className="text-slate-500 font-medium leading-relaxed mb-10 px-4">
+                            <h3 className="mb-3 text-xl font-black text-slate-900">Access Restricted</h3>
+                            <p className="mb-10 px-4 leading-relaxed font-medium text-slate-500">
                                 Your subscription for this estate is currently inactive. Please visit the Kontrol web platform to manage your access.
                             </p>
-                            <button 
+                            <button
                                 onClick={() => setShowForm(false)}
                                 className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
                             >
@@ -152,79 +150,86 @@ export default function HouseholdIndex({ members }: Props) {
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="p-1">
-                        <p className="mb-6 text-sm font-bold text-slate-400">
-                            They'll receive an email invitation to set up their account. Household members can generate visitor access codes
-                            and view the estate board.
-                        </p>
+                            <p className="mb-6 text-sm font-bold text-slate-400">
+                                They'll receive an email invitation to set up their account. Household members can generate visitor access codes and
+                                view the estate board.
+                            </p>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label htmlFor="name" className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
-                                    Full Name
-                                </label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    
-                                    value={form.data.name}
-                                    onChange={(e) => form.setData('name', e.target.value)}
-                                    placeholder="e.g. Jane Doe"
-                                    className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                                />
-                                {form.errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.name}</p>}
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="name" className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">
+                                        Full Name
+                                    </label>
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        value={form.data.name}
+                                        onChange={(e) => form.setData('name', e.target.value)}
+                                        placeholder="e.g. Jane Doe"
+                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    />
+                                    {form.errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.name}</p>}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">
+                                        Email Address
+                                    </label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        value={form.data.email}
+                                        onChange={(e) => form.setData('email', e.target.value)}
+                                        placeholder="e.g. jane@example.com"
+                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    />
+                                    {form.errors.email && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.email}</p>}
+                                </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="email" className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
-                                    Email Address
-                                </label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={form.data.email}
-                                    onChange={(e) => form.setData('email', e.target.value)}
-                                    placeholder="e.g. jane@example.com"
-                                    className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                                />
-                                {form.errors.email && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.email}</p>}
+                            <div className="mt-8 flex flex-col gap-3 pb-6">
+                                <button
+                                    type="submit"
+                                    disabled={form.processing}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {form.processing ? (
+                                        <span className="flex items-center gap-2">
+                                            <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                                                <circle
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                    fill="none"
+                                                    className="opacity-25"
+                                                />
+                                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                                            </svg>
+                                            Sending Invite...
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <Mail className="h-5 w-5" />
+                                            <span>Send Invitation</span>
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowForm(false);
+                                        form.reset();
+                                        form.clearErrors();
+                                    }}
+                                    className="w-full py-2 text-sm font-black text-slate-400 transition-colors hover:text-slate-900"
+                                >
+                                    Cancel
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="mt-8 flex flex-col gap-3 pb-6">
-                            <button
-                                type="submit"
-                                disabled={form.processing}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
-                            >
-                                {form.processing ? (
-                                    <span className="flex items-center gap-2">
-                                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                                            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-                                        </svg>
-                                        Sending Invite...
-                                    </span>
-                                ) : (
-                                    <>
-                                        <Mail className="h-5 w-5" />
-                                        <span>Send Invitation</span>
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowForm(false);
-                                    form.reset();
-                                    form.clearErrors();
-                                }}
-                                className="w-full py-2 text-sm font-black text-slate-400 transition-colors hover:text-slate-900"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                )}
+                        </form>
+                    )}
                 </MobileSheet>
 
                 {/* Members List */}
@@ -234,12 +239,15 @@ export default function HouseholdIndex({ members }: Props) {
                         animate={{ opacity: 1, scale: 1 }}
                         className="group relative overflow-hidden rounded-[40px] bg-slate-900 p-12 text-center shadow-2xl"
                     >
-                        <div className="absolute inset-0 opacity-[0.1] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                        <div
+                            className="pointer-events-none absolute inset-0 opacity-[0.1]"
+                            style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }}
+                        />
                         <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[32px] bg-white/10 text-white backdrop-blur-md transition-transform group-hover:rotate-6">
                             <Users className="h-12 w-12" />
                         </div>
                         <h3 className="text-2xl font-black tracking-tight text-white">Your household is empty</h3>
-                        <p className="mt-3 text-sm font-medium leading-relaxed text-slate-400 px-4">
+                        <p className="mt-3 px-4 text-sm leading-relaxed font-medium text-slate-400">
                             Add family members to share control. They'll be able to generate their own visitor codes and stay updated.
                         </p>
                         <button
@@ -254,11 +262,10 @@ export default function HouseholdIndex({ members }: Props) {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between px-2">
                             <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                Household Members ({members.length}{limit !== null ? ` / ${limit}` : ''})
+                                Household Members ({members.length}
+                                {limit !== null ? ` / ${limit}` : ''})
                             </h3>
-                            {isAtLimit && (
-                                <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>
-                            )}
+                            {isAtLimit && <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>}
                         </div>
                         {members.map((member, index) => (
                             <motion.div
@@ -273,7 +280,9 @@ export default function HouseholdIndex({ members }: Props) {
                                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-xl font-black text-white">
                                             {member.name[0].toUpperCase()}
                                         </div>
-                                        <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white ${member.status === 'accepted' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                        <div
+                                            className={`absolute -right-1 -bottom-1 h-4 w-4 rounded-full border-2 border-white ${member.status === 'accepted' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                        />
                                     </div>
                                     <div>
                                         <p className="text-base font-black text-slate-900">{member.name}</p>
@@ -306,21 +315,21 @@ export default function HouseholdIndex({ members }: Props) {
                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">What they can do</h3>
                     </div>
                     <div className="grid gap-4">
-                        <FeatureCard 
+                        <FeatureCard
                             title="Visitor Management"
                             description="They can generate short-term access codes for their own guests and deliveries."
                             icon={<Zap className="h-6 w-6" />}
                             color="bg-indigo-50 text-indigo-600"
                             delay={0.1}
                         />
-                        <FeatureCard 
+                        <FeatureCard
                             title="Community Board"
                             description="Stay updated with announcements and community activities on the estate board."
                             icon={<BellRing className="h-6 w-6" />}
                             color="bg-amber-50 text-amber-600"
                             delay={0.2}
                         />
-                        <FeatureCard 
+                        <FeatureCard
                             title="Real-time Activity"
                             description="View visitor entries and exits related to your home in the live activity feed."
                             icon={<Activity className="h-6 w-6" />}
@@ -329,11 +338,11 @@ export default function HouseholdIndex({ members }: Props) {
                         />
                     </div>
                     <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="mb-2 flex items-center gap-3">
                             <ShieldCheck className="h-5 w-5 text-indigo-400" />
-                            <h4 className="text-sm font-black uppercase tracking-widest">Privacy & Control</h4>
+                            <h4 className="text-sm font-black tracking-widest uppercase">Privacy & Control</h4>
                         </div>
-                        <p className="text-xs font-medium leading-relaxed text-slate-400">
+                        <p className="text-xs leading-relaxed font-medium text-slate-400">
                             Household members cannot add other members or create long-term codes. You remain the primary administrator of your home.
                         </p>
                     </div>

@@ -34,23 +34,23 @@ export default function LandingLayout({ children, isDark = false }: Props) {
     return (
         <div className="min-h-screen bg-white font-sans text-slate-900">
             {/* --- NAVIGATION --- */}
-            <header 
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                    isScrolled 
-                        ? 'bg-white/80 backdrop-blur-md shadow-sm py-4' 
-                        : isHeaderTransparent 
-                            ? 'bg-transparent py-6' 
-                            : 'bg-white/80 backdrop-blur-md py-6'
+            <header
+                className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
+                    isScrolled
+                        ? 'bg-white/80 py-4 shadow-sm backdrop-blur-md'
+                        : isHeaderTransparent
+                          ? 'bg-transparent py-6'
+                          : 'bg-white/80 py-6 backdrop-blur-md'
                 }`}
             >
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <Link href={landing.home().url} className="flex items-center group">
-                            <img 
-                                src={isHeaderTransparent ? "/assets/images/kontrol-white-logo.png" : "/assets/images/kontrol-logo-horizontal.png"} 
-                                alt="Kontrol Logo" 
-                                className="h-12 w-auto transition-transform group-hover:scale-105" 
+                        <Link href={landing.home().url} className="group flex items-center">
+                            <img
+                                src={isHeaderTransparent ? '/assets/images/kontrol-white-logo.png' : '/assets/images/kontrol-logo-horizontal.png'}
+                                alt="Kontrol Logo"
+                                className="h-12 w-auto transition-transform group-hover:scale-105"
                             />
                         </Link>
 
@@ -76,7 +76,7 @@ export default function LandingLayout({ children, isDark = false }: Props) {
                         </div>
 
                         {/* Mobile Toggle */}
-                        <button 
+                        <button
                             onClick={() => setIsMenuOpen(true)}
                             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors md:hidden ${
                                 isHeaderTransparent ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-600'

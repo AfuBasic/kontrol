@@ -112,10 +112,10 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
 
         setIsDeleting(true);
         router.delete(bulkDelete.url(), {
-            data: { 
+            data: {
                 ids: selectedIds,
                 all: allSelected,
-                filters: { search, status }
+                filters: { search, status },
             },
             onSuccess: () => {
                 setSelectedIds([]);
@@ -300,7 +300,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="border-t border-primary-200 pt-3 mt-3"
+                                    className="mt-3 border-t border-primary-200 pt-3"
                                 >
                                     <p className="text-center text-xs font-medium text-primary-700">
                                         All {residents.data.length} residents on this page are selected.{' '}
@@ -376,7 +376,13 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                                 : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
-                                                    {resident.suspended_at ? 'Suspended' : !resident.email_verified_at ? 'Inactive' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    {resident.suspended_at
+                                                        ? 'Suspended'
+                                                        : !resident.email_verified_at
+                                                          ? 'Inactive'
+                                                          : resident.status === 'accepted'
+                                                            ? 'Active'
+                                                            : 'Pending'}
                                                 </span>
                                                 <ResidentActions resident={resident} />
                                             </div>
@@ -480,7 +486,13 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                                 : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
-                                                    {resident.suspended_at ? 'Suspended' : !resident.email_verified_at ? 'Inactive' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                    {resident.suspended_at
+                                                        ? 'Suspended'
+                                                        : !resident.email_verified_at
+                                                          ? 'Inactive'
+                                                          : resident.status === 'accepted'
+                                                            ? 'Active'
+                                                            : 'Pending'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">

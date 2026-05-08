@@ -8,13 +8,7 @@ interface SEOProps {
     type?: string;
 }
 
-export default function SEO({ 
-    title, 
-    description, 
-    image = '/images/og-image.png', 
-    url = 'https://kontrol.test', 
-    type = 'website' 
-}: SEOProps) {
+export default function SEO({ title, description, image = '/images/og-image.png', url = 'https://kontrol.test', type = 'website' }: SEOProps) {
     const fullTitle = `${title} | Kontrol - Premium Estate Management`;
 
     return (

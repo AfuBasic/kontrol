@@ -1,6 +1,6 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { X } from 'lucide-react';
-import type { ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import { Fragment } from 'react';
 
 interface Props {
@@ -38,7 +38,7 @@ export default function MobileSheet({ isOpen, onClose, title, children }: Props)
                             leaveFrom="translate-y-0"
                             leaveTo="translate-y-full"
                         >
-                            <DialogPanel className="pb-safe relative w-full max-h-[90vh] flex flex-col rounded-t-[2.5rem] bg-white pt-2 shadow-2xl ring-1 ring-black/5">
+                            <DialogPanel className="pb-safe relative flex max-h-[90vh] w-full flex-col rounded-t-[2.5rem] bg-white pt-2 shadow-2xl ring-1 ring-black/5">
                                 {/* Grabber Handle */}
                                 <div className="flex justify-center p-2">
                                     <div className="h-1.5 w-12 rounded-full bg-slate-200" />

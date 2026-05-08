@@ -95,13 +95,13 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
 
     const confirmAction = () => {
         if (!modalConfig.residentUlid) return;
-    
+
         const ulid = modalConfig.residentUlid;
         const action = modalConfig.type === 'approve' ? approvalApprove : approvalReject;
-    
+
         setProcessingId(ulid);
         setModalConfig((prev) => ({ ...prev, isOpen: false }));
-    
+
         router.post(
             action.url({ user: ulid }),
             {},

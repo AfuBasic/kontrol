@@ -145,21 +145,25 @@ export default function SecurityVerify() {
             reset();
             return;
         }
-        router.post(VerifyController.decision.url(), { 
-            decision, 
-            code,
-            ...extraData 
-        }, { 
-            preserveScroll: true, 
-            onFinish: reset 
-        });
+        router.post(
+            VerifyController.decision.url(),
+            {
+                decision,
+                code,
+                ...extraData,
+            },
+            {
+                preserveScroll: true,
+                onFinish: reset,
+            },
+        );
     };
 
     return (
         <>
             <Head title="Verify Access · Security" />
 
-            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col pt-8 pb-6 px-4 sm:px-8">
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-6 sm:px-8">
                 <AnimatePresence mode="wait">
                     {result ? (
                         <ResultPanel
@@ -223,11 +227,7 @@ export default function SecurityVerify() {
     );
 }
 
-SecurityVerify.layout = (page: React.ReactNode) => (
-    <SecurityLayout variant="light">
-        {page}
-    </SecurityLayout>
-);
+SecurityVerify.layout = (page: React.ReactNode) => <SecurityLayout variant="light">{page}</SecurityLayout>;
 
 type ResultPanelProps = {
     result: ValidationResult;
@@ -245,14 +245,14 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center text-center pt-10"
+                className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
             >
                 <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-rose-50 text-rose-500 ring-4 ring-rose-500/5">
                     <ShieldX className="h-12 w-12" />
                 </div>
                 <h2 className="text-3xl font-black tracking-tight text-slate-900">Invalid Code</h2>
-                <p className="mt-3 text-lg font-medium text-slate-500 max-w-xs">{result.message}</p>
-                
+                <p className="mt-3 max-w-xs text-lg font-medium text-slate-500">{result.message}</p>
+
                 <button
                     onClick={onReset}
                     className="mt-12 flex items-center gap-3 rounded-2xl bg-slate-100 px-8 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
@@ -265,19 +265,14 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-1 flex-col"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-1 flex-col">
             <div className="flex flex-1 flex-col items-center justify-center p-4">
                 <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl">
                     <div className="flex flex-col items-center px-8 pt-12 pb-8">
                         <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-500/5">
                             <ShieldCheck className="h-12 w-12" strokeWidth={2} />
                         </div>
-                        
+
                         <h2 className="text-3xl font-black tracking-tight text-slate-900">Access Granted</h2>
                         <div className="mt-2 text-center">
                             <p className="text-base font-medium text-slate-500">Visitor verification successful.</p>
@@ -287,34 +282,19 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
                     <div className="border-t border-slate-100 bg-slate-50/50 p-2">
                         <div className="divide-y divide-slate-100">
                             {result.visitor_name && (
-                                <DetailRow 
-                                    icon={<User className="h-5 w-5" strokeWidth={2} />} 
-                                    label="Visitor" 
-                                    value={result.visitor_name} 
-                                />
+                                <DetailRow icon={<User className="h-5 w-5" strokeWidth={2} />} label="Visitor" value={result.visitor_name} />
                             )}
                             {result.host_name && (
-                                <DetailRow 
-                                    icon={<HomeIcon className="h-5 w-5" strokeWidth={2} />} 
-                                    label="Host" 
-                                    value={result.host_name} 
-                                />
+                                <DetailRow icon={<HomeIcon className="h-5 w-5" strokeWidth={2} />} label="Host" value={result.host_name} />
                             )}
                             {expiry && result.code_type !== 'long_lived' && (
-                                <DetailRow 
-                                    icon={<Clock className="h-5 w-5" strokeWidth={2} />} 
-                                    label="Expires in" 
-                                    value={expiry} 
-                                />
+                                <DetailRow icon={<Clock className="h-5 w-5" strokeWidth={2} />} label="Expires in" value={expiry} />
                             )}
                         </div>
                     </div>
 
                     <div className="px-8 pt-8 pb-10">
-                        <VehicleForm 
-                            show={result.has_vehicle} 
-                            onSubmit={(data) => onAdmit(data)} 
-                        />
+                        <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
 
                         {!result.has_vehicle && (
                             <button
@@ -355,7 +335,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
             <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 p-4">
                 <div className="flex items-center gap-3 text-indigo-600">
                     <Car className="h-5 w-5" />
-                    <p className="text-xs font-black uppercase tracking-widest">Vehicle Details Required</p>
+                    <p className="text-xs font-black tracking-widest uppercase">Vehicle Details Required</p>
                 </div>
             </div>
 
@@ -366,7 +346,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
                         placeholder="Vehicle Make (e.g. Toyota)"
                         value={data.vehicle_make}
                         onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                     />
                 </div>
                 <div className="relative">
@@ -375,7 +355,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
                         placeholder="Vehicle Model (e.g. Camry)"
                         value={data.vehicle_model}
                         onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                     />
                 </div>
                 <div className="relative">
@@ -384,7 +364,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) 
                         placeholder="Plate Number"
                         value={data.vehicle_plate_number}
                         onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                        className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                     />
                 </div>
             </div>
@@ -409,7 +389,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
             </div>
             <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{label}</p>
-                <p className="truncate text-base font-bold text-slate-900 leading-tight">{value}</p>
+                <p className="truncate text-base leading-tight font-bold text-slate-900">{value}</p>
             </div>
         </div>
     );

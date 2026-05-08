@@ -39,7 +39,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
     };
 
     return (
-        <div className="relative w-full min-h-screen">
+        <div className="relative min-h-screen w-full">
             <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                     key={pathname}
@@ -47,7 +47,7 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    className="w-full min-h-screen bg-slate-50"
+                    className="min-h-screen w-full bg-slate-50"
                 >
                     {children}
                 </motion.div>

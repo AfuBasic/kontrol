@@ -1,8 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { 
-    Users, 
-    CreditCard, 
+import {
+    Users,
+    CreditCard,
     ArrowLeft,
     ShieldCheck,
     Banknote,
@@ -13,7 +13,7 @@ import {
     ArrowUpRight,
     Activity,
     DollarSign,
-    Calendar
+    Calendar,
 } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
@@ -74,7 +74,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
-            currency: 'NGN'
+            currency: 'NGN',
         }).format(amount / 100);
     };
 
@@ -83,7 +83,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
         return new Date(dateString).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            year: 'numeric'
+            year: 'numeric',
         });
     };
 
@@ -109,18 +109,23 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                 <div className="flex flex-col items-start justify-between gap-6 border-b border-slate-50 p-8 sm:flex-row sm:items-center">
                     <div>
                         <div className="mb-2 flex items-center gap-2">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
-                                estate.status === 'active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-slate-50 text-slate-700 ring-slate-200'
-                            }`}>
+                            <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
+                                    estate.status === 'active'
+                                        ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                                        : 'bg-slate-50 text-slate-700 ring-slate-200'
+                                }`}
+                            >
                                 {estate.status}
                             </span>
-                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold tracking-widest text-indigo-700 uppercase ring-1 ring-inset ring-indigo-200">
+                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold tracking-widest text-indigo-700 uppercase ring-1 ring-indigo-200 ring-inset">
                                 {estate.subscription_record?.plan?.name || 'No Plan'}
                             </span>
                         </div>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900">{estate.name}</h1>
                         <p className="mt-1 text-sm text-slate-500">
-                            {estate.settings?.charge_type === 'estate' ? 'Estate pays bulk' : 'Residents pay individual'} · Created {formatDate(estate.created_at)}
+                            {estate.settings?.charge_type === 'estate' ? 'Estate pays bulk' : 'Residents pay individual'} · Created{' '}
+                            {formatDate(estate.created_at)}
                         </p>
                     </div>
 
@@ -180,7 +185,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
 
                     {/* Primary Admin */}
                     <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
-                        <h3 className="mb-6 flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        <h3 className="mb-6 flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase">
                             <Info className="h-4 w-4 text-indigo-600" />
                             Primary Admin
                         </h3>
@@ -203,9 +208,9 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
 
                 {/* Right: Resident Payment Status */}
                 <div className="lg:col-span-2">
-                    <div className="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+                    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
                         <div className="flex items-center justify-between border-b border-slate-50 px-8 py-6">
-                            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                            <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase">
                                 <Users className="h-4 w-4 text-indigo-600" />
                                 Resident Payment Status
                             </h3>
@@ -228,9 +233,11 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                                 <div className="text-[11px] text-slate-400">{resident.user.email}</div>
                                             </td>
                                             <td className="px-8 py-4">
-                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
-                                                    resident.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                                                }`}>
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
+                                                        resident.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                                                    }`}
+                                                >
                                                     {resident.status}
                                                 </span>
                                             </td>
@@ -238,9 +245,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                                 {formatCurrency(resident.last_amount)}
                                                 <div className="text-[10px] text-slate-400">{formatDate(resident.last_payment_at)}</div>
                                             </td>
-                                            <td className="px-8 py-4 text-sm font-medium text-slate-600">
-                                                {formatDate(resident.next_due)}
-                                            </td>
+                                            <td className="px-8 py-4 text-sm font-medium text-slate-600">{formatDate(resident.next_due)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -251,13 +256,16 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
             </div>
 
             {/* Estate Transactions Table */}
-            <div className="mt-8 rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+            <div className="mt-8 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-50 px-8 py-6">
-                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase">
                         <Banknote className="h-4 w-4 text-indigo-600" />
                         Estate Transactions
                     </h3>
-                    <Link href="/zeus/transactions" className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                    <Link
+                        href="/zeus/transactions"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                    >
                         View All <ArrowUpRight className="h-3 w-3" />
                     </Link>
                 </div>
@@ -275,23 +283,21 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                         <tbody className="divide-y divide-slate-50">
                             {recentTransactions.map((tx) => (
                                 <tr key={tx.id} className="transition-colors hover:bg-slate-50/50">
-                                    <td className="px-8 py-4 text-sm font-medium text-slate-600">
-                                        {new Date(tx.created_at).toLocaleString()}
-                                    </td>
+                                    <td className="px-8 py-4 text-sm font-medium text-slate-600">{new Date(tx.created_at).toLocaleString()}</td>
                                     <td className="px-8 py-4">
                                         <div className="text-sm font-semibold text-slate-900">{tx.invoice?.user?.name || '—'}</div>
                                     </td>
                                     <td className="px-8 py-4 text-sm font-bold text-slate-900">{formatCurrency(tx.amount)}</td>
                                     <td className="px-8 py-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
-                                            tx.status === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                                        }`}>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-tight uppercase ${
+                                                tx.status === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                            }`}
+                                        >
                                             {tx.status === 'success' ? 'Paid' : tx.status}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-4 text-xs font-mono text-slate-400">
-                                        {tx.paystack_reference}
-                                    </td>
+                                    <td className="px-8 py-4 font-mono text-xs text-slate-400">{tx.paystack_reference}</td>
                                 </tr>
                             ))}
                         </tbody>

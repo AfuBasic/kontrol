@@ -1,9 +1,9 @@
 import { Head, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Search, 
-    Filter, 
-    Calendar, 
+import {
+    Search,
+    Filter,
+    Calendar,
     Building2,
     ChevronLeft,
     ChevronRight,
@@ -19,7 +19,7 @@ import {
     Activity,
     Users,
     ChevronDown,
-    RotateCcw
+    RotateCcw,
 } from 'lucide-react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
@@ -85,16 +85,20 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
     const handleFilter = () => {
-        router.get('/zeus/transactions', {
-            search,
-            status,
-            estate_id: estateId,
-            date_from: dateFrom,
-            date_to: dateTo
-        }, {
-            preserveState: true,
-            replace: true
-        });
+        router.get(
+            '/zeus/transactions',
+            {
+                search,
+                status,
+                estate_id: estateId,
+                date_from: dateFrom,
+                date_to: dateTo,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const resetFilters = () => {
@@ -110,7 +114,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
             currency: 'NGN',
-            minimumFractionDigits: 0
+            minimumFractionDigits: 0,
         }).format(amount / 100);
     };
 
@@ -118,7 +122,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
         });
     };
 
@@ -126,22 +130,22 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         switch (status) {
             case 'success':
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200 uppercase tracking-tight">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-emerald-700 uppercase ring-1 ring-emerald-200 ring-inset">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Paid
                     </span>
                 );
             case 'failed':
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 ring-1 ring-inset ring-rose-200 uppercase tracking-tight">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-rose-700 uppercase ring-1 ring-rose-200 ring-inset">
                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                         Failed
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 ring-1 ring-inset ring-amber-200 uppercase tracking-tight">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-amber-700 uppercase ring-1 ring-amber-200 ring-inset">
+                        <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                         Pending
                     </span>
                 );
@@ -156,7 +160,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h1 className="text-4xl font-black tracking-tight text-slate-900">Transactions</h1>
-                    <p className="mt-1 text-slate-500 font-medium">Real-time financial monitor for the platform.</p>
+                    <p className="mt-1 font-medium text-slate-500">Real-time financial monitor for the platform.</p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                     <Activity className="h-4 w-4" />
@@ -180,7 +184,9 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                         transition={{ delay: i * 0.1 }}
                         className="group relative overflow-hidden rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md"
                     >
-                        <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 transition-transform group-hover:scale-110`}>
+                        <div
+                            className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 transition-transform group-hover:scale-110`}
+                        >
                             <stat.icon className="h-6 w-6" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">{stat.label}</p>
@@ -190,11 +196,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
             </div>
 
             {/* Advanced Filtering Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8 space-y-4"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 space-y-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     {/* Search Field */}
                     <div className="relative flex-1">
@@ -205,7 +207,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-                            className="w-full rounded-2xl border-slate-100 bg-white py-3 pl-11 pr-4 text-sm font-medium shadow-sm transition-all focus:border-slate-900 focus:ring-0"
+                            className="w-full rounded-2xl border-slate-100 bg-white py-3 pr-4 pl-11 text-sm font-medium shadow-sm transition-all focus:border-slate-900 focus:ring-0"
                         />
                     </div>
 
@@ -216,11 +218,13 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <select
                                 value={estateId}
                                 onChange={(e) => setEstateId(e.target.value)}
-                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pl-11 pr-10 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
+                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
                             >
                                 <option value="">All Estates</option>
-                                {estates.map(e => (
-                                    <option key={e.id} value={e.id}>{e.name}</option>
+                                {estates.map((e) => (
+                                    <option key={e.id} value={e.id}>
+                                        {e.name}
+                                    </option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
@@ -231,7 +235,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pl-11 pr-10 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
+                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="success">Paid</option>
@@ -284,7 +288,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <tr className="border-b border-slate-50 bg-slate-50/30">
                                 <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Date & Reference</th>
                                 <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident / Estate</th>
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase text-right">Amount</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount</th>
                                 <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Status</th>
                                 <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Method</th>
                                 <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase"></th>
@@ -305,14 +309,14 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                                 </tr>
                             ) : (
                                 transactions.data.map((tx) => (
-                                    <tr 
-                                        key={tx.id} 
+                                    <tr
+                                        key={tx.id}
                                         onClick={() => setSelectedTransaction(tx)}
                                         className="group cursor-pointer transition-colors hover:bg-slate-50/50"
                                     >
                                         <td className="px-8 py-6">
                                             <div className="text-sm font-bold text-slate-900">{formatDate(tx.created_at)}</div>
-                                            <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-slate-400 uppercase tracking-tighter">
+                                            <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] tracking-tighter text-slate-400 uppercase">
                                                 {tx.paystack_reference}
                                             </div>
                                         </td>
@@ -320,16 +324,12 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                                             <div className="text-sm font-bold text-slate-900">
                                                 {tx.invoice?.user?.name || tx.customer_email || 'System Payment'}
                                             </div>
-                                            <div className="mt-0.5 text-xs text-slate-400">
-                                                {tx.estate?.name || 'Kontrol HQ'}
-                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-400">{tx.estate?.name || 'Kontrol HQ'}</div>
                                         </td>
                                         <td className="px-8 py-6 text-right">
                                             <div className="text-sm font-black text-slate-900">{formatCurrency(tx.amount)}</div>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            {getStatusBadge(tx.status)}
-                                        </td>
+                                        <td className="px-8 py-6">{getStatusBadge(tx.status)}</td>
                                         <td className="px-8 py-6">
                                             <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
                                                 <CreditCard className="h-3 w-3" />
@@ -358,15 +358,15 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                     <div className="flex gap-2">
                         <button
                             disabled={transactions.current_page === 1}
-                            onClick={() => router.get(transactions.links.find(l => l.label === '&laquo; Previous')?.url || '')}
-                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                            onClick={() => router.get(transactions.links.find((l) => l.label === '&laquo; Previous')?.url || '')}
+                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                         >
                             <ChevronLeft className="h-4 w-4" /> Previous
                         </button>
                         <button
                             disabled={transactions.current_page === transactions.last_page}
-                            onClick={() => router.get(transactions.links.find(l => l.label === 'Next &raquo;')?.url || '')}
-                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                            onClick={() => router.get(transactions.links.find((l) => l.label === 'Next &raquo;')?.url || '')}
+                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                         >
                             Next <ChevronRight className="h-4 w-4" />
                         </button>
@@ -376,23 +376,18 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
 
             {/* Transaction Detail Modal */}
             <AnimatePresence>
-                {selectedTransaction && (
-                    <TransactionDetailModal 
-                        transaction={selectedTransaction} 
-                        onClose={() => setSelectedTransaction(null)} 
-                    />
-                )}
+                {selectedTransaction && <TransactionDetailModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />}
             </AnimatePresence>
         </ZeusLayout>
     );
 }
 
-function TransactionDetailModal({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) {
+function TransactionDetailModal({ transaction, onClose }: { transaction: Transaction; onClose: () => void }) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
             currency: 'NGN',
-            minimumFractionDigits: 2
+            minimumFractionDigits: 2,
         }).format(amount / 100);
     };
 
@@ -413,14 +408,14 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: Transac
             >
                 <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/30 px-10 py-8">
                     <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Transaction Details</h2>
-                        <p className="mt-1 flex items-center gap-2 font-mono text-xs text-slate-400 uppercase tracking-tighter">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Transaction Details</h2>
+                        <p className="mt-1 flex items-center gap-2 font-mono text-xs tracking-tighter text-slate-400 uppercase">
                             {transaction.paystack_reference}
                             <div className="h-1 w-1 rounded-full bg-slate-300" />
                             ID #{transaction.id}
                         </p>
                     </div>
-                    <button onClick={onClose} className="rounded-2xl bg-slate-100 p-3 hover:bg-slate-200 transition-colors active:scale-90">
+                    <button onClick={onClose} className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90">
                         <X className="h-5 w-5 text-slate-900" />
                     </button>
                 </div>
@@ -445,7 +440,7 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: Transac
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-y-10 gap-x-12">
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-10">
                         <div>
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Entity</p>
                             <p className="mt-2 text-sm font-black text-slate-900">{transaction.estate?.name || 'Kontrol HQ'}</p>

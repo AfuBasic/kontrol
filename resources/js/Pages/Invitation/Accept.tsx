@@ -33,7 +33,7 @@ export default function AcceptInvitation({ user }: Props) {
                 {/* Ambient logic background */}
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute top-0 left-0 h-96 w-96 bg-[#1F6FDB] opacity-10 blur-[100px]" />
-                    <div className="absolute bottom-0 right-0 h-96 w-96 bg-[#1F6FDB] opacity-5 blur-[100px]" />
+                    <div className="absolute right-0 bottom-0 h-96 w-96 bg-[#1F6FDB] opacity-5 blur-[100px]" />
                 </div>
 
                 <motion.div
@@ -45,7 +45,11 @@ export default function AcceptInvitation({ user }: Props) {
                     {/* Branding - Quiet Luxury (Small & Centered) */}
                     <div className="mb-10 flex justify-center">
                         <div className="h-20 w-auto">
-                            <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="h-full w-auto object-contain transition-transform duration-700 hover:scale-105" />
+                            <img
+                                src="/assets/images/kontrol-white-logo.png"
+                                alt="Kontrol"
+                                className="h-full w-auto object-contain transition-transform duration-700 hover:scale-105"
+                            />
                         </div>
                     </div>
 
@@ -61,9 +65,7 @@ export default function AcceptInvitation({ user }: Props) {
                                 {/* Email (Locked Display) */}
                                 <div>
                                     <label className="mb-2 block text-xs font-medium tracking-wider text-white/40 uppercase">Assigned Email</label>
-                                    <div className="rounded-xl border border-white/5 bg-white/5 px-4 py-3.5 text-sm text-white/60">
-                                        {user.email}
-                                    </div>
+                                    <div className="rounded-xl border border-white/5 bg-white/5 px-4 py-3.5 text-sm text-white/60">{user.email}</div>
                                 </div>
 
                                 {/* Password Entrance */}
@@ -80,26 +82,32 @@ export default function AcceptInvitation({ user }: Props) {
                                                 onChange={(e) => setData('password', e.target.value)}
                                                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 transition-all focus:border-[#1F6FDB] focus:bg-white/10 focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                                 placeholder="Create a strong password"
-                                                
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/20 outline-none transition-colors hover:text-white/60"
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/20 transition-colors outline-none hover:text-white/60"
                                                 tabIndex={-1}
                                             >
                                                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                             </button>
                                         </div>
                                         {errors.password && (
-                                            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-xs text-red-400">
+                                            <motion.p
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="mt-1.5 text-xs text-red-400"
+                                            >
                                                 {errors.password}
                                             </motion.p>
                                         )}
                                     </div>
 
                                     <div className="relative">
-                                        <label htmlFor="password_confirmation" className="mb-2 block text-xs font-medium tracking-wider text-white/40 uppercase">
+                                        <label
+                                            htmlFor="password_confirmation"
+                                            className="mb-2 block text-xs font-medium tracking-wider text-white/40 uppercase"
+                                        >
                                             Verify Password
                                         </label>
                                         <div className="relative">
@@ -114,7 +122,7 @@ export default function AcceptInvitation({ user }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/20 outline-none transition-colors hover:text-white/60"
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/20 transition-colors outline-none hover:text-white/60"
                                                 tabIndex={-1}
                                             >
                                                 {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -133,7 +141,11 @@ export default function AcceptInvitation({ user }: Props) {
                                             <>
                                                 <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
                                                 </svg>
                                                 Validating...
                                             </>

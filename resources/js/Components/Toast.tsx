@@ -36,7 +36,7 @@ export default function Toast({ show, message, type = 'success', onClick, onClos
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div 
+                    <div
                         className={`pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl border border-gray-100 bg-white/90 shadow-2xl ring-1 ring-black/5 backdrop-blur-sm ${onClick ? 'cursor-pointer transition-transform active:scale-95' : ''}`}
                         onClick={() => {
                             if (onClick) {

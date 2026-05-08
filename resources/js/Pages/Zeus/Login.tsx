@@ -84,7 +84,6 @@ export default function Login() {
                                         onChange={(e) => setData('username', e.target.value)}
                                         placeholder="Enter your username"
                                         autoComplete="username"
-                                        
                                         className="w-full rounded-lg border border-primary-700/40 bg-primary-800/30 px-4 py-3 text-sm text-white placeholder-primary-400/60 transition-all focus:border-primary-500/80 focus:bg-primary-800/50 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                                     />
                                     {errors.username && <p className="mt-2 text-sm text-red-400">{errors.username}</p>}

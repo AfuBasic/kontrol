@@ -156,11 +156,7 @@ function CheckCircleIcon({ className }: { className?: string }) {
 function XCircleIcon({ className }: { className?: string }) {
     return (
         <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
     );
 }
@@ -233,7 +229,8 @@ const coreBenefits = [
     {
         icon: ChartIcon,
         title: 'Track everything',
-        description: 'A complete, tamper-proof audit trail of every visitor: who, when, whom they visited, and when they left. Permanent peace of mind.',
+        description:
+            'A complete, tamper-proof audit trail of every visitor: who, when, whom they visited, and when they left. Permanent peace of mind.',
     },
 ];
 
@@ -352,11 +349,7 @@ function HeroActivityMock() {
             </div>
             <div className="mt-3 flex items-end gap-1.5">
                 {[38, 62, 45, 74, 90, 52, 68].map((h, i) => (
-                    <div
-                        key={i}
-                        className="flex-1 rounded-sm bg-linear-to-t from-blue-400 to-indigo-500"
-                        style={{ height: `${h * 0.6}px` }}
-                    />
+                    <div key={i} className="flex-1 rounded-sm bg-linear-to-t from-blue-400 to-indigo-500" style={{ height: `${h * 0.6}px` }} />
                 ))}
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -496,9 +489,7 @@ function SecurityShowcaseMock() {
 
                 <div className="mt-4 flex gap-2.5">
                     <button className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white">Admit</button>
-                    <button className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700">
-                        Reject
-                    </button>
+                    <button className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700">Reject</button>
                 </div>
             </div>
         </div>
@@ -757,8 +748,8 @@ export default function Landing({ plans }: Props) {
 
                             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
                                 Kontrol is an access management platform for gated communities. Residents generate time-limited codes for their
-                                visitors, security validates those codes at the gate, and administrators see every entry as it happens. Codes expire on
-                                their own. Every visit is recorded. Nothing gets written in a notebook at the gate.
+                                visitors, security validates those codes at the gate, and administrators see every entry as it happens. Codes expire
+                                on their own. Every visit is recorded. Nothing gets written in a notebook at the gate.
                             </p>
 
                             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -785,10 +776,7 @@ export default function Landing({ plans }: Props) {
                                         'from-amber-400 to-orange-500',
                                         'from-rose-400 to-pink-500',
                                     ].map((gradient, i) => (
-                                        <div
-                                            key={i}
-                                            className={`h-8 w-8 rounded-full bg-linear-to-br ${gradient} ring-2 ring-white`}
-                                        />
+                                        <div key={i} className={`h-8 w-8 rounded-full bg-linear-to-br ${gradient} ring-2 ring-white`} />
                                     ))}
                                 </div>
                                 <div>
@@ -948,8 +936,8 @@ export default function Landing({ plans }: Props) {
                                 Invite a visitor in under 10 seconds.
                             </h3>
                             <p className="mt-4 text-base leading-relaxed text-slate-600">
-                                No more phone calls to the gate. Residents generate codes from their phone, share them over Telegram, WhatsApp, or SMS,
-                                and get notified the moment their guest arrives.
+                                No more phone calls to the gate. Residents generate codes from their phone, share them over Telegram, WhatsApp, or
+                                SMS, and get notified the moment their guest arrives.
                             </p>
                             <ul className="mt-6 space-y-3">
                                 {[
@@ -1151,9 +1139,7 @@ export default function Landing({ plans }: Props) {
                         className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur"
                     >
                         <div className="grid grid-cols-3 border-b border-white/10 bg-white/[0.02]">
-                            <div className="px-4 py-4 text-left text-xs font-semibold tracking-wide text-slate-400 uppercase sm:px-6">
-                                Capability
-                            </div>
+                            <div className="px-4 py-4 text-left text-xs font-semibold tracking-wide text-slate-400 uppercase sm:px-6">Capability</div>
                             <div className="flex items-center gap-2 px-4 py-4 text-left text-xs font-semibold tracking-wide text-slate-400 uppercase sm:px-6">
                                 <XCircleIcon className="h-4 w-4 text-rose-400" />
                                 <span className="hidden sm:inline">The old way</span>
@@ -1165,10 +1151,7 @@ export default function Landing({ plans }: Props) {
                             </div>
                         </div>
                         {comparisonRows.map((row, i) => (
-                            <div
-                                key={row.feature}
-                                className={`grid grid-cols-3 ${i !== comparisonRows.length - 1 ? 'border-b border-white/5' : ''}`}
-                            >
+                            <div key={row.feature} className={`grid grid-cols-3 ${i !== comparisonRows.length - 1 ? 'border-b border-white/5' : ''}`}>
                                 <div className="px-4 py-4 text-xs font-semibold text-white sm:px-6 sm:py-5 sm:text-sm">{row.feature}</div>
                                 <div className="px-4 py-4 text-xs leading-relaxed text-slate-400 sm:px-6 sm:py-5 sm:text-sm">{row.old}</div>
                                 <div className="px-4 py-4 text-xs leading-relaxed text-slate-100 sm:px-6 sm:py-5 sm:text-sm">{row.kontrol}</div>

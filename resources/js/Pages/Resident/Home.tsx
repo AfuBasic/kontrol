@@ -47,10 +47,10 @@ export default function Home({ auth, stats, activeCodes, recentActivity, estateN
                 />
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
-                <CommandCenter 
-                    expectedToday={expectedToday} 
-                    lastActivity={lastActivityTime} 
-                    onAction={() => setIsCreateModalOpen(true)} 
+                <CommandCenter
+                    expectedToday={expectedToday}
+                    lastActivity={lastActivityTime}
+                    onAction={() => setIsCreateModalOpen(true)}
                     canGenerate={auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasAccessCodeGen}
                 />
 

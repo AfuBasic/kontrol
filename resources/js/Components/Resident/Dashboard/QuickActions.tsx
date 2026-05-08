@@ -45,12 +45,7 @@ export default function QuickActions() {
     return (
         <div className="grid grid-cols-1 gap-4">
             {visibleActions.map((action, index) => (
-                <motion.div
-                    key={action.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                >
+                <motion.div key={action.name} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * index }}>
                     <Link
                         href={action.href}
                         className="group relative flex items-center justify-between overflow-hidden rounded-[32px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/50 transition-all hover:shadow-lg active:scale-[0.98]"
@@ -64,7 +59,7 @@ export default function QuickActions() {
                                 <p className="text-xs font-bold text-slate-400">{action.description}</p>
                             </div>
                         </div>
-                        
+
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all group-hover:bg-indigo-600 group-hover:text-white">
                             <ArrowRight className="h-5 w-5" />
                         </div>
