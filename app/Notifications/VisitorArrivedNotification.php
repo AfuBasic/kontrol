@@ -93,30 +93,29 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $data = $this->toArray($notifiable);
 
         return FcmMessage::create()
-            ->data([
+            ->setNotification(Fcm\Notification::create()
+                ->setTitle($data['title'])
+                ->setBody($data['message'])
+            )
+            ->setData([
                 'title' => (string) $data['title'],
                 'body' => (string) $data['message'],
                 'action_url' => '/resident',
                 'access_code_id' => (string) $this->accessCode->id,
                 'type' => 'visitor_arrived',
             ])
-            ->notification(Fcm\Notification::create()
-                ->title($data['title'])
-                ->body($data['message'])
+            ->setAndroid(
+                Fcm\AndroidConfig::create()
+                    ->setNotification(
+                        Fcm\AndroidNotification::create()
+                            ->setChannelId('kontrol_v1_alerts')
+                            ->setSound('default')
+                            ->setColor('#0A3D91')
+                    )
             )
-            ->android([
-                'priority' => 'high',
-                'notification' => [
-                    'title' => $data['title'],
-                    'body' => $data['message'],
-                    'color' => '#0A3D91',
-                    'sound' => 'default',
-                    'channel_id' => 'kontrol_v1_alerts',
-                ],
-            ])
-            ->custom([
-                'apns' => [
-                    'payload' => [
+            ->setApns(
+                Fcm\ApnsConfig::create()
+                    ->setPayload([
                         'aps' => [
                             'alert' => [
                                 'title' => $data['title'],
@@ -126,9 +125,8 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
                             'badge' => 1,
                             'category' => 'visitor_arrived',
                         ],
-                    ],
-                ],
-            ]);
+                    ])
+            );
     }
 
     /**

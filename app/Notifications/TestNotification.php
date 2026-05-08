@@ -61,12 +61,12 @@ class TestNotification extends Notification implements ShouldQueue
     public function toFcm(object $notifiable): FcmMessage
     {
         return FcmMessage::create()
-            ->notification(
+            ->setNotification(
                 FcmNotification::create()
-                    ->title($this->title)
-                    ->body($this->message)
+                    ->setTitle($this->title)
+                    ->setBody($this->message)
             )
-            ->data($this->toArray($notifiable))
+            ->setData($this->toArray($notifiable))
             ->setAndroid(
                 AndroidConfig::create()
                     ->setNotification(
@@ -78,10 +78,6 @@ class TestNotification extends Notification implements ShouldQueue
             )
             ->setApns(
                 ApnsConfig::create()
-                    ->setHeaders([
-                        'apns-priority' => '10',
-                        'apns-push-type'=> 'alert',
-                    ])
                     ->setPayload([
                         'aps' => [
                             'alert' => [
@@ -91,10 +87,6 @@ class TestNotification extends Notification implements ShouldQueue
                             'sound' => 'default',
                             'badge' => 1,
                             'mutable-content' => 1,
-                        ],
-                        'data' => [
-                            'type'       => 'test',
-                            'action_url' => '/resident/home',
                         ],
                     ])
             );

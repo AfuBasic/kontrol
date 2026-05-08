@@ -34,3 +34,4 @@ yarn-error.log
 .mcp.json
 CLAUDE.md
 GEMINI.md
+/.agents
