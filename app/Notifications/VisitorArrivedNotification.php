@@ -94,8 +94,8 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
 
         return FcmMessage::create()
             ->setNotification(Fcm\Notification::create()
-                ->setTitle($data['title'])
-                ->setBody($data['message'])
+                ->title($data['title'])
+                ->body($data['message'])
             )
             ->setData([
                 'title' => (string) $data['title'],

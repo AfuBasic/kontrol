@@ -63,8 +63,8 @@ class TestNotification extends Notification implements ShouldQueue
         return FcmMessage::create()
             ->setNotification(
                 FcmNotification::create()
-                    ->setTitle($this->title)
-                    ->setBody($this->message)
+                    ->title($this->title)
+                    ->body($this->message)
             )
             ->setData($this->toArray($notifiable))
             ->setAndroid(
