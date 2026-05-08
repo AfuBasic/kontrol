@@ -7,9 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
-use NotificationChannels\Fcm\Resources\AndroidConfig;
-use NotificationChannels\Fcm\Resources\AndroidNotification;
-use NotificationChannels\Fcm\Resources\ApnsConfig;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
@@ -60,27 +57,6 @@ class TestNotification extends Notification implements ShouldQueue
 
     public function toFcm(object $notifiable): FcmMessage
     {
-        $androidConfig = AndroidConfig::create()
-            ->setNotification(
-                AndroidNotification::create()
-                    ->setChannelId('kontrol_v1_alerts')
-                    ->setSound('default')
-                    ->setColor('#0A3D91')
-            );
-
-        $apnsConfig = ApnsConfig::create()
-            ->setPayload([
-                'aps' => [
-                    'alert' => [
-                        'title' => $this->title,
-                        'body'  => $this->message,
-                    ],
-                    'sound' => 'default',
-                    'badge' => 1,
-                    'mutable-content' => 1,
-                ],
-            ]);
-
         return FcmMessage::create()
             ->notification(
                 FcmNotification::create()
@@ -89,8 +65,27 @@ class TestNotification extends Notification implements ShouldQueue
             )
             ->data($this->toArray($notifiable))
             ->custom([
-                'android' => $androidConfig->toArray(),
-                'apns'    => $apnsConfig->toArray(),
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'channel_id' => 'kontrol_v1_alerts',
+                        'sound' => 'default',
+                        'color' => '#0A3D91',
+                    ],
+                ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'alert' => [
+                                'title' => $this->title,
+                                'body'  => $this->message,
+                            ],
+                            'sound' => 'default',
+                            'badge' => 1,
+                            'mutable-content' => 1,
+                        ],
+                    ],
+                ],
             ]);
     }
 }
