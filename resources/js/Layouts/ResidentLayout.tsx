@@ -11,6 +11,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Resident/Noti
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
+import PullToRefresh from '@/Components/PullToRefresh';
 import SosButton from '@/Components/SosButton';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
@@ -365,7 +366,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         <SubscriptionBanner subscription={auth.user.resident_subscription} />
                     </div>
                 )}
-                <div className="px-6">{children}</div>
+                <PullToRefresh className="px-6">{children}</PullToRefresh>
             </main>
 
             {/* Bottom Navigation - Refined Glass Design */}

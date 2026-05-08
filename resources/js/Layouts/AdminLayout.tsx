@@ -24,6 +24,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
+import PullToRefresh from '@/Components/PullToRefresh';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
@@ -463,7 +464,9 @@ export default function AdminLayout({ children, title }: Props) {
                     <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
                         <div className="p-4">
                             <PendingInvoiceNotification invoice={pendingInvoice} />
-                            {children}
+                            <PullToRefresh>
+                                {children}
+                            </PullToRefresh>
                         </div>
                     </main>
 

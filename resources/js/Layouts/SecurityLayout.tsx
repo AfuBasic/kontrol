@@ -13,6 +13,7 @@ import { useForceLogout } from '@/Hooks/useForceLogout';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import PullToRefresh from '@/Components/PullToRefresh';
 
 const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -298,7 +299,11 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 </div>
             </motion.header>
 
-            <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">{children}</main>
+            <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
+                <PullToRefresh>
+                    {children}
+                </PullToRefresh>
+            </main>
 
             {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
             {!hideNav && (
