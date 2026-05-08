@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -151,12 +152,17 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     }
 
                     // Registration listeners
-                    PushNotifications.addListener('registration', (token) => {
-                        console.info('Push registration successful, token:', token.value);
-                        axios.post('/push/subscribe', {
-                            token: token.value,
-                            platform: Capacitor.getPlatform(),
-                        });
+                    PushNotifications.addListener('registration', async () => {
+                        try {
+                            const { token } = await FirebaseMessaging.getToken();
+                            console.info('Firebase FCM Token received:', token);
+                            axios.post('/push/subscribe', {
+                                token: token,
+                                platform: Capacitor.getPlatform(),
+                            });
+                        } catch (error) {
+                            console.error('Failed to get FCM token:', error);
+                        }
                     });
 
                     PushNotifications.addListener('registrationError', (error) => {
