@@ -146,7 +146,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
                     if (permStatus.receive === 'prompt') {
                         console.info('Requesting push permissions...');
-                        permStatus = await PushNotifications.requestPermissions();
+                        permStatus = await (PushNotifications as any).requestPermissions({
+                            ios: { criticalAlert: true },
+                        });
                         console.info('Push permission request result:', permStatus.receive);
                     }
 
@@ -300,9 +302,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
             </motion.header>
 
             <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
-                <PullToRefresh>
-                    {children}
-                </PullToRefresh>
+                <PullToRefresh>{children}</PullToRefresh>
             </main>
 
             {/* Bottom Navigation — slim, monochromatic, animated active indicator */}

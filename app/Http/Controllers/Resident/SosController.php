@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Resident;
 
-use App\Events\SosTriggered;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessSOSAlert;
 use App\Models\SosEvent;
@@ -87,6 +86,10 @@ class SosController extends Controller
             'acknowledged_at' => now(),
             'acknowledged_by' => $user->id,
         ]);
+
+        // Notify the resident that help is on the way
+        $resident = $sosEvent->user;
+        $resident->notify(new \App\Notifications\Resident\SosResponderNotification($sosEvent));
 
         return back()->with('success', 'SOS alert acknowledged');
     }
