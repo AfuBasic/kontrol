@@ -12,8 +12,12 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Sentry\Laravel\Integration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -98,5 +102,23 @@ return Application::configure(basePath: dirname(__DIR__))
             if (str_starts_with($request->path(), 'invitation')) {
                 return redirect()->route('invitation.invalid');
             }
+        });
+
+        $exceptions->render(function (Throwable $e, Request $request) use ($exceptions) {
+            $response = $exceptions->shouldRenderHtml() ? null : false;
+
+            if (app()->environment('production') || ! config('app.debug')) {
+                $statusCode = $e instanceof HttpExceptionInterface 
+                    ? $e->getStatusCode() 
+                    : 500;
+
+                if (in_array($statusCode, [500, 503, 404, 403, 419])) {
+                    return Inertia::render('Error', ['status' => $statusCode])
+                        ->toResponse($request)
+                        ->setStatusCode($statusCode);
+                }
+            }
+
+            return $response;
         });
     })->create();
