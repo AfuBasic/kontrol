@@ -53,7 +53,6 @@ export default function GlobalLoading() {
                         <div className="absolute inset-0 animate-ping rounded-full bg-primary-100 opacity-20"></div>
                         <Loader2 className="relative h-12 w-12 animate-spin text-primary-600" />
                     </div>
-                    <p className="mt-4 text-sm font-semibold tracking-tight text-slate-600">Loading...</p>
                 </motion.div>
             )}
         </AnimatePresence>
