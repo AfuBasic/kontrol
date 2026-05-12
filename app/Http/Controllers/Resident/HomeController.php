@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\EstateBoardService;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
 use Inertia\Inertia;
@@ -18,6 +20,11 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $estate = $this->estateContext->getEstate();
+        $boardService = app(EstateBoardService::class);
+        $announcements = $boardService->getFeed($estate->id, 3, [
+            EstateBoardPostAudience::All,
+            EstateBoardPostAudience::Residents,
+        ]);
 
         return Inertia::render('Resident/Home', [
             'stats' => $this->accessCodeService->getHomeStats(),
@@ -34,6 +41,7 @@ class HomeController extends Controller
                 'created_at' => $code->created_at?->toISOString(),
             ]),
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
+            'latestAnnouncements' => $announcements->items(),
             'estateName' => $estate->name,
         ]);
     }
