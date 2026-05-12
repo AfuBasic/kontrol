@@ -47,11 +47,11 @@ export default function GlobalLoading() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 p-6 backdrop-blur-sm"
+                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/80 p-6 backdrop-blur-md"
                 >
                     <div className="relative">
-                        <div className="absolute inset-0 animate-ping rounded-full bg-primary-100 opacity-20"></div>
-                        <Loader2 className="relative h-12 w-12 animate-spin text-primary-600" />
+                        <div className="absolute inset-0 animate-ping rounded-full bg-primary-500/20"></div>
+                        <Loader2 className="relative h-12 w-12 animate-spin text-primary-500" />
                     </div>
                 </motion.div>
             )}

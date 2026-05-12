@@ -29,13 +29,13 @@ export default function AppLoader({ isExiting }: Props) {
             initial={{ opacity: 1 }}
             animate={{ opacity: isExiting ? 0 : 1 }}
             transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-            className="fixed inset-0 z-[10000] flex flex-col items-center justify-between bg-white px-6 py-20"
+            className="fixed inset-0 z-[10000] flex flex-col items-center justify-between bg-slate-950 px-6 py-20"
         >
             {/* Soft Ambient Background */}
             <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
                 <div
                     className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 opacity-40"
-                    style={{ background: 'radial-gradient(circle, rgba(241,245,249,1) 0%, rgba(255,255,255,0) 70%)' }}
+                    style={{ background: 'radial-gradient(circle, rgba(15,23,42,1) 0%, rgba(2,6,23,0) 70%)' }}
                 />
             </div>
 
