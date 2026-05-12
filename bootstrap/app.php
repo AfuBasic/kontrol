@@ -105,7 +105,9 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (Throwable $e, Request $request) use ($exceptions) {
-            $response = $exceptions->shouldRenderHtml() ? null : false;
+            if ($request->expectsJson()) {
+                return null;
+            }
 
             if (app()->environment('production') || ! config('app.debug')) {
                 $statusCode = $e instanceof HttpExceptionInterface 

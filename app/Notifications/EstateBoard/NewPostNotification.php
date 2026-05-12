@@ -65,7 +65,7 @@ class NewPostNotification extends Notification implements ShouldQueue
             'post_hashid' => $this->post->hashid,
             'author_name' => $authorName,
             'type' => 'new_post',
-            'action_url' => '/resident/feed/'.$this->post->hashid,
+            'action_url' => '/resident/estate-board/'.$this->post->hashid,
         ];
     }
  
@@ -154,11 +154,7 @@ class NewPostNotification extends Notification implements ShouldQueue
     {
         $authorName = $this->post->author?->name ?? $this->post->estate->name;
         $title = $this->post->title ?? 'New Announcement';
-        $body = strip_tags($this->post->body);
-        $bodyPreview = strlen($body) > 100 ? substr($body, 0, 97).'...' : $body;
- 
         $text = "📣 <b>{$title}</b>\n\n"
-            ."{$bodyPreview}\n\n"
             ."👤 Posted by: <b>{$authorName}</b>\n"
             ."📍 Estate: <b>{$this->post->estate->name}</b>";
  
@@ -166,7 +162,7 @@ class NewPostNotification extends Notification implements ShouldQueue
             'text' => $text,
             'keyboard' => [
                 [
-                    ['text' => '📖 Read More', 'url' => config('app.url').'/resident/feed/'.$this->post->hashid],
+                    ['text' => '📖 Read More', 'url' => config('app.url').'/resident/estate-board/'.$this->post->hashid],
                 ],
             ],
         ];

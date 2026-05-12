@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Globe, Image as ImageIcon, MessageCircle, Shield, Users } from 'lucide-react';
+import { ChevronRight, Globe, Image as ImageIcon, MessageCircle, Shield, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
@@ -36,96 +36,85 @@ function getAudienceLabel(audience: PostAudience) {
 
 function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }) {
     const hasMedia = post.media && post.media.length > 0;
+    const bodyPreview = post.body.replace(/<[^>]*>/g, ' ').trim();
 
     return (
         <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: idx * 0.05, ease: 'easeOut' }}
-            className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-gray-100 transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+            className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
         >
-            <div className="p-4 sm:p-5">
+            <Link href={show.url({ post: post.hashid })} className="block p-5 sm:p-6">
                 {/* Post Header */}
-                <div className="mb-4 flex items-start justify-between">
+                <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-sm">
-                            <span className="text-sm font-semibold">{post.author.name.charAt(0).toUpperCase()}</span>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-lg shadow-indigo-200 ring-2 ring-white">
+                            <span className="text-sm">{post.author.name.charAt(0).toUpperCase()}</span>
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-gray-900">{post.author.name}</p>
+                            <p className="text-sm font-bold text-slate-900">{post.author.name}</p>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">
+                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                                     {post.published_at
                                         ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
                                         : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                                 </span>
-                                <span className="text-[10px] text-gray-300">•</span>
-                                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                                    {getAudienceIcon(post.audience)}
-                                    <span>{getAudienceLabel(post.audience)}</span>
-                                </div>
                             </div>
                         </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">
+                        {getAudienceIcon(post.audience)}
+                        <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{getAudienceLabel(post.audience)}</span>
                     </div>
                 </div>
 
                 {/* Post Content */}
-                <Link href={show.url({ post: post.hashid })} className="group block">
-                    {post.title && (
-                        <h2 className="mb-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-indigo-600">{post.title}</h2>
-                    )}
-                    <div
-                        className="prose prose-sm prose-gray line-clamp-3 max-w-none text-gray-600"
-                        dangerouslySetInnerHTML={{ __html: post.body }}
-                    />
-                </Link>
+                {post.title && (
+                    <h2 className="mb-2 text-xl font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600 leading-tight">
+                        {post.title}
+                    </h2>
+                )}
+                
+                <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600">
+                    {bodyPreview}
+                </p>
 
                 {/* Media Preview */}
                 {hasMedia && (
-                    <div className="mt-4 overflow-hidden rounded-xl bg-gray-50">
-                        {post.media.length === 1 ? (
-                            <img
-                                src={post.media[0].url}
-                                alt=""
-                                className="h-64 w-full object-cover transition-transform hover:scale-[1.02]"
-                                loading="lazy"
-                            />
-                        ) : (
-                            <div className="grid grid-cols-2 gap-0.5">
-                                {post.media.slice(0, 4).map((media, mediaIdx) => (
-                                    <div key={media.id} className="relative aspect-square overflow-hidden">
-                                        <img
-                                            src={media.url}
-                                            alt=""
-                                            className="h-full w-full object-cover transition-transform hover:scale-105"
-                                            loading="lazy"
-                                        />
-                                        {mediaIdx === 3 && post.media.length > 4 && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
-                                                <span className="text-lg font-bold text-white">+{post.media.length - 4}</span>
-                                            </div>
-                                        )}
+                    <div className="mt-4 grid grid-cols-2 gap-2 overflow-hidden rounded-2xl">
+                        {post.media.slice(0, 2).map((media, mIdx) => (
+                            <div key={media.id} className={`relative aspect-video overflow-hidden bg-slate-50 ${post.media.length === 1 ? 'col-span-2' : ''}`}>
+                                <img
+                                    src={media.url}
+                                    alt=""
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    loading="lazy"
+                                />
+                                {mIdx === 1 && post.media.length > 2 && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+                                        <span className="text-lg font-black text-white">+{post.media.length - 2}</span>
                                     </div>
-                                ))}
+                                )}
                             </div>
-                        )}
+                        ))}
                     </div>
                 )}
 
                 {/* Post Footer */}
-                <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3">
-                    <Link
-                        href={show.url({ post: post.hashid })}
-                        className="flex items-center gap-2 rounded-lg py-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-indigo-600"
-                    >
-                        <MessageCircle className="h-4.5 w-4.5" />
-                        <span>
-                            {post.comments_count > 0 ? `${post.comments_count} ${post.comments_count === 1 ? 'Comment' : 'Comments'}` : 'Add Comment'}
-                        </span>
-                    </Link>
-                    {/* Share / More actions could go here */}
+                <div className="mt-5 flex items-center justify-between pt-4 border-t border-slate-50">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-slate-400">
+                            <MessageCircle className="h-5 w-5" />
+                            <span className="text-xs font-black tabular-nums">{post.comments_count}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-black tracking-widest text-indigo-600 uppercase">
+                        Read Story
+                        <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
+                    </div>
                 </div>
-            </div>
+            </Link>
         </motion.article>
     );
 }

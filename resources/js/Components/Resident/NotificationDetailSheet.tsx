@@ -56,6 +56,12 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
                         <AlertTriangle className="h-6 w-6" />
                     </div>
                 );
+            case 'new_post':
+                return (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                        <Bell className="h-6 w-6" />
+                    </div>
+                );
             default:
                 return (
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 ring-1 ring-slate-100">

@@ -175,59 +175,73 @@ export default function EstateBoardShow({ post, comments }: Props) {
                 </Link>
             </motion.div>
 
-            {/* Post */}
-            <motion.article
+            {/* Post Header */}
+            <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
-                className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-gray-100"
+                className="mb-8"
             >
-                <div className="p-6">
-                    {/* Post Header */}
-                    <div className="mb-5 flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-sm">
-                                <span className="text-lg font-semibold">{post.author.name.charAt(0).toUpperCase()}</span>
-                            </div>
-                            <div>
-                                <p className="font-bold text-gray-900">{post.author.name}</p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-sm text-gray-500">
-                                        {post.published_at
-                                            ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
-                                            : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                                    </p>
-                                    <span className="text-[10px] text-gray-300">•</span>
-                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                                        {getAudienceIcon(post.audience)}
-                                        <span>{getAudienceLabel(post.audience)}</span>
-                                    </div>
-                                </div>
-                            </div>
+                <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-xl shadow-indigo-200 ring-2 ring-white">
+                        <span className="text-xl">{post.author.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">{post.title}</h1>
+                        <div className="mt-1 flex items-center gap-3">
+                            <span className="text-xs font-bold text-slate-900">{post.author.name}</span>
+                            <span className="h-1 w-1 rounded-full bg-slate-300" />
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                {post.published_at
+                                    ? format(new Date(post.published_at), 'MMMM d, yyyy')
+                                    : format(new Date(post.created_at), 'MMMM d, yyyy')}
+                            </span>
                         </div>
                     </div>
-
-                    {/* Post Content */}
-                    {post.title && <h1 className="mb-4 text-2xl font-bold text-gray-900">{post.title}</h1>}
-
-                    {/* Media */}
-                    {post.media && post.media.length > 0 && (
-                        <div className="mb-6">
-                            {post.media.length === 1 ? (
-                                <img src={post.media[0].url} alt="" className="max-h-[500px] w-full rounded-xl bg-gray-50 object-contain" />
-                            ) : (
-                                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                                    {post.media.map((media) => (
-                                        <img key={media.id} src={media.url} alt="" className="h-48 w-full rounded-xl object-cover" />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="prose prose-gray max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: post.body }} />
                 </div>
-            </motion.article>
+            </motion.div>
+
+            {/* Media & Content Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.04)] ring-1 ring-slate-100"
+            >
+                {/* Media */}
+                {post.media && post.media.length > 0 && (
+                    <div className="relative border-b border-slate-50 bg-slate-50/50">
+                        {post.media.length === 1 ? (
+                            <img src={post.media[0].url} alt="" className="max-h-[600px] w-full object-contain" />
+                        ) : (
+                            <div className="grid grid-cols-2 gap-1 p-2">
+                                {post.media.map((media) => (
+                                    <img key={media.id} src={media.url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="p-8 sm:p-10">
+                    <div 
+                        className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed 
+                            prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900
+                            prose-p:mb-6 prose-p:leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: post.body }} 
+                    />
+
+                    <div className="mt-12 flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-400">
+                            {getAudienceIcon(post.audience)}
+                        </div>
+                        <p className="text-[10px] font-black tracking-[0.15em] text-slate-500 uppercase">
+                            Official {getAudienceLabel(post.audience)} Bulletin
+                        </p>
+                    </div>
+                </div>
+            </motion.div>
+>
 
             {/* Comments Section */}
             <motion.div

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Events\SosTriggered;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessSOSAlert;
 use App\Models\SosEvent;
+use App\Notifications\Resident\SosResponderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -89,7 +91,7 @@ class SosController extends Controller
 
         // Notify the resident that help is on the way
         $resident = $sosEvent->user;
-        $resident->notify(new \App\Notifications\Resident\SosResponderNotification($sosEvent));
+        $resident->notify(new SosResponderNotification($sosEvent));
 
         return back()->with('success', 'SOS alert acknowledged');
     }
