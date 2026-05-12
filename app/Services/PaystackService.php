@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaystackService
 {
@@ -15,7 +17,7 @@ class PaystackService
         $baseUrl = config('paystack.base_url');
         $secretKey = config('paystack.secret_key');
 
-        \Log::info('PaystackService instantiated', [
+        Log::info('PaystackService instantiated', [
             'base_url' => $baseUrl,
             'has_secret_key' => ! empty($secretKey),
         ]);
@@ -32,7 +34,7 @@ class PaystackService
      */
     public function initializePayment(Invoice $invoice, string $callbackUrl, ?string $reference = null): array
     {
-        \Log::info('initializePayment called', [
+        Log::info('initializePayment called', [
             'invoice_id' => $invoice->id,
             'callback_url' => $callbackUrl,
             'reference' => $reference ?? $invoice->invoice_number,
@@ -54,27 +56,27 @@ class PaystackService
             $status = $response->status();
             $body = $response->body();
 
-            \Log::error('========== PAYSTACK API ERROR ==========');
-            \Log::error("HTTP Status: {$status}");
-            \Log::error("Raw Body: {$body}");
+            Log::error('========== PAYSTACK API ERROR ==========');
+            Log::error("HTTP Status: {$status}");
+            Log::error("Raw Body: {$body}");
 
             try {
                 $data = $response->json();
-                \Log::error('Parsed JSON:', $data);
+                Log::error('Parsed JSON:', $data);
             } catch (\Exception $e) {
-                \Log::error("JSON Parse Error: {$e->getMessage()}");
+                Log::error("JSON Parse Error: {$e->getMessage()}");
                 $data = ['message' => $body];
             }
 
             $errorMessage = $data['message'] ?? $body ?? 'Payment initialization failed';
             $errorCode = $data['code'] ?? 'unknown_error';
 
-            \Log::error('Paystack initialization error', [
+            Log::error('Paystack initialization error', [
                 'status' => $status,
                 'code' => $errorCode,
                 'message' => $errorMessage,
             ]);
-            \Log::error('========== END PAYSTACK ERROR ==========');
+            Log::error('========== END PAYSTACK ERROR ==========');
 
             throw new \Exception(json_encode([
                 'code' => $errorCode,
@@ -200,9 +202,11 @@ class PaystackService
      */
     public function getBanks(): array
     {
-        $response = $this->client->get('/bank', ['country' => 'nigeria']);
+        return Cache::remember('paystack_banks_nigeria', 86400, function () {
+            $response = $this->client->get('/bank', ['country' => 'nigeria']);
 
-        return $response->successful() ? $response->json('data') : [];
+            return $response->successful() ? $response->json('data') : [];
+        });
     }
 
     /**

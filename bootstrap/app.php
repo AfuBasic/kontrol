@@ -121,6 +121,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
             }
 
-            return $response;
+            return null;
         });
     })->create();

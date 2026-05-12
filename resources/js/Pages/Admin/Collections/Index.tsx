@@ -1,5 +1,5 @@
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Wallet, Users, Calendar, ArrowRight, MoreVertical, AlertTriangle, Building2, Settings2 } from 'lucide-react';
 import { Edit2 } from 'lucide-react';
 import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
@@ -130,10 +130,10 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
                 {collections.data.length > 0 ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {collections.data.map((collection) => (
-                            <Link
+                            <div
                                 key={collection.ulid}
-                                href={show.url(collection.ulid)}
-                                className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 active:scale-[0.98]"
+                                onClick={() => router.visit(show.url(collection.ulid))}
+                                className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 active:scale-[0.98]"
                             >
                                 <div className="mb-4 flex items-start justify-between">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-blue-50 group-hover:text-blue-500">
@@ -189,7 +189,7 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
                                         <ArrowRight className="h-5 w-5" />
                                     </div>
                                 </div>
-                            </Link>
+                            </div>
                         ))}
                     </div>
                 ) : (

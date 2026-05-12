@@ -59,12 +59,6 @@ class Collection extends Model
 {
     use GeneratesUlid, HasFactory;
 
-    public function resolveRouteBinding($value, $field = null)
-    {
-        return $this->where('ulid', $value)
-            ->orWhere('id', $value)
-            ->firstOrFail();
-    }
 
     protected $fillable = [
         'estate_id',
