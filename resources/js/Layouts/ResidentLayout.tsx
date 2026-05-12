@@ -320,8 +320,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
         {
-            name: 'Feed',
-            href: '/resident/activity',
+            name: 'Board',
+            href: '/resident/estate-board',
             show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasVisitFeed,
             icon: (active: boolean) => (
                 <div className="relative">

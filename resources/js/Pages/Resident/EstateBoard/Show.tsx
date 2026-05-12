@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -241,7 +241,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                     </div>
                 </div>
             </motion.div>
->
+
 
             {/* Comments Section */}
             <motion.div

@@ -1,10 +1,18 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { UserPlus, History, Shield, HelpCircle, ArrowRight } from 'lucide-react';
+import { UserPlus, History, Shield, HelpCircle, ArrowRight, Megaphone } from 'lucide-react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 
 const actions = [
+    {
+        name: 'Estate Board',
+        description: 'Latest community news & posts',
+        icon: Megaphone,
+        href: '/resident/estate-board',
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+    },
     {
         name: 'Invite Family',
         description: 'Share access with your household',
