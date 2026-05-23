@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -9,15 +10,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $estate_id
- * @property \Carbon\CarbonImmutable $triggered_at
+ * @property CarbonImmutable $triggered_at
  * @property string $status
- * @property \Carbon\CarbonImmutable|null $acknowledged_at
+ * @property CarbonImmutable|null $acknowledged_at
  * @property int|null $acknowledged_by
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\User|null $acknowledgedBy
- * @property-read \App\Models\Estate $estate
- * @property-read \App\Models\User $user
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read User|null $acknowledgedBy
+ * @property-read Estate $estate
+ * @property-read User $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SosEvent newQuery()

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,12 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $access_code_id
  * @property int $verified_by
  * @property array<array-key, mixed>|null $meta
- * @property \Carbon\CarbonImmutable $verified_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\AccessCode $accessCode
- * @property-read \App\Models\Estate $estate
- * @property-read \App\Models\User $verifier
+ * @property CarbonImmutable $verified_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read AccessCode $accessCode
+ * @property-read Estate $estate
+ * @property-read User $verifier
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newQuery()

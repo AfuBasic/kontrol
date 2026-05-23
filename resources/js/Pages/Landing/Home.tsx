@@ -1,8 +1,8 @@
-import LandingLayout from '@/Layouts/LandingLayout';
-import SEO from '@/Components/Landing/SEO';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, UserCheck, CreditCard, Zap, ArrowRight, Smartphone, Lock, BarChart3 } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import SEO from '@/Components/Landing/SEO';
+import LandingLayout from '@/Layouts/LandingLayout';
 import { login } from '@/routes';
 import landing from '@/routes/landing';
 

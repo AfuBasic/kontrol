@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Security;
 
+use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\ValidateAccessCodeAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\ValidateAccessCodeRequest;
@@ -14,7 +15,7 @@ class VerifyController extends Controller
 {
     public function __construct(
         protected ValidateAccessCodeAction $validateAccessCodeAction,
-        protected \App\Actions\Security\RecordCheckInAction $recordCheckInAction,
+        protected RecordCheckInAction $recordCheckInAction,
     ) {}
 
     public function __invoke(): Response

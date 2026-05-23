@@ -1,5 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
 
 interface BaseProps {
     label?: string;

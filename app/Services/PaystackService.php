@@ -45,6 +45,7 @@ class PaystackService
             'amount' => $invoice->amount,
             'reference' => $reference ?? $invoice->invoice_number,
             'callback_url' => $callbackUrl,
+            'channels' => ['bank_transfer'],
             'metadata' => [
                 'invoice_id' => $invoice->id,
                 'estate_id' => $invoice->estate_id,
@@ -153,6 +154,7 @@ class PaystackService
             'amount' => $amount,
             'reference' => $reference,
             'callback_url' => $callbackUrl,
+            'channels' => ['bank_transfer'],
             'metadata' => $metadata,
         ]);
 

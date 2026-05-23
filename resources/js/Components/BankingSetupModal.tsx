@@ -1,10 +1,10 @@
-import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
-import { X, Building2, Search, ChevronDown, Check, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
+import { AnimatePresence } from 'framer-motion';
+import { X, Building2, Search, ChevronDown, Check, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Fragment, useState, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: ClassValue[]) {

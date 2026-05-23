@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,13 +16,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $provider
  * @property string $reference
  * @property string $status
- * @property \Carbon\CarbonImmutable|null $paid_at
+ * @property CarbonImmutable|null $paid_at
  * @property array<array-key, mixed>|null $raw_payload
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\CollectionAssignment|null $assignment
- * @property-read \App\Models\Estate $estate
- * @property-read \App\Models\User $user
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read CollectionAssignment|null $assignment
+ * @property-read Estate $estate
+ * @property-read User $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newQuery()

@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,21 +25,21 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $visitor_phone
  * @property string|null $purpose
  * @property AccessCodeStatus $status
- * @property \Carbon\CarbonImmutable|null $expires_at
- * @property \Carbon\CarbonImmutable|null $used_at
- * @property \Carbon\CarbonImmutable|null $revoked_at
+ * @property CarbonImmutable|null $expires_at
+ * @property CarbonImmutable|null $used_at
+ * @property CarbonImmutable|null $revoked_at
  * @property int|null $verified_by
  * @property string|null $notes
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AccessLog> $accessLogs
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, AccessLog> $accessLogs
  * @property-read int|null $access_logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Activity> $activities
+ * @property-read Collection<int, Activity> $activities
  * @property-read int|null $activities_count
- * @property-read \App\Models\Estate $estate
+ * @property-read Estate $estate
  * @property-read string $time_remaining
- * @property-read \App\Models\User $user
- * @property-read \App\Models\User|null $verifiedBy
+ * @property-read User $user
+ * @property-read User|null $verifiedBy
  *
  * @method static Builder<static>|AccessCode active()
  * @method static Builder<static>|AccessCode expiredButNotMarked()

@@ -53,31 +53,74 @@ class InitializeInvoicePaymentAction
             ->latest()
             ->first();
 
-        if ($existing && $existing->status === 'success' && ! $existing->recorded_at) {
-            $this->verificationService->verifyAndRecordPayment(
-                $existing->paystack_reference,
-                $invoice,
-                $existing->idempotency_key,
-            );
+        if ($existing) {
+            try {
+                // Query Paystack to check the current definitive status
+                $verification = $this->paystackService->verifyPayment($existing->paystack_reference);
 
-            return InitializePaymentResult::flash(
-                $invoiceShowUrl,
-                'success',
-                'Payment verified and recorded!',
-            );
+                // Update the last checked timestamp
+                $existing->update(['last_checked_at' => now()]);
+
+                if ($verification['status'] === 'success') {
+                    $this->verificationService->verifyAndRecordPayment(
+                        $existing->paystack_reference,
+                        $invoice,
+                        $existing->idempotency_key,
+                    );
+
+                    return InitializePaymentResult::flash(
+                        $invoiceShowUrl,
+                        'success',
+                        'Payment verified and recorded!',
+                    );
+                } elseif ($verification['status'] === 'failed') {
+                    $existing->update([
+                        'status' => 'failed',
+                        'error_code' => 'PAYMENT_FAILED',
+                        'error_message' => 'Paystack returned status: failed',
+                    ]);
+                    // Fall through to generate a new transaction reference
+                } else {
+                    // Still pending on Paystack (e.g. transfer not yet received)
+                    $url = $existing->metadata['authorization_url'] ?? $invoiceShowUrl;
+
+                    return InitializePaymentResult::flash(
+                        $url,
+                        'info',
+                        'Your previous bank transfer payment is currently pending confirmation from Paystack. You are being redirected to the transfer status page.',
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to verify existing transaction on initialization: '.$e->getMessage());
+
+                if ($existing->status === 'success' && ! $existing->recorded_at) {
+                    $this->verificationService->verifyAndRecordPayment(
+                        $existing->paystack_reference,
+                        $invoice,
+                        $existing->idempotency_key,
+                    );
+
+                    return InitializePaymentResult::flash(
+                        $invoiceShowUrl,
+                        'success',
+                        'Payment verified and recorded!',
+                    );
+                }
+
+                if ($existing->status === 'pending') {
+                    $url = $existing->metadata['authorization_url'] ?? $invoiceShowUrl;
+
+                    return InitializePaymentResult::flash(
+                        $url,
+                        'info',
+                        'Returning to existing payment checkout. Please complete the payment.',
+                    );
+                }
+            }
         }
 
-        if ($existing && $existing->status === 'pending') {
-            $url = $existing->metadata['authorization_url'] ?? $invoiceShowUrl;
-
-            return InitializePaymentResult::flash(
-                $url,
-                'info',
-                'Returning to existing payment checkout. Please complete the payment.',
-            );
-        }
-
-        // 1. ATTEMPT CHARGE VIA SAVED CARD (One-click payment)
+        // 1. ATTEMPT CHARGE VIA SAVED CARD (Disabled - manual bank transfer payments only)
+        /*
         $authorizationCode = $this->getSavedAuthorizationCode($invoice);
 
         if ($authorizationCode) {
@@ -112,6 +155,7 @@ class InitializeInvoicePaymentAction
                 ]);
             }
         }
+        */
 
         $transaction = PaymentTransaction::create([
             'invoice_id' => $invoice->id,

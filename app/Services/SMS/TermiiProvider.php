@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class TermiiProvider implements SMSProvider
 {
     protected string $apiKey;
+
     protected string $senderId;
+
     protected string $baseUrl = 'https://api.ng.termii.com/api/sms/send';
 
     public function __construct()
@@ -26,6 +28,7 @@ class TermiiProvider implements SMSProvider
 
         if (empty($this->apiKey)) {
             Log::error('Termii API Key is missing. SMS not sent.');
+
             return false;
         }
 
@@ -46,12 +49,13 @@ class TermiiProvider implements SMSProvider
             Log::error('Termii SMS failed', [
                 'status' => $response->status(),
                 'response' => $response->json(),
-                'to' => $to
+                'to' => $to,
             ]);
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Termii SMS Exception: ' . $e->getMessage());
+            Log::error('Termii SMS Exception: '.$e->getMessage());
+
             return false;
         }
     }

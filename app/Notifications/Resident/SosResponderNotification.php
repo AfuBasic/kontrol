@@ -27,6 +27,7 @@ class SosResponderNotification extends Notification implements ShouldQueue
         if ($notifiable->fcm_token) {
             $channels[] = FcmChannel::class;
         }
+
         return $channels;
     }
 
@@ -44,6 +45,7 @@ class SosResponderNotification extends Notification implements ShouldQueue
     public function toWebPush(object $notifiable): WebPushMessage
     {
         $data = $this->toArray($notifiable);
+
         return (new WebPushMessage)
             ->title($data['title'])
             ->body($data['message'])
@@ -55,6 +57,7 @@ class SosResponderNotification extends Notification implements ShouldQueue
     public function toFcm(object $notifiable): FcmMessage
     {
         $data = $this->toArray($notifiable);
+
         return FcmMessage::create()
             ->notification(FcmNotification::create()
                 ->title($data['title'])

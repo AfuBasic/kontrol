@@ -1,8 +1,8 @@
-import LandingLayout from '@/Layouts/LandingLayout';
-import SEO from '@/Components/Landing/SEO';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, Bell, Users, PhoneCall, MapPin, Zap, Lock, ShieldCheck, Smartphone } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import SEO from '@/Components/Landing/SEO';
+import LandingLayout from '@/Layouts/LandingLayout';
 import { login } from '@/routes';
 
 export default function Security() {

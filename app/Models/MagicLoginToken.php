@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,11 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $token
  * @property string|null $destination_url
- * @property \Carbon\CarbonImmutable $expires_at
- * @property \Carbon\CarbonImmutable|null $used_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\User $user
+ * @property CarbonImmutable $expires_at
+ * @property CarbonImmutable|null $used_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read User $user
  *
  * @method static Builder<static>|MagicLoginToken newModelQuery()
  * @method static Builder<static>|MagicLoginToken newQuery()

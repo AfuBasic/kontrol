@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ArrowUpRight, ExternalLink } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 
 type Collection = {
     ulid: string;
@@ -71,7 +71,10 @@ export default function CollectionShow({ assignment }: Props) {
 
             {/* Main Info Card */}
             <section>
-                <div className="rounded-[2.5rem] bg-white p-8 shadow-xl ring-1 shadow-slate-200/50 ring-slate-100">
+                <motion.div
+                    layoutId={`collection-card-${assignment.ulid}`}
+                    className="rounded-[2.5rem] bg-white p-8 shadow-xl ring-1 shadow-slate-200/50 ring-slate-100"
+                >
                     <div className="flex flex-col items-center text-center">
                         <div
                             className={`mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
@@ -111,7 +114,7 @@ export default function CollectionShow({ assignment }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </section>
 
             {/* Details Grid */}
@@ -164,7 +167,6 @@ export default function CollectionShow({ assignment }: Props) {
     );
 }
 
-CollectionShow.layout = (page: any) => <ResidentLayout children={page} />;
 
 function CheckCircle2(props: any) {
     return (

@@ -1,8 +1,9 @@
-import { router, useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronRight, User, Phone, MessageSquare, Clock, ShieldCheck, Zap } from 'lucide-react';
+import { X, User, Clock, ShieldCheck, Zap, Phone } from 'lucide-react';
 import { useState } from 'react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 import type { SharedData } from '@/types';
 
 interface Props {
@@ -20,10 +21,10 @@ const purposes = [
 ];
 
 export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
-    const { auth, access_code_durations, access_code_constraints, estate_plan } = usePage<SharedData & { estate_plan: any }>().props;
+    const { auth, access_code_durations, access_code_constraints, estate_plan } = usePage<SharedData>().props;
+    const { openExternalBilling } = useExternalBilling();
     const features = estate_plan?.features || [];
     const hasFlexibleCodes = features.includes('flexible-code-types');
-    const hasAccessCodeGeneration = features.includes('access-code-generation');
     const [step, setStep] = useState<Step>('type');
     const form = useForm({
         type: 'single_use' as 'single_use' | 'long_lived',
@@ -86,7 +87,7 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
 
                         {/* Content */}
                         <div className="p-8">
-                            {auth?.user?.resident_subscription?.status === 'past_due' ? (
+                            {auth?.user?.resident_subscription && !auth.user.resident_subscription.is_active ? (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -97,15 +98,33 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                     </div>
                                     <h3 className="mb-3 text-xl font-black text-slate-900">Access Restricted</h3>
                                     <p className="mb-10 px-4 leading-relaxed font-medium text-slate-500">
-                                        Your subscription for this estate is currently inactive. Please visit the Kontrol web platform to manage your
-                                        access.
+                                        {auth.user.resident_subscription.is_household_member
+                                            ? `Your access is currently restricted because the primary resident's subscription is inactive. Please ask them to renew to restore access.`
+                                            : 'Your subscription for this estate is currently inactive. Please visit the billing section to restore access.'}
                                     </p>
-                                    <button
-                                        onClick={resetAndClose}
-                                        className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
-                                    >
-                                        Got it
-                                    </button>
+                                    {auth.user.resident_subscription.is_household_member ? (
+                                        <button
+                                            onClick={resetAndClose}
+                                            className="w-full rounded-[28px] bg-slate-900 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
+                                        >
+                                            Got it
+                                        </button>
+                                    ) : (
+                                        <div className="flex w-full flex-col gap-3">
+                                            <button
+                                                onClick={openExternalBilling}
+                                                className="w-full rounded-[28px] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl transition-all active:scale-95"
+                                            >
+                                                Settle / Manage Subscription
+                                            </button>
+                                            <button
+                                                onClick={resetAndClose}
+                                                className="w-full rounded-[28px] bg-slate-100 py-5 text-lg font-black text-slate-600 transition-all active:scale-95"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    )}
                                 </motion.div>
                             ) : (
                                 <AnimatePresence mode="wait">
@@ -311,7 +330,7 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                             className="space-y-8"
                                         >
                                             <div className="grid grid-cols-2 gap-4">
-                                                {(usePage().props as unknown as SharedData).access_code_durations.map((d) => (
+                                                {access_code_durations.map((d) => (
                                                     <button
                                                         key={d.minutes}
                                                         onClick={() => form.setData('duration_minutes', d.minutes)}

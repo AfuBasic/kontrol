@@ -29,40 +29,12 @@ class RecurringBillingService
     /**
      * Process Estate-level subscriptions (where charge_type = 'estate').
      */
-    public function processDueEstateSubscriptions(): void
-    {
-        $dueSubscriptions = EstateSubscription::where('status', 'active')
-            ->where('billing_preference', 'auto')
-            ->whereNotNull('paystack_authorization_code')
-            ->where('next_billing_date', '<=', now())
-            ->whereHas('estate.settings', function ($query) {
-                $query->where('charge_type', 'estate');
-            })
-            ->get();
-
-        foreach ($dueSubscriptions as $subscription) {
-            $this->chargeEstateSubscription($subscription);
-        }
-    }
+    public function processDueEstateSubscriptions(): void {}
 
     /**
      * Process Resident-level subscriptions (where charge_type = 'residents').
      */
-    public function processDueResidentSubscriptions(): void
-    {
-        $dueSubscriptions = ResidentSubscription::where('status', 'active')
-            ->where('billing_preference', 'auto')
-            ->whereNotNull('paystack_authorization_code')
-            ->where('current_period_end', '<=', now())
-            ->whereHas('estate.settings', function ($query) {
-                $query->where('charge_type', 'residents');
-            })
-            ->get();
-
-        foreach ($dueSubscriptions as $subscription) {
-            $this->chargeResidentSubscription($subscription);
-        }
-    }
+    public function processDueResidentSubscriptions(): void {}
 
     /**
      * Charge an Estate subscription using saved authorization.

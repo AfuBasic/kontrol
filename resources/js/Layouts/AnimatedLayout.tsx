@@ -1,53 +1,19 @@
 import { usePage } from '@inertiajs/react';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
-import { useEffect, useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function AnimatedLayout({ children }: { children: React.ReactNode }) {
     const { url } = usePage();
-    const [displayChildren, setDisplayChildren] = useState(children);
-    const [prevUrl, setPrevUrl] = useState(url);
-    const pathname = url.split('?')[0];
-    const prevPathname = useRef(pathname);
-
-    // Sync children but allow parallel rendering during transition
-    useEffect(() => {
-        if (url !== prevUrl) {
-            setDisplayChildren(children);
-            setPrevUrl(url);
-            prevPathname.current = pathname;
-        }
-    }, [url, children]);
-
-    const pageVariants: Variants = {
-        initial: {
-            opacity: 0,
-        },
-        animate: {
-            opacity: 1,
-            transition: {
-                duration: 0.3,
-                ease: 'easeOut',
-            },
-        },
-        exit: {
-            opacity: 0,
-            transition: {
-                duration: 0.2,
-                ease: 'easeIn',
-            },
-        },
-    };
 
     return (
         <div className="relative min-h-screen w-full">
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
-                    key={pathname}
-                    variants={pageVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    className="min-h-screen w-full bg-slate-50"
+                    key={url}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.38, ease: [0.32, 0.94, 0.6, 1] }} // Native iOS Cubic Bezier
+                    className="relative min-h-screen w-full"
                 >
                     {children}
                 </motion.div>
@@ -55,3 +21,4 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
         </div>
     );
 }
+

@@ -1,15 +1,15 @@
 <?php
 
-use App\Mail\Resident\InvoicePaidMail;
 use App\Models\Estate;
 use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Notifications\Resident\InvoicePaidNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -72,7 +72,7 @@ test('it processes a successful resident payment webhook', function () {
     $signature = hash_hmac('sha512', $jsonPayload, 'test_secret_key');
 
     // 3. Send Webhook Request with raw body to ensure signature matches
-    Mail::fake();
+    Notification::fake();
 
     $response = $this->call(
         'POST',
@@ -98,9 +98,9 @@ test('it processes a successful resident payment webhook', function () {
     expect($residentSubscription->status)->toBe('active');
     expect($residentSubscription->current_period_start)->not->toBeNull();
 
-    // Verify Email was sent
-    Mail::assertQueued(InvoicePaidMail::class, function ($mail) use ($invoice) {
-        return $mail->invoice->id === $invoice->id;
+    // Verify Notification was sent
+    Notification::assertSentTo($user, InvoicePaidNotification::class, function ($notification) use ($invoice) {
+        return $notification->invoice->id === $invoice->id;
     });
 });
 

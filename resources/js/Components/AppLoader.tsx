@@ -1,5 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 interface Props {
@@ -7,92 +6,37 @@ interface Props {
 }
 
 export default function AppLoader({ isExiting }: Props) {
-    const [currentTip, setCurrentTip] = useState(0);
-    const tips = [
-        'Generate visitor codes in seconds',
-        'Emergency SOS at your fingertips',
-        'Pay community dues effortlessly',
-        'Stay connected with your neighbors',
-        'Your safety, our priority',
-        'Manage your household with ease',
-    ];
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTip((prev) => (prev + 1) % tips.length);
-        }, 4000); // Slightly slower for readability
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <motion.div
             initial={{ opacity: 1 }}
             animate={{ opacity: isExiting ? 0 : 1 }}
-            transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-            className="fixed inset-0 z-[10000] flex flex-col items-center justify-between bg-white px-6 py-20"
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-white"
         >
-            {/* Soft Ambient Background */}
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-                <div
-                    className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 opacity-40"
-                    style={{ background: 'radial-gradient(circle, rgba(241,245,249,1) 0%, rgba(255,255,255,0) 70%)' }}
-                />
-            </div>
-
-            {/* Center: Logo Area */}
-            <div className="relative z-10 flex flex-1 items-center justify-center">
+            <div className="relative flex flex-col items-center">
                 <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{
-                        scale: [1, 1.02, 1],
-                        opacity: 1,
-                    }}
-                    transition={{
-                        scale: {
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                        },
-                        opacity: {
-                            duration: 1.2,
-                            ease: [0.16, 1, 0.3, 1],
-                        },
-                    }}
-                    className="relative"
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <img src="/assets/images/kontrol.png" alt="Kontrol Logo" className="h-48 w-auto object-contain drop-shadow-2xl" />
+                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-40 w-auto object-contain" />
                 </motion.div>
-            </div>
-
-            {/* Bottom: Subtle Loader */}
-            <div className="pb-safe relative z-10 flex flex-col items-center gap-4">
-                <motion.div
+                
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: '40px' }}
+                    transition={{ delay: 0.4, duration: 1.5, ease: "easeInOut" }}
+                    className="mt-12 h-[2px] bg-indigo-600 rounded-full"
+                />
+                
+                <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col items-center"
+                    transition={{ delay: 0.6, duration: 0.8 }}
+                    className="mt-4 text-[10px] font-black tracking-[0.4em] text-slate-300 uppercase"
                 >
-                    {/* Reverted to Spinner as requested */}
-                    <Loader2 className="h-6 w-6 animate-spin text-slate-300" strokeWidth={1.5} />
-
-                    <div className="mt-6 h-12 overflow-hidden">
-                        <AnimatePresence mode="wait">
-                            <motion.p
-                                key={currentTip}
-                                initial={{ opacity: 0, y: 15, filter: 'blur(8px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, y: -15, filter: 'blur(8px)' }}
-                                transition={{
-                                    duration: 0.9,
-                                    ease: [0.22, 1, 0.36, 1], // Quintic ease for ultra-smoothness
-                                }}
-                                className="max-w-[280px] text-center text-[10px] leading-relaxed font-black tracking-[0.3em] text-slate-400 uppercase"
-                            >
-                                {tips[currentTip]}
-                            </motion.p>
-                        </AnimatePresence>
-                    </div>
-                </motion.div>
+                    Secure Access
+                </motion.p>
             </div>
         </motion.div>
     );

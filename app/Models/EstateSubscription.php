@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,15 +20,15 @@ use Illuminate\Support\Facades\Cache;
  * @property string|null $card_last4
  * @property string $billing_interval
  * @property int|null $billing_anchor_day
- * @property \Carbon\CarbonImmutable|null $next_billing_date
- * @property \Carbon\CarbonImmutable|null $trial_ends_at
- * @property \Carbon\CarbonImmutable|null $current_period_end
+ * @property CarbonImmutable|null $next_billing_date
+ * @property CarbonImmutable|null $trial_ends_at
+ * @property CarbonImmutable|null $current_period_end
  * @property int|null $overridden_by Zeus admin ID who overrode the plan
  * @property string|null $override_notes
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\Estate $estate
- * @property-read \App\Models\Plan $plan
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Estate $estate
+ * @property-read Plan $plan
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription active()
  * @method static \Database\Factories\EstateSubscriptionFactory factory($count = null, $state = [])

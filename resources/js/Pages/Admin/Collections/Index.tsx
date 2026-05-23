@@ -1,13 +1,13 @@
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
+import { clsx, type ClassValue } from 'clsx';
 import { Wallet, Users, Calendar, ArrowRight, MoreVertical, AlertTriangle, Building2, Settings2 } from 'lucide-react';
 import { Edit2 } from 'lucide-react';
-import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import BankingSetupModal from '@/Components/BankingSetupModal';
-import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import BankingSetupModal from '@/Components/BankingSetupModal';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));

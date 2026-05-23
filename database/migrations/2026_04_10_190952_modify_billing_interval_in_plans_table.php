@@ -17,8 +17,8 @@ return new class extends Migration
         });
 
         // Update existing values to new format
-        \DB::table('plans')->where('billing_interval', 'monthly')->update(['billing_interval' => 'quarterly']);
-        \DB::table('plans')->where('billing_interval', 'annual')->update(['billing_interval' => 'annually']);
+        DB::table('plans')->where('billing_interval', 'monthly')->update(['billing_interval' => 'quarterly']);
+        DB::table('plans')->where('billing_interval', 'annual')->update(['billing_interval' => 'annually']);
 
         // Convert back to enum with new values
         Schema::table('plans', function (Blueprint $table) {
@@ -37,9 +37,9 @@ return new class extends Migration
         });
 
         // Revert the values back
-        \DB::table('plans')->where('billing_interval', 'quarterly')->update(['billing_interval' => 'monthly']);
-        \DB::table('plans')->where('billing_interval', 'semi-annually')->update(['billing_interval' => 'semi-annual']);
-        \DB::table('plans')->where('billing_interval', 'annually')->update(['billing_interval' => 'annual']);
+        DB::table('plans')->where('billing_interval', 'quarterly')->update(['billing_interval' => 'monthly']);
+        DB::table('plans')->where('billing_interval', 'semi-annually')->update(['billing_interval' => 'semi-annual']);
+        DB::table('plans')->where('billing_interval', 'annually')->update(['billing_interval' => 'annual']);
 
         // Convert back to varchar (don't use enum to avoid data type issues)
         // This is safer than trying to enforce an enum during rollback

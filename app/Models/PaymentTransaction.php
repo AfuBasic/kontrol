@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -20,15 +21,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $customer_email
  * @property string|null $error_code
  * @property string|null $error_message
- * @property \Carbon\CarbonImmutable|null $verified_at
- * @property \Carbon\CarbonImmutable|null $recorded_at
+ * @property CarbonImmutable|null $verified_at
+ * @property CarbonImmutable|null $recorded_at
  * @property int $attempt_count
  * @property array<array-key, mixed>|null $metadata Additional payment data from Paystack
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\Estate $estate
- * @property-read \App\Models\Invoice|null $invoice
- * @property-read \App\Models\User|null $user
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Estate $estate
+ * @property-read Invoice|null $invoice
+ * @property-read User|null $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction failed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction newModelQuery()
@@ -77,6 +78,7 @@ class PaymentTransaction extends Model
         'error_message',
         'verified_at',
         'recorded_at',
+        'last_checked_at',
         'attempt_count',
         'metadata',
     ];
@@ -86,6 +88,7 @@ class PaymentTransaction extends Model
         'attempt_count' => 'int',
         'verified_at' => 'datetime',
         'recorded_at' => 'datetime',
+        'last_checked_at' => 'datetime',
         'metadata' => 'json',
     ];
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $user_agent_hash
  * @property string|null $ip_address
- * @property \Carbon\CarbonImmutable $last_used_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property-read \App\Models\User $user
+ * @property CarbonImmutable $last_used_at
+ * @property CarbonImmutable|null $created_at
+ * @property-read User $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TrustedDevice newQuery()

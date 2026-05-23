@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
@@ -18,12 +19,12 @@ use Illuminate\Support\Facades\Cache;
  * @property bool $access_code_require_confirmation
  * @property string $charge_type
  * @property array<array-key, mixed>|null $contacts
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  * @property bool $free_trial_enabled
  * @property int $free_trial_days
  * @property int $grace_period_days
- * @property-read \App\Models\Estate $estate
+ * @property-read Estate $estate
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSettings newQuery()

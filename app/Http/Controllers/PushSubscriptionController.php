@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,7 +29,7 @@ class PushSubscriptionController extends Controller
                 'platform' => ['required', 'string'],
             ]);
 
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = $request->user();
             $user->update(['fcm_token' => $validated['token']]);
 
@@ -41,7 +42,7 @@ class PushSubscriptionController extends Controller
             'keys.p256dh' => ['required', 'string'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $user->updatePushSubscription(
@@ -62,7 +63,7 @@ class PushSubscriptionController extends Controller
             'endpoint' => ['required', 'url'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $user->deletePushSubscription($validated['endpoint']);

@@ -2,6 +2,8 @@
 
 namespace App\Services\Admin;
 
+use App\Models\EstateSettings;
+use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\ResidentSubscription;
 use App\Models\User;
@@ -31,7 +33,7 @@ class BillingService
             $this->initializeTrialService->initializeForEstate($estate);
         }
 
-        /** @var \App\Models\EstateSubscription|null $subscription */
+        /** @var EstateSubscription|null $subscription */
         $subscription = $estate->subscriptionRecord;
 
         if (! $subscription) {
@@ -81,7 +83,7 @@ class BillingService
             'expired' => ResidentSubscription::query()->where('estate_id', $estate->id)->whereIn('status', ['expired', 'cancelled'])->count(),
         ];
 
-        /** @var \App\Models\EstateSettings|null $settings */
+        /** @var EstateSettings|null $settings */
         $settings = $estate->settings;
         $trialDays = $settings->free_trial_days ?? 0;
 
@@ -96,7 +98,6 @@ class BillingService
                 'active_residents' => $activeResidents,
                 'upcoming_amount' => $upcomingAmount,
                 'has_overdue' => $hasOverdue,
-                'billing_preference' => $subscription->billing_preference,
                 'has_saved_card' => $subscription->hasSavedCard(),
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
@@ -128,7 +129,6 @@ class BillingService
             'active_residents' => $activeResidents,
             'upcoming_amount' => $upcomingAmount,
             'has_overdue' => $hasOverdue,
-            'billing_preference' => $subscription->billing_preference,
             'has_saved_card' => $subscription->hasSavedCard(),
             'card_brand' => $subscription->card_brand,
             'card_last4' => $subscription->card_last4,

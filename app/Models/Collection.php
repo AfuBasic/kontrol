@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,20 +17,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $amount
  * @property string $billing_type
  * @property string|null $recurring_interval
- * @property \Carbon\CarbonImmutable $start_date
+ * @property CarbonImmutable $start_date
  * @property int $due_day
  * @property int $grace_days
  * @property int|null $late_fee
  * @property string $applies_to
  * @property string $status
  * @property int $created_by
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CollectionAssignment> $assignments
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CollectionAssignment> $assignments
  * @property-read int|null $assignments_count
- * @property-read \App\Models\User $creator
- * @property-read \App\Models\Estate $estate
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CollectionTarget> $targets
+ * @property-read User $creator
+ * @property-read Estate $estate
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CollectionTarget> $targets
  * @property-read int|null $targets_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Collection newModelQuery()
@@ -58,7 +59,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Collection extends Model
 {
     use GeneratesUlid, HasFactory;
-
 
     protected $fillable = [
         'estate_id',

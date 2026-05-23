@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,12 +25,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $max_admins null = unlimited
  * @property bool $is_active
  * @property int $sort_order
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Feature> $features
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, Feature> $features
  * @property-read int|null $features_count
  * @property-read string $formatted_price
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateSubscription> $subscriptions
+ * @property-read Collection<int, EstateSubscription> $subscriptions
  * @property-read int|null $subscriptions_count
  *
  * @method static \Database\Factories\PlanFactory factory($count = null, $state = [])

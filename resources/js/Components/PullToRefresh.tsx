@@ -1,9 +1,9 @@
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { router } from '@inertiajs/react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
 
 interface Props {
     children: React.ReactNode;

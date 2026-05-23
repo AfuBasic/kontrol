@@ -1,6 +1,6 @@
-import LandingLayout from '@/Layouts/LandingLayout';
-import SEO from '@/Components/Landing/SEO';
 import { motion } from 'framer-motion';
+import SEO from '@/Components/Landing/SEO';
+import LandingLayout from '@/Layouts/LandingLayout';
 
 interface Props {
     title: string;

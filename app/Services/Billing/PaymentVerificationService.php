@@ -27,7 +27,7 @@ class PaymentVerificationService
      * Verify and record a payment atomically.
      * Handles idempotency, double-payment prevention, and comprehensive error tracking.
      *
-     * @throws \Exception on critical errors
+     * @throws Exception on critical errors
      */
     public function verifyAndRecordPayment(
         string $paystackReference,
@@ -52,7 +52,7 @@ class PaymentVerificationService
 
             // 3. CHECK INVOICE ALREADY PAID - Prevent double-payment if someone tries again
             if ($invoice->isPaid()) {
-                throw new \Exception(
+                throw new Exception(
                     "Invoice {$invoice->invoice_number} already paid. Payment duplicate attempt detected.",
                     'INVOICE_ALREADY_PAID'
                 );
@@ -60,6 +60,10 @@ class PaymentVerificationService
 
             // 4. VERIFY PAYMENT WITH PAYSTACK - Get definitive payment status from source
             $verification = $this->verifyPaymentWithRetry($paystackReference);
+
+            if ($existingTransaction) {
+                $existingTransaction->update(['last_checked_at' => now()]);
+            }
 
             // 5. VALIDATE PAYMENT AMOUNT - Critical: Ensure amount matches exactly
             $this->validatePaymentAmount($verification, $invoice);
@@ -84,6 +88,7 @@ class PaymentVerificationService
                     'payment_method' => $verification['payment_method'] ?? $transaction->payment_method,
                     'customer_email' => $verification['customer_email'] ?? $transaction->customer_email,
                     'verified_at' => now(),
+                    'last_checked_at' => now(),
                     'metadata' => [
                         'authorization' => $verification['authorization'] ?? null,
                         'customer' => $verification['customer'] ?? null,
@@ -101,6 +106,7 @@ class PaymentVerificationService
                     'payment_method' => $verification['payment_method'] ?? null,
                     'customer_email' => $verification['customer_email'] ?? null,
                     'verified_at' => now(),
+                    'last_checked_at' => now(),
                     'metadata' => [
                         'authorization' => $verification['authorization'] ?? null,
                         'customer' => $verification['customer'] ?? null,
@@ -116,7 +122,8 @@ class PaymentVerificationService
                 'customer_email' => $verification['customer']['email'] ?? null,
             ]);
 
-            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING (Only for first card setup or preference)
+            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING (Disabled - manual transfer payments only)
+            /*
             if ($verification['status'] === 'success' && ! empty($verification['authorization']['authorization_code'])) {
                 $auth = $verification['authorization'];
                 $customer = $verification['customer'];
@@ -143,6 +150,7 @@ class PaymentVerificationService
                     }
                 }
             }
+            */
 
             // 9. RECORD TRANSACTION AS PROCESSED - Prevent reprocessing
             $transaction->update([
@@ -177,20 +185,20 @@ class PaymentVerificationService
     /**
      * Verify payment with Paystack, with retry logic for transient failures.
      *
-     * @throws \Exception on persistent failures
+     * @throws Exception on persistent failures
      */
     private function verifyPaymentWithRetry(string $paystackReference, int $attempt = 1): array
     {
         try {
             return $this->paystackService->verifyPayment($paystackReference);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if ($attempt < self::MAX_RETRY_ATTEMPTS) {
                 sleep(self::RETRY_DELAY_SECONDS);
 
                 return $this->verifyPaymentWithRetry($paystackReference, $attempt + 1);
             }
 
-            throw new \Exception(
+            throw new Exception(
                 "Failed to verify payment after {$attempt} attempts: ".$e->getMessage(),
                 'VERIFICATION_FAILED'
             );
@@ -201,7 +209,7 @@ class PaymentVerificationService
      * Validate that the payment amount matches the invoice exactly.
      * Protects against fraud and incorrect amounts.
      *
-     * @throws \Exception if amount mismatch
+     * @throws Exception if amount mismatch
      */
     private function validatePaymentAmount(array $verification, Invoice $invoice): void
     {
@@ -209,7 +217,7 @@ class PaymentVerificationService
 
         // Amount must match exactly (in kobo)
         if ($paystackAmount !== $invoice->amount) {
-            throw new \Exception(
+            throw new Exception(
                 "Amount mismatch: Expected {$invoice->amount} kobo, got {$paystackAmount} kobo. "
                 .'Possible fraud or configuration error.',
                 'AMOUNT_MISMATCH'
@@ -235,6 +243,7 @@ class PaymentVerificationService
                 'status' => 'failed',
                 'error_code' => $errorCode,
                 'error_message' => $errorMessage,
+                'last_checked_at' => now(),
             ]);
 
             return $existingTransaction;
@@ -251,6 +260,7 @@ class PaymentVerificationService
             'error_code' => $errorCode,
             'error_message' => $errorMessage,
             'attempt_count' => 1,
+            'last_checked_at' => now(),
         ]);
 
         activity()
@@ -290,6 +300,8 @@ class PaymentVerificationService
             // 2. Verify with Paystack
             $verification = $this->verifyPaymentWithRetry($paystackReference);
 
+            $transaction->update(['last_checked_at' => now()]);
+
             if ($verification['status'] !== 'success') {
                 $transaction->update([
                     'status' => 'failed',
@@ -305,9 +317,11 @@ class PaymentVerificationService
                 'payment_method' => $verification['payment_method'] ?? null,
                 'customer_email' => $verification['customer_email'] ?? null,
                 'verified_at' => now(),
+                'last_checked_at' => now(),
             ]);
 
-            // 4. Save authorization code
+            // 4. Save authorization code (Disabled - manual transfer payments only)
+            /*
             if (! empty($verification['authorization']['authorization_code'])) {
                 $auth = $verification['authorization'];
                 $customer = $verification['customer'];
@@ -327,6 +341,7 @@ class PaymentVerificationService
                     $residentSubscription->update($authData);
                 }
             }
+            */
 
             // 5. Mark as recorded
             $transaction->update(['recorded_at' => now()]);

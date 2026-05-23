@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,14 +18,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $user_id
  * @property string $body
  * @property int|null $parent_id
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property \Carbon\CarbonImmutable|null $deleted_at
- * @property-read \App\Models\User $author
- * @property-read \App\Models\Estate $estate
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $deleted_at
+ * @property-read User $author
+ * @property-read Estate $estate
  * @property-read EstateBoardComment|null $parent
- * @property-read \App\Models\EstateBoardPost $post
- * @property-read \Illuminate\Database\Eloquent\Collection<int, EstateBoardComment> $replies
+ * @property-read EstateBoardPost $post
+ * @property-read Collection<int, EstateBoardComment> $replies
  * @property-read int|null $replies_count
  *
  * @method static \Database\Factories\EstateBoardCommentFactory factory($count = null, $state = [])

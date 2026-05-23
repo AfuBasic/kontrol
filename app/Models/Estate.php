@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,18 +21,18 @@ use Illuminate\Support\Facades\DB;
  * @property string $email
  * @property string|null $address
  * @property string $status
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\EstateInviteLink|null $inviteLink
- * @property-read \App\Models\Referrer|null $referrer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResidentSubscription> $residentSubscriptions
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read EstateInviteLink|null $inviteLink
+ * @property-read Referrer|null $referrer
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ResidentSubscription> $residentSubscriptions
  * @property-read int|null $resident_subscriptions_count
- * @property-read \App\Models\EstateSettings $settings
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SosEvent> $sosEvents
+ * @property-read EstateSettings $settings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, SosEvent> $sosEvents
  * @property-read int|null $sos_events_count
- * @property-read \App\Models\Plan|null $subscription
- * @property-read \App\Models\EstateSubscription|null $subscriptionRecord
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read Plan|null $subscription
+ * @property-read EstateSubscription|null $subscriptionRecord
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
  * @property-read int|null $users_count
  *
  * @method static \Database\Factories\EstateFactory factory($count = null, $state = [])
@@ -52,7 +53,6 @@ use Illuminate\Support\Facades\DB;
 class Estate extends Model
 {
     use GeneratesUlid, HasFactory;
-
 
     protected $fillable = [
         'name',

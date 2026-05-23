@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace App\Notifications\EstateBoard;
- 
+
 use App\Channels\TelegramChannel;
 use App\Models\EstateBoardPost;
 use Illuminate\Bus\Queueable;
@@ -13,15 +13,15 @@ use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
- 
+
 class NewPostNotification extends Notification implements ShouldQueue
 {
     use Queueable;
- 
+
     public function __construct(
         public EstateBoardPost $post
     ) {}
- 
+
     /**
      * Get the notification's delivery channels.
      *
@@ -30,25 +30,25 @@ class NewPostNotification extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         $channels = ['database', 'broadcast'];
- 
+
         // Add WebPush channel if user has push subscriptions
         if ($notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
         }
- 
+
         // Add FCM channel if user has FCM token
         if ($notifiable->fcm_token) {
             $channels[] = FcmChannel::class;
         }
- 
+
         // Add Telegram channel if user has Telegram linked
         if ($notifiable->hasTelegramLinked()) {
             $channels[] = TelegramChannel::class;
         }
- 
+
         return $channels;
     }
- 
+
     /**
      * Get the array representation of the notification for database storage.
      *
@@ -57,7 +57,7 @@ class NewPostNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $authorName = $this->post->author?->name ?? $this->post->estate->name;
- 
+
         return [
             'title' => $this->post->title ?? 'New Announcement',
             'message' => "Posted by {$authorName}",
@@ -68,7 +68,7 @@ class NewPostNotification extends Notification implements ShouldQueue
             'action_url' => '/resident/estate-board/'.$this->post->hashid,
         ];
     }
- 
+
     /**
      * Get the broadcastable representation of the notification.
      */
@@ -76,14 +76,14 @@ class NewPostNotification extends Notification implements ShouldQueue
     {
         return new BroadcastMessage($this->toArray($notifiable));
     }
- 
+
     /**
      * Get the web push notification representation.
      */
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
         $data = $this->toArray($notifiable);
- 
+
         return (new WebPushMessage)
             ->title($data['title'])
             ->body($data['message'])
@@ -100,14 +100,14 @@ class NewPostNotification extends Notification implements ShouldQueue
                 'urgency' => 'normal',
             ]);
     }
- 
+
     /**
      * Get the FCM notification representation.
      */
     public function toFcm(object $notifiable): FcmMessage
     {
         $data = $this->toArray($notifiable);
- 
+
         return FcmMessage::create()
             ->notification(FcmNotification::create()
                 ->title($data['title'])
@@ -144,7 +144,7 @@ class NewPostNotification extends Notification implements ShouldQueue
                 ],
             ]);
     }
- 
+
     /**
      * Get the telegram representation of the notification.
      *
@@ -157,7 +157,7 @@ class NewPostNotification extends Notification implements ShouldQueue
         $text = "📣 <b>{$title}</b>\n\n"
             ."👤 Posted by: <b>{$authorName}</b>\n"
             ."📍 Estate: <b>{$this->post->estate->name}</b>";
- 
+
         return [
             'text' => $text,
             'keyboard' => [

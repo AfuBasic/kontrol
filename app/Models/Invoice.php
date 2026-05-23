@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,25 +20,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $invoice_number
  * @property int $amount Amount in kobo
  * @property int $resident_count Snapshot of active residents at generation
- * @property \Carbon\CarbonImmutable $billing_period_start
- * @property \Carbon\CarbonImmutable $billing_period_end
- * @property \Carbon\CarbonImmutable $due_date
+ * @property CarbonImmutable $billing_period_start
+ * @property CarbonImmutable $billing_period_end
+ * @property CarbonImmutable $due_date
  * @property string $status
  * @property string|null $paystack_reference
  * @property string|null $paystack_access_code
  * @property array<array-key, mixed>|null $metadata
- * @property \Carbon\CarbonImmutable|null $paid_at
- * @property \Carbon\CarbonImmutable|null $notified_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property \Carbon\CarbonImmutable|null $last_sent_email_at
- * @property-read \App\Models\Estate $estate
+ * @property CarbonImmutable|null $paid_at
+ * @property CarbonImmutable|null $notified_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $last_sent_email_at
+ * @property-read Estate $estate
  * @property-read string $formatted_amount
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PaymentTransaction> $paymentTransactions
+ * @property-read Collection<int, PaymentTransaction> $paymentTransactions
  * @property-read int|null $payment_transactions_count
- * @property-read \App\Models\Plan $plan
- * @property-read \App\Models\EstateSubscription|null $subscription
- * @property-read \App\Models\User|null $user
+ * @property-read Plan $plan
+ * @property-read EstateSubscription|null $subscription
+ * @property-read User|null $user
  *
  * @method static \Database\Factories\InvoiceFactory factory($count = null, $state = [])
  * @method static Builder<static>|Invoice newModelQuery()
@@ -71,7 +73,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Invoice extends Model
 {
     use GeneratesUlid, HasFactory;
-
 
     protected $fillable = [
         'estate_id',

@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity as SpatieActivity;
 
@@ -16,13 +19,13 @@ use Spatie\Activitylog\Models\Activity as SpatieActivity;
  * @property int|null $subject_id
  * @property string|null $causer_type
  * @property int|null $causer_id
- * @property \Illuminate\Support\Collection<array-key, mixed>|null $properties
+ * @property Collection<array-key, mixed>|null $properties
  * @property string|null $batch_uuid
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model|null $causer
- * @property-read \Illuminate\Support\Collection $changes
- * @property-read \Illuminate\Database\Eloquent\Model|null $subject
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Model|null $causer
+ * @property-read Collection $changes
+ * @property-read Model|null $subject
  *
  * @method static Builder<static>|Activity causedBy(\Illuminate\Database\Eloquent\Model $causer)
  * @method static Builder<static>|Activity forBatch(string $batchUuid)

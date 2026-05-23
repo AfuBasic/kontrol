@@ -1,9 +1,6 @@
-import { usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { CreditCard, AlertCircle, Clock, Shield } from 'lucide-react';
 import React from 'react';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
-import type { SharedData } from '@/types';
 import type { ResidentSubscription } from '@/types/auth';
 
 interface SubscriptionBannerProps {
@@ -17,7 +14,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
         return null;
     }
 
-    const { status, trial_ends_at, current_period_end, is_active, is_grace_period, is_household_member } = subscription;
+    const { status, trial_ends_at, is_active, is_grace_period, is_household_member } = subscription;
 
     // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
     if (status === 'past_due') {
@@ -48,13 +45,44 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
 
     // 2. TRIAL STATUS
     if (status === 'trial' && trial_ends_at) {
+        const now = new Date();
         const trialEnd = new Date(trial_ends_at);
-        const daysLeft = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
+        // Reset hours for date-only comparison
+        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endDate = new Date(trialEnd.getFullYear(), trialEnd.getMonth(), trialEnd.getDate());
+
+        const diffTime = endDate.getTime() - todayDate.getTime();
+        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffTime < 0) {
+            return (
+                <Banner
+                    title="Trial expired"
+                    description="Access limited"
+                    cta={!is_household_member ? 'Open web' : undefined}
+                    onCtaClick={openExternalBilling}
+                    variant="inactive"
+                />
+            );
+        }
+
+        if (diffTime === 0) {
+            return (
+                <Banner
+                    title="Trial period"
+                    description="Ends today"
+                    cta={!is_household_member ? 'Open web' : undefined}
+                    onCtaClick={openExternalBilling}
+                    variant="grace"
+                />
+            );
+        }
 
         return (
             <Banner
                 title="Trial period"
-                description={daysLeft <= 0 ? 'Ends today' : `Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
+                description={`Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
                 cta={!is_household_member ? 'Open web' : undefined}
                 onCtaClick={openExternalBilling}
                 variant={daysLeft <= 3 ? 'grace' : 'active'}

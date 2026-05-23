@@ -31,7 +31,6 @@ class SubscriptionSyncService
             ['user_id' => $user->id, 'estate_id' => $estate->id],
             [
                 'status' => 'active', // Default to active if newly created
-                'billing_preference' => 'manual',
             ]
         );
 

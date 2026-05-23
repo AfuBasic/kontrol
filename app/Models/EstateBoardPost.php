@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Traits\HasHashid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,17 +23,17 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string $body
  * @property EstateBoardPostStatus $status
  * @property EstateBoardPostAudience $audience
- * @property \Carbon\CarbonImmutable|null $published_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Activity> $activities
+ * @property CarbonImmutable|null $published_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, Activity> $activities
  * @property-read int|null $activities_count
- * @property-read \App\Models\User $author
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateBoardComment> $comments
+ * @property-read User $author
+ * @property-read Collection<int, EstateBoardComment> $comments
  * @property-read int|null $comments_count
- * @property-read \App\Models\Estate $estate
+ * @property-read Estate $estate
  * @property-read string $hashid
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EstateBoardPostMedia> $media
+ * @property-read Collection<int, EstateBoardPostMedia> $media
  * @property-read int|null $media_count
  *
  * @method static \Database\Factories\EstateBoardPostFactory factory($count = null, $state = [])

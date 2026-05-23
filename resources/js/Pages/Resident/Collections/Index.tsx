@@ -1,7 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { Wallet, ChevronRight, Clock, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
-import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+import { motion } from 'framer-motion';
+import { Wallet, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
+
+const MotionLink = motion(Link);
 
 type Collection = {
     ulid: string;
@@ -29,7 +31,7 @@ type Props = {
     allAssignments: Assignment[];
 };
 
-export default function CollectionsIndex({ summary, allAssignments }: Props) {
+export default function CollectionsIndex({ summary }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -99,9 +101,10 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                 <div className="flex flex-col gap-3">
                     {summary.outstanding.length > 0 ? (
                         summary.outstanding.map((assignment) => (
-                            <Link
+                            <MotionLink
                                 key={assignment.id}
                                 href={show.url(assignment.ulid)}
+                                layoutId={`collection-card-${assignment.ulid}`}
                                 className="group flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
                             >
                                 <div className="flex items-center gap-4">
@@ -136,7 +139,7 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
                                         </span>
                                     </div>
                                 </div>
-                            </Link>
+                            </MotionLink>
                         ))
                     ) : (
                         <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
@@ -187,5 +190,3 @@ export default function CollectionsIndex({ summary, allAssignments }: Props) {
         </div>
     );
 }
-
-CollectionsIndex.layout = (page: any) => <ResidentLayout children={page} />;

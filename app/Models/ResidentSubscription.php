@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,17 +18,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $paystack_customer_code
  * @property string|null $card_brand
  * @property string|null $card_last4
- * @property \Carbon\CarbonImmutable|null $trial_ends_at
- * @property \Carbon\CarbonImmutable|null $current_period_start
- * @property \Carbon\CarbonImmutable|null $current_period_end
- * @property \Carbon\CarbonImmutable|null $last_paid_at
- * @property \Carbon\CarbonImmutable|null $last_reminded_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\Estate $estate
- * @property-read \Illuminate\Database\Eloquent\Relations\BelongsTo<Estate, $this> $is_active
+ * @property CarbonImmutable|null $trial_ends_at
+ * @property CarbonImmutable|null $current_period_start
+ * @property CarbonImmutable|null $current_period_end
+ * @property CarbonImmutable|null $last_paid_at
+ * @property CarbonImmutable|null $last_reminded_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Estate $estate
+ * @property-read BelongsTo<Estate, $this> $is_active
  * @property-read bool $is_grace_period
- * @property-read \App\Models\User $user
+ * @property-read User $user
  *
  * @method static \Database\Factories\ResidentSubscriptionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newModelQuery()
@@ -55,7 +56,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ResidentSubscription extends Model
 {
     use GeneratesUlid, HasFactory;
-
 
     protected $fillable = [
         'user_id',

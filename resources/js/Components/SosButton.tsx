@@ -1,7 +1,7 @@
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { router, usePage, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, X, AlertTriangle, CheckCircle2, Loader2, Calendar, Hash, Check, Clock, Shield, Users, ChevronRight } from 'lucide-react';
+import { ShieldAlert, X, AlertTriangle, Loader2, Hash, Check, Clock, Shield, Users, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
@@ -159,6 +159,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
     const TriggerButton = (
         <div className="relative flex items-center justify-center">
             <motion.button
+                layoutId="sos-button-morph"
                 onPointerDown={handleStartHold}
                 onPointerUp={handleEndHold}
                 onPointerCancel={handleEndHold}
@@ -251,9 +252,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                         {/* Countdown Overlay */}
                         {countdown !== null && (
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                                layoutId="sos-button-morph"
                                 className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-[#FFFBEB] p-6 text-[#111827] backdrop-blur-md"
                             >
                                 <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-[#F59E0B]/10">
@@ -277,9 +276,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                         {/* Sending / Sent Overlay */}
                         {(isSending || isSent || error) && (
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                                layoutId="sos-button-morph"
                                 className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center p-6 backdrop-blur-md ${
                                     error ? 'bg-[#FEF2F2]' : isSending ? 'bg-[#F0F9FF]' : 'bg-[#F7F9FC]'
                                 }`}

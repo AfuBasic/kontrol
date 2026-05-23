@@ -1,10 +1,10 @@
-import LandingLayout from '@/Layouts/LandingLayout';
-import SEO from '@/Components/Landing/SEO';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Check, X, Zap, ShieldCheck, Users, ChevronDown, ArrowRight } from 'lucide-react';
-import { Link } from '@inertiajs/react';
-import { login } from '@/routes';
 import { useState } from 'react';
+import SEO from '@/Components/Landing/SEO';
+import LandingLayout from '@/Layouts/LandingLayout';
+import { login } from '@/routes';
 
 interface Plan {
     id: number;

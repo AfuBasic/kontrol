@@ -5,19 +5,19 @@ use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\ValidateEstateContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Sentry\Laravel\Integration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -92,26 +92,26 @@ return Application::configure(basePath: dirname(__DIR__))
             'resident.active' => EnsureResidentSubscriptionActive::class,
             'feature' => CheckEstateFeature::class,
             'check-estate-feature' => CheckEstateFeature::class,
-            'validate-estate' => \App\Http\Middleware\ValidateEstateContext::class,
+            'validate-estate' => ValidateEstateContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
 
-        $exceptions->render(function (InvalidSignatureException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
             if (str_starts_with($request->path(), 'invitation')) {
                 return redirect()->route('invitation.invalid');
             }
         });
 
-        $exceptions->render(function (Throwable $e, Request $request) use ($exceptions) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->expectsJson()) {
                 return null;
             }
 
             if (app()->environment('production') || ! config('app.debug')) {
-                $statusCode = $e instanceof HttpExceptionInterface 
-                    ? $e->getStatusCode() 
+                $statusCode = $e instanceof HttpExceptionInterface
+                    ? $e->getStatusCode()
                     : 500;
 
                 if (in_array($statusCode, [500, 503, 404, 403, 419])) {

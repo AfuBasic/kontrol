@@ -16,6 +16,7 @@ use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -115,7 +116,7 @@ class SecurityPersonnelController extends Controller
                 'string',
                 'email',
                 'max:255',
-                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($security->id),
+                Rule::unique('users', 'email')->ignore($security->id),
             ],
             'phone' => ['nullable', 'string', 'max:20'],
             'badge_number' => ['nullable', 'string', 'max:50'],

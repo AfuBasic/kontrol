@@ -4,18 +4,26 @@ namespace App\Models;
 
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
+use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use NotificationChannels\WebPush\PushSubscription;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -26,32 +34,32 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $google_id
  * @property string|null $telegram_chat_id
  * @property string|null $fcm_token
- * @property \Carbon\CarbonImmutable|null $email_verified_at
+ * @property CarbonImmutable|null $email_verified_at
  * @property string|null $password
  * @property string|null $remember_token
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property \Carbon\CarbonImmutable|null $suspended_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EmergencyContact> $emergencyContacts
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $suspended_at
+ * @property-read Collection<int, EmergencyContact> $emergencyContacts
  * @property-read int|null $emergency_contacts_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Estate> $estates
+ * @property-read Collection<int, Estate> $estates
  * @property-read int|null $estates_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\HouseholdMember> $householdMembers
+ * @property-read Collection<int, HouseholdMember> $householdMembers
  * @property-read int|null $household_members_count
- * @property-read \App\Models\HouseholdMember|null $householdOf
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read HouseholdMember|null $householdOf
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read Collection<int, Permission> $permissions
  * @property-read int|null $permissions_count
- * @property-read \App\Models\UserProfile|null $profile
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \NotificationChannels\WebPush\PushSubscription> $pushSubscriptions
+ * @property-read UserProfile|null $profile
+ * @property-read Collection<int, PushSubscription> $pushSubscriptions
  * @property-read int|null $push_subscriptions_count
- * @property-read \App\Models\ResidentSubscription|null $residentSubscription
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read ResidentSubscription|null $residentSubscription
+ * @property-read Collection<int, Role> $roles
  * @property-read int|null $roles_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SosEvent> $sosEvents
+ * @property-read Collection<int, SosEvent> $sosEvents
  * @property-read int|null $sos_events_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TrustedDevice> $trustedDevices
+ * @property-read Collection<int, TrustedDevice> $trustedDevices
  * @property-read int|null $trusted_devices_count
  *
  * @method static Builder<static>|User acceptedInvitation()
@@ -89,7 +97,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use GeneratesUlid, HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
     /**

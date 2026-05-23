@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import {
-    CreditCardIcon,
     CheckCircleIcon,
     ArrowTopRightOnSquareIcon,
     ShieldCheckIcon,
@@ -12,8 +11,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
@@ -54,6 +53,7 @@ type Props = {
         formatted_amount: string;
         invoice_count: number;
         next_invoice_ulid: string | null;
+        next_due_date?: string;
     };
 };
 
@@ -198,20 +198,42 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         setIsNative(Capacitor.isNativePlatform());
     }, []);
 
-    const statusKey = (
-        ['active', 'trial', 'past_due', 'expired'].includes(subscription.status) ? subscription.status : 'active'
-    ) as SubscriptionStatus;
+    const isTrialExpired = subscription.status === 'trial' && subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date();
+    const isSubscriptionExpired = (subscription.status === 'active' || subscription.status === 'past_due') &&
+        subscription.current_period_end && new Date(subscription.current_period_end) < new Date();
+
+    const getComputedStatus = (): SubscriptionStatus => {
+        if (isTrialExpired || subscription.status === 'expired') {
+            return 'expired';
+        }
+        if (subscription.status === 'past_due') {
+            return 'past_due';
+        }
+        if (subscription.status === 'trial') {
+            return 'trial';
+        }
+        return 'active';
+    };
+
+    const statusKey = getComputedStatus();
     const status = STATUS_MAP[statusKey];
+
+    // Determine dynamic label and description
+    const displayLabel = statusKey === 'expired'
+        ? (isTrialExpired ? 'Trial expired' : 'Subscription expired')
+        : status.label;
+
+    const displayDescription = statusKey === 'expired'
+        ? (isTrialExpired
+            ? `Your trial expired on ${formatDate(subscription.trial_ends_at)}. Settle the outstanding invoice to restore access.`
+            : `Your subscription expired on ${formatDate(subscription.current_period_end)}. Renew to restore access.`)
+        : status.description(formatDate(subscription.current_period_end || subscription.trial_ends_at));
+
     const tone = TONE_STYLES[status.tone];
 
     const periodEnd = subscription.current_period_end || subscription.trial_ends_at;
     const hasOutstanding = outstanding.amount > 0;
     const needsAttention = !hasOutstanding && (statusKey === 'past_due' || statusKey === 'expired');
-
-    const toggleAutoRenewal = () => {
-        const next = subscription.billing_preference === 'auto' ? 'manual' : 'auto';
-        router.patch(ResidentBillingController.updatePreference.url(), { billing_preference: next }, { preserveScroll: true });
-    };
 
     const openWebApp = async () => {
         try {
@@ -236,7 +258,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         if (outstanding.amount > 0) {
             router.post(ResidentBillingController.payOutstanding.url(), {}, { onFinish: () => setPaying(false) });
         } else {
-            router.post(ResidentBillingController.setupPaymentMethod.url(), {}, { onFinish: () => setPaying(false) });
+            setPaying(false);
         }
     };
 
@@ -287,14 +309,62 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     hasOutstanding={hasOutstanding}
                     needsAttention={needsAttention}
                     statusKey={statusKey}
-                    statusLabel={status.label}
-                    statusDescription={status.description(formatDate(periodEnd))}
+                    statusLabel={displayLabel}
+                    statusDescription={displayDescription}
                     outstanding={outstanding}
                     isNative={isNative}
                     paying={paying}
                     onSettle={handleAction}
                     onOpenWeb={openWebApp}
                 />
+
+                {hasOutstanding && (
+                    <motion.section
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6 overflow-hidden rounded-3xl border border-rose-100 bg-gradient-to-br from-rose-50/50 to-white p-6 shadow-[0_1px_3px_rgba(244,63,94,0.05),0_12px_24px_-8px_rgba(244,63,94,0.08)] sm:p-8"
+                    >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <span className="text-xs font-bold tracking-wider text-rose-600 uppercase">Outstanding Balance</span>
+                                <h3 className="mt-1 text-3xl font-extrabold text-slate-900">{outstanding.formatted_amount}</h3>
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    {outstanding.invoice_count === 1 ? '1 invoice' : `${outstanding.invoice_count} invoices`} unpaid.
+                                    {outstanding.next_due_date && (
+                                        <> Due by <span className="font-semibold text-slate-700">{formatDate(outstanding.next_due_date)}</span></>
+                                    )}
+                                </p>
+                            </div>
+
+                            {!isNative ? (
+                                <button
+                                    type="button"
+                                    onClick={handleAction}
+                                    disabled={paying}
+                                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-rose-500 active:scale-[0.98] disabled:opacity-60"
+                                >
+                                    {paying ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                            Redirecting to Paystack…
+                                        </>
+                                    ) : (
+                                        `Pay ${outstanding.formatted_amount}`
+                                    )}
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={openWebApp}
+                                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-white px-6 py-3.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-50"
+                                >
+                                    Open Web to Pay
+                                    <ArrowTopRightOnSquareIcon className="h-4 w-4" strokeWidth={2} />
+                                </button>
+                            )}
+                        </div>
+                    </motion.section>
+                )}
 
                 {/* Plan card */}
                 <motion.section
@@ -309,7 +379,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                 <span
                                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tone.pill}`}
                                 >
-                                    {status.label}
+                                    {displayLabel}
                                 </span>
                             </div>
                             {estatePlan && (
@@ -330,107 +400,18 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                         </div>
                     </div>
 
-                    <dl className="mt-6 grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100">
+                    <dl className="mt-6 grid grid-cols-1 border-t border-slate-100">
                         <div className="px-6 py-4 sm:px-8">
-                            <dt className="text-xs font-medium text-slate-500">{statusKey === 'trial' ? 'Trial ends' : 'Next billing'}</dt>
+                            <dt className="text-xs font-medium text-slate-500">
+                                {isTrialExpired ? 'Trial expired on' : (
+                                    isSubscriptionExpired || statusKey === 'expired' ? 'Subscription expired on' : (
+                                        statusKey === 'trial' ? 'Trial ends' : 'Next billing'
+                                    )
+                                )}
+                            </dt>
                             <dd className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</dd>
                         </div>
-                        <div className="px-6 py-4 sm:px-8">
-                            <dt className="text-xs font-medium text-slate-500">Auto-renewal</dt>
-                            <dd className="mt-1 text-sm font-semibold text-slate-900">{subscription.billing_preference === 'auto' ? 'On' : 'Off'}</dd>
-                        </div>
                     </dl>
-                </motion.section>
-
-                {/* Payment method */}
-                <motion.section
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="mt-5 rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
-                >
-                    <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 sm:px-8">
-                        <h3 className="text-sm font-semibold text-slate-900">Settlement method</h3>
-                        {subscription.has_saved_card && !isNative && (
-                            <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700">Update</button>
-                        )}
-                    </div>
-
-                    <div className="px-6 py-5 sm:px-8">
-                        {subscription.has_saved_card ? (
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-14 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-200">
-                                    <CreditCardIcon className="h-5 w-5 text-slate-600" strokeWidth={2} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium text-slate-900">
-                                        {subscription.card_brand ?? 'Card'} •••• {subscription.card_last4}
-                                    </p>
-                                    <p className="text-xs text-slate-500">Used for automatic renewals</p>
-                                </div>
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200 ring-inset">
-                                    <CheckCircleIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                    Verified
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="flex items-start gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                                    <CreditCardIcon className="h-5 w-5 text-slate-500" strokeWidth={2} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium text-slate-900">No card saved yet</p>
-                                    <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                                        Save a card to enable seamless auto-renewal each cycle.
-                                    </p>
-                                    {isNative ? (
-                                        <button
-                                            onClick={openWebApp}
-                                            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
-                                        >
-                                            Open Kontrol Web to add a card
-                                            <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={handleAction}
-                                            className="mt-3 inline-flex items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
-                                        >
-                                            {paying
-                                                ? 'Processing...'
-                                                : outstanding.amount > 0
-                                                  ? `Settle ${outstanding.formatted_amount} to save card`
-                                                  : 'Set up settlement method'}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4 border-t border-slate-100 px-6 py-4 sm:px-8">
-                        <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900">Enable auto-renewal</p>
-                            <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                                We'll quietly renew your plan each cycle so you're never interrupted.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            role="switch"
-                            aria-checked={subscription.billing_preference === 'auto'}
-                            onClick={toggleAutoRenewal}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
-                                subscription.billing_preference === 'auto' ? 'bg-indigo-600' : 'bg-slate-200'
-                            }`}
-                        >
-                            <span
-                                className={`pointer-events-none inline-block h-5 w-5 translate-y-px transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                    subscription.billing_preference === 'auto' ? 'translate-x-5' : 'translate-x-0.5'
-                                }`}
-                            />
-                        </button>
-                    </div>
                 </motion.section>
 
                 {/* Transaction history */}

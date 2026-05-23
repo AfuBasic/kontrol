@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GeneratesUlid;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,17 +18,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $amount_due
  * @property int $amount_paid
  * @property string $status
- * @property \Carbon\CarbonImmutable $due_date
- * @property \Carbon\CarbonImmutable|null $grace_until
- * @property \Carbon\CarbonImmutable|null $paid_at
+ * @property CarbonImmutable $due_date
+ * @property CarbonImmutable|null $grace_until
+ * @property CarbonImmutable|null $paid_at
  * @property string|null $external_reference
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\Collection $collection
- * @property-read \App\Models\Estate $estate
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection $collection
+ * @property-read Estate $estate
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
  * @property-read int|null $payments_count
- * @property-read \App\Models\User $user
+ * @property-read User $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment newQuery()
@@ -53,7 +54,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CollectionAssignment extends Model
 {
     use GeneratesUlid, HasFactory;
-
 
     protected $fillable = [
         'collection_id',

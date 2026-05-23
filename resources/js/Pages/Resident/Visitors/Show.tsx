@@ -142,9 +142,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
 
                 {/* Code Display */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
+                    layoutId={`visitor-card-${accessCode.id}`}
                     className="mb-6 w-full max-w-xs"
                 >
                     <div

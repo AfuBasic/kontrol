@@ -10,7 +10,7 @@ import '../css/app.css';
 import './echo';
 
 import AppLoader from './Components/AppLoader';
-import GlobalLoading from './Components/GlobalLoading';
+import RouteProgressBar from './Components/UI/RouteProgressBar';
 import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
@@ -104,7 +104,7 @@ createInertiaApp({
                         <App {...props} />
                     </div>
                     {isBooting && <AppLoader isExiting={isExiting} />}
-                    <GlobalLoading />
+                    <RouteProgressBar />
                 </AppErrorBoundary>
             );
         }

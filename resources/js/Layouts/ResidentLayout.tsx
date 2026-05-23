@@ -8,10 +8,10 @@ import { Bell, Home, Users, LayoutGrid, User, Plus, Wallet } from 'lucide-react'
 import { useEffect, useState, lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
-import PullToRefresh from '@/Components/PullToRefresh';
 import SosButton from '@/Components/SosButton';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
@@ -361,7 +361,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
             {/* Main Content */}
             <main className="relative mx-auto w-full max-w-lg flex-1 py-8">
-                {auth?.user?.resident_subscription && (
+                {auth?.user?.resident_subscription && usePage().component !== 'Resident/Billing/Index' && (
                     <div className="px-2">
                         <SubscriptionBanner subscription={auth.user.resident_subscription} />
                     </div>

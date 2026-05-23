@@ -17,7 +17,9 @@ use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SettlementController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VisitorLogController;
 use App\Http\Controllers\Api\ContentEnhanceController;
 use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Support\Facades\Route;
@@ -86,7 +88,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
     // Visitor Logs
     Route::prefix('visitors')->name('visitors.')->group(function (): void {
-        Route::get('/', [\App\Http\Controllers\Admin\VisitorLogController::class, 'index'])->name('index');
+        Route::get('/', [VisitorLogController::class, 'index'])->name('index');
     });
 
     // Security Personnel management
@@ -106,8 +108,8 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
         // Settlement Banking
         Route::prefix('settlement')->name('settlement.')->group(function (): void {
-            Route::post('/resolve', [App\Http\Controllers\Admin\SettlementController::class, 'resolve'])->name('resolve');
-            Route::post('/update', [App\Http\Controllers\Admin\SettlementController::class, 'update'])->name('update');
+            Route::post('/resolve', [SettlementController::class, 'resolve'])->name('resolve');
+            Route::post('/update', [SettlementController::class, 'update'])->name('update');
         });
 
         // Activity Log

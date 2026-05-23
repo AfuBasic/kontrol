@@ -1,7 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Shield, ChevronRight, Github, Twitter, Linkedin, Facebook } from 'lucide-react';
-import { ReactNode, useState, useEffect } from 'react';
+import type { ReactNode} from 'react';
+import { useState, useEffect } from 'react';
 import { login } from '@/routes';
 import landing from '@/routes/landing';
 

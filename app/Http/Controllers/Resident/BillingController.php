@@ -11,10 +11,10 @@ use App\Models\Invoice;
 use App\Models\ResidentSubscription;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\EstateContextService;
+use App\Services\ResidentSubscriptionService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -26,18 +26,27 @@ class BillingController extends Controller
         private InvoiceGenerationService $invoiceGenerationService,
     ) {}
 
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
         $user = auth()->user();
         $estate = $this->estateContext->getEstate();
 
-        $subscription = ResidentSubscription::firstOrCreate(
-            ['user_id' => $user->id, 'estate_id' => $estate->id],
-            ['status' => 'trial', 'trial_ends_at' => now()->addDays(30), 'billing_preference' => 'auto']
-        );
+        $subscription = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
 
-        // Ensure pending invoice exists if subscription is active/past_due and not in trial
-        if ($subscription->status !== 'trial') {
+        if (! $subscription) {
+            $service = app(ResidentSubscriptionService::class);
+            $subscription = $service->createForUser($user, $estate);
+        }
+
+        if (! $subscription) {
+            return redirect()->route('resident.home')->with('info', 'Billing is managed by your estate.');
+        }
+
+        // Ensure pending invoice exists if subscription is not in trial or if the trial has expired
+        $isTrialExpired = $subscription->status === 'trial' && $subscription->trial_ends_at?->isPast();
+        if ($subscription->status !== 'trial' || $isTrialExpired) {
             $this->invoiceGenerationService->getOrCreatePendingInvoiceForResident($subscription);
         }
 
@@ -60,7 +69,6 @@ class BillingController extends Controller
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => [
                 'status' => $subscription->status,
-                'billing_preference' => $subscription->billing_preference,
                 'has_saved_card' => $subscription->hasSavedCard(),
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
@@ -78,30 +86,10 @@ class BillingController extends Controller
                 'formatted_amount' => '₦'.number_format($outstandingAmount / 100, 2),
                 'invoice_count' => $outstandingInvoices->count(),
                 'next_invoice_id' => $nextPayableInvoice?->id,
+                'next_invoice_ulid' => $nextPayableInvoice?->ulid,
+                'next_due_date' => $nextPayableInvoice?->due_date?->toDateString(),
             ],
         ]);
-    }
-
-    public function updatePreference(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'billing_preference' => 'required|in:auto,manual',
-        ]);
-
-        $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
-
-        $subscription = ResidentSubscription::where('user_id', $user->id)
-            ->where('estate_id', $estate->id)
-            ->first();
-
-        if ($subscription) {
-            $subscription->update([
-                'billing_preference' => $request->billing_preference,
-            ]);
-        }
-
-        return back()->with('success', 'Billing preference updated.');
     }
 
     public function pay(Invoice $invoice, InitializeInvoicePaymentAction $initialize): RedirectResponse|SymfonyResponse

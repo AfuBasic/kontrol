@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentTransaction;
 use App\Services\Admin\BillingService;
 use App\Services\EstateContextService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,23 +47,5 @@ class BillingController extends Controller
             'filters' => request()->only(['search', 'status']),
             'chargeType' => $estate->settings->charge_type,
         ]);
-    }
-
-    public function updatePreference(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'billing_preference' => 'required|in:auto,manual',
-        ]);
-
-        $estate = $this->estateContext->getEstate();
-        $subscription = $estate->subscriptionRecord;
-
-        if ($subscription) {
-            $subscription->update([
-                'billing_preference' => $request->billing_preference,
-            ]);
-        }
-
-        return back()->with('success', 'Billing preference updated.');
     }
 }

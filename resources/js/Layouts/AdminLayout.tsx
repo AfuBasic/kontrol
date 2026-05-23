@@ -24,7 +24,6 @@ import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
-import PullToRefresh from '@/Components/PullToRefresh';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
@@ -40,6 +39,7 @@ import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsCon
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import PullToRefresh from '@/Components/PullToRefresh';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';

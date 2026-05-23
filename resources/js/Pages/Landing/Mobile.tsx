@@ -1,8 +1,8 @@
-import LandingLayout from '@/Layouts/LandingLayout';
-import SEO from '@/Components/Landing/SEO';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Smartphone, Zap, TouchpadOff, Wifi, Lock, ArrowRight, MousePointer2, CheckCircle2 } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import SEO from '@/Components/Landing/SEO';
+import LandingLayout from '@/Layouts/LandingLayout';
 import { login } from '@/routes';
 
 export default function Mobile() {

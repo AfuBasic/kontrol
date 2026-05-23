@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,11 +14,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $phone
  * @property string|null $notes
  * @property string $status
- * @property \Carbon\CarbonImmutable|null $reviewed_at
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $reviewed_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  * @property int|null $plan_id
- * @property-read \App\Models\Plan|null $plan
+ * @property-read Plan|null $plan
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newQuery()

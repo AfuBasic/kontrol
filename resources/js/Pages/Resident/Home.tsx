@@ -1,4 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { formatDistanceToNow } from 'date-fns';
+import { Megaphone, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
@@ -11,10 +13,8 @@ import resident from '@/routes/resident';
 
 import type { SharedData } from '@/types';
 
-import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 import type { EstateBoardPost } from '@/types';
-import { Megaphone, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 
 type Props = SharedData & {
     stats: HomeStats;

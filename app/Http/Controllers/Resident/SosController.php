@@ -6,6 +6,7 @@ use App\Events\SosTriggered;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessSOSAlert;
 use App\Models\SosEvent;
+use App\Models\User;
 use App\Notifications\Resident\SosResponderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ class SosController extends Controller
      */
     public function trigger(Request $request)
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $estate = $user->getCurrentEstate();
 
@@ -75,7 +76,7 @@ class SosController extends Controller
      */
     public function acknowledge(SosEvent $sosEvent)
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // Ensure user is authorized for this estate and has correct role

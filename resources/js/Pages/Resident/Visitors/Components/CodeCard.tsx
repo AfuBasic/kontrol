@@ -54,9 +54,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
     return (
         <motion.div
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            layoutId={`visitor-card-${code.id}`}
             className="group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200 transition-all hover:shadow-lg"
         >
             <div className="relative z-10">
