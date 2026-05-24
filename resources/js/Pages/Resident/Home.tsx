@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import { Megaphone, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Megaphone, ChevronRight, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
@@ -16,15 +17,28 @@ import type { SharedData } from '@/types';
 import type { EstateBoardPost } from '@/types';
 import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 
+type UnpaidDue = {
+    ulid: string;
+    amount_due: number;
+    amount_paid: number;
+    status: 'pending' | 'overdue' | 'grace' | 'partial';
+    due_date: string;
+    collection: {
+        name: string;
+        description: string | null;
+    };
+};
+
 type Props = SharedData & {
     stats: HomeStats;
     activeCodes: AccessCode[];
     recentActivity: ActivityItem[];
     latestAnnouncements: EstateBoardPost[];
     estateName: string;
+    unpaidDues?: UnpaidDue[];
 };
 
-export default function Home({ auth, stats, activeCodes, recentActivity, latestAnnouncements, estateName }: Props) {
+export default function Home({ auth, stats, activeCodes, recentActivity, latestAnnouncements, estateName, unpaidDues = [] }: Props) {
     const userRoles = auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth?.user?.resident_subscription?.parent_resident_name;
@@ -32,10 +46,12 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
     const hasAccessCodeGen = estate_plan?.features?.includes('access-code-generation') ?? true;
     const hasLiveFeed = estate_plan?.features?.includes('real-time-visit-feed') ?? true;
     const hasEstateBoard = estate_plan?.features?.includes('interactive-notice-board') ?? true;
+    const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
     const lastActivityTime = recentActivity[0]?.time;
+    const showDuesAlert = hasPaymentCollection && unpaidDues && unpaidDues.length > 0;
 
     return (
         <>
@@ -50,6 +66,35 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                     isHouseholdMember={isHouseholdMember}
                     parentResidentName={parentResidentName}
                 />
+
+                {/* OUTSTANDING DUES ALERT SECTION */}
+                {showDuesAlert && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-[2.5rem] bg-gradient-to-br from-rose-50 to-white p-6 shadow-xl ring-1 shadow-rose-500/5 ring-rose-100/50"
+                    >
+                        <Link
+                            href="/resident/dues"
+                            className="group flex items-center justify-between gap-4"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 ring-1 ring-rose-200">
+                                    <Wallet className="h-7 w-7" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-base font-black text-rose-950">Outstanding Estate Dues</h3>
+                                    <p className="mt-0.5 text-xs font-semibold text-rose-700/80">
+                                        You have pending dues. Click to view and settle your obligations.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100/50 text-rose-600 transition-all group-hover:bg-rose-600 group-hover:text-white">
+                                <ChevronRight className="h-5 w-5" />
+                            </div>
+                        </Link>
+                    </motion.div>
+                )}
 
                 {/* 2. DYNAMIC HERO (COMMAND CENTER) */}
                 <CommandCenter

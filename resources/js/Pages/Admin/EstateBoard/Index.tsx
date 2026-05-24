@@ -5,8 +5,7 @@ import { Globe, Image as ImageIcon, Megaphone, MessageCircle, Plus, Settings, Sh
 import { useCallback, useEffect, useRef } from 'react';
 
 import { create, show } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import AdminLayout from '@/Layouts/AdminLayout';
-import { manage } from '@/routes/admin/estate-board';
+import { manage } from '@/routes/admin/estate-board/index';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {

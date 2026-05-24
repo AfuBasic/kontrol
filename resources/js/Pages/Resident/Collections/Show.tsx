@@ -1,8 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ArrowUpRight, ExternalLink } from 'lucide-react';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import type { SharedData } from '@/types';
 
 type Collection = {
     ulid: string;
@@ -30,6 +33,11 @@ type Props = {
 };
 
 export default function CollectionShow({ assignment }: Props) {
+    // Use app_url from shared props — same pattern as useExternalBilling.
+    // window.location.origin is unreliable inside Capacitor's webview
+    // (it resolves to capacitor://localhost, not the actual server).
+    const { app_url: appUrl } = usePage<SharedData>().props;
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -51,8 +59,22 @@ export default function CollectionShow({ assignment }: Props) {
         }
     };
 
-    // The payment URL will be the web billing page
-    const paymentUrl = CollectionPaymentController.show.url(assignment.ulid);
+    // Build the absolute payment URL using the server-provided app_url.
+    const paymentUrl = `${appUrl}${CollectionPaymentController.show.url(assignment.ulid)}`;
+
+    const handleSettle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        const isNative = Capacitor.isNativePlatform();
+        if (isNative) {
+            try {
+                await Browser.open({ url: paymentUrl });
+            } catch (err) {
+                console.error('Failed to open in-app browser:', err);
+                window.open(paymentUrl, '_system');
+            }
+        } else {
+            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
 
     return (
         <div className="flex flex-col gap-8 pb-32">
@@ -137,15 +159,13 @@ export default function CollectionShow({ assignment }: Props) {
             <section>
                 {assignment.status !== 'paid' ? (
                     <div className="space-y-4">
-                        <a
-                            href={paymentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95"
+                        <button
+                            onClick={handleSettle}
+                            className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95 cursor-pointer"
                         >
                             Settle Balance
                             <ExternalLink className="h-5 w-5" />
-                        </a>
+                        </button>
                         <div className="flex items-center justify-center gap-2 px-6 text-center">
                             <ShieldCheck className="h-4 w-4 text-slate-400" />
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Securely resolve dues via Secure Gateway</p>

@@ -320,8 +320,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
         {
-            name: 'Board',
-            href: '/resident/estate-board',
+            name: 'Activity',
+            href: '/resident/activity?tab=notifications',
             show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasVisitFeed,
             icon: (active: boolean) => (
                 <div className="relative">
@@ -394,7 +394,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     );
                                 }
 
-                                const isActive = currentPath === usePathFromUrl(item.href) || currentPath.startsWith(usePathFromUrl(item.href) + '/');
+                                const currentPathname = currentPath.split('?')[0];
+                                const itemPathname = usePathFromUrl(item.href).split('?')[0];
+                                const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
 
                                 return (
                                     <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">

@@ -37,6 +37,7 @@ class EmergencyContactController extends Controller
 
         $emergencyContact->delete();
 
-        return back()->with('success', 'Emergency contact removed successfully.');
+        return redirect()->route('resident.profile', ['open' => 'emergency_management'])
+            ->with('success', 'Emergency contact removed successfully.');
     }
 }

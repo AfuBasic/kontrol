@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Bell,
@@ -15,7 +15,7 @@ import {
     CheckCircle,
     Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import type { ActivityItem } from '@/types/access-code';
 
@@ -113,7 +113,24 @@ function groupActivitiesByDate(activities: ActivityItem[]): Record<string, Activ
 export default function Activity({ activities, posts = [], notifications = [], unreadCount = 0 }: Props & { posts: any[] }) {
     const groupedActivities = groupActivitiesByDate(activities);
     const dateLabels = Object.keys(groupedActivities);
-    const [activeTab, setActiveTab] = useState<'posts' | 'feed' | 'notifications'>('posts');
+
+    const { url } = usePage();
+    const [activeTab, setActiveTab] = useState<'posts' | 'feed' | 'notifications'>(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        const tab = params.get('tab');
+        if (tab === 'posts' || tab === 'feed' || tab === 'notifications') {
+            return tab;
+        }
+        return 'posts';
+    });
+
+    useEffect(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        const tab = params.get('tab');
+        if (tab === 'posts' || tab === 'feed' || tab === 'notifications') {
+            setActiveTab(tab);
+        }
+    }, [url]);
 
     return (
         <>

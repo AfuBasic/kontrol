@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
-import ConfirmationModal from '@/Components/ConfirmationModal';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
@@ -301,7 +301,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                 </div>
             </MobileSheet>
 
-            <ConfirmationModal
+            <ConfirmationSheet
                 isOpen={showLogoutConfirmation}
                 onClose={() => !loggingOut && setShowLogoutConfirmation(false)}
                 onConfirm={handleLogout}
@@ -624,7 +624,7 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                 )}
             </div>
 
-            <ConfirmationModal
+            <ConfirmationSheet
                 isOpen={contactToDelete !== null}
                 onClose={() => setContactToDelete(null)}
                 onConfirm={handleDelete}

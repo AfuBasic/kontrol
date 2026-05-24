@@ -81,6 +81,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                 email: email,
                 amount: amount * 100, // Paystack requires amount in kobo
                 ref: reference,
+                channels: ['bank_transfer'],
                 onClose: () => {
                     setIsProcessing(false);
                 },
