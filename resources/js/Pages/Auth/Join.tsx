@@ -95,7 +95,7 @@ export default function Join({ token, estate }: Props) {
             {/* Left side - Context & Illustration */}
             <div className="relative hidden w-1/2 overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] lg:flex lg:flex-col lg:justify-between lg:p-12">
                 <div className="relative z-10">
-                    <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="h-8 w-auto" />
+                    <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-8 w-auto" />
                 </div>
 
                 <div className="relative z-10 flex flex-1 items-center justify-center">

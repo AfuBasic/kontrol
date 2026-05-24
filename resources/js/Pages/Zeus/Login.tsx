@@ -50,7 +50,7 @@ export default function Login() {
                         transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
                         className="mb-12 flex justify-center"
                     >
-                        <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="h-24 w-auto object-contain" />
+                        <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-12 w-auto object-contain" />
                     </motion.div>
 
                     {/* Heading */}

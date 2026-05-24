@@ -33,9 +33,7 @@ export default function ResetPassword({ token, email }: Props) {
                 {/* Left side - Branding */}
                 <div className="relative hidden w-1/2 overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] lg:flex lg:flex-col lg:justify-between lg:p-12">
                     <div className="relative z-10">
-                        <div className="h-12 w-48 overflow-hidden">
-                            <img src="/assets/images/kontrol-white-logo.png" alt="Kontrol" className="w-full -translate-y-8" />
-                        </div>
+                        <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-8 w-auto" />
                     </div>
 
                     <motion.div

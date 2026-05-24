@@ -44,9 +44,9 @@ export default function AcceptInvitation({ user }: Props) {
                 >
                     {/* Branding - Quiet Luxury (Small & Centered) */}
                     <div className="mb-10 flex justify-center">
-                        <div className="h-20 w-auto">
+                        <div className="h-10 w-auto">
                             <img
-                                src="/assets/images/kontrol-white-logo.png"
+                                src="/assets/images/kontrol-white-logo-new.png"
                                 alt="Kontrol"
                                 className="h-full w-auto object-contain transition-transform duration-700 hover:scale-105"
                             />

@@ -6,8 +6,8 @@ import LandingLayout from '@/Layouts/LandingLayout';
 import { login } from '@/routes';
 import landing from '@/routes/landing';
 
-const FeatureDetail = ({ title, description, icon: Icon, color, image, reversed = false }: any) => (
-    <section className="overflow-hidden py-20">
+const FeatureDetail = ({ title, description, icon: Icon, color, reversed = false }: any) => (
+    <section className="relative z-10 overflow-hidden py-20 border-b border-slate-900/40">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className={`grid gap-16 lg:grid-cols-2 lg:items-center ${reversed ? 'lg:direction-rtl' : ''}`}>
                 <motion.div
@@ -16,16 +16,16 @@ const FeatureDetail = ({ title, description, icon: Icon, color, image, reversed 
                     viewport={{ once: true }}
                     className={reversed ? 'lg:order-2' : ''}
                 >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${color} shadow-lg shadow-current/10`}>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-lg">
                         <Icon className="h-6 w-6" />
                     </div>
-                    <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{title}</h2>
-                    <p className="mt-6 text-lg leading-relaxed font-medium text-slate-500">{description}</p>
+                    <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{title}</h2>
+                    <p className="mt-6 text-lg leading-relaxed font-medium text-slate-400">{description}</p>
                     <ul className="mt-10 space-y-4">
                         {[1, 2, 3].map((i) => (
                             <li key={i} className="flex items-center gap-3">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                                <span className="text-sm font-bold text-slate-700">Premium feature capability {i}</span>
+                                <CheckCircle2 className="h-5 w-5 text-indigo-400" />
+                                <span className="text-sm font-bold text-slate-300">Premium feature capability {i}</span>
                             </li>
                         ))}
                     </ul>
@@ -37,10 +37,9 @@ const FeatureDetail = ({ title, description, icon: Icon, color, image, reversed 
                     viewport={{ once: true }}
                     className={`relative ${reversed ? 'lg:order-1' : ''}`}
                 >
-                    <div className="aspect-square overflow-hidden rounded-[3rem] bg-slate-100 shadow-2xl ring-1 ring-slate-200">
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 p-12">
-                            {/* Placeholder for specific feature illustration or screenshots */}
-                            <Icon className={`h-32 w-32 ${color.split(' ')[1]}`} />
+                    <div className="aspect-[4/3] overflow-hidden rounded-[3rem] bg-slate-900/60 border border-slate-800 shadow-2xl">
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-950 to-slate-900 p-12">
+                            <Icon className="h-24 w-24 text-indigo-400/80" />
                         </div>
                     </div>
                 </motion.div>
@@ -57,19 +56,22 @@ export default function Features() {
                 description="Explore Kontrol's robust suite of tools: from visitor access codes and SOS emergency alerts to automated collection tracking and household management."
             />
 
-            {/* --- HEADER --- */}
-            <header className="relative overflow-hidden bg-primary-900 pt-32 pb-20 text-center lg:pt-48 lg:pb-32">
-                <div className="absolute top-0 left-0 h-full w-full opacity-10">
-                    <div className="absolute top-1/4 left-1/4 h-64 w-64 animate-pulse rounded-full bg-primary-500 blur-3xl" />
-                    <div className="absolute right-1/4 bottom-1/4 h-64 w-64 animate-pulse rounded-full bg-primary-500 blur-3xl delay-1000" />
-                </div>
+            {/* Grid & Ambient Glows Background */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-[#020617]" />
+                <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:32px_32px]" />
+                <div className="absolute top-[20%] right-[10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[150px]" />
+            </div>
 
+            {/* --- HEADER --- */}
+            <header className="relative z-10 overflow-hidden pt-32 pb-20 text-center lg:pt-48 lg:pb-32">
                 <div className="relative z-10 mx-auto max-w-4xl px-6 lg:px-8">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <span className="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase font-mono block mb-4">Core Infrastructure</span>
                         <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
-                            The Complete <span className="text-primary-400">Toolkit</span> for Estate Operations.
+                            The Complete <span className="bg-gradient-to-r from-indigo-400 to-orange-400 bg-clip-text text-transparent">Toolkit</span> for Estate Operations.
                         </h1>
-                        <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed font-medium text-primary-100">
+                        <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed font-medium text-slate-400">
                             We've built a multi-layered ecosystem that solves the most complex challenges of residential living.
                         </p>
                     </motion.div>
@@ -77,14 +79,14 @@ export default function Features() {
             </header>
 
             {/* --- VISUAL HIGHLIGHT --- */}
-            <section className="-mt-12 py-20">
+            <section className="relative z-10 -mt-12 py-20">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="overflow-hidden rounded-[3rem] bg-white shadow-2xl ring-1 shadow-primary-900/10 ring-slate-200"
+                        className="overflow-hidden rounded-[3rem] bg-slate-950/60 border border-slate-900 shadow-2xl"
                     >
-                        <img src="/images/landing/features.png" alt="Kontrol Platform Features" className="w-full object-cover" />
+                        <img src="/images/landing/features.png" alt="Kontrol Platform Features" className="w-full object-cover opacity-80" />
                     </motion.div>
                 </div>
             </section>
@@ -94,14 +96,14 @@ export default function Features() {
                 title="Visitor Access Codes"
                 description="Secure your estate with expiring, one-time-use digital keys. Residents generate codes for guests, and security validates them at the gatehouse with a simple scan."
                 icon={Lock}
-                color="bg-primary-50 text-primary-600"
+                color="bg-slate-900 text-indigo-400"
             />
 
             <FeatureDetail
                 title="SOS Emergency System"
                 description="Safety is just a tap away. Our SOS system instantly alerts estate security and designated emergency contacts with real-time location data when triggered by a resident."
                 icon={Zap}
-                color="bg-rose-50 text-rose-600"
+                color="bg-slate-900 text-rose-400"
                 reversed
             />
 
@@ -109,14 +111,14 @@ export default function Features() {
                 title="Collections & Billing"
                 description="Automate the heavy lifting of estate financial operations. Track dues, manage recurring bills, and provide residents with instant digital receipts—all synchronized with the estate bank account."
                 icon={CreditCard}
-                color="bg-emerald-50 text-emerald-600"
+                color="bg-slate-900 text-emerald-400"
             />
 
             <FeatureDetail
                 title="Household Management"
                 description="Organize everything related to your home in one place. Manage family members, register vehicles for gatehouse clearance, and authorize domestic staff access."
                 icon={HomeIcon}
-                color="bg-amber-50 text-amber-600"
+                color="bg-slate-900 text-amber-400"
                 reversed
             />
 
@@ -128,19 +130,19 @@ export default function Features() {
             />
 
             {/* --- FINAL CTA --- */}
-            <section className="bg-slate-50 py-24">
+            <section className="relative z-10 bg-slate-950/40 border-t border-slate-900 py-24">
                 <div className="mx-auto max-w-7xl px-6 text-center lg:px-8">
-                    <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">Everything you need, nothing you don't.</h2>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">Everything you need, nothing you don't.</h2>
                     <div className="mt-12 flex flex-wrap justify-center gap-4">
                         <Link
                             href={login().url}
-                            className="flex h-14 items-center justify-center rounded-2xl bg-primary-700 px-10 text-lg font-bold text-white shadow-xl shadow-primary-700/20 transition-all hover:scale-105 hover:bg-primary-800"
+                            className="flex h-14 items-center justify-center rounded-2xl bg-indigo-600 px-10 text-lg font-bold text-white shadow-xl hover:bg-indigo-500 shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95"
                         >
                             Get Started
                         </Link>
                         <Link
                             href={landing.mobile().url}
-                            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-white px-8 text-lg font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50"
+                            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-200 px-8 text-lg font-bold hover:bg-slate-800 transition-all"
                         >
                             See Mobile Experience
                             <ArrowRight className="h-5 w-5" />

@@ -1,8 +1,8 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ArrowUpRight, ExternalLink } from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import { Wallet, ChevronLeft, Calendar, Info, ShieldCheck, ExternalLink } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 import type { SharedData } from '@/types';
@@ -161,7 +161,7 @@ export default function CollectionShow({ assignment }: Props) {
                     <div className="space-y-4">
                         <button
                             onClick={handleSettle}
-                            className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95 cursor-pointer"
+                            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-[2rem] bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95"
                         >
                             Settle Balance
                             <ExternalLink className="h-5 w-5" />
@@ -186,7 +186,6 @@ export default function CollectionShow({ assignment }: Props) {
         </div>
     );
 }
-
 
 function CheckCircle2(props: any) {
     return (

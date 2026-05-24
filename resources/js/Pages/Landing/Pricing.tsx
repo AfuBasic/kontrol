@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Check, X, Zap, ShieldCheck, Users, ChevronDown, ArrowRight } from 'lucide-react';
+import { Check, Zap, ShieldCheck, Users, ChevronDown, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import SEO from '@/Components/Landing/SEO';
 import LandingLayout from '@/Layouts/LandingLayout';
@@ -27,13 +27,13 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="border-b border-slate-200 py-6">
+        <div className="border-b border-slate-800 py-6">
             <button onClick={() => setIsOpen(!isOpen)} className="group flex w-full items-center justify-between text-left">
-                <span className="text-lg font-bold text-slate-900 transition-colors group-hover:text-primary-600">{question}</span>
-                <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <span className="text-lg font-bold text-slate-200 transition-colors group-hover:text-indigo-400">{question}</span>
+                <ChevronDown className={`h-5 w-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             <motion.div initial={false} animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }} className="overflow-hidden">
-                <p className="mt-4 leading-relaxed font-medium text-slate-500">{answer}</p>
+                <p className="mt-4 leading-relaxed font-medium text-slate-400">{answer}</p>
             </motion.div>
         </div>
     );
@@ -60,20 +60,28 @@ export default function Pricing({ plans }: Props) {
     ];
 
     return (
-        <LandingLayout>
+        <LandingLayout isDark={true}>
             <SEO
                 title="Simple, Transparent Pricing"
                 description="Choose the perfect plan for your estate. From basic visitor management to full-scale financial operations and security command centers."
             />
 
+            {/* Grid & Ambient Glows Background */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-[#020617]" />
+                <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:32px_32px]" />
+                <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[150px]" />
+            </div>
+
             {/* --- HEADER --- */}
-            <header className="relative overflow-hidden pt-32 pb-20 text-center lg:pt-48 lg:pb-32">
+            <header className="relative z-10 overflow-hidden pt-32 pb-20 text-center lg:pt-48 lg:pb-32">
                 <div className="mx-auto max-w-4xl px-6 lg:px-8">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
-                            Plans that scale with your <span className="text-primary-600">Estate.</span>
+                        <span className="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase font-mono block mb-4">Pricing Architecture</span>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
+                            Plans that scale with your <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Estate.</span>
                         </h1>
-                        <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed font-medium text-slate-500">
+                        <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed font-medium text-slate-400">
                             Transparent pricing with no hidden fees. All annual plans include free onboarding and security guard training.
                         </p>
                     </motion.div>
@@ -81,7 +89,7 @@ export default function Pricing({ plans }: Props) {
             </header>
 
             {/* --- PRICING GRID --- */}
-            <section className="-mt-12 pb-24">
+            <section className="relative z-10 -mt-12 pb-24">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-8 lg:grid-cols-3">
                         {plans.map((plan, idx) => (
@@ -90,10 +98,10 @@ export default function Pricing({ plans }: Props) {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className={`relative flex flex-col rounded-[3rem] p-8 ring-1 transition-all hover:shadow-2xl ${
+                                className={`relative flex flex-col rounded-[3rem] p-8 border transition-all hover:shadow-2xl ${
                                     plan.is_featured
-                                        ? 'z-10 bg-primary-900 text-white shadow-xl ring-primary-700 lg:scale-105'
-                                        : 'bg-white text-slate-900 ring-slate-200'
+                                        ? 'z-10 bg-indigo-950/40 border-indigo-500/40 text-white shadow-xl shadow-indigo-500/5 lg:scale-105'
+                                        : 'bg-slate-900/40 border-slate-800/80 text-slate-200'
                                 }`}
                             >
                                 {plan.badge && (
@@ -104,18 +112,18 @@ export default function Pricing({ plans }: Props) {
 
                                 <div className="mb-8">
                                     <h3
-                                        className={`text-xl font-bold tracking-widest uppercase ${plan.is_featured ? 'text-primary-400' : 'text-primary-600'}`}
+                                        className={`text-xl font-bold tracking-widest uppercase ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`}
                                     >
                                         {plan.name}
                                     </h3>
                                     <div className="mt-4 flex items-baseline gap-2">
-                                        <span className="text-5xl font-extrabold tracking-tight">{plan.formatted_price}</span>
-                                        <span className={`text-sm font-bold uppercase ${plan.is_featured ? 'text-primary-300' : 'text-slate-400'}`}>
-                                            / year
+                                        <span className="text-5xl font-extrabold tracking-tight font-mono">{plan.formatted_price}</span>
+                                        <span className={`text-sm font-bold uppercase ${plan.is_featured ? 'text-indigo-300' : 'text-slate-500'}`}>
+                                            / resident / year
                                         </span>
                                     </div>
                                     <p
-                                        className={`mt-6 text-sm leading-relaxed font-medium ${plan.is_featured ? 'text-primary-100' : 'text-slate-500'}`}
+                                        className={`mt-6 text-sm leading-relaxed font-medium ${plan.is_featured ? 'text-slate-300' : 'text-slate-400'}`}
                                     >
                                         {plan.description || `Optimized for estates with up to ${plan.max_residents || 'unlimited'} residents.`}
                                     </p>
@@ -123,28 +131,28 @@ export default function Pricing({ plans }: Props) {
 
                                 <ul className="mb-10 flex-1 space-y-4">
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">{plan.max_residents || 'Unlimited'} Residents</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">{plan.max_residents || 'Unlimited'} Residents</span>
                                     </li>
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">{plan.max_security || 'Unlimited'} Security Guards</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">{plan.max_security || 'Unlimited'} Security Guards</span>
                                     </li>
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">{plan.max_admins || 'Unlimited'} Admin Seats</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">{plan.max_admins || 'Unlimited'} Admin Seats</span>
                                     </li>
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">Visitor Access Codes</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">Visitor Access Codes</span>
                                     </li>
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">SOS Emergency System</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">SOS Emergency System</span>
                                     </li>
                                     <li className="flex items-center gap-3">
-                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                                        <span className="text-sm font-bold">Financial Collections</span>
+                                        <Check className={`h-5 w-5 ${plan.is_featured ? 'text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="text-sm font-medium">Financial Collections</span>
                                     </li>
                                 </ul>
 
@@ -152,8 +160,8 @@ export default function Pricing({ plans }: Props) {
                                     href={login().url}
                                     className={`flex h-14 items-center justify-center rounded-2xl text-lg font-bold transition-all active:scale-95 ${
                                         plan.is_featured
-                                            ? 'bg-white text-primary-900 shadow-xl hover:bg-slate-50'
-                                            : 'bg-primary-700 text-white shadow-lg shadow-primary-700/20 hover:bg-primary-800'
+                                            ? 'bg-indigo-600 text-white shadow-xl hover:bg-indigo-500 shadow-indigo-600/20'
+                                            : 'bg-slate-800 text-slate-200 border border-slate-700/60 hover:bg-slate-700'
                                     }`}
                                 >
                                     Select Plan
@@ -165,10 +173,11 @@ export default function Pricing({ plans }: Props) {
             </section>
 
             {/* --- FAQ --- */}
-            <section className="bg-slate-50 py-24">
+            <section className="relative z-10 bg-slate-950/40 border-t border-slate-900 py-24">
                 <div className="mx-auto max-w-3xl px-6 lg:px-8">
                     <div className="mb-16 text-center">
-                        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Frequently Asked Questions</h2>
+                        <span className="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase font-mono block mb-4">FAQ</span>
+                        <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Frequently Asked Questions</h2>
                     </div>
                     <div className="space-y-4">
                         {faqs.map((faq) => (
@@ -179,20 +188,20 @@ export default function Pricing({ plans }: Props) {
             </section>
 
             {/* --- FINAL CTA --- */}
-            <section className="py-24">
+            <section className="relative z-10 py-24">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="flex flex-col items-center justify-between gap-12 rounded-[3rem] bg-emerald-600 p-8 text-white lg:flex-row lg:p-16">
-                        <div className="max-w-xl">
+                    <div className="flex flex-col items-center justify-between gap-12 rounded-[3rem] bg-indigo-950/20 border border-indigo-900/30 p-8 text-white lg:flex-row lg:p-16">
+                        <div className="max-w-xl text-center lg:text-left">
                             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Still have questions?</h2>
-                            <p className="mt-4 text-lg leading-relaxed font-medium text-emerald-50">
+                            <p className="mt-4 text-lg leading-relaxed font-medium text-slate-400">
                                 Our estate consultants are ready to walk you through a personalized demo tailored to your estate's needs.
                             </p>
                         </div>
-                        <div className="flex shrink-0 flex-wrap gap-4">
-                            <button className="flex h-14 items-center justify-center rounded-2xl bg-white px-10 text-lg font-bold text-emerald-600 shadow-xl transition-all hover:bg-emerald-50">
+                        <div className="flex shrink-0 flex-wrap gap-4 justify-center">
+                            <button className="flex h-14 items-center justify-center rounded-2xl bg-white px-10 text-lg font-bold text-slate-950 shadow-xl transition-all hover:bg-slate-100">
                                 Contact Sales
                             </button>
-                            <button className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-8 text-lg font-bold text-white shadow-sm transition-all hover:bg-emerald-800">
+                            <button className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-8 text-lg font-bold text-white shadow-sm transition-all hover:bg-indigo-500 shadow-lg shadow-indigo-600/20">
                                 Request a Demo
                                 <ArrowRight className="h-5 w-5" />
                             </button>
