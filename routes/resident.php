@@ -118,6 +118,7 @@ Route::middleware('role:resident')->group(function (): void {
     Route::prefix('dues')->name('resident.collections.')->middleware('check-estate-feature:payment-collection')->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
         Route::get('/{assignment}', [CollectionController::class, 'show'])->name('show');
+        Route::post('/{assignment}/verify', [CollectionController::class, 'verify'])->name('verify');
     });
 
     // Household Management

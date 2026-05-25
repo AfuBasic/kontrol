@@ -67,7 +67,18 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                 },
             });
 
-            const { reference, email, amount } = await response.json();
+            const data = await response.json();
+
+            if (data.already_paid) {
+                setPaymentStatus('success');
+                setIsProcessing(false);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+                return;
+            }
+
+            const { reference, email, amount } = data;
 
             // 2. Open Paystack Popup
             if (!window.PaystackPop) {

@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
+use App\Models\Payment;
 use App\Services\EstateContextService;
+use App\Services\PaystackService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,6 +50,66 @@ class CollectionController extends Controller
 
         return Inertia::render('Resident/Collections/Show', [
             'assignment' => $assignment,
+        ]);
+    }
+
+    public function verify(CollectionAssignment $assignment, PaystackService $paystackService): JsonResponse
+    {
+        $user = auth()->user();
+        abort_if($assignment->user_id !== $user->id, 403);
+
+        // Find all pending/initiated payment transactions for this assignment
+        $initiatedPayments = Payment::where('collection_assignment_id', $assignment->id)
+            ->where('status', '!=', 'success')
+            ->get();
+
+        foreach ($initiatedPayments as $payment) {
+            try {
+                $verification = $paystackService->verifyPayment($payment->reference);
+
+                if ($verification['status'] === 'success') {
+                    DB::transaction(function () use ($payment, $assignment) {
+                        // Lock the rows for update to ensure atomicity and prevent race conditions
+                        $lockedPayment = Payment::where('id', $payment->id)->lockForUpdate()->first();
+                        $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
+
+                        if ($lockedPayment && $lockedPayment->status !== 'success') {
+                            $lockedPayment->update([
+                                'status' => 'success',
+                                'paid_at' => now(),
+                            ]);
+
+                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount);
+                            if ($lockedAssignment->amount_paid >= $lockedAssignment->amount_due) {
+                                $lockedAssignment->update([
+                                    'status' => 'paid',
+                                    'paid_at' => now(),
+                                    'external_reference' => $lockedPayment->reference,
+                                ]);
+                            } else {
+                                $lockedAssignment->update(['status' => 'partial']);
+                            }
+                        }
+                    });
+
+                    return response()->json([
+                        'status' => 'success',
+                        'is_paid' => true,
+                        'message' => 'Payment verified and recorded successfully!',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to verify collection payment status: '.$e->getMessage(), [
+                    'assignment_id' => $assignment->id,
+                    'reference' => $payment->reference,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'is_paid' => $assignment->isPaid(),
+            'message' => 'Payment not verified or not found.',
         ]);
     }
 }

@@ -13,7 +13,6 @@ import {
     UserCircle,
     Eye,
     EyeOff,
-    CreditCard,
     Crown,
     X,
     Loader2,
@@ -25,7 +24,6 @@ import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
-import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -67,7 +65,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
-    const { openExternalBilling } = useExternalBilling();
 
     const handleLogout = async () => {
         if (loggingOut) return;
@@ -221,33 +218,18 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     </section>
 
                     {/* Billing Section */}
-                    {auth.user?.roles?.includes('resident') && (
+                    {auth.user?.roles?.includes('resident') && hasPaymentCollection && (
                         <section>
                             <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
-                                <SettingsRow
-                                    icon={<CreditCard className="h-5 w-5" />}
-                                    label="App Subscription"
-                                    description={
-                                        auth.user?.resident_subscription
-                                            ? `${auth.user.resident_subscription.plan_name} • ${auth.user.resident_subscription.is_active ? 'Active' : 'Inactive'}`
-                                            : 'Manage your app subscription'
-                                    }
-                                    onClick={openExternalBilling}
-                                />
-                                {hasPaymentCollection && (
-                                    <>
-                                        <div className="mx-6 h-px bg-slate-50" />
-                                        <Link href="/resident/dues" className="block">
-                                            <SettingsRow
-                                                icon={<Wallet className="h-5 w-5" />}
-                                                label="Estate Collections"
-                                                description="Review and resolve estate dues"
-                                                onClick={() => {}}
-                                            />
-                                        </Link>
-                                    </>
-                                )}
+                                <Link href="/resident/dues" className="block">
+                                    <SettingsRow
+                                        icon={<Wallet className="h-5 w-5" />}
+                                        label="Estate Collections"
+                                        description="Review and resolve estate dues"
+                                        onClick={() => {}}
+                                    />
+                                </Link>
                             </div>
                         </section>
                     )}
