@@ -122,7 +122,7 @@ class Estate extends Model
             function () {
                 $subscription = $this->subscriptionRecord;
 
-                if (! $subscription || $subscription->isCancelled()) {
+                if (! $subscription || $subscription->isCancelled() || ! $subscription->plan) {
                     return [];
                 }
 
@@ -138,7 +138,7 @@ class Estate extends Model
     {
         $subscription = $this->subscriptionRecord;
 
-        if (! $subscription || $subscription->isCancelled()) {
+        if (! $subscription || $subscription->isCancelled() || ! $subscription->plan) {
             return '0';
         }
 
