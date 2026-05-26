@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sun, Moon } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface HeaderProps {
     hideCta?: boolean;
@@ -12,25 +12,46 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
     const { app_subdomain_url } = usePage().props as unknown as { app_subdomain_url?: string };
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+    const desktopToggleRef = useRef<HTMLButtonElement>(null);
+    const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const currentTheme = (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
         setTheme(currentTheme);
     }, []);
 
-    const toggleTheme = () => {
+    const toggleTheme = (triggerRef: React.RefObject<HTMLButtonElement | null>) => {
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
-        setTheme(nextTheme);
-        localStorage.setItem('theme', nextTheme);
-        if (nextTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-            document.documentElement.style.colorScheme = 'dark';
-        } else {
-            document.documentElement.classList.add('light');
-            document.documentElement.classList.remove('dark');
-            document.documentElement.style.colorScheme = 'light';
+
+        // Set ripple origin from the button's center position
+        const btn = triggerRef.current;
+        if (btn) {
+            const { left, top, width, height } = btn.getBoundingClientRect();
+            document.documentElement.style.setProperty('--theme-x', `${Math.round(left + width / 2)}px`);
+            document.documentElement.style.setProperty('--theme-y', `${Math.round(top + height / 2)}px`);
         }
+
+        const applyTheme = () => {
+            setTheme(nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            if (nextTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                document.documentElement.style.colorScheme = 'dark';
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
+            }
+        };
+
+        // Use View Transitions API if available, fall back to instant switch
+        if (!document.startViewTransition) {
+            applyTheme();
+            return;
+        }
+
+        document.startViewTransition(applyTheme);
     };
 
     const handleNavClick = (sectionId: string, e: React.MouseEvent) => {
@@ -111,11 +132,23 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             </Link>
                         )}
                         <button
-                            onClick={toggleTheme}
+                            ref={desktopToggleRef}
+                            onClick={() => toggleTheme(desktopToggleRef)}
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
-                            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.span
+                                    key={theme}
+                                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
+                                    transition={{ duration: 0.18, ease: 'easeInOut' }}
+                                    style={{ display: 'flex' }}
+                                >
+                                    {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                                </motion.span>
+                            </AnimatePresence>
                         </button>
                     </div>
 
@@ -129,11 +162,23 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                         </button>
                         <button
-                            onClick={toggleTheme}
+                            ref={mobileToggleRef}
+                            onClick={() => toggleTheme(mobileToggleRef)}
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
-                            {theme === 'dark' ? <Sun className="h-5.5 w-5.5" /> : <Moon className="h-5.5 w-5.5" />}
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.span
+                                    key={theme}
+                                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
+                                    transition={{ duration: 0.18, ease: 'easeInOut' }}
+                                    style={{ display: 'flex' }}
+                                >
+                                    {theme === 'dark' ? <Sun className="h-5.5 w-5.5" /> : <Moon className="h-5.5 w-5.5" />}
+                                </motion.span>
+                            </AnimatePresence>
                         </button>
                     </div>
                 </div>

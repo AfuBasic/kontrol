@@ -379,3 +379,28 @@ textarea,
         opacity: 0;
     }
 }
+
+/* ============================================
+   THEME TRANSITION — Circular Ripple Reveal
+   ============================================ */
+
+/* Keep the old snapshot frozen — no animation on it */
+::view-transition-old(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* New snapshot: circle expands from button position */
+::view-transition-new(root) {
+    animation: theme-circle-reveal 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    mix-blend-mode: normal;
+}
+
+@keyframes theme-circle-reveal {
+    from {
+        clip-path: circle(0% at var(--theme-x, 50%) var(--theme-y, 50%));
+    }
+    to {
+        clip-path: circle(150% at var(--theme-x, 50%) var(--theme-y, 50%));
+    }
+}
