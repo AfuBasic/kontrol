@@ -1,15 +1,17 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:is(.dark *));
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
-/* Dark mode disabled - Kontrol forces light mode for premium aesthetic */
+/* Light/Dark mode root styling */
 
 html,
 body {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    color-scheme: light !important;
+    background-color: #ffffff;
+    color: #111827;
+    color-scheme: light;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -18,6 +20,13 @@ body {
     overscroll-behavior-y: auto; /* Restore native bounce */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
+}
+
+html.dark,
+html.dark body {
+    background-color: #020617;
+    color: #f8fafc;
+    color-scheme: dark;
 }
 
 /* Hide scrollbars globally */
