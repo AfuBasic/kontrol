@@ -49,6 +49,7 @@ test('resident dashboard returns unpaid collections correctly', function () {
 
     // 3. Act
     $response = $this->actingAs($user)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->get(route('resident.home'));
 
     // 4. Assert

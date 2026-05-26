@@ -521,12 +521,17 @@ export default function Home({ plans }: Props) {
                                         <h3 className="text-xl font-bold text-white">{quarterlyPlan.name}</h3>
                                         <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed quarterly.</p>
                                     </div>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{(quarterlyPlan.price / 100).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ quarter</span>
+                                    <div className="flex flex-col gap-1.5 mt-2">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-4xl font-black text-white">₦{(quarterlyPlan.price / 100).toLocaleString()}</span>
+                                            <span className="text-xs text-slate-400">/ quarter</span>
+                                        </div>
+                                        <div className="text-xs text-slate-400 font-medium">
+                                            ₦5,000 / month equivalent
+                                        </div>
                                     </div>
                                     <span className="text-[10px] text-slate-500 font-semibold uppercase">
-                                        Billed {quarterlyPlan.billing_interval}
+                                        Billed quarterly
                                     </span>
                                     <hr className="border-slate-900 my-2" />
                                     <ul className="flex flex-col gap-3 text-xs text-slate-400">
@@ -573,17 +578,27 @@ export default function Home({ plans }: Props) {
                                         {semiAnnualPlan.badge}
                                     </div>
                                 )}
+                                <div className="absolute top-0 right-6 px-3 py-2 bg-[#FF7E67] text-white text-[10px] font-black uppercase rounded-b-lg tracking-wider shadow-lg">
+                                    Save 10%
+                                </div>
                                 <div className="flex flex-col gap-5">
                                     <div>
                                         <h3 className="text-xl font-bold text-white">{semiAnnualPlan.name}</h3>
                                         <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed semi-annually.</p>
                                     </div>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{(semiAnnualPlan.price / 100).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ 6 months</span>
+                                    <div className="flex flex-col gap-1.5 mt-2">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-4xl font-black text-white">₦{(semiAnnualPlan.price / 100).toLocaleString()}</span>
+                                            <span className="text-xs text-slate-400">/ 6 months</span>
+                                            <span className="text-xs text-slate-500 line-through">₦30,000</span>
+                                        </div>
+                                        <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                                            <span>₦4,500 / month equivalent</span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-[#4F46E5]/20 text-[#4F46E5] rounded font-bold">Save 10%</span>
+                                        </div>
                                     </div>
                                     <span className="text-[10px] text-[#4F46E5] font-extrabold uppercase tracking-wider">
-                                        Billed semi-annually (Save 10%)
+                                        Billed semi-annually
                                     </span>
                                     <hr className="border-slate-900 my-2" />
                                     <ul className="flex flex-col gap-3 text-xs text-slate-400">
@@ -624,23 +639,33 @@ export default function Home({ plans }: Props) {
 
                         {/* Pro - Annually Column */}
                         {annualPlan && (
-                            <div className="bg-[#0f172a]/20 border border-slate-900 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-800 transition-all">
+                            <div className="bg-[#0f172a]/20 border border-slate-900 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-800 transition-all relative">
                                 {annualPlan.badge && (
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-widest rounded-full">
                                         {annualPlan.badge}
                                     </div>
                                 )}
+                                <div className="absolute top-0 right-6 px-3 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase rounded-b-lg tracking-wider shadow-lg">
+                                    Save 20%
+                                </div>
                                 <div className="flex flex-col gap-5">
                                     <div>
                                         <h3 className="text-xl font-bold text-white">{annualPlan.name}</h3>
                                         <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed annually.</p>
                                     </div>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{(annualPlan.price / 100).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ year</span>
+                                    <div className="flex flex-col gap-1.5 mt-2">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-4xl font-black text-white">₦{(annualPlan.price / 100).toLocaleString()}</span>
+                                            <span className="text-xs text-slate-400">/ year</span>
+                                            <span className="text-xs text-slate-500 line-through">₦60,000</span>
+                                        </div>
+                                        <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                                            <span>₦4,000 / month equivalent</span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded font-bold">Save 20%</span>
+                                        </div>
                                     </div>
                                     <span className="text-[10px] text-emerald-500 font-extrabold uppercase tracking-wider">
-                                        Billed annually (Save 20%)
+                                        Billed annually
                                     </span>
                                     <hr className="border-slate-900 my-2" />
                                     <ul className="flex flex-col gap-3 text-xs text-slate-400">

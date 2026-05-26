@@ -28,7 +28,7 @@ class PlanSeeder extends Seeder
 
         $plans = [
             [
-                'name' => 'Pro - Quarterly',
+                'name' => 'Kontrol Quarterly',
                 'slug' => 'pro-plan',
                 'description' => 'Complete access control and premium features billed quarterly.',
                 'price' => 1500000,
@@ -45,7 +45,7 @@ class PlanSeeder extends Seeder
                 'features' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
             ],
             [
-                'name' => 'Pro - Semi-Annually',
+                'name' => 'Kontrol Semi-Annually',
                 'slug' => 'pro-plan-semi',
                 'description' => 'Complete access control and premium features billed semi-annually.',
                 'price' => 2700000,
@@ -62,7 +62,7 @@ class PlanSeeder extends Seeder
                 'features' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
             ],
             [
-                'name' => 'Pro - Annually',
+                'name' => 'Kontrol Annually',
                 'slug' => 'pro-plan-annual',
                 'description' => 'Complete access control and premium features billed annually.',
                 'price' => 4800000,
