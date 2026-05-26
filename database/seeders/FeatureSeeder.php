@@ -15,10 +15,12 @@ class FeatureSeeder extends Seeder
     {
         if (DB::getDriverName() === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = OFF;');
+            DB::table('plan_features')->truncate();
             Feature::truncate();
             DB::statement('PRAGMA foreign_keys = ON;');
         } else {
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            DB::table('plan_features')->truncate();
             Feature::truncate();
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         }

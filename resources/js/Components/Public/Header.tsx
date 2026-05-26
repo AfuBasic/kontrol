@@ -56,8 +56,6 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             Download App
                         </a>
 
-                        <div className="h-4 w-px bg-slate-800"></div>
-
                         <Link
                             href="/product/residents"
                             prefetch

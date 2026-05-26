@@ -52,8 +52,6 @@ interface Props {
 export default function Home({ plans }: Props) {
     const [isMounted, setIsMounted] = useState(false);
     const [activeTab, setActiveTab] = useState<'entry' | 'collections' | 'sos'>('entry');
-    
-    const [billingInterval, setBillingInterval] = useState<'quarterly' | 'semi-annually' | 'annually'>('quarterly');
 
     // Scroll progress for cinematic camera perspective parallax
     const { scrollY } = useScroll();
@@ -97,14 +95,9 @@ export default function Home({ plans }: Props) {
         };
     }, []);
 
-    const getMonthlyEquivalent = (plan: DBPlanConfig) => {
-        const months = plan.billing_interval === 'quarterly' ? 3 : plan.billing_interval === 'semi-annually' ? 6 : 12;
-        return plan.price / 100 / months;
-    };
-
-    const basicPlan = plans.find(p => p.billing_interval === billingInterval && p.slug.startsWith('basic'));
-    const growthPlan = plans.find(p => p.billing_interval === billingInterval && p.slug.startsWith('growth'));
-    const proPlan = plans.find(p => p.billing_interval === billingInterval && p.slug.startsWith('pro'));
+    const quarterlyPlan = plans.find(p => p.billing_interval === 'quarterly');
+    const semiAnnualPlan = plans.find(p => p.billing_interval === 'semi-annually');
+    const annualPlan = plans.find(p => p.billing_interval === 'annually');
 
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
@@ -517,161 +510,23 @@ export default function Home({ plans }: Props) {
                             Choose the plan that fits your community size and operations.
                         </p>
 
-                        {/* Toggle */}
-                        <div className="flex justify-center mt-6">
-                            <div className="inline-flex p-1 bg-[#020617] rounded-xl border border-slate-800">
-                                <button 
-                                    onClick={() => setBillingInterval('quarterly')}
-                                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                                        billingInterval === 'quarterly' 
-                                            ? 'bg-[#FF7E67] text-white' 
-                                            : 'text-slate-400 hover:text-white'
-                                    }`}
-                                >
-                                    Quarterly
-                                </button>
-                                <button 
-                                    onClick={() => setBillingInterval('semi-annually')}
-                                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                                        billingInterval === 'semi-annually' 
-                                            ? 'bg-[#FF7E67] text-white' 
-                                            : 'text-slate-400 hover:text-white'
-                                    }`}
-                                >
-                                    Semi-Annually (-10%)
-                                </button>
-                                <button 
-                                    onClick={() => setBillingInterval('annually')}
-                                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                                        billingInterval === 'annually' 
-                                            ? 'bg-[#FF7E67] text-white' 
-                                            : 'text-slate-400 hover:text-white'
-                                    }`}
-                                >
-                                    Annually (-20%)
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-                        {/* Basic Plan Column */}
-                        {basicPlan && (
+                        {/* Pro - Quarterly Column */}
+                        {quarterlyPlan && (
                             <div className="bg-[#0f172a]/20 border border-slate-900 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-800 transition-all">
                                 <div className="flex flex-col gap-5">
                                     <div>
-                                        <h3 className="text-xl font-bold text-white">{basicPlan.name}</h3>
-                                        <p className="text-xs text-slate-400 mt-1">For smaller estates needing essential gate controls.</p>
+                                        <h3 className="text-xl font-bold text-white">{quarterlyPlan.name}</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed quarterly.</p>
                                     </div>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{getMonthlyEquivalent(basicPlan).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ month</span>
+                                        <span className="text-4xl font-black text-white">₦{(quarterlyPlan.price / 100).toLocaleString()}</span>
+                                        <span className="text-xs text-slate-400">/ quarter</span>
                                     </div>
                                     <span className="text-[10px] text-slate-500 font-semibold uppercase">
-                                        Billed {billingInterval}: ₦{(basicPlan.price / 100).toLocaleString()}
-                                    </span>
-                                    <hr className="border-slate-900 my-2" />
-                                    <ul className="flex flex-col gap-3 text-xs text-slate-400">
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Up to 50 active resident units</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>5 security guards, 2 admins</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Instant visitor gate codes</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Security guard scanner app</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Estate noticeboard & updates</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link 
-                                    href={`/apply?plan_id=${basicPlan.id}`}
-                                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 text-center transition-colors mt-8"
-                                >
-                                    Get Started
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Growth Plan Column */}
-                        {growthPlan && (
-                            <div className="bg-[#0f172a]/30 border-2 border-[#4F46E5]/40 rounded-3xl p-8 flex flex-col justify-between relative shadow-2xl">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#4F46E5] text-white text-[9px] font-extrabold uppercase tracking-widest rounded-full">
-                                    Most Popular
-                                </div>
-                                <div className="flex flex-col gap-5">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white">{growthPlan.name}</h3>
-                                        <p className="text-xs text-slate-400 mt-1">For growing communities with advanced operations.</p>
-                                    </div>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{getMonthlyEquivalent(growthPlan).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ month</span>
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 font-semibold uppercase">
-                                        Billed {billingInterval}: ₦{(growthPlan.price / 100).toLocaleString()}
-                                    </span>
-                                    <hr className="border-slate-900 my-2" />
-                                    <ul className="flex flex-col gap-3 text-xs text-slate-400">
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-[#FF7E67] shrink-0 mt-0.5" />
-                                            <span className="text-slate-200">Up to 250 active resident units</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>10 security guards, 5 admins</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Everything in Basic</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Easy levy collections & payments</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Security roster management</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Real-time visitor logs & histories</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link 
-                                    href={`/apply?plan_id=${growthPlan.id}`}
-                                    className="w-full py-3.5 bg-[#FF7E67] hover:bg-[#ff8f7a] text-white font-extrabold text-xs rounded-xl text-center shadow-lg transition-colors mt-8"
-                                >
-                                    Get Started
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Pro Plan Column */}
-                        {proPlan && (
-                            <div className="bg-[#0f172a]/20 border border-slate-900 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-800 transition-all">
-                                <div className="flex flex-col gap-5">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white">{proPlan.name}</h3>
-                                        <p className="text-xs text-slate-400 mt-1">For large estates requiring complete operations.</p>
-                                    </div>
-                                    <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-4xl font-black text-white">₦{getMonthlyEquivalent(proPlan).toLocaleString()}</span>
-                                        <span className="text-xs text-slate-400">/ month</span>
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 font-semibold uppercase">
-                                        Billed {billingInterval}: ₦{(proPlan.price / 100).toLocaleString()}
+                                        Billed {quarterlyPlan.billing_interval}
                                     </span>
                                     <hr className="border-slate-900 my-2" />
                                     <ul className="flex flex-col gap-3 text-xs text-slate-400">
@@ -685,24 +540,138 @@ export default function Home({ plans }: Props) {
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Everything in Growth</span>
+                                            <span>Instant visitor gate codes</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Security guard scanner app</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Easy levy collections & payments</span>
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                                             <span>Telegram bot access codes</span>
                                         </li>
+                                    </ul>
+                                </div>
+                                <Link 
+                                    href={`/apply?plan_id=${quarterlyPlan.id}`}
+                                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 text-center transition-colors mt-8"
+                                >
+                                    Get Started
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Pro - Semi-Annually Column */}
+                        {semiAnnualPlan && (
+                            <div className="bg-[#0f172a]/30 border-2 border-[#4F46E5]/40 rounded-3xl p-8 flex flex-col justify-between relative shadow-2xl">
+                                {semiAnnualPlan.badge && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#4F46E5] text-white text-[9px] font-extrabold uppercase tracking-widest rounded-full">
+                                        {semiAnnualPlan.badge}
+                                    </div>
+                                )}
+                                <div className="flex flex-col gap-5">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">{semiAnnualPlan.name}</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed semi-annually.</p>
+                                    </div>
+                                    <div className="flex items-baseline gap-1 mt-2">
+                                        <span className="text-4xl font-black text-white">₦{(semiAnnualPlan.price / 100).toLocaleString()}</span>
+                                        <span className="text-xs text-slate-400">/ 6 months</span>
+                                    </div>
+                                    <span className="text-[10px] text-[#4F46E5] font-extrabold uppercase tracking-wider">
+                                        Billed semi-annually (Save 10%)
+                                    </span>
+                                    <hr className="border-slate-900 my-2" />
+                                    <ul className="flex flex-col gap-3 text-xs text-slate-400">
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-[#FF7E67] shrink-0 mt-0.5" />
+                                            <span className="text-slate-200">Unlimited active resident units</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-[#FF7E67] shrink-0 mt-0.5" />
+                                            <span className="text-slate-200">Unlimited security guards & admins</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-[#FF7E67] shrink-0 mt-0.5" />
+                                            <span className="text-slate-200">Instant visitor gate codes & scanner app</span>
+                                        </li>
                                         <li className="flex items-start gap-2">
                                             <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>Financial audits & exports</span>
+                                            <span>Easy levy collections & payments</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Security roster management</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Telegram bot access codes</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <Link 
+                                    href={`/apply?plan_id=${semiAnnualPlan.id}`}
+                                    className="w-full py-3.5 bg-[#FF7E67] hover:bg-[#ff8f7a] text-white font-extrabold text-xs rounded-xl text-center shadow-lg transition-colors mt-8"
+                                >
+                                    Get Started
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Pro - Annually Column */}
+                        {annualPlan && (
+                            <div className="bg-[#0f172a]/20 border border-slate-900 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-800 transition-all">
+                                {annualPlan.badge && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-widest rounded-full">
+                                        {annualPlan.badge}
+                                    </div>
+                                )}
+                                <div className="flex flex-col gap-5">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">{annualPlan.name}</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Complete access control and premium features, billed annually.</p>
+                                    </div>
+                                    <div className="flex items-baseline gap-1 mt-2">
+                                        <span className="text-4xl font-black text-white">₦{(annualPlan.price / 100).toLocaleString()}</span>
+                                        <span className="text-xs text-slate-400">/ year</span>
+                                    </div>
+                                    <span className="text-[10px] text-emerald-500 font-extrabold uppercase tracking-wider">
+                                        Billed annually (Save 20%)
+                                    </span>
+                                    <hr className="border-slate-900 my-2" />
+                                    <ul className="flex flex-col gap-3 text-xs text-slate-400">
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Unlimited active resident units</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Unlimited security guards & admins</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Everything in Semi-Annually</span>
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                                             <span>Priority onboarding & support</span>
                                         </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Dedicated account manager</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            <span>Telegram bot access codes</span>
+                                        </li>
                                     </ul>
                                 </div>
                                 <Link 
-                                    href={`/apply?plan_id=${proPlan.id}`}
+                                    href={`/apply?plan_id=${annualPlan.id}`}
                                     className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 text-center transition-colors mt-8"
                                 >
                                     Get Started
