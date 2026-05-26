@@ -14,10 +14,17 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('plan_features')->truncate();
-        Plan::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = OFF;');
+            DB::table('plan_features')->truncate();
+            Plan::truncate();
+            DB::statement('PRAGMA foreign_keys = ON;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            DB::table('plan_features')->truncate();
+            Plan::truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
 
         $plans = [
             [

@@ -15,6 +15,6 @@ class ApplicationController
     {
         $action->execute($request->all());
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Thank you! Your estate application has been received. We will contact you shortly.');
     }
 }

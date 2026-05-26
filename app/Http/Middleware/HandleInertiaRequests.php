@@ -122,6 +122,9 @@ class HandleInertiaRequests extends Middleware
             'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
             'unreadCount' => fn () => $user ? $user->unreadNotifications()->count() : 0,
             'app_url' => url('/'),
+            'app_subdomain_url' => config('domains.routing_enabled')
+                ? request()->getScheme().'://'.config('domains.app')
+                : url('/'),
         ];
     }
 }

@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Any visit to the app domain root should always go to login.
 */
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+if (config('domains.routing_enabled', true)) {
+    Route::get('/', function () {
+        return redirect()->route('login');
+    });
+}
 
 /*
 |--------------------------------------------------------------------------

@@ -4,8 +4,8 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, LayoutGrid, User, Plus, Wallet } from 'lucide-react';
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { Bell, Home, Users, User, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import PullToRefresh from '@/Components/PullToRefresh';
@@ -15,8 +15,22 @@ import NotificationDetailSheet from '@/Components/Resident/NotificationDetailShe
 import SosButton from '@/Components/SosButton';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
-import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import type { SharedData } from '@/types';
+
+const getPathFromUrl = (href: string): string => {
+    if (href.startsWith('//')) {
+        const pathStart = href.indexOf('/', 2);
+        return pathStart !== -1 ? href.slice(pathStart) : '/';
+    }
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+        try {
+            return new URL(href).pathname;
+        } catch {
+            return href;
+        }
+    }
+    return href;
+};
 
 interface Props {
     children: ReactNode;
@@ -26,18 +40,24 @@ interface Props {
 }
 
 export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
-    const { auth, webpush_public_key } = usePage<SharedData & { webpush_public_key?: string }>().props;
-    const currentPath = usePage().url;
+    const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
+    const { auth, webpush_public_key } = props;
 
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [createModalOpen, setCreateModalOpen] = useState(false);
-    const [selectedNotification, setSelectedNotification] = useState<any>(null);
-    const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
+    const [selectedNotification, setSelectedNotification] = useState<unknown>(null);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
 
     // Force logout if account is disabled
     useForceLogout(auth?.user?.id);
+
+    // Redirect to download app if accessing on a non-native web browser
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) {
+            router.visit('/download-app');
+        }
+    }, []);
 
     const { flash } = usePage<SharedData>().props;
 
@@ -61,17 +81,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
         const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
-        userChannel.notification((notification: any) => {
+        userChannel.notification((notification: { id?: string; message?: string; [key: string]: unknown }) => {
             // Update unread count
             setUnreadCount((prev) => prev + 1);
 
             // Show toast
             setToastMessage(notification.message || 'New notification received');
-            setLastReceivedNotification({
-                id: notification.id,
-                data: notification, // Echo sends the data directly
-                created_at_human: 'Just now',
-            });
             setShowToast(true);
 
             // Reload auth data to keep state in sync
@@ -85,7 +100,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         };
     }, [auth?.user?.id]);
 
-    const handleNotificationClick = (notification: any) => {
+    const handleNotificationClick = (notification: { id?: string; read_at?: string; [key: string]: unknown }) => {
         setSelectedNotification(notification);
 
         // Mark as read in backend
@@ -224,7 +239,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             data: notification.data,
                         });
 
-                        setLastReceivedNotification(notification);
                         setToastMessage(notification.body || notification.title || 'New notification received');
                         setShowToast(true);
                         setTimeout(() => setShowToast(false), 5000);
@@ -290,20 +304,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 PushNotifications.removeAllListeners();
             }
         };
-    }, [auth?.user?.id, webpush_public_key]);
+    }, [auth, webpush_public_key, currentPath]);
 
     // Listen for global notification detail requests
     useEffect(() => {
-        const handleDetailRequest = (e: any) => {
-            handleNotificationClick(e.detail);
+        const handleDetailRequest = (e: Event) => {
+            const detail = (e as CustomEvent<{ id?: string; read_at?: string; [key: string]: unknown }>).detail;
+            handleNotificationClick(detail);
         };
         window.addEventListener('show-notification-detail', handleDetailRequest);
         return () => window.removeEventListener('show-notification-detail', handleDetailRequest);
-    }, []);
+    }, [auth]);
 
     const hasAccessCodes = useFeature('access-code-generation');
     const hasVisitFeed = useFeature('real-time-visit-feed');
-    const hasPaymentCollection = useFeature('payment-collection');
 
     const navItems = [
         {
@@ -361,7 +375,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
             {/* Main Content */}
             <main className="relative mx-auto w-full max-w-lg flex-1 py-8">
-                {auth?.user?.resident_subscription && usePage().component !== 'Resident/Billing/Index' && (
+                {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
                     <div className="px-2">
                         <SubscriptionBanner subscription={auth.user.resident_subscription} />
                     </div>
@@ -378,7 +392,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/[0.05] backdrop-blur-2xl"
                     >
                         <div className="flex items-center justify-between px-3 py-2">
-                            {navItems.map((item, index) => {
+                            {navItems.map((item) => {
                                 if (item.name === 'CREATE_CODE') {
                                     return (
                                         <div key="fab" className="relative flex flex-1 justify-center">
@@ -395,7 +409,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 }
 
                                 const currentPathname = currentPath.split('?')[0];
-                                const itemPathname = usePathFromUrl(item.href).split('?')[0];
+                                const itemPathname = getPathFromUrl(item.href).split('?')[0];
                                 const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
 
                                 return (

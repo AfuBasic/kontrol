@@ -36,6 +36,27 @@ class EnsureUserHasRole
         // Check if user has any of the allowed roles
         foreach ($roles as $role) {
             if ($user->hasRole($role)) {
+                // If it's a restricted mobile-only role, check if they are on the native app
+                if (in_array($role, ['resident', 'household_member', 'security'])) {
+                    $ua = $request->userAgent() ?? '';
+                    $isNativeApp = false;
+
+                    // iOS WKWebView check
+                    if (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/')) {
+                        $isNativeApp = true;
+                    }
+                    // Android WebView check
+                    elseif (str_contains($ua, '; wv)') || str_contains($ua, 'Version/4.0')) {
+                        $isNativeApp = true;
+                    }
+
+                    $bypassRestrict = $request->has('bypass_mobile_restrict') || ($request->header('X-Bypass-Mobile-Restrict') === 'true');
+
+                    if (! $isNativeApp && ! $bypassRestrict) {
+                        return redirect()->route('landing.download');
+                    }
+                }
+
                 return $next($request);
             }
         }

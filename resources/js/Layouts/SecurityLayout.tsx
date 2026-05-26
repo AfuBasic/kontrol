@@ -1,8 +1,11 @@
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User, History } from 'lucide-react';
-import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
-import '@/echo';
+import { type ReactNode, useEffect, useState } from 'react';
+
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
 import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
@@ -11,9 +14,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileCo
 import PullToRefresh from '@/Components/PullToRefresh';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
 import { useForceLogout } from '@/Hooks/useForceLogout';
-import axios from 'axios';
-import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+import '@/echo';
 
 const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -89,11 +90,18 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
     useForceLogout(auth?.user?.id);
 
+    // Redirect to download app if accessing on a non-native web browser
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) {
+            router.visit('/download-app');
+        }
+    }, []);
+
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-    const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
+    const [lastReceivedNotification, setLastReceivedNotification] = useState<unknown>(null);
 
     // Sync unread count when props change
     useEffect(() => {
@@ -146,7 +154,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
                     if (permStatus.receive === 'prompt') {
                         console.info('Requesting push permissions...');
-                        permStatus = await (PushNotifications as any).requestPermissions({
+                        permStatus = await (PushNotifications as unknown as { requestPermissions: (options: Record<string, unknown>) => Promise<{ receive: string }> }).requestPermissions({
                             ios: { criticalAlert: true },
                         });
                         console.info('Push permission request result:', permStatus.receive);
@@ -235,7 +243,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 PushNotifications.removeAllListeners();
             }
         };
-    }, [auth?.user?.id, page.props.webpush_public_key]);
+    }, [auth, page.props.webpush_public_key, currentPath]);
 
     const isActive = (item: (typeof navItems)[0]) => {
         // Check for exact match first
