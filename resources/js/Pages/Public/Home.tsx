@@ -122,14 +122,26 @@ export default function Home({ plans }: Props) {
 
                     {/* Blending Gradients - Light Mode */}
                     <div className="absolute inset-0 block dark:hidden pointer-events-none">
-                        <div className="absolute inset-0 bg-linear-to-r from-white/95 via-white/50 to-transparent" style={{width: '55%'}} />
-                        <div className="absolute inset-0 bg-linear-to-t from-white/80 via-transparent to-transparent" />
+                        {/* Left edge — solid white, fades right */}
+                        <div className="absolute inset-0 bg-linear-to-r from-white via-white/70 to-transparent" />
+                        {/* Bottom edge — solid white, fades up */}
+                        <div className="absolute inset-x-0 bottom-0 h-[45%] bg-linear-to-t from-white via-white/55 to-transparent" />
+                        {/* Right edge — subtle fade at viewport edge */}
+                        <div className="absolute inset-y-0 right-0 w-1/5 bg-linear-to-l from-white/40 to-transparent" />
+                        {/* Top edge — subtle fade under header */}
+                        <div className="absolute inset-x-0 top-0 h-1/4 bg-linear-to-b from-white/60 to-transparent" />
                     </div>
 
                     {/* Blending Gradients - Dark Mode */}
                     <div className="absolute inset-0 hidden dark:block pointer-events-none">
-                        <div className="absolute inset-0 bg-linear-to-r from-[#020617]/95 via-[#020617]/60 to-transparent" style={{width: '65%'}} />
-                        <div className="absolute inset-0 bg-linear-to-t from-[#020617]/70 via-transparent to-transparent" />
+                        {/* Left edge */}
+                        <div className="absolute inset-0 bg-linear-to-r from-[#020617] via-[#020617]/60 to-transparent" />
+                        {/* Bottom edge */}
+                        <div className="absolute inset-x-0 bottom-0 h-[45%] bg-linear-to-t from-[#020617] via-[#020617]/50 to-transparent" />
+                        {/* Right edge */}
+                        <div className="absolute inset-y-0 right-0 w-1/5 bg-linear-to-l from-[#020617]/50 to-transparent" />
+                        {/* Top edge */}
+                        <div className="absolute inset-x-0 top-0 h-1/4 bg-linear-to-b from-[#020617]/60 to-transparent" />
                     </div>
                 </div>
 

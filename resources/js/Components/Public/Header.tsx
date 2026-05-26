@@ -96,13 +96,6 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
 
                     {/* Actions */}
                     <div className="hidden items-center gap-4 md:flex">
-                        <button
-                            onClick={toggleTheme}
-                            className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
-                            aria-label="Toggle Theme"
-                        >
-                            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                        </button>
                         <a
                             href={app_subdomain_url ? `${app_subdomain_url}/login` : '/login'}
                             className="rounded-lg border border-slate-200 bg-slate-50 px-5 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:bg-[#0f172a] dark:text-white dark:hover:bg-[#1e293b]"
@@ -117,23 +110,30 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                                 Get Started
                             </Link>
                         )}
-                    </div>
-
-                    {/* Mobile menu trigger & Theme Toggle */}
-                    <div className="flex items-center gap-1 md:hidden">
                         <button
                             onClick={toggleTheme}
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
-                            {theme === 'dark' ? <Sun className="h-5.5 w-5.5" /> : <Moon className="h-5.5 w-5.5" />}
+                            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                         </button>
+                    </div>
+
+                    {/* Mobile menu trigger & Theme Toggle */}
+                    <div className="flex items-center gap-1 md:hidden">
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                             aria-label="Toggle Menu"
                         >
                             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                        </button>
+                        <button
+                            onClick={toggleTheme}
+                            className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
+                            aria-label="Toggle Theme"
+                        >
+                            {theme === 'dark' ? <Sun className="h-5.5 w-5.5" /> : <Moon className="h-5.5 w-5.5" />}
                         </button>
                     </div>
                 </div>
