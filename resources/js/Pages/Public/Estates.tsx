@@ -3,14 +3,10 @@ import { motion } from 'framer-motion';
 import { 
     Building2, 
     QrCode, 
-    Users, 
     FileText, 
     Bell, 
     ArrowRight, 
-    CheckCircle2, 
-    Shield, 
-    Smartphone,
-    Activity
+    CheckCircle2
 } from 'lucide-react';
 import React, { useEffect } from 'react';
 import Header from '@/Components/Public/Header';
@@ -77,7 +73,7 @@ export default function Estates() {
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white leading-tight tracking-tight max-w-4xl"
                     >
-                        Modern operations for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-indigo-350 to-[#FF7E67] dark:from-indigo-400 dark:via-indigo-200">estate managers.</span>
+                        Modern operations for <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-500 via-indigo-350 to-[#FF7E67] dark:from-indigo-400 dark:via-indigo-200">estate managers.</span>
                     </motion.h1>
                     
                     <motion.p 
@@ -112,7 +108,7 @@ export default function Estates() {
                         style={{ transformPerspective: 1200 }}
                         className="mt-16 w-full rounded-2xl border border-slate-200 dark:border-slate-900 bg-slate-100/40 dark:bg-slate-950/40 p-2 shadow-2xl shadow-[#4F46E5]/10 dark:shadow-[#4F46E5]/5 relative group"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent dark:from-[#020617] z-10 pointer-events-none rounded-xl"></div>
+                        <div className="absolute inset-0 bg-linear-to-t from-white via-transparent to-transparent dark:from-[#020617] z-10 pointer-events-none rounded-xl"></div>
                         <img 
                             src="/assets/images/admin-dashboard-mockup.png" 
                             alt="Kontrol Admin Dashboard Console" 
@@ -341,7 +337,7 @@ export default function Estates() {
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
-                        className="p-10 bg-gradient-to-br from-slate-50 to-white dark:from-[#0f172a]/80 dark:to-[#020617] border border-slate-200 dark:border-[#FF7E67]/20 rounded-[40px] flex flex-col items-center text-center justify-between gap-6 shadow-2xl relative overflow-hidden"
+                        className="p-10 bg-linear-to-br from-slate-50 to-white dark:from-[#0f172a]/80 dark:to-[#020617] border border-slate-200 dark:border-[#FF7E67]/20 rounded-[40px] flex flex-col items-center text-center justify-between gap-6 shadow-2xl relative overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF7E67]/5 rounded-full filter blur-3xl"></div>
                         

@@ -132,7 +132,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full max-w-md rounded-[3rem] bg-white p-12 text-center shadow-2xl ring-1 shadow-emerald-500/10 ring-slate-100"
                 >
-                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-emerald-50 text-emerald-500">
+                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-4xl bg-emerald-50 text-emerald-500">
                         <CheckCircle2 className="h-12 w-12" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-slate-900">Payment Successful</h1>
@@ -161,7 +161,7 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
                 <div className="relative bg-slate-900 p-8 text-white lg:w-1/2 lg:p-16">
                     <div className="relative z-10 flex h-full flex-col justify-between">
                         <div>
-                            <div className="mb-12 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-blue-600 shadow-xl shadow-blue-500/20">
+                            <div className="mb-12 flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-600 shadow-xl shadow-blue-500/20">
                                 <Wallet className="h-8 w-8" />
                             </div>
                             <h2 className="text-4xl leading-tight font-black tracking-tight">Secure Checkout</h2>

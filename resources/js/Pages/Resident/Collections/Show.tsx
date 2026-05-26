@@ -102,7 +102,7 @@ export default function CollectionShow({ assignment }: Props) {
                 >
                     <div className="flex flex-col items-center text-center">
                         <div
-                            className={`mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
+                            className={`mb-6 flex h-20 w-20 items-center justify-center rounded-4xl ${
                                 assignment.status === 'paid' ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-blue-500'
                             }`}
                         >
@@ -144,14 +144,14 @@ export default function CollectionShow({ assignment }: Props) {
 
             {/* Details Grid */}
             <section className="grid grid-cols-2 gap-4">
-                <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <div className="rounded-4xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
                     <Calendar className="mb-3 h-5 w-5 text-slate-400" />
                     <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Due Date</p>
                     <p className="mt-1 font-black tracking-tight text-slate-900">
                         {new Date(assignment.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                 </div>
-                <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
+                <div className="rounded-4xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
                     <Info className="mb-3 h-5 w-5 text-slate-400" />
                     <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Billing Cycle</p>
                     <p className="mt-1 font-black tracking-tight text-slate-900 uppercase">{assignment.period || 'One-time'}</p>
@@ -164,7 +164,7 @@ export default function CollectionShow({ assignment }: Props) {
                     <div className="space-y-4">
                         <button
                             onClick={handleSettle}
-                            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-[2rem] bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95"
+                            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-4xl bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-95"
                         >
                             Settle Balance
                             <ExternalLink className="h-5 w-5" />
@@ -175,7 +175,7 @@ export default function CollectionShow({ assignment }: Props) {
                         </div>
                     </div>
                 ) : (
-                    <div className="rounded-[2rem] bg-emerald-50 p-8 text-center ring-1 ring-emerald-100 ring-inset">
+                    <div className="rounded-4xl bg-emerald-50 p-8 text-center ring-1 ring-emerald-100 ring-inset">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-500 shadow-sm">
                             <CheckCircle2 className="h-8 w-8" />
                         </div>

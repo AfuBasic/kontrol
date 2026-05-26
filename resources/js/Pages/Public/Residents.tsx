@@ -66,7 +66,7 @@ export default function Residents() {
                         Resident Companion App
                     </div>
                     <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
-                        Your home gate in your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7E67] to-indigo-500 dark:to-indigo-400">pocket.</span>
+                        Your home gate in your <span className="text-transparent bg-clip-text bg-linear-to-r from-[#FF7E67] to-indigo-500 dark:to-indigo-400">pocket.</span>
                     </h1>
                     <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
                         No more intercom delays or walking down to the gate. Generate guest access codes, invite household members, and trigger panic alerts in seconds.
@@ -101,7 +101,7 @@ export default function Residents() {
             {/* How to Connect / Start */}
             <section className="py-24">
                 <div className="max-w-4xl mx-auto px-6">
-                    <div className="p-10 bg-gradient-to-br from-slate-50 to-white dark:from-[#0f172a]/80 dark:to-[#020617] border border-slate-250 dark:border-[#4F46E5]/30 rounded-[40px] flex flex-col items-center text-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+                    <div className="p-10 bg-linear-to-br from-slate-50 to-white dark:from-[#0f172a]/80 dark:to-[#020617] border border-slate-250 dark:border-[#4F46E5]/30 rounded-[40px] flex flex-col items-center text-center justify-between gap-6 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-[#4F46E5]/5 rounded-full filter blur-3xl"></div>
                         
                         <div className="max-w-2xl">

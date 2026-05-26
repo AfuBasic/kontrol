@@ -389,7 +389,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     <motion.nav
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/[0.05] backdrop-blur-2xl"
+                        className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
                     >
                         <div className="flex items-center justify-between px-3 py-2">
                             {navItems.map((item) => {

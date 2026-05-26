@@ -1,7 +1,7 @@
 import { Link, Head } from '@inertiajs/react';
 import { Player } from '@remotion/player';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Shield, Check, Smartphone, Users, AlertOctagon, Download, ArrowUpRight, Coins, QrCode, Bell } from 'lucide-react';
+import { Shield, Check, Smartphone, Users, AlertOctagon, ArrowUpRight, Coins, QrCode, Bell } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import Header from '@/Components/Public/Header';
 import { VisitorEntryAnimation, LeviesCollectionsAnimation, EmergencySOSAnimation } from '@/Components/Public/RemotionAnimations';
@@ -122,14 +122,14 @@ export default function Home({ plans }: Props) {
 
                     {/* Blending Gradients - Light Mode */}
                     <div className="absolute inset-0 block dark:hidden pointer-events-none">
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/50 to-transparent" style={{width: '55%'}} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-r from-white/95 via-white/50 to-transparent" style={{width: '55%'}} />
+                        <div className="absolute inset-0 bg-linear-to-t from-white/80 via-transparent to-transparent" />
                     </div>
 
                     {/* Blending Gradients - Dark Mode */}
                     <div className="absolute inset-0 hidden dark:block pointer-events-none">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/95 via-[#020617]/60 to-transparent" style={{width: '65%'}} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/70 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-r from-[#020617]/95 via-[#020617]/60 to-transparent" style={{width: '65%'}} />
+                        <div className="absolute inset-0 bg-linear-to-t from-[#020617]/70 via-transparent to-transparent" />
                     </div>
                 </div>
 
@@ -144,7 +144,7 @@ export default function Home({ plans }: Props) {
                                 The easiest way to
                                 <br />
                                 manage your{' '}
-                                <span className="bg-gradient-to-r from-indigo-500 via-indigo-300 to-[#FF7E67] bg-clip-text text-transparent dark:from-indigo-400 dark:via-indigo-200">
+                                <span className="bg-linear-to-r from-indigo-500 via-indigo-300 to-[#FF7E67] bg-clip-text text-transparent dark:from-indigo-400 dark:via-indigo-200">
                                     estate.
                                 </span>
                             </h1>
@@ -734,7 +734,7 @@ export default function Home({ plans }: Props) {
             {/* 4. DEPLOYMENT & DOWNLOAD NODE */}
             <section
                 id="download"
-                className="relative overflow-hidden bg-gradient-to-t from-slate-100 to-slate-50 py-24 dark:from-[#01030a] dark:to-[#020617]"
+                className="relative overflow-hidden bg-linear-to-t from-slate-100 to-slate-50 py-24 dark:from-[#01030a] dark:to-[#020617]"
             >
                 <div className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4F46E5]/5 blur-[120px] filter"></div>
 
