@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { Bell, CreditCard, Info, AlertTriangle, ChevronRight, ExternalLink } from 'lucide-react';
+import { Bell, CreditCard, Info, AlertTriangle, ChevronRight } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
-interface NotificationData {
+export interface NotificationData {
     type: string;
     title: string;
     message: string;
@@ -18,7 +18,7 @@ interface NotificationData {
     is_final_attempt?: boolean;
 }
 
-interface Notification {
+export interface Notification {
     id: string;
     data: NotificationData;
     read_at: string | null;

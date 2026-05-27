@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -139,8 +140,12 @@
         .badge {
             display: inline-block;
             padding: 4px 12px;
-            background-color: @yield('badge-bg', '#eef2ff');
-            color: @yield('badge-color', '#4338ca');
+            background-color:
+                @yield('badge-bg', '#eef2ff')
+            ;
+            color:
+                @yield('badge-color', '#4338ca')
+            ;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
@@ -154,22 +159,78 @@
             .main {
                 border-radius: 0 !important;
             }
+
             .content {
                 padding: 32px 24px !important;
             }
+
             .button {
                 width: 100% !important;
             }
         }
+
+        /* Dark Mode — Apple Mail, iOS Mail, Outlook iOS/Android, Samsung Email */
+        @media (prefers-color-scheme: dark) {
+            body,
+            .wrapper {
+                background-color: #020617 !important;
+            }
+
+            .main {
+                background-color: #0f172a !important;
+                border-color: #1e293b !important;
+            }
+
+            h1 {
+                color: #f1f5f9 !important;
+            }
+
+            p {
+                color: #94a3b8 !important;
+            }
+
+            .bold {
+                color: #e2e8f0 !important;
+            }
+
+            .divider {
+                background-color: #1e293b !important;
+            }
+
+            .footer p,
+            .footer a {
+                color: #475569 !important;
+            }
+
+            /* Logo swap */
+            .logo-light {
+                display: none !important;
+                max-height: 0 !important;
+                overflow: hidden !important;
+                mso-hide: all !important;
+            }
+
+            .logo-dark {
+                display: block !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="wrapper">
         <table class="main" style="margin-top: 40px;">
             <tr>
                 <td style="padding: 40px 48px 0; text-align: center;">
                     <a href="{{ config('app.url') }}" target="_blank">
-                        <img src="{{ config('app.url') }}/assets/images/app-icon.png" alt="Kontrol" class="logo" style="width: 100px; margin-bottom: 0;">
+                        {{-- Light mode logo (default) --}}
+                        <img src="{{ config('app.url') }}/assets/images/kontrol-logo-horizontal.png"
+                            alt="Kontrol" class="logo logo-light" style="width: 160px; margin-bottom: 0; display: block;">
+                        {{-- Dark mode logo (shown when device is in dark mode) --}}
+                        <img src="{{ config('app.url') }}/assets/images/kontrol-white-logo-new.png"
+                            alt="Kontrol" class="logo logo-dark" style="width: 160px; margin-bottom: 0; display: none;">
                     </a>
                 </td>
             </tr>
@@ -183,7 +244,7 @@
                     <p>© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
                     <p>Designed to keep your community secure and connected.</p>
                     <p>
-                        <a href="{{ config('app.url') }}/privacy">Privacy Policy</a> • 
+                        <a href="{{ config('app.url') }}/privacy">Privacy Policy</a> •
                         <a href="{{ config('app.url') }}/terms">Terms of Service</a>
                     </p>
                 </td>
@@ -191,4 +252,5 @@
         </table>
     </div>
 </body>
+
 </html>

@@ -7,15 +7,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, User, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { SharedData } from '@/types';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
+import type { Notification } from '@/Components/Resident/NotificationDetailSheet';
 import SosButton from '@/Components/SosButton';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
-import type { SharedData } from '@/types';
 
 const getPathFromUrl = (href: string): string => {
     if (href.startsWith('//')) {
@@ -46,7 +47,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [createModalOpen, setCreateModalOpen] = useState(false);
-    const [selectedNotification, setSelectedNotification] = useState<unknown>(null);
+    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
 
     // Force logout if account is disabled
