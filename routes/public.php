@@ -7,8 +7,11 @@
  */
 
 use App\Http\Controllers\Public\ApplicationController;
+use App\Http\Controllers\PublicPassController;
 use App\Http\Controllers\Web\LandingController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/pass/{uuid}', [PublicPassController::class, 'show'])->name('public.pass');
 
 Route::get('/', [LandingController::class, 'index'])->name('landing.home');
 Route::get('/product/residents', [LandingController::class, 'residents'])->name('landing.residents');

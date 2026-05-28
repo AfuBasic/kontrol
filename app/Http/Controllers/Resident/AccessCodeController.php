@@ -182,4 +182,21 @@ class AccessCodeController extends Controller
 
         return back()->with('success', 'Access code revoked successfully.');
     }
+
+    /**
+     * Track and increment visitor pass sharing.
+     */
+    public function share(AccessCode $accessCode): \Illuminate\Http\JsonResponse
+    {
+        $userCode = $this->accessCodeService->getCode($accessCode->id);
+        abort_if(! $userCode, 404);
+
+        $this->accessCodeService->incrementShare($userCode);
+
+        return response()->json([
+            'success' => true,
+            'share_count' => $userCode->share_count,
+            'last_shared_at' => $userCode->last_shared_at?->toISOString(),
+        ]);
+    }
 }

@@ -78,6 +78,9 @@ class AccessCode extends Model
         'estate_id',
         'user_id',
         'code',
+        'pass_uuid',
+        'qr_token',
+        'qr_image_path',
         'type', // single_use, long_lived
         'source', // web, telegram
         'visitor_name',
@@ -86,10 +89,13 @@ class AccessCode extends Model
         'status',
         'expires_at',
         'used_at',
+        'scanned_at',
         'revoked_at',
         'verified_by',
         'has_vehicle',
         'notes',
+        'share_count',
+        'last_shared_at',
     ];
 
     /**
@@ -102,9 +108,19 @@ class AccessCode extends Model
             'source' => AccessCodeSource::class,
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
+            'scanned_at' => 'datetime',
             'revoked_at' => 'datetime',
             'has_vehicle' => 'boolean',
+            'last_shared_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (AccessCode $accessCode) {
+            $accessCode->pass_uuid = (string) \Illuminate\Support\Str::uuid();
+            $accessCode->qr_token = \Illuminate\Support\Str::random(40);
+        });
     }
 
     public function getActivitylogOptions(): LogOptions

@@ -494,4 +494,13 @@ class AccessCodeService
 
         return $query->cursorPaginate($perPage);
     }
+
+    /**
+     * Increment share count and update last shared timestamp.
+     */
+    public function incrementShare(AccessCode $accessCode): void
+    {
+        $accessCode->increment('share_count');
+        $accessCode->update(['last_shared_at' => now()]);
+    }
 }

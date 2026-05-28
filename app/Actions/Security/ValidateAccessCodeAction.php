@@ -29,11 +29,39 @@ class ValidateAccessCodeAction
         $settings = EstateSettings::forEstate($estateId);
         $gracePeriod = $settings->access_code_grace_period_minutes ?? 0;
 
-        $accessCode = AccessCode::query()
-            ->forEstate($estateId)
-            ->where('code', $code)
-            ->with('user:id,name,email')
-            ->first();
+        $passUuid = null;
+        $qrToken = null;
+
+        if (str_starts_with($code, 'kontrol://pass/')) {
+            $parsed = parse_url($code);
+            if ($parsed && isset($parsed['path'])) {
+                $pathParts = explode('/', trim($parsed['path'], '/'));
+                $passUuid = end($pathParts);
+            }
+            if (isset($parsed['query'])) {
+                parse_str($parsed['query'], $queryParams);
+                $qrToken = $queryParams['token'] ?? null;
+            }
+        }
+
+        if ($passUuid && $qrToken) {
+            $accessCode = AccessCode::query()
+                ->forEstate($estateId)
+                ->where('pass_uuid', $passUuid)
+                ->where('qr_token', $qrToken)
+                ->with('user:id,name,email')
+                ->first();
+
+            if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
+                $accessCode->update(['scanned_at' => now()]);
+            }
+        } else {
+            $accessCode = AccessCode::query()
+                ->forEstate($estateId)
+                ->where('code', $code)
+                ->with('user:id,name,email')
+                ->first();
+        }
 
         if (! $accessCode) {
             return $this->denied('Code not found', 'not_found');
@@ -69,6 +97,8 @@ class ValidateAccessCodeAction
             'valid' => true,
             'status' => 'granted',
             'message' => 'Access code is valid',
+            'code' => $accessCode->code,
+            'pass_uuid' => $accessCode->pass_uuid,
             'visitor_name' => $accessCode->visitor_name,
             'host_name' => $accessCode->user?->name,
             'purpose' => $accessCode->purpose,
@@ -84,6 +114,8 @@ class ValidateAccessCodeAction
             'valid' => false,
             'status' => $status,
             'message' => $message,
+            'code' => $accessCode?->code,
+            'pass_uuid' => $accessCode?->pass_uuid,
             'visitor_name' => $accessCode?->visitor_name,
             'host_name' => $accessCode?->user?->name,
             'purpose' => $accessCode?->purpose,
