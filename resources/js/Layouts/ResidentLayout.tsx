@@ -363,7 +363,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
             {/* Header - Conditional Light Premium Header */}
             {!hideHeader && (
-                <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
+                <header className="fixed top-0 inset-x-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
                     <div className="mx-auto max-w-lg px-6">
                         <div className="flex h-16 items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             )}
 
             {/* Main Content */}
-            <main className="relative mx-auto w-full max-w-lg flex-1 py-8">
+            <main className={`relative mx-auto w-full max-w-lg flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}>
                 {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
                     <div className="px-2">
                         <SubscriptionBanner subscription={auth.user.resident_subscription} />

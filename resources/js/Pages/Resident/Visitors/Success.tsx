@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { AccessCode } from '@/types/access-code';
+import PassCard from '@/Components/Resident/PassCard';
 
 import { shareAccessCode } from '@/Utils/share';
 
@@ -32,7 +33,7 @@ export default function CodeSuccess({ accessCode }: Props) {
     }
     return (
         <>
-            <Head title="Code Created" />
+            <Head title="Pass Created" />
 
             <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
                 {/* Success Animation */}
@@ -40,14 +41,14 @@ export default function CodeSuccess({ accessCode }: Props) {
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                    className="mb-6"
+                    className="mb-4"
                 >
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                         <motion.svg
                             initial={{ pathLength: 0 }}
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.5, delay: 0.3 }}
-                            className="h-10 w-10 text-emerald-600"
+                            className="h-8 w-8 text-emerald-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2.5}
@@ -63,9 +64,9 @@ export default function CodeSuccess({ accessCode }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.2 }}
-                    className="mb-2 text-2xl font-semibold text-gray-900"
+                    className="mb-1 text-2xl font-black text-gray-900"
                 >
-                    Code Created!
+                    Pass Created!
                 </motion.h1>
 
                 {/* Subtitle */}
@@ -73,39 +74,18 @@ export default function CodeSuccess({ accessCode }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.25 }}
-                    className="mb-8 text-gray-500"
+                    className="mb-6 text-sm font-bold text-gray-400"
                 >
-                    Share this code with your visitor
+                    Share this pass credential with your visitor
                 </motion.p>
 
-                {/* Code Display */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
-                    className="mb-6 w-full max-w-xs"
-                >
-                    <div className="rounded-3xl border-2 border-gray-100 bg-white p-8 shadow-lg">
-                        <p className="font-mono text-5xl font-bold tracking-[0.2em] text-gray-900">{accessCode.code}</p>
-                    </div>
-                </motion.div>
-
-                {/* Details */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.35 }}
-                    className="mb-8 space-y-1 text-sm text-gray-500"
-                >
-                    {accessCode.visitor_name && (
-                        <p>
-                            For: <span className="font-medium text-gray-900">{accessCode.visitor_name}</span>
-                        </p>
-                    )}
-                    <p>
-                        Expires: <span className="font-medium text-amber-600">{accessCode.time_remaining}</span>
-                    </p>
-                </motion.div>
+                {/* Pass Card Display */}
+                <div className="mb-6 w-full max-w-sm px-2">
+                    <PassCard
+                        pass={accessCode}
+                        qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}
+                    />
+                </div>
 
                 {/* Action Buttons */}
                 <motion.div

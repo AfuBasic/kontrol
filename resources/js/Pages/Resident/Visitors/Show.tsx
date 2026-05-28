@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import resident from '@/routes/resident';
 import type { AccessCode, CursorPaginatedUsageLogs } from '@/types/access-code';
 import { shareAccessCode } from '@/Utils/share';
+import PassCard from '@/Components/Resident/PassCard';
 
 type Props = {
     accessCode: AccessCode;
@@ -125,9 +126,9 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="mb-2 text-2xl font-semibold text-gray-900"
+                    className="mb-2 text-2xl font-black text-gray-900"
                 >
-                    Access Code
+                    Visitor Pass Details
                 </motion.h1>
 
                 {/* Subtitle */}
@@ -135,78 +136,36 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="mb-8 text-gray-500"
+                    className="mb-8 text-sm font-bold text-gray-400"
                 >
-                    Share this code with your visitor
+                    Manage visitor credentials and track gate activity
                 </motion.p>
 
-                {/* Code Display */}
-                <motion.div
-                    layoutId={`visitor-card-${accessCode.id}`}
-                    className="mb-6 w-full max-w-xs"
-                >
-                    <div
-                        className={`rounded-3xl border-2 bg-white p-8 shadow-lg ${accessCode.status === 'active' ? 'border-gray-100' : 'border-red-100 bg-red-50'}`}
-                    >
-                        <p
-                            className={`font-mono text-5xl font-bold tracking-[0.2em] ${accessCode.status === 'active' ? 'text-gray-900' : 'text-red-400 line-through'}`}
-                        >
-                            {accessCode.code}
-                        </p>
-                        {accessCode.status !== 'active' && (
-                            <p className="mt-2 text-sm font-medium tracking-widest text-red-500 uppercase">{accessCode.status}</p>
-                        )}
-                    </div>
-                </motion.div>
+                {/* Pass Card Display */}
+                <div className="mb-6 w-full max-w-sm px-2">
+                    <PassCard
+                        pass={accessCode}
+                        qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}
+                    />
+                </div>
 
-                {/* Details */}
+                {/* Source and status details */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
-                    className="mb-8 space-y-2 text-sm text-gray-500"
+                    className="mb-8 space-y-1 text-xs font-bold text-slate-400"
                 >
-                    {accessCode.visitor_name && (
-                        <p>
-                            For: <span className="font-medium text-gray-900">{accessCode.visitor_name}</span>
-                        </p>
-                    )}
-                    <p>
-                        Type: <span className="font-medium text-gray-900">{accessCode.type === 'long_lived' ? 'Long-lived' : 'Single Use'}</span>
-                    </p>
                     <p className="flex items-center justify-center gap-1.5">
                         Created via:{' '}
                         {accessCode.source === 'telegram' ? (
-                            <span className="inline-flex items-center gap-1 font-medium text-blue-600">
-                                <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.751-.244-1.349-.374-1.297-.789.027-.216.324-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.141.119.098.152.228.166.33.016.115.022.285.011.436z" />
-                                </svg>
+                            <span className="inline-flex items-center gap-1 font-extrabold text-blue-600">
                                 Telegram
                             </span>
                         ) : (
-                            <span className="font-medium text-gray-900">Web App</span>
+                            <span className="font-extrabold text-gray-900">Web App</span>
                         )}
                     </p>
-                    <p>
-                        {accessCode.status === 'active' ? (
-                            <>
-                                Expires: <span className="font-medium text-amber-600">{accessCode.time_remaining}</span>
-                            </>
-                        ) : accessCode.status === 'used' ? (
-                            <>
-                                Arrived: <span className="font-medium text-blue-600">{new Date(accessCode.used_at!).toLocaleString()}</span>
-                            </>
-                        ) : accessCode.status === 'revoked' ? (
-                            <>
-                                Revoked: <span className="font-medium text-red-600">{new Date(accessCode.revoked_at!).toLocaleString()}</span>
-                            </>
-                        ) : (
-                            <span>Expired: {new Date(accessCode.expires_at).toLocaleDateString()}</span>
-                        )}
-                    </p>
-                    {accessCode.status !== 'active' && (
-                        <p className="text-xs text-gray-400">Created: {new Date(accessCode.created_at).toLocaleDateString()}</p>
-                    )}
                 </motion.div>
 
                 {/* Action Buttons */}

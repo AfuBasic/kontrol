@@ -4,6 +4,8 @@ export type AccessCodeSource = 'web' | 'telegram';
 export type AccessCode = {
     id: number;
     code: string;
+    pass_uuid?: string;
+    qr_token?: string;
     type: 'single_use' | 'long_lived';
     visitor_name: string | null;
     visitor_phone: string | null;
@@ -15,6 +17,9 @@ export type AccessCode = {
     revoked_at: string | null;
     created_at: string;
     time_remaining: string;
+    estate_name?: string;
+    host_name?: string;
+    notes?: string | null;
 };
 
 export type DurationOption = {

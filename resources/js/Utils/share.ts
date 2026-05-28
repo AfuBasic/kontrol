@@ -1,19 +1,34 @@
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import axios from 'axios';
 import type { AccessCode } from '@/types/access-code';
 
 /**
  * Robust sharing utility that prioritizes native mobile sharing via Capacitor,
  * falling back to Web Share API and finally Clipboard copy.
  */
-export async function shareAccessCode(accessCode: AccessCode) {
-    const text =
-        accessCode.type === 'long_lived'
-            ? `Here is a long-term access code: ${accessCode.code}${accessCode.visitor_name ? ` (for ${accessCode.visitor_name})` : ''}. This code does not expire.`
-            : `Here is a one-time access code: ${accessCode.code}${accessCode.visitor_name ? ` (for ${accessCode.visitor_name})` : ''}. Valid for: ${accessCode.time_remaining}.`;
+export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: string; estate_name?: string }) {
+    // Record sharing event in background
+    axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
 
-    const title = 'Access Code';
+    const passUrl = `${window.location.origin}/pass/${accessCode.pass_uuid}`;
+    const formattedExpiry = accessCode.expires_at
+        ? new Date(accessCode.expires_at).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+          })
+        : 'Never Expires';
+
+    const text = `You've been granted visitor access to ${accessCode.estate_name || 'the Estate'}.
+
+Access Code: ${accessCode.code}
+Valid Until: ${formattedExpiry}
+
+Present your digital visitor pass at the gate for fast verification:
+${passUrl}`;
+
+    const title = 'Visitor Access Pass';
 
     // 1. Try Native Capacitor Share if on native platform
     if (Capacitor.isNativePlatform()) {
@@ -23,7 +38,7 @@ export async function shareAccessCode(accessCode: AccessCode) {
                 await Share.share({
                     title: title,
                     text: text,
-                    dialogTitle: 'Share Access Code',
+                    dialogTitle: 'Share Visitor Pass',
                 });
                 return { success: true, method: 'share' };
             }

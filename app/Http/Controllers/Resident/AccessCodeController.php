@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Services\Resident\AccessCodeService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -105,11 +106,15 @@ class AccessCodeController extends Controller
             abort(404);
         }
 
+        $userCode->load(['estate', 'user:id,name']);
+
         return Inertia::render('Resident/Visitors/Success', [
             'accessCode' => [
                 'id' => $userCode->id,
                 'type' => $userCode->type,
                 'code' => $userCode->code,
+                'pass_uuid' => $userCode->pass_uuid,
+                'qr_token' => $userCode->qr_token,
                 'visitor_name' => $userCode->visitor_name,
                 'visitor_phone' => $userCode->visitor_phone,
                 'purpose' => $userCode->purpose,
@@ -118,6 +123,9 @@ class AccessCodeController extends Controller
                 'expires_at' => $userCode->expires_at?->toISOString(),
                 'time_remaining' => $userCode->time_remaining,
                 'created_at' => $userCode->created_at->toISOString(),
+                'estate_name' => $userCode->estate->name,
+                'host_name' => $userCode->user->name,
+                'notes' => $userCode->notes,
             ],
         ]);
     }
@@ -131,6 +139,8 @@ class AccessCodeController extends Controller
 
         abort_if(! $userCode, 404);
 
+        $userCode->load(['estate', 'user:id,name']);
+
         $dateFilter = $request->input('date');
         $usageLogs = $this->accessCodeService->getUsageHistory($userCode, $dateFilter);
 
@@ -139,6 +149,8 @@ class AccessCodeController extends Controller
                 'id' => $userCode->id,
                 'type' => $userCode->type,
                 'code' => $userCode->code,
+                'pass_uuid' => $userCode->pass_uuid,
+                'qr_token' => $userCode->qr_token,
                 'visitor_name' => $userCode->visitor_name,
                 'visitor_phone' => $userCode->visitor_phone,
                 'purpose' => $userCode->purpose,
@@ -149,6 +161,9 @@ class AccessCodeController extends Controller
                 'created_at' => $userCode->created_at->toISOString(),
                 'used_at' => $userCode->used_at?->toISOString(),
                 'revoked_at' => $userCode->revoked_at?->toISOString(),
+                'estate_name' => $userCode->estate->name,
+                'host_name' => $userCode->user->name,
+                'notes' => $userCode->notes,
             ],
             'usageLogs' => [
                 'data' => collect($usageLogs->items())->map(fn ($log) => [
@@ -186,7 +201,7 @@ class AccessCodeController extends Controller
     /**
      * Track and increment visitor pass sharing.
      */
-    public function share(AccessCode $accessCode): \Illuminate\Http\JsonResponse
+    public function share(AccessCode $accessCode): JsonResponse
     {
         $userCode = $this->accessCodeService->getCode($accessCode->id);
         abort_if(! $userCode, 404);

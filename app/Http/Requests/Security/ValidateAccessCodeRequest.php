@@ -11,13 +11,10 @@ class ValidateAccessCodeRequest extends FormRequest
         return true;
     }
 
-    /**
-     * @return array<string, array<int, string>>
-     */
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'min:4', 'max:20'],
+            'code' => ['required', 'string', 'min:4', 'max:255'],
         ];
     }
 
@@ -29,7 +26,7 @@ class ValidateAccessCodeRequest extends FormRequest
         return [
             'code.required' => 'Please enter an access code.',
             'code.min' => 'Access code must be at least 4 characters.',
-            'code.max' => 'Access code must not exceed 20 characters.',
+            'code.max' => 'Access code must not exceed 255 characters.',
         ];
     }
 }

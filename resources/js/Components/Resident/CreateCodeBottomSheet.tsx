@@ -351,7 +351,7 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                     disabled={form.processing}
                                                     className="flex w-full items-center justify-center gap-3 rounded-[28px] bg-linear-to-br from-indigo-500 to-indigo-700 py-6 text-xl font-black text-white shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                                 >
-                                                    {form.processing ? 'Generating...' : 'Generate Access Code'}
+                                                    {form.processing ? 'Generating...' : 'Generate Digital Pass'}
                                                 </button>
                                                 <button onClick={() => setStep('details')} className="w-full py-2 text-sm font-bold text-slate-400">
                                                     Go Back

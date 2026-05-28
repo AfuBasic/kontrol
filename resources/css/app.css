@@ -617,3 +617,12 @@ textarea,
         transform: translateY(0);
     }
 }
+
+@keyframes scan {
+    0%, 100% {
+        top: 5%;
+    }
+    50% {
+        top: 95%;
+    }
+}
