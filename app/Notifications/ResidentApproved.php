@@ -10,6 +10,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
@@ -82,6 +83,8 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
     public function toFcm(object $notifiable): FcmMessage
     {
         $data = $this->notificationData();
+        $badgeCount = (int) $notifiable->unreadNotifications()->count();
+        Log::info("FCM push badge count for {$notifiable->email}: {$badgeCount}");
 
         return (new FcmMessage(
             notification: new FcmNotification(
@@ -105,7 +108,7 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
                     'payload' => [
                         'aps' => [
                             'sound' => 'default',
-                            'badge' => $notifiable->unreadNotifications()->count(),
+                            'badge' => $badgeCount,
                         ],
                     ],
                 ],

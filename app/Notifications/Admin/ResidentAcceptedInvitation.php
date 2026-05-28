@@ -84,6 +84,18 @@ class ResidentAcceptedInvitation extends Notification implements ShouldBroadcast
                         'color' => '#0A3D91',
                     ],
                 ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'alert' => [
+                                'title' => $this->isPasswordReset ? 'Security Alert' : 'Invitation Accepted',
+                                'body' => $data['message'],
+                            ],
+                            'sound' => 'default',
+                            'badge' => $notifiable->unreadNotifications()->count(),
+                        ],
+                    ],
+                ],
             ]);
     }
 
