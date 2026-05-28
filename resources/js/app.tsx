@@ -140,11 +140,9 @@ createInertiaApp({
                             // Extract path from various URL formats (The "Smart Router")
                             let path = '';
                             if (url.startsWith('kontrol://')) {
-                                // For custom scheme: kontrol://path/to/page
-                                path = url.replace('kontrol:/', '');
-                                if (!path.startsWith('/')) {
-                                    path = '/' + path;
-                                }
+                                const urlObj = new URL(url);
+                                path = `/${urlObj.hostname}${urlObj.pathname}${urlObj.search || ''}`;
+                                path = path.replace(/\/+/g, '/'); // Collapse multiple slashes
                             } else if (url.includes('://')) {
                                 // For universal links: https://domain/path/to/page
                                 const urlObj = new URL(url);
@@ -152,6 +150,19 @@ createInertiaApp({
                             }
 
                             if (path) {
+                                // For server-side redirect/auth routes (like autologin), bypass Inertia
+                                // and perform a clean full page load to establish session and cookies.
+                                if (path.startsWith('/autologin')) {
+                                    const absoluteUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
+                                    window.location.href = absoluteUrl;
+                                    
+                                    // Hide splash screen after initiating load
+                                    setTimeout(() => {
+                                        SplashScreen.hide().catch(() => {});
+                                    }, 1000);
+                                    return;
+                                }
+
                                 router.visit(path, {
                                     onFinish: () => {
                                         // Hide splash ONLY after the deep link page has loaded
