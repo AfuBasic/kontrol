@@ -68,7 +68,7 @@ export default function DownloadApp({ autologinToken }: Props) {
                     {/* Primary Button: Deep Link to Open App */}
                     <div className="mt-2 flex w-full flex-col gap-6">
                         <a
-                            href={autologinToken ? `kontrol://autologin?token=${autologinToken}` : "kontrol://home"}
+                            href="kontrol://login"
                             className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4 text-sm font-extrabold text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                         >
                             <Smartphone className="h-5 w-5" />

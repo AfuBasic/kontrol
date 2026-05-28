@@ -60,7 +60,6 @@ export default function SecurityVerify() {
     const streamRef = useRef<MediaStream | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
-    // Dynamic library loader for fallback
     const loadJSQR = (): Promise<any> => {
         return new Promise((resolve, reject) => {
             if ((window as any).jsQR) {
@@ -105,44 +104,52 @@ export default function SecurityVerify() {
         );
     }, []);
 
-    const startScanning = async () => {
-        setIsScanning(true);
-        setScannerError(null);
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
-            streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.setAttribute('playsinline', 'true');
-                videoRef.current.play();
-            }
+    // FIXED: Unified Lifecycle Management via UseEffect
+    useEffect(() => {
+        if (!isScanning) return;
 
-            // Small delay to allow camera initialization
-            setTimeout(async () => {
+        let isComponentActive = true;
+
+        const startCameraAndScan = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                });
+
+                if (!isComponentActive) {
+                    stream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
+
+                streamRef.current = stream;
+
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.setAttribute('playsinline', 'true');
+                    await videoRef.current.play().catch(() => {});
+                }
+
                 let jsQRDec: any = null;
                 const hasNative = 'BarcodeDetector' in window;
                 let detector: any = null;
+
                 if (hasNative) {
                     try {
                         detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-                    } catch {
-                        // Native detector not supported or errored
-                    }
+                    } catch {}
                 }
+
                 if (!detector) {
-                    try {
-                        jsQRDec = await loadJSQR();
-                    } catch (e) {
-                        console.error('Failed to load fallback jsQR:', e);
-                    }
+                    jsQRDec = await loadJSQR().catch(() => null);
                 }
 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
 
                 const scanFrame = async () => {
+                    // FIX 1: Explicit Kill Switch. If scanning state turns false, break the frame loops immediately.
+                    if (!isComponentActive || !isScanning) return;
+
                     if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) {
                         animationFrameRef.current = requestAnimationFrame(scanFrame);
                         return;
@@ -163,10 +170,7 @@ export default function SecurityVerify() {
                                     decodedValue = barcodes[0].rawValue;
                                 }
                             } catch (e) {
-                                console.error('Native detector failed, falling back to jsQR:', e);
-                                if (!jsQRDec) {
-                                    jsQRDec = await loadJSQR().catch(() => null);
-                                }
+                                if (!jsQRDec) jsQRDec = await loadJSQR().catch(() => null);
                             }
                         }
 
@@ -175,16 +179,12 @@ export default function SecurityVerify() {
                             const codeObj = jsQRDec(imgData.data, imgData.width, imgData.height, {
                                 inversionAttempts: 'dontInvert',
                             });
-                            if (codeObj) {
-                                decodedValue = codeObj.data;
-                            }
+                            if (codeObj) decodedValue = codeObj.data;
                         }
 
                         if (decodedValue) {
-                            if (navigator.vibrate) {
-                                navigator.vibrate(150);
-                            }
-                            stopScanning();
+                            if (navigator.vibrate) navigator.vibrate(150);
+                            setIsScanning(false); // This cleanup handles execution loops
                             submit(decodedValue);
                             return;
                         }
@@ -193,41 +193,35 @@ export default function SecurityVerify() {
                 };
 
                 animationFrameRef.current = requestAnimationFrame(scanFrame);
-            }, 300);
+            } catch (err) {
+                console.error('Camera access failed:', err);
+                setScannerError('Camera access denied or unavailable. Please use manual fallback.');
+                setIsScanning(false);
+            }
+        };
 
-        } catch (err: any) {
-            console.error('Camera access failed:', err);
-            setScannerError('Camera access denied or unavailable. Please use manual fallback.');
-            setIsScanning(false);
-        }
-    };
+        // Delay execution slightly to let Framer Motion mount the layout node smoothly
+        const initTimeout = setTimeout(startCameraAndScan, 150);
 
-    const stopScanning = () => {
-        setIsScanning(false);
-        if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.srcObject = null;
-        }
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach((track) => track.stop());
-            streamRef.current = null;
-        }
-        if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-        }
-    };
-
-    useEffect(() => {
         return () => {
+            isComponentActive = false;
+            clearTimeout(initTimeout);
+
+            // Clean up native hardware elements completely
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.srcObject = null;
+            }
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current = null;
             }
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
             }
         };
-    }, []);
+    }, [isScanning, submit]);
 
     const updateDigit = (index: number, raw: string) => {
         const sanitized = raw
@@ -330,24 +324,19 @@ export default function SecurityVerify() {
                             <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">QR scan terminal</p>
                             <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Scan Visitor QR Pass</h1>
 
-                            <div className="relative mt-8 h-80 w-80 overflow-hidden rounded-[2.5rem] bg-black ring-4 ring-indigo-500/20 shadow-2xl">
-                                <video
-                                    ref={videoRef}
-                                    className="h-full w-full object-cover"
-                                />
-                                {/* Scanning line animation */}
-                                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-[scan_2s_ease-in-out_infinite]" />
-                                {/* Framing corner brackets */}
-                                <div className="absolute top-6 left-6 h-6 w-6 border-t-4 border-l-4 border-white/80 rounded-tl-md" />
-                                <div className="absolute top-6 right-6 h-6 w-6 border-t-4 border-r-4 border-white/80 rounded-tr-md" />
-                                <div className="absolute bottom-6 left-6 h-6 w-6 border-b-4 border-l-4 border-white/80 rounded-bl-md" />
-                                <div className="absolute bottom-6 right-6 h-6 w-6 border-b-4 border-r-4 border-white/80 rounded-br-md" />
+                            <div className="relative mt-8 h-80 w-80 overflow-hidden rounded-[2.5rem] bg-black shadow-2xl ring-4 ring-indigo-500/20">
+                                <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
+                                <div className="absolute inset-x-0 top-0 h-1 animate-[scan_2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399]" />
+                                <div className="absolute top-6 left-6 h-6 w-6 rounded-tl-md border-t-4 border-l-4 border-white/80" />
+                                <div className="absolute top-6 right-6 h-6 w-6 rounded-tr-md border-t-4 border-r-4 border-white/80" />
+                                <div className="absolute bottom-6 left-6 h-6 w-6 rounded-bl-md border-b-4 border-l-4 border-white/80" />
+                                <div className="absolute right-6 bottom-6 h-6 w-6 rounded-br-md border-r-4 border-b-4 border-white/80" />
                             </div>
 
                             <p className="mt-6 text-sm font-bold text-slate-400">Position the QR code inside the frame</p>
 
                             <button
-                                onClick={stopScanning}
+                                onClick={() => setIsScanning(false)}
                                 className="mt-8 flex items-center gap-3 rounded-2xl bg-slate-100 px-8 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
                             >
                                 <CameraOff className="h-4 w-4" />
@@ -390,13 +379,11 @@ export default function SecurityVerify() {
                                 ))}
                             </div>
 
-                            {scannerError && (
-                                <p className="mt-4 text-xs font-bold text-rose-500">{scannerError}</p>
-                            )}
+                            {scannerError && <p className="mt-4 text-xs font-bold text-rose-500">{scannerError}</p>}
 
-                            <div className="mt-8 flex flex-col items-center gap-4 w-full max-w-xs">
+                            <div className="mt-8 flex w-full max-w-xs flex-col items-center gap-4">
                                 <button
-                                    onClick={startScanning}
+                                    onClick={() => setIsScanning(true)}
                                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4.5 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95"
                                 >
                                     <QrCode className="h-5 w-5" />
