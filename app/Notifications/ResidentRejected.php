@@ -130,7 +130,7 @@ class ResidentRejected extends Notification implements ShouldBroadcast, ShouldQu
                                 'body' => $data['message'],
                             ],
                             'sound' => 'default',
-                            'badge' => 1,
+                            'badge' => $notifiable->unreadNotifications()->count(),
                             'category' => 'resident_rejected',
                         ],
                     ],

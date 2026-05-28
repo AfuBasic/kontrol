@@ -183,7 +183,6 @@ export default function AdminLayout({ children, title }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             channel.listen('.resident.created', (e: any) => {
-                console.info('ResidentCreated event received:', e);
 
                 const message = typeof e.message === 'string' ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
 
@@ -227,7 +226,6 @@ export default function AdminLayout({ children, title }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             userChannel.notification((notification: any) => {
-                console.info('User notification received:', notification);
 
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
 
@@ -290,13 +288,17 @@ export default function AdminLayout({ children, title }: Props) {
             try {
                 // PATH 1: Native Platform (Capacitor FCM)
                 if (Capacitor.isNativePlatform()) {
+                    // Clear delivered notifications and app badge count on launch
+                    try {
+                        await PushNotifications.removeAllDeliveredNotifications();
+                    } catch (e) {
+                        console.warn('Failed to clear delivered notifications:', e);
+                    }
+
                     let permStatus = await PushNotifications.checkPermissions();
-                    console.info('Initial push permission status:', permStatus.receive);
 
                     if (permStatus.receive === 'prompt') {
-                        console.info('Requesting push permissions...');
                         permStatus = await PushNotifications.requestPermissions();
-                        console.info('Push permission request result:', permStatus.receive);
                     }
 
                     if (permStatus.receive !== 'granted') {
@@ -308,7 +310,6 @@ export default function AdminLayout({ children, title }: Props) {
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
-                        console.info('Native push registration successful, token:', token.value);
                         axios
                             .post('/push/subscribe', {
                                 token: token.value,
@@ -324,7 +325,6 @@ export default function AdminLayout({ children, title }: Props) {
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        console.info('Native push received in foreground:', notification);
                         setToastMessage(notification.body || 'New notification received');
                         setToastType('info');
                         setLastReceivedNotification(notification);
@@ -335,6 +335,10 @@ export default function AdminLayout({ children, title }: Props) {
                     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
                         const data = notification.notification.data;
                         const targetUrl = data?.action_url || data?.url;
+
+                        // Clear delivered notifications when tapping one
+                        PushNotifications.removeAllDeliveredNotifications().catch(() => {});
+
                         if (targetUrl) {
                             router.visit(targetUrl);
                         }
@@ -363,7 +367,6 @@ export default function AdminLayout({ children, title }: Props) {
 
                             // Send subscription object to backend
                             await axios.post('/push/subscribe', subscription.toJSON());
-                            console.info('WebPush subscription synced successfully');
                         } catch (subErr) {
                             console.error('Failed to subscribe to WebPush:', subErr);
                         }

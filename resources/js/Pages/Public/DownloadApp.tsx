@@ -22,8 +22,6 @@ export default function DownloadApp({ autologinToken }: Props) {
         } else {
             setDeviceType('other');
         }
-
-        console.log(auth);
     }, []);
 
     return (

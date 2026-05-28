@@ -149,15 +149,19 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
             try {
                 // PATH 1: Native Platform (Capacitor FCM)
                 if (Capacitor.isNativePlatform()) {
+                    // Clear delivered notifications and app badge count on launch
+                    try {
+                        await PushNotifications.removeAllDeliveredNotifications();
+                    } catch (e) {
+                        console.warn('Failed to clear delivered notifications:', e);
+                    }
+
                     let permStatus = await PushNotifications.checkPermissions();
-                    console.info('Initial push permission status:', permStatus.receive);
 
                     if (permStatus.receive === 'prompt') {
-                        console.info('Requesting push permissions...');
                         permStatus = await (PushNotifications as unknown as { requestPermissions: (options: Record<string, unknown>) => Promise<{ receive: string }> }).requestPermissions({
                             ios: { criticalAlert: true },
                         });
-                        console.info('Push permission request result:', permStatus.receive);
                     }
 
                     if (permStatus.receive !== 'granted') {
@@ -169,7 +173,6 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
                     // Registration listeners
                     PushNotifications.addListener('registration', (token) => {
-                        console.info('Native push registration successful, token:', token.value);
                         axios.post('/push/subscribe', {
                             token: token.value,
                             platform: Capacitor.getPlatform(),
@@ -181,7 +184,6 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        console.info('Native push received in foreground:', notification);
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || 'New alert received');
                         setToastType('success');
@@ -194,6 +196,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         const data = notification.notification.data;
                         const targetUrl = data?.action_url || data?.url;
                         const type = data?.type;
+
+                        // Clear delivered notifications when tapping one
+                        PushNotifications.removeAllDeliveredNotifications().catch(() => {});
 
                         // Only navigate for critical alerts (like SOS) and if the path is different
                         if (targetUrl && type !== 'visitor_arrived' && targetUrl !== currentPath) {

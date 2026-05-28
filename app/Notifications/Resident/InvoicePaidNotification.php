@@ -138,7 +138,7 @@ class InvoicePaidNotification extends Notification implements ShouldQueue
                                 'body' => $data['message'],
                             ],
                             'sound' => 'default',
-                            'badge' => 1,
+                            'badge' => $notifiable->unreadNotifications()->count(),
                             'category' => 'invoice_paid',
                         ],
                     ],

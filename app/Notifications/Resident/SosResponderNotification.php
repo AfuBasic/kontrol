@@ -16,7 +16,9 @@ class SosResponderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public SosEvent $sosEvent) {}
+    public function __construct(public SosEvent $sosEvent)
+    {
+    }
 
     public function via(object $notifiable): array
     {
@@ -59,9 +61,10 @@ class SosResponderNotification extends Notification implements ShouldQueue
         $data = $this->toArray($notifiable);
 
         return FcmMessage::create()
-            ->notification(FcmNotification::create()
-                ->title($data['title'])
-                ->body($data['message'])
+            ->notification(
+                FcmNotification::create()
+                    ->title($data['title'])
+                    ->body($data['message'])
             )
             ->data([
                 'title' => $data['title'],
@@ -88,10 +91,10 @@ class SosResponderNotification extends Notification implements ShouldQueue
                         'aps' => [
                             'alert' => [
                                 'title' => $data['title'],
-                                'body' => $data['body'],
+                                'body' => $data['message'],
                             ],
                             'sound' => 'default',
-                            'badge' => 1,
+                            'badge' => $notifiable->unreadNotifications()->count(),
                         ],
                     ],
                 ],

@@ -127,7 +127,7 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
                                 'body' => $body,
                             ],
                             'sound' => 'default',
-                            'badge' => 1,
+                            'badge' => $notifiable->unreadNotifications()->count(),
                             'critical-alert' => [
                                 'name' => 'default',
                                 'volume' => 1.0,

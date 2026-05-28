@@ -105,6 +105,7 @@ class ResidentApproved extends Notification implements ShouldBroadcast, ShouldQu
                     'payload' => [
                         'aps' => [
                             'sound' => 'default',
+                            'badge' => $notifiable->unreadNotifications()->count(),
                         ],
                     ],
                 ],

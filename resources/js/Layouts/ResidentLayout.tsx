@@ -143,15 +143,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         const syncFcmToken = async () => {
             const platform = Capacitor.getPlatform();
             try {
-                console.info(`[${platform.toUpperCase()}] Syncing FCM token...`);
-
                 if (platform === 'ios') {
                     // iOS: Request permissions via FirebaseMessaging
                     await FirebaseMessaging.requestPermissions();
                     const { token } = await FirebaseMessaging.getToken();
 
                     if (token) {
-                        console.info('[iOS] FCM token obtained:', token.substring(0, 20) + '...');
                         await axios.post('/push/subscribe', {
                             token,
                             platform: 'ios',
@@ -164,7 +161,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     const { token } = await FirebaseMessaging.getToken();
 
                     if (token) {
-                        console.info('[Android] FCM token obtained:', token.substring(0, 20) + '...');
                         await axios.post('/push/subscribe', {
                             token,
                             platform: 'android',
@@ -183,17 +179,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 // PATH 1: Native Platform (Capacitor + Firebase)
                 if (Capacitor.isNativePlatform()) {
                     const platform = Capacitor.getPlatform();
-                    console.info(`[${platform.toUpperCase()}] Initializing push notifications...`);
+
+                    // Clear delivered notifications and app badge count on launch
+                    try {
+                        await PushNotifications.removeAllDeliveredNotifications();
+                    } catch (e) {
+                        console.warn('Failed to clear delivered notifications:', e);
+                    }
 
                     // Check current permission status
                     let permStatus = await PushNotifications.checkPermissions();
-                    console.info(`[${platform.toUpperCase()}] Initial permission status:`, permStatus.receive);
 
                     // Request permissions if needed
                     if (permStatus.receive === 'prompt') {
-                        console.info(`[${platform.toUpperCase()}] Requesting push permissions...`);
                         permStatus = await PushNotifications.requestPermissions();
-                        console.info(`[${platform.toUpperCase()}] Permission response:`, permStatus.receive);
                     }
 
                     // Exit if permissions denied
@@ -222,17 +221,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             visibility: 1,
                             vibration: true,
                         });
-                        console.info('[Android] Notification channels created');
                     }
 
                     // iOS: No need to call register(), just get the token
                     // iOS automatically registers with APNs once permissions are granted
-                    console.info(`[${platform.toUpperCase()}] Push permissions granted, syncing token...`);
                     await syncFcmToken();
 
                     // Listen for successful registration (Android)
                     PushNotifications.addListener('registration', async () => {
-                        console.info(`[${platform.toUpperCase()}] Device registered with push service`);
                         // Re-sync token on registration (Android)
                         if (platform === 'android') {
                             await syncFcmToken();
@@ -246,12 +242,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                     // Listen for received notifications
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        console.info(`[${platform.toUpperCase()}] Notification received:`, {
-                            title: notification.title,
-                            body: notification.body,
-                            data: notification.data,
-                        });
-
                         setToastMessage(notification.body || notification.title || 'New notification received');
                         setShowToast(true);
                         setTimeout(() => setShowToast(false), 5000);
@@ -266,10 +256,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         const targetUrl = data?.action_url || data?.url;
                         const type = data?.type;
 
-                        console.info(`[${platform.toUpperCase()}] Notification action performed:`, {
-                            type,
-                            targetUrl,
-                        });
+                        // Clear delivered notifications when tapping one
+                        PushNotifications.removeAllDeliveredNotifications().catch(() => {});
 
                         // Only navigate if it's NOT a visitor arrival (which doesn't need "details")
                         // and if we aren't already on that page.
@@ -299,7 +287,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             });
 
                             await axios.post('/push/subscribe', subscription.toJSON());
-                            console.info('WebPush subscription synced successfully');
                         } catch (subErr) {
                             console.error('Failed to subscribe to WebPush:', subErr);
                         }
