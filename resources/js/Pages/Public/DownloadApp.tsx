@@ -4,7 +4,11 @@ import { Smartphone, Apple, Play, ArrowLeft, Shield, LogOut } from 'lucide-react
 import React, { useEffect, useState } from 'react';
 import Header from '@/Components/Public/Header';
 
-export default function DownloadApp() {
+interface Props {
+    autologinToken?: string | null;
+}
+
+export default function DownloadApp({ autologinToken }: Props) {
     const [deviceType, setDeviceType] = useState<'apple' | 'android' | 'other'>('other');
     const { auth } = usePage<any>().props;
 
@@ -23,7 +27,7 @@ export default function DownloadApp() {
     }, []);
 
     return (
-        <div className="flex min-h-screen flex-col justify-between bg-white pb-12 font-sans text-slate-900 transition-colors duration-300 selection:bg-[#FF7E67]/30 selection:text-white dark:bg-[#020617] dark:text-slate-100">
+        <div className="flex min-h-[100dvh] flex-col justify-between bg-white pb-12 font-sans text-slate-900 transition-colors duration-300 selection:bg-[#FF7E67]/30 selection:text-white dark:bg-[#020617] dark:text-slate-100">
             <Head>
                 <title>Download Kontrol App - Gated Estate Operations</title>
                 <meta
@@ -63,84 +67,53 @@ export default function DownloadApp() {
                         </div>
                     )}
 
-                    {/* Primary Button based on detected device */}
-                    <div className="mt-2 flex w-full flex-col gap-4">
-                        {deviceType === 'apple' ? (
+                    {/* Primary Button: Deep Link to Open App */}
+                    <div className="mt-2 flex w-full flex-col gap-6">
+                        <a
+                            href={autologinToken ? `kontrol://autologin?token=${autologinToken}` : "kontrol://home"}
+                            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4 text-sm font-extrabold text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
+                        >
+                            <Smartphone className="h-5 w-5" />
+                            <div className="text-left leading-tight">
+                                <div className="text-sm font-bold text-white">Open Kontrol App</div>
+                            </div>
+                        </a>
+
+                        {/* Divider */}
+                        <div className="my-1 flex items-center">
+                            <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+                            <span className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase dark:text-slate-600">
+                                Or Download App
+                            </span>
+                            <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+                        </div>
+
+                        {/* Download Options Grid */}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <a
                                 href="#"
-                                className="hover:bg-slate-850 flex w-full items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                                className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
                                 <Apple className="h-5 w-5 fill-current text-white dark:text-slate-950" />
                                 <div className="text-left leading-tight">
                                     <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                        Download on the
+                                        Download for
                                     </div>
-                                    <div className="text-sm font-bold text-white dark:text-slate-950">App Store</div>
+                                    <div className="text-xs font-bold text-white dark:text-slate-950">App Store (iOS)</div>
                                 </div>
                             </a>
-                        ) : deviceType === 'android' ? (
+
                             <a
                                 href="#"
-                                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-transparent bg-[#FF7E67] py-4 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-[#ff8f7a]"
+                                className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
-                                <Play className="h-5 w-5 fill-white text-white" />
+                                <Play className="h-5 w-5 fill-current text-white dark:text-slate-950" />
                                 <div className="text-left leading-tight">
-                                    <div className="text-[10px] font-semibold tracking-wider text-[#ffd6ce] uppercase">Get it on</div>
-                                    <div className="text-sm font-bold text-white">Google Play</div>
+                                    <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">Get it on</div>
+                                    <div className="text-xs font-bold text-white dark:text-slate-950">Google Play (Android)</div>
                                 </div>
                             </a>
-                        ) : (
-                            <div className="flex flex-col gap-4">
-                                <a
-                                    href="#"
-                                    className="hover:bg-slate-850 flex w-full items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
-                                >
-                                    <Apple className="h-5 w-5 fill-current text-white dark:text-slate-950" />
-                                    <div className="text-left leading-tight">
-                                        <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                            Download on the
-                                        </div>
-                                        <div className="text-sm font-bold text-white dark:text-slate-950">App Store</div>
-                                    </div>
-                                </a>
-                                <a
-                                    href="#"
-                                    className="flex w-full items-center justify-center gap-3 rounded-2xl border border-transparent bg-[#FF7E67] py-4 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-[#ff8f7a]"
-                                >
-                                    <Play className="h-5 w-5 fill-white text-white" />
-                                    <div className="text-left leading-tight">
-                                        <div className="text-[10px] font-semibold tracking-wider text-[#ffd6ce] uppercase">Get it on</div>
-                                        <div className="text-sm font-bold text-white">Google Play</div>
-                                    </div>
-                                </a>
-                            </div>
-                        )}
-
-                        {/* Secondary Options */}
-                        {deviceType !== 'other' && (
-                            <div className="mt-2 grid w-full grid-cols-1 gap-3">
-                                {/* App Store button */}
-                                {deviceType !== 'apple' && (
-                                    <a
-                                        href="#"
-                                        className="dark:border-slate-850 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-3 text-xs font-bold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:border-slate-800 dark:hover:bg-slate-900/80 dark:hover:text-white"
-                                    >
-                                        <Apple className="h-4 w-4 fill-current" />
-                                        Download for iOS
-                                    </a>
-                                )}
-                                {/* Play Store button */}
-                                {deviceType !== 'android' && (
-                                    <a
-                                        href="#"
-                                        className="dark:border-slate-850 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-3 text-xs font-bold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:border-slate-800 dark:hover:bg-slate-900/80 dark:hover:text-white"
-                                    >
-                                        <Play className="h-4 w-4 fill-current" />
-                                        Download for Android
-                                    </a>
-                                )}
-                            </div>
-                        )}
+                        </div>
                     </div>
 
                     <div className="my-2 flex w-full flex-col items-center gap-4 border-t border-slate-200 pt-4 dark:border-slate-900">

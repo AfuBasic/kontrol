@@ -140,7 +140,7 @@ export default function VerifyOtp({ email }: Props) {
                                         value={digits[i]?.trim() || ''}
                                         onChange={(e) => handleDigitChange(i, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(i, e)}
-                                        className={`h-14 w-12 rounded-xl border text-center text-xl font-semibold transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none ${
+                                        className={`h-14 w-12 rounded-xl border text-center text-xl font-semibold text-slate-900 transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none ${
                                             errors.code ? 'border-red-300 bg-red-50/50' : 'border-gray-200 bg-gray-50/50'
                                         }`}
                                         autoComplete="one-time-code"

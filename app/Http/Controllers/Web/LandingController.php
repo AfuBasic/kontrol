@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Auth\DetermineUserRedirect;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -99,6 +105,37 @@ class LandingController extends Controller
      */
     public function downloadApp(): Response
     {
-        return Inertia::render('Public/DownloadApp');
+        $token = null;
+        if (auth()->check()) {
+            $token = Str::random(40);
+            Cache::put('autologin_'.$token, auth()->id(), now()->addMinutes(5));
+        }
+
+        return Inertia::render('Public/DownloadApp', [
+            'autologinToken' => $token,
+        ]);
+    }
+
+    /**
+     * Autologin from mobile app deep links.
+     */
+    public function autologin(Request $request, DetermineUserRedirect $determineRedirect): RedirectResponse
+    {
+        $token = $request->query('token');
+        if (! $token) {
+            return redirect()->route('login');
+        }
+
+        $userId = Cache::pull('autologin_'.$token);
+        if (! $userId) {
+            return redirect()->route('login')->with('error', 'Authentication link expired.');
+        }
+
+        Auth::loginUsingId($userId);
+        $request->session()->regenerate();
+
+        $redirectUrl = $determineRedirect->execute(Auth::user());
+
+        return redirect()->intended($redirectUrl);
     }
 }

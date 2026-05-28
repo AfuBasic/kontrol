@@ -19,6 +19,7 @@ Route::get('/product/estates', [LandingController::class, 'estates'])->name('lan
 Route::get('/apply', [LandingController::class, 'apply'])->name('landing.apply');
 Route::post('/apply', [ApplicationController::class, 'store'])->name('landing.apply.store');
 Route::get('/download-app', [LandingController::class, 'downloadApp'])->name('landing.download');
+Route::get('/autologin', [LandingController::class, 'autologin'])->name('autologin');
 
 Route::redirect('/features', '/');
 Route::redirect('/billing', '/');
