@@ -147,6 +147,12 @@ export default function AdminLayout({ children, title }: Props) {
         setNotifications(auth.user?.notifications || []);
     }, [auth.user?.unread_notifications_count, auth.user?.notifications]);
 
+    // Force light mode for Admin panel
+    useEffect(() => {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+    }, []);
+
     // Close all open menus on navigation
     useEffect(() => {
         setNotificationOpen(false);
@@ -436,7 +442,7 @@ export default function AdminLayout({ children, title }: Props) {
     const sidebarWidth = isCollapsed ? 72 : 240;
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
+        <div className="min-h-screen bg-slate-50">
             {/* Mobile View Structure */}
             <div className="md:hidden">
                 <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200/50 bg-white/80 ring-1 ring-black/5 backdrop-blur-xl">
@@ -464,9 +470,7 @@ export default function AdminLayout({ children, title }: Props) {
                     <main className="min-h-screen pt-[calc(4rem+env(safe-area-inset-top))] pb-28">
                         <div className="p-4">
                             <PendingInvoiceNotification invoice={pendingInvoice} />
-                            <PullToRefresh>
-                                {children}
-                            </PullToRefresh>
+                            <PullToRefresh>{children}</PullToRefresh>
                         </div>
                     </main>
 
