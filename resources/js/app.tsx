@@ -113,6 +113,14 @@ createInertiaApp({
 
         // Handle Capacitor specific logic
         if (Capacitor.isNativePlatform()) {
+            // Set a cookie so that all browser document/page load requests include the native identifier
+            document.cookie = "is_native_app=true; path=/; max-age=31536000; SameSite=Lax; Secure";
+
+            // Add global header to all Inertia visits
+            router.on('before', (event) => {
+                event.detail.visit.headers['X-Capacitor-App'] = 'true';
+            });
+
             (async () => {
                 try {
                     await StatusBar.setStyle({ style: Style.Default });

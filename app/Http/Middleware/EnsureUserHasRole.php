@@ -41,11 +41,15 @@ class EnsureUserHasRole
                     $ua = $request->userAgent() ?? '';
                     $isNativeApp = false;
 
-                    // Appended custom UA check or iOS WKWebView check
-                    if (str_contains($ua, 'KontrolApp') || (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/'))) {
+                    // Check if request is authenticated as native via Header or Cookie, or falls back to UA checks
+                    if ($request->header('X-Capacitor-App') === 'true' || $request->cookie('is_native_app') === 'true') {
                         $isNativeApp = true;
                     }
-                    // Android WebView check
+                    // 1. Standard custom UA check or obvious mobile webview paths
+                    elseif (str_contains($ua, 'KontrolApp') || (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/'))) {
+                        $isNativeApp = true;
+                    }
+                    // 2. Android WebView check
                     elseif (str_contains($ua, '; wv)') || str_contains($ua, 'Version/4.0')) {
                         $isNativeApp = true;
                     }
