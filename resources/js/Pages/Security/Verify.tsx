@@ -2,6 +2,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import jsQR from 'jsqr';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 
@@ -60,19 +61,6 @@ export default function SecurityVerify() {
     const streamRef = useRef<MediaStream | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
-    const loadJSQR = (): Promise<any> => {
-        return new Promise((resolve, reject) => {
-            if ((window as any).jsQR) {
-                resolve((window as any).jsQR);
-                return;
-            }
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
-            script.onload = () => resolve((window as any).jsQR);
-            script.onerror = (err) => reject(err);
-            document.body.appendChild(script);
-        });
-    };
 
     useEffect(() => {
         if (flash?.validation_result) {
@@ -129,7 +117,6 @@ export default function SecurityVerify() {
                     await videoRef.current.play().catch(() => {});
                 }
 
-                let jsQRDec: any = null;
                 const hasNative = 'BarcodeDetector' in window;
                 let detector: any = null;
 
@@ -138,8 +125,6 @@ export default function SecurityVerify() {
                         detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
                     } catch {}
                 }
-
-                jsQRDec = await loadJSQR().catch(() => null);
 
                 // Create offscreen canvas asset layers ONCE to protect GPU memory context
                 const canvas = document.createElement('canvas');
@@ -181,9 +166,9 @@ export default function SecurityVerify() {
                         }
 
                         // 2. Secondary Fallback Engine Layer
-                        if (!decodedValue && jsQRDec && ctx) {
+                        if (!decodedValue && jsQR && ctx) {
                             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const codeObj = jsQRDec(imgData.data, imgData.width, imgData.height, {
+                            const codeObj = jsQR(imgData.data, imgData.width, imgData.height, {
                                 inversionAttempts: 'attemptInvert', // Patched to intercept low-light items
                             });
                             if (codeObj) decodedValue = codeObj.data;
