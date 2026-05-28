@@ -204,6 +204,10 @@ export default function SecurityVerify() {
 
     const stopScanning = () => {
         setIsScanning(false);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.srcObject = null;
+        }
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((track) => track.stop());
             streamRef.current = null;

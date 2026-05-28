@@ -2,6 +2,7 @@ import { Clipboard } from '@capacitor/clipboard';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import axios from 'axios';
+import { toPng } from 'html-to-image';
 import type { AccessCode } from '@/types/access-code';
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -18,10 +19,14 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 /**
- * Native sharing utility that utilizes Capacitor to fetch the QR Code,
- * attach it as a local file, and trigger the native system share sheet.
+ * Native sharing utility that utilizes Capacitor to either render the entire
+ * PassCard HTML element as a PNG image, or fall back to fetching the QR Code,
+ * and shares it via the native iOS/Android Share Sheet.
  */
-export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: string; estate_name?: string }) {
+export async function shareAccessCode(
+    accessCode: AccessCode & { pass_uuid?: string; estate_name?: string },
+    cardElement?: HTMLElement | null
+) {
     // Record sharing event in background
     axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
 
@@ -38,34 +43,52 @@ Access Code: ${accessCode.code}
 Valid Until: ${formattedExpiry}`;
 
     const title = 'Visitor Access Pass';
-
-    // Generate the QR code image url
-    const qrUrl = `kontrol://pass/${accessCode.pass_uuid}?token=${(accessCode as any).qr_token || ''}`;
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=0a3d91&bgcolor=ffffff&qzone=1`;
-
+    const fileName = `kontrol_pass_${accessCode.pass_uuid || accessCode.id}.png`;
     let nativeFileUri: string | null = null;
 
     try {
-        const response = await fetch(qrImageUrl);
-        const blob = await response.blob();
-        const base64Data = await blobToBase64(blob);
-        const fileName = `kontrol_pass_${accessCode.pass_uuid || accessCode.id}.png`;
-        
-        // Write temporary file to cache
-        await Filesystem.writeFile({
-            path: fileName,
-            data: base64Data,
-            directory: Directory.Cache,
-        });
+        let base64Data = '';
 
-        // Get URI for sharing
-        const uriResult = await Filesystem.getUri({
-            directory: Directory.Cache,
-            path: fileName,
-        });
-        nativeFileUri = uriResult.uri;
+        if (cardElement) {
+            // Render the entire HTML PassCard component to a high-definition PNG
+            const dataUrl = await toPng(cardElement, {
+                cacheBust: true,
+                pixelRatio: 3, // High definition for scanners
+                backgroundColor: '#0b0f19', // Match the dark card gradient base color
+                filter: (node) => {
+                    if (node.classList && node.classList.contains('share-exclude')) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            base64Data = dataUrl.split(',')[1];
+        } else {
+            // Fallback: Fetch only the QR code image
+            const qrUrl = `kontrol://pass/${accessCode.pass_uuid}?token=${(accessCode as any).qr_token || ''}`;
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=0a3d91&bgcolor=ffffff&qzone=1`;
+            const response = await fetch(qrImageUrl);
+            const blob = await response.blob();
+            base64Data = await blobToBase64(blob);
+        }
+
+        if (base64Data) {
+            // Write temporary file to cache
+            await Filesystem.writeFile({
+                path: fileName,
+                data: base64Data,
+                directory: Directory.Cache,
+            });
+
+            // Get URI for sharing
+            const uriResult = await Filesystem.getUri({
+                directory: Directory.Cache,
+                path: fileName,
+            });
+            nativeFileUri = uriResult.uri;
+        }
     } catch (e) {
-        console.error('Failed to prepare QR code image for sharing', e);
+        console.error('Failed to prepare pass card image for sharing', e);
     }
 
     try {

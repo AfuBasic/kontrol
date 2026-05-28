@@ -22,6 +22,8 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
+    const cardRef = useRef<HTMLDivElement>(null);
+
     async function copyCode() {
         try {
             await navigator.clipboard.writeText(accessCode.code);
@@ -30,7 +32,11 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         } catch {
             const textArea = document.createElement('textarea');
             textArea.value = accessCode.code;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '0';
             document.body.appendChild(textArea);
+            textArea.focus();
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
@@ -45,32 +51,29 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         }
     }
 
-    const loadMore = useCallback(() => {
+    const loadMoreLogs = useCallback(() => {
         if (!usageLogs.next_page_url || isLoadingMore.current) return;
 
         isLoadingMore.current = true;
-        router.get(
-            usageLogs.next_page_url,
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['usageLogs'],
-                onFinish: () => {
-                    isLoadingMore.current = false;
-                },
+        router.reload({
+            url: usageLogs.next_page_url,
+            preserveState: true,
+            preserveScroll: true,
+            only: ['usageLogs', 'filters'],
+            onFinish: () => {
+                isLoadingMore.current = false;
             },
-        );
+        });
     }, [usageLogs.next_page_url]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting) {
-                    loadMore();
+                    loadMoreLogs();
                 }
             },
-            { threshold: 0.1 },
+            { rootMargin: '100px' },
         );
 
         if (loadMoreRef.current) {
@@ -78,13 +81,12 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         }
 
         return () => observer.disconnect();
-    }, [loadMore]);
+    }, [loadMoreLogs]);
 
-    function handleDateFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const value = e.target.value;
-        setDateFilter(value);
-
-        router.get(resident.visitors.show.url(accessCode.id), value ? { date: value } : {}, {
+    function handleDateFilterChange(val: string) {
+        setDateFilter(val);
+        router.reload({
+            data: { date: val },
             preserveState: true,
             preserveScroll: true,
             only: ['usageLogs', 'filters'],
@@ -92,22 +94,13 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
     }
 
     function clearDateFilter() {
-        setDateFilter('');
-        router.get(
-            resident.visitors.show.url(accessCode.id),
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['usageLogs', 'filters'],
-            },
-        );
+        handleDateFilterChange('');
     }
 
     const [shareCopied, setShareCopied] = useState(false);
 
     async function handleShare() {
-        const result = await shareAccessCode(accessCode);
+        const result = await shareAccessCode(accessCode, cardRef.current);
         if (result?.method === 'copy' && result.success) {
             setShareCopied(true);
             setTimeout(() => setShareCopied(false), 3000);
@@ -142,7 +135,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                 </motion.p>
 
                 {/* Pass Card Display */}
-                <div className="mb-6 w-full max-w-sm px-2">
+                <div ref={cardRef} className="mb-6 w-full max-w-sm px-2">
                     <PassCard
                         pass={accessCode}
                         qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}

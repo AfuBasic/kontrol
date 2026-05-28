@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { AccessCode } from '@/types/access-code';
 import PassCard from '@/Components/Resident/PassCard';
@@ -13,6 +13,7 @@ type Props = {
 
 export default function CodeSuccess({ accessCode }: Props) {
     const [copied, setCopied] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
 
     async function copyCode() {
         try {
@@ -80,7 +81,7 @@ export default function CodeSuccess({ accessCode }: Props) {
                 </motion.p>
 
                 {/* Pass Card Display */}
-                <div className="mb-6 w-full max-w-sm px-2">
+                <div ref={cardRef} className="mb-6 w-full max-w-sm px-2">
                     <PassCard
                         pass={accessCode}
                         qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}
@@ -121,7 +122,7 @@ export default function CodeSuccess({ accessCode }: Props) {
                         )}
                     </button>
                     <button
-                        onClick={() => shareAccessCode(accessCode)}
+                        onClick={() => shareAccessCode(accessCode, cardRef.current)}
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-5 py-3.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98]"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

@@ -78,7 +78,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     <p className="text-[10px] font-black tracking-widest text-[#1f6fdb] uppercase">ESTATE</p>
                     <h2 className="text-lg font-bold text-white truncate">{pass.estate_name || 'My Estate'}</h2>
                 </div>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${statusBg}`}>
+                <div className={`share-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${statusBg}`}>
                     {statusIcon}
                     {statusLabel}
                 </div>
