@@ -212,6 +212,23 @@ createInertiaApp({
                 window.location.reload();
             }
         });
+
+        // Self-healing handler for Vite dynamic import failures (stale client-side assets)
+        window.addEventListener('error', (e) => {
+            const msg = e.message || '';
+            if (msg.includes('importing a module script failed') || msg.includes('Failed to fetch dynamically imported module')) {
+                console.warn('Vite asset load failed, forcing page reload...');
+                window.location.reload();
+            }
+        }, true);
+
+        window.addEventListener('unhandledrejection', (e) => {
+            const reason = e.reason;
+            if (reason && (reason.message?.includes('importing a module script failed') || reason.message?.includes('Failed to fetch dynamically imported module') || reason.message?.includes('dynamically imported module'))) {
+                console.warn('Vite asset promise rejection, forcing page reload...');
+                window.location.reload();
+            }
+        });
     },
     progress: {
         color: '#4B5563',
