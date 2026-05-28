@@ -55,10 +55,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     // Redirect to download app if accessing on a non-native web browser
     useEffect(() => {
-        if (!Capacitor.isNativePlatform()) {
+        const path = getPathFromUrl(currentPath);
+        const isBillingRoute = path.startsWith('/resident/billing') || path.startsWith('/billing');
+        if (!Capacitor.isNativePlatform() && !isBillingRoute) {
             router.visit('/download-app');
         }
-    }, []);
+    }, [currentPath]);
 
     const { flash } = usePage<SharedData>().props;
 

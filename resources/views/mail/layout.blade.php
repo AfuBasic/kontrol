@@ -171,6 +171,7 @@
 
         /* Dark Mode — Apple Mail, iOS Mail, Outlook iOS/Android, Samsung Email */
         @media (prefers-color-scheme: dark) {
+
             body,
             .wrapper {
                 background-color: #020617 !important;
@@ -226,11 +227,11 @@
                 <td style="padding: 40px 48px 0; text-align: center;">
                     <a href="{{ config('app.url') }}" target="_blank">
                         {{-- Light mode logo (default) --}}
-                        <img src="{{ config('app.url') }}/assets/images/kontrol-logo-horizontal.png"
-                            alt="Kontrol" class="logo logo-light" style="width: 160px; margin-bottom: 0; display: block;">
+                        <img src="{{ config('app.url') }}/assets/images/kontrol-logo-horizontal.png" alt="Kontrol"
+                            class="logo logo-light" style="width: 160px; margin-bottom: 0; display: block;">
                         {{-- Dark mode logo (shown when device is in dark mode) --}}
-                        <img src="{{ config('app.url') }}/assets/images/kontrol-white-logo-new.png"
-                            alt="Kontrol" class="logo logo-dark" style="width: 160px; margin-bottom: 0; display: none;">
+                        <img src="{{ config('app.url') }}/assets/images/kontrol-white-logo-new.png" alt="Kontrol"
+                            class="logo logo-dark" style="width: 160px; margin-bottom: 0; display: none;">
                     </a>
                 </td>
             </tr>

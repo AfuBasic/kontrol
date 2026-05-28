@@ -14,9 +14,11 @@ class LandingController extends Controller
      */
     public function index(): Response
     {
-        $plans = Plan::with(['features' => function ($query) {
-            $query->wherePivot('is_enabled', true);
-        }])
+        $plans = Plan::with([
+            'features' => function ($query) {
+                $query->wherePivot('is_enabled', true);
+            },
+        ])
             ->where('visibility', 'public')
             ->where('is_active', true)
             ->orderBy('sort_order')

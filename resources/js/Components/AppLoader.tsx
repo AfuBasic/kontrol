@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 
 interface Props {
     isExiting: boolean;
@@ -21,14 +20,14 @@ export default function AppLoader({ isExiting }: Props) {
                 >
                     <img src="/assets/images/kontrol.png" alt="Kontrol" className="h-40 w-auto object-contain" />
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '40px' }}
-                    transition={{ delay: 0.4, duration: 1.5, ease: "easeInOut" }}
-                    className="mt-12 h-[2px] bg-indigo-600 rounded-full"
+                    transition={{ delay: 0.4, duration: 1.5, ease: 'easeInOut' }}
+                    className="mt-12 h-[2px] rounded-full bg-indigo-600"
                 />
-                
+
                 <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
