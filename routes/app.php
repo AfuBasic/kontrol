@@ -6,6 +6,7 @@
  * Entry point for the authenticated SaaS application (app.kontrol.test).
  */
 
+use App\Http\Controllers\Web\LandingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,8 @@ if (config('domains.routing_enabled', true)) {
         return redirect()->route('login');
     });
 }
+
+Route::get('/autologin', [LandingController::class, 'autologin'])->name('autologin');
 
 /*
 |--------------------------------------------------------------------------
