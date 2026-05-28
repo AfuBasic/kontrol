@@ -104,7 +104,7 @@ export default function SecurityVerify() {
         );
     }, []);
 
-    // FIXED: Unified Lifecycle Management via UseEffect
+    // FIXED: Unified Sequential Processing Pipeline
     useEffect(() => {
         if (!isScanning) return;
 
@@ -139,30 +139,36 @@ export default function SecurityVerify() {
                     } catch {}
                 }
 
-                if (!detector) {
-                    jsQRDec = await loadJSQR().catch(() => null);
-                }
+                jsQRDec = await loadJSQR().catch(() => null);
 
+                // Create offscreen canvas asset layers ONCE to protect GPU memory context
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                let dimensionsSet = false;
 
                 const scanFrame = async () => {
-                    // FIX 1: Explicit Kill Switch. If scanning state turns false, break the frame loops immediately.
+                    // Check absolute kill switches before executing evaluation cycle
                     if (!isComponentActive || !isScanning) return;
 
-                    if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) {
+                    const video = videoRef.current;
+                    if (!video || video.paused || video.ended) {
+                        // Safe loop re-entry point if video device is temporarily buffer-cycling
                         animationFrameRef.current = requestAnimationFrame(scanFrame);
                         return;
                     }
 
-                    const video = videoRef.current;
                     if (video.videoWidth > 0 && video.videoHeight > 0) {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        // Set dimensions once instead of thrashing backing stores on every tick
+                        if (!dimensionsSet || canvas.width !== video.videoWidth) {
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            dimensionsSet = true;
+                        }
 
+                        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
                         let decodedValue = '';
 
+                        // 1. Primary Native Evaluation Route
                         if (detector) {
                             try {
                                 const barcodes = await detector.detect(canvas);
@@ -170,25 +176,28 @@ export default function SecurityVerify() {
                                     decodedValue = barcodes[0].rawValue;
                                 }
                             } catch (e) {
-                                if (!jsQRDec) jsQRDec = await loadJSQR().catch(() => null);
+                                console.warn('Native barcode matching slipped, using jsQR fallback.');
                             }
                         }
 
+                        // 2. Secondary Fallback Engine Layer
                         if (!decodedValue && jsQRDec && ctx) {
                             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                             const codeObj = jsQRDec(imgData.data, imgData.width, imgData.height, {
-                                inversionAttempts: 'dontInvert',
+                                inversionAttempts: 'attemptInvert', // Patched to intercept low-light items
                             });
                             if (codeObj) decodedValue = codeObj.data;
                         }
 
                         if (decodedValue) {
                             if (navigator.vibrate) navigator.vibrate(150);
-                            setIsScanning(false); // This cleanup handles execution loops
+                            setIsScanning(false); // Shuts down execution blocks cleanly
                             submit(decodedValue);
-                            return;
+                            return; // Terminates loop sequence
                         }
                     }
+
+                    // FIXED: Schedule the next evaluation frame ONLY when processing has fully finished
                     animationFrameRef.current = requestAnimationFrame(scanFrame);
                 };
 
@@ -200,14 +209,12 @@ export default function SecurityVerify() {
             }
         };
 
-        // Delay execution slightly to let Framer Motion mount the layout node smoothly
-        const initTimeout = setTimeout(startCameraAndScan, 150);
+        const initTimeout = setTimeout(startCameraAndScan, 200);
 
         return () => {
             isComponentActive = false;
             clearTimeout(initTimeout);
 
-            // Clean up native hardware elements completely
             if (videoRef.current) {
                 videoRef.current.pause();
                 videoRef.current.srcObject = null;
@@ -325,7 +332,13 @@ export default function SecurityVerify() {
                             <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Scan Visitor QR Pass</h1>
 
                             <div className="relative mt-8 h-80 w-80 overflow-hidden rounded-[2.5rem] bg-black shadow-2xl ring-4 ring-indigo-500/20">
-                                <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
+                                <video
+                                    ref={videoRef}
+                                    className="h-full w-full object-cover"
+                                    playsInline
+                                    autoPlay // Added to guarantee runtime thread pickup by default
+                                    muted
+                                />
                                 <div className="absolute inset-x-0 top-0 h-1 animate-[scan_2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399]" />
                                 <div className="absolute top-6 left-6 h-6 w-6 rounded-tl-md border-t-4 border-l-4 border-white/80" />
                                 <div className="absolute top-6 right-6 h-6 w-6 rounded-tr-md border-t-4 border-r-4 border-white/80" />
