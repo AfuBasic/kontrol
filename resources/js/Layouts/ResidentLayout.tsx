@@ -57,9 +57,19 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     useEffect(() => {
         const path = getPathFromUrl(currentPath);
         const isBillingRoute = path.startsWith('/resident/billing') || path.startsWith('/billing');
-        if (!Capacitor.isNativePlatform() && !isBillingRoute) {
-            router.visit('/download-app');
-        }
+        
+        const timer = setTimeout(() => {
+            const isNative = Capacitor.isNativePlatform() || 
+                             (window as any).Capacitor?.platform === 'ios' || 
+                             (window as any).Capacitor?.platform === 'android' ||
+                             (window as any).webkit?.messageHandlers !== undefined;
+
+            if (!isNative && !isBillingRoute) {
+                router.visit('/download-app');
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
     }, [currentPath]);
 
     const { flash } = usePage<SharedData>().props;

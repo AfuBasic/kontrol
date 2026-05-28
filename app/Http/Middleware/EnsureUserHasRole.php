@@ -41,8 +41,8 @@ class EnsureUserHasRole
                     $ua = $request->userAgent() ?? '';
                     $isNativeApp = false;
 
-                    // iOS WKWebView check
-                    if (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/')) {
+                    // Appended custom UA check or iOS WKWebView check
+                    if (str_contains($ua, 'KontrolApp') || (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/'))) {
                         $isNativeApp = true;
                     }
                     // Android WebView check

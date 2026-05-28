@@ -127,8 +127,7 @@ createInertiaApp({
                         }
                     });
 
-                    // Handle Universal Links / Deep Links (The "Snap" Handshake)
-                    CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+                    const handleDeepLink = (url: string) => {
                         try {
                             // Extract path from various URL formats (The "Smart Router")
                             let path = '';
@@ -157,6 +156,18 @@ createInertiaApp({
                         } catch (err) {
                             console.error('Deep link routing failed:', err);
                             SplashScreen.hide().catch(() => {});
+                        }
+                    };
+
+                    // Handle Universal Links / Deep Links (The "Snap" Handshake)
+                    CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+                        handleDeepLink(url);
+                    });
+
+                    // Check for a launch URL on cold start (when app is opened while not running)
+                    CapacitorApp.getLaunchUrl().then((launchUrl) => {
+                        if (launchUrl?.url) {
+                            handleDeepLink(launchUrl.url);
                         }
                     });
 

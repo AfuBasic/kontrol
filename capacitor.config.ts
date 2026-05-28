@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
     appName: 'Kontrol',
     webDir: 'public',
+    appendUserAgent: ' KontrolApp',
     // loggingBehavior: isDev ? 'debug' : 'none',
     server: {
         url: isDev ? devUrl : 'https://app.usekontrol.com',
