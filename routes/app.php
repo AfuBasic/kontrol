@@ -21,7 +21,9 @@ if (config('domains.routing_enabled', true)) {
     });
 }
 
-Route::get('/autologin', [LandingController::class, 'autologin'])->name('autologin');
+if (! Route::getRoutes()->hasNamedRoute('autologin')) {
+    Route::get('/autologin', [LandingController::class, 'autologin'])->name('autologin');
+}
 
 /*
 |--------------------------------------------------------------------------
