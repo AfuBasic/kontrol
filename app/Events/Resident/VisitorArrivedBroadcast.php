@@ -4,6 +4,7 @@ namespace App\Events\Resident;
 
 use App\Models\AccessCode;
 use App\Models\User;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -20,12 +21,13 @@ class VisitorArrivedBroadcast implements ShouldBroadcastNow
     ) {}
 
     /**
-     * @return array<int, PrivateChannel>
+     * @return array<int, Channel|PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel('App.Models.User.'.$this->user->id),
+            new Channel('pass.'.$this->accessCode->pass_uuid),
         ];
     }
 

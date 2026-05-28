@@ -102,13 +102,15 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     {/* Visual lock status */}
                     {!isActive && (
                         <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-4 text-center backdrop-blur-xs">
-                            {isRevoked ? (
+                            {isUsed ? (
+                                <CheckCircle2 className="h-10 w-10 text-emerald-500 mb-2" strokeWidth={2.5} />
+                            ) : isRevoked ? (
                                 <XCircle className="h-10 w-10 text-rose-500 mb-2" />
                             ) : (
                                 <Clock className="h-10 w-10 text-rose-500 mb-2" />
                             )}
-                            <p className="text-xs font-black text-rose-400 tracking-wider uppercase">
-                                {isRevoked ? 'Pass Revoked' : 'Pass Expired'}
+                            <p className={`text-xs font-black tracking-wider uppercase ${isUsed ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {isUsed ? 'Visitor Admitted' : isRevoked ? 'Pass Revoked' : 'Pass Expired'}
                             </p>
                         </div>
                     )}
