@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\MagicLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\PublicPassController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Web\CollectionPaymentController;
@@ -109,3 +110,4 @@ Route::post('/billing/collection/{assignment}/initiate', [CollectionPaymentContr
 Route::post('/billing/collection/verify/{reference}', [CollectionPaymentController::class, 'verify'])->name('web.billing.collection.verify');
 
 Route::get('/download-app', [LandingController::class, 'downloadApp'])->name('landing.download');
+Route::get('/pass/{uuid}', [PublicPassController::class, 'show'])->name('public.pass');

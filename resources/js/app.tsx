@@ -10,6 +10,7 @@ import '../css/app.css';
 import './echo';
 
 import AppLoader from './Components/AppLoader';
+import AppErrorBoundary from './Components/ErrorBoundary/AppErrorBoundary';
 import RouteProgressBar from './Components/UI/RouteProgressBar';
 import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
@@ -37,8 +38,6 @@ const SecurityLayoutWrapper = (page: React.ReactNode) => (
 );
 
 const DefaultLayoutWrapper = (page: React.ReactNode) => <AnimatedLayout>{page}</AnimatedLayout>;
-
-import AppErrorBoundary from './Components/ErrorBoundary/AppErrorBoundary';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -114,7 +113,7 @@ createInertiaApp({
         // Handle Capacitor specific logic
         if (Capacitor.isNativePlatform()) {
             // Set a cookie so that all browser document/page load requests include the native identifier
-            document.cookie = "is_native_app=true; path=/; max-age=31536000; SameSite=Lax; Secure";
+            document.cookie = 'is_native_app=true; path=/; max-age=31536000; SameSite=Lax; Secure';
 
             // Add global header to all Inertia visits
             router.on('before', (event) => {
@@ -155,7 +154,7 @@ createInertiaApp({
                                 if (path.startsWith('/autologin')) {
                                     const absoluteUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
                                     window.location.href = absoluteUrl;
-                                    
+
                                     // Hide splash screen after initiating load
                                     setTimeout(() => {
                                         SplashScreen.hide().catch(() => {});
@@ -214,17 +213,26 @@ createInertiaApp({
         });
 
         // Self-healing handler for Vite dynamic import failures (stale client-side assets)
-        window.addEventListener('error', (e) => {
-            const msg = e.message || '';
-            if (msg.includes('importing a module script failed') || msg.includes('Failed to fetch dynamically imported module')) {
-                console.warn('Vite asset load failed, forcing page reload...');
-                window.location.reload();
-            }
-        }, true);
+        window.addEventListener(
+            'error',
+            (e) => {
+                const msg = e.message || '';
+                if (msg.includes('importing a module script failed') || msg.includes('Failed to fetch dynamically imported module')) {
+                    console.warn('Vite asset load failed, forcing page reload...');
+                    window.location.reload();
+                }
+            },
+            true,
+        );
 
         window.addEventListener('unhandledrejection', (e) => {
             const reason = e.reason;
-            if (reason && (reason.message?.includes('importing a module script failed') || reason.message?.includes('Failed to fetch dynamically imported module') || reason.message?.includes('dynamically imported module'))) {
+            if (
+                reason &&
+                (reason.message?.includes('importing a module script failed') ||
+                    reason.message?.includes('Failed to fetch dynamically imported module') ||
+                    reason.message?.includes('dynamically imported module'))
+            ) {
                 console.warn('Vite asset promise rejection, forcing page reload...');
                 window.location.reload();
             }

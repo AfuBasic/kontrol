@@ -85,5 +85,7 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Kontrol requires camera access to scan visitor QR passes at the security gate.</string>
 </dict>
 </plist>
