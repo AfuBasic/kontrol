@@ -215,8 +215,19 @@ export default function PassCard({ pass, qrUrl }: Props) {
                             </p>
                         </div>
                     )}
-                    {/* Single image with logo already composited in via canvas — exports correctly with html-to-image */}
+                    {/* QR image — uses canvas-composited version when available (for sharing), plain QR otherwise */}
                     <img src={displayQrSrc} alt="Access QR Code" className="block h-36 w-36" />
+
+                    {/* Logo overlay — shown while canvas compositing is in progress or unavailable */}
+                    {isActive && !compositeQrUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <img
+                                src={KONTROL_LOGO_BASE64}
+                                alt="Kontrol"
+                                className="h-8 w-8 object-contain"
+                            />
+                        </div>
+                    )}
                 </div>
                 <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
             </div>
