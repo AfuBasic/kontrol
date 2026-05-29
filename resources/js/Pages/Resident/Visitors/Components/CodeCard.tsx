@@ -28,7 +28,11 @@ type Props = {
 export default function CodeCard({ code, showActions = false, onRevoke }: Props) {
     const [copying, setCopying] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
-    const status = getStatusInfo(code.status);
+
+    // Compute effective status based on chronological expiration
+    const isExpired = code.expires_at ? new Date(code.expires_at) < new Date() : false;
+    const effectiveStatus = code.status === 'active' && isExpired ? 'expired' : code.status;
+    const status = getStatusInfo(effectiveStatus);
 
     async function copyCode() {
         try {
@@ -63,7 +67,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         <div
                             className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-100 transition-colors group-hover:bg-indigo-50 group-hover:ring-indigo-100`}
                         >
-                            {code.status === 'active' ? (
+                            {effectiveStatus === 'active' ? (
                                 <Zap className="h-7 w-7 text-emerald-500" fill="currentColor" />
                             ) : (
                                 <status.icon className={`h-7 w-7 ${status.color.replace('400', '600')}`} />
@@ -126,7 +130,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                     </div>
                 </Link>
 
-                {showActions && code.status === 'active' && (
+                {showActions && effectiveStatus === 'active' && (
                     <motion.button
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
@@ -171,7 +175,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         </div>
                     </button>
 
-                    {code.status === 'active' && (
+                    {effectiveStatus === 'active' && (
                         <>
                             <button
                                 onClick={() => {

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Clock, ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface PassData {
     id: number;
@@ -25,6 +25,22 @@ interface Props {
 
 export default function PassCard({ pass, qrUrl }: Props) {
     const [viewNotes, setViewNotes] = useState(false);
+    const [logoBase64, setLogoBase64] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Pre-load and convert the local logo to a Base64 data URL so html-to-image is guaranteed to capture it
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                setLogoBase64(reader.result as string);
+            };
+            reader.readAsDataURL(xhr.response);
+        };
+        xhr.open('GET', '/assets/images/kontrol-transparent.png');
+        xhr.responseType = 'blob';
+        xhr.send();
+    }, []);
 
     // Format dates nicely
     const expiryDate = pass.expires_at ? new Date(pass.expires_at) : null;
@@ -150,11 +166,10 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     <img src={qrImageUrl} alt="Access QR Code" className="block h-36 w-36" />
 
                     {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
-                    {isActive && (
+                    {isActive && logoBase64 && (
                         <div className="absolute top-1/2 left-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-100/50 bg-white p-0.5 shadow-md">
                             <img
-                                src={`${window.location.origin}/assets/images/kontrol-transparent.png`}
-                                crossOrigin="anonymous"
+                                src={logoBase64}
                                 alt="Kontrol"
                                 className="h-4.5 w-4.5 object-contain"
                             />

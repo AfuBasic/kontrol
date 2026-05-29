@@ -37,7 +37,7 @@ export default function VisitorPass({ pass, qr_url }: Props) {
 
             {/* Sticky Security Personnel Navigation */}
             {isSecurity && (
-                <div className="pt-safe sticky top-0 bg-[#0b1626]/95 backdrop-blur-md border-b border-[#1f6fdb]/30 text-slate-300 px-4 py-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider z-20 shadow-lg">
+                <div className="pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-3 px-4 sticky top-0 bg-[#0b1626]/95 backdrop-blur-md border-b border-[#1f6fdb]/30 text-slate-300 flex items-center justify-between text-xs font-bold uppercase tracking-wider z-20 shadow-lg">
                     <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span>Gate Console</span>
