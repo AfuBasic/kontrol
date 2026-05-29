@@ -40,6 +40,16 @@ class VerifyController extends Controller
         );
 
         if ($result['valid']) {
+            // Check in immediately upon successful validation
+            $log = $this->recordCheckInAction->execute(
+                code: $request->validated('code'),
+                estateId: $estate->id,
+                verifiedBy: $user,
+                vehicleData: []
+            );
+
+            $result['access_log_id'] = $log->id;
+
             return back()->with([
                 'success' => "Code Verified: Found access code for {$result['visitor_name']}.",
                 'validation_result' => $result,
@@ -73,12 +83,20 @@ class VerifyController extends Controller
             ->log('Security guard recorded entry decision');
 
         if ($request->input('decision') === 'admit') {
-            $this->recordCheckInAction->execute(
-                code: $request->input('code'),
-                estateId: $estate->id,
-                verifiedBy: $user,
-                vehicleData: $request->only(['vehicle_make', 'vehicle_model', 'vehicle_plate_number'])
-            );
+            if ($request->filled('access_log_id')) {
+                \App\Models\AccessLog::where('id', $request->input('access_log_id'))->update([
+                    'vehicle_make' => $request->input('vehicle_make'),
+                    'vehicle_model' => $request->input('vehicle_model'),
+                    'vehicle_plate_number' => $request->input('vehicle_plate_number'),
+                ]);
+            } else {
+                $this->recordCheckInAction->execute(
+                    code: $request->input('code'),
+                    estateId: $estate->id,
+                    verifiedBy: $user,
+                    vehicleData: $request->only(['vehicle_make', 'vehicle_model', 'vehicle_plate_number'])
+                );
+            }
         }
 
         return back();

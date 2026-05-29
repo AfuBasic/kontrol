@@ -18,6 +18,7 @@ type ValidationResult = {
     expires_at: string | null;
     code_type: string | null;
     has_vehicle: boolean;
+    access_log_id?: number | null;
 };
 
 interface PageProps {
@@ -301,7 +302,7 @@ export default function SecurityVerify() {
                         <ResultPanel
                             key="result"
                             result={result}
-                            onAdmit={(data) => recordDecision('admit', data)}
+                            onAdmit={(data) => recordDecision('admit', { ...data, access_log_id: result.access_log_id })}
                             onReject={(data) => recordDecision('reject', data)}
                             onReset={reset}
                         />

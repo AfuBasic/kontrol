@@ -18,12 +18,37 @@ class RecordCheckInAction
     public function execute(string $code, int $estateId, User $verifiedBy, array $vehicleData = []): AccessLog
     {
         return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData) {
-            $accessCode = AccessCode::query()
-                ->forEstate($estateId)
-                ->where('code', $code)
-                ->with('user:id,name,email,fcm_token')
-                ->lockForUpdate()
-                ->firstOrFail();
+            $passUuid = null;
+            $qrToken = null;
+
+            if (str_starts_with($code, 'kontrol://pass/')) {
+                $parsed = parse_url($code);
+                if ($parsed && isset($parsed['path'])) {
+                    $pathParts = explode('/', trim($parsed['path'], '/'));
+                    $passUuid = end($pathParts);
+                }
+                if (isset($parsed['query'])) {
+                    parse_str($parsed['query'], $queryParams);
+                    $qrToken = $queryParams['token'] ?? null;
+                }
+            }
+
+            if ($passUuid && $qrToken) {
+                $accessCode = AccessCode::query()
+                    ->forEstate($estateId)
+                    ->where('pass_uuid', $passUuid)
+                    ->where('qr_token', $qrToken)
+                    ->with('user:id,name,email,fcm_token')
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            } else {
+                $accessCode = AccessCode::query()
+                    ->forEstate($estateId)
+                    ->where('code', $code)
+                    ->with('user:id,name,email,fcm_token')
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
 
             $settings = EstateSettings::forEstate($estateId);
             $forceSingleUse = $settings->access_code_single_use;
