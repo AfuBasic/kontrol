@@ -160,7 +160,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                             <img
                                 src={KONTROL_LOGO_BASE64}
                                 alt="Kontrol"
-                                className="h-6.5 w-6.5 object-contain"
+                                className="h-6 w-6 object-contain"
                             />
                         </div>
                     )}
