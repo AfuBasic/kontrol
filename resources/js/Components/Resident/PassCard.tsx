@@ -151,13 +151,16 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     )}
                     <img src={qrImageUrl} alt="Access QR Code" className="block h-36 w-36" />
 
-                    {/* Centered logo — no white background, just the transparent logo over the QR */}
+                    {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
                     {isActive && (
-                        <div className="absolute top-[68px] left-[68px] flex h-8 w-8 items-center justify-center">
+                        <div 
+                            className="absolute flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm"
+                            style={{ top: '68px', left: '68px', zIndex: 10 }}
+                        >
                             <img
                                 src={KONTROL_LOGO_BASE64}
                                 alt="Kontrol"
-                                className="h-7 w-7 object-contain"
+                                className="h-6.5 w-6.5 object-contain"
                             />
                         </div>
                     )}

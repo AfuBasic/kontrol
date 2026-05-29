@@ -10,7 +10,7 @@ export default function AppLoader({ isExiting }: Props) {
             initial={{ opacity: 1 }}
             animate={{ opacity: isExiting ? 0 : 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-white"
+            className="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-white"
         >
             <div className="relative flex flex-col items-center">
                 <motion.div
