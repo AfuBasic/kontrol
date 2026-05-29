@@ -6,6 +6,7 @@ use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\ValidateAccessCodeAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\ValidateAccessCodeRequest;
+use App\Models\AccessLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,7 +46,8 @@ class VerifyController extends Controller
                 code: $request->validated('code'),
                 estateId: $estate->id,
                 verifiedBy: $user,
-                vehicleData: []
+                vehicleData: [],
+                verificationMethod: $request->validated('source')
             );
 
             $result['access_log_id'] = $log->id;
@@ -84,7 +86,7 @@ class VerifyController extends Controller
 
         if ($request->input('decision') === 'admit') {
             if ($request->filled('access_log_id')) {
-                \App\Models\AccessLog::where('id', $request->input('access_log_id'))->update([
+                AccessLog::where('id', $request->input('access_log_id'))->update([
                     'vehicle_make' => $request->input('vehicle_make'),
                     'vehicle_model' => $request->input('vehicle_model'),
                     'vehicle_plate_number' => $request->input('vehicle_plate_number'),

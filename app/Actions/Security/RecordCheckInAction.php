@@ -15,9 +15,9 @@ class RecordCheckInAction
     /**
      * Record a visitor check-in.
      */
-    public function execute(string $code, int $estateId, User $verifiedBy, array $vehicleData = []): AccessLog
+    public function execute(string $code, int $estateId, User $verifiedBy, array $vehicleData = [], ?string $verificationMethod = null): AccessLog
     {
-        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData) {
+        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData, $verificationMethod) {
             $passUuid = null;
             $qrToken = null;
 
@@ -77,6 +77,7 @@ class RecordCheckInAction
                     'host_id' => $accessCode->user_id,
                     'enforced_single_use' => $forceSingleUse,
                     'original_type' => $accessCode->type,
+                    'verification_method' => $verificationMethod,
                 ],
             ]);
 

@@ -78,13 +78,13 @@ export default function SecurityVerify() {
         }
     }, [result, isScanning]);
 
-    const submit = useCallback((code: string) => {
+    const submit = useCallback((code: string, source?: 'scanned' | 'typed') => {
         if (submittedFor.current === code) return;
         submittedFor.current = code;
         setSubmitting(true);
         router.post(
             VerifyController.validate.url(),
-            { code },
+            { code, source },
             {
                 preserveScroll: true,
                 onFinish: () => setSubmitting(false),
@@ -177,7 +177,7 @@ export default function SecurityVerify() {
                         if (decodedValue) {
                             if (navigator.vibrate) navigator.vibrate(150);
                             setIsScanning(false); // Shuts down execution blocks cleanly
-                            submit(decodedValue);
+                            submit(decodedValue, 'scanned');
                             return; // Terminates loop sequence
                         }
                     }

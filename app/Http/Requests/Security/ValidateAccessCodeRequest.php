@@ -15,6 +15,7 @@ class ValidateAccessCodeRequest extends FormRequest
     {
         return [
             'code' => ['required', 'string', 'min:4', 'max:255'],
+            'source' => ['nullable', 'string', 'in:scanned,typed'],
         ];
     }
 

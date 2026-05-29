@@ -72,7 +72,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     });
 
     // Estate Board (read-only + comments)
-    Route::prefix('estate-board')->name('resident.estate-board.')->middleware('check-estate-feature:interactive-notice-board')->group(function (): void {
+    Route::prefix('estate-board')->name('resident.estate-board.')->middleware(['check-estate-feature:interactive-notice-board', 'resident.active'])->group(function (): void {
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
         Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
 
@@ -95,8 +95,10 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 
     // Emergency Contacts Management
     Route::prefix('emergency-contacts')->name('resident.emergency-contacts.')->group(function (): void {
-        Route::post('/', [EmergencyContactController::class, 'store'])->name('store');
-        Route::delete('/{emergencyContact}', [EmergencyContactController::class, 'destroy'])->name('destroy');
+        Route::middleware('resident.active')->group(function (): void {
+            Route::post('/', [EmergencyContactController::class, 'store'])->name('store');
+            Route::delete('/{emergencyContact}', [EmergencyContactController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 
@@ -125,8 +127,10 @@ Route::middleware('role:resident')->group(function (): void {
     // Household Management
     Route::prefix('household')->name('resident.household.')->middleware('check-estate-feature:household-management')->group(function (): void {
         Route::get('/', [HouseholdMemberController::class, 'index'])->name('index');
-        Route::middleware('resident.active')->post('/', [HouseholdMemberController::class, 'store'])->name('store');
+        Route::middleware('resident.active')->group(function (): void {
+            Route::post('/', [HouseholdMemberController::class, 'store'])->name('store');
+            Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
+        });
         Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
-        Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
     });
 });
