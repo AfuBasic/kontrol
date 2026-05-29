@@ -152,7 +152,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
                     {isActive && (
                         <div className="absolute top-1/2 left-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-100/50 bg-white p-0.5 shadow-md">
-                            <img src="/assets/kontrol-transparent.png" alt="Kontrol" className="h-4.5 w-4.5 object-contain" />
+                            <img src="/assets/images/kontrol-transparent.png" alt="Kontrol" className="h-4.5 w-4.5 object-contain" />
                         </div>
                     )}
                 </div>
