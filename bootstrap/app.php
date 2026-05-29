@@ -16,7 +16,6 @@ use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 use Inertia\Inertia;
 use Sentry\Laravel\Integration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
