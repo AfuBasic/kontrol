@@ -132,7 +132,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
 
             {/* QR Code Segment */}
             <div className="relative flex flex-col items-center justify-center bg-slate-50/50 px-5 py-4">
-                <div className="relative overflow-hidden rounded-2xl bg-white p-3 shadow-xl ring-4 ring-primary-500/5 transition-all hover:scale-102">
+                <div className="relative overflow-hidden rounded-2xl bg-white p-3 ring-4 ring-primary-500/5 transition-all hover:scale-102">
                     {/* Visual lock status */}
                     {!isActive && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
@@ -152,15 +152,11 @@ export default function PassCard({ pass, qrUrl }: Props) {
 
                     {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
                     {isActive && (
-                        <div 
-                            className="absolute flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm"
+                        <div
+                            className="absolute flex items-center justify-center rounded-lg bg-white p-1"
                             style={{ top: '68px', left: '68px', zIndex: 10 }}
                         >
-                            <img
-                                src={KONTROL_LOGO_BASE64}
-                                alt="Kontrol"
-                                className="h-6 w-6 object-contain"
-                            />
+                            <img src={KONTROL_LOGO_BASE64} alt="Kontrol" className="h-6 w-6 object-contain" />
                         </div>
                     )}
                 </div>
