@@ -19,6 +19,7 @@ const PERMISSIONS = ['Validate visitor access codes', 'Acknowledge & dismiss ale
 
 export default function ProfilePage({ user, estateName }: Props) {
     const [editOpen, setEditOpen] = useState(false);
+    const [editMode, setEditMode] = useState<'profile' | 'password'>('profile');
     const [logoutConfirm, setLogoutConfirm] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
 
@@ -100,13 +101,19 @@ export default function ProfilePage({ user, estateName }: Props) {
                     icon={<Pencil className="h-4 w-4" strokeWidth={2.2} />}
                     label="Edit profile"
                     sub="Name and security details"
-                    onClick={() => setEditOpen(true)}
+                    onClick={() => {
+                        setEditMode('profile');
+                        setEditOpen(true);
+                    }}
                 />
                 <ActionRow
                     icon={<KeyRound className="h-4 w-4" strokeWidth={2.2} />}
                     label="Change password"
                     sub="Update your sign-in password"
-                    onClick={() => setEditOpen(true)}
+                    onClick={() => {
+                        setEditMode('password');
+                        setEditOpen(true);
+                    }}
                 />
             </section>
 
@@ -144,7 +151,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                 )}
             </section>
 
-            <EditSheet open={editOpen} onClose={() => setEditOpen(false)} user={user} />
+            <EditSheet open={editOpen} onClose={() => setEditOpen(false)} user={user} mode={editMode} />
         </>
     );
 }
@@ -178,7 +185,7 @@ function ActionRow({ icon, label, sub, onClick }: { icon: React.ReactNode; label
     );
 }
 
-function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void; user: Props['user'] }) {
+function EditSheet({ open, onClose, user, mode }: { open: boolean; onClose: () => void; user: Props['user']; mode: 'profile' | 'password' }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const { data, setData, put, processing, errors, reset, recentlySuccessful } = useForm({
@@ -230,8 +237,12 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-200" />
                         <header className="flex items-center justify-between px-5 pt-3 pb-2">
                             <div>
-                                <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Edit</p>
-                                <h2 className="text-base font-semibold tracking-tight text-slate-900">Update profile</h2>
+                                <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                                    {mode === 'password' ? 'Security' : 'Edit'}
+                                </p>
+                                <h2 className="text-base font-semibold tracking-tight text-slate-900">
+                                    {mode === 'password' ? 'Change password' : 'Update profile'}
+                                </h2>
                             </div>
                             <button
                                 onClick={onClose}
@@ -243,64 +254,67 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                         </header>
  
                         <form onSubmit={handleSubmit} className="space-y-4 px-5 pt-2 pb-6">
-                            <FormField label="Name" error={errors.name}>
-                                <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
-                                />
-                            </FormField>
-
-                            {data.password && (
-                                <FormField label="Current password" error={errors.current_password as string | undefined}>
+                            {mode === 'profile' && (
+                                <FormField label="Name" error={errors.name}>
                                     <input
-                                        type="password"
-                                        value={data.current_password}
-                                        onChange={(e) => setData('current_password', e.target.value)}
-                                        placeholder="Confirm your old password"
-                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
                                     />
                                 </FormField>
                             )}
- 
-                            <FormField label="New password" error={errors.password}>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="Leave blank to keep current"
-                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword((v) => !v)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
-                                    >
-                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                            </FormField>
- 
-                            {data.password && (
-                                <FormField label="Confirm password" error={errors.password_confirmation as string | undefined}>
-                                    <div className="relative">
+
+                            {mode === 'password' && (
+                                <>
+                                    <FormField label="Old password" error={errors.current_password as string | undefined}>
                                         <input
-                                            type={showConfirm ? 'text' : 'password'}
-                                            value={data.password_confirmation}
-                                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 transition focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                            type="password"
+                                            value={data.current_password}
+                                            onChange={(e) => setData('current_password', e.target.value)}
+                                            placeholder="Enter your current password"
+                                            className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirm((v) => !v)}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
-                                        >
-                                            {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    </div>
-                                </FormField>
+                                    </FormField>
+ 
+                                    <FormField label="New password" error={errors.password}>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={data.password}
+                                                onChange={(e) => setData('password', e.target.value)}
+                                                placeholder="Enter a new password"
+                                                className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword((v) => !v)}
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                                            >
+                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </FormField>
+ 
+                                    <FormField label="Confirm password" error={errors.password_confirmation as string | undefined}>
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirm ? 'text' : 'password'}
+                                                value={data.password_confirmation}
+                                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                                placeholder="Confirm your new password"
+                                                className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirm((v) => !v)}
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                                            >
+                                                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </FormField>
+                                </>
                             )}
 
                             {recentlySuccessful && (
