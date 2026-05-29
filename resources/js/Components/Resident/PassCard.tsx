@@ -28,18 +28,21 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const [logoBase64, setLogoBase64] = useState<string | null>(null);
 
     useEffect(() => {
-        // Pre-load and convert the local logo to a Base64 data URL so html-to-image is guaranteed to capture it
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-            const reader = new FileReader();
-            reader.onloadend = function () {
-                setLogoBase64(reader.result as string);
-            };
-            reader.readAsDataURL(xhr.response);
+        const convertLogoToBase64 = async () => {
+            try {
+                const response = await fetch('/assets/images/kontrol-transparent.png');
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setLogoBase64(reader.result as string);
+                };
+                reader.readAsDataURL(blob);
+            } catch (err) {
+                console.error('Failed to pre-convert local logo asset:', err);
+            }
         };
-        xhr.open('GET', '/assets/images/kontrol-transparent.png');
-        xhr.responseType = 'blob';
-        xhr.send();
+
+        convertLogoToBase64();
     }, []);
 
     // Format dates nicely
