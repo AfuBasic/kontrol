@@ -14,6 +14,7 @@ interface Props {
     cancelLabel?: string;
     type?: SheetType;
     isLoading?: boolean;
+    children?: React.ReactNode;
 }
 
 export default function ConfirmationSheet({
@@ -26,6 +27,7 @@ export default function ConfirmationSheet({
     cancelLabel = 'Cancel',
     type = 'danger',
     isLoading = false,
+    children,
 }: Props) {
     const getColors = () => {
         switch (type) {
@@ -102,6 +104,12 @@ export default function ConfirmationSheet({
                                     <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-400 max-w-sm">
                                         {message}
                                     </p>
+
+                                    {children && (
+                                        <div className="mt-6 w-full text-left">
+                                            {children}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Action Buttons - Large touch targets, stacked on mobile */}

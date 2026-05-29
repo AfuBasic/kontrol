@@ -12,6 +12,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
+use App\Notifications\Resident\NewCollectionNotification;
+
 class PublishCollectionJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -53,7 +55,7 @@ class PublishCollectionJob implements ShouldQueue
         }
 
         foreach ($userIds as $userId) {
-            CollectionAssignment::firstOrCreate(
+            $assignment = CollectionAssignment::firstOrCreate(
                 [
                     'collection_id' => $collection->id,
                     'user_id' => $userId,
@@ -68,6 +70,10 @@ class PublishCollectionJob implements ShouldQueue
                     'grace_until' => $graceUntil,
                 ]
             );
+
+            if ($assignment->wasRecentlyCreated) {
+                $assignment->user->notify(new NewCollectionNotification($assignment));
+            }
         }
     }
 

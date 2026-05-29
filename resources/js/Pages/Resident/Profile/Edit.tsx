@@ -135,12 +135,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                     <Shield className="h-3 w-3" />
                                     Resident
                                 </span>
-                                {auth.user?.resident_subscription && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/10 px-4 py-2 text-[10px] font-black tracking-[0.2em] text-amber-200 uppercase ring-1 ring-amber-400/20 backdrop-blur-sm">
-                                        <Crown className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                        {auth.user.resident_subscription.plan_name}
-                                    </span>
-                                )}
+
                             </div>
                             {isHouseholdMember && parentResidentName && (
                                 <p className="mt-4 text-xs font-bold text-slate-400">

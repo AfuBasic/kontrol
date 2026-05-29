@@ -659,23 +659,23 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                 type="info"
                 isLoading={isRecording}
             >
-                <div className="mt-4 space-y-4">
+                <div className="mt-6 space-y-5">
                     <div>
-                        <label className="text-xs font-bold text-slate-400 uppercase">Amount (NGN)</label>
+                        <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Amount (NGN)</label>
                         <input
                             type="number"
                             value={recordData.amount}
                             onChange={(e) => setRecordData({ ...recordData, amount: e.target.value })}
-                            className="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-sm font-bold focus:border-indigo-500 focus:ring-indigo-500"
+                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
                             placeholder="0.00"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-slate-400 uppercase">Payment Method</label>
+                        <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Payment Method</label>
                         <select
                             value={recordData.method}
                             onChange={(e) => setRecordData({ ...recordData, method: e.target.value })}
-                            className="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-sm font-bold focus:border-indigo-500 focus:ring-indigo-500"
+                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
                         >
                             <option value="bank_transfer">Bank Transfer</option>
                             <option value="cash">Cash</option>
