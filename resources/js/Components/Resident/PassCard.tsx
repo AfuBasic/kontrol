@@ -100,6 +100,72 @@ export default function PassCard({ pass, qrUrl }: Props) {
     // Google Chart / QR Server API QR code link with high error correction (ecc=H) to allow logo overlay
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`;
 
+    const [compositeQrUrl, setCompositeQrUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isActive) return;
+
+        let cancelled = false;
+
+        const compose = async () => {
+            try {
+                const size = 144;
+                const logoSize = 30;
+                const logoOffset = (size - logoSize) / 2;
+
+                // Fetch QR image respecting CORS
+                const response = await fetch(qrImageUrl);
+                const blob = await response.blob();
+                const qrDataUrl = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+
+                if (cancelled) return;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d')!;
+
+                // Draw QR code
+                await new Promise<void>((resolve, reject) => {
+                    const qrImg = new Image();
+                    qrImg.onload = () => { ctx.drawImage(qrImg, 0, 0, size, size); resolve(); };
+                    qrImg.onerror = reject;
+                    qrImg.src = qrDataUrl;
+                });
+
+                if (cancelled) return;
+
+                // Draw logo on top (no white background box — just the transparent logo directly)
+                await new Promise<void>((resolve, reject) => {
+                    const logoImg = new Image();
+                    logoImg.onload = () => {
+                        ctx.drawImage(logoImg, logoOffset, logoOffset, logoSize, logoSize);
+                        resolve();
+                    };
+                    logoImg.onerror = reject;
+                    logoImg.src = KONTROL_LOGO_BASE64;
+                });
+
+                if (cancelled) return;
+                setCompositeQrUrl(canvas.toDataURL('image/png'));
+            } catch (e) {
+                // Compositing failed - fall back to plain QR (no logo)
+                console.warn('QR logo compositing failed', e);
+            }
+        };
+
+        compose();
+        return () => { cancelled = true; };
+    }, [qrImageUrl, isActive]);
+
+    // Show the composite (with logo baked in), falling back to plain QR while loading
+    const displayQrSrc = compositeQrUrl || qrImageUrl;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -149,18 +215,8 @@ export default function PassCard({ pass, qrUrl }: Props) {
                             </p>
                         </div>
                     )}
-                    <img src={qrImageUrl} alt="Access QR Code" className="block h-36 w-36" />
-
-                    {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
-                    {isActive && (
-                        <div className="absolute top-[68px] left-[68px] flex h-8 w-8 items-center justify-center rounded-lg border border-slate-100/50 bg-white p-0.5 shadow-md">
-                            <img
-                                src={KONTROL_LOGO_BASE64}
-                                alt="Kontrol"
-                                className="h-4.5 w-4.5 object-contain"
-                            />
-                        </div>
-                    )}
+                    {/* Single image with logo already composited in via canvas — exports correctly with html-to-image */}
+                    <img src={displayQrSrc} alt="Access QR Code" className="block h-36 w-36" />
                 </div>
                 <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
             </div>

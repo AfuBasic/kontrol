@@ -115,6 +115,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
     }
 
     const isLongLived = accessCode.type === 'long_lived';
+    const isExpired = accessCode.expires_at ? new Date(accessCode.expires_at) < new Date() : false;
 
     return (
         <>
@@ -163,13 +164,13 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                 Telegram
                             </span>
                         ) : (
-                            <span className="font-extrabold text-gray-900">Web App</span>
+                            <span className="font-extrabold text-gray-900">Mobile App</span>
                         )}
                     </p>
                 </motion.div>
 
                 {/* Action Buttons */}
-                {accessCode.status === 'active' && (
+                {accessCode.status === 'active' && !isExpired && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
