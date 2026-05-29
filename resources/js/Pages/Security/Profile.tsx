@@ -183,13 +183,14 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
     const [showConfirm, setShowConfirm] = useState(false);
     const { data, setData, put, processing, errors, reset, recentlySuccessful } = useForm({
         name: user.name,
+        current_password: '',
         password: '',
         password_confirmation: '',
     });
 
     useEffect(() => {
         if (!open) {
-            reset('password', 'password_confirmation');
+            reset('current_password', 'password', 'password_confirmation');
             setShowPassword(false);
             setShowConfirm(false);
         }
@@ -200,7 +201,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
         put(ProfileController.update.url(), {
             preserveScroll: true,
             onSuccess: () => {
-                reset('password', 'password_confirmation');
+                reset('current_password', 'password', 'password_confirmation');
                 setTimeout(onClose, 600);
             },
         });
@@ -240,7 +241,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                                 <X className="h-4 w-4" strokeWidth={2.4} />
                             </button>
                         </header>
-
+ 
                         <form onSubmit={handleSubmit} className="space-y-4 px-5 pt-2 pb-6">
                             <FormField label="Name" error={errors.name}>
                                 <input
@@ -251,6 +252,18 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                                 />
                             </FormField>
 
+                            {data.password && (
+                                <FormField label="Current password" error={errors.current_password as string | undefined}>
+                                    <input
+                                        type="password"
+                                        value={data.current_password}
+                                        onChange={(e) => setData('current_password', e.target.value)}
+                                        placeholder="Confirm your old password"
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
+                                    />
+                                </FormField>
+                            )}
+ 
                             <FormField label="New password" error={errors.password}>
                                 <div className="relative">
                                     <input
@@ -269,7 +282,7 @@ function EditSheet({ open, onClose, user }: { open: boolean; onClose: () => void
                                     </button>
                                 </div>
                             </FormField>
-
+ 
                             {data.password && (
                                 <FormField label="Confirm password" error={errors.password_confirmation as string | undefined}>
                                     <div className="relative">

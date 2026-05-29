@@ -18,9 +18,9 @@ class VerifyController extends Controller
         protected RecordCheckInAction $recordCheckInAction,
     ) {}
 
-    public function __invoke(): Response
+    public function __invoke(Request $request): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
         $estate = $user->getCurrentEstate();
 
         return Inertia::render('Security/Verify', [
@@ -31,7 +31,7 @@ class VerifyController extends Controller
 
     public function validate(ValidateAccessCodeRequest $request): RedirectResponse
     {
-        $user = auth()->user();
+        $user = $request->user();
         $estate = $user->getCurrentEstate();
 
         $result = $this->validateAccessCodeAction->execute(
@@ -69,7 +69,7 @@ class VerifyController extends Controller
             'vehicle_plate_number' => 'nullable|string|max:255',
         ]);
 
-        $user = auth()->user();
+        $user = $request->user();
         $estate = $user->getCurrentEstate();
 
         activity()

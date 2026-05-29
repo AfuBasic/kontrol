@@ -1,10 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useRef } from 'react';
-import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { AccessCode } from '@/types/access-code';
 import PassCard from '@/Components/Resident/PassCard';
-
+import type { AccessCode } from '@/types/access-code';
 import { shareAccessCode } from '@/Utils/share';
 
 type Props = {
@@ -36,20 +34,20 @@ export default function CodeSuccess({ accessCode }: Props) {
         <>
             <Head title="Pass Created" />
 
-            <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
+            <div className="flex min-h-[60vh] flex-col items-center justify-center py-4 text-center">
                 {/* Success Animation */}
                 <motion.div
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                    className="mb-4"
+                    className="mb-2"
                 >
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
                         <motion.svg
                             initial={{ pathLength: 0 }}
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.5, delay: 0.3 }}
-                            className="h-8 w-8 text-emerald-600"
+                            className="h-6 w-6 text-emerald-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2.5}
@@ -64,8 +62,8 @@ export default function CodeSuccess({ accessCode }: Props) {
                 <motion.h1
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    className="mb-1 text-2xl font-black text-gray-900"
+                    transition={{ duration: 0.4, delay: 0.25 }}
+                    className="mb-0.5 text-xl font-black text-gray-900"
                 >
                     Pass Created!
                 </motion.h1>
@@ -74,14 +72,14 @@ export default function CodeSuccess({ accessCode }: Props) {
                 <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.25 }}
-                    className="mb-6 text-sm font-bold text-gray-400"
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                    className="mb-4 text-xs font-bold text-gray-400"
                 >
                     Share this pass credential with your visitor
                 </motion.p>
 
                 {/* Pass Card Display */}
-                <div ref={cardRef} className="mb-6 w-full max-w-sm px-2">
+                <div ref={cardRef} className="mb-4 w-full max-w-sm px-2">
                     <PassCard
                         pass={accessCode}
                         qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}

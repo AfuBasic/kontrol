@@ -1,4 +1,3 @@
-import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 export function useForceLogout(userId?: number) {
@@ -8,7 +7,7 @@ export function useForceLogout(userId?: number) {
         const channel = window.Echo.private(`users.${userId}`);
 
         channel.listen('.force.logout', () => {
-            router.visit('/login');
+            window.location.href = '/login';
         });
 
         return () => {

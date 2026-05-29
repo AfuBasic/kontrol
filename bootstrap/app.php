@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ValidateEstateContext;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 use Inertia\Inertia;
 use Sentry\Laravel\Integration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
@@ -21,8 +24,8 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        commands: __DIR__ . '/../routes/console.php',
+        channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
         using: function (): void {
             $domainRoutingEnabled = config('domains.routing_enabled', true);
@@ -41,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             |
             */
 
-            if ($domainRoutingEnabled && ! $isLocal) {
+            if ($domainRoutingEnabled && !$isLocal) {
                 // Production / Staging: Full domain-based routing
                 Route::domain(config('domains.root'))
                     ->middleware('web')
@@ -64,9 +67,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Both public and app routes accessible on localhost/tunnel
                 Route::middleware('web')
                     ->group(function () {
-                        require base_path('routes/public.php');
-                        require base_path('routes/app.php');
-                    });
+                    require base_path('routes/public.php');
+                    require base_path('routes/app.php');
+                });
 
                 Route::middleware('api')
                     ->prefix('api')
@@ -105,11 +108,15 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (Throwable $e, Request $request) {
+            if ($e instanceof AuthenticationException || $e instanceof ValidationException) {
+                return null;
+            }
+
             if ($request->expectsJson()) {
                 return null;
             }
 
-            if (app()->environment('production') || ! config('app.debug')) {
+            if (app()->environment('production') || !config('app.debug')) {
                 $statusCode = $e instanceof HttpExceptionInterface
                     ? $e->getStatusCode()
                     : 500;

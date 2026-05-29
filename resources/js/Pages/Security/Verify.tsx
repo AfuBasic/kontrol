@@ -1,8 +1,8 @@
 import { Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import jsQR from 'jsqr';
 import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import jsQR from 'jsqr';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 
@@ -61,7 +61,6 @@ export default function SecurityVerify() {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const animationFrameRef = useRef<number | null>(null);
-
 
     useEffect(() => {
         if (flash?.validation_result) {

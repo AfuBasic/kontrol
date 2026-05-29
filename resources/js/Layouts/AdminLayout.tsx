@@ -4,7 +4,6 @@ import {
     ArrowLeftStartOnRectangleIcon,
     Bars3Icon,
     BellIcon,
-    BuildingOffice2Icon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ChevronDownIcon,
@@ -38,7 +37,6 @@ import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/Se
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
@@ -103,7 +101,7 @@ export default function AdminLayout({ children, title }: Props) {
             webpush_public_key?: string;
         }
     >();
-    const { auth, flash, billing_enabled, has_overdue_invoice, pendingInvoice, webpush_public_key } = page.props;
+    const { auth, flash, billing_enabled, pendingInvoice, webpush_public_key } = page.props;
     const { url: fullUrl } = page;
     const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -183,7 +181,6 @@ export default function AdminLayout({ children, title }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             channel.listen('.resident.created', (e: any) => {
-
                 const message = typeof e.message === 'string' ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
 
                 // Prevent duplicate toast if it matches current flash message
@@ -226,7 +223,6 @@ export default function AdminLayout({ children, title }: Props) {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             userChannel.notification((notification: any) => {
-
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
 
                 // Avoid showing notification if it's likely a duplicate of a recent broadcast

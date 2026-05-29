@@ -19,6 +19,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'current_password' => ['required_with:password', 'nullable', 'string', 'current_password'],
             'password' => ['nullable', 'string', Password::defaults(), 'confirmed'],
         ];
     }
@@ -31,6 +32,8 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name.required' => 'Please enter your name.',
             'name.max' => 'Name must not exceed 255 characters.',
+            'current_password.required_with' => 'Please enter your current password to set a new password.',
+            'current_password.current_password' => 'The current password you entered is incorrect.',
             'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
