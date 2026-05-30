@@ -2,6 +2,7 @@
 
 use App\Jobs\Admin\RecurringAssignmentJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
+use App\Jobs\Admin\WeeklyCollectionReminderJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -21,3 +22,6 @@ Schedule::command('kontrol:send-billing-reminders')->dailyAt('08:00');
 // Collections system
 Schedule::job(new RecurringAssignmentJob)->dailyAt('00:05');
 Schedule::job(new UpdateAssignmentStatusesJob)->dailyAt('01:05');
+
+// Weekly payment reminders — every Monday at 8am
+Schedule::job(new WeeklyCollectionReminderJob)->weeklyOn(1, '08:00');

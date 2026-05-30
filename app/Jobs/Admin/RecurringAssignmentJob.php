@@ -34,31 +34,39 @@ class RecurringAssignmentJob implements ShouldQueue
 
     private function processCollection(Collection $collection, Carbon $now): void
     {
+        $startDate = Carbon::parse($collection->start_date);
         $periodFormat = $collection->recurring_interval === 'monthly' ? 'Y-m' : 'Y';
         $currentPeriod = $now->format($periodFormat);
 
-        // Check if we should create assignments for this period
-        // For monthly: If current day is the due_day
-        if ($collection->recurring_interval === 'monthly' && $now->day != $collection->due_day) {
-            return;
+        // New assignments are created on the anniversary of start_date each period,
+        // NOT on due_day. due_day is when payment is due (used for reminders/overdue logic).
+        if ($collection->recurring_interval === 'monthly') {
+            if ($now->day !== $startDate->day) {
+                return;
+            }
         }
 
-        // For yearly: If current month and day match start_date month and day
         if ($collection->recurring_interval === 'yearly') {
-            $startDate = Carbon::parse($collection->start_date);
-            if ($now->month != $startDate->month || $now->day != $startDate->day) {
+            if ($now->month !== $startDate->month || $now->day !== $startDate->day) {
                 return;
             }
         }
 
         Log::info("Generating assignments for collection: {$collection->name} for period: {$currentPeriod}");
 
-        // Reuse target user identification logic (could move to service)
         $userIds = $this->getTargetUserIds($collection);
 
-        $dueDate = $now->copy()->toDateString();
+        // due_date is due_day of the current period, not today (the start day)
+        $dueDate = $now->copy()->day($collection->due_day);
+
+        // Handle edge case: if due_day is less than start day (e.g. starts on 20th, due on 5th),
+        // the due date falls in the next month
+        if ($dueDate->lt($now)) {
+            $dueDate->addMonth();
+        }
+
         $graceUntil = $collection->grace_days > 0
-            ? $now->copy()->addDays($collection->grace_days)->toDateString()
+            ? $dueDate->copy()->addDays($collection->grace_days)
             : null;
 
         foreach ($userIds as $userId) {
@@ -73,8 +81,8 @@ class RecurringAssignmentJob implements ShouldQueue
                     'amount_due' => $collection->amount,
                     'amount_paid' => 0,
                     'status' => 'pending',
-                    'due_date' => $dueDate,
-                    'grace_until' => $graceUntil,
+                    'due_date' => $dueDate->toDateString(),
+                    'grace_until' => $graceUntil?->toDateString(),
                 ]
             );
         }

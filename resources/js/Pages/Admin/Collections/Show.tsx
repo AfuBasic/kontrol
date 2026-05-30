@@ -16,9 +16,10 @@ import {
     User,
     CreditCard,
     ShieldCheck,
+    Trash2,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { index, publish, edit, remind, exportMethod, recordPayment } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
@@ -89,9 +90,10 @@ type Props = {
         paystack_subaccount_code: string | null;
     };
     hasBanking: boolean;
+    canDelete: boolean;
 };
 
-export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement, hasBanking }: Props) {
+export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement, hasBanking, canDelete }: Props) {
     const { post, processing } = useForm();
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
@@ -102,6 +104,8 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
     const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
     const [recordData, setRecordData] = useState({ amount: '', method: 'bank_transfer' });
     const [isRecording, setIsRecording] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -134,6 +138,16 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
 
     const handleExport = () => {
         window.location.href = exportMethod.url(collection.ulid);
+    };
+
+    const handleDelete = () => {
+        setIsDeleting(true);
+        router.delete(destroy.url(collection.ulid), {
+            onFinish: () => {
+                setIsDeleting(false);
+                setIsDeleteModalOpen(false);
+            },
+        });
     };
 
     const handleRecordPayment = () => {
@@ -250,16 +264,27 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                         </div>
                     </div>
 
-                    <div className="flex w-full items-center gap-2 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-slate-200 lg:w-auto">
-                        <div className="flex min-w-max flex-col items-center border-r border-slate-100 px-4 py-1 sm:px-6">
-                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Rate</span>
-                            <span className="text-lg font-bold tracking-tight text-emerald-600 sm:text-xl">{collectionRate}%</span>
-                        </div>
-                        <div className="flex min-w-max flex-col items-center px-4 py-1 sm:px-6">
-                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Collected</span>
-                            <span className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                                {formatCurrency(stats.total_collected)}
-                            </span>
+                    <div className="flex items-center gap-3">
+                        {canDelete && (
+                            <button
+                                onClick={() => setIsDeleteModalOpen(true)}
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500 ring-1 ring-rose-100 transition-colors hover:bg-rose-100 hover:text-rose-600"
+                                title="Delete Collection"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        )}
+                        <div className="flex w-full items-center gap-2 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-slate-200 lg:w-auto">
+                            <div className="flex min-w-max flex-col items-center border-r border-slate-100 px-4 py-1 sm:px-6">
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Rate</span>
+                                <span className="text-lg font-bold tracking-tight text-emerald-600 sm:text-xl">{collectionRate}%</span>
+                            </div>
+                            <div className="flex min-w-max flex-col items-center px-4 py-1 sm:px-6">
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Collected</span>
+                                <span className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                                    {formatCurrency(stats.total_collected)}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -684,6 +709,17 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                     </div>
                 </div>
             </ConfirmationModal>
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Collection"
+                message={`Are you sure you want to delete "${collection.name}"? This will remove all ${stats.total_assignments} assignment(s) permanently. This cannot be undone.`}
+                confirmLabel="Yes, Delete Collection"
+                cancelLabel="Cancel"
+                type="danger"
+                isLoading={isDeleting}
+            />
         </>
     );
 }

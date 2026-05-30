@@ -134,6 +134,18 @@ createInertiaApp({
                         }
                     });
 
+                    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+                        if (isActive) {
+                            router.reload({
+                                preserveScroll: true,
+                                preserveState: true,
+                                onError: (err) => {
+                                    console.warn('App background token reconciliation skipped:', err);
+                                },
+                            });
+                        }
+                    });
+
                     const handleDeepLink = (url: string) => {
                         try {
                             // Extract path from various URL formats (The "Smart Router")
@@ -149,19 +161,6 @@ createInertiaApp({
                             }
 
                             if (path) {
-                                // For server-side redirect/auth routes (like autologin), bypass Inertia
-                                // and perform a clean full page load to establish session and cookies.
-                                if (path.startsWith('/autologin')) {
-                                    const absoluteUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
-                                    window.location.href = absoluteUrl;
-
-                                    // Hide splash screen after initiating load
-                                    setTimeout(() => {
-                                        SplashScreen.hide().catch(() => {});
-                                    }, 1000);
-                                    return;
-                                }
-
                                 router.visit(path, {
                                     onFinish: () => {
                                         // Hide splash ONLY after the deep link page has loaded

@@ -1,7 +1,21 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import ConfirmationSheet from './ConfirmationSheet';
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767px)');
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        setIsMobile(mq.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    return isMobile;
+}
 
 type ModalType = 'danger' | 'warning' | 'info';
 
@@ -30,6 +44,8 @@ export default function ConfirmationModal({
     isLoading = false,
     children,
 }: Props) {
+    const isMobile = useIsMobile();
+
     const getColors = () => {
         switch (type) {
             case 'danger':
@@ -65,8 +81,8 @@ export default function ConfirmationModal({
     return (
         <>
             {/* Desktop Confirmation Modal */}
-            <Transition.Root show={isOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-[200] hidden md:block" onClose={onClose}>
+            <Transition.Root show={isOpen && !isMobile} as={Fragment}>
+                <Dialog as="div" className="relative z-[200]" onClose={onClose}>
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -135,7 +151,14 @@ export default function ConfirmationModal({
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                 >
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                    ></circle>
                                                     <path
                                                         className="opacity-75"
                                                         fill="currentColor"
@@ -162,7 +185,7 @@ export default function ConfirmationModal({
 
             {/* Mobile Confirmation Sheet */}
             <ConfirmationSheet
-                isOpen={isOpen}
+                isOpen={isOpen && isMobile}
                 onClose={onClose}
                 onConfirm={onConfirm}
                 title={title}

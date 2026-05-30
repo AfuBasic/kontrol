@@ -98,6 +98,8 @@ class CollectionController extends Controller
                 'paystack_subaccount_code' => $settings->paystack_subaccount_code,
             ],
             'hasBanking' => ! empty($settings->paystack_subaccount_code),
+            'canDelete' => $collection->status === 'draft'
+                || ($collection->status === 'active' && ! $collection->assignments()->where('amount_paid', '>', 0)->exists()),
         ]);
     }
 
@@ -171,7 +173,18 @@ class CollectionController extends Controller
     public function destroy(Collection $collection): RedirectResponse
     {
         $this->authorizeCollection($collection);
-        $this->ensureIsDraft($collection);
+
+        if ($collection->status === 'active') {
+            $hasPaidAssignments = $collection->assignments()->where('amount_paid', '>', 0)->exists();
+
+            if ($hasPaidAssignments) {
+                abort(403, 'This collection cannot be deleted because payments have already been made.');
+            }
+
+            // Safe to delete — remove all unpaid assignments first
+            $collection->assignments()->delete();
+        }
+
         $collection->delete();
 
         return redirect()->route('admin.collections.index')
