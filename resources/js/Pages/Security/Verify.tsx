@@ -297,7 +297,22 @@ export default function SecurityVerify() {
 
             <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-6 sm:px-8">
                 <AnimatePresence mode="wait">
-                    {result ? (
+                    {submitting ? (
+                        <motion.div
+                            key="validating"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
+                        >
+                            <div className="relative mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-slate-50 shadow-sm ring-1 ring-slate-200">
+                                <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
+                            </div>
+                            <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Verification in progress</p>
+                            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Validating Access Code</h1>
+                            <p className="mt-3 text-sm text-slate-500">Checking credentials with the gate server...</p>
+                        </motion.div>
+                    ) : result ? (
                         <ResultPanel
                             key="result"
                             result={result}

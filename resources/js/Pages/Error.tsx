@@ -1,12 +1,21 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { AlertCircle, ArrowLeft, Home, RefreshCcw } from 'lucide-react';
+import type { SharedData } from '@/types';
+import AdminLayout from '@/Layouts/AdminLayout';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import SecurityLayout from '@/Layouts/SecurityLayout';
+import ZeusLayout from '@/Layouts/ZeusLayout';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
 interface Props {
     status: number;
 }
 
 export default function Error({ status }: Props) {
+    const { props } = usePage<SharedData>();
+    const hasLayout = !!props.auth?.user;
+
     const title = {
         503: '503: Service Unavailable',
         500: '500: Internal Server Error',
@@ -24,27 +33,37 @@ export default function Error({ status }: Props) {
     }[status] || 'An unexpected error occurred.';
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-24 text-center selection:bg-primary-500/30">
+        <div className={`flex flex-col items-center justify-center text-center selection:bg-primary-500/30 ${
+            hasLayout 
+                ? 'min-h-[70vh] px-4 py-12 sm:px-6' 
+                : 'min-h-screen bg-slate-950 px-6 py-24'
+        }`}>
             <Head title={title} />
 
-            {/* Ambient Background Elements */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-500/10 blur-[120px]" />
-                <div className="absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full bg-indigo-500/10 blur-[100px]" />
-            </div>
+            {/* Ambient Background Elements (Only for standalone page) */}
+            {!hasLayout && (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-500/10 blur-[120px]" />
+                    <div className="absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full bg-indigo-500/10 blur-[100px]" />
+                </div>
+            )}
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-lg"
+                className="relative z-10 w-full max-w-md"
             >
                 {/* Icon Circle */}
-                <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-900/50 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
+                <div className={`mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl backdrop-blur-xl ${
+                    hasLayout 
+                        ? 'bg-slate-100/80 shadow-sm ring-1 ring-slate-200' 
+                        : 'bg-slate-900/50 shadow-2xl ring-1 ring-white/10'
+                }`}>
                     <motion.div
                         animate={{ 
                             rotate: [0, 5, -5, 0],
-                            scale: [1, 1.1, 1]
+                            scale: [1, 1.05, 1]
                         }}
                         transition={{ 
                             duration: 4, 
@@ -52,7 +71,7 @@ export default function Error({ status }: Props) {
                             ease: "easeInOut"
                         }}
                     >
-                        <AlertCircle className="h-12 w-12 text-primary-500" strokeWidth={1.5} />
+                        <AlertCircle className={`h-10 w-10 ${hasLayout ? 'text-rose-500' : 'text-primary-500'}`} strokeWidth={1.5} />
                     </motion.div>
                 </div>
 
@@ -61,60 +80,102 @@ export default function Error({ status }: Props) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="mb-4 inline-block text-sm font-black tracking-[0.3em] text-primary-500 uppercase"
+                    className={`mb-3 inline-block text-xs font-black tracking-[0.3em] uppercase ${
+                        hasLayout ? 'text-slate-400' : 'text-primary-500'
+                    }`}
                 >
                     Status {status}
                 </motion.span>
 
                 {/* Heading */}
-                <h1 className="mb-4 text-4xl font-black tracking-tight text-white sm:text-5xl">
+                <h1 className={`mb-4 text-3xl font-black tracking-tight sm:text-4xl ${
+                    hasLayout ? 'text-slate-900' : 'text-white'
+                }`}>
                     {title.split(': ')[1] || title}
                 </h1>
 
                 {/* Description */}
-                <p className="mb-12 text-lg leading-relaxed text-slate-400">
+                <p className={`mb-10 text-base leading-relaxed ${
+                    hasLayout ? 'text-slate-500' : 'text-slate-400'
+                }`}>
                     {description}
                 </p>
 
                 {/* Actions */}
-                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
                     {status === 419 || status === 500 ? (
                          <button
                             onClick={() => window.location.reload()}
-                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 font-black text-slate-950 transition-all hover:scale-[1.02] hover:bg-slate-100 active:scale-[0.98] sm:w-auto"
+                            className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto ${
+                                hasLayout 
+                                    ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                                    : 'bg-white text-slate-950 hover:bg-slate-100'
+                            }`}
                         >
-                            <RefreshCcw className="h-5 w-5 transition-transform group-hover:rotate-180 duration-500" />
+                            <RefreshCcw className="h-4.5 w-4.5 transition-transform group-hover:rotate-180 duration-500" />
                             Refresh Page
                         </button>
                     ) : (
                         <Link
                             href="/"
-                            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 font-black text-slate-950 transition-all hover:scale-[1.02] hover:bg-slate-100 active:scale-[0.98] sm:w-auto"
+                            className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto ${
+                                hasLayout 
+                                    ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                                    : 'bg-white text-slate-950 hover:bg-slate-100'
+                            }`}
                         >
-                            <Home className="h-5 w-5" />
+                            <Home className="h-4.5 w-4.5" />
                             Back Home
                         </Link>
                     )}
                     
                     <button
                         onClick={() => window.history.back()}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-8 py-4 font-black text-white ring-1 ring-white/10 transition-all hover:bg-slate-800 active:scale-[0.98] sm:w-auto"
+                        className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold ring-1 transition-all active:scale-[0.98] sm:w-auto ${
+                            hasLayout 
+                                ? 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50' 
+                                : 'bg-slate-900 text-white ring-white/10 hover:bg-slate-800'
+                        }`}
                     >
-                        <ArrowLeft className="h-5 w-5" />
+                        <ArrowLeft className="h-4.5 w-4.5" />
                         Go Back
                     </button>
                 </div>
             </motion.div>
 
-            {/* Footer Brand */}
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="absolute bottom-12 left-0 right-0"
-            >
-                <img src="/assets/images/kontrol.png" alt="Kontrol" className="mx-auto h-8 w-auto opacity-20 grayscale transition-opacity hover:opacity-40" />
-            </motion.div>
+            {/* Footer Brand (Only for standalone page) */}
+            {!hasLayout && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="absolute bottom-12 left-0 right-0"
+                >
+                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="mx-auto h-8 w-auto opacity-20 grayscale transition-opacity hover:opacity-40" />
+                </motion.div>
+            )}
         </div>
     );
 }
+
+function ErrorLayout({ children }: { children: React.ReactNode }) {
+    const { props } = usePage<SharedData>();
+    const roles = props.auth?.user?.roles || [];
+
+    if (roles.includes('resident')) {
+        return <ResidentLayout><AnimatedLayout>{children}</AnimatedLayout></ResidentLayout>;
+    }
+    if (roles.includes('admin')) {
+        return <AdminLayout><AnimatedLayout>{children}</AnimatedLayout></AdminLayout>;
+    }
+    if (roles.includes('security')) {
+        return <SecurityLayout><AnimatedLayout>{children}</AnimatedLayout></SecurityLayout>;
+    }
+    if (roles.includes('zeus')) {
+        return <ZeusLayout><AnimatedLayout>{children}</AnimatedLayout></ZeusLayout>;
+    }
+
+    return <AnimatedLayout>{children}</AnimatedLayout>;
+}
+
+Error.layout = (page: React.ReactNode) => <ErrorLayout>{page}</ErrorLayout>;
