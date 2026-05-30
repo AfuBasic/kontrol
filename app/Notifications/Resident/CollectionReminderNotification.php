@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Number;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
@@ -60,14 +61,18 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $remaining = $this->assignment->amount_due - $this->assignment->amount_paid;
+
         return [
             'type' => 'collection_reminder',
             'collection_id' => $this->assignment->collection_id,
             'assignment_id' => $this->assignment->id,
-            'amount' => $this->assignment->amount_due,
+            'amount' => $remaining,
             'estate_name' => $this->assignment->estate->name,
             'title' => 'Payment Reminder',
-            'message' => "Reminder: Payment for {$this->assignment->collection->name} is due.",
+            'message' => $this->assignment->amount_paid > 0
+                ? "Reminder: Outstanding balance for {$this->assignment->collection->name} is due."
+                : "Reminder: Payment for {$this->assignment->collection->name} is due.",
             'action_url' => '/resident/billing',
         ];
     }
@@ -133,11 +138,16 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
     public function toTelegram(object $notifiable): array
     {
         $data = $this->toArray($notifiable);
+        $remaining = $this->assignment->amount_due - $this->assignment->amount_paid;
+
+        $amountLabel = $this->assignment->amount_paid > 0
+            ? '💰 Outstanding Balance: <b>'.Number::currency($remaining, 'NGN').'</b> (Paid: '.Number::currency($this->assignment->amount_paid, 'NGN').' of '.Number::currency($this->assignment->amount_due, 'NGN').')'
+            : '💰 Amount Due: <b>'.Number::currency($remaining, 'NGN').'</b>';
 
         $text = "🔔 <b>{$data['title']}</b>\n\n"
             ."Hi <b>{$notifiable->name}</b>,\n"
             ."{$data['message']}\n"
-            ."💰 Amount Due: <b>{$this->assignment->amount_due}</b>\n\n"
+            .$amountLabel."\n\n"
             .'<i>Please visit the Kontrol billing portal to settle this payment.</i>';
 
         return [

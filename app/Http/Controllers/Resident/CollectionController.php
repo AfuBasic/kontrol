@@ -46,7 +46,9 @@ class CollectionController extends Controller
         $user = auth()->user();
         abort_if($assignment->user_id !== $user->id, 403);
 
-        $assignment->load('collection');
+        $assignment->load(['collection', 'payments' => function ($query) {
+            $query->where('status', 'success')->latest();
+        }]);
 
         return Inertia::render('Resident/Collections/Show', [
             'assignment' => $assignment,

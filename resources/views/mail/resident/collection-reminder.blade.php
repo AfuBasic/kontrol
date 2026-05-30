@@ -10,10 +10,25 @@
 
     <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
         <table style="width: 100%;">
+            @if($assignment->amount_paid > 0)
+            <tr>
+                <td style="padding: 8px 0; color: #475569;">Total Expected</td>
+                <td style="padding: 8px 0; text-align: right;" class="bold">{{ \Illuminate\Support\Number::currency($assignment->amount_due, 'NGN') }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #10b981;">Amount Paid</td>
+                <td style="padding: 8px 0; text-align: right; color: #10b981;" class="bold">{{ \Illuminate\Support\Number::currency($assignment->amount_paid, 'NGN') }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #475569;">Outstanding Balance</td>
+                <td style="padding: 8px 0; text-align: right;" class="bold">{{ \Illuminate\Support\Number::currency($assignment->amount_due - $assignment->amount_paid, 'NGN') }}</td>
+            </tr>
+            @else
             <tr>
                 <td style="padding: 8px 0; color: #475569;">Amount Due</td>
                 <td style="padding: 8px 0; text-align: right;" class="bold">{{ \Illuminate\Support\Number::currency($assignment->amount_due, 'NGN') }}</td>
             </tr>
+            @endif
             <tr>
                 <td style="padding: 8px 0; color: #475569;">Due Date</td>
                 <td style="padding: 8px 0; text-align: right;" class="bold">{{ $assignment->due_date->format('M d, Y') }}</td>

@@ -8,6 +8,7 @@ use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Notifications\Resident\CollectionReminderNotification;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -96,16 +97,17 @@ class CollectionService
 
     public function getCollectionStats(Collection $collection): array
     {
+        $today = Carbon::today()->toDateString();
         $stats = DB::table('collection_assignments')
             ->where('collection_id', $collection->id)
             ->selectRaw('
                 COUNT(*) as total_assignments,
                 SUM(CASE WHEN status = "paid" THEN 1 ELSE 0 END) as paid_count,
-                SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count,
-                SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as overdue_count,
+                SUM(CASE WHEN status IN ("pending", "grace") OR (status = "partial" AND (grace_until >= ? OR (grace_until IS NULL AND due_date >= ?))) THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = "overdue" OR (status = "partial" AND (grace_until < ? OR (grace_until IS NULL AND due_date < ?))) THEN 1 ELSE 0 END) as overdue_count,
                 SUM(amount_due) as total_expected,
                 SUM(amount_paid) as total_collected
-            ')
+            ', [$today, $today, $today, $today])
             ->first();
 
         return [
@@ -194,7 +196,7 @@ class CollectionService
                 'estate_id' => $assignment->estate_id,
                 'user_id' => $assignment->user_id,
                 'amount' => $amount,
-                'payment_method' => $data['method'] ?? 'manual',
+                'provider' => $data['method'] ?? 'manual',
                 'status' => 'success',
                 'reference' => 'MANUAL-'.strtoupper(Str::random(8)),
                 'paid_at' => now(),

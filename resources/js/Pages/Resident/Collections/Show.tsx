@@ -15,6 +15,14 @@ type Collection = {
     amount: number;
 };
 
+type Payment = {
+    id: number;
+    amount: number;
+    provider: string;
+    reference: string;
+    paid_at: string;
+};
+
 type Assignment = {
     ulid: string;
     id: number;
@@ -26,6 +34,7 @@ type Assignment = {
     period: string | null;
     paid_at: string | null;
     collection: Collection;
+    payments?: Payment[];
 };
 
 type Props = {
@@ -157,6 +166,45 @@ export default function CollectionShow({ assignment }: Props) {
                     <p className="mt-1 font-black tracking-tight text-slate-900 uppercase">{assignment.period || 'One-time'}</p>
                 </div>
             </section>
+
+            {/* Payment History / Receipts */}
+            {assignment.payments && assignment.payments.length > 0 && (
+                <section className="flex flex-col gap-4">
+                    <h3 className="px-2 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Payment History</h3>
+                    <div className="flex flex-col gap-3">
+                        {assignment.payments.map((payment) => (
+                            <div
+                                key={payment.id}
+                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+                                        <Wallet className="h-6 w-6 text-slate-400" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-900 capitalize">
+                                            {payment.provider.replace('_', ' ')}
+                                        </h4>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                            Ref: {payment.reference}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm font-bold text-slate-900">{formatCurrency(payment.amount / 100)}</div>
+                                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                        {new Date(payment.paid_at).toLocaleDateString(undefined, {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Settlement Section */}
             <section>

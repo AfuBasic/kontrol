@@ -19,7 +19,7 @@ class WeeklyCollectionReminderJob implements ShouldQueue
     {
         // Find all unpaid assignments on active collections
         $assignments = CollectionAssignment::query()
-            ->whereIn('status', ['pending', 'grace', 'overdue'])
+            ->whereIn('status', ['pending', 'grace', 'overdue', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('status', 'active'))
             ->with(['user', 'collection', 'estate'])
             ->get();

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
 use App\Services\PaystackService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -84,7 +85,42 @@ class CollectionController extends Controller
         }
 
         if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $today = Carbon::today()->toDateString();
+            if ($request->status === 'paid') {
+                $query->where('status', 'paid');
+            } elseif ($request->status === 'overdue') {
+                $query->where(function ($q) use ($today) {
+                    $q->where('status', 'overdue')
+                        ->orWhere(function ($sq) use ($today) {
+                            $sq->where('status', 'partial')
+                                ->where(function ($gq) use ($today) {
+                                    $gq->where(function ($sub) use ($today) {
+                                        $sub->whereNull('grace_until')
+                                            ->where('due_date', '<', $today);
+                                    })->orWhere(function ($sub) use ($today) {
+                                        $sub->whereNotNull('grace_until')
+                                            ->where('grace_until', '<', $today);
+                                    });
+                                });
+                        });
+                });
+            } elseif ($request->status === 'pending') {
+                $query->where(function ($q) use ($today) {
+                    $q->whereIn('status', ['pending', 'grace'])
+                        ->orWhere(function ($sq) use ($today) {
+                            $sq->where('status', 'partial')
+                                ->where(function ($gq) use ($today) {
+                                    $gq->where(function ($sub) use ($today) {
+                                        $sub->whereNull('grace_until')
+                                            ->where('due_date', '>=', $today);
+                                    })->orWhere(function ($sub) use ($today) {
+                                        $sub->whereNotNull('grace_until')
+                                            ->where('grace_until', '>=', $today);
+                                    });
+                                });
+                        });
+                });
+            }
         }
 
         return Inertia::render('Admin/Collections/Show', [
