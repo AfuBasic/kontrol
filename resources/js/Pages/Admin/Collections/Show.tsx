@@ -599,7 +599,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                                                                 setSelectedAssignment(a);
                                                                 setRecordData({
                                                                     ...recordData,
-                                                                    amount: ((a.amount_due - a.amount_paid) / 100).toString(),
+                                                                    amount: (a.amount_due - a.amount_paid).toString(),
                                                                 });
                                                                 setIsRecordModalOpen(true);
                                                             }}

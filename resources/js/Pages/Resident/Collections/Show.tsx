@@ -191,7 +191,7 @@ export default function CollectionShow({ assignment }: Props) {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm font-bold text-slate-900">{formatCurrency(payment.amount / 100)}</div>
+                                    <div className="text-sm font-bold text-slate-900">{formatCurrency(payment.amount)}</div>
                                     <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                         {new Date(payment.paid_at).toLocaleDateString(undefined, {
                                             month: 'short',

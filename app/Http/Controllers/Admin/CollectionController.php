@@ -196,8 +196,10 @@ class CollectionController extends Controller
 
     public function recordPayment(Request $request, CollectionAssignment $assignment): RedirectResponse
     {
+        $remaining = $assignment->amount_due - $assignment->amount_paid;
+
         $request->validate([
-            'amount' => 'required|numeric|min:0',
+            'amount' => "required|numeric|min:0.01|max:{$remaining}",
             'method' => 'required|string',
         ]);
 

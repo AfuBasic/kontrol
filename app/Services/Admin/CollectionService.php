@@ -159,8 +159,8 @@ class CollectionService
                 fputcsv($file, [
                     $assignment->user->name,
                     $assignment->user->email,
-                    $assignment->amount_due / 100,
-                    $assignment->amount_paid / 100,
+                    $assignment->amount_due,
+                    $assignment->amount_paid,
                     ucfirst($assignment->status),
                     $assignment->due_date->format('Y-m-d'),
                     $assignment->paid_at ? $assignment->paid_at->format('Y-m-d H:i') : 'N/A',
@@ -179,7 +179,7 @@ class CollectionService
     public function recordPayment(CollectionAssignment $assignment, array $data): void
     {
         DB::transaction(function () use ($assignment, $data) {
-            $amount = (int) ($data['amount'] * 100);
+            $amount = (int) $data['amount'];
             $assignment->amount_paid += $amount;
 
             if ($assignment->amount_paid >= $assignment->amount_due) {
