@@ -12,7 +12,7 @@ class PruneExpiredAccessCodes extends Command
      *
      * @var string
      */
-    protected $signature = 'app:prune-expired-codes';
+    protected $signature = 'kontrol:prune-expired-codes';
 
     /**
      * The console command description.
