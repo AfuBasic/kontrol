@@ -213,7 +213,8 @@ class AccessCodeService
                         $q->where('subject_type', User::class)
                             ->where('subject_id', $user->id)
                             ->where('causer_type', User::class)
-                            ->where('causer_id', $user->id);
+                            ->where('causer_id', $user->id)
+                            ->whereNotIn('description', ['logged in', 'logged out']);
                     });
             })
             ->with(['subject'])

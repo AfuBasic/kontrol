@@ -72,12 +72,13 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
             'collection_id' => $this->assignment->collection_id,
             'assignment_id' => $this->assignment->id,
             'amount' => $remaining,
+            'formatted_amount' => number_format($remaining, 2).' NGN',
             'estate_name' => $this->assignment->estate->name,
             'title' => 'Payment Reminder',
             'message' => $this->assignment->amount_paid > 0
                 ? "Reminder: Outstanding balance for {$this->assignment->collection->name} is due."
                 : "Reminder: Payment for {$this->assignment->collection->name} is due.",
-            'action_url' => '/resident/billing',
+            'action_url' => route('resident.collections.show', $this->assignment, false),
         ];
     }
 

@@ -1,12 +1,13 @@
-import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { clsx, type ClassValue } from 'clsx';
-import { Wallet, Users, Calendar, ArrowRight, MoreVertical, AlertTriangle, Building2, Settings2 } from 'lucide-react';
+import { Wallet, Users, Calendar, ArrowRight, AlertTriangle, Building2, Settings2, Send } from 'lucide-react';
 import { Edit2 } from 'lucide-react';
 import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { index, create, show, edit } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { index, create, show, edit, publish } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import BankingSetupModal from '@/Components/BankingSetupModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 function cn(...inputs: ClassValue[]) {
@@ -46,6 +47,26 @@ type Props = {
 
 export default function CollectionsIndex({ collections, totalResidents, hasBanking, banks, settlement }: Props) {
     const [isBankingModalOpen, setIsBankingModalOpen] = useState(false);
+    const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+    const [isPublishing, setIsPublishing] = useState(false);
+
+    const handlePublish = () => {
+        if (!selectedCollection) return;
+        setIsPublishing(true);
+        router.post(
+            publish.url(selectedCollection.ulid),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsPublishing(false);
+                    setIsPublishModalOpen(false);
+                    setSelectedCollection(null);
+                },
+            },
+        );
+    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -126,6 +147,21 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
 
             <BankingSetupModal isOpen={isBankingModalOpen} onClose={() => setIsBankingModalOpen(false)} banks={banks} currentSettings={settlement} />
 
+            <ConfirmationModal
+                isOpen={isPublishModalOpen}
+                onClose={() => {
+                    setIsPublishModalOpen(false);
+                    setSelectedCollection(null);
+                }}
+                onConfirm={handlePublish}
+                title="Publish Collection"
+                message={`Are you sure you want to publish "${selectedCollection?.name}"? This will generate assignments for residents.`}
+                confirmLabel="Yes, Publish Now"
+                cancelLabel="Cancel"
+                type="info"
+                isLoading={isPublishing}
+            />
+
             <div className="grid gap-6">
                 {collections.data.length > 0 ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -176,14 +212,27 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
 
                                 <div className="absolute top-1/2 right-6 flex -translate-y-1/2 items-center gap-2 opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
                                     {collection.status === 'draft' && hasBanking && (
-                                        <Link
-                                            href={edit.url(collection.ulid)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-100"
-                                            title="Edit Collection"
-                                        >
-                                            <Edit2 className="h-4 w-4" />
-                                        </Link>
+                                        <>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedCollection(collection);
+                                                    setIsPublishModalOpen(true);
+                                                }}
+                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-500 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:text-emerald-600 hover:ring-emerald-100"
+                                                title="Publish Collection"
+                                            >
+                                                <Send className="h-4 w-4" />
+                                            </button>
+                                            <Link
+                                                href={edit.url(collection.ulid)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-100"
+                                                title="Edit Collection"
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </Link>
+                                        </>
                                     )}
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
                                         <ArrowRight className="h-5 w-5" />

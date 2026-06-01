@@ -1,5 +1,6 @@
+import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Bell, CreditCard, Info, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Bell, CreditCard, Info, AlertTriangle, ChevronRight, Wallet } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
 import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
@@ -62,6 +63,13 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
                         <Bell className="h-6 w-6" />
                     </div>
                 );
+            case 'new_collection':
+            case 'collection_reminder':
+                return (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                        <Wallet className="h-6 w-6" />
+                    </div>
+                );
             default:
                 return (
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 ring-1 ring-slate-100">
@@ -121,7 +129,18 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
 
                 {/* Actions */}
                 <div className="space-y-3 pt-4">
-                    {data.action_url?.includes('billing') ? (
+                    {data.type === 'new_collection' || data.type === 'collection_reminder' ? (
+                        <button
+                            onClick={() => {
+                                router.visit(data.action_url!);
+                                onClose();
+                            }}
+                            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 font-bold text-white shadow-xl shadow-slate-900/20 transition-all active:scale-[0.98]"
+                        >
+                            View Collection Details
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
+                    ) : data.action_url?.includes('billing') ? (
                         <button
                             onClick={() => {
                                 openExternalBilling();
@@ -137,7 +156,7 @@ export default function NotificationDetailSheet({ notification, onClose }: Props
                         data.type !== 'visitor_arrived' && (
                             <button
                                 onClick={() => {
-                                    window.location.href = data.action_url!;
+                                    router.visit(data.action_url!);
                                     onClose();
                                 }}
                                 className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 font-bold text-white shadow-xl shadow-slate-900/20 transition-all active:scale-[0.98]"

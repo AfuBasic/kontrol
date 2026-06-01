@@ -395,7 +395,9 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                             <div className="mt-12">
                                 <div className="mb-4 flex items-center justify-between">
                                     <span className="text-xs font-bold text-slate-900 sm:text-sm">Overall Progress</span>
-                                    <span className="text-xs font-bold text-emerald-600 sm:text-sm">{collectionRate}% Complete</span>
+                                    <span className="text-xs font-bold text-emerald-600 sm:text-sm">
+                                        {stats.paid_count} of {stats.total_assignments} paid ({collectionRate}%)
+                                    </span>
                                 </div>
                                 <div className="relative h-4 w-full overflow-hidden rounded-2xl bg-slate-100 ring-4 ring-slate-50 sm:h-6">
                                     <motion.div

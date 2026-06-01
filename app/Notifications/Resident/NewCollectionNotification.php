@@ -64,10 +64,11 @@ class NewCollectionNotification extends Notification implements ShouldQueue
             'collection_id' => $this->assignment->collection_id,
             'assignment_id' => $this->assignment->id,
             'amount' => $this->assignment->amount_due,
+            'formatted_amount' => number_format($this->assignment->amount_due, 2).' NGN',
             'estate_name' => $this->assignment->estate->name,
             'title' => 'New Payment Collection Assigned',
             'message' => "A new payment collection '{$this->assignment->collection->name}' of ".number_format($this->assignment->amount_due, 2).' NGN has been assigned to you.',
-            'action_url' => '/resident/billing',
+            'action_url' => route('resident.collections.show', $this->assignment, false),
         ];
     }
 
