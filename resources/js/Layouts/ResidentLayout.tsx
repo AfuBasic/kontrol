@@ -64,12 +64,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     useEffect(() => {
         const path = getPathFromUrl(currentPath);
         const isBillingRoute = path.startsWith('/resident/billing') || path.startsWith('/billing');
-        
+
         const timer = setTimeout(() => {
-            const isNative = Capacitor.isNativePlatform() || 
-                             (window as any).Capacitor?.platform === 'ios' || 
-                             (window as any).Capacitor?.platform === 'android' ||
-                             (window as any).webkit?.messageHandlers !== undefined;
+            const isNative =
+                Capacitor.isNativePlatform() ||
+                (window as any).Capacitor?.platform === 'ios' ||
+                (window as any).Capacitor?.platform === 'android' ||
+                (window as any).webkit?.messageHandlers !== undefined;
 
             if (!isNative && !isBillingRoute) {
                 router.visit('/download-app');
@@ -367,7 +368,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
             {/* Header - Conditional Light Premium Header */}
             {!hideHeader && (
-                <header className="fixed top-0 inset-x-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
+                <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
                     <div className="mx-auto max-w-lg px-6">
                         <div className="flex h-16 items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -381,7 +382,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             )}
 
             {/* Main Content */}
-            <main className={`relative mx-auto w-full max-w-lg flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}>
+            <main
+                className={`relative mx-auto w-full max-w-lg flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}
+            >
                 {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
                     <div className="px-2">
                         <SubscriptionBanner subscription={auth.user.resident_subscription} />
@@ -391,7 +394,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             </main>
 
             {/* Bottom Navigation - Refined Glass Design */}
-            {!hideNav && (
+            {!hideNav && component !== 'Resident/Billing/Index' && (
                 <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6">
                     <motion.nav
                         initial={{ opacity: 0, y: 20 }}
