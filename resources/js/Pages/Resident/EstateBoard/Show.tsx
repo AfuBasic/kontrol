@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Resident/EstateBoardCommentController';
 import { index } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
@@ -286,7 +287,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Add a comment..."
                                     rows={2} // Start small
-                                    className="block w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-12 text-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                    className="block w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-12 text-sm text-slate-900 transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                 />
                                 <div className="absolute right-2 bottom-2">
                                     <button
@@ -306,3 +307,9 @@ export default function EstateBoardShow({ post, comments }: Props) {
         </>
     );
 }
+
+EstateBoardShow.layout = (page: React.ReactNode) => (
+    <ResidentLayout hideNav={true}>
+        <AnimatedLayout>{page}</AnimatedLayout>
+    </ResidentLayout>
+);

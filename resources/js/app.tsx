@@ -125,7 +125,7 @@ createInertiaApp({
 
                     // All layouts have a white top nav — always use dark icons so they're visible.
                     const applyStatusBarStyle = () => {
-                        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+                        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
                     };
 
                     // Apply on first load
