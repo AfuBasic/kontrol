@@ -68,32 +68,27 @@ createInertiaApp({
             const [isExiting, setIsExiting] = useState(false);
 
             useEffect(() => {
-                const unregister = router.on('finish', () => {
-                    // Small delay to ensure React has painted the first frame
-                    setTimeout(() => {
-                        setIsExiting(true);
-                        // Hide native splash once our custom loader is fully visible underneath
-                        if (Capacitor.isNativePlatform()) {
-                            SplashScreen.hide().catch(() => {});
-                        }
-                        // Remove the loader from DOM after its fade-out animation
-                        setTimeout(() => setIsBooting(false), 600);
-                    }, 400);
-                    unregister();
-                });
-
-                // Safety timeout: Never leave the user stranded on the splash
-                const timer = setTimeout(() => {
-                    setIsExiting(true);
+                // 1. Hide the native splash screen quickly after mount so the custom loader is shown
+                const hideNativeTimer = setTimeout(() => {
                     if (Capacitor.isNativePlatform()) {
                         SplashScreen.hide().catch(() => {});
                     }
-                    setTimeout(() => setIsBooting(false), 600);
-                }, 8000);
+                }, 100);
+
+                // 2. Allow the custom loader to run its animations, then fade it out
+                const fadeOutTimer = setTimeout(() => {
+                    setIsExiting(true);
+                }, 1800);
+
+                // 3. Remove the custom loader from DOM after fade-out
+                const cleanupTimer = setTimeout(() => {
+                    setIsBooting(false);
+                }, 2400);
 
                 return () => {
-                    unregister();
-                    clearTimeout(timer);
+                    clearTimeout(hideNativeTimer);
+                    clearTimeout(fadeOutTimer);
+                    clearTimeout(cleanupTimer);
                 };
             }, []);
 
@@ -128,22 +123,18 @@ createInertiaApp({
                         await StatusBar.setBackgroundColor({ color: '#00000000' });
                     }
 
-                    // Determine the correct status bar style based on the current page.
-                    // Security pages with a dark variant need light icons; everything else uses dark icons.
+                    // All layouts have a white top nav — always use dark icons so they're visible.
                     const applyStatusBarStyle = () => {
-                        const component = (window as any).__inertia?.page?.component ?? '';
-                        const isDarkPage = component.startsWith('Security/');
-                        StatusBar.setStyle({ style: isDarkPage ? Style.Light : Style.Dark }).catch(() => {});
+                        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
                     };
 
                     // Apply on first load
                     applyStatusBarStyle();
 
-                    // Re-apply after every Inertia navigation (catches layout changes)
+                    // Re-apply after every Inertia navigation (page transitions can reset it)
                     router.on('navigate', () => {
                         applyStatusBarStyle();
                     });
-
 
                     // Handle Android back button
                     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
