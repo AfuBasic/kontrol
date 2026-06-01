@@ -1,10 +1,11 @@
 import { Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
+import { offlineDb, sha256 } from '@/Utils/offlineDb';
 
 const CODE_LENGTH = 6;
 
@@ -62,6 +63,90 @@ export default function SecurityVerify() {
     const streamRef = useRef<MediaStream | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
+    // Offline / Sync State
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [syncing, setSyncing] = useState(false);
+    const [pendingLogsCount, setPendingLogsCount] = useState(0);
+
+    const syncOfflineLogsAndData = useCallback(async () => {
+        if (!navigator.onLine || syncing) return;
+        setSyncing(true);
+
+        try {
+            // 1. Sync pending check-in logs
+            const pending = await offlineDb.getPendingLogs();
+            if (pending.length > 0) {
+                const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
+                const response = await fetch('/verify/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ logs: pending }),
+                });
+
+                if (response.ok) {
+                    const res = await response.json();
+                    if (res.success) {
+                        await offlineDb.clearPendingLogs();
+                        setPendingLogsCount(0);
+                    }
+                }
+            }
+
+            // 2. Fetch new active code hashes to cache
+            const response = await fetch('/verify/sync');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.codes) {
+                    await offlineDb.saveActiveCodes(data.codes);
+                }
+            }
+        } catch (err) {
+            console.error('Offline sync failed:', err);
+        } finally {
+            setSyncing(false);
+        }
+    }, [syncing]);
+
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true);
+            syncOfflineLogsAndData();
+        };
+        const handleOffline = () => {
+            setIsOnline(false);
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Run sync on load if online
+        if (navigator.onLine) {
+            syncOfflineLogsAndData();
+        }
+
+        // Get initial pending count
+        offlineDb.getPendingLogs().then((logs) => {
+            setPendingLogsCount(logs.length);
+        });
+
+        // Sync periodically every 2 minutes
+        const interval = setInterval(() => {
+            if (navigator.onLine) {
+                syncOfflineLogsAndData();
+            }
+        }, 120000);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            clearInterval(interval);
+        };
+    }, [syncOfflineLogsAndData]);
+
     useEffect(() => {
         if (flash?.validation_result) {
             setResult(flash.validation_result);
@@ -78,10 +163,49 @@ export default function SecurityVerify() {
         }
     }, [result, isScanning]);
 
-    const submit = useCallback((code: string, source?: 'scanned' | 'typed') => {
+    const submit = useCallback(async (code: string, source?: 'scanned' | 'typed') => {
         if (submittedFor.current === code) return;
         submittedFor.current = code;
         setSubmitting(true);
+
+        if (!navigator.onLine) {
+            try {
+                const codeHash = await sha256(code);
+                const cached = await offlineDb.findActiveCode(codeHash);
+
+                if (cached) {
+                    setResult({
+                        valid: true,
+                        status: 'granted',
+                        message: 'Access code validated offline',
+                        visitor_name: cached.visitor_name,
+                        host_name: cached.host_name,
+                        purpose: cached.purpose || null,
+                        expires_at: cached.expires_at,
+                        code_type: null,
+                        has_vehicle: cached.has_vehicle,
+                    });
+                } else {
+                    setResult({
+                        valid: false,
+                        status: 'offline_not_found',
+                        message: 'Code Not Recognized Offline',
+                        visitor_name: null,
+                        host_name: null,
+                        purpose: null,
+                        expires_at: null,
+                        code_type: null,
+                        has_vehicle: false,
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setSubmitting(false);
+            }
+            return;
+        }
+
         router.post(
             VerifyController.validate.url(),
             { code, source },
@@ -118,12 +242,16 @@ export default function SecurityVerify() {
                 }
 
                 const hasNative = 'BarcodeDetector' in window;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let detector: any = null;
 
                 if (hasNative) {
                     try {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-                    } catch {}
+                    } catch {
+                        // ignore native BarcodeDetector initialization errors
+                    }
                 }
 
                 // Create offscreen canvas asset layers ONCE to protect GPU memory context
@@ -271,12 +399,36 @@ export default function SecurityVerify() {
         setTimeout(() => inputsRef.current[0]?.focus(), 50);
     };
 
-    const recordDecision = (decision: 'admit' | 'reject', extraData: any = {}) => {
+    const recordDecision = async (
+        decision: 'admit' | 'reject',
+        extraData: { vehicle_make?: string; vehicle_model?: string; vehicle_plate_number?: string } = {}
+    ) => {
         const code = submittedFor.current;
         if (!code) {
             reset();
             return;
         }
+
+        if (!navigator.onLine) {
+            try {
+                await offlineDb.queueOfflineLog({
+                    code,
+                    decision,
+                    vehicle_make: extraData.vehicle_make,
+                    vehicle_model: extraData.vehicle_model,
+                    vehicle_plate_number: extraData.vehicle_plate_number,
+                    created_at: new Date().toISOString(),
+                });
+                const logs = await offlineDb.getPendingLogs();
+                setPendingLogsCount(logs.length);
+            } catch (err) {
+                console.error('Failed to queue offline log:', err);
+            } finally {
+                reset();
+            }
+            return;
+        }
+
         router.post(
             VerifyController.decision.url(),
             {
@@ -296,6 +448,44 @@ export default function SecurityVerify() {
             <Head title="Verify Access · Security" />
 
             <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-6 sm:px-8">
+                {/* Offline & Sync Status Banner */}
+                <AnimatePresence>
+                    {!isOnline && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="mb-4 rounded-xl border border-amber-500/20 bg-amber-50/70 dark:bg-amber-950/20 p-3 text-amber-800 dark:text-amber-400 text-xs font-bold flex items-center justify-between shadow-sm"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                </span>
+                                <span>Offline Mode Active</span>
+                            </div>
+                            {pendingLogsCount > 0 && (
+                                <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[10px]">
+                                    {pendingLogsCount} Pending Sync
+                                </span>
+                            )}
+                        </motion.div>
+                    )}
+                    {isOnline && pendingLogsCount > 0 && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="mb-4 rounded-xl border border-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/20 p-3 text-indigo-850 dark:text-indigo-400 text-xs font-bold flex items-center justify-between shadow-sm"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
+                                <span>Syncing {pendingLogsCount} queued check-ins...</span>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <AnimatePresence mode="wait">
                     {submitting ? (
                         <motion.div
@@ -426,14 +616,55 @@ SecurityVerify.layout = (page: React.ReactNode) => <SecurityLayout variant="ligh
 
 type ResultPanelProps = {
     result: ValidationResult;
-    onAdmit: (data?: any) => void;
-    onReject: (data?: any) => void;
+    onAdmit: (data?: Record<string, unknown>) => void;
+    onReject?: (data?: Record<string, unknown>) => void;
     onReset: () => void;
 };
 
-function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
+function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
+
+    if (result.status === 'offline_not_found') {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
+            >
+                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-amber-50 text-amber-500 ring-4 ring-amber-500/5">
+                    <WifiOff className="h-12 w-12" />
+                </div>
+                <h2 className="text-3xl font-black tracking-tight text-slate-900">Code Not Recognized Offline</h2>
+                
+                <div className="mt-4 max-w-sm space-y-4 px-4 text-center">
+                    <p className="text-sm font-semibold text-slate-500 leading-relaxed">
+                        This code is not in our offline cache. If this code was created recently, connect this device to the internet to verify it online.
+                    </p>
+                    
+                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs font-semibold text-indigo-850 leading-relaxed text-left dark:border-indigo-950/20 dark:bg-indigo-950/10 dark:text-indigo-400">
+                        <p className="font-extrabold uppercase tracking-wider text-[10px] mb-1">Visual Verification Option</p>
+                        If the visitor displays their valid app pass visually on their phone showing the resident's name, host's villa, and timestamp, you can manually admit them.
+                    </div>
+                </div>
+
+                <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
+                    <button
+                        onClick={() => onAdmit({ override: true })}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95 cursor-pointer"
+                    >
+                        Manually Admit Visitor
+                    </button>
+                    <button
+                        onClick={onReset}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-4 text-sm font-black text-slate-900 transition-all active:scale-95 cursor-pointer"
+                    >
+                        Try another code
+                    </button>
+                </div>
+            </motion.div>
+        );
+    }
 
     if (!valid) {
         return (
@@ -470,7 +701,7 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
 
                         <h2 className="text-3xl font-black tracking-tight text-slate-900">Access Granted</h2>
                         <div className="mt-2 text-center">
-                            <p className="text-base font-medium text-slate-500">Visitor verification successful.</p>
+                            <p className="text-base font-medium text-slate-500">{result.message || 'Visitor verification successful.'}</p>
                         </div>
                     </div>
 
@@ -516,7 +747,7 @@ function ResultPanel({ result, onAdmit, onReject, onReset }: ResultPanelProps) {
     );
 }
 
-function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: any) => void }) {
+function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Record<string, string>) => void }) {
     const [data, setData] = useState({
         vehicle_make: '',
         vehicle_model: '',

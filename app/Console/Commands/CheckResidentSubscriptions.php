@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Jobs\Billing\ProcessSubscriptionReminderJob;
+use App\Mail\CommandExecutedMail;
 use App\Models\ResidentSubscription;
 use App\Services\Billing\InvoiceGenerationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class CheckResidentSubscriptions extends Command
 {
@@ -69,6 +71,15 @@ class CheckResidentSubscriptions extends Command
         $this->dispatchReminders();
 
         $this->info('Check completed.');
+
+        try {
+            Mail::to('support@usekontrol.com')->queue(new CommandExecutedMail(
+                'Command Executed: kontrol:check-resident-subscriptions',
+                "Command 'kontrol:check-resident-subscriptions' executed successfully at ".now()->toDateTimeString()
+            ));
+        } catch (\Throwable $e) {
+            $this->error('Failed to send mail: '.$e->getMessage());
+        }
     }
 
     protected function dispatchReminders(): void

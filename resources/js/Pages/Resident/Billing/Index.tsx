@@ -111,6 +111,7 @@ type StatusBannerProps = {
     paying: boolean;
     onSettle: () => void;
     onOpenWeb: () => void;
+    daysRemaining: number;
 };
 
 function StatusBanner({
@@ -124,6 +125,7 @@ function StatusBanner({
     paying,
     onSettle,
     onOpenWeb,
+    daysRemaining,
 }: StatusBannerProps) {
     if (!hasOutstanding && !needsAttention) {
         return null;
@@ -142,6 +144,8 @@ function StatusBanner({
           }`
         : statusDescription;
 
+    const showSettle = !isNative || daysRemaining <= 3;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: -4 }}
@@ -158,7 +162,26 @@ function StatusBanner({
                 <p className="truncate text-xs text-slate-500">{subtext}</p>
             </div>
 
-            {isNative ? (
+            {showSettle ? (
+                hasOutstanding ? (
+                    <button
+                        type="button"
+                        onClick={onSettle}
+                        disabled={paying}
+                        className="inline-flex shrink-0 items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+                    >
+                        {paying ? 'Redirecting…' : 'Settle Now'}
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onOpenWeb}
+                        className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
+                    >
+                        Manage
+                    </button>
+                )
+            ) : (
                 <button
                     type="button"
                     onClick={onOpenWeb}
@@ -166,23 +189,6 @@ function StatusBanner({
                 >
                     Open Web
                     <ArrowTopRightOnSquareIcon className="h-3 w-3" strokeWidth={2.2} />
-                </button>
-            ) : hasOutstanding ? (
-                <button
-                    type="button"
-                    onClick={onSettle}
-                    disabled={paying}
-                    className="inline-flex shrink-0 items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
-                >
-                    {paying ? 'Redirecting…' : `Settle ${outstanding.formatted_amount}`}
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    onClick={onOpenWeb}
-                    className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
-                >
-                    Manage
                 </button>
             )}
         </motion.div>
@@ -218,22 +224,45 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
     const statusKey = getComputedStatus();
     const status = STATUS_MAP[statusKey];
 
-    // Determine dynamic label and description
-    const displayLabel = statusKey === 'expired'
-        ? (isTrialExpired ? 'Trial expired' : 'Subscription expired')
-        : status.label;
-
-    const displayDescription = statusKey === 'expired'
-        ? (isTrialExpired
-            ? `Your trial expired on ${formatDate(subscription.trial_ends_at)}. Settle the outstanding invoice to restore access.`
-            : `Your subscription expired on ${formatDate(subscription.current_period_end)}. Renew to restore access.`)
-        : status.description(formatDate(subscription.current_period_end || subscription.trial_ends_at));
-
-    const tone = TONE_STYLES[status.tone];
-
+    // Compute remaining days
     const periodEnd = subscription.current_period_end || subscription.trial_ends_at;
+    const getDaysRemaining = (): number => {
+        if (!periodEnd) return 999;
+        const diffTime = new Date(periodEnd).getTime() - new Date().getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+    const daysRemaining = getDaysRemaining();
+    const isExpiringSoon = daysRemaining <= 5 && daysRemaining >= 0 && statusKey !== 'expired' && statusKey !== 'past_due';
+
+    const formatExpiresIn = () => {
+        if (daysRemaining === 0) {
+            return 'expires today';
+        }
+        return `expires in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`;
+    };
+
+    // Determine dynamic label and description
+    let displayLabel = status.label;
+    let displayDescription = '';
+    let tone = TONE_STYLES[status.tone];
+
+    if (isExpiringSoon) {
+        displayLabel = subscription.status === 'trial' ? 'Trial expiring soon' : 'Subscription expiring soon';
+        displayDescription = subscription.status === 'trial'
+            ? `Current trial ${formatExpiresIn()}.`
+            : `Current subscription ${formatExpiresIn()}.`;
+        tone = TONE_STYLES['warning'];
+    } else if (statusKey === 'expired') {
+        displayLabel = isTrialExpired ? 'Trial expired' : 'Subscription expired';
+        displayDescription = isTrialExpired
+            ? `Your trial expired on ${formatDate(subscription.trial_ends_at)}. Settle the outstanding invoice to restore access.`
+            : `Your subscription expired on ${formatDate(subscription.current_period_end)}. Renew to restore access.`;
+    } else {
+        displayDescription = status.description(formatDate(subscription.current_period_end || subscription.trial_ends_at));
+    }
+
     const hasOutstanding = outstanding.amount > 0;
-    const needsAttention = !hasOutstanding && (statusKey === 'past_due' || statusKey === 'expired');
+    const needsAttention = isExpiringSoon || (!hasOutstanding && (statusKey === 'past_due' || statusKey === 'expired'));
 
     const openWebApp = async () => {
         try {
@@ -316,6 +345,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     paying={paying}
                     onSettle={handleAction}
                     onOpenWeb={openWebApp}
+                    daysRemaining={daysRemaining}
                 />
 
                 {hasOutstanding && (

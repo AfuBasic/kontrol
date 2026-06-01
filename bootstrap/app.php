@@ -23,8 +23,8 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__ . '/../routes/console.php',
-        channels: __DIR__ . '/../routes/channels.php',
+        commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         using: function (): void {
             $domainRoutingEnabled = config('domains.routing_enabled', true);
@@ -43,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
             |
             */
 
-            if ($domainRoutingEnabled && !$isLocal) {
+            if ($domainRoutingEnabled && ! $isLocal) {
                 // Production / Staging: Full domain-based routing
                 Route::domain(config('domains.root'))
                     ->middleware('web')
@@ -66,9 +66,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Both public and app routes accessible on localhost/tunnel
                 Route::middleware('web')
                     ->group(function () {
-                    require base_path('routes/public.php');
-                    require base_path('routes/app.php');
-                });
+                        require base_path('routes/public.php');
+                        require base_path('routes/app.php');
+                    });
 
                 Route::middleware('api')
                     ->prefix('api')
@@ -115,7 +115,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            if (app()->environment('production') || !config('app.debug')) {
+            if (app()->environment('production') || ! config('app.debug')) {
                 $statusCode = $e instanceof HttpExceptionInterface
                     ? $e->getStatusCode()
                     : 500;

@@ -122,8 +122,9 @@ createInertiaApp({
 
             (async () => {
                 try {
+                    await StatusBar.show();
                     await StatusBar.setStyle({ style: Style.Default });
-                    await StatusBar.setOverlaysWebView({ overlay: true });
+                    await StatusBar.setOverlaysWebView({ overlay: false });
 
                     // Handle Android back button
                     CapacitorApp.addListener('backButton', ({ canGoBack }) => {

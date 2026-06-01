@@ -5,14 +5,13 @@ namespace App\Jobs\Admin;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\User;
+use App\Notifications\Resident\NewCollectionNotification;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-
-use App\Notifications\Resident\NewCollectionNotification;
 
 class PublishCollectionJob implements ShouldQueue
 {

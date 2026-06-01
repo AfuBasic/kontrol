@@ -1,10 +1,26 @@
-import { Link, Head } from '@inertiajs/react';
+import { Link, Head, usePage } from '@inertiajs/react';
 import { Player } from '@remotion/player';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Shield, Check, Smartphone, Users, AlertOctagon, ArrowUpRight, Coins, QrCode, Bell } from 'lucide-react';
+import {
+    Shield,
+    Check,
+    Smartphone,
+    Users,
+    AlertOctagon,
+    ArrowUpRight,
+    Coins,
+    QrCode,
+    Bell,
+    ChevronDown,
+    Activity,
+    ShieldAlert,
+    WifiOff,
+    FileText,
+} from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import Header from '@/Components/Public/Header';
 import { VisitorEntryAnimation, LeviesCollectionsAnimation, EmergencySOSAnimation } from '@/Components/Public/RemotionAnimations';
+import type { SharedData } from '@/types';
 
 interface PlanFeature {
     name: string;
@@ -35,8 +51,15 @@ interface Props {
 }
 
 export default function Home({ plans }: Props) {
+    const { props } = usePage<SharedData>();
+    const appUrl = props.app_url;
+    const cleanAppUrl = appUrl ? appUrl.replace(/\/$/, '') : 'https://usekontrol.com';
+    const canonicalUrl = `${cleanAppUrl}/`;
+    const ogImageUrl = `${cleanAppUrl}/assets/images/app-icon.png`;
+
     const [isMounted, setIsMounted] = useState(false);
     const [activeTab, setActiveTab] = useState<'entry' | 'collections' | 'sos'>('entry');
+    const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
 
     // Scroll progress for cinematic camera perspective parallax
     const { scrollY } = useScroll();
@@ -83,11 +106,167 @@ export default function Home({ plans }: Props) {
     return (
         <div className="min-h-screen bg-white font-sans text-slate-900 transition-colors duration-300 selection:bg-[#FF7E67]/30 selection:text-white dark:bg-[#020617] dark:text-slate-100">
             <Head>
-                <title>Kontrol - Modern Estate Access & Gated Community Control</title>
+                <title>Kontrol - Modern Estate Access & Gated Community Security System</title>
                 <meta
                     name="description"
-                    content="Automate gate code generation, guest authorizations, estate billing levies, and guard checkpoints using Kontrol."
+                    content="Simplify gated community security and estate management. Generate visitor access codes, track visitor logs, pay levies, and trigger emergency SOS with Kontrol."
                 />
+                <meta
+                    name="keywords"
+                    content="estate access control, gated community security system, visitor management software, gate code generator, estate billing system, security guard checkpoint, residential security app, gated estate security, nigerian estate app, guest security scanner"
+                />
+                <meta name="author" content="Kontrol Technologies" />
+                <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content="Kontrol - Modern Estate Access & Gated Community Security System" />
+                <meta
+                    property="og:description"
+                    content="Simplify gated community security and estate management. Generate visitor access codes, track visitor logs, pay levies, and trigger emergency SOS with Kontrol."
+                />
+                <meta property="og:image" content={ogImageUrl} />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:image:alt" content="Kontrol - Gated Estate Access Control & Visitor Management" />
+                <meta property="og:site_name" content="Kontrol" />
+                <meta property="og:locale" content="en_US" />
+
+                {/* Twitter Cards */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:url" content={canonicalUrl} />
+                <meta name="twitter:title" content="Kontrol - Modern Estate Access & Gated Community Security System" />
+                <meta
+                    name="twitter:description"
+                    content="Simplify gated community security and estate management. Generate visitor access codes, track visitor logs, pay levies, and trigger emergency SOS with Kontrol."
+                />
+                <meta name="twitter:image" content={ogImageUrl} />
+                <meta name="twitter:image:alt" content="Kontrol - Gated Estate Access Control & Visitor Management" />
+
+                {/* Canonical */}
+                <link rel="canonical" href={canonicalUrl} />
+
+                {/* Structured Data (JSON-LD) for SEO Rich Snippets */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@graph': [
+                            {
+                                '@type': 'SoftwareApplication',
+                                '@id': `${cleanAppUrl}/#software`,
+                                name: 'Kontrol',
+                                url: cleanAppUrl,
+                                operatingSystem: 'Android, iOS, Web',
+                                applicationCategory: 'SecurityApplication, BusinessApplication',
+                                description:
+                                    'Automate gate code generation, guest authorizations, estate billing levies, and guard checkpoints using Kontrol.',
+                                offers: {
+                                    '@type': 'AggregateOffer',
+                                    priceCurrency: 'NGN',
+                                    lowPrice: '15000',
+                                    priceCount: '3',
+                                    offers: [
+                                        {
+                                            '@type': 'Offer',
+                                            name: 'Pro Quarterly',
+                                            price: '15000',
+                                            priceCurrency: 'NGN',
+                                            priceSpecification: {
+                                                '@type': 'UnitPriceSpecification',
+                                                price: '15000',
+                                                priceCurrency: 'NGN',
+                                                referenceQuantity: {
+                                                    '@type': 'QuantitativeValue',
+                                                    value: '3',
+                                                    unitCode: 'MON',
+                                                },
+                                            },
+                                        },
+                                        {
+                                            '@type': 'Offer',
+                                            name: 'Pro Semi-Annually',
+                                            price: '27000',
+                                            priceCurrency: 'NGN',
+                                            priceSpecification: {
+                                                '@type': 'UnitPriceSpecification',
+                                                price: '27000',
+                                                priceCurrency: 'NGN',
+                                                referenceQuantity: {
+                                                    '@type': 'QuantitativeValue',
+                                                    value: '6',
+                                                    unitCode: 'MON',
+                                                },
+                                            },
+                                        },
+                                        {
+                                            '@type': 'Offer',
+                                            name: 'Pro Annually',
+                                            price: '48000',
+                                            priceCurrency: 'NGN',
+                                            priceSpecification: {
+                                                '@type': 'UnitPriceSpecification',
+                                                price: '48000',
+                                                priceCurrency: 'NGN',
+                                                referenceQuantity: {
+                                                    '@type': 'QuantitativeValue',
+                                                    value: '1',
+                                                    unitCode: 'ANN',
+                                                },
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                            {
+                                '@type': 'Organization',
+                                '@id': `${cleanAppUrl}/#organization`,
+                                name: 'Kontrol Technologies',
+                                url: cleanAppUrl,
+                                logo: ogImageUrl,
+                                description: 'Modern Gated Community Access & Estate Management System.',
+                            },
+                            {
+                                '@type': 'FAQPage',
+                                '@id': `${cleanAppUrl}/#faq`,
+                                mainEntity: [
+                                    {
+                                        '@type': 'Question',
+                                        name: 'How does the digital gate access code work?',
+                                        acceptedAnswer: {
+                                            '@type': 'Answer',
+                                            text: 'Residents generate a secure 6-digit access code or QR pass inside the Kontrol app. Security guards scan or verify the code at the gate to grant entry in seconds, completely replacing paper logbooks.',
+                                        },
+                                    },
+                                    {
+                                        '@type': 'Question',
+                                        name: 'How are estate levies and security dues collected?',
+                                        acceptedAnswer: {
+                                            '@type': 'Answer',
+                                            text: 'Estate managers can create and assign levies, and residents can pay securely using their cards or bank transfers inside the app. Payment status is updated instantly on the dashboard.',
+                                        },
+                                    },
+                                    {
+                                        '@type': 'Question',
+                                        name: 'Can other members of my household use the app?',
+                                        acceptedAnswer: {
+                                            '@type': 'Answer',
+                                            text: 'Yes! Primary residents can invite family members or co-occupants to join their unit. Household members can view the community board and generate guest access codes, while primary residents retain control over visitor history and billing.',
+                                        },
+                                    },
+                                    {
+                                        '@type': 'Question',
+                                        name: 'Can I generate long-term codes, and how is usage tracked?',
+                                        acceptedAnswer: {
+                                            '@type': 'Answer',
+                                            text: 'Yes! You can generate long-lived access codes for regular visitors, household staff, or contractors. Whenever a code is used, it is tracked in real-time. Residents receive instant push notifications the exact second a guest pass is verified at the gate, keeping a complete audit trail.',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    })}
+                </script>
             </Head>
             <Header activePage="home" />
             {/* 1. HERO SECTION */}
@@ -108,20 +287,20 @@ export default function Home({ plans }: Props) {
                         }}
                         className="animate-pulse-slow h-full w-full"
                     >
-                        <img 
-                            src="/assets/images/estate-entrance-day.png" 
-                            alt="Premium Gated Estate Entrance" 
-                            className="block dark:hidden w-full h-full object-cover filter brightness-[0.98] contrast-[1.02] transition-all duration-300"
+                        <img
+                            src="/assets/images/estate-entrance-day.png"
+                            alt="Premium Gated Estate Entrance"
+                            className="block h-full w-full object-cover brightness-[0.98] contrast-[1.02] filter transition-all duration-300 dark:hidden"
                         />
-                        <img 
-                            src="/assets/images/estate-entrance-night.png" 
-                            alt="Premium Gated Estate Entrance" 
-                            className="hidden dark:block w-full h-full object-cover filter brightness-[0.85] contrast-[1.05] transition-all duration-300"
+                        <img
+                            src="/assets/images/estate-entrance-night.png"
+                            alt="Premium Gated Estate Entrance"
+                            className="hidden h-full w-full object-cover brightness-[0.85] contrast-[1.05] filter transition-all duration-300 dark:block"
                         />
                     </motion.div>
 
                     {/* Blending Gradients - Light Mode */}
-                    <div className="absolute inset-0 block dark:hidden pointer-events-none">
+                    <div className="pointer-events-none absolute inset-0 block dark:hidden">
                         {/* Left edge — solid white, fades right */}
                         <div className="absolute inset-0 bg-linear-to-r from-white via-white/70 to-transparent" />
                         {/* Bottom edge — solid white, fades up */}
@@ -133,7 +312,7 @@ export default function Home({ plans }: Props) {
                     </div>
 
                     {/* Blending Gradients - Dark Mode */}
-                    <div className="absolute inset-0 hidden dark:block pointer-events-none">
+                    <div className="pointer-events-none absolute inset-0 hidden dark:block">
                         {/* Left edge */}
                         <div className="absolute inset-0 bg-linear-to-r from-[#020617] via-[#020617]/60 to-transparent" />
                         {/* Bottom edge */}
@@ -525,221 +704,363 @@ export default function Home({ plans }: Props) {
                         </div>
                     </div>
                 </div>
-            </section>{' '}
-            {/* 3. PLANS & PRICING */}
-            <section id="pricing" className="relative border-b border-slate-200 py-24 dark:border-slate-900">
+            </section>
+            {/* 3. PLANS & PRICING (HIDDEN FOR NOW) */}
+            {false && (
+                <section id="pricing" className="relative border-b border-slate-200 py-24 dark:border-slate-900">
+                    <div className="mx-auto max-w-7xl px-6">
+                        <div className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
+                            <span className="text-xs font-bold tracking-widest text-[#4F46E5] uppercase">Plans & Pricing</span>
+                            <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">
+                                Simple, transparent pricing.
+                            </h2>
+                            <p className="text-base text-slate-600 sm:text-lg dark:text-slate-400">
+                                Choose the plan that fits your community size and operations.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-3">
+                            {/* Pro - Quarterly Column */}
+                            {quarterlyPlan && (
+                                <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
+                                    <div className="flex flex-col gap-5">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{quarterlyPlan.name}</h3>
+                                            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                                                Complete access control and premium features, billed quarterly.
+                                            </p>
+                                        </div>
+                                        <div className="mt-2 flex flex-col gap-1.5">
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-4xl font-black text-slate-900 dark:text-white">
+                                                    ₦{(quarterlyPlan.price / 100).toLocaleString()}
+                                                </span>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">/ quarter</span>
+                                            </div>
+                                            <div className="text-xs font-medium text-slate-600 dark:text-slate-400">₦5,000 / month equivalent</div>
+                                        </div>
+                                        <span className="text-[10px] font-semibold text-slate-500 uppercase">Billed quarterly</span>
+                                        <hr className="my-2 border-slate-200 dark:border-slate-900" />
+                                        <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Unlimited active resident units</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Unlimited security guards & admins</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Instant visitor gate codes</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Security guard scanner app</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Easy levy collections & payments</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Telegram bot access codes</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <Link
+                                        href={`/apply?plan_id=${quarterlyPlan.id}`}
+                                        className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </div>
+                            )}
+
+                            {/* Pro - Semi-Annually Column */}
+                            {semiAnnualPlan && (
+                                <div className="relative flex flex-col justify-between rounded-3xl border-2 border-indigo-200 bg-slate-50 p-8 shadow-2xl dark:border-[#4F46E5]/40 dark:bg-[#0f172a]/30">
+                                    {semiAnnualPlan.badge && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4F46E5] px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
+                                            {semiAnnualPlan.badge}
+                                        </div>
+                                    )}
+                                    <div className="absolute top-0 right-6 rounded-b-lg bg-[#FF7E67] px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
+                                        Save 10%
+                                    </div>
+                                    <div className="flex flex-col gap-5">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{semiAnnualPlan.name}</h3>
+                                            <p className="text-slate-655 mt-1 text-xs dark:text-slate-400">
+                                                Complete access control and premium features, billed semi-annually.
+                                            </p>
+                                        </div>
+                                        <div className="mt-2 flex flex-col gap-1.5">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-slate-900 dark:text-white">
+                                                    ₦{(semiAnnualPlan.price / 100).toLocaleString()}
+                                                </span>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">/ 6 months</span>
+                                                <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦30,000</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>₦4,500 / month equivalent</span>
+                                                <span className="rounded bg-[#4F46E5]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#4F46E5]">
+                                                    Save 10%
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-extrabold tracking-wider text-[#4F46E5] uppercase">
+                                            Billed semi-annually
+                                        </span>
+                                        <hr className="my-2 border-slate-200 dark:border-slate-900" />
+                                        <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
+                                                <span className="text-slate-800 dark:text-slate-200">Unlimited active resident units</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
+                                                <span className="text-slate-800 dark:text-slate-200">Unlimited security guards & admins</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
+                                                <span className="text-slate-800 dark:text-slate-200">Instant visitor gate codes & scanner app</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Easy levy collections & payments</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Security roster management</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Telegram bot access codes</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <Link
+                                        href={`/apply?plan_id=${semiAnnualPlan.id}`}
+                                        className="mt-8 w-full rounded-xl bg-[#FF7E67] py-3.5 text-center text-xs font-extrabold text-white shadow-lg transition-colors hover:bg-[#ff8f7a]"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </div>
+                            )}
+
+                            {/* Pro - Annually Column */}
+                            {annualPlan && (
+                                <div className="relative flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
+                                    {annualPlan.badge && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
+                                            {annualPlan.badge}
+                                        </div>
+                                    )}
+                                    <div className="absolute top-0 right-6 rounded-b-lg bg-emerald-500 px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
+                                        Save 20%
+                                    </div>
+                                    <div className="flex flex-col gap-5">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{annualPlan.name}</h3>
+                                            <p className="text-slate-655 mt-1 text-xs dark:text-slate-400">
+                                                Complete access control and premium features, billed annually.
+                                            </p>
+                                        </div>
+                                        <div className="mt-2 flex flex-col gap-1.5">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-slate-900 dark:text-white">
+                                                    ₦{(annualPlan.price / 100).toLocaleString()}
+                                                </span>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">/ year</span>
+                                                <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦60,000</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>₦4,000 / month equivalent</span>
+                                                <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                    Save 20%
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-extrabold tracking-wider text-emerald-600 uppercase dark:text-emerald-500">
+                                            Billed annually
+                                        </span>
+                                        <hr className="my-2 border-slate-200 dark:border-slate-900" />
+                                        <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Unlimited active resident units</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Unlimited security guards & admins</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Everything in Semi-Annually</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Priority onboarding & support</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Dedicated account manager</span>
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                                <span>Telegram bot access codes</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <Link
+                                        href={`/apply?plan_id=${annualPlan.id}`}
+                                        className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+            )}
+            {/* NEW SECTION 2: SECURITY TELEMETRY & OPERATIONS GRID */}
+            <section className="relative border-b border-slate-200 py-24 dark:border-slate-900">
                 <div className="mx-auto max-w-7xl px-6">
                     <div className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
-                        <span className="text-xs font-bold tracking-widest text-[#4F46E5] uppercase">Plans & Pricing</span>
+                        <span className="text-xs font-bold tracking-widest text-[#FF7E67] uppercase">Gate Operations</span>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">
-                            Simple, transparent pricing.
+                            Digital checkpoint telemetry
                         </h2>
                         <p className="text-base text-slate-600 sm:text-lg dark:text-slate-400">
-                            Choose the plan that fits your community size and operations.
+                            Give your security guard crew the ultimate digital toolkit. Zero setups, zero servers, zero lag.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-3">
-                        {/* Pro - Quarterly Column */}
-                        {quarterlyPlan && (
-                            <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
-                                <div className="flex flex-col gap-5">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{quarterlyPlan.name}</h3>
-                                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                                            Complete access control and premium features, billed quarterly.
-                                        </p>
-                                    </div>
-                                    <div className="mt-2 flex flex-col gap-1.5">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                ₦{(quarterlyPlan.price / 100).toLocaleString()}
-                                            </span>
-                                            <span className="text-xs text-slate-500 dark:text-slate-400">/ quarter</span>
-                                        </div>
-                                        <div className="text-xs font-medium text-slate-600 dark:text-slate-400">₦5,000 / month equivalent</div>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-slate-500 uppercase">Billed quarterly</span>
-                                    <hr className="my-2 border-slate-200 dark:border-slate-900" />
-                                    <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Unlimited active resident units</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Unlimited security guards & admins</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Instant visitor gate codes</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Security guard scanner app</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Easy levy collections & payments</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Telegram bot access codes</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href={`/apply?plan_id=${quarterlyPlan.id}`}
-                                    className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                >
-                                    Get Started
-                                </Link>
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        {/* Telemetry Card 1 */}
+                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                <QrCode className="h-5 w-5 text-[#FF7E67]" />
                             </div>
-                        )}
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Live Activity Audits</h3>
+                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                Complete timeline history of every check-in, check-out, and scan event at your estate gates. Completely digital and
+                                immutable.
+                            </p>
+                        </div>
 
-                        {/* Pro - Semi-Annually Column */}
-                        {semiAnnualPlan && (
-                            <div className="relative flex flex-col justify-between rounded-3xl border-2 border-indigo-200 bg-slate-50 p-8 shadow-2xl dark:border-[#4F46E5]/40 dark:bg-[#0f172a]/30">
-                                {semiAnnualPlan.badge && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4F46E5] px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
-                                        {semiAnnualPlan.badge}
-                                    </div>
-                                )}
-                                <div className="absolute top-0 right-6 rounded-b-lg bg-[#FF7E67] px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
-                                    Save 10%
-                                </div>
-                                <div className="flex flex-col gap-5">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{semiAnnualPlan.name}</h3>
-                                        <p className="text-slate-650 mt-1 text-xs dark:text-slate-400">
-                                            Complete access control and premium features, billed semi-annually.
-                                        </p>
-                                    </div>
-                                    <div className="mt-2 flex flex-col gap-1.5">
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                ₦{(semiAnnualPlan.price / 100).toLocaleString()}
-                                            </span>
-                                            <span className="text-xs text-slate-500 dark:text-slate-400">/ 6 months</span>
-                                            <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦30,000</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                                            <span>₦4,500 / month equivalent</span>
-                                            <span className="rounded bg-[#4F46E5]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#4F46E5]">
-                                                Save 10%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] font-extrabold tracking-wider text-[#4F46E5] uppercase">Billed semi-annually</span>
-                                    <hr className="my-2 border-slate-200 dark:border-slate-900" />
-                                    <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
-                                            <span className="text-slate-800 dark:text-slate-200">Unlimited active resident units</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
-                                            <span className="text-slate-800 dark:text-slate-200">Unlimited security guards & admins</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF7E67]" />
-                                            <span className="text-slate-800 dark:text-slate-200">Instant visitor gate codes & scanner app</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Easy levy collections & payments</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Security roster management</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Telegram bot access codes</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href={`/apply?plan_id=${semiAnnualPlan.id}`}
-                                    className="mt-8 w-full rounded-xl bg-[#FF7E67] py-3.5 text-center text-xs font-extrabold text-white shadow-lg transition-colors hover:bg-[#ff8f7a]"
-                                >
-                                    Get Started
-                                </Link>
+                        {/* Telemetry Card 2 */}
+                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                <Users className="h-5 w-5 text-indigo-500" />
                             </div>
-                        )}
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Guard Shift Rosters</h3>
+                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                Seamless guard handover logs. Assign security guards to specific gates and monitor validation speeds and scans per
+                                shift.
+                            </p>
+                        </div>
 
-                        {/* Pro - Annually Column */}
-                        {annualPlan && (
-                            <div className="relative flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
-                                {annualPlan.badge && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
-                                        {annualPlan.badge}
-                                    </div>
-                                )}
-                                <div className="absolute top-0 right-6 rounded-b-lg bg-emerald-500 px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
-                                    Save 20%
-                                </div>
-                                <div className="flex flex-col gap-5">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{annualPlan.name}</h3>
-                                        <p className="text-slate-650 mt-1 text-xs dark:text-slate-400">
-                                            Complete access control and premium features, billed annually.
-                                        </p>
-                                    </div>
-                                    <div className="mt-2 flex flex-col gap-1.5">
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                ₦{(annualPlan.price / 100).toLocaleString()}
-                                            </span>
-                                            <span className="text-xs text-slate-500 dark:text-slate-400">/ year</span>
-                                            <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦60,000</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                                            <span>₦4,000 / month equivalent</span>
-                                            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                                                Save 20%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] font-extrabold tracking-wider text-emerald-600 uppercase dark:text-emerald-500">
-                                        Billed annually
-                                    </span>
-                                    <hr className="my-2 border-slate-200 dark:border-slate-900" />
-                                    <ul className="flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Unlimited active resident units</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Unlimited security guards & admins</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Everything in Semi-Annually</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Priority onboarding & support</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Dedicated account manager</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                            <span>Telegram bot access codes</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Link
-                                    href={`/apply?plan_id=${annualPlan.id}`}
-                                    className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                >
-                                    Get Started
-                                </Link>
+                        {/* Telemetry Card 3 */}
+                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                <WifiOff className="h-5 w-5 text-emerald-400" />
                             </div>
-                        )}
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Offline Scanning</h3>
+                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                Network failure? No problem. Gate scan records cache offline on guard terminals and sync instantly with databases when
+                                connectivity is restored.
+                            </p>
+                        </div>
+
+                        {/* Telemetry Card 4 */}
+                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                <Bell className="h-5 w-5 text-[#FF7E67]" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Instant Arrivals</h3>
+                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                Residents receive real-time push alerts the exact second their guest pass is validated, with name, phone, and
+                                registration tags.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {/* NEW SECTION 3: FAQ ACCORDION */}
+            <section className="relative border-b border-slate-200 bg-slate-50/50 py-24 dark:border-slate-900 dark:bg-[#0f172a]/20">
+                <div className="mx-auto max-w-4xl px-6">
+                    <div className="mx-auto mb-16 flex max-w-2xl flex-col gap-4 text-center">
+                        <span className="text-xs font-bold tracking-widest text-[#4F46E5] uppercase">Common Questions</span>
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">Frequently Asked Questions</h2>
+                        <p className="text-base text-slate-600 sm:text-lg dark:text-slate-400">
+                            Got questions about how Kontrol works in gated communities? We have answers.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        {[
+                            {
+                                question: 'How do residents generate visitor access codes?',
+                                answer: 'Residents generate a secure 6-digit access code or QR pass inside the Kontrol app. Security guards scan or verify the code at the gate to grant entry in seconds, completely replacing paper logbooks.',
+                            },
+                            {
+                                question: 'Can I pay my estate levies and dues through the app?',
+                                answer: 'Yes, Kontrol allows residents to view and pay estate levies, security dues, or electricity fees directly inside the app. Payment status is updated instantly on the dashboard for managers.',
+                            },
+                            {
+                                question: 'Can other members of my household use the app?',
+                                answer: 'Yes! Primary residents can invite family members or co-occupants to join their unit. Household members can view the community board and generate guest access codes, while primary residents retain control over visitor history and billing.',
+                            },
+                            {
+                                question: 'Can I generate long-term codes, and how is usage tracked?',
+                                answer: 'Yes! You can generate long-lived access codes for regular visitors, household staff, or contractors. Whenever a code is used, it is tracked in real-time. Residents receive instant push notifications the exact second a guest pass is verified at the gate, keeping a complete audit trail.',
+                            },
+                            {
+                                question: 'What hardware is required at the estate gate?',
+                                answer: 'Zero expensive hardware is needed. Guards only need any standard low-cost Android phone with a camera to run the Kontrol Terminal app. It works offline and scans codes instantly.',
+                            },
+                        ].map((faq, index) => {
+                            const isOpen = faqOpenIndex === index;
+                            return (
+                                <div
+                                    key={index}
+                                    className="rounded-2xl border border-slate-200 bg-white p-5 transition-all dark:border-slate-900 dark:bg-[#0f172a]/40"
+                                >
+                                    <button
+                                        onClick={() => setFaqOpenIndex(isOpen ? null : index)}
+                                        className="flex w-full cursor-pointer items-center justify-between text-left"
+                                    >
+                                        <span className="text-sm font-bold text-slate-900 md:text-base dark:text-white">{faq.question}</span>
+                                        <motion.div
+                                            animate={{ rotate: isOpen ? 180 : 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="shrink-0 text-slate-500"
+                                        >
+                                            <ChevronDown className="h-5 w-5" />
+                                        </motion.div>
+                                    </button>
+                                    <AnimatePresence initial={false}>
+                                        {isOpen && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                                className="overflow-hidden"
+                                            >
+                                                <p className="text-slate-650 text-xs leading-relaxed font-medium md:text-sm dark:text-slate-400">
+                                                    {faq.answer}
+                                                </p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -811,15 +1132,15 @@ export default function Home({ plans }: Props) {
                         <span className="text-slate-650 text-[10px] font-medium dark:text-slate-600">© 2026. All rights reserved.</span>
                     </div>
                     <div className="flex gap-6">
-                        <a href="/privacy" className="hover:text-slate-900 dark:hover:text-slate-300">
+                        <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-slate-300">
                             Privacy Policy
-                        </a>
-                        <a href="/terms" className="hover:text-slate-900 dark:hover:text-slate-300">
+                        </Link>
+                        <Link href="/terms" className="hover:text-slate-900 dark:hover:text-slate-300">
                             Terms of Use
-                        </a>
-                        <a href="/contact" className="hover:text-slate-900 dark:hover:text-slate-300">
+                        </Link>
+                        <Link href="/contact" className="hover:text-slate-900 dark:hover:text-slate-300">
                             Contact Support
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </footer>

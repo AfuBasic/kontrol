@@ -37,7 +37,7 @@ class SendBulkResidentInvitationsJob implements ShouldQueue
         User::whereIn('id', $this->userIds)
             ->cursor()
             ->each(function (User $user) use ($estate) {
-                Mail::to($user->email)->send(
+                Mail::to($user->email)->queue(
                     new ResidentInvitationMail($user, $estate, false)
                 );
             });

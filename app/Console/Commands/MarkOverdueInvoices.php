@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\CommandExecutedMail;
 use App\Models\Invoice;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class MarkOverdueInvoices extends Command
 {
@@ -21,6 +23,15 @@ class MarkOverdueInvoices extends Command
             ->update(['status' => 'overdue']);
 
         $this->info("Marked {$count} invoices as overdue");
+
+        try {
+            Mail::to('support@usekontrol.com')->queue(new CommandExecutedMail(
+                'Command Executed: kontrol:mark-overdue-invoices',
+                "Command 'kontrol:mark-overdue-invoices' executed successfully at ".now()->toDateTimeString().'. Total invoices marked overdue: '.$count
+            ));
+        } catch (\Throwable $e) {
+            $this->error('Failed to send mail: '.$e->getMessage());
+        }
 
         return Command::SUCCESS;
     }

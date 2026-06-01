@@ -84,13 +84,13 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                         >
                             Features
                         </a>
-                        <a
+                        {/* <a
                             href="/#pricing"
                             onClick={(e) => handleNavClick('pricing', e)}
                             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                         >
                             Pricing
-                        </a>
+                        </a> */}
                         <a
                             href="/#download"
                             onClick={(e) => handleNavClick('download', e)}
@@ -200,13 +200,13 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                         >
                             Features
                         </a>
-                        <a
+                        {/* <a
                             href="/#pricing"
                             onClick={(e) => handleNavClick('pricing', e)}
                             className="text-left text-base font-semibold text-slate-700 dark:text-slate-300"
                         >
                             Pricing
-                        </a>
+                        </a> */}
                         <a
                             href="/#download"
                             onClick={(e) => handleNavClick('download', e)}

@@ -23,7 +23,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Overdue"
                     description="Grace period active"
-                    cta={!is_household_member ? 'Open web' : undefined}
+                    cta={!is_household_member ? 'Settle now' : undefined}
                     onCtaClick={openExternalBilling}
                     variant="grace"
                 />
@@ -35,7 +35,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Account inactive"
                     description="Access limited"
-                    cta={!is_household_member ? 'Open web' : undefined}
+                    cta={!is_household_member ? 'Settle now' : undefined}
                     onCtaClick={openExternalBilling}
                     variant="inactive"
                 />
@@ -60,7 +60,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Trial expired"
                     description="Access limited"
-                    cta={!is_household_member ? 'Open web' : undefined}
+                    cta={!is_household_member ? 'Settle now' : undefined}
                     onCtaClick={openExternalBilling}
                     variant="inactive"
                 />
@@ -72,18 +72,22 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Trial period"
                     description="Ends today"
-                    cta={!is_household_member ? 'Open web' : undefined}
+                    cta={!is_household_member ? 'Settle now' : undefined}
                     onCtaClick={openExternalBilling}
                     variant="grace"
                 />
             );
         }
 
+        // Less than or equal to 3 days: show 'Settle now'
+        // More than 3 days: do not show CTA
+        const showCta = !is_household_member && daysLeft <= 3;
+
         return (
             <Banner
                 title="Trial period"
                 description={`Ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
-                cta={!is_household_member ? 'Open web' : undefined}
+                cta={showCta ? 'Settle now' : undefined}
                 onCtaClick={openExternalBilling}
                 variant={daysLeft <= 3 ? 'grace' : 'active'}
             />

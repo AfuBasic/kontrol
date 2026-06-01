@@ -16,9 +16,7 @@ class SosResponderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public SosEvent $sosEvent)
-    {
-    }
+    public function __construct(public SosEvent $sosEvent) {}
 
     public function via(object $notifiable): array
     {

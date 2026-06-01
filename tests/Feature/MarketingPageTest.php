@@ -1,9 +1,11 @@
 <?php
 
+use App\Mail\ContactInquiryMail;
 use App\Models\Plan;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
 
@@ -102,4 +104,41 @@ test('submitting application stores details and redirects back with success mess
         'plan_id' => $plan->id,
         'status' => 'pending',
     ]);
+});
+
+test('public privacy page returns ok and renders correct inertia component', function () {
+    $response = $this->get(route('landing.privacy'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page->component('Public/Privacy'));
+});
+
+test('public terms page returns ok and renders correct inertia component', function () {
+    $response = $this->get(route('landing.terms'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page->component('Public/Terms'));
+});
+
+test('public contact page returns ok and renders correct inertia component', function () {
+    $response = $this->get(route('landing.contact'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page->component('Public/Contact'));
+});
+
+test('submitting contact form sends email to support and redirects back with success message', function () {
+    Mail::fake();
+
+    $response = $this->post(route('landing.contact.submit'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'subject' => 'Setup Help',
+        'message' => 'We want to onboard our gated community.',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    Mail::assertQueued(ContactInquiryMail::class, function ($mail) {
+        return $mail->hasTo('support@usekontrol.com') &&
+               $mail->hasReplyTo('test@example.com');
+    });
 });

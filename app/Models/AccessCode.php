@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -118,8 +119,8 @@ class AccessCode extends Model
     protected static function booted(): void
     {
         static::creating(function (AccessCode $accessCode) {
-            $accessCode->pass_uuid = (string) \Illuminate\Support\Str::uuid();
-            $accessCode->qr_token = \Illuminate\Support\Str::random(40);
+            $accessCode->pass_uuid = (string) Str::uuid();
+            $accessCode->qr_token = Str::random(40);
         });
     }
 

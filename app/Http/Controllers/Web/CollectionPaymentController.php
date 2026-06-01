@@ -9,7 +9,6 @@ use App\Models\Payment;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,7 +36,7 @@ class CollectionPaymentController extends Controller
         if ($assignment->isPaid() || ($assignment->amount_due - $assignment->amount_paid) <= 0) {
             return response()->json([
                 'already_paid' => true,
-                'message' => 'Payment already completed.'
+                'message' => 'Payment already completed.',
             ]);
         }
 
@@ -77,7 +76,7 @@ class CollectionPaymentController extends Controller
 
                     return response()->json([
                         'already_paid' => true,
-                        'message' => 'Payment already completed.'
+                        'message' => 'Payment already completed.',
                     ]);
                 }
             } catch (\Exception $e) {
@@ -96,7 +95,7 @@ class CollectionPaymentController extends Controller
                 ->where('status', 'success')
                 ->count();
 
-            $reference = 'COLL-' . $assignment->ulid . ($successCount > 0 ? '-' . ($successCount + 1) : '');
+            $reference = 'COLL-'.$assignment->ulid.($successCount > 0 ? '-'.($successCount + 1) : '');
 
             // Create a new pending payment record
             $payment = Payment::create([

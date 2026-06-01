@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Jobs\Billing\GenerateInvoiceJob;
+use App\Mail\CommandExecutedMail;
 use App\Models\EstateSubscription;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class GenerateScheduledInvoices extends Command
 {
@@ -53,6 +55,15 @@ class GenerateScheduledInvoices extends Command
         }
 
         $this->info('Total invoices dispatched: '.($trialCount + $recurringCount));
+
+        try {
+            Mail::to('support@usekontrol.com')->queue(new CommandExecutedMail(
+                'Command Executed: kontrol:generate-scheduled-invoices',
+                "Command 'kontrol:generate-scheduled-invoices' executed successfully at ".now()->toDateTimeString().'. Total invoices dispatched: '.($trialCount + $recurringCount)
+            ));
+        } catch (\Throwable $e) {
+            $this->error('Failed to send mail: '.$e->getMessage());
+        }
 
         return Command::SUCCESS;
     }

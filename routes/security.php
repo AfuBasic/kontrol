@@ -28,6 +28,8 @@ Route::middleware('role:security')->group(function (): void {
     Route::get('/verify', VerifyController::class)->name('security.verify');
     Route::post('/verify/validate', [VerifyController::class, 'validate'])->name('security.verify.validate');
     Route::post('/verify/decision', [VerifyController::class, 'decision'])->name('security.verify.decision');
+    Route::get('/verify/sync', [VerifyController::class, 'syncData'])->name('security.verify.sync');
+    Route::post('/verify/sync', [VerifyController::class, 'syncLogs'])->name('security.verify.sync-logs');
 
     // Access History
     Route::get('/history', [HistoryController::class, 'index'])->name('security.history');

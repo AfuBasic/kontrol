@@ -62,7 +62,7 @@ class NewCollectionNotification extends Notification implements ShouldQueue
             'amount' => $this->assignment->amount_due,
             'estate_name' => $this->assignment->estate->name,
             'title' => 'New Payment Collection Assigned',
-            'message' => "A new payment collection '{$this->assignment->collection->name}' of " . number_format($this->assignment->amount_due, 2) . " NGN has been assigned to you.",
+            'message' => "A new payment collection '{$this->assignment->collection->name}' of ".number_format($this->assignment->amount_due, 2).' NGN has been assigned to you.',
             'action_url' => '/resident/billing',
         ];
     }
@@ -132,7 +132,7 @@ class NewCollectionNotification extends Notification implements ShouldQueue
         $text = "🔔 <b>{$data['title']}</b>\n\n"
             ."Hi <b>{$notifiable->name}</b>,\n"
             ."{$data['message']}\n"
-            ."💰 Amount Due: <b>" . number_format($this->assignment->amount_due, 2) . " NGN</b>\n\n"
+            .'💰 Amount Due: <b>'.number_format($this->assignment->amount_due, 2)." NGN</b>\n\n"
             .'<i>Please visit the Kontrol billing portal to view and pay.</i>';
 
         return [

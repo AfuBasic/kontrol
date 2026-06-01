@@ -2,12 +2,14 @@
 
 namespace App\Actions\Security;
 
+use App\Enums\AccessCodeStatus;
 use App\Events\Resident\VisitorArrivedBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\VisitorArrivedNotification;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class RecordCheckInAction
@@ -15,9 +17,17 @@ class RecordCheckInAction
     /**
      * Record a visitor check-in.
      */
-    public function execute(string $code, int $estateId, User $verifiedBy, array $vehicleData = [], ?string $verificationMethod = null): AccessLog
-    {
-        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData, $verificationMethod) {
+    public function execute(
+        string $code,
+        int $estateId,
+        User $verifiedBy,
+        array $vehicleData = [],
+        ?string $verificationMethod = null,
+        ?\DateTimeInterface $verifiedAt = null
+    ): AccessLog {
+        $timestamp = $verifiedAt ? CarbonImmutable::instance($verifiedAt) : now();
+
+        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData, $verificationMethod, $timestamp) {
             $passUuid = null;
             $qrToken = null;
 
@@ -55,11 +65,15 @@ class RecordCheckInAction
 
             // Mark as used only if estate setting enforces single-use AND it's a single-use code
             if ($forceSingleUse && $accessCode->type === 'single_use') {
-                $accessCode->markAsUsed($verifiedBy);
+                $accessCode->update([
+                    'status' => AccessCodeStatus::Used,
+                    'used_at' => $timestamp,
+                    'verified_by' => $verifiedBy->id,
+                ]);
             } else {
                 $accessCode->updateQuietly([
                     'verified_by' => $verifiedBy->id,
-                    'used_at' => now(),
+                    'used_at' => $timestamp,
                 ]);
             }
 
@@ -68,7 +82,7 @@ class RecordCheckInAction
                 'estate_id' => $estateId,
                 'access_code_id' => $accessCode->id,
                 'verified_by' => $verifiedBy->id,
-                'verified_at' => now(),
+                'verified_at' => $timestamp,
                 'vehicle_make' => $vehicleData['vehicle_make'] ?? null,
                 'vehicle_model' => $vehicleData['vehicle_model'] ?? null,
                 'vehicle_plate_number' => $vehicleData['vehicle_plate_number'] ?? null,

@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Home, Users, User, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { SharedData } from '@/types';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
@@ -17,6 +16,7 @@ import type { Notification } from '@/Components/Resident/NotificationDetailSheet
 import SosButton from '@/Components/SosButton';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
+import type { SharedData } from '@/types';
 
 const getPathFromUrl = (href: string): string => {
     if (href.startsWith('//')) {
@@ -367,7 +367,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                 <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                             </div>
-                            <SosButton variant="header" />
+                            {/* <SosButton variant="header" /> */}
                         </div>
                     </div>
                 </header>

@@ -44,11 +44,8 @@ class BillingController extends Controller
             return redirect()->route('resident.home')->with('info', 'Billing is managed by your estate.');
         }
 
-        // Ensure pending invoice exists if subscription is not in trial or if the trial has expired
-        $isTrialExpired = $subscription->status === 'trial' && $subscription->trial_ends_at?->isPast();
-        if ($subscription->status !== 'trial' || $isTrialExpired) {
-            $this->invoiceGenerationService->getOrCreatePendingInvoiceForResident($subscription);
-        }
+        // Ensure pending invoice exists if subscription is due or expiring soon
+        $this->invoiceGenerationService->getOrCreatePendingInvoiceForResident($subscription);
 
         $estateSub = $estate->subscriptionRecord;
 

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\Admin\BillingReminderMail;
+use App\Mail\CommandExecutedMail;
 use App\Models\EstateSubscription;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -33,10 +34,19 @@ class SendBillingReminders extends Command
             $admins = $estate->users()->where('user_type', 'admin')->get();
 
             foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new BillingReminderMail($subscription));
+                Mail::to($admin->email)->queue(new BillingReminderMail($subscription));
             }
 
             $this->line("Sent reminder for estate {$estate->id}");
+        }
+
+        try {
+            Mail::to('support@usekontrol.com')->queue(new CommandExecutedMail(
+                'Command Executed: kontrol:send-billing-reminders',
+                "Command 'kontrol:send-billing-reminders' executed successfully at ".now()->toDateTimeString().'. Total reminders sent: '.$count
+            ));
+        } catch (\Throwable $e) {
+            $this->error('Failed to send mail: '.$e->getMessage());
         }
 
         return Command::SUCCESS;

@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Security;
 
 use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\ValidateAccessCodeAction;
+use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\ValidateAccessCodeRequest;
+use App\Models\AccessCode;
 use App\Models\AccessLog;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -102,5 +106,105 @@ class VerifyController extends Controller
         }
 
         return back();
+    }
+
+    public function syncData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $estate = $user->getCurrentEstate();
+
+        // Retrieve active codes for today/future
+        $activeCodes = AccessCode::query()
+            ->forEstate($estate->id)
+            ->active()
+            ->with('user:id,name')
+            ->get();
+
+        $cachedCodes = $activeCodes->map(function (AccessCode $code) {
+            return [
+                'hash' => hash('sha256', strtoupper(trim($code->code))),
+                'visitor_name' => $code->visitor_name ?? 'Guest',
+                'host_name' => $code->user?->name ?? 'Resident',
+                'expires_at' => $code->expires_at?->toIso8601String(),
+                'has_vehicle' => (bool) $code->has_vehicle,
+                'purpose' => $code->purpose,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'codes' => $cachedCodes,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function syncLogs(Request $request): JsonResponse
+    {
+        $request->validate([
+            'logs' => 'required|array',
+            'logs.*.code' => 'required|string',
+            'logs.*.decision' => 'required|in:admit,reject',
+            'logs.*.vehicle_make' => 'nullable|string',
+            'logs.*.vehicle_model' => 'nullable|string',
+            'logs.*.vehicle_plate_number' => 'nullable|string',
+            'logs.*.created_at' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $estate = $user->getCurrentEstate();
+        $syncedCount = 0;
+
+        foreach ($request->input('logs') as $logData) {
+            $code = $logData['code'];
+            $decision = $logData['decision'];
+            $timestamp = CarbonImmutable::parse($logData['created_at']);
+
+            if ($decision === 'admit') {
+                // Check if code exists and is active on server
+                $accessCode = AccessCode::query()
+                    ->forEstate($estate->id)
+                    ->where('code', $code)
+                    ->first();
+
+                if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
+                    $this->recordCheckInAction->execute(
+                        code: $code,
+                        estateId: $estate->id,
+                        verifiedBy: $user,
+                        vehicleData: [
+                            'vehicle_make' => $logData['vehicle_make'] ?? null,
+                            'vehicle_model' => $logData['vehicle_model'] ?? null,
+                            'vehicle_plate_number' => $logData['vehicle_plate_number'] ?? null,
+                        ],
+                        verificationMethod: 'offline_sync',
+                        verifiedAt: $timestamp
+                    );
+                } else {
+                    // Create manual override log entry (audit trail)
+                    AccessLog::create([
+                        'estate_id' => $estate->id,
+                        'access_code_id' => $accessCode?->id,
+                        'verified_by' => $user->id,
+                        'verified_at' => $timestamp,
+                        'vehicle_make' => $logData['vehicle_make'] ?? null,
+                        'vehicle_model' => $logData['vehicle_model'] ?? null,
+                        'vehicle_plate_number' => $logData['vehicle_plate_number'] ?? null,
+                        'meta' => [
+                            'visitor_name' => $accessCode?->visitor_name ?? 'Unknown (Offline Override)',
+                            'host_id' => $accessCode?->user_id,
+                            'offline_code' => $code,
+                            'offline_override' => true,
+                            'sync_status' => $accessCode ? 'code_exists_but_'.$accessCode->status->value : 'code_not_found',
+                        ],
+                    ]);
+                }
+                $syncedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'synced_count' => $syncedCount,
+        ]);
     }
 }

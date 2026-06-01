@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Auth\DetermineUserRedirect;
 use App\Http\Controllers\Controller;
+use App\Mail\ContactInquiryMail;
 use App\Models\Plan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -137,5 +140,56 @@ class LandingController extends Controller
         $redirectUrl = $determineRedirect->execute(Auth::user());
 
         return redirect()->intended($redirectUrl);
+    }
+
+    /**
+     * Render the public Privacy Policy page.
+     */
+    public function privacy(): Response
+    {
+        return Inertia::render('Public/Privacy');
+    }
+
+    /**
+     * Render the public Terms of Use page.
+     */
+    public function terms(): Response
+    {
+        return Inertia::render('Public/Terms');
+    }
+
+    /**
+     * Render the public Contact page.
+     */
+    public function contact(): Response
+    {
+        return Inertia::render('Public/Contact');
+    }
+
+    /**
+     * Handle public contact form submission.
+     */
+    public function submitContact(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'subject' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        // Send the support email
+        Mail::to('support@usekontrol.com')
+            ->send(new ContactInquiryMail(
+                $validated['name'],
+                $validated['email'],
+                $validated['subject'],
+                $validated['message']
+            ));
+
+        // Log support inquiry for auditable trails
+        Log::info('Public Support Contact Inquiry:', $validated);
+
+        return redirect()->back()->with('success', 'Your message has been sent successfully. We will get back to you shortly.');
     }
 }

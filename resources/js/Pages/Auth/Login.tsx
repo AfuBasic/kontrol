@@ -29,10 +29,7 @@ export default function Login() {
     const [googleLoading, setGoogleLoading] = useState(false);
 
     useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-            // Revert when leaving the page if needed, but for login we want it dark
-        }
+        // No status bar overrides to prevent interfering with status bar
     }, []);
 
     function submit(e: React.FormEvent) {

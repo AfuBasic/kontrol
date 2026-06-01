@@ -74,11 +74,14 @@ class InvoiceGenerationService
             ->latest('created_at')
             ->first();
 
-        // If no unpaid invoice, generate one only if they are due or past due
+        // If no unpaid invoice, generate one if they are due, past due, or expiring within 5 days
         if (! $unpaidInvoice) {
+            $isExpiringSoon = $subscription->current_period_end && $subscription->current_period_end->lte(now()->addDays(5));
+
             $isDue = $subscription->status === 'past_due' ||
                      ($subscription->current_period_end && $subscription->current_period_end->isPast()) ||
-                     ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
+                     ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast()) ||
+                     $isExpiringSoon;
 
             if ($isDue) {
                 return $this->generateInvoiceAction->executeForResident($subscription);

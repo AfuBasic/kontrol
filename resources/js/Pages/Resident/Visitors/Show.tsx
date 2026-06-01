@@ -3,10 +3,10 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Shield, User } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import PassCard from '@/Components/Resident/PassCard';
 import resident from '@/routes/resident';
 import type { AccessCode, CursorPaginatedUsageLogs } from '@/types/access-code';
 import { shareAccessCode } from '@/Utils/share';
-import PassCard from '@/Components/Resident/PassCard';
 
 type Props = {
     accessCode: AccessCode;

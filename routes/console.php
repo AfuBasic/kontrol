@@ -16,7 +16,7 @@ Schedule::command('kontrol:check-resident-subscriptions')->daily();
 // Billing scheduled commands
 Schedule::command('kontrol:generate-scheduled-invoices')->dailyAt('00:01');
 Schedule::command('kontrol:mark-overdue-invoices')->dailyAt('01:00');
-Schedule::command('kontrol:process-auto-billing')->dailyAt('02:00');
+// Schedule::command('kontrol:process-auto-billing')->dailyAt('02:00');
 Schedule::command('kontrol:send-billing-reminders')->dailyAt('08:00');
 
 // Collections system
