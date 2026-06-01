@@ -199,8 +199,6 @@ export default function Activity({ activities, notifications = [], unreadCount =
             {/* Scrollable Content Area */}
             <div className="px-6 pb-32">
                 <AnimatePresence mode="wait">
-
-
                     {activeTab === 'feed' && (
                         <motion.div
                             key="feed-tab"
@@ -212,7 +210,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                             {/* ... same activity feed logic as before ... */}
                             {activities.length > 0 ? (
                                 <div className="space-y-10">
-                                    {dateLabels.map((dateLabel, groupIndex) => (
+                                    {dateLabels.map((dateLabel) => (
                                         <div key={dateLabel}>
                                             <div className="mb-5 flex items-center gap-4">
                                                 <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">{dateLabel}</h3>
