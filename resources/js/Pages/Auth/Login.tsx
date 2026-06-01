@@ -29,7 +29,9 @@ export default function Login() {
     const [googleLoading, setGoogleLoading] = useState(false);
 
     useEffect(() => {
-        // No status bar overrides to prevent interfering with status bar
+        if (Capacitor.isNativePlatform()) {
+            StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+        }
     }, []);
 
     function submit(e: React.FormEvent) {

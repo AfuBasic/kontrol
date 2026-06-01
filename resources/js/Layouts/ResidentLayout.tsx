@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
@@ -52,6 +53,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     // Force logout if account is disabled
     useForceLogout(auth?.user?.id);
+
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        }
+    }, []);
 
     // Redirect to download app if accessing on a non-native web browser
     useEffect(() => {

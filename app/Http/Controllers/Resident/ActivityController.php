@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Resident;
 
-use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
-use App\Models\EstateBoardPost;
 use App\Services\Resident\AccessCodeService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -19,23 +17,12 @@ class ActivityController extends Controller
     public function __invoke(): Response
     {
         $user = Auth::user();
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
 
         // Capture unread count for the tab
         $unreadCount = $user->unreadNotifications()->count();
-        $hasBoardFeature = $estate && $estate->hasFeature('interactive-notice-board');
-
-        $posts = $hasBoardFeature ? EstateBoardPost::query()
-            ->forEstate($estate->id)
-            ->published()
-            ->forAudience([EstateBoardPostAudience::All, EstateBoardPostAudience::Residents])
-            ->with(['author', 'media'])
-            ->latest()
-            ->get() : collect();
 
         return Inertia::render('Resident/Activity', [
             'unreadCount' => $unreadCount,
-            'posts' => $posts,
             'activities' => $this->accessCodeService->getRecentActivity(50),
             'notifications' => $user->notifications()->take(20)->get()->map(function ($notification) {
                 return [

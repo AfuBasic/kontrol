@@ -123,8 +123,11 @@ createInertiaApp({
             (async () => {
                 try {
                     await StatusBar.show();
+                    await StatusBar.setOverlaysWebView({ overlay: true });
+                    if (Capacitor.getPlatform() === 'android') {
+                        await StatusBar.setBackgroundColor({ color: '#00000000' });
+                    }
                     await StatusBar.setStyle({ style: Style.Default });
-                    await StatusBar.setOverlaysWebView({ overlay: false });
 
                     // Handle Android back button
                     CapacitorApp.addListener('backButton', ({ canGoBack }) => {

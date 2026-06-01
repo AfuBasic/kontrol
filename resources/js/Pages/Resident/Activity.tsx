@@ -110,24 +110,24 @@ function groupActivitiesByDate(activities: ActivityItem[]): Record<string, Activ
     return groups;
 }
 
-export default function Activity({ activities, posts = [], notifications = [], unreadCount = 0 }: Props & { posts: any[] }) {
+export default function Activity({ activities, notifications = [], unreadCount = 0 }: Props) {
     const groupedActivities = groupActivitiesByDate(activities);
     const dateLabels = Object.keys(groupedActivities);
 
     const { url } = usePage();
-    const [activeTab, setActiveTab] = useState<'posts' | 'feed' | 'notifications'>(() => {
+    const [activeTab, setActiveTab] = useState<'feed' | 'notifications'>(() => {
         const params = new URLSearchParams(url.split('?')[1] || '');
         const tab = params.get('tab');
-        if (tab === 'posts' || tab === 'feed' || tab === 'notifications') {
+        if (tab === 'feed' || tab === 'notifications') {
             return tab;
         }
-        return 'posts';
+        return 'feed';
     });
 
     useEffect(() => {
         const params = new URLSearchParams(url.split('?')[1] || '');
         const tab = params.get('tab');
-        if (tab === 'posts' || tab === 'feed' || tab === 'notifications') {
+        if (tab === 'feed' || tab === 'notifications') {
             setActiveTab(tab);
         }
     }, [url]);
@@ -154,21 +154,6 @@ export default function Activity({ activities, posts = [], notifications = [], u
 
                 {/* Glass Tabs */}
                 <div className="relative z-10 mt-8 flex rounded-[22px] bg-slate-200/50 p-1.5 ring-1 ring-slate-900/5 backdrop-blur-xl">
-                    <button
-                        onClick={() => setActiveTab('posts')}
-                        className={`relative flex-1 rounded-[18px] py-3 text-[10px] font-black tracking-widest uppercase transition-all ${
-                            activeTab === 'posts' ? 'text-white' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        {activeTab === 'posts' && (
-                            <motion.div
-                                layoutId="activeTab"
-                                className="absolute inset-0 rounded-[18px] bg-slate-900 shadow-lg"
-                                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                            />
-                        )}
-                        <span className="relative z-10">Estate</span>
-                    </button>
                     <button
                         onClick={() => setActiveTab('feed')}
                         className={`relative flex-1 rounded-[18px] py-3 text-[10px] font-black tracking-widest uppercase transition-all ${
@@ -214,70 +199,7 @@ export default function Activity({ activities, posts = [], notifications = [], u
             {/* Scrollable Content Area */}
             <div className="px-6 pb-32">
                 <AnimatePresence mode="wait">
-                    {activeTab === 'posts' && (
-                        <motion.div
-                            key="posts-tab"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-6"
-                        >
-                            {posts.length > 0 ? (
-                                posts.map((post: any, index: number) => (
-                                    <motion.div
-                                        key={post.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4, delay: index * 0.1 }}
-                                        className="overflow-hidden rounded-[40px] bg-white shadow-sm ring-1 ring-slate-100"
-                                    >
-                                        {post.media?.[0] && (
-                                            <div className="aspect-video w-full overflow-hidden">
-                                                <img
-                                                    src={post.media[0].url}
-                                                    alt=""
-                                                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="p-8">
-                                            <div className="mb-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">
-                                                        {post.author?.name?.[0]}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-900">{post.author?.name}</p>
-                                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                                            {new Date(post.published_at).toLocaleDateString(undefined, {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                            })}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <span className="rounded-full bg-slate-50 px-3 py-1 text-[8px] font-black tracking-widest text-slate-400 uppercase ring-1 ring-slate-200">
-                                                    Post
-                                                </span>
-                                            </div>
-                                            <h2 className="mb-3 text-2xl leading-tight font-black tracking-tight text-slate-900">{post.title}</h2>
-                                            <p className="text-base leading-relaxed font-medium text-slate-500">{post.body}</p>
-                                        </div>
-                                    </motion.div>
-                                ))
-                            ) : (
-                                <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
-                                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
-                                        <Megaphone className="h-10 w-10" strokeWidth={1.5} />
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900">No estate news</h3>
-                                    <p className="mt-2 max-w-[200px] text-sm font-medium text-slate-400">
-                                        Important announcements from your estate will appear here.
-                                    </p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
+
 
                     {activeTab === 'feed' && (
                         <motion.div

@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
@@ -88,7 +89,11 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
 
-    useForceLogout(auth?.user?.id);
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            StatusBar.setStyle({ style: variant === 'dark' ? Style.Light : Style.Dark }).catch(() => {});
+        }
+    }, [variant]);
 
     // Redirect to download app if accessing on a non-native web browser
     useEffect(() => {
