@@ -113,7 +113,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                                 View Board
                             </Link>
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {latestAnnouncements.map((post) => (
                                 <Link 
                                     key={post.id} 

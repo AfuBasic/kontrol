@@ -20,7 +20,7 @@ export default function SummaryDashboard({ activeCount, expectedToday, totalToda
                 </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
                 <div>
                     <div className="mb-2 flex items-end justify-between">
                         <div>
@@ -41,7 +41,7 @@ export default function SummaryDashboard({ activeCount, expectedToday, totalToda
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 pt-2">
+                <div className="grid grid-cols-2 gap-6 border-t border-slate-100 pt-6 sm:border-t-0 sm:border-l sm:border-slate-100 sm:pt-0 sm:pl-8">
                     <div className="group">
                         <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Inside</p>
                         <div className="mt-1 flex items-baseline gap-1.5">

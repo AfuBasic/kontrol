@@ -83,26 +83,26 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction, c
                     </div>
                 </div>
 
-                <div className="mb-10 grid grid-cols-1 gap-4">
-                    <div className="rounded-[24px] bg-white/[0.03] p-5 ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.06]">
+                <div className={`mb-10 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} gap-4 items-stretch`}>
+                    <div className="rounded-[24px] bg-white/[0.03] p-5 ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.06] flex flex-col justify-center">
                         <p className="mb-1 text-[10px] font-bold tracking-wider text-white/30 uppercase">Expected Today</p>
                         <p className="text-2xl font-black text-white">{expectedToday}</p>
                     </div>
-                </div>
 
-                {canGenerate && (
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.96 }}
-                        onClick={onAction}
-                        className="relative flex w-full items-center justify-center gap-3 rounded-[24px] bg-white py-5 text-lg font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none"
-                    >
-                        <Plus className="h-6 w-6" strokeWidth={3} />
-                        Generate Access Code
-                        {/* Subtle button glow */}
-                        <div className="absolute inset-0 -z-10 rounded-[24px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
-                    </motion.button>
-                )}
+                    {canGenerate && (
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={onAction}
+                            className="relative flex w-full h-full items-center justify-center gap-3 rounded-[24px] bg-white py-5 text-lg font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none"
+                        >
+                            <Plus className="h-6 w-6" strokeWidth={3} />
+                            Generate Access Code
+                            {/* Subtle button glow */}
+                            <div className="absolute inset-0 -z-10 rounded-[24px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
+                        </motion.button>
+                    )}
+                </div>
             </div>
         </motion.div>
     );

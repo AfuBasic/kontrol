@@ -192,7 +192,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.3 }}
-                            className="space-y-4"
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                         >
                             {currentCodes.map((code, index) => (
                                 <motion.div

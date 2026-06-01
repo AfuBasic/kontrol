@@ -234,6 +234,79 @@ class AccessCodeService
     }
 
     /**
+     * Get paginated recent activity for the current user.
+     *
+     * @return CursorPaginator<array{type: string, message: string, time: string, time_full: string, code?: string, visitor?: string}>
+     */
+    public function getRecentActivityPaginated(int $limit = 10, ?string $search = null): CursorPaginator
+    {
+        $user = Auth::user();
+        $estate = $this->estateContext->getEstate();
+
+        $userIds = $user->getHouseholdUserIds();
+
+        // Get IDs of codes belonging to this household/estate to filter activities
+        $codeIds = AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $userIds)
+            ->pluck('id');
+
+        $query = Activity::query()
+            ->where(function ($query) use ($codeIds, $user) {
+                // Access code activities
+                $query->where(function ($q) use ($codeIds) {
+                    $q->where('subject_type', AccessCode::class)
+                        ->whereIn('subject_id', $codeIds);
+                })
+                    // User activities (like Telegram linked) where the user is both causer and subject
+                    ->orWhere(function ($q) use ($user) {
+                        $q->where('subject_type', User::class)
+                            ->where('subject_id', $user->id)
+                            ->where('causer_type', User::class)
+                            ->where('causer_id', $user->id)
+                            ->whereNotIn('description', ['logged in', 'logged out']);
+                    });
+            });
+
+        if ($search !== null && $search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('properties->attributes->visitor_name', 'like', "%{$search}%")
+                    ->orWhere('properties->attributes->code', 'like', "%{$search}%")
+                    ->orWhere('properties->attributes->purpose', 'like', "%{$search}%")
+                    ->orWhere(function ($sq) use ($search) {
+                        $sq->where('subject_type', AccessCode::class)
+                            ->whereIn('subject_id', function ($subQuery) use ($search) {
+                                $subQuery->select('id')
+                                    ->from((new AccessCode)->getTable())
+                                    ->where(function ($innerQuery) use ($search) {
+                                        $innerQuery->where('visitor_name', 'like', "%{$search}%")
+                                            ->orWhere('code', 'like', "%{$search}%")
+                                            ->orWhere('purpose', 'like', "%{$search}%");
+                                    });
+                            });
+                    });
+            });
+        }
+
+        $paginator = $query->with(['subject'])
+            ->orderByDesc('created_at')
+            ->cursorPaginate($limit);
+
+        $paginator->through(function ($activity) {
+            // Handle user activities (like Telegram linked)
+            if ($activity->subject_type === User::class) {
+                return $this->mapUserActivity($activity);
+            }
+
+            // Handle access code activities
+            return $this->mapAccessCodeActivity($activity);
+        });
+
+        return $paginator;
+    }
+
+    /**
      * Map a user activity to the activity format.
      *
      * @return array{type: string, message: string, time: string, time_full: string, detail?: string, ip_address?: string}
@@ -259,6 +332,7 @@ class AccessCodeService
             'message' => $message,
             'time' => $activity->created_at->diffForHumans(),
             'time_full' => $activity->created_at->format('M j, Y g:i A'),
+            'created_at' => $activity->created_at,
         ];
 
         if ($type === 'logged_in') {
@@ -273,7 +347,7 @@ class AccessCodeService
     /**
      * Map an access code activity to the activity format.
      *
-     * @return array{type: string, message: string, time: string, time_full: string, code: string, visitor: string|null}
+     * @return array{type: string, message: string, time: string, time_full: string, code: string, visitor: string|null, created_at: \Carbon\Carbon}
      */
     private function mapAccessCodeActivity(Activity $activity): array
     {
@@ -307,6 +381,7 @@ class AccessCodeService
             'time_full' => $activity->created_at->format('M j, Y g:i A'),
             'code' => $codeStr,
             'visitor' => $visitorName,
+            'created_at' => $activity->created_at,
         ];
     }
 

@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, InfiniteScroll } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Bell,
@@ -14,15 +14,29 @@ import {
     Megaphone,
     CheckCircle,
     Trash2,
+    Search,
+    X,
+    Loader2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
+import { useDebounce } from '@/Hooks/useDebounce';
 import type { ActivityItem } from '@/types/access-code';
 
 type Props = {
-    activities: ActivityItem[];
+    activities: {
+        data: ActivityItem[];
+        next_page_url: string | null;
+        current_page: number;
+        last_page: number;
+        total: number;
+    };
     notifications?: any[];
     unreadCount?: number;
+    filters: {
+        search?: string;
+    };
 };
 
 function getActivityIcon(type: ActivityItem['type']) {
@@ -110,9 +124,12 @@ function groupActivitiesByDate(activities: ActivityItem[]): Record<string, Activ
     return groups;
 }
 
-export default function Activity({ activities, notifications = [], unreadCount = 0 }: Props) {
-    const groupedActivities = groupActivitiesByDate(activities);
+export default function Activity({ activities, notifications = [], unreadCount = 0, filters }: Props) {
+    const groupedActivities = groupActivitiesByDate(activities?.data || []);
     const dateLabels = Object.keys(groupedActivities);
+
+    const [search, setSearch] = useState(filters?.search || '');
+    const debouncedSearch = useDebounce(search, 500);
 
     const { url } = usePage();
     const [activeTab, setActiveTab] = useState<'feed' | 'notifications'>(() => {
@@ -132,12 +149,28 @@ export default function Activity({ activities, notifications = [], unreadCount =
         }
     }, [url]);
 
+    useEffect(() => {
+        if (debouncedSearch !== (filters?.search || '')) {
+            router.get(
+                ActivityController.url(),
+                {
+                    search: debouncedSearch,
+                    tab: activeTab,
+                },
+                {
+                    preserveState: true,
+                    replace: true,
+                },
+            );
+        }
+    }, [debouncedSearch]);
+
     return (
         <>
             <Head title="Feed" />
 
             {/* Premium Header Section */}
-            <div className="relative overflow-hidden px-6 pt-4 pb-8">
+            <div className="relative overflow-hidden pt-4 pb-8">
                 {/* Background Decor */}
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
                 <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-blue-500/5 blur-[60px]" />
@@ -197,7 +230,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="px-6 pb-32">
+            <div className="pb-32">
                 <AnimatePresence mode="wait">
                     {activeTab === 'feed' && (
                         <motion.div
@@ -207,9 +240,44 @@ export default function Activity({ activities, notifications = [], unreadCount =
                             exit={{ opacity: 0, x: 10 }}
                             transition={{ duration: 0.3 }}
                         >
-                            {/* ... same activity feed logic as before ... */}
-                            {activities.length > 0 ? (
-                                <div className="space-y-10">
+                            {/* Premium Search Bar */}
+                            <div className="mb-6">
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        {search !== debouncedSearch ? (
+                                            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                                        ) : (
+                                            <Search className="h-5 w-5 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Search activities, codes, or visitors..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="block w-full rounded-2xl border border-slate-100 bg-white py-3.5 pr-12 pl-12 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                    {search && (
+                                        <button
+                                            onClick={() => setSearch('')}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {activities?.data.length > 0 ? (
+                                <InfiniteScroll
+                                    data="activities"
+                                    className="space-y-10"
+                                    loading={
+                                        <div className="flex justify-center py-8">
+                                            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                                        </div>
+                                    }
+                                >
                                     {dateLabels.map((dateLabel) => (
                                         <div key={dateLabel}>
                                             <div className="mb-5 flex items-center gap-4">
@@ -222,7 +290,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                                         key={`${dateLabel}-${index}`}
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                                                        transition={{ duration: 0.4, delay: index * 0.02 }}
                                                         className="group relative flex gap-5 rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md active:scale-[0.98]"
                                                     >
                                                         {getActivityIcon(activity.type)}
@@ -255,15 +323,27 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                             </div>
                                         </div>
                                     ))}
-                                </div>
+                                </InfiniteScroll>
                             ) : (
-                                <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
-                                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
-                                        <ActivityIcon className="h-10 w-10" strokeWidth={1.5} />
+                                search ? (
+                                    <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
+                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
+                                            <Search className="h-10 w-10" strokeWidth={1.5} />
+                                        </div>
+                                        <h3 className="text-xl font-black text-slate-900">No matches found</h3>
+                                        <p className="mt-2 text-sm font-medium text-slate-400">
+                                            We couldn't find any activities matching "{search}".
+                                        </p>
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900">Quiet for now</h3>
-                                    <p className="mt-2 text-sm font-medium text-slate-400">Your recent activity will bloom here as things happen.</p>
-                                </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
+                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
+                                            <ActivityIcon className="h-10 w-10" strokeWidth={1.5} />
+                                        </div>
+                                        <h3 className="text-xl font-black text-slate-900">Quiet for now</h3>
+                                        <p className="mt-2 text-sm font-medium text-slate-400">Your recent activity will bloom here as things happen.</p>
+                                    </div>
+                                )
                             )}
                         </motion.div>
                     )}

@@ -98,7 +98,7 @@ export default function CollectionsIndex({ summary }: Props) {
                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {summary.outstanding.length > 0 ? (
                         summary.outstanding.map((assignment) => (
                             <MotionLink
@@ -160,7 +160,7 @@ export default function CollectionsIndex({ summary }: Props) {
                         <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Paid History</h3>
                     </div>
 
-                    <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {summary.paid.slice(0, 3).map((assignment) => (
                             <Link
                                 key={assignment.id}

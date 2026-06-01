@@ -267,45 +267,47 @@ export default function HouseholdIndex({ members }: Props) {
                             </h3>
                             {isAtLimit && <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>}
                         </div>
-                        {members.map((member, index) => (
-                            <motion.div
-                                key={member.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                className="group relative flex items-center justify-between rounded-[28px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200 transition-all hover:shadow-lg"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-xl font-black text-white">
-                                            {member.name[0].toUpperCase()}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {members.map((member, index) => (
+                                <motion.div
+                                    key={member.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                                    className="group relative flex items-center justify-between rounded-[28px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200 transition-all hover:shadow-lg"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-xl font-black text-white">
+                                                {member.name[0].toUpperCase()}
+                                            </div>
+                                            <div
+                                                className={`absolute -right-1 -bottom-1 h-4 w-4 rounded-full border-2 border-white ${member.status === 'accepted' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                            />
                                         </div>
-                                        <div
-                                            className={`absolute -right-1 -bottom-1 h-4 w-4 rounded-full border-2 border-white ${member.status === 'accepted' ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                                        />
+                                        <div>
+                                            <p className="text-base font-black text-slate-900">{member.name}</p>
+                                            <p className="text-xs font-bold text-slate-400">{member.email}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-base font-black text-slate-900">{member.name}</p>
-                                        <p className="text-xs font-bold text-slate-400">{member.email}</p>
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setMemberToReset(member)}
-                                        className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
-                                    >
-                                        <KeyRound className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => setMemberToDelete(member)}
-                                        className="rounded-xl p-3 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
-                                    >
-                                        <Trash2 className="h-5 w-5" />
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setMemberToReset(member)}
+                                            className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
+                                        >
+                                            <KeyRound className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => setMemberToDelete(member)}
+                                            className="rounded-xl p-3 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
+                                        >
+                                            <Trash2 className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -314,7 +316,7 @@ export default function HouseholdIndex({ members }: Props) {
                     <div className="px-2">
                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">What they can do</h3>
                     </div>
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <FeatureCard
                             title="Visitor Management"
                             description="They can generate short-term access codes for their own guests and deliveries."

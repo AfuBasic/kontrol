@@ -362,7 +362,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             {/* Header - Conditional Light Premium Header */}
             {!hideHeader && (
                 <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
-                    <div className="mx-auto max-w-lg px-6">
+                    <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl px-6">
                         <div className="flex h-16 items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
@@ -376,7 +376,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
             {/* Main Content */}
             <main
-                className={`relative mx-auto w-full max-w-lg flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}
+                className={`relative mx-auto w-full max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}
             >
                 {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
                     <div className="px-2">
@@ -392,7 +392,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     <motion.nav
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
+                        className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
                     >
                         <div className="flex items-center justify-between px-3 py-2">
                             {navItems.map((item) => {

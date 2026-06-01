@@ -13,7 +13,7 @@ export default function DailyMetrics({ stats }: Props) {
         <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">
             <h3 className="mb-6 text-lg font-bold tracking-tight text-slate-900">Today's Overview</h3>
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
                 <div>
                     <div className="mb-2 flex items-end justify-between">
                         <div>
@@ -34,7 +34,7 @@ export default function DailyMetrics({ stats }: Props) {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 pt-2">
+                <div className="grid grid-cols-2 gap-6 border-t border-slate-100 pt-6 sm:border-t-0 sm:border-l sm:border-slate-100 sm:pt-0 sm:pl-8">
                     <div>
                         <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Active Codes</p>
                         <div className="mt-1 flex items-baseline gap-1">

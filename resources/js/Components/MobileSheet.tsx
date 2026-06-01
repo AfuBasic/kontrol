@@ -13,7 +13,7 @@ interface Props {
 export default function MobileSheet({ isOpen, onClose, title, children }: Props) {
     return (
         <Transition show={isOpen} as={Fragment}>
-            <Dialog onClose={onClose} className="relative z-[100] md:hidden">
+            <Dialog onClose={onClose} className="relative z-[100]">
                 {/* Backdrop */}
                 <TransitionChild
                     as={Fragment}
@@ -38,7 +38,7 @@ export default function MobileSheet({ isOpen, onClose, title, children }: Props)
                             leaveFrom="translate-y-0"
                             leaveTo="translate-y-full"
                         >
-                            <DialogPanel className="pb-safe relative flex max-h-[90vh] w-full flex-col rounded-t-[2.5rem] bg-white pt-2 shadow-2xl ring-1 ring-black/5">
+                            <DialogPanel className="pb-safe relative mx-auto flex max-h-[90vh] w-full flex-col rounded-t-[2.5rem] bg-white pt-2 shadow-2xl ring-1 ring-black/5 sm:max-w-xl md:max-w-2xl">
                                 {/* Grabber Handle */}
                                 <div className="flex justify-center p-2">
                                     <div className="h-1.5 w-12 rounded-full bg-slate-200" />

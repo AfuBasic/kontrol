@@ -43,63 +43,65 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: idx * 0.05, ease: 'easeOut' }}
-            className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
+            className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] h-full"
         >
-            <Link href={show.url({ post: post.hashid })} className="block p-5 sm:p-6">
-                {/* Post Header */}
-                <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-lg shadow-indigo-200 ring-2 ring-white">
-                            <span className="text-sm">{post.author.name.charAt(0).toUpperCase()}</span>
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-slate-900">{post.author.name}</p>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                    {post.published_at
-                                        ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
-                                        : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                                </span>
+            <Link href={show.url({ post: post.hashid })} className="flex flex-col justify-between h-full p-5 sm:p-6">
+                <div>
+                    {/* Post Header */}
+                    <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-lg shadow-indigo-200 ring-2 ring-white">
+                                <span className="text-sm">{post.author.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900">{post.author.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                        {post.published_at
+                                            ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
+                                            : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                    </span>
+                                </div>
                             </div>
                         </div>
+                        <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">
+                            {getAudienceIcon(post.audience)}
+                            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{getAudienceLabel(post.audience)}</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">
-                        {getAudienceIcon(post.audience)}
-                        <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{getAudienceLabel(post.audience)}</span>
-                    </div>
+
+                    {/* Post Content */}
+                    {post.title && (
+                        <h2 className="mb-2 text-xl font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600 leading-tight">
+                            {post.title}
+                        </h2>
+                    )}
+                    
+                    <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600">
+                        {bodyPreview}
+                    </p>
+
+                    {/* Media Preview */}
+                    {hasMedia && (
+                        <div className="mt-4 grid grid-cols-2 gap-2 overflow-hidden rounded-2xl">
+                            {post.media.slice(0, 2).map((media, mIdx) => (
+                                <div key={media.id} className={`relative aspect-video overflow-hidden bg-slate-50 ${post.media.length === 1 ? 'col-span-2' : ''}`}>
+                                    <img
+                                        src={media.url}
+                                        alt=""
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                    {mIdx === 1 && post.media.length > 2 && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+                                            <span className="text-lg font-black text-white">+{post.media.length - 2}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-
-                {/* Post Content */}
-                {post.title && (
-                    <h2 className="mb-2 text-xl font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600 leading-tight">
-                        {post.title}
-                    </h2>
-                )}
-                
-                <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600">
-                    {bodyPreview}
-                </p>
-
-                {/* Media Preview */}
-                {hasMedia && (
-                    <div className="mt-4 grid grid-cols-2 gap-2 overflow-hidden rounded-2xl">
-                        {post.media.slice(0, 2).map((media, mIdx) => (
-                            <div key={media.id} className={`relative aspect-video overflow-hidden bg-slate-50 ${post.media.length === 1 ? 'col-span-2' : ''}`}>
-                                <img
-                                    src={media.url}
-                                    alt=""
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    loading="lazy"
-                                />
-                                {mIdx === 1 && post.media.length > 2 && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
-                                        <span className="text-lg font-black text-white">+{post.media.length - 2}</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
 
                 {/* Post Footer */}
                 <div className="mt-5 flex items-center justify-between pt-4 border-t border-slate-50">
@@ -175,14 +177,14 @@ export default function EstateBoardIndex({ posts }: Props) {
 
             {/* Posts Feed */}
             {posts.data.length > 0 ? (
-                <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-stretch">
                     {posts.data.map((post, idx) => (
                         <PostCard key={post.id} post={post} index={idx} />
                     ))}
 
                     {/* Load More Trigger */}
                     {posts.next_page_url && (
-                        <div ref={loadMoreRef} className="flex justify-center py-8">
+                        <div ref={loadMoreRef} className="col-span-1 sm:col-span-2 flex justify-center py-8">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
                         </div>
                     )}
