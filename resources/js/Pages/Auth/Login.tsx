@@ -1,11 +1,10 @@
 import { Capacitor } from '@capacitor/core';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { useEffect } from 'react';
+
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import AuthErrorSheet from '@/Components/AuthErrorSheet';
 import Toast from '@/Components/Toast';
@@ -27,12 +26,6 @@ export default function Login() {
     const [googleError, setGoogleError] = useState('');
     const [showGoogleError, setShowGoogleError] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-
-    useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-        }
-    }, []);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();

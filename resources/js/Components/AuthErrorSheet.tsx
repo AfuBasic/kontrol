@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
     error: string | null;
@@ -9,10 +9,17 @@ interface Props {
 
 export default function AuthErrorSheet({ error, onClose }: Props) {
     const [isOpen, setIsOpen] = useState(false);
+    // A counter that bumps on every new error (even the same message) so
+    // AnimatePresence remounts the sheet and replays the slide-up animation.
+    const [sheetKey, setSheetKey] = useState(0);
+    const prevError = useRef<string | null>(null);
 
     useEffect(() => {
         if (error) {
+            // Always bump the key so the sheet re-animates, even for identical errors
+            setSheetKey((k) => k + 1);
             setIsOpen(true);
+            prevError.current = error;
         } else {
             setIsOpen(false);
         }
@@ -20,16 +27,16 @@ export default function AuthErrorSheet({ error, onClose }: Props) {
 
     const handleClose = () => {
         setIsOpen(false);
-        // Wait for animation to finish before calling parent onClose
         setTimeout(onClose, 300);
     };
 
     return (
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
             {isOpen && (
                 <>
                     {/* Backdrop */}
                     <motion.div
+                        key={`backdrop-${sheetKey}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -39,6 +46,7 @@ export default function AuthErrorSheet({ error, onClose }: Props) {
 
                     {/* Sheet */}
                     <motion.div
+                        key={`sheet-${sheetKey}`}
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
