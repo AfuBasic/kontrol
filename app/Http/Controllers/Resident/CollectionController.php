@@ -22,6 +22,8 @@ class CollectionController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
+        abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to dues or collections.');
+
         $estate = $this->estateContext->getEstate();
 
         $assignments = CollectionAssignment::where('user_id', $user->id)
@@ -44,6 +46,7 @@ class CollectionController extends Controller
     public function show(CollectionAssignment $assignment): Response
     {
         $user = auth()->user();
+        abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to dues or collections.');
         abort_if($assignment->user_id !== $user->id, 403);
 
         $assignment->load(['collection', 'payments' => function ($query) {

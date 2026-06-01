@@ -27,6 +27,10 @@ class NewCollectionNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
+        if (method_exists($notifiable, 'isHouseholdMember') && $notifiable->isHouseholdMember()) {
+            return [];
+        }
+
         $via = ['database', 'broadcast', 'mail'];
 
         if ($notifiable->pushSubscriptions()->exists()) {

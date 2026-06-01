@@ -44,7 +44,7 @@ class EnsureResidentSubscriptionActive
 
             if (! $subscription || ! $subscription->isActive()) {
                 $message = $user->isHouseholdMember()
-                    ? 'Your access is currently limited because the primary resident\'s subscription is inactive.'
+                    ? 'Your access is currently restricted.'
                     : 'Your access is currently limited due to an inactive subscription. Please visit the billing section to restore access.';
 
                 if ($request->expectsJson()) {

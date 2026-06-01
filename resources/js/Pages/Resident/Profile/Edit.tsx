@@ -213,7 +213,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     </section>
 
                     {/* Billing Section */}
-                    {auth.user?.roles?.includes('resident') && hasPaymentCollection && (
+                    {!isHouseholdMember && auth.user?.roles?.includes('resident') && hasPaymentCollection && (
                         <section>
                             <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">

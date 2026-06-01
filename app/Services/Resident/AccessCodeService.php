@@ -42,7 +42,7 @@ class AccessCodeService
         // Block if subscription is expired/invalid (only if estate charges residents)
         if ($estate->settings->charge_type === 'residents' && (! $subscription || ! $subscription->isActive())) {
             $message = $user->isHouseholdMember()
-                ? 'Access is currently limited because the primary resident\'s subscription is inactive.'
+                ? 'Access is currently restricted.'
                 : 'Your subscription has expired or is inactive. Please visit the billing section to restore access.';
 
             throw ValidationException::withMessages([

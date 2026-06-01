@@ -29,6 +29,8 @@ class BillingController extends Controller
     public function index(): Response|RedirectResponse
     {
         $user = auth()->user();
+        abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to billing.');
+
         $estate = $this->estateContext->getEstate();
 
         $subscription = ResidentSubscription::where('user_id', $user->id)

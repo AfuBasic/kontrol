@@ -28,6 +28,10 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
+        if (method_exists($notifiable, 'isHouseholdMember') && $notifiable->isHouseholdMember()) {
+            return [];
+        }
+
         // Check if we should send email based on the Gmail rule
         $via = ['database', 'broadcast'];
 

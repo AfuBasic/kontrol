@@ -10,7 +10,7 @@ interface SubscriptionBannerProps {
 export default function SubscriptionBanner({ subscription }: SubscriptionBannerProps) {
     const { openExternalBilling } = useExternalBilling();
 
-    if (!subscription) {
+    if (!subscription || subscription.is_household_member) {
         return null;
     }
 

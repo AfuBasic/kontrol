@@ -30,6 +30,10 @@ class PaymentFailedNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
+        if (method_exists($notifiable, 'isHouseholdMember') && $notifiable->isHouseholdMember()) {
+            return [];
+        }
+
         $channels = ['mail', 'database', 'broadcast'];
 
         if ($notifiable->pushSubscriptions()->exists()) {
