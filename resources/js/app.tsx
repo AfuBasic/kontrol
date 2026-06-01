@@ -127,7 +127,23 @@ createInertiaApp({
                     if (Capacitor.getPlatform() === 'android') {
                         await StatusBar.setBackgroundColor({ color: '#00000000' });
                     }
-                    await StatusBar.setStyle({ style: Style.Default });
+
+                    // Determine the correct status bar style based on the current page.
+                    // Security pages with a dark variant need light icons; everything else uses dark icons.
+                    const applyStatusBarStyle = () => {
+                        const component = (window as any).__inertia?.page?.component ?? '';
+                        const isDarkPage = component.startsWith('Security/');
+                        StatusBar.setStyle({ style: isDarkPage ? Style.Light : Style.Dark }).catch(() => {});
+                    };
+
+                    // Apply on first load
+                    applyStatusBarStyle();
+
+                    // Re-apply after every Inertia navigation (catches layout changes)
+                    router.on('navigate', () => {
+                        applyStatusBarStyle();
+                    });
+
 
                     // Handle Android back button
                     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
