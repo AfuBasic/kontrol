@@ -7,6 +7,7 @@ use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\DB;
 
 class EstateBoardService
 {
@@ -18,10 +19,49 @@ class EstateBoardService
      */
     public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null): CursorPaginator
     {
+        $user = auth()->user();
+        if ($user) {
+            setPermissionsTeamId($estateId);
+        }
+        $isAdmin = $user && $user->hasRole('admin');
+        $isPropertyOwner = $user && $user->hasRole('property_owner');
+        $propertyOwnerId = $user?->profile?->property_owner_id;
+        $propertyId = $user?->profile?->property_id;
+
         return EstateBoardPost::query()
             ->forEstate($estateId)
             ->published()
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
+            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
+                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
+                    $q->whereNull('property_owner_id');
+
+                    if ($propertyOwnerId) {
+                        $q->orWhere(function ($sq) use ($user, $propertyOwnerId, $propertyId) {
+                            $sq->where('property_owner_id', $propertyOwnerId)
+                                ->where(function ($sq2) use ($user, $propertyId) {
+                                    $sq2->where('applies_to', 'all')
+                                        ->orWhere(function ($sq3) use ($user, $propertyId) {
+                                            $sq3->where('applies_to', 'custom')
+                                                ->whereExists(function ($tq) use ($user, $propertyId) {
+                                                    $tq->select(DB::raw(1))
+                                                        ->from('estate_board_post_targets')
+                                                        ->whereColumn('estate_board_post_targets.estate_board_post_id', 'estate_board_posts.id')
+                                                        ->where(function ($tq2) use ($user, $propertyId) {
+                                                            $tq2->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                                                ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)));
+                                                        });
+                                                });
+                                        });
+                                });
+                        });
+                    }
+
+                    if ($isPropertyOwner) {
+                        $q->orWhere('property_owner_id', $user->id);
+                    }
+                });
+            })
             ->with([
                 'author:id,name,email',
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
@@ -38,9 +78,48 @@ class EstateBoardService
      */
     public function getPost(int $postId, int $estateId, ?array $audiences = null): ?EstateBoardPost
     {
+        $user = auth()->user();
+        if ($user) {
+            setPermissionsTeamId($estateId);
+        }
+        $isAdmin = $user && $user->hasRole('admin');
+        $isPropertyOwner = $user && $user->hasRole('property_owner');
+        $propertyOwnerId = $user?->profile?->property_owner_id;
+        $propertyId = $user?->profile?->property_id;
+
         return EstateBoardPost::query()
             ->forEstate($estateId)
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
+            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
+                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
+                    $q->whereNull('property_owner_id');
+
+                    if ($propertyOwnerId) {
+                        $q->orWhere(function ($sq) use ($user, $propertyOwnerId, $propertyId) {
+                            $sq->where('property_owner_id', $propertyOwnerId)
+                                ->where(function ($sq2) use ($user, $propertyId) {
+                                    $sq2->where('applies_to', 'all')
+                                        ->orWhere(function ($sq3) use ($user, $propertyId) {
+                                            $sq3->where('applies_to', 'custom')
+                                                ->whereExists(function ($tq) use ($user, $propertyId) {
+                                                    $tq->select(DB::raw(1))
+                                                        ->from('estate_board_post_targets')
+                                                        ->whereColumn('estate_board_post_targets.estate_board_post_id', 'estate_board_posts.id')
+                                                        ->where(function ($tq2) use ($user, $propertyId) {
+                                                            $tq2->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                                                ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)));
+                                                        });
+                                                });
+                                        });
+                                });
+                        });
+                    }
+
+                    if ($isPropertyOwner) {
+                        $q->orWhere('property_owner_id', $user->id);
+                    }
+                });
+            })
             ->with([
                 'author:id,name,email',
                 'media',

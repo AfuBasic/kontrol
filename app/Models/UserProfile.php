@@ -39,6 +39,8 @@ class UserProfile extends Model
         'unit_number',
         'address',
         'metadata',
+        'property_owner_id',
+        'property_id',
     ];
 
     protected function casts(): array
@@ -54,5 +56,21 @@ class UserProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function propertyOwner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'property_owner_id');
+    }
+
+    /**
+     * @return BelongsTo<Property, $this>
+     */
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class, 'property_id');
     }
 }

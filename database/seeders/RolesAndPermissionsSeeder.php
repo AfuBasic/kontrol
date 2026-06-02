@@ -22,6 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $residentRole = Role::firstOrCreate(['name' => 'resident', 'estate_id' => null]);
         $hmRole = Role::firstOrCreate(['name' => 'household_member', 'estate_id' => null]);
         $affiliateRole = Role::firstOrCreate(['name' => 'affiliate', 'estate_id' => null]);
+        $poRole = Role::firstOrCreate(['name' => 'property_owner', 'estate_id' => null]);
 
         // 4. Assign all permissions to the global admin role
         $allPermissions = PermissionSeeder::getAllPermissionNames();
@@ -31,5 +32,6 @@ class RolesAndPermissionsSeeder extends Seeder
         $securityRole->syncPermissions(['estate-board.view', 'visitors.view']);
         $residentRole->syncPermissions(['estate-board.view']);
         $hmRole->syncPermissions(['estate-board.view']);
+        $poRole->syncPermissions(['estate-board.view']);
     }
 }

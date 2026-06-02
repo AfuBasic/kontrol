@@ -77,14 +77,22 @@ class InviteRegistrationController extends Controller
                 'user_type' => 'user',
             ]);
 
-            // Assign 'resident' role scoped to this estate
-            $role = Role::where('name', 'resident')
+            setPermissionsTeamId($inviteLink->estate_id);
+
+            // Assign roles scoped to this estate
+            $residentRole = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
                 ->whereNull('estate_id')
                 ->firstOrFail();
+            $user->assignRole($residentRole);
 
-            setPermissionsTeamId($inviteLink->estate_id);
-            $user->assignRole($role);
+            if ($inviteLink->role === 'property_owner') {
+                $poRole = Role::where('name', 'property_owner')
+                    ->where('guard_name', 'web')
+                    ->whereNull('estate_id')
+                    ->firstOrFail();
+                $user->assignRole($poRole);
+            }
 
             // Send verification email
             $user->notify(new VerifyResidentEmail($inviteLink->estate));

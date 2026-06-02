@@ -177,6 +177,29 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasMany<Property, $this>
+     */
+    public function properties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'property_owner_id');
+    }
+
+    /**
+     * Residents managed by this user (if property owner).
+     */
+    public function managedResidents()
+    {
+        return $this->hasManyThrough(
+            User::class,
+            UserProfile::class,
+            'property_owner_id',
+            'id',
+            'id',
+            'user_id'
+        );
+    }
+
+    /**
      * Household members where this user is the primary resident (head).
      *
      * @return HasMany<HouseholdMember, $this>

@@ -24,6 +24,8 @@ class StoreResidentRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
+            'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'property_id' => ['nullable', 'integer', Rule::exists('properties', 'id')],
         ];
     }
 

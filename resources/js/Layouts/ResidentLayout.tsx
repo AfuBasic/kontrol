@@ -4,7 +4,7 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus } from 'lucide-react';
+import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, AlertOctagon as AlertTriangle, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -320,6 +320,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const hasAccessCodes = useFeature('access-code-generation');
     const hasVisitFeed = useFeature('real-time-visit-feed');
 
+    const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
+    const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
     const navItems = [
         {
             name: 'Dashboard',
@@ -357,56 +360,67 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
     ].filter((item) => item.show !== false);
 
+    const poMobileNavItems = [
+        {
+            name: 'Home',
+            href: '/resident/home',
+            icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+        },
+        {
+            name: 'Residents',
+            href: '/resident/property-owner/residents',
+            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+        },
+        { name: 'CREATE_CODE', href: '#' },
+        {
+            name: 'Activity',
+            href: '/resident/activity?tab=notifications',
+            icon: (active: boolean) => (
+                <div className="relative">
+                    <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
+                            {unreadCount}
+                        </span>
+                    )}
+                </div>
+            ),
+        },
+        {
+            name: 'More',
+            href: '#more',
+            icon: (active: boolean) => <Menu className={`h-6 w-6`} />,
+        },
+    ];
+
+    const poSidebarItems = [
+        { name: 'Home', href: '/resident/home', icon: Home },
+        { name: 'Residents', href: '/resident/property-owner/residents', icon: Users },
+        { name: 'Collections', href: '/resident/property-owner/collections', icon: Wallet },
+        { name: 'Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
+        { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
+        { name: 'Visitor Passes', href: '/resident/visitors', icon: ClipboardList },
+        { name: 'Household Members', href: '/resident/household', icon: UserCheck },
+        { name: 'SOS', href: '#sos', icon: AlertTriangle, action: true },
+        { name: 'Profile', href: '/resident/profile', icon: User },
+    ];
+
     return (
-        <div className={`flex min-h-screen flex-col bg-slate-50 ${className || ''}`}>
-            {/* Header - Conditional Light Premium Header */}
-            {!hideHeader && (
-                <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
-                    <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl px-6">
-                        <div className="flex h-16 items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
-                                <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
-                            </div>
-                            {/* <SosButton variant="header" /> */}
+        <div className={`flex min-h-screen ${isPropertyOwner ? 'md:flex-row flex-col' : 'flex-col'} bg-slate-50 ${className || ''}`}>
+            {/* Desktop Property Owner Sidebar */}
+            {isPropertyOwner && (
+                <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 shrink-0 sticky top-0 h-screen p-6 justify-between">
+                    <div className="flex flex-col gap-8">
+                        <div className="flex items-center gap-3 px-2">
+                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
+                            <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                         </div>
-                    </div>
-                </header>
-            )}
-
-            {/* Main Content */}
-            <main
-                className={`relative mx-auto w-full max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl flex-1 pb-8 ${!hideHeader ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'}`}
-            >
-                {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
-                    <div className="px-2">
-                        <SubscriptionBanner subscription={auth.user.resident_subscription} />
-                    </div>
-                )}
-                <PullToRefresh className="px-6">{children}</PullToRefresh>
-            </main>
-
-            {/* Bottom Navigation - Refined Glass Design */}
-            {!hideNav && component !== 'Resident/Billing/Index' && (
-                <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6">
-                    <motion.nav
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
-                    >
-                        <div className="flex items-center justify-between px-3 py-2">
-                            {navItems.map((item) => {
-                                if (item.name === 'CREATE_CODE') {
+                        <nav className="flex flex-col gap-1">
+                            {poSidebarItems.map((item) => {
+                                if (item.name === 'SOS') {
                                     return (
-                                        <div key="fab" className="relative flex flex-1 justify-center">
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => setCreateModalOpen(true)}
-                                                className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
-                                            >
-                                                <Plus className="h-7 w-7" strokeWidth={3} />
-                                            </motion.button>
+                                        <div key={item.name} className="px-2 py-3 mt-4">
+                                            <SosButton variant="sidebar" />
                                         </div>
                                     );
                                 }
@@ -416,22 +430,249 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
 
                                 return (
-                                    <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
-                                        <div
-                                            className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
-                                        >
-                                            {item.icon(isActive)}
-                                        </div>
-                                        {isActive && (
-                                            <motion.div layoutId="navIndicator" className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600" />
-                                        )}
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                                            isActive
+                                                ? 'bg-indigo-50 text-indigo-600'
+                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        <item.icon className="h-5 w-5" />
+                                        {item.name}
                                     </Link>
                                 );
                             })}
+                        </nav>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-4 flex flex-col gap-1">
+                        <div className="flex items-center gap-3 px-2 py-2">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 font-bold">
+                                {auth.user?.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-black text-slate-900">{auth.user?.name}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Property Owner</p>
+                            </div>
                         </div>
-                    </motion.nav>
-                </div>
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-rose-600 hover:bg-rose-50/50 transition-all"
+                        >
+                            Sign out
+                        </Link>
+                    </div>
+                </aside>
             )}
+
+            {/* Main Content Area */}
+            <div className="flex flex-1 flex-col min-h-screen">
+                {/* Header - Conditional Light Premium Header */}
+                {!hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) && (
+                    <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
+                        <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl px-6">
+                            <div className="flex h-16 items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
+                                    <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                )}
+
+                {/* Main Content */}
+                <main
+                    className={`relative mx-auto w-full flex-1 pb-8 ${isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'} ${
+                        !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'
+                    }`}
+                >
+                    {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
+                        <div className="px-2 mb-4">
+                            <SubscriptionBanner subscription={auth.user.resident_subscription} />
+                        </div>
+                    )}
+                    <PullToRefresh className="px-6">{children}</PullToRefresh>
+                </main>
+
+                {/* Bottom Navigation for normal Residents */}
+                {!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
+                    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6">
+                        <motion.nav
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
+                        >
+                            <div className="flex items-center justify-between px-3 py-2">
+                                {navItems.map((item) => {
+                                    if (item.name === 'CREATE_CODE') {
+                                        return (
+                                            <div key="fab" className="relative flex flex-1 justify-center">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => setCreateModalOpen(true)}
+                                                    className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
+                                                >
+                                                    <Plus className="h-7 w-7" strokeWidth={3} />
+                                                </motion.button>
+                                            </div>
+                                        );
+                                    }
+
+                                    const currentPathname = currentPath.split('?')[0];
+                                    const itemPathname = getPathFromUrl(item.href).split('?')[0];
+                                    const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
+
+                                    return (
+                                        <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
+                                            <div
+                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
+                                            >
+                                                {item.icon(isActive)}
+                                            </div>
+                                            {isActive && (
+                                                <motion.div layoutId="navIndicator" className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600" />
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </motion.nav>
+                    </div>
+                )}
+
+                {/* Bottom Navigation for Property Owners on Mobile */}
+                {isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
+                    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 md:hidden">
+                        <motion.nav
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
+                        >
+                            <div className="flex items-center justify-between px-3 py-2">
+                                {poMobileNavItems.map((item) => {
+                                    if (item.name === 'CREATE_CODE') {
+                                        return (
+                                            <div key="fab" className="relative flex flex-1 justify-center">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => setCreateModalOpen(true)}
+                                                    className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
+                                                >
+                                                    <Plus className="h-7 w-7" strokeWidth={3} />
+                                                </motion.button>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (item.name === 'More') {
+                                        return (
+                                            <button
+                                                key={item.name}
+                                                onClick={() => setMoreMenuOpen(true)}
+                                                className="group relative flex flex-1 flex-col items-center gap-1 text-slate-400 hover:text-slate-600"
+                                            >
+                                                <div className="rounded-xl p-2.5 transition-all">
+                                                    {item.icon(false)}
+                                                </div>
+                                            </button>
+                                        );
+                                    }
+
+                                    const currentPathname = currentPath.split('?')[0];
+                                    const itemPathname = getPathFromUrl(item.href).split('?')[0];
+                                    const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
+
+                                    return (
+                                        <Link key={item.name} href={item.href} className="group relative flex flex-1 flex-col items-center gap-1">
+                                            <div
+                                                className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
+                                            >
+                                                {item.icon(isActive)}
+                                            </div>
+                                            {isActive && (
+                                                <motion.div layoutId="navIndicator" className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600" />
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </motion.nav>
+                    </div>
+                )}
+            </div>
+
+            {/* Mobile Property Owner 'More' Slide-up Menu Drawer */}
+            <AnimatePresence>
+                {moreMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setMoreMenuOpen(false)}
+                            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs md:hidden"
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed inset-x-0 bottom-0 z-50 rounded-t-[40px] bg-white p-6 pb-12 shadow-2xl md:hidden border-t border-slate-100"
+                        >
+                            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-black text-slate-900">Manage Estate</h3>
+                                <button
+                                    onClick={() => setMoreMenuOpen(false)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                {poSidebarItems.map((item) => {
+                                    if (item.name === 'SOS') {
+                                        return (
+                                            <div key={item.name} className="flex flex-col items-center gap-1.5">
+                                                <SosButton variant="mobile-menu" />
+                                            </div>
+                                        );
+                                    }
+
+                                    const currentPathname = currentPath.split('?')[0];
+                                    const itemPathname = getPathFromUrl(item.href).split('?')[0];
+                                    const isActive = currentPathname === itemPathname || currentPathname.startsWith(itemPathname + '/');
+
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setMoreMenuOpen(false)}
+                                            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-slate-50 transition-all text-center"
+                                        >
+                                            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                                                isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
+                                            }`}>
+                                                <item.icon className="h-6 w-6" />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-600 leading-tight">
+                                                {item.name}
+                                            </span>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Modals and Sheets */}
             <CreateCodeBottomSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />

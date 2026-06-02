@@ -4,6 +4,7 @@ namespace App\Jobs\Admin;
 
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
+use App\Models\Property;
 use App\Models\User;
 use App\Notifications\Resident\NewCollectionNotification;
 use Carbon\Carbon;
@@ -78,7 +79,17 @@ class PublishCollectionJob implements ShouldQueue
 
     private function getTargetUserIds(Collection $collection, $estate): array
     {
+        $creator = $collection->creator;
+        setPermissionsTeamId($estate->id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+
         if ($collection->applies_to === 'all') {
+            if ($isPropertyOwner) {
+                return User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                    ->pluck('users.id')
+                    ->toArray();
+            }
+
             return User::withRole('resident', $estate->id)
                 ->pluck('users.id')
                 ->toArray();
@@ -88,6 +99,11 @@ class PublishCollectionJob implements ShouldQueue
         foreach ($collection->targets as $target) {
             if ($target->target_type === User::class || $target->target_type === 'user') {
                 $userIds[] = $target->target_id;
+            } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
+                $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $propertyResidentIds);
             }
         }
 

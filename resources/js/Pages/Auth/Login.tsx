@@ -30,19 +30,26 @@ export default function Login() {
 
     const [loginError, setLoginError] = useState<string | null>(null);
 
-    // Sync external errors to local state
+    // Sync external errors to local state on initial mount
     useEffect(() => {
-        const extError = flash?.error || errors?.email || null;
+        const extError = page.props.flash?.error || page.props.errors?.email || null;
         if (extError) {
-            setLoginError(extError);
+            setLoginError(extError as string);
         }
-    }, [flash?.error, errors?.email]);
+    }, []);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
         setLoginError(null);
         clearErrors();
-        post('/login');
+        post('/login', {
+            onError: (errs) => {
+                const extError = errs.email || null;
+                if (extError) {
+                    setLoginError(extError);
+                }
+            },
+        });
     }
 
     async function handleGoogleSignIn() {
@@ -231,9 +238,6 @@ export default function Login() {
                             onClose={() => {
                                 setLoginError(null);
                                 clearErrors();
-                                if (page.props.flash) {
-                                    page.props.flash.error = undefined;
-                                }
                             }}
                         />
 

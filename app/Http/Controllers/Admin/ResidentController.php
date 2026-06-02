@@ -11,6 +11,7 @@ use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
+use App\Models\Property;
 use App\Models\User;
 use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
@@ -46,6 +47,10 @@ class ResidentController extends Controller
                 'email' => $user->email,
                 'phone' => $user->profile?->phone,
                 'unit_number' => $user->profile?->unit_number,
+                'property_owner_id' => $user->profile?->property_owner_id,
+                'property_owner_name' => $user->profile?->propertyOwner?->name,
+                'property_id' => $user->profile?->property_id,
+                'property_name' => $user->profile?->property?->name,
                 'status' => $user->estates->first()?->pivot?->status ?? 'pending',
                 'suspended_at' => $user->suspended_at,
                 'email_verified_at' => $user->email_verified_at,
@@ -83,6 +88,18 @@ class ResidentController extends Controller
                 'expires_at' => $link->expires_at?->toDateTimeString(),
                 'is_expired' => $link->expires_at?->isPast() ?? false,
             ] : null,
+            'propertyOwners' => User::query()
+                ->forEstate($estate->id)
+                ->withRole('property_owner', $estate->id)
+                ->active()
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+            'properties' => Property::query()
+                ->where('estate_id', $estate->id)
+                ->whereNull('archived_at')
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -107,7 +124,8 @@ class ResidentController extends Controller
     public function edit(User $resident): Response
     {
         $this->authorize('residents.edit');
-        $resident->load('profile');
+        $resident->load(['profile.propertyOwner', 'profile.property']);
+        $estate = $this->estateContext->getEstate();
 
         return Inertia::render('Admin/Residents/Edit', [
             'resident' => [
@@ -119,7 +137,21 @@ class ResidentController extends Controller
                 'phone' => $resident->profile?->phone,
                 'unit_number' => $resident->profile?->unit_number,
                 'address' => $resident->profile?->address,
+                'property_owner_id' => $resident->profile?->property_owner_id,
+                'property_id' => $resident->profile?->property_id,
             ],
+            'propertyOwners' => User::query()
+                ->forEstate($estate->id)
+                ->withRole('property_owner', $estate->id)
+                ->active()
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+            'properties' => Property::query()
+                ->where('estate_id', $estate->id)
+                ->whereNull('archived_at')
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -148,6 +180,8 @@ class ResidentController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
+            'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'property_id' => ['nullable', 'integer', Rule::exists('properties', 'id')],
         ]);
 
         $estate = $this->estateContext->getEstate();

@@ -24,6 +24,8 @@ interface InviteLink {
 
 interface Props {
     inviteLink: InviteLink | null;
+    propertyOwners?: { id: number; name: string }[];
+    properties?: { id: number; name: string }[];
 }
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -55,7 +57,7 @@ function extractEmailsFromRow(row: unknown[]): string | null {
     return null;
 }
 
-export default function CreateResident({ inviteLink }: Props) {
+export default function CreateResident({ inviteLink, propertyOwners = [], properties = [] }: Props) {
     const [activeTab, setActiveTab] = useState<TabType>('invite_link');
     const [extractedEmails, setExtractedEmails] = useState<string[]>([]);
     const [pasteText, setPasteText] = useState('');
@@ -90,6 +92,8 @@ export default function CreateResident({ inviteLink }: Props) {
         phone: '',
         unit_number: '',
         address: '',
+        property_owner_id: '',
+        property_id: '',
     });
 
     function handleSubmitSingle(e: React.FormEvent) {
@@ -454,6 +458,48 @@ export default function CreateResident({ inviteLink }: Props) {
                                         placeholder="Enter resident's address within the estate"
                                     />
                                     {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+                                </div>
+
+                                {/* Property Owner Delegation */}
+                                <div>
+                                    <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700">
+                                        Property Owner <span className="text-gray-400">(optional delegation)</span>
+                                    </label>
+                                    <select
+                                        id="property_owner_id"
+                                        value={data.property_owner_id}
+                                        onChange={(e) => setData('property_owner_id', e.target.value)}
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none bg-white"
+                                    >
+                                        <option value="">None / Standard Resident</option>
+                                        {propertyOwners.map((owner) => (
+                                            <option key={owner.id} value={owner.id}>
+                                                {owner.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
+                                </div>
+
+                                {/* Property Assignment */}
+                                <div>
+                                    <label htmlFor="property_id" className="block text-sm font-medium text-gray-700">
+                                        Property Assignment <span className="text-gray-400">(optional)</span>
+                                    </label>
+                                    <select
+                                        id="property_id"
+                                        value={data.property_id}
+                                        onChange={(e) => setData('property_id', e.target.value)}
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none bg-white"
+                                    >
+                                        <option value="">None</option>
+                                        {properties.map((prop) => (
+                                            <option key={prop.id} value={prop.id}>
+                                                {prop.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.property_id && <p className="mt-1 text-sm text-red-600">{errors.property_id}</p>}
                                 </div>
                             </div>
 

@@ -25,7 +25,7 @@ class ResidentService
         return User::query()
             ->forEstate($estate->id)
             ->withRole('resident', $estate->id)
-            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['profile.propertyOwner', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

@@ -4,6 +4,7 @@ namespace App\Jobs\Admin;
 
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
+use App\Models\Property;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -90,16 +91,35 @@ class RecurringAssignmentJob implements ShouldQueue
 
     private function getTargetUserIds(Collection $collection): array
     {
+        $creator = $collection->creator;
+        setPermissionsTeamId($collection->estate_id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+
         if ($collection->applies_to === 'all') {
+            if ($isPropertyOwner) {
+                return User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                    ->pluck('users.id')
+                    ->toArray();
+            }
+
             return User::query()
                 ->withRole('resident', $collection->estate_id)
                 ->pluck('users.id')
                 ->toArray();
         }
 
-        return $collection->targets()
-            ->where('target_type', 'user')
-            ->pluck('target_id')
-            ->toArray();
+        $userIds = [];
+        foreach ($collection->targets as $target) {
+            if ($target->target_type === User::class || $target->target_type === 'user') {
+                $userIds[] = $target->target_id;
+            } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
+                $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $propertyResidentIds);
+            }
+        }
+
+        return array_unique($userIds);
     }
 }

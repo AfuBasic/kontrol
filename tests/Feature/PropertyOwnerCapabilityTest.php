@@ -1,0 +1,307 @@
+<?php
+
+use App\Models\Collection;
+use App\Models\Estate;
+use App\Models\EstateBoardPost;
+use App\Models\EstateSubscription;
+use App\Models\Plan;
+use App\Models\Property;
+use App\Models\User;
+use App\Models\UserProfile;
+use Database\Seeders\FeatureSeeder;
+use Database\Seeders\PlanSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    // Seed roles/permissions
+    Role::create(['name' => 'admin']);
+    Role::create(['name' => 'resident']);
+    Role::create(['name' => 'property_owner']);
+
+    // Seed essential permission for testing
+    Permission::create(['name' => 'property_owners.view']);
+    Permission::create(['name' => 'property_owners.create']);
+    Permission::create(['name' => 'property_owners.edit']);
+    Permission::create(['name' => 'property_owners.suspend']);
+    Permission::create(['name' => 'residents.view']);
+    Permission::create(['name' => 'residents.create']);
+    Permission::create(['name' => 'residents.edit']);
+
+    Role::findByName('admin')->givePermissionTo([
+        'property_owners.view',
+        'property_owners.create',
+        'property_owners.edit',
+        'property_owners.suspend',
+        'residents.view',
+        'residents.create',
+        'residents.edit',
+    ]);
+
+    $this->estate = Estate::factory()->create();
+    $this->adminUser = User::factory()->create();
+
+    setPermissionsTeamId($this->estate->id);
+    $this->adminUser->assignRole('admin');
+    $this->adminUser->estates()->attach($this->estate->id, ['status' => 'accepted']);
+
+    // Seed features and plans
+    $this->seed(FeatureSeeder::class);
+    $this->seed(PlanSeeder::class);
+
+    // Create estate subscription
+    $plan = Plan::first();
+    EstateSubscription::create([
+        'estate_id' => $this->estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'billing_interval' => 'quarterly',
+    ]);
+});
+
+test('admin can view, create, edit, suspend property owners', function () {
+    $this->actingAs($this->adminUser);
+
+    // 1. View Index
+    $response = $this->get(route('admin.property-owners.index'));
+    $response->assertOk();
+
+    // 2. Create Property Owner
+    $response = $this->post(route('admin.property-owners.store'), [
+        'name' => 'John Owner',
+        'email' => 'john@owner.com',
+        'phone' => '1234567890',
+        'unit_number' => 'Block A',
+        'address' => '123 Main St',
+    ]);
+    $response->assertRedirect(route('admin.property-owners.index'));
+
+    $owner = User::where('email', 'john@owner.com')->first();
+    expect($owner)->not->toBeNull();
+    setPermissionsTeamId($this->estate->id);
+    expect($owner->hasRole('property_owner'))->toBeTrue();
+    expect($owner->hasRole('resident'))->toBeTrue();
+
+    // 3. Edit Property Owner details
+    $response = $this->put(route('admin.property-owners.update', $owner->id), [
+        'name' => 'John Owner Updated',
+        'email' => 'john@owner.com',
+        'phone' => '0987654321',
+        'unit_number' => 'Block A2',
+        'address' => '456 Main St',
+    ]);
+    $response->assertRedirect(route('admin.property-owners.index'));
+
+    $owner->refresh();
+    expect($owner->name)->toBe('John Owner Updated');
+    expect($owner->profile->phone)->toBe('0987654321');
+
+    // 4. Suspend Property Owner
+    $response = $this->patch(route('admin.property-owners.suspend', $owner->id));
+    $response->assertRedirect();
+
+    $owner->refresh();
+    expect($owner->suspended_at)->not->toBeNull();
+
+    // 5. Reactivate
+    $response = $this->patch(route('admin.property-owners.suspend', $owner->id));
+    $response->assertRedirect();
+
+    $owner->refresh();
+    expect($owner->suspended_at)->toBeNull();
+});
+
+test('property owner dashboard, residents, properties, collections, and announcements access', function () {
+    // 1. Create a Property Owner
+    $owner = User::factory()->create();
+    UserProfile::create([
+        'user_id' => $owner->id,
+    ]);
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('resident');
+    $owner->assignRole('property_owner');
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+
+    // 2. Create managed residents
+    $resident1 = User::factory()->create();
+    $resident1->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident1->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    $resident2 = User::factory()->create();
+    $resident2->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident2->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    // 3. Create property
+    $property = Property::create([
+        'estate_id' => $this->estate->id,
+        'property_owner_id' => $owner->id,
+        'name' => 'Villa A-12',
+    ]);
+
+    $this->actingAs($owner);
+
+    // 4. Dashboard View
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.property-owner.dashboard'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/PropertyOwner/Dashboard')
+        ->where('residentsCount', 2)
+        ->where('propertiesCount', 1)
+    );
+
+    // 5. List Managed Residents
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.property-owner.residents.index'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/PropertyOwner/Residents/Index')
+        ->has('residents', 2)
+    );
+
+    // 6. Assign resident to property
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.properties.assign-resident', $property->id), [
+            'resident_id' => $resident1->id,
+        ]);
+    $response->assertRedirect();
+
+    $resident1->refresh();
+    expect($resident1->profile->property_id)->toBe($property->id);
+
+    // 7. Create Collection
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.collections.store'), [
+            'name' => 'July Rent',
+            'description' => 'Annual Rent',
+            'amount' => 150000,
+            'due_at' => now()->addDays(5)->toDateString(),
+            'applies_to' => 'all',
+        ]);
+    $response->assertRedirect(route('resident.property-owner.collections.index'));
+
+    // Verify collection assignments were created for both managed residents
+    $collection = Collection::where('name', 'July Rent')->first();
+    expect($collection)->not->toBeNull();
+    expect($collection->assignments()->count())->toBe(2);
+
+    // 8. Create Announcement
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.announcements.store'), [
+            'title' => 'Renovation Notice',
+            'body' => 'Painting starts Monday',
+            'applies_to' => 'all',
+        ]);
+    $response->assertRedirect(route('resident.property-owner.announcements.index'));
+
+    $announcement = EstateBoardPost::where('title', 'Renovation Notice')->first();
+    expect($announcement)->not->toBeNull();
+    expect($announcement->property_owner_id)->toBe($owner->id);
+});
+
+test('admin can bulk invite property owners', function () {
+    $this->actingAs($this->adminUser);
+
+    $response = $this->post(route('admin.property-owners.bulk-invite'), [
+        'emails' => ['bulk1@owner.com', 'bulk2@owner.com'],
+    ]);
+
+    $response->assertRedirect(route('admin.property-owners.index'));
+
+    $user1 = User::where('email', 'bulk1@owner.com')->first();
+    $user2 = User::where('email', 'bulk2@owner.com')->first();
+
+    expect($user1)->not->toBeNull();
+    expect($user2)->not->toBeNull();
+
+    setPermissionsTeamId($this->estate->id);
+    expect($user1->hasRole('property_owner'))->toBeTrue();
+    expect($user1->hasRole('resident'))->toBeTrue();
+    expect($user2->hasRole('property_owner'))->toBeTrue();
+    expect($user2->hasRole('resident'))->toBeTrue();
+});
+
+test('admin can manage property owner invite link and users can join', function () {
+    $this->actingAs($this->adminUser);
+
+    // 1. Get index (should be null)
+    $response = $this->get(route('admin.property-owners.invite-link.index'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/PropertyOwners/InviteLink/Index')
+        ->where('inviteLink', null)
+    );
+
+    // 2. Generate link
+    $response = $this->post(route('admin.property-owners.invite-link.store'), [
+        'max_usages' => 10,
+        'requires_approval' => true,
+        'expires_at' => now()->addDays(5)->toDateString(),
+    ]);
+    $response->assertRedirect();
+
+    $this->estate->refresh();
+    $link = $this->estate->propertyOwnerInviteLink;
+    expect($link)->not->toBeNull();
+    expect($link->role)->toBe('property_owner');
+    expect($link->max_usages)->toBe(10);
+    expect($link->requires_approval)->toBeTrue();
+
+    // 3. Get index (should return the link details)
+    $response = $this->get(route('admin.property-owners.invite-link.index'));
+    $response->assertOk();
+
+    // 4. Toggle link
+    $response = $this->post(route('admin.property-owners.invite-link.toggle'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->is_active)->toBeFalse();
+
+    // Toggle back to active
+    $response = $this->post(route('admin.property-owners.invite-link.toggle'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->is_active)->toBeTrue();
+
+    // 5. Regenerate token
+    $oldToken = $link->token;
+    $response = $this->post(route('admin.property-owners.invite-link.regenerate'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->token)->not->toBe($oldToken);
+
+    // 6. User accepts invitation through the public join route
+    $this->post(route('logout')); // Log out admin
+
+    // View registration page
+    $response = $this->get(url("/join/{$link->token}"));
+    $response->assertOk();
+
+    // Register
+    $response = $this->post(url("/join/{$link->token}"), [
+        'name' => 'Public Owner',
+        'email' => 'public@owner.com',
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
+    ]);
+    $response->assertOk(); // returns Inertia::render('Auth/JoinSuccess')
+
+    // Verify registration details
+    $user = User::where('email', 'public@owner.com')->first();
+    expect($user)->not->toBeNull();
+    setPermissionsTeamId($this->estate->id);
+    expect($user->hasRole('property_owner'))->toBeTrue();
+    expect($user->hasRole('resident'))->toBeTrue();
+
+    // Verify membership status (requires_approval was true, so status should be pending)
+    expect($user->estates->first()->pivot->status)->toBe('pending');
+});

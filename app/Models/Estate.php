@@ -270,7 +270,15 @@ class Estate extends Model
      */
     public function inviteLink(): HasOne
     {
-        return $this->hasOne(EstateInviteLink::class);
+        return $this->hasOne(EstateInviteLink::class)->where('role', 'resident');
+    }
+
+    /**
+     * @return HasOne<EstateInviteLink, $this>
+     */
+    public function propertyOwnerInviteLink(): HasOne
+    {
+        return $this->hasOne(EstateInviteLink::class)->where('role', 'property_owner');
     }
 
     /**

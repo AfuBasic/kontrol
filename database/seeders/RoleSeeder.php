@@ -16,6 +16,7 @@ class RoleSeeder extends Seeder
         'resident',         // Global resident role
         'household_member', // Global household member role,
         'affiliate',
+        'property_owner',   // Global property owner role
     ];
 
     /**
@@ -26,6 +27,7 @@ class RoleSeeder extends Seeder
         'resident',
         'household_member',
         'affiliate',
+        'property_owner',
     ];
 
     /**

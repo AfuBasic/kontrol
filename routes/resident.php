@@ -14,6 +14,11 @@ use App\Http\Controllers\Resident\NotificationController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\PaymentCallbackController;
 use App\Http\Controllers\Resident\ProfileController;
+use App\Http\Controllers\Resident\PropertyOwner\AnnouncementController as POAnnouncementController;
+use App\Http\Controllers\Resident\PropertyOwner\CollectionController as POCollectionController;
+use App\Http\Controllers\Resident\PropertyOwner\DashboardController as PODashboardController;
+use App\Http\Controllers\Resident\PropertyOwner\PropertyController as POPropertyController;
+use App\Http\Controllers\Resident\PropertyOwner\ResidentController as POResidentController;
 use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Resident\TelegramLinkController;
 use Illuminate\Support\Facades\Route;
@@ -132,5 +137,26 @@ Route::middleware('role:resident')->group(function (): void {
             Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
         });
         Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // Property Owner routes (gated by property_owner role)
+    Route::middleware('role:property_owner')->prefix('property-owner')->name('resident.property-owner.')->group(function (): void {
+        Route::get('/dashboard', PODashboardController::class)->name('dashboard');
+
+        // Managed Residents CRUD
+        Route::patch('/residents/{resident}/suspend', [POResidentController::class, 'suspend'])->name('residents.suspend');
+        Route::resource('/residents', POResidentController::class)->except(['create', 'store', 'show'])->names('residents');
+
+        // Properties CRUD
+        Route::post('/properties/{property}/assign-resident', [POPropertyController::class, 'assignResident'])->name('properties.assign-resident');
+        Route::post('/properties/{property}/remove-resident', [POPropertyController::class, 'removeResident'])->name('properties.remove-resident');
+        Route::resource('/properties', POPropertyController::class)->names('properties');
+
+        // Custom Collections
+        Route::post('/collections/assignments/{assignment}/record-payment', [POCollectionController::class, 'recordPayment'])->name('collections.record-payment');
+        Route::resource('/collections', POCollectionController::class)->names('collections');
+
+        // Scoped Announcements
+        Route::resource('/announcements', POAnnouncementController::class)->names('announcements');
     });
 });

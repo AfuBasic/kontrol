@@ -22,6 +22,12 @@ class PermissionSeeder extends Seeder
             'residents.suspend' => 'Suspend or unsuspend residents',
             'residents.reset-password' => 'Reset resident passwords',
         ],
+        'property_owners' => [
+            'property_owners.view' => 'View property owners list and details',
+            'property_owners.create' => 'Create new property owners',
+            'property_owners.edit' => 'Edit existing property owners',
+            'property_owners.suspend' => 'Suspend or unsuspend property owners',
+        ],
         'security' => [
             'security.view' => 'View security personnel list and details',
             'security.create' => 'Create new security personnel',

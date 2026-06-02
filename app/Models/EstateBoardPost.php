@@ -70,6 +70,8 @@ class EstateBoardPost extends Model
         'status',
         'audience',
         'published_at',
+        'property_owner_id',
+        'applies_to',
     ];
 
     /**
@@ -113,6 +115,22 @@ class EstateBoardPost extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function propertyOwner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'property_owner_id');
+    }
+
+    /**
+     * @return HasMany<EstateBoardPostTarget, $this>
+     */
+    public function targets(): HasMany
+    {
+        return $this->hasMany(EstateBoardPostTarget::class, 'estate_board_post_id');
     }
 
     /**

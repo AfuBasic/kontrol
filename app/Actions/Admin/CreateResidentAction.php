@@ -48,6 +48,8 @@ class CreateResidentAction
                 'phone' => $data['phone'] ?? null,
                 'unit_number' => $data['unit_number'] ?? null,
                 'address' => $data['address'] ?? null,
+                'property_owner_id' => $data['property_owner_id'] ?? null,
+                'property_id' => $data['property_id'] ?? null,
             ]);
 
             // Create resident subscription if required

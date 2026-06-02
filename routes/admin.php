@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PaymentCallbackController;
 use App\Http\Controllers\Admin\PaymentHistoryController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\PropertyOwnerController;
+use App\Http\Controllers\Admin\PropertyOwnerInviteLinkController;
 use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
@@ -84,6 +86,23 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         });
 
         Route::resource('residents', ResidentController::class)->except(['show'])->middleware('feature:resident-directory');
+
+        // Property Owners management
+        Route::middleware('permission:property_owners.view')->group(function (): void {
+            Route::middleware('feature:secure-invitations')->group(function (): void {
+                Route::post('property-owners/bulk-invite', [PropertyOwnerController::class, 'bulkInvite'])->name('property-owners.bulk-invite');
+                Route::get('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'index'])->name('property-owners.invite-link.index');
+                Route::post('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'store'])->name('property-owners.invite-link.store');
+                Route::post('property-owners/invite-link/toggle', [PropertyOwnerInviteLinkController::class, 'toggle'])->name('property-owners.invite-link.toggle');
+                Route::post('property-owners/invite-link/regenerate', [PropertyOwnerInviteLinkController::class, 'regenerate'])->name('property-owners.invite-link.regenerate');
+                Route::delete('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'destroy'])->name('property-owners.invite-link.destroy');
+            });
+
+            Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
+            Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
+            Route::get('property-owners/{propertyOwner}/properties', [PropertyOwnerController::class, 'properties'])->name('property-owners.properties');
+            Route::resource('property-owners', PropertyOwnerController::class)->except(['show']);
+        });
     });
 
     // Visitor Logs
