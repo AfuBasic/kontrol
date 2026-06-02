@@ -3,7 +3,7 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import AuthErrorSheet from '@/Components/AuthErrorSheet';
@@ -15,8 +15,9 @@ interface LoginFlash {
 }
 
 export default function Login() {
-    const { flash } = usePage<{ flash: LoginFlash }>().props;
-    const { data, setData, post, processing, errors } = useForm({
+    const page = usePage<{ flash: LoginFlash }>();
+    const { flash } = page.props;
+    const { data, setData, post, processing, errors, clearErrors } = useForm({
         email: '',
         password: '',
         remember: false,
@@ -27,8 +28,20 @@ export default function Login() {
     const [showGoogleError, setShowGoogleError] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
 
+    const [loginError, setLoginError] = useState<string | null>(null);
+
+    // Sync external errors to local state
+    useEffect(() => {
+        const extError = flash?.error || errors?.email || null;
+        if (extError) {
+            setLoginError(extError);
+        }
+    }, [flash?.error, errors?.email]);
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
+        setLoginError(null);
+        clearErrors();
         post('/login');
     }
 
@@ -203,21 +216,24 @@ export default function Login() {
                             </motion.div>
                         )}
 
-                        {(flash?.error || errors?.email) && (
+                        {loginError && (
                             <motion.div
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6 lg:block"
                             >
-                                {flash?.error || errors?.email}
+                                {loginError}
                             </motion.div>
                         )}
 
                         <AuthErrorSheet
-                            error={flash?.error || errors?.email || null}
+                            error={loginError}
                             onClose={() => {
-                                // Clear errors if possible or just hide the sheet
-                                // Inertia errors are usually cleared on next request
+                                setLoginError(null);
+                                clearErrors();
+                                if (page.props.flash) {
+                                    page.props.flash.error = undefined;
+                                }
                             }}
                         />
 
