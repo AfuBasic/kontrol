@@ -1,7 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Wallet, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 import { show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
+import type { SharedData } from '@/types';
 
 const MotionLink = motion(Link);
 
@@ -21,6 +23,8 @@ type Assignment = {
     due_date: string;
     period: string | null;
     collection: Collection;
+    is_property_owner_bill?: boolean;
+    billing_source?: 'estate' | 'property_owner';
 };
 
 type Props = {
@@ -32,6 +36,10 @@ type Props = {
 };
 
 export default function CollectionsIndex({ summary }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const hasLandlord = !!auth?.user?.profile?.property_owner_id;
+    const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>('all');
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -55,8 +63,24 @@ export default function CollectionsIndex({ summary }: Props) {
 
     const totalOutstanding = summary.outstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
 
+    const filteredOutstanding = summary.outstanding.filter((item) => {
+        if (billFilter === 'all') return true;
+        return item.billing_source === billFilter;
+    });
+
+    const filteredPaid = summary.paid.filter((item) => {
+        if (billFilter === 'all') return true;
+        return item.billing_source === billFilter;
+    });
+
+    const tabs = [
+        { id: 'all' as const, label: 'All Bills' },
+        { id: 'estate' as const, label: 'Estate Bills' },
+        ...(hasLandlord ? [{ id: 'property_owner' as const, label: 'Landlord Bills' }] : []),
+    ];
+
     return (
-        <div className="flex flex-col gap-8 pb-32">
+        <div className="flex flex-col gap-6 pb-32">
             <Head title="Billing & Dues" />
 
             {/* Header Section */}
@@ -92,6 +116,36 @@ export default function CollectionsIndex({ summary }: Props) {
                 </div>
             </section>
 
+            {/* Filter Tabs */}
+            {hasLandlord && (
+                <div className="mb-2">
+                    <div className="flex rounded-xl bg-slate-100 p-1 max-w-md">
+                        {tabs.map((tab) => {
+                            const isActive = billFilter === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setBillFilter(tab.id)}
+                                    className={`relative flex flex-1 items-center justify-center rounded-lg py-2 text-xs font-semibold transition-all ${
+                                        isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeBillFilter"
+                                            className="absolute inset-0 rounded-lg bg-white shadow-xs"
+                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10">{tab.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Outstanding Section */}
             <section>
                 <div className="mb-4 flex items-center justify-between px-2">
@@ -99,8 +153,8 @@ export default function CollectionsIndex({ summary }: Props) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {summary.outstanding.length > 0 ? (
-                        summary.outstanding.map((assignment) => (
+                    {filteredOutstanding.length > 0 ? (
+                        filteredOutstanding.map((assignment) => (
                             <MotionLink
                                 key={assignment.id}
                                 href={show.url(assignment.ulid)}
@@ -116,7 +170,18 @@ export default function CollectionsIndex({ summary }: Props) {
                                         {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
                                     </div>
                                     <div>
-                                        <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                            {assignment.billing_source === 'property_owner' ? (
+                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-700 ring-1 ring-purple-100/50">
+                                                    Landlord
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100/50">
+                                                    Estate
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="mt-0.5 text-xs font-bold tracking-widest text-slate-400 uppercase">
                                             Due{' '}
                                             {new Date(assignment.due_date).toLocaleDateString(undefined, {
@@ -161,7 +226,7 @@ export default function CollectionsIndex({ summary }: Props) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {summary.paid.slice(0, 3).map((assignment) => (
+                        {filteredPaid.slice(0, 3).map((assignment) => (
                             <Link
                                 key={assignment.id}
                                 href={show.url(assignment.ulid)}
@@ -172,7 +237,18 @@ export default function CollectionsIndex({ summary }: Props) {
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                            {assignment.billing_source === 'property_owner' ? (
+                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-700 ring-1 ring-purple-100/50">
+                                                    Landlord
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100/50">
+                                                    Estate
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                             {assignment.period || 'One-time'}
                                         </p>

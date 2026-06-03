@@ -1,15 +1,16 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronRight, Globe, Image as ImageIcon, MessageCircle, Shield, Users } from 'lucide-react';
+import { ChevronRight, Globe, Image as ImageIcon, MessageCircle, Shield, Users, Home } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
+import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, SharedData } from '@/types';
 
 type Props = {
     posts: CursorPaginatedPosts;
+    filter: string | null;
 };
 
 function getAudienceIcon(audience: PostAudience) {
@@ -64,9 +65,20 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">
-                            {getAudienceIcon(post.audience)}
-                            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{getAudienceLabel(post.audience)}</span>
+                        <div className="flex flex-col items-end gap-1">
+                            {post.property_owner_id ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                    <Home className="h-2 w-2" /> Landlord Notice
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                    <Shield className="h-2 w-2" /> Estate Update
+                                </span>
+                            )}
+                            <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                                {getAudienceIcon(post.audience)}
+                                <span className="uppercase tracking-wider">{getAudienceLabel(post.audience)}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -121,7 +133,24 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
     );
 }
 
-export default function EstateBoardIndex({ posts }: Props) {
+export default function EstateBoardIndex({ posts, filter }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const hasLandlord = !!auth?.user?.profile?.property_owner_id;
+
+    const tabs = [
+        { id: null, label: 'All Updates' },
+        { id: 'estate', label: 'Estate Notices' },
+        ...(hasLandlord ? [{ id: 'property_owner', label: 'Landlord Notices' }] : []),
+    ];
+
+    const handleFilterChange = (filterId: string | null) => {
+        router.get(
+            index.url(),
+            { filter: filterId || undefined },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
@@ -131,7 +160,7 @@ export default function EstateBoardIndex({ posts }: Props) {
         isLoadingMore.current = true;
         router.get(
             posts.next_page_url,
-            {},
+            { filter: filter || undefined },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -141,7 +170,7 @@ export default function EstateBoardIndex({ posts }: Props) {
                 },
             },
         );
-    }, [posts.next_page_url]);
+    }, [posts.next_page_url, filter]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -169,11 +198,39 @@ export default function EstateBoardIndex({ posts }: Props) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-6 px-1"
+                className="mb-4 px-1"
             >
                 <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
                 <p className="mt-1 text-sm text-gray-500">Updates from your community</p>
             </motion.div>
+
+            {/* Filter Tabs */}
+            <div className="mb-6">
+                <div className="flex rounded-xl bg-slate-100 p-1 max-w-md">
+                    {tabs.map((tab) => {
+                        const isActive = (filter === null && tab.id === null) || (filter === tab.id);
+                        return (
+                            <button
+                                key={tab.id ?? 'all'}
+                                type="button"
+                                onClick={() => handleFilterChange(tab.id)}
+                                className={`relative flex flex-1 items-center justify-center rounded-lg py-2 text-xs font-semibold transition-all ${
+                                    isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeFeedFilter"
+                                        className="absolute inset-0 rounded-lg bg-white shadow-xs"
+                                        transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                                    />
+                                )}
+                                <span className="relative z-10">{tab.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
 
             {/* Posts Feed */}
             {posts.data.length > 0 ? (

@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { suspend, destroy, edit } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { suspend, destroy, edit, create } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
 import { 
     UsersIcon, 
     EnvelopeIcon, 
@@ -59,6 +59,13 @@ export default function Index({ residents }: Props) {
                         View and manage details of residents/occupants delegated to you.
                     </p>
                 </div>
+                <Link
+                    href={create.url()}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                >
+                    <UserPlusIcon className="h-5 w-5 text-indigo-100" />
+                    Invite Resident
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

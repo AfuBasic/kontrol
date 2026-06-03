@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users, Home } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Resident/EstateBoardCommentController';
@@ -189,7 +189,16 @@ export default function EstateBoardShow({ post, comments }: Props) {
                     </div>
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">{post.title}</h1>
-                        <div className="mt-1 flex items-center gap-3">
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                            {post.property_owner_id ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                    <Home className="h-2.5 w-2.5" /> Landlord Notice
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                    <Shield className="h-2.5 w-2.5" /> Estate Update
+                                </span>
+                            )}
                             <span className="text-xs font-bold text-slate-900">{post.author.name}</span>
                             <span className="h-1 w-1 rounded-full bg-slate-300" />
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -234,10 +243,12 @@ export default function EstateBoardShow({ post, comments }: Props) {
 
                     <div className="mt-12 flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-400">
-                            {getAudienceIcon(post.audience)}
+                            {post.property_owner_id ? <Home className="h-3.5 w-3.5 text-purple-600" /> : getAudienceIcon(post.audience)}
                         </div>
                         <p className="text-[10px] font-black tracking-[0.15em] text-slate-500 uppercase">
-                            Official {getAudienceLabel(post.audience)} Bulletin
+                            {post.property_owner_id 
+                                ? `Private Landlord Bulletin (${getAudienceLabel(post.audience)})` 
+                                : `Official Estate ${getAudienceLabel(post.audience)} Bulletin`}
                         </p>
                     </div>
                 </div>

@@ -19,10 +19,9 @@ type Resident = {
 type Props = {
     resident: Resident;
     propertyOwners?: { id: number; name: string }[];
-    properties?: { id: number; name: string }[];
 };
 
-export default function EditResident({ resident, propertyOwners = [], properties = [] }: Props) {
+export default function EditResident({ resident, propertyOwners = [] }: Props) {
     const isVerified = !!resident.email_verified_at;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -164,47 +163,25 @@ export default function EditResident({ resident, propertyOwners = [], properties
                         </div>
                     </div>
 
-                    {/* Property Owner Delegation & Property Assignment */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div>
-                            <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700">
-                                Property Owner <span className="font-normal text-gray-400">(optional delegation)</span>
-                            </label>
-                            <select
-                                id="property_owner_id"
-                                value={data.property_owner_id}
-                                onChange={(e) => setData('property_owner_id', e.target.value)}
-                                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none bg-white"
-                            >
-                                <option value="">None / Standard Resident</option>
-                                {propertyOwners.map((owner) => (
-                                    <option key={owner.id} value={owner.id}>
-                                        {owner.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
-                        </div>
-
-                        <div>
-                            <label htmlFor="property_id" className="block text-sm font-medium text-gray-700">
-                                Property Assignment <span className="font-normal text-gray-400">(optional)</span>
-                            </label>
-                            <select
-                                id="property_id"
-                                value={data.property_id}
-                                onChange={(e) => setData('property_id', e.target.value)}
-                                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none bg-white"
-                            >
-                                <option value="">None</option>
-                                {properties.map((prop) => (
-                                    <option key={prop.id} value={prop.id}>
-                                        {prop.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.property_id && <p className="mt-1 text-sm text-red-600">{errors.property_id}</p>}
-                        </div>
+                    {/* Property Owner Delegation */}
+                    <div>
+                        <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700">
+                            Property Owner <span className="font-normal text-gray-400">(optional delegation)</span>
+                        </label>
+                        <select
+                            id="property_owner_id"
+                            value={data.property_owner_id}
+                            onChange={(e) => setData('property_owner_id', e.target.value)}
+                            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none bg-white"
+                        >
+                            <option value="">None / Standard Resident</option>
+                            {propertyOwners.map((owner) => (
+                                <option key={owner.id} value={owner.id}>
+                                    {owner.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
                     </div>
                 </div>
 

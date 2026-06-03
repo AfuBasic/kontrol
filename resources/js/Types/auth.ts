@@ -14,6 +14,16 @@ export type ResidentSubscription = {
     is_household_member?: boolean;
 };
 
+export type UserProfile = {
+    id?: number;
+    user_id?: number;
+    property_owner_id?: number | null;
+    property_id?: number | null;
+    phone?: string | null;
+    address?: string | null;
+    unit_number?: string | null;
+};
+
 export type User = {
     id: number;
     name: string;
@@ -32,6 +42,7 @@ export type User = {
     }[];
     unread_notifications_count?: number;
     resident_subscription?: ResidentSubscription | null;
+    profile?: UserProfile | null;
     [key: string]: unknown;
 };
 

@@ -19,6 +19,7 @@ interface Resident {
     phone: string | null;
     unit_number: string | null;
     status: 'pending';
+    is_property_owner: boolean;
     created_at_human: string;
 }
 
@@ -124,7 +125,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                 </Link>
                 <div>
                     <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">Pending Resident Applications</h1>
-                    <p className="mt-2 text-sm leading-relaxed font-medium text-slate-500">
+                    <p className="mt-2 text-sm leading-relaxed font-medium text-slate-505">
                         Review and approve residents who signed up via the invite link.
                     </p>
                 </div>
@@ -139,7 +140,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by name or email..."
-                        className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                        className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-505/20"
                     />
                 </form>
             </div>
@@ -166,7 +167,12 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                     {resident.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-105 text-indigo-700' : 'bg-emerald-105 text-emerald-700'}`}>
+                                                            {resident.is_property_owner ? 'Property Owner' : 'Resident'}
+                                                        </span>
+                                                    </div>
                                                     <div className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
                                                         <MapPin className="h-3 w-3" />
                                                         {resident.unit_number || 'Unit Pending'}
@@ -248,7 +254,12 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                             {resident.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <div className="font-bold text-slate-900">{resident.name}</div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-bold text-slate-900">{resident.name}</div>
+                                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                                    {resident.is_property_owner ? 'Property Owner' : 'Resident'}
+                                                                </span>
+                                                            </div>
                                                             <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-slate-400">
                                                                 <MapPin className="h-3 w-3" />
                                                                 {resident.unit_number || 'Unit Pending'}

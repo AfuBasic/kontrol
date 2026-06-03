@@ -36,11 +36,13 @@ class EstateBoardController extends Controller
     {
         $this->authorize('viewAny', EstateBoardPost::class);
 
+        $filter = request('filter');
         $estateId = $this->estateContext->getEstateId();
-        $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences);
+        $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences, $filter);
 
         return Inertia::render('Resident/EstateBoard/Index', [
             'posts' => $posts,
+            'filter' => $filter,
         ]);
     }
 

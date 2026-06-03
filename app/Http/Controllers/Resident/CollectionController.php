@@ -25,12 +25,20 @@ class CollectionController extends Controller
         abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to dues or collections.');
 
         $estate = $this->estateContext->getEstate();
+        $propertyOwnerId = $user->profile?->property_owner_id;
 
         $assignments = CollectionAssignment::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
-            ->with('collection')
+            ->with(['collection.creator'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($assignment) use ($propertyOwnerId) {
+                $isPoBill = $propertyOwnerId && $assignment->collection->created_by == $propertyOwnerId;
+                $assignment->is_property_owner_bill = $isPoBill;
+                $assignment->billing_source = $isPoBill ? 'property_owner' : 'estate';
+
+                return $assignment;
+            });
 
         $summary = [
             'outstanding' => $assignments->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])->values(),
@@ -49,9 +57,14 @@ class CollectionController extends Controller
         abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to dues or collections.');
         abort_if($assignment->user_id !== $user->id, 403);
 
-        $assignment->load(['collection', 'payments' => function ($query) {
+        $assignment->load(['collection.creator', 'payments' => function ($query) {
             $query->where('status', 'success')->latest();
         }]);
+
+        $propertyOwnerId = $user->profile?->property_owner_id;
+        $isPoBill = $propertyOwnerId && $assignment->collection->created_by == $propertyOwnerId;
+        $assignment->is_property_owner_bill = $isPoBill;
+        $assignment->billing_source = $isPoBill ? 'property_owner' : 'estate';
 
         return Inertia::render('Resident/Collections/Show', [
             'assignment' => $assignment,

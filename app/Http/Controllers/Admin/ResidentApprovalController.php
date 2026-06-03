@@ -32,18 +32,23 @@ class ResidentApprovalController extends Controller
         $filters = $request->only(['search']);
         $filters['status'] = 'pending';
 
-        $residents = $this->residentService
-            ->getPaginatedResidents(15, $filters)
-            ->through(fn ($user) => [
-                'ulid' => $user->ulid,
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'unit_number' => $user->profile?->unit_number,
-                'status' => 'pending',
-                'created_at' => $user->created_at->format('M d, Y'),
-            ]);
+        $estate = $this->estateContext->getEstate();
+        setPermissionsTeamId($estate->id);
+
+        $paginated = $this->residentService->getPaginatedResidents(15, $filters);
+        $paginated->load('roles');
+
+        $residents = $paginated->through(fn ($user) => [
+            'ulid' => $user->ulid,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->profile?->phone,
+            'unit_number' => $user->profile?->unit_number,
+            'status' => 'pending',
+            'is_property_owner' => $user->roles->contains('name', 'property_owner'),
+            'created_at' => $user->created_at->format('M d, Y'),
+        ]);
 
         return Inertia::render('Admin/Residents/Approvals/Index', [
             'residents' => $residents,

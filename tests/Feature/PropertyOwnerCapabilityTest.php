@@ -1,8 +1,11 @@
 <?php
 
+use App\Enums\EstateBoardPostStatus;
 use App\Models\Collection;
+use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
+use App\Models\EstateInviteLink;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
 use App\Models\Property;
@@ -304,4 +307,255 @@ test('admin can manage property owner invite link and users can join', function 
 
     // Verify membership status (requires_approval was true, so status should be pending)
     expect($user->estates->first()->pivot->status)->toBe('pending');
+});
+
+test('property owner can invite resident manually', function () {
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+
+    $profile = UserProfile::create(['user_id' => $owner->id]);
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+
+    $property = Property::create([
+        'estate_id' => $this->estate->id,
+        'property_owner_id' => $owner->id,
+        'name' => 'Villa 5B',
+        'address' => '789 Oak Ave',
+    ]);
+
+    $this->actingAs($owner);
+
+    // 1. Get Create View
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.property-owner.residents.create'));
+    $response->assertOk();
+
+    // 2. Post Store Resident
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.residents.store'), [
+            'name' => 'Delegated Resident',
+            'email' => 'delegated@resident.com',
+            'phone' => '1122334455',
+            'unit_number' => 'Flat 5B',
+            'address' => '789 Oak Ave',
+            'property_id' => $property->id,
+        ]);
+    $response->assertRedirect(route('resident.property-owner.residents.index'));
+
+    $resident = User::where('email', 'delegated@resident.com')->first();
+    expect($resident)->not->toBeNull();
+
+    setPermissionsTeamId($this->estate->id);
+    expect($resident->hasRole('resident'))->toBeTrue();
+    expect($resident->profile->property_owner_id)->toBe($owner->id);
+    expect($resident->profile->property_id)->toBe($property->id);
+});
+
+test('property owner can manage their own invite link and users can join', function () {
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+
+    $profile = UserProfile::create(['user_id' => $owner->id]);
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+
+    $this->actingAs($owner);
+
+    // 1. Generate Invite Link
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.residents.invite-link.store'), [
+            'max_usages' => 5,
+            'requires_approval' => false,
+            'expires_at' => now()->addDays(2)->toDateString(),
+        ]);
+    $response->assertSessionHasNoErrors();
+    $response->assertRedirect();
+
+    $link = EstateInviteLink::where('estate_id', $this->estate->id)
+        ->where('user_id', $owner->id)
+        ->first();
+
+    expect($link)->not->toBeNull();
+    expect($link->max_usages)->toBe(5);
+    expect($link->requires_approval)->toBeFalse();
+    expect($link->role)->toBe('resident');
+
+    // 2. Toggle active state
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.residents.invite-link.toggle'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->is_active)->toBeFalse();
+
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.residents.invite-link.toggle'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->is_active)->toBeTrue();
+
+    // 3. Regenerate invite link
+    $oldToken = $link->token;
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.residents.invite-link.regenerate'));
+    $response->assertRedirect();
+    $link->refresh();
+    expect($link->token)->not->toBe($oldToken);
+
+    // 4. Sign up via public route using this link
+    $this->post(route('logout'));
+
+    $response = $this->get(url("/join/{$link->token}"));
+    $response->assertOk();
+
+    $response = $this->post(url("/join/{$link->token}"), [
+        'name' => 'Joined Resident Under PO',
+        'email' => 'joined.under.po@resident.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ]);
+    $response->assertOk();
+
+    $resident = User::where('email', 'joined.under.po@resident.com')->first();
+    expect($resident)->not->toBeNull();
+
+    setPermissionsTeamId($this->estate->id);
+    expect($resident->hasRole('resident'))->toBeTrue();
+    expect($resident->profile->property_owner_id)->toBe($owner->id);
+    expect($resident->estates->first()->pivot->status)->toBe('accepted'); // requires_approval was false
+});
+
+test('resident can distinguish between estate and property owner notices and collections', function () {
+    // 1. Create a Property Owner and Resident
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $owner->id]);
+
+    $resident = User::factory()->create();
+    $resident->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+    $resident->assignRole('resident');
+
+    // 2. Create Estate notice
+    $estatePost = EstateBoardPost::create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->adminUser->id,
+        'title' => 'Estate Notice Title',
+        'body' => 'Estate Notice Body',
+        'audience' => 'residents',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    // 3. Create Property Owner notice
+    $ownerPost = EstateBoardPost::create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $owner->id,
+        'title' => 'Owner Notice Title',
+        'body' => 'Owner Notice Body',
+        'audience' => 'residents',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+        'property_owner_id' => $owner->id,
+    ]);
+
+    // 4. Create Estate Collection Bill
+    $estateCollection = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Estate Dues',
+        'amount' => 5000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'due_day' => 1,
+        'grace_days' => 0,
+        'applies_to' => 'all',
+        'status' => 'active',
+        'created_by' => $this->adminUser->id,
+    ]);
+    CollectionAssignment::create([
+        'collection_id' => $estateCollection->id,
+        'user_id' => $resident->id,
+        'estate_id' => $this->estate->id,
+        'amount_due' => 5000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    // 5. Create Property Owner Collection Bill
+    $ownerCollection = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Landlord Rent',
+        'amount' => 100000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'due_day' => 1,
+        'grace_days' => 0,
+        'applies_to' => 'all',
+        'status' => 'active',
+        'created_by' => $owner->id,
+    ]);
+    CollectionAssignment::create([
+        'collection_id' => $ownerCollection->id,
+        'user_id' => $resident->id,
+        'estate_id' => $this->estate->id,
+        'amount_due' => 100000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    // 6. Act: Access Notice Feed as Resident
+    $this->actingAs($resident);
+
+    // All Notices
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/EstateBoard/Index')
+        ->has('posts.data', 2)
+    );
+
+    // Filter by Estate Notices
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index', ['filter' => 'estate']));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/EstateBoard/Index')
+        ->has('posts.data', 1)
+        ->where('posts.data.0.title', 'Estate Notice Title')
+    );
+
+    // Filter by Landlord Notices
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index', ['filter' => 'property_owner']));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/EstateBoard/Index')
+        ->has('posts.data', 1)
+        ->where('posts.data.0.title', 'Owner Notice Title')
+    );
+
+    // 7. Act: Access Dues list as Resident
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.collections.index'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/Collections/Index')
+        ->has('summary.outstanding', 2)
+        ->where('summary.outstanding.0.billing_source', 'estate')
+        ->where('summary.outstanding.1.billing_source', 'property_owner')
+    );
 });

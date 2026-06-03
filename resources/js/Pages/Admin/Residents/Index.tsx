@@ -23,6 +23,7 @@ type Resident = {
     phone: string | null;
     unit_number: string | null;
     status: 'pending' | 'accepted';
+    is_property_owner: boolean;
     suspended_at: string | null;
     email_verified_at: string | null;
     created_at: string;
@@ -238,6 +239,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                         >
                             <option value="">All Statuses</option>
                             <option value="active">Active Residents</option>
+                            <option value="property_owner">Property Owners</option>
                             <option value="pending">Pending Invites</option>
                             <option value="suspended">Suspended Users</option>
                         </select>
@@ -356,7 +358,14 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     )}
                                                 </div>
                                                 <div onClick={() => toggleSelect(resident.id)}>
-                                                    <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                        {resident.is_property_owner && (
+                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
+                                                                Property Owner
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
                                                         <MapPin className="h-3 w-3" />
                                                         {resident.unit_number || 'Unit Pending'}
@@ -459,7 +468,14 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
                                                         {resident.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div className="text-sm font-bold text-slate-900">{resident.name}</div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="text-sm font-bold text-slate-900">{resident.name}</div>
+                                                        {resident.is_property_owner && (
+                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
+                                                                Property Owner
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

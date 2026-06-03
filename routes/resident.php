@@ -145,7 +145,11 @@ Route::middleware('role:resident')->group(function (): void {
 
         // Managed Residents CRUD
         Route::patch('/residents/{resident}/suspend', [POResidentController::class, 'suspend'])->name('residents.suspend');
-        Route::resource('/residents', POResidentController::class)->except(['create', 'store', 'show'])->names('residents');
+        Route::post('/residents/invite-link', [POResidentController::class, 'storeInviteLink'])->name('residents.invite-link.store');
+        Route::post('/residents/invite-link/regenerate', [POResidentController::class, 'regenerateInviteLink'])->name('residents.invite-link.regenerate');
+        Route::post('/residents/invite-link/toggle', [POResidentController::class, 'toggleInviteLink'])->name('residents.invite-link.toggle');
+        Route::delete('/residents/invite-link', [POResidentController::class, 'destroyInviteLink'])->name('residents.invite-link.destroy');
+        Route::resource('/residents', POResidentController::class)->except(['show'])->names('residents');
 
         // Properties CRUD
         Route::post('/properties/{property}/assign-resident', [POPropertyController::class, 'assignResident'])->name('properties.assign-resident');

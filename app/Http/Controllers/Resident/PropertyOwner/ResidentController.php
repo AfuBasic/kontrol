@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers\Resident\PropertyOwner;
 
+use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
+use App\Models\EstateInviteLink;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\UserProfile;
 use App\Services\EstateContextService;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class ResidentController extends Controller
 {
@@ -172,5 +178,218 @@ class ResidentController extends Controller
         return redirect()
             ->route('resident.property-owner.residents.index')
             ->with('success', 'Resident delegation removed successfully.');
+    }
+
+    /**
+     * Show form to invite a resident.
+     */
+    public function create(): Response
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+        $link = EstateInviteLink::where('estate_id', $estate->id)
+            ->where('user_id', $user->id)
+            ->where('role', 'resident')
+            ->first();
+
+        $properties = Property::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_owner_id', $user->id)
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('Resident/PropertyOwner/Residents/Create', [
+            'inviteLink' => $link ? [
+                'token' => $link->token,
+                'url' => url("/join/{$link->token}"),
+                'is_active' => $link->is_active,
+                'usage_count' => $link->usage_count,
+                'max_usages' => $link->max_usages,
+                'requires_approval' => $link->requires_approval,
+                'expires_at' => $link->expires_at?->toDateTimeString(),
+                'is_expired' => $link->expires_at?->isPast() ?? false,
+            ] : null,
+            'properties' => $properties,
+        ]);
+    }
+
+    /**
+     * Invite a new resident manually.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'unit_number' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'property_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('properties', 'id')->where('property_owner_id', $user->id)->whereNull('archived_at'),
+            ],
+        ]);
+
+        \DB::transaction(function () use ($validated, $estate, $user) {
+            $resident = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => null,
+            ]);
+
+            $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+            $role = Role::where('name', 'resident')
+                ->where('guard_name', 'web')
+                ->whereNull('estate_id')
+                ->firstOrFail();
+
+            setPermissionsTeamId($estate->id);
+            $resident->assignRole($role);
+
+            UserProfile::create([
+                'user_id' => $resident->id,
+                'phone' => $validated['phone'] ?? null,
+                'unit_number' => $validated['unit_number'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'property_owner_id' => $user->id,
+                'property_id' => $validated['property_id'] ?? null,
+            ]);
+
+            $subscriptionService = app(ResidentSubscriptionService::class);
+            $subscriptionService->createForUser($resident, $estate);
+
+            event(new ResidentCreated($resident, $estate, false));
+
+            activity()
+                ->performedOn($resident)
+                ->causedBy($user)
+                ->withProperties(['estate_id' => $estate->id])
+                ->log('property owner invited resident '.$resident->email);
+        });
+
+        return redirect()
+            ->route('resident.property-owner.residents.index')
+            ->with('success', 'Resident invited successfully. They will receive an email to set up their account.');
+    }
+
+    /**
+     * Store/Update Invite Link settings.
+     */
+    public function storeInviteLink(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+        $validated = $request->validate([
+            'max_usages' => ['nullable', 'integer', 'min:1'],
+            'requires_approval' => ['required', 'boolean'],
+            'expires_at' => ['nullable', 'date', 'after:today'],
+        ]);
+
+        $link = EstateInviteLink::where('estate_id', $estate->id)
+            ->where('user_id', $user->id)
+            ->where('role', 'resident')
+            ->first();
+
+        if ($link) {
+            $link->update([
+                'max_usages' => $validated['max_usages'] ?? null,
+                'requires_approval' => $validated['requires_approval'] ?? true,
+                'expires_at' => $validated['expires_at'] ?? null,
+            ]);
+        } else {
+            EstateInviteLink::create([
+                'estate_id' => $estate->id,
+                'user_id' => $user->id,
+                'role' => 'resident',
+                'token' => Str::random(32),
+                'is_active' => true,
+                'usage_count' => 0,
+                'max_usages' => $validated['max_usages'] ?? null,
+                'requires_approval' => $validated['requires_approval'] ?? true,
+                'expires_at' => $validated['expires_at'] ?? null,
+            ]);
+        }
+
+        return back()->with('success', 'Invite link settings updated successfully.');
+    }
+
+    /**
+     * Regenerate Invite Link token.
+     */
+    public function regenerateInviteLink(): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $link = EstateInviteLink::where('estate_id', $estate->id)
+            ->where('user_id', $user->id)
+            ->where('role', 'resident')
+            ->first();
+
+        if (! $link) {
+            return back()->with('error', 'No invite link to regenerate.');
+        }
+
+        $link->update([
+            'token' => Str::random(32),
+            'usage_count' => 0,
+        ]);
+
+        return back()->with('success', 'Invite link regenerated successfully.');
+    }
+
+    /**
+     * Toggle Invite Link status.
+     */
+    public function toggleInviteLink(): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $link = EstateInviteLink::where('estate_id', $estate->id)
+            ->where('user_id', $user->id)
+            ->where('role', 'resident')
+            ->first();
+
+        if ($link) {
+            $link->update(['is_active' => ! $link->is_active]);
+            $status = $link->is_active ? 'enabled' : 'disabled';
+
+            return back()->with('success', "Invite link {$status} successfully.");
+        }
+
+        return back()->with('error', 'No invite link found.');
+    }
+
+    /**
+     * Delete Invite Link.
+     */
+    public function destroyInviteLink(): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $link = EstateInviteLink::where('estate_id', $estate->id)
+            ->where('user_id', $user->id)
+            ->where('role', 'resident')
+            ->first();
+
+        if (! $link) {
+            return back()->with('error', 'No invite link to delete.');
+        }
+
+        if ($link->is_active) {
+            return back()->with('error', 'Invite link must be disabled before it can be deleted.');
+        }
+
+        $link->delete();
+
+        return redirect()->route('resident.property-owner.residents.index')->with('success', 'Invite link deleted successfully.');
     }
 }

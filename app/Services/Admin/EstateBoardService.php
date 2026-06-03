@@ -15,9 +15,10 @@ class EstateBoardService
      * Get the feed of published posts for an estate using cursor pagination.
      *
      * @param  array<EstateBoardPostAudience>|null  $audiences  Filter by audience (null = all audiences for admins)
+     * @param  string|null  $filter  Filter by source ('estate' | 'property_owner' | null)
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null): CursorPaginator
     {
         $user = auth()->user();
         if ($user) {
@@ -32,6 +33,8 @@ class EstateBoardService
             ->forEstate($estateId)
             ->published()
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
+            ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
+            ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
             ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
                 $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
                     $q->whereNull('property_owner_id');

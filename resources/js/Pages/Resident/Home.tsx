@@ -1,8 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Megaphone, ChevronRight, Wallet } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
@@ -10,6 +10,7 @@ import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
 import LiveFeed from '@/Components/Resident/Dashboard/LiveFeed';
 import QuickActions from '@/Components/Resident/Dashboard/QuickActions';
 import VisitorStatus from '@/Components/Resident/Dashboard/VisitorStatus';
+import WelcomeSlideshow from '@/Components/Resident/WelcomeSlideshow';
 import resident from '@/routes/resident';
 
 import type { SharedData } from '@/types';
@@ -49,6 +50,15 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
     const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false);
+
+    useEffect(() => {
+        const hasSeenWelcome = localStorage.getItem('seen_resident_welcome');
+        if (!hasSeenWelcome) {
+            setShowWelcome(true);
+        }
+    }, []);
+
     const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
     const lastActivityTime = recentActivity[0]?.time;
     const showDuesAlert = hasPaymentCollection && unpaidDues && unpaidDues.length > 0;
@@ -181,6 +191,17 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
             </div>
 
             <CreateCodeBottomSheet isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+            
+            <AnimatePresence>
+                {showWelcome && (
+                    <WelcomeSlideshow
+                        estateName={estateName}
+                        userName={auth?.user?.name ?? 'Resident'}
+                        isPropertyOwner={auth?.user?.roles?.includes('property_owner') ?? false}
+                        onClose={() => setShowWelcome(false)}
+                    />
+                )}
+            </AnimatePresence>
         </>
     );
 }

@@ -39,6 +39,7 @@ class EstateInviteLink extends Model
 {
     protected $fillable = [
         'estate_id',
+        'user_id',
         'role',
         'token',
         'is_active',

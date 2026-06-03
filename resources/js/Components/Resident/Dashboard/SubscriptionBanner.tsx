@@ -125,7 +125,7 @@ function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ backgroundColor: backgroundColors[variant] }}
-            className="mx-4 mb-6 flex h-[48px] items-center rounded-[12px] px-[14px] py-[10px]"
+            className="mx-0 mb-6 flex h-[48px] items-center rounded-[12px] px-[14px] py-[10px]"
         >
             {/* Status Dot */}
             <div className={`mr-[10px] h-2 w-2 shrink-0 rounded-full ${dotColors[variant]}`} />

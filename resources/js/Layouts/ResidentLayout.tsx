@@ -4,7 +4,20 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, AlertOctagon as AlertTriangle, Menu, X } from 'lucide-react';
+import {
+    Bell,
+    Home,
+    Users,
+    User,
+    Plus,
+    Wallet,
+    Megaphone,
+    Building,
+    ClipboardList,
+    UserCheck,
+    Menu,
+    X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -401,15 +414,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
         { name: 'Visitor Passes', href: '/resident/visitors', icon: ClipboardList },
         { name: 'Household Members', href: '/resident/household', icon: UserCheck },
-        { name: 'SOS', href: '#sos', icon: AlertTriangle, action: true },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
 
     return (
-        <div className={`flex min-h-screen ${isPropertyOwner ? 'md:flex-row flex-col' : 'flex-col'} bg-slate-50 ${className || ''}`}>
+        <div className={`flex min-h-screen ${isPropertyOwner ? 'flex-col md:flex-row' : 'flex-col'} bg-slate-50 ${className || ''}`}>
             {/* Desktop Property Owner Sidebar */}
             {isPropertyOwner && (
-                <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 shrink-0 sticky top-0 h-screen p-6 justify-between">
+                <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-slate-100 bg-white p-6 md:flex">
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center gap-3 px-2">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
@@ -419,7 +431,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             {poSidebarItems.map((item) => {
                                 if (item.name === 'SOS') {
                                     return (
-                                        <div key={item.name} className="px-2 py-3 mt-4">
+                                        <div key={item.name} className="mt-4 px-2 py-3">
                                             <SosButton variant="sidebar" />
                                         </div>
                                     );
@@ -433,10 +445,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <Link
                                         key={item.name}
                                         href={item.href}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
-                                            isActive
-                                                ? 'bg-indigo-50 text-indigo-600'
-                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+                                            isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                         }`}
                                     >
                                         <item.icon className="h-5 w-5" />
@@ -447,21 +457,21 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         </nav>
                     </div>
 
-                    <div className="border-t border-slate-100 pt-4 flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 border-t border-slate-100 pt-4">
                         <div className="flex items-center gap-3 px-2 py-2">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 font-bold">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 font-bold text-indigo-600 ring-1 ring-indigo-100">
                                 {auth.user?.name?.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                                 <p className="truncate text-sm font-black text-slate-900">{auth.user?.name}</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Property Owner</p>
+                                <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Property Owner</p>
                             </div>
                         </div>
                         <Link
                             href="/logout"
                             method="post"
                             as="button"
-                            className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-rose-600 hover:bg-rose-50/50 transition-all"
+                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 transition-all hover:bg-rose-50/50"
                         >
                             Sign out
                         </Link>
@@ -470,11 +480,11 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             )}
 
             {/* Main Content Area */}
-            <div className="flex flex-1 flex-col min-h-screen">
+            <div className="flex min-h-screen flex-1 flex-col">
                 {/* Header - Conditional Light Premium Header */}
                 {!hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) && (
                     <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
-                        <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl px-6">
+                        <div className="mx-auto max-w-lg px-6 sm:max-w-xl md:max-w-4xl lg:max-w-5xl">
                             <div className="flex h-16 items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
@@ -492,11 +502,11 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     }`}
                 >
                     {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
-                        <div className="px-2 mb-4">
+                        <div className="mb-4 p-0">
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
                     )}
-                    <PullToRefresh className="px-6">{children}</PullToRefresh>
+                    <PullToRefresh className="p-0">{children}</PullToRefresh>
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}
@@ -505,7 +515,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         <motion.nav
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
+                            className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl sm:max-w-lg"
                         >
                             <div className="flex items-center justify-between px-3 py-2">
                                 {navItems.map((item) => {
@@ -536,7 +546,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 {item.icon(isActive)}
                                             </div>
                                             {isActive && (
-                                                <motion.div layoutId="navIndicator" className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600" />
+                                                <motion.div
+                                                    layoutId="navIndicator"
+                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                                />
                                             )}
                                         </Link>
                                     );
@@ -552,7 +565,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         <motion.nav
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="pointer-events-auto mx-auto max-w-sm sm:max-w-lg overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl"
+                            className="pointer-events-auto mx-auto max-w-sm overflow-visible rounded-[32px] bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-1 ring-black/5 backdrop-blur-2xl sm:max-w-lg"
                         >
                             <div className="flex items-center justify-between px-3 py-2">
                                 {poMobileNavItems.map((item) => {
@@ -578,9 +591,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 onClick={() => setMoreMenuOpen(true)}
                                                 className="group relative flex flex-1 flex-col items-center gap-1 text-slate-400 hover:text-slate-600"
                                             >
-                                                <div className="rounded-xl p-2.5 transition-all">
-                                                    {item.icon(false)}
-                                                </div>
+                                                <div className="rounded-xl p-2.5 transition-all">{item.icon(false)}</div>
                                             </button>
                                         );
                                     }
@@ -597,7 +608,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 {item.icon(isActive)}
                                             </div>
                                             {isActive && (
-                                                <motion.div layoutId="navIndicator" className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600" />
+                                                <motion.div
+                                                    layoutId="navIndicator"
+                                                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                                />
                                             )}
                                         </Link>
                                     );
@@ -624,10 +638,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-x-0 bottom-0 z-50 rounded-t-[40px] bg-white p-6 pb-12 shadow-2xl md:hidden border-t border-slate-100"
+                            className="fixed inset-x-0 bottom-0 z-50 rounded-t-[40px] border-t border-slate-100 bg-white p-6 pb-12 shadow-2xl md:hidden"
                         >
                             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="mb-6 flex items-center justify-between">
                                 <h3 className="text-lg font-black text-slate-900">Manage Estate</h3>
                                 <button
                                     onClick={() => setMoreMenuOpen(false)}
@@ -655,16 +669,16 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                             key={item.name}
                                             href={item.href}
                                             onClick={() => setMoreMenuOpen(false)}
-                                            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-slate-50 transition-all text-center"
+                                            className="flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all hover:bg-slate-50"
                                         >
-                                            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                                                isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
-                                            }`}>
+                                            <div
+                                                className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                                                    isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
+                                                }`}
+                                            >
                                                 <item.icon className="h-6 w-6" />
                                             </div>
-                                            <span className="text-[10px] font-bold text-slate-600 leading-tight">
-                                                {item.name}
-                                            </span>
+                                            <span className="text-[10px] leading-tight font-bold text-slate-600">{item.name}</span>
                                         </Link>
                                     );
                                 })}

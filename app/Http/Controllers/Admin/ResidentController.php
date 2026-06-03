@@ -52,6 +52,7 @@ class ResidentController extends Controller
                 'property_id' => $user->profile?->property_id,
                 'property_name' => $user->profile?->property?->name,
                 'status' => $user->estates->first()?->pivot?->status ?? 'pending',
+                'is_property_owner' => $user->roles->contains('name', 'property_owner'),
                 'suspended_at' => $user->suspended_at,
                 'email_verified_at' => $user->email_verified_at,
                 'created_at' => $user->created_at->format('M d, Y'),
@@ -147,11 +148,6 @@ class ResidentController extends Controller
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
                 ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
-            'properties' => Property::query()
-                ->where('estate_id', $estate->id)
-                ->whereNull('archived_at')
-                ->orderBy('name')
-                ->get(['id', 'name']),
         ]);
     }
 

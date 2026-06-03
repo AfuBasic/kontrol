@@ -170,14 +170,14 @@ export default function Edit({ resident, properties }: Props) {
                 <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
                     <Link
                         href={index.url()}
-                        className="rounded-2xl px-5 py-3 text-sm font-bold text-slate-500 hover:bg-slate-550 transition-colors"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-800"
                     >
                         Cancel
                     </Link>
                     <button
                         type="submit"
                         disabled={processing}
-                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 transition-all"
+                        className="rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-750 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 disabled:opacity-50"
                     >
                         {processing ? 'Saving...' : 'Save Changes'}
                     </button>

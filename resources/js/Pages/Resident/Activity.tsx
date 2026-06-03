@@ -182,7 +182,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                         </div>
                         <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Updates & Events</span>
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Your Feed</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Notifications</h1>
                 </motion.div>
 
                 {/* Glass Tabs */}
@@ -260,7 +260,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                     {search && (
                                         <button
                                             onClick={() => setSearch('')}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 transition-colors"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors hover:text-slate-600"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
@@ -324,26 +324,22 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                         </div>
                                     ))}
                                 </InfiniteScroll>
+                            ) : search ? (
+                                <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
+                                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
+                                        <Search className="h-10 w-10" strokeWidth={1.5} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-900">No matches found</h3>
+                                    <p className="mt-2 text-sm font-medium text-slate-400">We couldn't find any activities matching "{search}".</p>
+                                </div>
                             ) : (
-                                search ? (
-                                    <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
-                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
-                                            <Search className="h-10 w-10" strokeWidth={1.5} />
-                                        </div>
-                                        <h3 className="text-xl font-black text-slate-900">No matches found</h3>
-                                        <p className="mt-2 text-sm font-medium text-slate-400">
-                                            We couldn't find any activities matching "{search}".
-                                        </p>
+                                <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
+                                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
+                                        <ActivityIcon className="h-10 w-10" strokeWidth={1.5} />
                                     </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center rounded-[40px] bg-white p-16 text-center shadow-sm ring-1 ring-slate-100">
-                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-50 text-slate-300">
-                                            <ActivityIcon className="h-10 w-10" strokeWidth={1.5} />
-                                        </div>
-                                        <h3 className="text-xl font-black text-slate-900">Quiet for now</h3>
-                                        <p className="mt-2 text-sm font-medium text-slate-400">Your recent activity will bloom here as things happen.</p>
-                                    </div>
-                                )
+                                    <h3 className="text-xl font-black text-slate-900">Quiet for now</h3>
+                                    <p className="mt-2 text-sm font-medium text-slate-400">Your recent activity will bloom here as things happen.</p>
+                                </div>
                             )}
                         </motion.div>
                     )}

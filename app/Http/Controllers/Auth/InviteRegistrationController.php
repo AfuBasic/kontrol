@@ -100,6 +100,7 @@ class InviteRegistrationController extends Controller
             // Create profile
             UserProfile::create([
                 'user_id' => $user->id,
+                'property_owner_id' => $inviteLink->user_id,
             ]);
 
             // Create membership based on requires_approval setting

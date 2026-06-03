@@ -167,6 +167,7 @@ class PropertyOwnerController extends Controller
                 'phone' => $propertyOwner->profile?->phone,
                 'unit_number' => $propertyOwner->profile?->unit_number,
                 'address' => $propertyOwner->profile?->address,
+                'email_verified_at' => $propertyOwner->email_verified_at ? $propertyOwner->email_verified_at->toDateTimeString() : null,
             ],
         ]);
     }
