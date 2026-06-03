@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /resident/
+Disallow: /security/
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /join/
+Allow: /
+
+Sitemap: https://usekontrol.com/sitemap.xml
