@@ -27,6 +27,7 @@
         "spatie/browsershot": "^5.2",
         "spatie/laravel-activitylog": "^4.11",
         "spatie/laravel-permission": "^6.24",
+        "spatie/laravel-sitemap": "^8.1",
         "vinkla/hashids": "^13.0"
     },
     "require-dev": {

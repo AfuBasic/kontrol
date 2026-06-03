@@ -26,3 +26,6 @@ Schedule::job(new UpdateAssignmentStatusesJob)->dailyAt('01:05');
 
 // Weekly payment reminders — every Monday at 8am
 Schedule::job(new WeeklyCollectionReminderJob)->weeklyOn(1, '08:00');
+
+// Generate public sitemap daily at 3:00 AM
+Schedule::command('sitemap:generate')->dailyAt('03:00');
