@@ -1,83 +1,92 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" style="color-scheme: dark;">
-    <head>
-        <meta charset="utf-8">
-        <script>
-            try {
-                const theme = localStorage.getItem('theme') || 'dark';
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                    document.documentElement.style.colorScheme = 'dark';
-                } else {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.style.colorScheme = 'light';
-                }
-            } catch (_) {}
-        </script>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+<head>
+    <meta charset="utf-8">
+    <script>
+        try {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                document.documentElement.style.colorScheme = 'dark';
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
+            }
+        } catch (_) { }
+    </script>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        {{-- SEO Meta Tags --}}
-        <meta name="description" content="Kontrol is the modern estate access management platform. Generate digital access codes for visitors, validate instantly at the gate, and track every entry.">
-        <meta name="keywords" content="estate access control, visitor management, gate access, digital access codes, estate security, residential security, gated community, Nigeria, Africa">
-        <meta name="author" content="Kontrol">
-        <meta name="robots" content="index, follow">
+    <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        {{-- Open Graph / Facebook --}}
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:title" content="Kontrol - Modern Estate Access Control">
-        <meta property="og:description" content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds, not minutes.">
-        <meta property="og:image" content="{{ asset('assets/images/app-icon.png') }}">
-        <meta property="og:image:width" content="1200">
-        <meta property="og:image:height" content="630">
-        <meta property="og:image:alt" content="Kontrol - Estate Access Reimagined">
-        <meta property="og:site_name" content="Kontrol">
-        <meta property="og:locale" content="en_US">
+    {{-- SEO Meta Tags --}}
+    <meta name="description"
+        content="Kontrol is the modern estate access management platform. Generate digital access codes for visitors, validate instantly at the gate, and track every entry.">
+    <meta name="keywords"
+        content="Kontrol, estate access control, visitor management, gate access, digital access codes, estate security, residential security, gated community, Nigeria, Africa">
+    <meta name="author" content="Kontrol">
+    <meta name="robots" content="index, follow">
 
-        {{-- Twitter Card --}}
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:url" content="{{ url()->current() }}">
-        <meta name="twitter:title" content="Kontrol - Modern Estate Access Control">
-        <meta name="twitter:description" content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds.">
-        <meta name="twitter:image" content="{{ asset('assets/images/app-icon.png') }}">
-        <meta name="twitter:image:alt" content="Kontrol - Estate Access Reimagined">
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="Kontrol - Modern Estate Access Control">
+    <meta property="og:description"
+        content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds, not minutes.">
+    <meta property="og:image" content="{{ asset('assets/images/app-icon.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Kontrol - Estate Access Reimagined">
+    <meta property="og:site_name" content="Kontrol">
+    <meta property="og:locale" content="en_US">
 
-        {{-- App Meta --}}
-        <meta name="application-name" content="Kontrol">
-        <meta name="apple-mobile-web-app-title" content="Kontrol">
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="Kontrol - Modern Estate Access Control">
+    <meta name="twitter:description"
+        content="Replace outdated phone calls and paper logs with instant digital access codes. Security validates visitors in seconds.">
+    <meta name="twitter:image" content="{{ asset('assets/images/app-icon.png') }}">
+    <meta name="twitter:image:alt" content="Kontrol - Estate Access Reimagined">
 
-        <link rel="icon" href="/assets/images/icon.png" type="image/png">
-        <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
-        <link rel="canonical" href="{{ url()->current() }}">
-        <meta name="theme-color" content="#ffffff">
+    {{-- App Meta --}}
+    <meta name="application-name" content="Kontrol">
+    <meta name="apple-mobile-web-app-title" content="Kontrol">
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link rel="icon" href="/assets/images/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta name="theme-color" content="#ffffff">
 
-        @if(config('services.google.analytics_id'))
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+
+    @if(config('services.google.analytics_id'))
         <!-- Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.analytics_id') }}"></script>
+        <script async
+            src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.analytics_id') }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
+            function gtag() { dataLayer.push(arguments); }
             gtag('js', new Date());
             gtag('config', '{{ config('services.google.analytics_id') }}');
         </script>
-        @endif
+    @endif
 
-        @viteReactRefresh
-        @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
-        <!-- Paystack Inline JS -->
-        <script src="https://js.paystack.co/v1/inline.js"></script>
+    @viteReactRefresh
+    @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
+    <!-- Paystack Inline JS -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
 
-        @inertiaHead
-    </head>
-    <body class="font-sans antialiased">
-        @inertia
-    </body>
+    @inertiaHead
+</head>
+
+<body class="font-sans antialiased">
+    @inertia
+</body>
+
 </html>
