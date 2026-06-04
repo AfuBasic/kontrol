@@ -83,6 +83,23 @@ const navItems = [
     },
 ];
 
+async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
+    if (!navigator.onLine) return false;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch('/security/verify/sync?ping=' + Date.now(), {
+            method: 'HEAD',
+            signal: controller.signal,
+        });
+        clearTimeout(id);
+        return response.ok || response.status === 404 || response.status === 405;
+    } catch (e) {
+        clearTimeout(id);
+        return false;
+    }
+}
+
 export default function SecurityLayout({ children, hideNav = false, variant = 'light' }: Props & { variant?: 'light' | 'dark' }) {
     const page = usePage<PageProps>();
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
@@ -109,11 +126,16 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
-        const checkInterval = setInterval(() => {
-            if (navigator.onLine !== isOnline) {
-                setIsOnline(navigator.onLine);
+        const checkInterval = setInterval(async () => {
+            if (navigator.onLine) {
+                const online = await checkServerReachable(2000);
+                if (online !== isOnline) {
+                    setIsOnline(online);
+                }
+            } else if (isOnline) {
+                setIsOnline(false);
             }
-        }, 2000);
+        }, 4000);
 
         return () => {
             window.removeEventListener('online', handleOnline);

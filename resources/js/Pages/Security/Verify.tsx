@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 import { offlineDb, sha256 } from '@/Utils/offlineDb';
+import axios from 'axios';
 
 const CODE_LENGTH = 6;
 
@@ -50,17 +51,14 @@ function formatExpiry(iso: string | null) {
 
 async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
     if (!navigator.onLine) return false;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
-        const response = await fetch('/security/verify/sync?ping=' + Date.now(), {
+        const response = await axios.get('/security/verify/sync', {
             method: 'HEAD',
-            signal: controller.signal,
+            params: { ping: Date.now() },
+            timeout: timeoutMs,
         });
-        clearTimeout(id);
-        return response.ok || response.status === 404 || response.status === 405;
+        return response.status === 200 || response.status === 404 || response.status === 405;
     } catch (e) {
-        clearTimeout(id);
         return false;
     }
 }
@@ -96,33 +94,17 @@ export default function SecurityVerify() {
             // 1. Sync pending check-in logs
             const pending = await offlineDb.getPendingLogs();
             if (pending.length > 0) {
-                const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
-                const response = await fetch('/security/verify/sync', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify({ logs: pending }),
-                });
-
-                if (response.ok) {
-                    const res = await response.json();
-                    if (res.success) {
-                        await offlineDb.clearPendingLogs();
-                        setPendingLogsCount(0);
-                    }
+                const response = await axios.post('/security/verify/sync', { logs: pending });
+                if (response.data?.success) {
+                    await offlineDb.clearPendingLogs();
+                    setPendingLogsCount(0);
                 }
             }
 
             // 2. Fetch new active code hashes to cache
-            const response = await fetch('/security/verify/sync');
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.codes) {
-                    await offlineDb.saveActiveCodes(data.codes);
-                }
+            const response = await axios.get('/security/verify/sync');
+            if (response.data?.success && response.data.codes) {
+                await offlineDb.saveActiveCodes(response.data.codes);
             }
         } catch (err) {
             console.error('Offline sync failed:', err);
