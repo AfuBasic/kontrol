@@ -119,7 +119,7 @@ export default function CollectionsIndex({ summary }: Props) {
             {/* Filter Tabs */}
             {hasLandlord && (
                 <div className="mb-2">
-                    <div className="flex rounded-xl bg-slate-100 p-1 max-w-md">
+                    <div className="flex max-w-md rounded-xl bg-slate-100 p-1">
                         {tabs.map((tab) => {
                             const isActive = billFilter === tab.id;
                             return (
@@ -152,7 +152,7 @@ export default function CollectionsIndex({ summary }: Props) {
                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {filteredOutstanding.length > 0 ? (
                         filteredOutstanding.map((assignment) => (
                             <MotionLink
@@ -173,11 +173,11 @@ export default function CollectionsIndex({ summary }: Props) {
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
                                             {assignment.billing_source === 'property_owner' ? (
-                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-700 ring-1 ring-purple-100/50">
+                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50">
                                                     Landlord
                                                 </span>
                                             ) : (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100/50">
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50">
                                                     Estate
                                                 </span>
                                             )}
@@ -225,7 +225,7 @@ export default function CollectionsIndex({ summary }: Props) {
                         <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Paid History</h3>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {filteredPaid.slice(0, 3).map((assignment) => (
                             <Link
                                 key={assignment.id}
@@ -240,11 +240,11 @@ export default function CollectionsIndex({ summary }: Props) {
                                         <div className="flex items-center gap-2">
                                             <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
                                             {assignment.billing_source === 'property_owner' ? (
-                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-700 ring-1 ring-purple-100/50">
+                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50">
                                                     Landlord
                                                 </span>
                                             ) : (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100/50">
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50">
                                                     Estate
                                                 </span>
                                             )}

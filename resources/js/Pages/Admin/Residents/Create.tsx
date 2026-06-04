@@ -469,7 +469,7 @@ export default function CreateResident({ inviteLink, propertyOwners = [], proper
                                         id="property_owner_id"
                                         value={data.property_owner_id}
                                         onChange={(e) => setData('property_owner_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none bg-white"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
                                     >
                                         <option value="">None / Standard Resident</option>
                                         {propertyOwners.map((owner) => (
@@ -490,7 +490,7 @@ export default function CreateResident({ inviteLink, propertyOwners = [], proper
                                         id="property_id"
                                         value={data.property_id}
                                         onChange={(e) => setData('property_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none bg-white"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
                                     >
                                         <option value="">None</option>
                                         {properties.map((prop) => (

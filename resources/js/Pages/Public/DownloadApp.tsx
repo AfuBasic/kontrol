@@ -107,7 +107,9 @@ export default function DownloadApp({ autologinToken }: Props) {
                             >
                                 <Play className="h-5 w-5 fill-current text-white dark:text-slate-950" />
                                 <div className="text-left leading-tight">
-                                    <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">Get it on</div>
+                                    <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                                        Get it on
+                                    </div>
                                     <div className="text-xs font-bold text-white dark:text-slate-950">Google Play (Android)</div>
                                 </div>
                             </a>

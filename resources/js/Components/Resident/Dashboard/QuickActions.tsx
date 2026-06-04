@@ -51,26 +51,30 @@ export default function QuickActions() {
     });
 
     return (
-        <div className={`grid grid-cols-1 ${
-            visibleActions.length === 2
-                ? 'sm:grid-cols-2'
-                : visibleActions.length === 3
-                ? 'sm:grid-cols-3'
-                : 'sm:grid-cols-1'
-        } gap-4`}>
+        <div
+            className={`grid grid-cols-1 ${
+                visibleActions.length === 2 ? 'sm:grid-cols-2' : visibleActions.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-1'
+            } gap-4`}
+        >
             {visibleActions.map((action, index) => (
-                <motion.div key={action.name} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * index }} className="h-full">
+                <motion.div
+                    key={action.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="h-full"
+                >
                     <Link
                         href={action.href}
-                        className="group relative flex flex-row items-center justify-between gap-4 overflow-hidden rounded-[32px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/50 transition-all hover:shadow-lg active:scale-[0.98] sm:flex-col sm:items-start sm:justify-between sm:gap-5 sm:min-h-[160px]"
+                        className="group relative flex flex-row items-center justify-between gap-4 overflow-hidden rounded-[32px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/50 transition-all hover:shadow-lg active:scale-[0.98] sm:min-h-[160px] sm:flex-col sm:items-start sm:justify-between sm:gap-5"
                     >
-                        <div className="flex flex-1 flex-row items-center gap-4 sm:flex-col sm:items-start sm:gap-4 sm:w-full">
+                        <div className="flex flex-1 flex-row items-center gap-4 sm:w-full sm:flex-col sm:items-start sm:gap-4">
                             <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${action.bg} ${action.color}`}>
                                 <action.icon className="h-7 w-7" strokeWidth={2.5} />
                             </div>
                             <div className="min-w-0 flex-1 sm:w-full">
-                                <h4 className="text-base font-black text-slate-900 leading-tight">{action.name}</h4>
-                                <p className="mt-0.5 text-xs font-bold text-slate-400 leading-normal">{action.description}</p>
+                                <h4 className="text-base leading-tight font-black text-slate-900">{action.name}</h4>
+                                <p className="mt-0.5 text-xs leading-normal font-bold text-slate-400">{action.description}</p>
                             </div>
                         </div>
 

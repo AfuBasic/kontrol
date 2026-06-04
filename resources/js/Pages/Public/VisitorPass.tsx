@@ -28,26 +28,29 @@ export default function VisitorPass({ pass, qr_url }: Props) {
     }, [pass.uuid, pass.status]);
 
     return (
-        <div className="min-h-screen bg-[#070a0e] text-slate-100 flex flex-col justify-between relative overflow-hidden pb-8">
+        <div className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-[#070a0e] pb-8 text-slate-100">
             <Head title={`Visitor Pass - ${pass.visitor_name || 'Guest'}`} />
 
             {/* Premium Atmospheric Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(10,61,145,0.15),transparent_50%)] pointer-events-none" />
-            <div className="absolute inset-0 bg-noise opacity-3 pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(10,61,145,0.15),transparent_50%)]" />
+            <div className="bg-noise pointer-events-none absolute inset-0 opacity-3" />
 
             {/* Sticky Security Personnel Navigation */}
             {isSecurity && (
-                <div className="pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-3 px-4 sticky top-0 bg-[#0b1626]/95 backdrop-blur-md border-b border-[#1f6fdb]/30 text-slate-300 flex items-center justify-between text-xs font-bold uppercase tracking-wider z-20 shadow-lg">
+                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#1f6fdb]/30 bg-[#0b1626]/95 px-4 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-3 text-xs font-bold tracking-wider text-slate-300 uppercase shadow-lg backdrop-blur-md">
                     <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                         <span>Gate Console</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link href="/security" className="text-slate-400 hover:text-white transition-colors">
+                        <Link href="/security" className="text-slate-400 transition-colors hover:text-white">
                             Dashboard
                         </Link>
                         <span className="text-slate-700">|</span>
-                        <Link href="/security/verify" className="bg-[#1f6fdb] text-white px-3 py-1.5 rounded-lg hover:bg-[#1557ad] transition-all active:scale-95">
+                        <Link
+                            href="/security/verify"
+                            className="rounded-lg bg-[#1f6fdb] px-3 py-1.5 text-white transition-all hover:bg-[#1557ad] active:scale-95"
+                        >
                             Verify Terminal
                         </Link>
                     </div>
@@ -55,21 +58,21 @@ export default function VisitorPass({ pass, qr_url }: Props) {
             )}
 
             {/* Brand Header */}
-            <header className="flex flex-col items-center justify-center pt-8 pb-4 z-10">
+            <header className="z-10 flex flex-col items-center justify-center pt-8 pb-4">
                 <div className="flex items-center gap-2">
                     <img src="/assets/images/kontrol-icon-white.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                     <span className="text-lg font-black tracking-widest text-white uppercase">KONTROL</span>
                 </div>
-                <p className="text-[10px] font-black tracking-[0.3em] text-[#1f6fdb] uppercase mt-1">ACCESS CREDENTIAL</p>
+                <p className="mt-1 text-[10px] font-black tracking-[0.3em] text-[#1f6fdb] uppercase">ACCESS CREDENTIAL</p>
             </header>
 
             {/* Boarding Pass Container */}
-            <main className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto px-4 z-10 relative">
+            <main className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4">
                 <PassCard pass={pass} qrUrl={qr_url} />
             </main>
 
             {/* Footer */}
-            <footer className="text-center py-4 z-10">
+            <footer className="z-10 py-4 text-center">
                 <div className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
                     <ShieldCheck className="h-4 w-4 text-[#1f6fdb]" />
                     <span>Secure estate infrastructure by Kontrol</span>

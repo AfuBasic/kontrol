@@ -172,7 +172,7 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             id="property_owner_id"
                             value={data.property_owner_id}
                             onChange={(e) => setData('property_owner_id', e.target.value)}
-                            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none bg-white"
+                            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
                         >
                             <option value="">None / Standard Resident</option>
                             {propertyOwners.map((owner) => (

@@ -13,7 +13,7 @@ export default function DailyMetrics({ stats }: Props) {
         <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">
             <h3 className="mb-6 text-lg font-bold tracking-tight text-slate-900">Today's Overview</h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+            <div className="grid grid-cols-1 items-center gap-8 sm:grid-cols-2">
                 <div>
                     <div className="mb-2 flex items-end justify-between">
                         <div>

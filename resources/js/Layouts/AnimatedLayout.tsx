@@ -21,4 +21,3 @@ export default function AnimatedLayout({ children }: { children: React.ReactNode
         </div>
     );
 }
-

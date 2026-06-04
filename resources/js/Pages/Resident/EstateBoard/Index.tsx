@@ -44,14 +44,14 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: idx * 0.05, ease: 'easeOut' }}
-            className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] h-full"
+            className="group relative h-full overflow-hidden rounded-3xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
         >
-            <Link href={show.url({ post: post.hashid })} className="flex flex-col justify-between h-full p-5 sm:p-6">
+            <Link href={show.url({ post: post.hashid })} className="flex h-full flex-col justify-between p-5 sm:p-6">
                 <div>
                     {/* Post Header */}
                     <div className="mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-lg shadow-indigo-200 ring-2 ring-white">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-lg ring-2 shadow-indigo-200 ring-white">
                                 <span className="text-sm">{post.author.name.charAt(0).toUpperCase()}</span>
                             </div>
                             <div>
@@ -77,27 +77,28 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                             )}
                             <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
                                 {getAudienceIcon(post.audience)}
-                                <span className="uppercase tracking-wider">{getAudienceLabel(post.audience)}</span>
+                                <span className="tracking-wider uppercase">{getAudienceLabel(post.audience)}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Post Content */}
                     {post.title && (
-                        <h2 className="mb-2 text-xl font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600 leading-tight">
+                        <h2 className="mb-2 text-xl leading-tight font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600">
                             {post.title}
                         </h2>
                     )}
-                    
-                    <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600">
-                        {bodyPreview}
-                    </p>
+
+                    <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600">{bodyPreview}</p>
 
                     {/* Media Preview */}
                     {hasMedia && (
                         <div className="mt-4 grid grid-cols-2 gap-2 overflow-hidden rounded-2xl">
                             {post.media.slice(0, 2).map((media, mIdx) => (
-                                <div key={media.id} className={`relative aspect-video overflow-hidden bg-slate-50 ${post.media.length === 1 ? 'col-span-2' : ''}`}>
+                                <div
+                                    key={media.id}
+                                    className={`relative aspect-video overflow-hidden bg-slate-50 ${post.media.length === 1 ? 'col-span-2' : ''}`}
+                                >
                                     <img
                                         src={media.url}
                                         alt=""
@@ -116,7 +117,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                 </div>
 
                 {/* Post Footer */}
-                <div className="mt-5 flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="mt-5 flex items-center justify-between border-t border-slate-50 pt-4">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 text-slate-400">
                             <MessageCircle className="h-5 w-5" />
@@ -145,11 +146,7 @@ export default function EstateBoardIndex({ posts, filter }: Props) {
     ];
 
     const handleFilterChange = (filterId: string | null) => {
-        router.get(
-            index.url(),
-            { filter: filterId || undefined },
-            { preserveState: true, preserveScroll: true }
-        );
+        router.get(index.url(), { filter: filterId || undefined }, { preserveState: true, preserveScroll: true });
     };
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -208,7 +205,7 @@ export default function EstateBoardIndex({ posts, filter }: Props) {
             {/* Filter Tabs — only for property owners and residents with a landlord */}
             {showTabs && (
                 <div className="mb-6">
-                    <div className="flex rounded-xl bg-slate-100 p-1 max-w-xs">
+                    <div className="flex max-w-xs rounded-xl bg-slate-100 p-1">
                         {tabs.map((tab) => {
                             const isActive = filter === tab.id || (filter === null && tab.id === 'estate');
                             return (
@@ -237,14 +234,14 @@ export default function EstateBoardIndex({ posts, filter }: Props) {
 
             {/* Posts Feed */}
             {posts.data.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-stretch">
+                <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2">
                     {posts.data.map((post, idx) => (
                         <PostCard key={post.id} post={post} index={idx} />
                     ))}
 
                     {/* Load More Trigger */}
                     {posts.next_page_url && (
-                        <div ref={loadMoreRef} className="col-span-1 sm:col-span-2 flex justify-center py-8">
+                        <div ref={loadMoreRef} className="col-span-1 flex justify-center py-8 sm:col-span-2">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
                         </div>
                     )}

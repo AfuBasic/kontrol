@@ -122,21 +122,18 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
             <Head title="Access Code Details" />
 
             <div className="flex min-h-[60vh] flex-col items-center justify-center py-6">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start w-full max-w-4xl mx-auto">
+                <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-start gap-8 md:grid-cols-12">
                     {/* Left Column: Pass card & Actions (cols: 5 on md+) */}
-                    <div className="md:col-span-5 flex flex-col items-center text-center w-full">
+                    <div className="flex w-full flex-col items-center text-center md:col-span-5">
                         {/* Title (Mobile only) */}
-                        <div className="md:hidden mb-6 text-center">
+                        <div className="mb-6 text-center md:hidden">
                             <h1 className="text-2xl font-black text-gray-900">Visitor Pass Details</h1>
                             <p className="mt-1 text-sm font-bold text-gray-400">Manage visitor credentials and track gate activity</p>
                         </div>
 
                         {/* Pass Card Display */}
                         <div ref={cardRef} className="mb-6 w-full max-w-sm px-2">
-                            <PassCard
-                                pass={accessCode}
-                                qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`}
-                            />
+                            <PassCard pass={accessCode} qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`} />
                         </div>
 
                         {/* Action Buttons */}
@@ -161,7 +158,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     <button
                                         onClick={handleShare}
                                         disabled={sharing}
-                                        className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 px-5 py-3.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-75 disabled:pointer-events-none ${
+                                        className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 px-5 py-3.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-75 ${
                                             shareCopied
                                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                                 : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -169,9 +166,18 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     >
                                         {sharing ? (
                                             <>
-                                                <svg className="h-5 w-5 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg
+                                                    className="h-5 w-5 animate-spin text-gray-500"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
                                                 </svg>
                                                 Preparing...
                                             </>
@@ -194,10 +200,10 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                     </div>
 
                     {/* Right Column: Info and Usage Logs (cols: 7 on md+) */}
-                    <div className="md:col-span-7 flex flex-col justify-start text-center md:text-left space-y-6 w-full px-2 items-center md:items-stretch">
+                    <div className="flex w-full flex-col items-center justify-start space-y-6 px-2 text-center md:col-span-7 md:items-stretch md:text-left">
                         {/* Title (Tablet/Desktop only) */}
                         <div className="hidden md:block">
-                            <h1 className="text-3xl font-black text-gray-900 leading-tight">Visitor Pass Details</h1>
+                            <h1 className="text-3xl leading-tight font-black text-gray-900">Visitor Pass Details</h1>
                             <p className="mt-2 text-sm font-bold text-gray-400">Manage visitor credentials and track gate activity</p>
                         </div>
 
@@ -206,7 +212,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.3 }}
-                            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm w-full max-w-sm md:max-w-none"
+                            className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:max-w-none"
                         >
                             <p className="text-xs font-bold text-slate-400">
                                 Created via:{' '}
@@ -220,7 +226,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
 
                         {/* Static verified card for single use passes that are used */}
                         {!isLongLived && accessCode.status === 'used' && (
-                            <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50/50 p-6 text-left shadow-sm w-full max-w-sm md:max-w-none">
+                            <div className="w-full max-w-sm rounded-[2rem] border border-emerald-100 bg-emerald-50/50 p-6 text-left shadow-sm md:max-w-none">
                                 <div className="flex items-center gap-4">
                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 ring-1 ring-emerald-200">
                                         <Shield className="h-6 w-6" />
@@ -254,7 +260,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     {/* Date Filter */}
                                     <div className="mb-4">
                                         <div className="flex items-center gap-2">
-                                            <div className="relative flex-1 min-w-0">
+                                            <div className="relative min-w-0 flex-1">
                                                 <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                                 <input
                                                     type="date"
@@ -328,7 +334,12 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                         )}
 
                         {/* Footer Back Button */}
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.6 }} className="pt-4 w-full text-center md:text-left">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            className="w-full pt-4 text-center md:text-left"
+                        >
                             <Link href="/resident/home" className="text-sm font-bold text-gray-500 hover:text-gray-700">
                                 Back to Home
                             </Link>

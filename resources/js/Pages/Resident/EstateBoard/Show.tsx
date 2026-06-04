@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Resident/EstateBoardCommentController';
 import { index } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 
 type Props = {
@@ -184,11 +184,11 @@ export default function EstateBoardShow({ post, comments }: Props) {
                 className="mb-8"
             >
                 <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-xl shadow-indigo-200 ring-2 ring-white">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-xl ring-2 shadow-indigo-200 ring-white">
                         <span className="text-xl">{post.author.name.charAt(0).toUpperCase()}</span>
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">{post.title}</h1>
+                        <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">{post.title}</h1>
                         <div className="mt-2 flex flex-wrap items-center gap-3">
                             {post.property_owner_id ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
@@ -201,7 +201,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                             )}
                             <span className="text-xs font-bold text-slate-900">{post.author.name}</span>
                             <span className="h-1 w-1 rounded-full bg-slate-300" />
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">
                                 {post.published_at
                                     ? format(new Date(post.published_at), 'MMMM d, yyyy')
                                     : format(new Date(post.created_at), 'MMMM d, yyyy')}
@@ -234,11 +234,9 @@ export default function EstateBoardShow({ post, comments }: Props) {
                 )}
 
                 <div className="p-8 sm:p-10">
-                    <div 
-                        className="prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed 
-                            prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900
-                            prose-p:mb-6 prose-p:leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: post.body }} 
+                    <div
+                        className="prose prose-slate prose-lg prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:mb-6 prose-p:leading-relaxed max-w-none leading-relaxed text-slate-700"
+                        dangerouslySetInnerHTML={{ __html: post.body }}
                     />
 
                     <div className="mt-12 flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
@@ -246,14 +244,13 @@ export default function EstateBoardShow({ post, comments }: Props) {
                             {post.property_owner_id ? <Home className="h-3.5 w-3.5 text-purple-600" /> : getAudienceIcon(post.audience)}
                         </div>
                         <p className="text-[10px] font-black tracking-[0.15em] text-slate-500 uppercase">
-                            {post.property_owner_id 
-                                ? `Private Landlord Bulletin (${getAudienceLabel(post.audience)})` 
+                            {post.property_owner_id
+                                ? `Private Landlord Bulletin (${getAudienceLabel(post.audience)})`
                                 : `Official Estate ${getAudienceLabel(post.audience)} Bulletin`}
                         </p>
                     </div>
                 </div>
             </motion.div>
-
 
             {/* Comments Section */}
             <motion.div

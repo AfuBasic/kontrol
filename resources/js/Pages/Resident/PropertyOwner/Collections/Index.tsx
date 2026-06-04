@@ -1,6 +1,6 @@
+import { WalletIcon, PlusIcon, CalendarIcon, CheckCircleIcon, ArrowUpRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
-import { WalletIcon, PlusIcon, CalendarIcon, CheckCircleIcon, ArrowUpRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface Collection {
     id: number;

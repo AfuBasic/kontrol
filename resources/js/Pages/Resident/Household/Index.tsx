@@ -267,7 +267,7 @@ export default function HouseholdIndex({ members }: Props) {
                             </h3>
                             {isAtLimit && <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>}
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {members.map((member, index) => (
                                 <motion.div
                                     key={member.id}
@@ -316,7 +316,7 @@ export default function HouseholdIndex({ members }: Props) {
                     <div className="px-2">
                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">What they can do</h3>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <FeatureCard
                             title="Visitor Management"
                             description="They can generate short-term access codes for their own guests and deliveries."

@@ -1,14 +1,14 @@
-import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, RefreshCw, Share2, Upload, User, X, ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { bulkInvite, index, store } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import {
     store as inviteLinkStore,
     regenerate as inviteLinkRegenerate,
     toggle as inviteLinkToggle,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
-import { bulkInvite, index, store } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
@@ -319,7 +319,9 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                         Back to Property Owners
                     </Link>
                     <h1 className="text-2xl font-semibold text-gray-900">Invite Property Owner</h1>
-                    <p className="mt-1 text-gray-500">Invite a landlord or property manager to delegate resident administration. Choose the method that works best.</p>
+                    <p className="mt-1 text-gray-500">
+                        Invite a landlord or property manager to delegate resident administration. Choose the method that works best.
+                    </p>
                 </motion.div>
 
                 {/* Tabs */}
@@ -395,7 +397,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         placeholder="Enter property owner's full name"
                                         required
                                     />
-                                    {errors.name && <p className="mt-1 text-sm text-red-650">{errors.name}</p>}
+                                    {errors.name && <p className="text-red-650 mt-1 text-sm">{errors.name}</p>}
                                 </div>
 
                                 {/* Email */}
@@ -413,7 +415,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         required
                                     />
                                     <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email.</p>
-                                    {errors.email && <p className="mt-1 text-sm text-red-655">{errors.email}</p>}
+                                    {errors.email && <p className="text-red-655 mt-1 text-sm">{errors.email}</p>}
                                 </div>
 
                                 {/* Phone */}
@@ -429,7 +431,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="+1 (555) 000-0000"
                                     />
-                                    {errors.phone && <p className="mt-1 text-sm text-red-660">{errors.phone}</p>}
+                                    {errors.phone && <p className="text-red-660 mt-1 text-sm">{errors.phone}</p>}
                                 </div>
 
                                 {/* Unit Number */}
@@ -445,7 +447,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="e.g., Block C, Villa 12"
                                     />
-                                    {errors.unit_number && <p className="mt-1 text-sm text-red-665">{errors.unit_number}</p>}
+                                    {errors.unit_number && <p className="text-red-665 mt-1 text-sm">{errors.unit_number}</p>}
                                 </div>
 
                                 {/* Address */}
@@ -461,7 +463,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="Enter address details"
                                     />
-                                    {errors.address && <p className="mt-1 text-sm text-red-670">{errors.address}</p>}
+                                    {errors.address && <p className="text-red-670 mt-1 text-sm">{errors.address}</p>}
                                 </div>
                             </div>
 
@@ -730,7 +732,8 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-semibold text-gray-900">Require Admin Approval</span>
                                                 <span className="text-xs text-gray-500">
-                                                    If enabled, property owners will stay 'pending' after signup until you manually approve them in the dashboard.
+                                                    If enabled, property owners will stay 'pending' after signup until you manually approve them in
+                                                    the dashboard.
                                                 </span>
                                             </div>
                                         </label>

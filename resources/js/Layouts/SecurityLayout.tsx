@@ -157,7 +157,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     let permStatus = await PushNotifications.checkPermissions();
 
                     if (permStatus.receive === 'prompt') {
-                        permStatus = await (PushNotifications as unknown as { requestPermissions: (options: Record<string, unknown>) => Promise<{ receive: string }> }).requestPermissions({
+                        permStatus = await (
+                            PushNotifications as unknown as { requestPermissions: (options: Record<string, unknown>) => Promise<{ receive: string }> }
+                        ).requestPermissions({
                             ios: { criticalAlert: true },
                         });
                     }

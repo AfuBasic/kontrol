@@ -31,8 +31,8 @@ import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardC
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';

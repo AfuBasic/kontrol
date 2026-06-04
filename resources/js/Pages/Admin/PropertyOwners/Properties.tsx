@@ -1,7 +1,7 @@
-import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link } from '@inertiajs/react';
 import { BuildingOffice2Icon, CalendarDaysIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { Head, Link } from '@inertiajs/react';
 import { index } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Property {
     id: number;
@@ -29,17 +29,15 @@ export default function Properties({ propertyOwner, properties }: Props) {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <Link href={index.url()} className="hover:text-indigo-600 font-bold transition-colors">
+                            <Link href={index.url()} className="font-bold transition-colors hover:text-indigo-600">
                                 Property Owners
                             </Link>
                             <span>/</span>
                             <span className="font-bold text-slate-800">{propertyOwner.name}</span>
                             <span>/</span>
-                            <span className="font-bold text-slate-850">Properties</span>
+                            <span className="text-slate-850 font-bold">Properties</span>
                         </div>
-                        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
-                            Managed Properties
-                        </h1>
+                        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Managed Properties</h1>
                         <p className="mt-1 text-sm text-slate-500">
                             Listing all properties owned by <span className="font-bold text-slate-800">{propertyOwner.name}</span>.
                         </p>
@@ -71,20 +69,18 @@ export default function Properties({ propertyOwner, properties }: Props) {
                                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 font-bold text-indigo-600">
                                                         <BuildingOffice2Icon className="h-5 w-5" />
                                                     </div>
-                                                    <span className="text-sm font-bold text-slate-900">
-                                                        {property.name}
-                                                    </span>
+                                                    <span className="text-sm font-bold text-slate-900">{property.name}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
-                                                    <UsersIcon className="h-4 w-4 text-slate-400 shrink-0" />
+                                                    <UsersIcon className="h-4 w-4 shrink-0 text-slate-400" />
                                                     {property.residents_count}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-550">
-                                                    <CalendarDaysIcon className="h-4 w-4 text-slate-400 shrink-0" />
+                                                <span className="text-slate-550 inline-flex items-center gap-1.5 text-sm font-bold">
+                                                    <CalendarDaysIcon className="h-4 w-4 shrink-0 text-slate-400" />
                                                     {property.created_at}
                                                 </span>
                                             </td>
@@ -97,9 +93,7 @@ export default function Properties({ propertyOwner, properties }: Props) {
                         <div className="py-16 text-center">
                             <BuildingOffice2Icon className="mx-auto h-12 w-12 text-slate-300" />
                             <h3 className="mt-4 text-lg font-black text-slate-900">No Properties Found</h3>
-                            <p className="mt-1 text-sm text-slate-500">
-                                This Property Owner has not registered any properties yet.
-                            </p>
+                            <p className="mt-1 text-sm text-slate-500">This Property Owner has not registered any properties yet.</p>
                         </div>
                     )}
                 </div>

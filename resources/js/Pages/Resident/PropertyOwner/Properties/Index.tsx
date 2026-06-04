@@ -1,8 +1,8 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import { store, update, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
 import { BuildingOffice2Icon, PlusIcon, UsersIcon, WalletIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { store, update, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
 
 interface Property {
     id: number;

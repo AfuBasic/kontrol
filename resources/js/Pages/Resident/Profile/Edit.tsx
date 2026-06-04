@@ -2,23 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    User,
-    Lock,
-    Shield,
-    ChevronRight,
-    LogOut,
-    Zap,
-    Users,
-    UserCircle,
-    Eye,
-    EyeOff,
-    Crown,
-    X,
-    Loader2,
-    Plus,
-    Wallet,
-} from 'lucide-react';
+import { User, Lock, Shield, ChevronRight, LogOut, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
@@ -135,7 +119,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                     <Shield className="h-3 w-3" />
                                     Resident
                                 </span>
-
                             </div>
                             {isHouseholdMember && parentResidentName && (
                                 <p className="mt-4 text-xs font-bold text-slate-400">
@@ -245,7 +228,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                             onClick={() => {
                                 const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                 if (isIPadOrDesktop) {
-                                    if (window.confirm("Are you sure you want to sign out of your account?")) {
+                                    if (window.confirm('Are you sure you want to sign out of your account?')) {
                                         handleLogout();
                                     }
                                 } else {
@@ -602,7 +585,11 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                     onClick={() => {
                                         const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                         if (isIPadOrDesktop) {
-                                            if (window.confirm(`Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`)) {
+                                            if (
+                                                window.confirm(
+                                                    `Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`,
+                                                )
+                                            ) {
                                                 router.delete(EmergencyContactController.destroy.url(contact.id));
                                             }
                                         } else {

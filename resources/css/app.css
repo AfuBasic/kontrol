@@ -405,7 +405,6 @@ textarea,
     }
 }
 
-
 /* Root container */
 .splash-screen {
     position: fixed;
@@ -455,12 +454,7 @@ textarea,
     width: 300px;
     height: 190px;
     pointer-events: none;
-    background: radial-gradient(
-        ellipse at center,
-        rgba(99, 102, 241, 0.11) 0%,
-        rgba(99, 102, 241, 0.04) 38%,
-        transparent 68%
-    );
+    background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.11) 0%, rgba(99, 102, 241, 0.04) 38%, transparent 68%);
     /* Delayed — appears after logo resolves */
     animation: splash-glow 3.2s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
     will-change: opacity, transform;
@@ -539,8 +533,12 @@ textarea,
 
 /* Background initializes */
 @keyframes splash-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* Logo: blur-to-clarity with gentle scale resolve */
@@ -619,7 +617,8 @@ textarea,
 }
 
 @keyframes scan {
-    0%, 100% {
+    0%,
+    100% {
         top: 5%;
     }
     50% {

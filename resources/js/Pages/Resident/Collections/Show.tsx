@@ -138,7 +138,10 @@ export default function CollectionShow({ assignment }: Props) {
 
                         <h1 className="text-2xl font-black tracking-tight text-slate-900">{assignment.collection.name}</h1>
                         <p className="mt-2 max-w-[250px] font-medium text-slate-500">
-                            {assignment.collection.description || (assignment.billing_source === 'property_owner' ? 'Levy/charge issued by your Landlord.' : 'Official Estate levy for the current period.')}
+                            {assignment.collection.description ||
+                                (assignment.billing_source === 'property_owner'
+                                    ? 'Levy/charge issued by your Landlord.'
+                                    : 'Official Estate levy for the current period.')}
                         </p>
 
                         <div className="mt-8 flex w-full flex-col gap-4 rounded-3xl bg-slate-50 p-6">
@@ -194,12 +197,8 @@ export default function CollectionShow({ assignment }: Props) {
                                         <Wallet className="h-6 w-6 text-slate-400" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900 capitalize">
-                                            {payment.provider.replace('_', ' ')}
-                                        </h4>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                            Ref: {payment.reference}
-                                        </p>
+                                        <h4 className="text-sm font-bold text-slate-900 capitalize">{payment.provider.replace('_', ' ')}</h4>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Ref: {payment.reference}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">

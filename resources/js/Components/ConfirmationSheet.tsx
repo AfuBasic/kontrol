@@ -89,7 +89,9 @@ export default function ConfirmationSheet({
                                 {/* Confirmation Details */}
                                 <div className="flex flex-col items-center px-6 pt-6 pb-4 text-center">
                                     {/* Icon */}
-                                    <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-50 ring-4 ${colors.iconBg}`}>
+                                    <div
+                                        className={`mb-4 flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-50 ring-4 ${colors.iconBg}`}
+                                    >
                                         {type === 'danger' || type === 'warning' ? (
                                             <AlertTriangle className="h-7 w-7" />
                                         ) : (
@@ -99,17 +101,11 @@ export default function ConfirmationSheet({
 
                                     {/* Title */}
                                     <h3 className="text-xl font-black tracking-tight text-slate-900">{title}</h3>
-                                    
-                                    {/* Message */}
-                                    <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-400 max-w-sm">
-                                        {message}
-                                    </p>
 
-                                    {children && (
-                                        <div className="mt-6 w-full text-left">
-                                            {children}
-                                        </div>
-                                    )}
+                                    {/* Message */}
+                                    <p className="mt-2 max-w-sm text-sm leading-relaxed font-semibold text-slate-400">{message}</p>
+
+                                    {children && <div className="mt-6 w-full text-left">{children}</div>}
                                 </div>
 
                                 {/* Action Buttons - Large touch targets, stacked on mobile */}
@@ -118,19 +114,15 @@ export default function ConfirmationSheet({
                                         type="button"
                                         disabled={isLoading}
                                         onClick={onConfirm}
-                                        className={`flex w-full items-center justify-center gap-2 rounded-[24px] py-4.5 text-sm font-black uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-50 ${colors.confirmBtn}`}
+                                        className={`flex w-full items-center justify-center gap-2 rounded-[24px] py-4.5 text-sm font-black tracking-wider uppercase transition-all active:scale-[0.98] disabled:opacity-50 ${colors.confirmBtn}`}
                                     >
-                                        {isLoading ? (
-                                            <Loader2 className="h-5 w-5 animate-spin" />
-                                        ) : (
-                                            confirmLabel
-                                        )}
+                                        {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : confirmLabel}
                                     </button>
                                     <button
                                         type="button"
                                         disabled={isLoading}
                                         onClick={onClose}
-                                        className="w-full rounded-[24px] bg-slate-50 py-4.5 text-sm font-black uppercase tracking-wider text-slate-500 transition-all hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
+                                        className="w-full rounded-[24px] bg-slate-50 py-4.5 text-sm font-black tracking-wider text-slate-500 uppercase transition-all hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
                                     >
                                         {cancelLabel}
                                     </button>

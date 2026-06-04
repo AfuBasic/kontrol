@@ -2,8 +2,6 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Mail, Power, RefreshCw, Share2, User, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { SharedData } from '@/types';
 import {
     index,
     store,
@@ -12,6 +10,8 @@ import {
     toggleInviteLink,
     destroyInviteLink,
 } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+import type { SharedData } from '@/types';
 
 type TabType = 'invite_link' | 'single';
 
@@ -130,12 +130,9 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
 
     const handleClearLink = () => {
         if (!confirm('Are you sure you want to delete this invite link? Users will no longer be able to use it to join.')) return;
-        router.delete(
-            destroyInviteLink.url(),
-            {
-                preserveScroll: true,
-            },
-        );
+        router.delete(destroyInviteLink.url(), {
+            preserveScroll: true,
+        });
     };
 
     const tabs = [
@@ -263,7 +260,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="property_id"
                                     value={data.property_id}
                                     onChange={(e) => setData('property_id', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none bg-white"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                 >
                                     <option value="">None</option>
                                     {properties.map((prop) => (
@@ -311,14 +308,14 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                         <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
                             <Link
                                 href={index.url()}
-                                className="px-6 py-3 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-850"
+                                className="hover:text-slate-850 px-6 py-3 text-sm font-semibold text-slate-500 transition-colors"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-750 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 disabled:opacity-50"
+                                className="to-indigo-750 rounded-2xl bg-gradient-to-r from-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
                             >
                                 {processing ? 'Sending Invite...' : 'Invite Resident'}
                             </button>
@@ -341,8 +338,8 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     <LinkIcon className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-black text-slate-900 leading-tight">Configure Invite Link</h3>
-                                    <p className="text-xs text-slate-500 mt-0.5">Let residents join your property using a shared URL.</p>
+                                    <h3 className="text-lg leading-tight font-black text-slate-900">Configure Invite Link</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">Let residents join your property using a shared URL.</p>
                                 </div>
                             </div>
 
@@ -350,15 +347,17 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                             {inviteLink ? (
                                 <div className="rounded-[2rem] bg-slate-50/50 p-6 ring-1 ring-slate-100/50">
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                                                inviteLink.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'
-                                            }`}>
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <div
+                                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                                                    inviteLink.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                                                }`}
+                                            >
                                                 {inviteLink.is_active ? <CheckCircle className="h-6 w-6" /> : <Power className="h-6 w-6" />}
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-bold text-slate-800">{inviteLink.url}</p>
-                                                <p className="mt-0.5 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                <p className="mt-0.5 text-xs font-bold tracking-widest text-slate-400 uppercase">
                                                     Used {inviteLink.usage_count} times
                                                     {inviteLink.max_usages ? ` · Limit ${inviteLink.max_usages}` : ''}
                                                     {inviteLink.expires_at ? ` · Expires ${inviteLink.expires_at.split(' ')[0]}` : ''}
@@ -370,15 +369,19 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={handleCopyLink}
-                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-xs ring-1 ring-slate-200 transition-all hover:text-slate-900 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-xs ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:text-slate-900 active:translate-y-0 active:scale-95"
                                                 title="Copy Link"
                                             >
-                                                {isCopied ? <span className="text-[10px] font-semibold text-emerald-600">Copied</span> : <Copy className="h-4.5 w-4.5" />}
+                                                {isCopied ? (
+                                                    <span className="text-[10px] font-semibold text-emerald-600">Copied</span>
+                                                ) : (
+                                                    <Copy className="h-4.5 w-4.5" />
+                                                )}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={handleShareWhatsApp}
-                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] text-white shadow-xs transition-all hover:bg-[#20ba5a] hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] text-white shadow-xs transition-all hover:-translate-y-0.5 hover:bg-[#20ba5a] active:translate-y-0 active:scale-95"
                                                 title="Share on WhatsApp"
                                             >
                                                 <Share2 className="h-4.5 w-4.5" />
@@ -392,8 +395,8 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             onClick={handleToggleLink}
                                             className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
                                                 inviteLink.is_active
-                                                    ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm shadow-rose-500/5 hover:shadow'
-                                                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-sm shadow-emerald-500/5 hover:shadow'
+                                                    ? 'bg-rose-50 text-rose-600 shadow-sm shadow-rose-500/5 hover:bg-rose-100 hover:shadow'
+                                                    : 'bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-500/5 hover:bg-emerald-100 hover:shadow'
                                             }`}
                                         >
                                             <Power className="h-3.5 w-3.5" />
@@ -402,7 +405,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                         <button
                                             type="button"
                                             onClick={handleRegenerateLink}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shadow-sm hover:shadow"
+                                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow active:translate-y-0 active:scale-95"
                                         >
                                             <RefreshCw className="h-3.5 w-3.5" />
                                             Regenerate
@@ -410,14 +413,14 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                         <button
                                             type="button"
                                             onClick={() => setIsEditingSettings(!isEditingSettings)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shadow-sm hover:shadow"
+                                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow active:translate-y-0 active:scale-95"
                                         >
                                             Settings
                                         </button>
                                         <button
                                             type="button"
                                             onClick={handleClearLink}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 transition-all hover:bg-rose-100 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shadow-sm shadow-rose-500/5 hover:shadow"
+                                            className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 shadow-sm shadow-rose-500/5 transition-all hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow active:translate-y-0 active:scale-95"
                                         >
                                             Delete Link
                                         </button>
@@ -429,7 +432,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     <button
                                         type="button"
                                         onClick={handleGenerateLink}
-                                        className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-750 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:from-indigo-500 hover:to-indigo-650 hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                                        className="to-indigo-750 hover:to-indigo-650 mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98"
                                     >
                                         Generate Invite Link
                                     </button>
@@ -440,7 +443,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                             {(isEditingSettings || !inviteLink) && (
                                 <div className="space-y-4 border-t border-slate-100 pt-6">
                                     <h4 className="text-sm font-bold text-slate-800">Invite Link Settings</h4>
-                                    
+
                                     {/* Max Usages */}
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-700">Maximum Usage Limit</label>
@@ -453,7 +456,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                                 className="block w-full rounded-2xl border border-slate-200 py-2.5 pr-12 pl-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                             />
                                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                                <span className="text-xs text-slate-400 font-semibold">uses</span>
+                                                <span className="text-xs font-semibold text-slate-400">uses</span>
                                             </div>
                                         </div>
                                         <p className="text-[10px] text-slate-400">Leave blank or set to 0 for unlimited uses.</p>
@@ -470,7 +473,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             />
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-slate-900">Require Admin Approval</span>
-                                                <span className="text-xs text-slate-400 mt-0.5">
+                                                <span className="mt-0.5 text-xs text-slate-400">
                                                     If checked, new residents must be approved by the estate administrator after signing up.
                                                 </span>
                                             </div>
@@ -485,7 +488,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                             value={inviteSettings.expires_at}
                                             onChange={(e) => setInviteSettings((prev) => ({ ...prev, expires_at: e.target.value }))}
-                                            className="block w-full rounded-2xl border border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                            className="block w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                         />
                                         <p className="text-[10px] text-slate-400">Link will automatically expire after this date.</p>
                                     </div>
@@ -495,14 +498,14 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsEditingSettings(false)}
-                                                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+                                                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-50"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={handleGenerateLink}
-                                                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                                                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0 active:scale-95"
                                             >
                                                 Save Settings
                                             </button>

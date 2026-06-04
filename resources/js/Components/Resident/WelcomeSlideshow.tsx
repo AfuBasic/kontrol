@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Key, Wallet, ChevronRight, X, Users, Home, Megaphone, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
 
 interface WelcomeSlideshowProps {
     estateName: string;

@@ -39,7 +39,7 @@ export default function VisitorStatus({ activeCodes }: Props) {
                         <h3 className="text-lg font-bold tracking-tight text-slate-900">Inside Community</h3>
                         <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">{inside.length} Active</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {inside.map((code) => (
                             <VisitorCard key={code.id} code={code} status="Inside" />
                         ))}
@@ -54,7 +54,7 @@ export default function VisitorStatus({ activeCodes }: Props) {
                         <h3 className="text-lg font-bold tracking-tight text-slate-900">Upcoming Visitors</h3>
                         <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">{upcoming.length} Pending</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {upcoming.map((code) => (
                             <VisitorCard key={code.id} code={code} status="At gate" />
                         ))}

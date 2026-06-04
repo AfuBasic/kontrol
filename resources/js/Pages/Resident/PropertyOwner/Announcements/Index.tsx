@@ -1,6 +1,6 @@
+import { MegaphoneIcon, PlusIcon, TrashIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { create, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { MegaphoneIcon, PlusIcon, TrashIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface Announcement {
     id: number;

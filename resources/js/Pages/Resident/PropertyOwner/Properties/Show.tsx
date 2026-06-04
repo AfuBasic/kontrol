@@ -1,20 +1,20 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { assignResident, removeResident, index } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
-import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { 
-    BuildingOffice2Icon, 
+import {
+    BuildingOffice2Icon,
     ArrowLeftIcon,
-    UsersIcon, 
-    WalletIcon, 
-    MegaphoneIcon, 
+    UsersIcon,
+    WalletIcon,
+    MegaphoneIcon,
     ClockIcon,
     PlusIcon,
     TrashIcon,
     ArrowDownLeftIcon,
-    UserPlusIcon
+    UserPlusIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
+import { assignResident, removeResident, index } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
 
 interface Resident {
     id: number;
@@ -82,15 +82,7 @@ interface Props {
 
 type Tab = 'overview' | 'residents' | 'collections' | 'announcements' | 'activity';
 
-export default function Show({
-    property,
-    residents,
-    outstandingCollections,
-    payments,
-    announcements,
-    activities,
-    eligibleResidents
-}: Props) {
+export default function Show({ property, residents, outstandingCollections, payments, announcements, activities, eligibleResidents }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [showAssignForm, setShowAssignForm] = useState(false);
 
@@ -104,7 +96,7 @@ export default function Show({
             onSuccess: () => {
                 setShowAssignForm(false);
                 assignForm.reset();
-            }
+            },
         });
     };
 
@@ -124,7 +116,7 @@ export default function Show({
             <div className="flex items-center gap-3">
                 <Link
                     href={index.url()}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-655 hover:bg-slate-550 shadow-xs ring-1 ring-slate-100 transition-all"
+                    className="text-slate-655 hover:bg-slate-550 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all"
                 >
                     <ArrowLeftIcon className="h-5 w-5" />
                 </Link>
@@ -135,14 +127,14 @@ export default function Show({
             </div>
 
             {/* Custom Tab Navigation Bar */}
-            <div className="flex border-b border-slate-100 bg-white px-2 pt-2 rounded-2xl shadow-xs ring-1 ring-slate-100">
+            <div className="flex rounded-2xl border-b border-slate-100 bg-white px-2 pt-2 shadow-xs ring-1 ring-slate-100">
                 {(['overview', 'residents', 'collections', 'announcements', 'activity'] as Tab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 pb-3 pt-2 text-center text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+                        className={`flex-1 border-b-2 pt-2 pb-3 text-center text-xs font-bold tracking-wider uppercase transition-all ${
                             activeTab === tab
-                                ? 'border-indigo-650 text-indigo-600 font-black'
+                                ? 'border-indigo-650 font-black text-indigo-600'
                                 : 'border-transparent text-slate-400 hover:text-slate-600'
                         }`}
                     >
@@ -153,26 +145,21 @@ export default function Show({
 
             {/* Tab Contents */}
             <div className="min-h-96">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
+                <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                     {/* OVERVIEW TAB */}
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                             <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Residents</h3>
+                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Residents</h3>
                                 <p className="mt-2 text-3xl font-black text-slate-950">{residents.length}</p>
                                 <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
-                                    <span>Active: {residents.filter(r => r.status === 'active').length}</span>
-                                    <span>Suspended: {residents.filter(r => r.status === 'suspended').length}</span>
+                                    <span>Active: {residents.filter((r) => r.status === 'active').length}</span>
+                                    <span>Suspended: {residents.filter((r) => r.status === 'suspended').length}</span>
                                 </div>
                             </div>
 
                             <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Outstanding Balance</h3>
+                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Outstanding Balance</h3>
                                 <p className="mt-2 text-3xl font-black text-slate-950">₦{outstandingBalance.toLocaleString()}</p>
                                 <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
                                     <span>Pending: {outstandingCollections.length} bills</span>
@@ -180,8 +167,10 @@ export default function Show({
                             </div>
 
                             <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recent Payments</h3>
-                                <p className="mt-2 text-3xl font-black text-slate-950">₦{payments.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}</p>
+                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Recent Payments</h3>
+                                <p className="mt-2 text-3xl font-black text-slate-950">
+                                    ₦{payments.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+                                </p>
                                 <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
                                     <span>Collected payments logs</span>
                                 </div>
@@ -192,11 +181,13 @@ export default function Show({
                                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                                     <div className="rounded-2xl bg-slate-50 p-4">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">ULID</p>
-                                        <p className="mt-1 font-mono text-slate-900 font-semibold">{property.ulid}</p>
+                                        <p className="mt-1 font-mono font-semibold text-slate-900">{property.ulid}</p>
                                     </div>
                                     <div className="rounded-2xl bg-slate-50 p-4">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">Assigned Residents</p>
-                                        <p className="mt-1 text-slate-900 font-semibold">{residents.map(r => r.name).join(', ') || 'No resident assigned'}</p>
+                                        <p className="mt-1 font-semibold text-slate-900">
+                                            {residents.map((r) => r.name).join(', ') || 'No resident assigned'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -211,7 +202,7 @@ export default function Show({
                                 {!showAssignForm && (
                                     <button
                                         onClick={() => setShowAssignForm(true)}
-                                        className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-50 px-4 py-2 text-xs font-black text-indigo-650 hover:bg-indigo-100 transition-colors"
+                                        className="text-indigo-650 inline-flex items-center gap-1.5 rounded-2xl bg-indigo-50 px-4 py-2 text-xs font-black transition-colors hover:bg-indigo-100"
                                     >
                                         <PlusIcon className="h-4 w-4" />
                                         Assign Resident
@@ -223,14 +214,14 @@ export default function Show({
                                 <form onSubmit={handleAssign} className="rounded-[32px] bg-indigo-50/50 p-6 ring-1 ring-indigo-50">
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                                         <div className="flex-1">
-                                            <label htmlFor="resident_id" className="block text-xs font-bold uppercase tracking-wider text-indigo-900">
+                                            <label htmlFor="resident_id" className="block text-xs font-bold tracking-wider text-indigo-900 uppercase">
                                                 Select Resident
                                             </label>
                                             <select
                                                 id="resident_id"
                                                 value={assignForm.data.resident_id}
                                                 onChange={(e) => assignForm.setData('resident_id', e.target.value)}
-                                                className="mt-2 block w-full rounded-2xl border-indigo-200 px-4 py-3 text-sm bg-white focus:border-indigo-500 focus:ring-indigo-555"
+                                                className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-indigo-200 bg-white px-4 py-3 text-sm focus:border-indigo-500"
                                             >
                                                 <option value="">Choose a resident...</option>
                                                 {eligibleResidents.map((r) => (
@@ -258,7 +249,7 @@ export default function Show({
                                         </div>
                                     </div>
                                     {assignForm.errors.resident_id && (
-                                        <p className="mt-2 text-xs text-rose-600 font-bold">{assignForm.errors.resident_id}</p>
+                                        <p className="mt-2 text-xs font-bold text-rose-600">{assignForm.errors.resident_id}</p>
                                     )}
                                 </form>
                             )}
@@ -290,26 +281,30 @@ export default function Show({
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-bold text-slate-900">{resident.name}</p>
-                                                                {resident.phone && <p className="text-xs text-slate-400 font-semibold">{resident.phone}</p>}
+                                                                {resident.phone && (
+                                                                    <p className="text-xs font-semibold text-slate-400">{resident.phone}</p>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="text-sm font-bold text-slate-600">
-                                                            {resident.unit_number || '—'}
-                                                        </span>
+                                                        <span className="text-sm font-bold text-slate-600">{resident.unit_number || '—'}</span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                                                            resident.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                                                        }`}>
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                                resident.status === 'active'
+                                                                    ? 'bg-emerald-100 text-emerald-700'
+                                                                    : 'bg-rose-100 text-rose-700'
+                                                            }`}
+                                                        >
                                                             {resident.status}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right whitespace-nowrap">
                                                         <button
                                                             onClick={() => handleRemoveResident(resident.id)}
-                                                            className="rounded-xl p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
+                                                            className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                                                             title="Deassociate occupant"
                                                         >
                                                             <TrashIcon className="h-4.5 w-4.5" />
@@ -347,30 +342,30 @@ export default function Show({
                                             outstandingCollections.map((bill) => (
                                                 <div key={bill.id} className="flex items-center justify-between py-3.5">
                                                     <div>
-                                                        <p className="font-bold text-slate-950 text-sm">{bill.name}</p>
-                                                        <p className="text-xs text-slate-400 font-semibold">{bill.resident_name} &middot; Due {bill.due_date}</p>
+                                                        <p className="text-sm font-bold text-slate-950">{bill.name}</p>
+                                                        <p className="text-xs font-semibold text-slate-400">
+                                                            {bill.resident_name} &middot; Due {bill.due_date}
+                                                        </p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-black text-slate-900 text-sm">
+                                                        <p className="text-sm font-black text-slate-900">
                                                             ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
                                                         </p>
-                                                        <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase text-amber-700 tracking-wider">
+                                                        <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
                                                             {bill.status}
                                                         </span>
                                                     </div>
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="py-8 text-center text-sm text-slate-400 font-semibold">
-                                                No outstanding bills found.
-                                            </div>
+                                            <div className="py-8 text-center text-sm font-semibold text-slate-400">No outstanding bills found.</div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Payment Logs */}
                                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                    <h3 className="font-black text-slate-955">Recent Receipts</h3>
+                                    <h3 className="text-slate-955 font-black">Recent Receipts</h3>
                                     <div className="mt-4 divide-y divide-slate-100">
                                         {payments.length > 0 ? (
                                             payments.map((p) => (
@@ -380,20 +375,18 @@ export default function Show({
                                                             <ArrowDownLeftIcon className="h-4.5 w-4.5" />
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-slate-950 text-sm">{p.resident_name}</p>
-                                                            <p className="text-xs text-slate-400 font-bold">{p.collection_name}</p>
+                                                            <p className="text-sm font-bold text-slate-950">{p.resident_name}</p>
+                                                            <p className="text-xs font-bold text-slate-400">{p.collection_name}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-black text-slate-900 text-sm">₦{p.amount.toLocaleString()}</p>
-                                                        <p className="text-[10px] text-slate-400 font-bold uppercase">{p.date}</p>
+                                                        <p className="text-sm font-black text-slate-900">₦{p.amount.toLocaleString()}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{p.date}</p>
                                                     </div>
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="py-8 text-center text-sm text-slate-400 font-semibold">
-                                                No payment history recorded.
-                                            </div>
+                                            <div className="py-8 text-center text-sm font-semibold text-slate-400">No payment history recorded.</div>
                                         )}
                                     </div>
                                 </div>
@@ -414,14 +407,14 @@ export default function Show({
                                     announcements.map((a) => (
                                         <div key={a.id} className="rounded-3xl bg-white p-6 shadow-xs ring-1 ring-slate-100">
                                             <div className="flex items-center justify-between">
-                                                <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black uppercase text-indigo-700 tracking-wider">
+                                                <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
                                                     {a.status}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase">{a.created_at}</span>
                                             </div>
-                                            <h3 className="mt-3 font-black text-slate-950 text-base">{a.title}</h3>
+                                            <h3 className="mt-3 text-base font-black text-slate-950">{a.title}</h3>
                                             <div className="mt-4 flex items-center justify-between">
-                                                <span className="text-xs text-slate-500 font-semibold">Target: {a.applies_to}</span>
+                                                <span className="text-xs font-semibold text-slate-500">Target: {a.applies_to}</span>
                                                 <Link
                                                     href={showAnnouncement.url(a.hashid as any)}
                                                     className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
@@ -433,8 +426,8 @@ export default function Show({
                                     ))
                                 ) : (
                                     <div className="col-span-full rounded-[32px] bg-white py-12 text-center shadow-xs ring-1 ring-slate-100">
-                                        <MegaphoneIcon className="mx-auto h-12 w-12 text-slate-350" />
-                                        <p className="mt-2 text-sm text-slate-500 font-semibold">No announcements sent to this property.</p>
+                                        <MegaphoneIcon className="text-slate-350 mx-auto h-12 w-12" />
+                                        <p className="mt-2 text-sm font-semibold text-slate-500">No announcements sent to this property.</p>
                                     </div>
                                 )}
                             </div>
@@ -446,7 +439,7 @@ export default function Show({
                         <div className="space-y-6">
                             <div>
                                 <h2 className="text-lg font-black text-slate-900">Activity Logs</h2>
-                                <p className="text-xs text-slate-550">Property transaction timelines.</p>
+                                <p className="text-slate-550 text-xs">Property transaction timelines.</p>
                             </div>
 
                             <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
@@ -457,7 +450,10 @@ export default function Show({
                                                 <li key={actIdx}>
                                                     <div className="relative pb-8">
                                                         {actIdx !== activities.length - 1 ? (
-                                                            <span className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-slate-100" aria-hidden="true" />
+                                                            <span
+                                                                className="absolute top-5 left-5 -ml-px h-full w-0.5 bg-slate-100"
+                                                                aria-hidden="true"
+                                                            />
                                                         ) : null}
                                                         <div className="relative flex items-start space-x-3">
                                                             <div className="relative">
@@ -466,12 +462,8 @@ export default function Show({
                                                                 </div>
                                                             </div>
                                                             <div className="min-w-0 flex-1 py-1.5">
-                                                                <p className="text-sm font-bold text-slate-900">
-                                                                    {act.description}
-                                                                </p>
-                                                                <p className="mt-1 text-xs text-slate-450 font-bold uppercase">
-                                                                    {act.date}
-                                                                </p>
+                                                                <p className="text-sm font-bold text-slate-900">{act.description}</p>
+                                                                <p className="text-slate-450 mt-1 text-xs font-bold uppercase">{act.date}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -480,9 +472,7 @@ export default function Show({
                                         </ul>
                                     </div>
                                 ) : (
-                                    <div className="py-12 text-center text-sm text-slate-400 font-semibold">
-                                        No recent property activities.
-                                    </div>
+                                    <div className="py-12 text-center text-sm font-semibold text-slate-400">No recent property activities.</div>
                                 )}
                             </div>
                         </div>

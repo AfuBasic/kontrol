@@ -132,7 +132,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
 
             {/* QR Code Segment */}
             <div className="relative flex flex-col items-center justify-center bg-slate-50/50 px-5 py-4">
-                <div className="relative overflow-hidden rounded-2xl bg-white p-3 border border-slate-100 transition-all hover:scale-102">
+                <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 transition-all hover:scale-102">
                     {/* Visual lock status */}
                     {!isActive && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">

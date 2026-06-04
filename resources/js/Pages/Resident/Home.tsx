@@ -84,10 +84,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                         animate={{ opacity: 1, y: 0 }}
                         className="rounded-[2.5rem] bg-gradient-to-br from-rose-50 to-white p-6 shadow-xl ring-1 shadow-rose-500/5 ring-rose-100/50"
                     >
-                        <Link
-                            href="/resident/dues"
-                            className="group flex items-center justify-between gap-4"
-                        >
+                        <Link href="/resident/dues" className="group flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 ring-1 ring-rose-200">
                                     <Wallet className="h-7 w-7" />
@@ -123,25 +120,25 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                                 View Board
                             </Link>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {latestAnnouncements.map((post) => (
-                                <Link 
-                                    key={post.id} 
+                                <Link
+                                    key={post.id}
                                     href={`/resident/estate-board/${post.hashid}`}
                                     className="group flex items-center gap-4 rounded-[24px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] ring-1 ring-slate-100 transition-all active:scale-[0.98]"
                                 >
                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
                                         <Megaphone className="h-6 w-6" />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="truncate text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="truncate text-sm font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
                                             {post.title}
                                         </h4>
-                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                                        <p className="mt-0.5 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
                                             {formatDistanceToNow(new Date(post.published_at || post.created_at), { addSuffix: true })}
                                         </p>
                                     </div>
-                                    <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-900 transition-colors" />
+                                    <ChevronRight className="h-5 w-5 text-slate-300 transition-colors group-hover:text-slate-900" />
                                 </Link>
                             ))}
                         </div>
@@ -191,7 +188,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
             </div>
 
             <CreateCodeBottomSheet isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
-            
+
             <AnimatePresence>
                 {showWelcome && (
                     <WelcomeSlideshow

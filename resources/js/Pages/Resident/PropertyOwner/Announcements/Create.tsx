@@ -1,8 +1,8 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { index, store } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 import { ArrowLeftIcon, UserIcon, BuildingOfficeIcon, MagnifyingGlassIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { useState, useMemo } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { index, store } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 
 interface TargetItem {
     type: 'user' | 'property';

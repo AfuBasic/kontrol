@@ -1,14 +1,23 @@
-import AdminLayout from '@/Layouts/AdminLayout';
+import {
+    PlusIcon,
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    XMarkIcon,
+    ChevronDownIcon,
+    ChevronRightIcon,
+    BuildingOffice2Icon,
+    UsersIcon,
+} from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect, useCallback } from 'react';
-import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ChevronDownIcon, ChevronRightIcon, BuildingOffice2Icon, UsersIcon } from '@heroicons/react/24/outline';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, Phone, MapPin, LinkIcon } from 'lucide-react';
-import { useDebounce } from '@/Hooks/useDebounce';
-import { usePermission } from '@/Hooks/usePermission';
-import PropertyOwnerActions from '@/Components/Admin/PropertyOwnerActions';
+import { useState, useEffect, useCallback } from 'react';
 import { index, create, properties, residents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
-import { AnimatePresence, motion } from 'framer-motion';
+import PropertyOwnerActions from '@/Components/Admin/PropertyOwnerActions';
+import { useDebounce } from '@/Hooks/useDebounce';
+import { usePermission } from '@/Hooks/usePermission';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface PropertyOwner {
     id: number;
@@ -82,7 +91,7 @@ export default function Index({ propertyOwners, filters }: Props) {
                             href={inviteLinkIndex.url()}
                             className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                         >
-                            <LinkIcon className="h-4 w-4 text-slate-550" />
+                            <LinkIcon className="text-slate-550 h-4 w-4" />
                             Manage Invite Link
                         </Link>
                         <Link
@@ -179,8 +188,8 @@ export default function Index({ propertyOwners, filters }: Props) {
                                                         owner.suspended_at
                                                             ? 'bg-rose-100 text-rose-700'
                                                             : owner.status === 'accepted'
-                                                            ? 'bg-emerald-100 text-emerald-700'
-                                                            : 'bg-amber-100 text-amber-700'
+                                                              ? 'bg-emerald-100 text-emerald-700'
+                                                              : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
                                                     {owner.suspended_at ? 'Suspended' : owner.status}
@@ -205,9 +214,9 @@ export default function Index({ propertyOwners, filters }: Props) {
                                         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
                                             <Link
                                                 href={properties.url(owner.ulid)}
-                                                className="flex items-center justify-between rounded-xl bg-slate-50 p-3 hover:bg-slate-100 transition-all"
+                                                className="flex items-center justify-between rounded-xl bg-slate-50 p-3 transition-all hover:bg-slate-100"
                                             >
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-550 uppercase">
+                                                <div className="text-slate-550 flex items-center gap-2 text-xs font-bold uppercase">
                                                     <BuildingOffice2Icon className="h-4.5 w-4.5 text-slate-400" />
                                                     Properties
                                                 </div>
@@ -215,9 +224,9 @@ export default function Index({ propertyOwners, filters }: Props) {
                                             </Link>
                                             <Link
                                                 href={residents.url(owner.ulid)}
-                                                className="flex items-center justify-between rounded-xl bg-slate-50 p-3 hover:bg-slate-100 transition-all"
+                                                className="flex items-center justify-between rounded-xl bg-slate-50 p-3 transition-all hover:bg-slate-100"
                                             >
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-550 uppercase">
+                                                <div className="text-slate-550 flex items-center gap-2 text-xs font-bold uppercase">
                                                     <UsersIcon className="h-4.5 w-4.5 text-slate-400" />
                                                     Residents
                                                 </div>
@@ -259,10 +268,7 @@ export default function Index({ propertyOwners, filters }: Props) {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 bg-white">
                                     {propertyOwners.data.map((owner) => (
-                                        <tr
-                                            key={owner.ulid}
-                                            className="transition-colors hover:bg-slate-50/50"
-                                        >
+                                        <tr key={owner.ulid} className="transition-colors hover:bg-slate-50/50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
@@ -287,7 +293,7 @@ export default function Index({ propertyOwners, filters }: Props) {
                                                     href={properties.url(owner.ulid)}
                                                     className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700"
                                                 >
-                                                    <BuildingOffice2Icon className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                                                    <BuildingOffice2Icon className="h-4.5 w-4.5 shrink-0 text-slate-400" />
                                                     {owner.properties_count}
                                                 </Link>
                                             </td>
@@ -296,7 +302,7 @@ export default function Index({ propertyOwners, filters }: Props) {
                                                     href={residents.url(owner.ulid)}
                                                     className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700"
                                                 >
-                                                    <UsersIcon className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                                                    <UsersIcon className="h-4.5 w-4.5 shrink-0 text-slate-400" />
                                                     {owner.residents_count}
                                                 </Link>
                                             </td>
@@ -306,8 +312,8 @@ export default function Index({ propertyOwners, filters }: Props) {
                                                         owner.suspended_at
                                                             ? 'bg-rose-100 text-rose-700'
                                                             : owner.status === 'accepted'
-                                                            ? 'bg-emerald-100 text-emerald-700'
-                                                            : 'bg-amber-100 text-amber-700'
+                                                              ? 'bg-emerald-100 text-emerald-700'
+                                                              : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
                                                     {owner.suspended_at ? 'Suspended' : owner.status}
@@ -324,9 +330,9 @@ export default function Index({ propertyOwners, filters }: Props) {
 
                         {/* Pagination Strategy */}
                         <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between w-full">
+                            <div className="hidden w-full sm:flex sm:flex-1 sm:items-center sm:justify-between">
                                 <div>
-                                    <p className="text-sm text-slate-705">
+                                    <p className="text-slate-705 text-sm">
                                         Showing <span className="font-bold">{propertyOwners.data.length}</span> entries of{' '}
                                         <span className="font-bold">{propertyOwners.total}</span>
                                     </p>
@@ -342,7 +348,7 @@ export default function Index({ propertyOwners, filters }: Props) {
                                                 className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
                                                     link.active
                                                         ? 'bg-slate-900 text-white shadow-sm'
-                                                        : 'bg-white text-slate-700 hover:bg-slate-50 shadow-xs ring-1 ring-slate-200'
+                                                        : 'bg-white text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-slate-50'
                                                 }`}
                                             />
                                         );

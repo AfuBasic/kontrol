@@ -81,7 +81,7 @@ export default function SecurityVerify() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({ logs: pending }),
@@ -401,7 +401,7 @@ export default function SecurityVerify() {
 
     const recordDecision = async (
         decision: 'admit' | 'reject',
-        extraData: { vehicle_make?: string; vehicle_model?: string; vehicle_plate_number?: string } = {}
+        extraData: { vehicle_make?: string; vehicle_model?: string; vehicle_plate_number?: string } = {},
     ) => {
         const code = submittedFor.current;
         if (!code) {
@@ -455,19 +455,17 @@ export default function SecurityVerify() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="mb-4 rounded-xl border border-amber-500/20 bg-amber-50/70 dark:bg-amber-950/20 p-3 text-amber-800 dark:text-amber-400 text-xs font-bold flex items-center justify-between shadow-sm"
+                            className="mb-4 flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-50/70 p-3 text-xs font-bold text-amber-800 shadow-sm dark:bg-amber-950/20 dark:text-amber-400"
                         >
                             <div className="flex items-center gap-2">
                                 <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
                                 </span>
                                 <span>Offline Mode Active</span>
                             </div>
                             {pendingLogsCount > 0 && (
-                                <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[10px]">
-                                    {pendingLogsCount} Pending Sync
-                                </span>
+                                <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[10px]">{pendingLogsCount} Pending Sync</span>
                             )}
                         </motion.div>
                     )}
@@ -476,7 +474,7 @@ export default function SecurityVerify() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="mb-4 rounded-xl border border-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/20 p-3 text-indigo-850 dark:text-indigo-400 text-xs font-bold flex items-center justify-between shadow-sm"
+                            className="text-indigo-850 mb-4 flex items-center justify-between rounded-xl border border-indigo-500/20 bg-indigo-50/70 p-3 text-xs font-bold shadow-sm dark:bg-indigo-950/20 dark:text-indigo-400"
                         >
                             <div className="flex items-center gap-2">
                                 <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
@@ -496,7 +494,7 @@ export default function SecurityVerify() {
                             className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
                         >
                             <div className="relative mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-slate-50 shadow-sm ring-1 ring-slate-200">
-                                <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
+                                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
                             </div>
                             <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Verification in progress</p>
                             <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900">Validating Access Code</h1>
@@ -636,28 +634,30 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                     <WifiOff className="h-12 w-12" />
                 </div>
                 <h2 className="text-3xl font-black tracking-tight text-slate-900">Code Not Recognized Offline</h2>
-                
+
                 <div className="mt-4 max-w-sm space-y-4 px-4 text-center">
-                    <p className="text-sm font-semibold text-slate-500 leading-relaxed">
-                        This code is not in our offline cache. If this code was created recently, connect this device to the internet to verify it online.
+                    <p className="text-sm leading-relaxed font-semibold text-slate-500">
+                        This code is not in our offline cache. If this code was created recently, connect this device to the internet to verify it
+                        online.
                     </p>
-                    
-                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs font-semibold text-indigo-850 leading-relaxed text-left dark:border-indigo-950/20 dark:bg-indigo-950/10 dark:text-indigo-400">
-                        <p className="font-extrabold uppercase tracking-wider text-[10px] mb-1">Visual Verification Option</p>
-                        If the visitor displays their valid app pass visually on their phone showing the resident's name, host's villa, and timestamp, you can manually admit them.
+
+                    <div className="text-indigo-850 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-left text-xs leading-relaxed font-semibold dark:border-indigo-950/20 dark:bg-indigo-950/10 dark:text-indigo-400">
+                        <p className="mb-1 text-[10px] font-extrabold tracking-wider uppercase">Visual Verification Option</p>
+                        If the visitor displays their valid app pass visually on their phone showing the resident's name, host's villa, and timestamp,
+                        you can manually admit them.
                     </div>
                 </div>
 
                 <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
                     <button
                         onClick={() => onAdmit({ override: true })}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95 cursor-pointer"
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95"
                     >
                         Manually Admit Visitor
                     </button>
                     <button
                         onClick={onReset}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-4 text-sm font-black text-slate-900 transition-all active:scale-95 cursor-pointer"
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-100 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
                     >
                         Try another code
                     </button>

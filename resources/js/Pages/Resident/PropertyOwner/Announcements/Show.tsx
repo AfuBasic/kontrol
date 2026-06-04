@@ -1,11 +1,7 @@
+import { MegaphoneIcon, ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { index, destroy } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { 
-    MegaphoneIcon, 
-    ArrowLeftIcon,
-    TrashIcon
-} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
+import { index, destroy } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 
 interface Target {
     type: string;
@@ -40,7 +36,7 @@ export default function Show({ announcement, targets }: Props) {
                 <div className="flex items-center gap-2">
                     <Link
                         href={index.url()}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-650 hover:bg-slate-50 shadow-xs ring-1 ring-slate-100 transition-all"
+                        className="text-slate-650 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all hover:bg-slate-50"
                     >
                         <ArrowLeftIcon className="h-5 w-5" />
                     </Link>
@@ -52,7 +48,7 @@ export default function Show({ announcement, targets }: Props) {
 
                 <button
                     onClick={handleDelete}
-                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-rose-50 px-4 text-xs font-bold text-rose-650 hover:bg-rose-100 hover:text-rose-700 transition-all"
+                    className="text-rose-650 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-rose-50 px-4 text-xs font-bold transition-all hover:bg-rose-100 hover:text-rose-700"
                 >
                     <TrashIcon className="h-4.5 w-4.5" />
                     Delete
@@ -72,11 +68,11 @@ export default function Show({ announcement, targets }: Props) {
                                 <MegaphoneIcon className="h-5 w-5" />
                             </div>
                             <div>
-                                <span className="text-xs text-slate-400 font-bold uppercase">Published Date</span>
+                                <span className="text-xs font-bold text-slate-400 uppercase">Published Date</span>
                                 <p className="text-xs font-black text-slate-900">{announcement.created_at}</p>
                             </div>
                         </div>
-                        <span className="inline-flex rounded-full bg-slate-50 px-3 py-1 text-xs font-bold uppercase text-slate-500 tracking-wider ring-1 ring-slate-100">
+                        <span className="inline-flex rounded-full bg-slate-50 px-3 py-1 text-xs font-bold tracking-wider text-slate-500 uppercase ring-1 ring-slate-100">
                             {announcement.applies_to === 'all' ? 'All Managed' : 'Targeted'}
                         </span>
                     </div>
@@ -85,27 +81,21 @@ export default function Show({ announcement, targets }: Props) {
                 {/* Announcement Body */}
                 <div className="prose max-w-none">
                     <h2 className="text-xl font-black text-slate-950">{announcement.title}</h2>
-                    <p className="mt-4 text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
-                        {announcement.body}
-                    </p>
+                    <p className="mt-4 text-sm leading-relaxed font-semibold whitespace-pre-wrap text-slate-700">{announcement.body}</p>
                 </div>
 
                 {/* Target Audience List */}
                 {announcement.applies_to === 'target' && (
-                    <div className="border-t border-slate-100 pt-6 space-y-3">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Recipients</h4>
-                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto rounded-2xl bg-slate-50 p-4">
+                    <div className="space-y-3 border-t border-slate-100 pt-6">
+                        <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Target Recipients</h4>
+                        <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-2xl bg-slate-50 p-4">
                             {targets.map((tgt, index) => (
                                 <span
                                     key={index}
-                                    className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-sm ring-1 ring-slate-150"
+                                    className="ring-slate-150 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-sm ring-1"
                                 >
-                                    <span className="text-[10px] font-bold uppercase text-slate-400">
-                                        {tgt.type}:
-                                    </span>
-                                    <span className="font-bold text-slate-900">
-                                        {tgt.name}
-                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">{tgt.type}:</span>
+                                    <span className="font-bold text-slate-900">{tgt.name}</span>
                                 </span>
                             ))}
                         </div>

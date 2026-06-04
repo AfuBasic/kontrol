@@ -1,17 +1,17 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { index, recordPayment } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
-import { 
-    WalletIcon, 
+import {
+    WalletIcon,
     ArrowLeftIcon,
     CalendarIcon,
     PlusIcon,
     CheckCircleIcon,
     ChevronRightIcon,
     ClockIcon,
-    XMarkIcon
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { index, recordPayment } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
 
 interface Assignment {
     id: number;
@@ -40,12 +40,7 @@ interface Props {
     outstanding: number;
 }
 
-export default function Show({
-    collection,
-    assignments,
-    collected,
-    outstanding
-}: Props) {
+export default function Show({ collection, assignments, collected, outstanding }: Props) {
     const [recordingAssignment, setRecordingAssignment] = useState<Assignment | null>(null);
 
     const paymentForm = useForm({
@@ -56,17 +51,17 @@ export default function Show({
     const handleRecordPayment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!recordingAssignment) return;
-        
+
         paymentForm.post(recordPayment.url(recordingAssignment.ulid), {
             onSuccess: () => {
                 setRecordingAssignment(null);
                 paymentForm.reset();
-            }
+            },
         });
     };
 
     const totalBillsCount = assignments.length;
-    const paidBillsCount = assignments.filter(a => a.status === 'paid').length;
+    const paidBillsCount = assignments.filter((a) => a.status === 'paid').length;
     const collectedPct = totalBillsCount > 0 ? Math.round((paidBillsCount / totalBillsCount) * 100) : 0;
 
     return (
@@ -77,7 +72,7 @@ export default function Show({
             <div className="flex items-center gap-3">
                 <Link
                     href={index.url()}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-655 hover:bg-slate-50 shadow-xs ring-1 ring-slate-100 transition-all"
+                    className="text-slate-655 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all hover:bg-slate-50"
                 >
                     <ArrowLeftIcon className="h-5 w-5" />
                 </Link>
@@ -90,26 +85,25 @@ export default function Show({
             {/* Collection Metrics */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Collected</h3>
+                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Collected</h3>
                     <p className="mt-2 text-2xl font-black text-slate-950">₦{collected.toLocaleString()}</p>
                 </div>
 
                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Outstanding Balance</h3>
-                    <p className="mt-2 text-2xl font-black text-slate-955">₦{outstanding.toLocaleString()}</p>
+                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Outstanding Balance</h3>
+                    <p className="text-slate-955 mt-2 text-2xl font-black">₦{outstanding.toLocaleString()}</p>
                 </div>
 
                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Collection Rate</h3>
+                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Collection Rate</h3>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-2xl font-black text-slate-950">{collectedPct}%</span>
-                        <span className="text-xs text-slate-400 font-bold">({paidBillsCount}/{totalBillsCount} paid)</span>
+                        <span className="text-xs font-bold text-slate-400">
+                            ({paidBillsCount}/{totalBillsCount} paid)
+                        </span>
                     </div>
                     <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                            className="h-full bg-indigo-650 transition-all duration-500"
-                            style={{ width: `${collectedPct}%` }}
-                        />
+                        <div className="bg-indigo-650 h-full transition-all duration-500" style={{ width: `${collectedPct}%` }} />
                     </div>
                 </div>
             </div>
@@ -117,8 +111,8 @@ export default function Show({
             {/* Billing details info */}
             {collection.description && (
                 <div className="rounded-[32px] bg-slate-50 p-6 ring-1 ring-slate-100">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</h4>
-                    <p className="mt-2 text-sm text-slate-700 leading-relaxed font-semibold">{collection.description}</p>
+                    <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Description</h4>
+                    <p className="mt-2 text-sm leading-relaxed font-semibold text-slate-700">{collection.description}</p>
                 </div>
             )}
 
@@ -131,18 +125,12 @@ export default function Show({
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead className="bg-slate-50/50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                        Resident
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                        Property
-                                    </th>
+                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Resident</th>
+                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Property</th>
                                     <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                         Amount Due
                                     </th>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                        Status
-                                    </th>
+                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
                                     <th className="relative px-6 py-4"></th>
                                 </tr>
                             </thead>
@@ -150,33 +138,31 @@ export default function Show({
                                 {assignments.map((asg) => (
                                     <tr key={asg.id}>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-slate-900">
-                                                {asg.resident_name}
-                                            </span>
+                                            <span className="text-sm font-bold text-slate-900">{asg.resident_name}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-slate-500">
-                                                {asg.property_name}
-                                            </span>
+                                            <span className="text-sm font-bold text-slate-500">{asg.property_name}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-bold text-slate-900">
                                                 ₦{(asg.amount_due - asg.amount_paid).toLocaleString()}
                                                 {asg.amount_paid > 0 && (
-                                                    <span className="ml-1.5 text-xs text-slate-400 font-bold">
+                                                    <span className="ml-1.5 text-xs font-bold text-slate-400">
                                                         (paid ₦{asg.amount_paid.toLocaleString()})
                                                     </span>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                                                asg.status === 'paid' 
-                                                    ? 'bg-emerald-100 text-emerald-700' 
-                                                    : asg.status === 'partial' 
-                                                    ? 'bg-amber-100 text-amber-700' 
-                                                    : 'bg-slate-100 text-slate-700'
-                                            }`}>
+                                            <span
+                                                className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                    asg.status === 'paid'
+                                                        ? 'bg-emerald-100 text-emerald-700'
+                                                        : asg.status === 'partial'
+                                                          ? 'bg-amber-100 text-amber-700'
+                                                          : 'bg-slate-100 text-slate-700'
+                                                }`}
+                                            >
                                                 {asg.status}
                                             </span>
                                         </td>
@@ -190,7 +176,7 @@ export default function Show({
                                                             reference: '',
                                                         });
                                                     }}
-                                                    className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-650 hover:bg-indigo-100 transition-colors"
+                                                    className="text-indigo-650 inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black transition-colors hover:bg-indigo-100"
                                                 >
                                                     Record Payment
                                                 </button>
@@ -201,7 +187,7 @@ export default function Show({
                             </tbody>
                         </table>
                     ) : (
-                        <div className="py-12 text-center text-sm text-slate-400 font-bold">
+                        <div className="py-12 text-center text-sm font-bold text-slate-400">
                             No billing targets matched for this collection sheet.
                         </div>
                     )}
@@ -217,7 +203,7 @@ export default function Show({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setRecordingAssignment(null)}
-                            className="absolute inset-0 bg-slate-905/60 backdrop-blur-xs"
+                            className="bg-slate-905/60 absolute inset-0 backdrop-blur-xs"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -229,7 +215,7 @@ export default function Show({
                                 <h3 className="text-lg font-black text-slate-950">Record Offline Payment</h3>
                                 <button
                                     onClick={() => setRecordingAssignment(null)}
-                                    className="rounded-xl p-1.5 hover:bg-slate-50 text-slate-400 hover:text-slate-650 transition-colors"
+                                    className="hover:text-slate-650 rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-50"
                                 >
                                     <XMarkIcon className="h-5 w-5" />
                                 </button>
@@ -238,13 +224,15 @@ export default function Show({
                             <form onSubmit={handleRecordPayment} className="mt-6 space-y-4">
                                 <div className="rounded-2xl bg-slate-50 p-4">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">Resident</p>
-                                    <p className="font-black text-slate-900 text-sm mt-0.5">{recordingAssignment.resident_name}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-3">Outstanding balance</p>
-                                    <p className="font-black text-slate-900 text-sm mt-0.5">₦{(recordingAssignment.amount_due - recordingAssignment.amount_paid).toLocaleString()}</p>
+                                    <p className="mt-0.5 text-sm font-black text-slate-900">{recordingAssignment.resident_name}</p>
+                                    <p className="mt-3 text-[10px] font-bold text-slate-400 uppercase">Outstanding balance</p>
+                                    <p className="mt-0.5 text-sm font-black text-slate-900">
+                                        ₦{(recordingAssignment.amount_due - recordingAssignment.amount_paid).toLocaleString()}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="payment-amount" className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    <label htmlFor="payment-amount" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                         Amount Received (₦)
                                     </label>
                                     <input
@@ -255,16 +243,14 @@ export default function Show({
                                         max={recordingAssignment.amount_due - recordingAssignment.amount_paid}
                                         value={paymentForm.data.amount}
                                         onChange={(e) => paymentForm.setData('amount', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-555"
+                                        className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
                                         placeholder="Amount"
                                     />
-                                    {paymentForm.errors.amount && (
-                                        <p className="mt-1 text-xs text-rose-600 font-bold">{paymentForm.errors.amount}</p>
-                                    )}
+                                    {paymentForm.errors.amount && <p className="mt-1 text-xs font-bold text-rose-600">{paymentForm.errors.amount}</p>}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="payment-reference" className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    <label htmlFor="payment-reference" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                         Reference / Note <span className="font-normal text-slate-400">(optional)</span>
                                     </label>
                                     <input
@@ -272,11 +258,11 @@ export default function Show({
                                         id="payment-reference"
                                         value={paymentForm.data.reference}
                                         onChange={(e) => paymentForm.setData('reference', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-555"
+                                        className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
                                         placeholder="e.g. Cash, Bank Transfer reference"
                                     />
                                     {paymentForm.errors.reference && (
-                                        <p className="mt-1 text-xs text-rose-600 font-bold">{paymentForm.errors.reference}</p>
+                                        <p className="mt-1 text-xs font-bold text-rose-600">{paymentForm.errors.reference}</p>
                                     )}
                                 </div>
 
@@ -284,14 +270,14 @@ export default function Show({
                                     <button
                                         type="button"
                                         onClick={() => setRecordingAssignment(null)}
-                                        className="rounded-2xl px-5 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors"
+                                        className="rounded-2xl px-5 py-3 text-sm font-bold text-slate-500 transition-colors hover:bg-slate-50"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={paymentForm.processing}
-                                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 transition-all"
+                                        className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
                                     >
                                         {paymentForm.processing ? 'Recording...' : 'Record Payment'}
                                     </button>

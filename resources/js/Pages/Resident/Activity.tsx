@@ -19,8 +19,8 @@ import {
     Loader2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
+import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import type { ActivityItem } from '@/types/access-code';
 

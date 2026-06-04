@@ -2,12 +2,12 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Power, RefreshCw, Share2, Trash2, AlertCircle, ArrowLeft, Clock, Users, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { index as propertyOwnersIndex, create as propertyOwnersCreate } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import {
     toggle as inviteLinkToggle,
     regenerate as inviteLinkRegenerate,
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
-import { index as propertyOwnersIndex, create as propertyOwnersCreate } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 interface InviteLinkProps {
@@ -140,7 +140,9 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                                                 {inviteLink.is_active ? 'Active' : 'Disabled'}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-500">Share this link with anyone you want to invite to the estate as a Property Owner.</p>
+                                        <p className="text-sm text-gray-500">
+                                            Share this link with anyone you want to invite to the estate as a Property Owner.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -322,7 +324,7 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                         <p className="mt-2 max-w-sm text-gray-500">You haven't generated a public property owner invite link for your estate yet.</p>
                         <Link
                             href={propertyOwnersCreate.url()}
-                            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-755 active:scale-95"
+                            className="hover:bg-blue-755 mt-8 inline-flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all active:scale-95"
                         >
                             <LinkIcon className="h-4 w-4" />
                             Generate My First Link

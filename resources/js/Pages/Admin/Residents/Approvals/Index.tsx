@@ -125,7 +125,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                 </Link>
                 <div>
                     <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">Pending Resident Applications</h1>
-                    <p className="mt-2 text-sm leading-relaxed font-medium text-slate-505">
+                    <p className="text-slate-505 mt-2 text-sm leading-relaxed font-medium">
                         Review and approve residents who signed up via the invite link.
                     </p>
                 </div>
@@ -140,7 +140,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by name or email..."
-                        className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-505/20"
+                        className="focus:ring-primary-505/20 w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2"
                     />
                 </form>
             </div>
@@ -169,7 +169,9 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                 <div>
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
-                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-105 text-indigo-700' : 'bg-emerald-105 text-emerald-700'}`}>
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-105 text-indigo-700' : 'bg-emerald-105 text-emerald-700'}`}
+                                                        >
                                                             {resident.is_property_owner ? 'Property Owner' : 'Resident'}
                                                         </span>
                                                     </div>
@@ -256,7 +258,9 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <div className="font-bold text-slate-900">{resident.name}</div>
-                                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                                <span
+                                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}
+                                                                >
                                                                     {resident.is_property_owner ? 'Property Owner' : 'Resident'}
                                                                 </span>
                                                             </div>

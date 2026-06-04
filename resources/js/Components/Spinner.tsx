@@ -17,7 +17,7 @@ export default function Spinner({ size = 'md', className = '', color = 'primary'
     return (
         <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 0.6, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
             className={`${sizes[size]} rounded-full border-t-2 border-r-2 ${color === 'white' ? 'border-white/20 border-t-white' : 'border-indigo-600/20 border-t-indigo-600'} ${className}`}
         />
     );

@@ -205,8 +205,10 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
     }, []);
 
     const isTrialExpired = subscription.status === 'trial' && subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date();
-    const isSubscriptionExpired = (subscription.status === 'active' || subscription.status === 'past_due') &&
-        subscription.current_period_end && new Date(subscription.current_period_end) < new Date();
+    const isSubscriptionExpired =
+        (subscription.status === 'active' || subscription.status === 'past_due') &&
+        subscription.current_period_end &&
+        new Date(subscription.current_period_end) < new Date();
 
     const getComputedStatus = (): SubscriptionStatus => {
         if (isTrialExpired || subscription.status === 'expired') {
@@ -248,9 +250,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
 
     if (isExpiringSoon) {
         displayLabel = subscription.status === 'trial' ? 'Trial expiring soon' : 'Subscription expiring soon';
-        displayDescription = subscription.status === 'trial'
-            ? `Current trial ${formatExpiresIn()}.`
-            : `Current subscription ${formatExpiresIn()}.`;
+        displayDescription = subscription.status === 'trial' ? `Current trial ${formatExpiresIn()}.` : `Current subscription ${formatExpiresIn()}.`;
         tone = TONE_STYLES['warning'];
     } else if (statusKey === 'expired') {
         displayLabel = isTrialExpired ? 'Trial expired' : 'Subscription expired';
@@ -361,7 +361,10 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                 <p className="mt-1.5 text-xs text-slate-500">
                                     {outstanding.invoice_count === 1 ? '1 invoice' : `${outstanding.invoice_count} invoices`} unpaid.
                                     {outstanding.next_due_date && (
-                                        <> Due by <span className="font-semibold text-slate-700">{formatDate(outstanding.next_due_date)}</span></>
+                                        <>
+                                            {' '}
+                                            Due by <span className="font-semibold text-slate-700">{formatDate(outstanding.next_due_date)}</span>
+                                        </>
                                     )}
                                 </p>
                             </div>
@@ -433,11 +436,13 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                     <dl className="mt-6 grid grid-cols-1 border-t border-slate-100">
                         <div className="px-6 py-4 sm:px-8">
                             <dt className="text-xs font-medium text-slate-500">
-                                {isTrialExpired ? 'Trial expired on' : (
-                                    isSubscriptionExpired || statusKey === 'expired' ? 'Subscription expired on' : (
-                                        statusKey === 'trial' ? 'Trial ends' : 'Next billing'
-                                    )
-                                )}
+                                {isTrialExpired
+                                    ? 'Trial expired on'
+                                    : isSubscriptionExpired || statusKey === 'expired'
+                                      ? 'Subscription expired on'
+                                      : statusKey === 'trial'
+                                        ? 'Trial ends'
+                                        : 'Next billing'}
                             </dt>
                             <dd className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</dd>
                         </div>

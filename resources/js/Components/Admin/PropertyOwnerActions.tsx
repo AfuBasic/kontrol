@@ -1,4 +1,12 @@
-import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, NoSymbolIcon, CheckCircleIcon, BuildingOffice2Icon, UsersIcon } from '@heroicons/react/24/outline';
+import {
+    ArrowPathIcon,
+    EllipsisVerticalIcon,
+    PencilIcon,
+    NoSymbolIcon,
+    CheckCircleIcon,
+    BuildingOffice2Icon,
+    UsersIcon,
+} from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';

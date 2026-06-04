@@ -252,7 +252,7 @@ function EditSheet({ open, onClose, user, mode }: { open: boolean; onClose: () =
                                 <X className="h-4 w-4" strokeWidth={2.4} />
                             </button>
                         </header>
- 
+
                         <form onSubmit={handleSubmit} className="space-y-4 px-5 pt-2 pb-6">
                             {mode === 'profile' && (
                                 <FormField label="Name" error={errors.name}>
@@ -276,7 +276,7 @@ function EditSheet({ open, onClose, user, mode }: { open: boolean; onClose: () =
                                             className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-300/40 focus:outline-none"
                                         />
                                     </FormField>
- 
+
                                     <FormField label="New password" error={errors.password}>
                                         <div className="relative">
                                             <input
@@ -295,7 +295,7 @@ function EditSheet({ open, onClose, user, mode }: { open: boolean; onClose: () =
                                             </button>
                                         </div>
                                     </FormField>
- 
+
                                     <FormField label="Confirm password" error={errors.password_confirmation as string | undefined}>
                                         <div className="relative">
                                             <input

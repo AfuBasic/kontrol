@@ -20,7 +20,7 @@ export default function SummaryDashboard({ activeCount, expectedToday, totalToda
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+            <div className="grid grid-cols-1 items-center gap-8 sm:grid-cols-2">
                 <div>
                     <div className="mb-2 flex items-end justify-between">
                         <div>

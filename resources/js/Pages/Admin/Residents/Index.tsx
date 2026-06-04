@@ -362,7 +362,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
                                                         {resident.is_property_owner && (
-                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
+                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-700 uppercase">
                                                                 Property Owner
                                                             </span>
                                                         )}
@@ -479,7 +479,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                         <div className="flex items-center gap-2">
                                                             <div className="text-sm font-bold text-slate-900">{resident.name}</div>
                                                             {resident.is_property_owner && (
-                                                                <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
+                                                                <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-700 uppercase">
                                                                     Property Owner
                                                                 </span>
                                                             )}
