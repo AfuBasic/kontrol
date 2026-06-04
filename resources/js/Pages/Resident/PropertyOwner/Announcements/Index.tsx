@@ -1,11 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { create, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { 
-    MegaphoneIcon, 
-    PlusIcon, 
-    TrashIcon,
-    ChevronRightIcon
-} from '@heroicons/react/24/outline';
+import { MegaphoneIcon, PlusIcon, TrashIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface Announcement {
     id: number;
@@ -36,16 +31,14 @@ export default function Index({ announcements }: Props) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-slate-900">Announcements</h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Broadcast important updates, alerts, and instructions to your occupants.
-                    </p>
+                    <p className="mt-1 text-sm text-slate-500">Broadcast important updates, alerts, and instructions to your occupants.</p>
                 </div>
                 <Link
                     href={create.url()}
-                    className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-655/15 hover:bg-indigo-700 active:scale-98 transition-all"
+                    className="shadow-indigo-655/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98"
                 >
                     <PlusIcon className="h-5 w-5" />
-                    New Notice
+                    New Announcement
                 </Link>
             </div>
 
@@ -63,7 +56,7 @@ export default function Index({ announcements }: Props) {
                                     </div>
                                     <button
                                         onClick={() => deleteAnnouncement(ann.hashid)}
-                                        className="rounded-xl p-1.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-50 text-slate-400 hover:text-rose-600"
+                                        className="rounded-xl p-1.5 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600"
                                         title="Delete Broadcast"
                                     >
                                         <TrashIcon className="h-4.5 w-4.5" />
@@ -73,38 +66,32 @@ export default function Index({ announcements }: Props) {
                                 <div className="mt-4">
                                     <Link
                                         href={show.url(ann.hashid as any)}
-                                        className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1"
+                                        className="line-clamp-1 text-base font-black text-slate-900 transition-colors group-hover:text-indigo-600"
                                     >
                                         {ann.title}
                                     </Link>
-                                    <p className="mt-2 text-xs text-slate-500 font-semibold line-clamp-3">
-                                        {ann.body}
-                                    </p>
+                                    <p className="mt-2 line-clamp-3 text-xs font-semibold text-slate-500">{ann.body}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
-                                <div className="text-xs text-slate-450 font-bold uppercase">
+                            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                                <div className="text-slate-450 text-xs font-bold uppercase">
                                     Target: {ann.applies_to === 'all' ? 'All Residents' : `${ann.targets_count} custom`}
                                 </div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">
-                                    {ann.created_at}
-                                </div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">{ann.created_at}</div>
                             </div>
                         </div>
                     ))
                 ) : (
                     <div className="col-span-full rounded-[32px] bg-white py-16 text-center shadow-xs ring-1 ring-slate-100">
-                        <MegaphoneIcon className="mx-auto h-12 w-12 text-slate-350" />
+                        <MegaphoneIcon className="text-slate-350 mx-auto h-12 w-12" />
                         <h3 className="mt-4 text-lg font-black text-slate-900">No Announcements Sent</h3>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Broadcast messages to alert your residents about updates or bills.
-                        </p>
+                        <p className="mt-1 text-sm text-slate-500">Broadcast messages to alert your residents about updates or bills.</p>
                         <Link
                             href={create.url()}
-                            className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-all"
+                            className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
                         >
-                            Write First Notice
+                            Write First Announcement
                         </Link>
                     </div>
                 )}
