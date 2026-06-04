@@ -97,7 +97,7 @@ export default function SecurityVerify() {
             const pending = await offlineDb.getPendingLogs();
             if (pending.length > 0) {
                 const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
-                const response = await fetch('/verify/sync', {
+                const response = await fetch('/security/verify/sync', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ export default function SecurityVerify() {
             }
 
             // 2. Fetch new active code hashes to cache
-            const response = await fetch('/verify/sync');
+            const response = await fetch('/security/verify/sync');
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.codes) {
@@ -481,33 +481,54 @@ export default function SecurityVerify() {
                 <AnimatePresence>
                     {!isOnline && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="mb-4 flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-50/70 p-3 text-xs font-bold text-amber-800 shadow-sm dark:bg-amber-950/20 dark:text-amber-400"
+                            initial={{ height: 0, opacity: 0, y: -10 }}
+                            animate={{ height: 'auto', opacity: 1, y: 0 }}
+                            exit={{ height: 0, opacity: 0, y: -10 }}
+                            className="mb-6 overflow-hidden"
                         >
-                            <div className="flex items-center gap-2">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-                                </span>
-                                <span>Offline Mode Active</span>
+                            <div className="flex items-center justify-between rounded-2xl border border-amber-500/15 bg-linear-to-r from-amber-500/8 via-orange-500/5 to-amber-500/8 p-3.5 shadow-sm backdrop-blur-md dark:border-amber-500/10 dark:from-amber-500/5 dark:to-orange-500/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+                                        <WifiOff className="h-4.5 w-4.5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-extrabold tracking-wide text-amber-800 dark:text-amber-400">
+                                            Offline Mode Active
+                                        </span>
+                                        <span className="text-[10px] font-bold text-amber-600/85 dark:text-amber-500/80">
+                                            Verifying codes locally via encrypted cache
+                                        </span>
+                                    </div>
+                                </div>
+                                {pendingLogsCount > 0 && (
+                                    <span className="rounded-lg bg-amber-500/15 px-2.5 py-1 font-mono text-[10px] font-black tracking-wider text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                                        {pendingLogsCount} Queue
+                                    </span>
+                                )}
                             </div>
-                            {pendingLogsCount > 0 && (
-                                <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[10px]">{pendingLogsCount} Pending Sync</span>
-                            )}
                         </motion.div>
                     )}
                     {isOnline && pendingLogsCount > 0 && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="text-indigo-850 mb-4 flex items-center justify-between rounded-xl border border-indigo-500/20 bg-indigo-50/70 p-3 text-xs font-bold shadow-sm dark:bg-indigo-950/20 dark:text-indigo-400"
+                            initial={{ height: 0, opacity: 0, y: -10 }}
+                            animate={{ height: 'auto', opacity: 1, y: 0 }}
+                            exit={{ height: 0, opacity: 0, y: -10 }}
+                            className="mb-6 overflow-hidden"
                         >
-                            <div className="flex items-center gap-2">
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
-                                <span>Syncing {pendingLogsCount} queued check-ins...</span>
+                            <div className="flex items-center justify-between rounded-2xl border border-indigo-500/15 bg-linear-to-r from-indigo-500/8 via-purple-500/5 to-indigo-500/8 p-3.5 shadow-sm backdrop-blur-md dark:border-indigo-500/10 dark:from-indigo-500/5 dark:to-purple-500/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
+                                        <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-extrabold tracking-wide text-indigo-800 dark:text-indigo-400">
+                                            Synchronizing Logs
+                                        </span>
+                                        <span className="text-[10px] font-bold text-indigo-600/85 dark:text-indigo-500/85">
+                                            Uploading {pendingLogsCount} queued check-ins to server...
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     )}
