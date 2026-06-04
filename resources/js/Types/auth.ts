@@ -35,6 +35,7 @@ export type User = {
     created_at: string;
     updated_at: string;
     current_estate_id?: number;
+    property_owner_id?: number | null;
     notifications?: {
         id: string;
         data: Record<string, unknown>;

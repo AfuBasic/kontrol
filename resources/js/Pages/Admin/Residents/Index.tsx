@@ -22,6 +22,7 @@ type Resident = {
     email: string;
     phone: string | null;
     unit_number: string | null;
+    property_owner_name: string | null;
     status: 'pending' | 'accepted';
     is_property_owner: boolean;
     suspended_at: string | null;
@@ -370,6 +371,12 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                         <MapPin className="h-3 w-3" />
                                                         {resident.unit_number || 'Unit Pending'}
                                                     </div>
+                                                    {resident.property_owner_name && (
+                                                        <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                                            <User className="h-2.5 w-2.5" />
+                                                            via {resident.property_owner_name}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -468,12 +475,20 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
                                                         {resident.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="text-sm font-bold text-slate-900">{resident.name}</div>
-                                                        {resident.is_property_owner && (
-                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
-                                                                Property Owner
-                                                            </span>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="text-sm font-bold text-slate-900">{resident.name}</div>
+                                                            {resident.is_property_owner && (
+                                                                <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase text-indigo-700">
+                                                                    Property Owner
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {resident.property_owner_name && (
+                                                            <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                                                <User className="h-2.5 w-2.5" />
+                                                                via {resident.property_owner_name}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>

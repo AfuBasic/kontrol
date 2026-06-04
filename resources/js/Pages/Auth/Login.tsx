@@ -1,8 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, Megaphone, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
@@ -20,15 +20,76 @@ export default function Login() {
     const { data, setData, post, processing, errors, clearErrors } = useForm({
         email: '',
         password: '',
-        remember: false,
+        remember: true, // Always remember the user by default
     });
 
     const [showPassword, setShowPassword] = useState(false);
     const [googleError, setGoogleError] = useState('');
     const [showGoogleError, setShowGoogleError] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-
     const [loginError, setLoginError] = useState<string | null>(null);
+
+    // Onboarding welcome slides state
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const onboardingSlides = [
+        {
+            title: 'Welcome to Kontrol',
+            subtitle: 'Estate access, simplified',
+            description: 'Experience a smarter, safer way of living. Manage visitors, stay informed, and settle dues in one unified platform.',
+            icon: Sparkles,
+            themeBg: 'bg-indigo-600',
+        },
+        {
+            title: 'Easy Guest Access',
+            subtitle: 'Secure Access Control',
+            description: 'Generate temporary gate codes for your family, friends, or delivery agents. Get notified in real-time when they arrive.',
+            icon: Key,
+            themeBg: 'bg-blue-600',
+        },
+        {
+            title: 'Pay Dues in a Tap',
+            subtitle: 'Hassle-Free Payments',
+            description: 'Track and pay your outstanding estate dues, levies, and recurring bills securely all in one place.',
+            icon: Wallet,
+            themeBg: 'bg-purple-600',
+        },
+        {
+            title: 'Report Incidents',
+            subtitle: 'Quick Safety Updates',
+            description:
+                'Report security concerns, maintenance issues, or emergencies immediately. Keep the estate security and admins updated in realtime.',
+            icon: AlertTriangle,
+            themeBg: 'bg-rose-500',
+        },
+    ];
+
+    useEffect(() => {
+        const hasSeenOnboarding = localStorage.getItem('seen_public_onboarding');
+        if (!hasSeenOnboarding) {
+            setShowOnboarding(true);
+        }
+    }, []);
+
+    const handleOnboardingComplete = () => {
+        localStorage.setItem('seen_public_onboarding', 'true');
+        setShowOnboarding(false);
+    };
+
+    const nextSlide = () => {
+        if (currentSlide < onboardingSlides.length - 1) {
+            setCurrentSlide(currentSlide + 1);
+        } else {
+            handleOnboardingComplete();
+        }
+    };
+
+    const prevSlide = () => {
+        if (currentSlide > 0) {
+            setCurrentSlide(currentSlide - 1);
+        }
+    };
 
     // Sync external errors to local state on initial mount
     useEffect(() => {
@@ -125,13 +186,127 @@ export default function Login() {
         }
     }
 
+    if (showOnboarding) {
+        const slide = onboardingSlides[currentSlide];
+        const IconComponent = slide.icon;
+
+        return (
+            <>
+                <Head title="Welcome" />
+                <div className="bg-slate-955 fixed inset-0 z-50 flex items-center justify-center bg-slate-950 p-4">
+                    {/* Decorative Background Glows */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-primary-500/40 via-indigo-500/25 to-transparent blur-[100px]" />
+                        <div className="absolute -bottom-28 -left-16 h-[360px] w-[360px] rounded-full bg-linear-to-tr from-indigo-500/30 via-primary-500/15 to-transparent blur-[90px]" />
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="relative z-10 flex min-h-[500px] w-full max-w-md flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-indigo-950/25 sm:max-w-lg"
+                    >
+                        {/* Skip button (top-right) */}
+                        <button
+                            onClick={handleOnboardingComplete}
+                            className="absolute top-6 right-6 z-[60] cursor-pointer text-xs font-semibold text-slate-400 transition-colors hover:text-slate-600"
+                        >
+                            Skip
+                        </button>
+
+                        <div className="overflow-hidden">
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.div
+                                    key={currentSlide}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                    className="w-full"
+                                >
+                                    {/* Header Panel */}
+                                    <div className="flex flex-col items-center bg-slate-950 px-8 py-10 text-center text-white sm:px-10 sm:py-12">
+                                        <div
+                                            className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl sm:h-20 sm:w-20 ${slide.themeBg} text-white shadow-lg`}
+                                        >
+                                            <IconComponent className="h-8 w-8 text-white sm:h-10 sm:w-10" />
+                                        </div>
+
+                                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase sm:text-xs">
+                                            {slide.subtitle}
+                                        </span>
+                                        <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">{slide.title}</h2>
+                                    </div>
+
+                                    {/* Content Description */}
+                                    <div className="px-8 py-8 sm:px-10 sm:py-10">
+                                        <div className="flex min-h-[88px] items-center justify-center text-center sm:min-h-[104px]">
+                                            <p className="text-sm leading-relaxed font-medium text-slate-700 sm:text-base">{slide.description}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Controls / Dots Footer */}
+                        <div className="px-8 pb-8 sm:px-10 sm:pb-10">
+                            {/* Progress Dots Indicator */}
+                            <div className="flex justify-center gap-2">
+                                {onboardingSlides.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentSlide(i)}
+                                        className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
+                                            currentSlide === i ? 'w-6 bg-slate-900' : 'w-1.5 bg-slate-200'
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Controls Footer */}
+                            <div className="mt-8 flex items-center justify-between gap-4">
+                                {currentSlide > 0 ? (
+                                    <button
+                                        onClick={prevSlide}
+                                        className="cursor-pointer rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-50 sm:px-5 sm:py-3 sm:text-sm"
+                                    >
+                                        Back
+                                    </button>
+                                ) : (
+                                    <div />
+                                )}
+
+                                <button
+                                    onClick={nextSlide}
+                                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all active:scale-95 sm:px-6 sm:py-3 sm:text-sm ${
+                                        currentSlide === onboardingSlides.length - 1
+                                            ? 'bg-indigo-600 hover:bg-indigo-700'
+                                            : 'bg-slate-900 hover:bg-slate-800'
+                                    }`}
+                                >
+                                    {currentSlide === onboardingSlides.length - 1 ? (
+                                        <>Proceed to Login</>
+                                    ) : (
+                                        <>
+                                            Next
+                                            <ChevronRight className="h-3.5 w-3.5" />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <Head title="Sign in" />
 
-            <div className="min-h-screen bg-white lg:flex">
-                {/* Branded panel — full-width hero on mobile, left side on desktop */}
-                <div className="relative overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
+            <div className="flex min-h-screen flex-col bg-white lg:flex-row">
+                {/* Branded panel — hidden on mobile, left side on desktop */}
+                <div className="relative hidden overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
                         <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-primary-500/40 via-indigo-500/25 to-transparent blur-[100px] lg:-top-32 lg:-right-24 lg:h-[520px] lg:w-[520px] lg:blur-[120px]" />
                         <div className="absolute -bottom-28 -left-16 h-[360px] w-[360px] rounded-full bg-linear-to-tr from-indigo-500/30 via-primary-500/15 to-transparent blur-[90px] lg:-bottom-24 lg:-left-24 lg:h-[420px] lg:w-[420px] lg:blur-[100px]" />
@@ -150,23 +325,6 @@ export default function Login() {
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-10 w-10 rounded-xl lg:h-9 lg:w-9" />
                             <span className="text-xl font-semibold tracking-tight text-white lg:text-lg">Kontrol</span>
                         </Link>
-
-                        {/* Mobile welcome heading (desktop has it in the form) */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
-                            className="mt-12 lg:hidden"
-                        >
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium tracking-wide text-slate-300 backdrop-blur">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                Estate access, simplified
-                            </span>
-                            <h1 className="mt-4 text-[2rem] leading-tight font-semibold tracking-tight text-white">Welcome back.</h1>
-                            <p className="mt-2.5 max-w-xs text-sm leading-relaxed text-slate-400">
-                                Sign in to manage visitor codes, residents, and gate activity across your estate.
-                            </p>
-                        </motion.div>
 
                         {/* Desktop: product mock */}
                         <div className="hidden flex-1 items-center justify-center py-12 lg:flex">
@@ -200,9 +358,17 @@ export default function Login() {
                     </div>
                 </div>
 
-                {/* Form panel — floating card on mobile, side panel on desktop */}
-                <div className="relative -mt-12 flex flex-1 flex-col rounded-t-[28px] bg-white px-6 pt-8 pb-10 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.35)] sm:px-10 sm:pt-10 lg:mt-0 lg:w-1/2 lg:justify-center lg:rounded-none lg:px-16 lg:py-12 lg:shadow-none xl:px-24">
+                {/* Form panel — simple full-screen centered login on mobile, side panel on desktop */}
+                <div className="flex flex-1 flex-col justify-center bg-white px-6 py-12 sm:px-10 lg:w-1/2 lg:px-16 lg:py-12 xl:px-24">
                     <div className="mx-auto w-full max-w-sm">
+                        {/* Logo on mobile/native */}
+                        <div className="mb-8 flex flex-col items-center lg:hidden">
+                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-16 w-16 rounded-2xl" />
+                            <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+                            <p className="mt-1 text-sm text-slate-500">Sign in to your estate</p>
+                        </div>
+
+                        {/* Title on desktop */}
                         <motion.div
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -210,7 +376,7 @@ export default function Login() {
                             className="hidden lg:block"
                         >
                             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Welcome back</h1>
-                            <p className="mt-2 text-sm text-slate-500">Sign in to manage your estate.</p>
+                            <p className="mt-2 text-sm text-slate-500">Sign in to your estate.</p>
                         </motion.div>
 
                         {flash?.success && (
@@ -227,7 +393,7 @@ export default function Login() {
                             <motion.div
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6 lg:block"
+                                className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:mt-6"
                             >
                                 {loginError}
                             </motion.div>
@@ -297,16 +463,6 @@ export default function Login() {
                                 </div>
                                 {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
                             </div>
-
-                            <label className="flex cursor-pointer items-center gap-2.5">
-                                <input
-                                    type="checkbox"
-                                    checked={data.remember}
-                                    onChange={(e) => setData('remember', e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm text-slate-600">Keep me signed in</span>
-                            </label>
 
                             <button
                                 type="submit"

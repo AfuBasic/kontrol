@@ -4,20 +4,7 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Bell,
-    Home,
-    Users,
-    User,
-    Plus,
-    Wallet,
-    Megaphone,
-    Building,
-    ClipboardList,
-    UserCheck,
-    Menu,
-    X,
-} from 'lucide-react';
+import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -332,9 +319,21 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const hasAccessCodes = useFeature('access-code-generation');
     const hasVisitFeed = useFeature('real-time-visit-feed');
-
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+    const hasHousehold = useFeature('household-management');
+    const hasPaymentCollection = useFeature('payment-collection');
+    const hasNoticeBoard = useFeature('interactive-notice-board');
+    const isHouseholdMember = auth?.user?.roles?.includes('household_member') && !auth?.user?.roles?.includes('resident');
+
+    const residentMoreItems = [
+        { name: 'Profile', href: '/resident/profile', icon: User },
+        ...(hasHousehold && !isHouseholdMember ? [{ name: 'Household', href: '/resident/household', icon: UserCheck }] : []),
+        ...(!isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
+        ...(!isHouseholdMember ? [{ name: 'SOS Contacts', href: '/resident/profile?open=emergency_management', icon: Shield }] : []),
+        ...(hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
+    ];
 
     const navItems = [
         {
@@ -366,9 +365,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             ),
         },
         {
-            name: 'Profile',
-            href: '/resident/profile',
-            icon: (active: boolean) => <User className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            name: 'More',
+            href: '#more',
+            icon: (active: boolean) => <Menu className="h-6 w-6" />,
             show: true,
         },
     ].filter((item) => item.show !== false);
@@ -402,16 +401,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'More',
             href: '#more',
-            icon: (active: boolean) => <Menu className={`h-6 w-6`} />,
+            icon: (active: boolean) => <Menu className="h-6 w-6" />,
         },
     ];
 
     const poSidebarItems = [
         { name: 'Home', href: '/resident/home', icon: Home },
         { name: 'Residents', href: '/resident/property-owner/residents', icon: Users },
-        { name: 'Collections', href: '/resident/property-owner/collections', icon: Wallet },
-        { name: 'Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
         { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
+        { name: 'Manage Dues', href: '/resident/property-owner/collections', icon: Wallet },
+        { name: 'Estate Dues', href: '/resident/dues', icon: Wallet },
+        { name: 'Manage Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
+        { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
         { name: 'Visitor Passes', href: '/resident/visitors', icon: ClipboardList },
         { name: 'Household Members', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
@@ -471,6 +472,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             href="/logout"
                             method="post"
                             as="button"
+                            onClick={() => localStorage.removeItem('seen_resident_welcome')}
                             className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 transition-all hover:bg-rose-50/50"
                         >
                             Sign out
@@ -506,7 +508,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
                     )}
-                    <PullToRefresh className="p-0">{children}</PullToRefresh>
+                    <PullToRefresh className="px-2 md:px-10">{children}</PullToRefresh>
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}
@@ -531,6 +533,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                     <Plus className="h-7 w-7" strokeWidth={3} />
                                                 </motion.button>
                                             </div>
+                                        );
+                                    }
+
+                                    if (item.name === 'More') {
+                                        return (
+                                            <button
+                                                key={item.name}
+                                                onClick={() => setMoreMenuOpen(true)}
+                                                className="group hover:text-slate-650 relative flex flex-1 cursor-pointer flex-col items-center gap-1 text-slate-400"
+                                            >
+                                                <div className="rounded-xl p-2.5 transition-all">{item.icon(false)}</div>
+                                            </button>
                                         );
                                     }
 
@@ -622,7 +636,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 )}
             </div>
 
-            {/* Mobile Property Owner 'More' Slide-up Menu Drawer */}
+            {/* Mobile Property Owner & Resident 'More' Slide-up Menu Drawer */}
             <AnimatePresence>
                 {moreMenuOpen && (
                     <>
@@ -631,18 +645,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setMoreMenuOpen(false)}
-                            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs md:hidden"
+                            className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-xs ${isPropertyOwner ? 'md:hidden' : ''}`}
                         />
                         <motion.div
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-x-0 bottom-0 z-50 rounded-t-[40px] border-t border-slate-100 bg-white p-6 pb-12 shadow-2xl md:hidden"
+                            className={`fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-[40px] border-t border-slate-100 bg-white p-6 pb-12 shadow-2xl ${isPropertyOwner ? 'md:hidden' : ''}`}
                         >
                             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
                             <div className="mb-6 flex items-center justify-between">
-                                <h3 className="text-lg font-black text-slate-900">Manage Estate</h3>
+                                <h3 className="text-lg font-black text-slate-900">{isPropertyOwner ? 'Manage Estate' : 'More Options'}</h3>
                                 <button
                                     onClick={() => setMoreMenuOpen(false)}
                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400"
@@ -651,7 +665,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 </button>
                             </div>
                             <div className="grid grid-cols-3 gap-4">
-                                {poSidebarItems.map((item) => {
+                                {(isPropertyOwner ? poSidebarItems : residentMoreItems).map((item) => {
                                     if (item.name === 'SOS') {
                                         return (
                                             <div key={item.name} className="flex flex-col items-center gap-1.5">

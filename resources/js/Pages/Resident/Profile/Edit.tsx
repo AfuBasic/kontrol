@@ -74,11 +74,11 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                 const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
                 await FirebaseAuthentication.signOut().catch(() => {});
             }
-            router.post('/logout');
         } catch (error) {
-            console.error('Logout failed:', error);
-            setLoggingOut(false);
-            window.location.href = '/login';
+            console.error('Logout failed (Firebase):', error);
+        } finally {
+            localStorage.removeItem('seen_resident_welcome');
+            router.post('/logout');
         }
     };
 
@@ -103,7 +103,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
 
     return (
         <>
-            <Head title="Profile Hub" />
+            <Head title="Profile" />
 
             <div className="flex flex-col gap-8 pb-32">
                 {/* 1. PREMIUM PROFILE HEADER */}
@@ -242,7 +242,16 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     {/* Logout */}
                     <div className="px-2">
                         <button
-                            onClick={() => setShowLogoutConfirmation(true)}
+                            onClick={() => {
+                                const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                                if (isIPadOrDesktop) {
+                                    if (window.confirm("Are you sure you want to sign out of your account?")) {
+                                        handleLogout();
+                                    }
+                                } else {
+                                    setShowLogoutConfirmation(true);
+                                }
+                            }}
                             className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
                         >
                             <LogOut className="h-5 w-5" />
@@ -369,7 +378,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                     />
                     {errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{errors.name}</p>}
                 </div>
@@ -383,7 +392,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                                 value={data.unit_number}
                                 onChange={(e) => setData('unit_number', e.target.value)}
                                 placeholder="e.g. Block A, Flat 5"
-                                className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             />
                         </div>
 
@@ -394,7 +403,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                                 value={data.address}
                                 onChange={(e) => setData('address', e.target.value)}
                                 placeholder="e.g. Lekki Gardens Estate, Lekki, Lagos"
-                                className="w-full resize-none rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="w-full resize-none rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             />
                         </div>
                     </>
@@ -443,7 +452,7 @@ function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
                             type={showCurrent ? 'text' : 'password'}
                             value={data.current_password}
                             onChange={(e) => setData('current_password', e.target.value)}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold text-slate-900 shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                         />
                         <button
                             type="button"
@@ -463,7 +472,7 @@ function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
                             type={showNew ? 'text' : 'password'}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold text-slate-900 shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                         />
                         <button
                             type="button"
@@ -590,7 +599,16 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => setContactToDelete({ id: contact.id, name: contact.name })}
+                                    onClick={() => {
+                                        const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                                        if (isIPadOrDesktop) {
+                                            if (window.confirm(`Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`)) {
+                                                router.delete(EmergencyContactController.destroy.url(contact.id));
+                                            }
+                                        } else {
+                                            setContactToDelete({ id: contact.id, name: contact.name });
+                                        }
+                                    }}
                                     className="flex h-12 w-12 items-center justify-center rounded-full text-slate-300 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
                                 >
                                     <X className="h-6 w-6" />
@@ -650,7 +668,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         required
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                     />
                 </div>
                 <div className="group relative">
@@ -661,7 +679,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         required
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                     />
                 </div>
                 <div className="group relative">
@@ -671,7 +689,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                         placeholder="e.g. Spouse, Brother"
                         value={data.relationship || ''}
                         onChange={(e) => setData('relationship', e.target.value)}
-                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                        className="w-full rounded-[24px] border border-slate-100 bg-slate-50 px-6 py-5 text-base font-bold text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                     />
                 </div>
             </div>

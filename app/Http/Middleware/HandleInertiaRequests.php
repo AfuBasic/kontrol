@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 setPermissionsTeamId($estate->id);
             }
 
+            $user->loadMissing('profile');
             $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
             $roles = $user->getRoleNames()->toArray();
         }
@@ -67,6 +68,7 @@ class HandleInertiaRequests extends Middleware
                     'current_estate_id' => $estate?->id,
                     'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,
+                    'property_owner_id' => $user->profile?->property_owner_id,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
                         'id' => $n->id,

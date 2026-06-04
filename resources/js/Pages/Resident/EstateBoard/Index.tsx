@@ -68,7 +68,7 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                         <div className="flex flex-col items-end gap-1">
                             {post.property_owner_id ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                    <Home className="h-2 w-2" /> Landlord Notice
+                                    <Home className="h-2 w-2" /> House Update
                                 </span>
                             ) : (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50">
@@ -135,12 +135,13 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
 
 export default function EstateBoardIndex({ posts, filter }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const hasLandlord = !!auth?.user?.profile?.property_owner_id;
+    const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
+    const hasLandlord = !!auth?.user?.property_owner_id;
+    const showTabs = isPropertyOwner || hasLandlord;
 
     const tabs = [
-        { id: null, label: 'All Updates' },
-        { id: 'estate', label: 'Estate Notices' },
-        ...(hasLandlord ? [{ id: 'property_owner', label: 'Landlord Notices' }] : []),
+        { id: 'estate', label: 'Estate' },
+        { id: 'property_owner', label: 'My House' },
     ];
 
     const handleFilterChange = (filterId: string | null) => {
@@ -204,33 +205,35 @@ export default function EstateBoardIndex({ posts, filter }: Props) {
                 <p className="mt-1 text-sm text-gray-500">Updates from your community</p>
             </motion.div>
 
-            {/* Filter Tabs */}
-            <div className="mb-6">
-                <div className="flex rounded-xl bg-slate-100 p-1 max-w-md">
-                    {tabs.map((tab) => {
-                        const isActive = (filter === null && tab.id === null) || (filter === tab.id);
-                        return (
-                            <button
-                                key={tab.id ?? 'all'}
-                                type="button"
-                                onClick={() => handleFilterChange(tab.id)}
-                                className={`relative flex flex-1 items-center justify-center rounded-lg py-2 text-xs font-semibold transition-all ${
-                                    isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeFeedFilter"
-                                        className="absolute inset-0 rounded-lg bg-white shadow-xs"
-                                        transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
-                                    />
-                                )}
-                                <span className="relative z-10">{tab.label}</span>
-                            </button>
-                        );
-                    })}
+            {/* Filter Tabs — only for property owners and residents with a landlord */}
+            {showTabs && (
+                <div className="mb-6">
+                    <div className="flex rounded-xl bg-slate-100 p-1 max-w-xs">
+                        {tabs.map((tab) => {
+                            const isActive = filter === tab.id || (filter === null && tab.id === 'estate');
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => handleFilterChange(tab.id)}
+                                    className={`relative flex flex-1 items-center justify-center rounded-lg py-2 text-xs font-semibold transition-all ${
+                                        isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeFeedFilter"
+                                            className="absolute inset-0 rounded-lg bg-white shadow-xs"
+                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10">{tab.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Posts Feed */}
             {posts.data.length > 0 ? (
