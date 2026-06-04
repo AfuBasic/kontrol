@@ -345,7 +345,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'Visitors',
             href: '/resident/visitors',
-            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            icon: (active: boolean) => <ClipboardList className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
             show: hasAccessCodes,
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
@@ -379,9 +379,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             icon: (active: boolean) => <Home className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
         },
         {
-            name: 'Residents',
-            href: '/resident/property-owner/residents',
-            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            name: 'Visitor Passes',
+            href: '/resident/visitors',
+            icon: (active: boolean) => <ClipboardList className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null },
         {

@@ -40,6 +40,7 @@ class AccessCodeController extends Controller
                 'status' => $code->status->value,
                 'source' => $code->source->value,
                 'expires_at' => $code->expires_at?->toISOString(),
+                'used_at' => $code->used_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),

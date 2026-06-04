@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Trash2, Clock, CheckCircle2, AlertCircle, Calendar, MoreVertical, Share2, Zap, ExternalLink, Activity } from 'lucide-react';
 import { useState } from 'react';
@@ -85,8 +86,21 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 </div>
                             </div>
                             <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                {code.type === 'long_lived' ? <Calendar className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                                {code.type === 'long_lived' ? 'Long-term access' : code.time_remaining}
+                                {effectiveStatus === 'used' ? (
+                                    <>
+                                        <CheckCircle2 className="h-3 w-3 text-blue-500" />
+                                        <span>
+                                            Arrived {code.used_at 
+                                                ? `${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} (${formatDistanceToNow(new Date(code.used_at), { addSuffix: true })})` 
+                                                : 'Recently'}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {code.type === 'long_lived' ? <Calendar className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                                        <span>{code.type === 'long_lived' ? 'Long-term access' : code.time_remaining}</span>
+                                    </>
+                                )}
                                 {code.purpose && code.purpose !== 'Emergency' && (
                                     <>
                                         <span className="mx-1 opacity-30">•</span>

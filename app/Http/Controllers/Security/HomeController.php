@@ -20,11 +20,7 @@ class HomeController extends Controller
 
         $expectedTodayCount = AccessCode::query()
             ->forEstate($estate->id)
-            ->where('status', AccessCodeStatus::Active)
-            ->where(function ($q) use ($today): void {
-                $q->whereNull('expires_at')
-                    ->orWhereDate('expires_at', '>=', $today);
-            })
+            ->active()
             ->whereDate('created_at', '>=', $today->copy()->subDay())
             ->whereDoesntHave('accessLogs', function ($q) use ($today) {
                 $q->whereDate('verified_at', $today);
