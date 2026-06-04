@@ -159,10 +159,11 @@ Valid Until: ${formattedExpiry}`;
             return { success: true, method: 'share' };
         }
     } catch (error) {
-        console.error('Native Share failed, falling back to clipboard', error);
+        console.error('Native Share failed or was cancelled', error);
+        return { success: false };
     }
 
-    // Fallback: Clipboard copy
+    // Fallback: Clipboard copy (only runs if native sharing is not supported)
     try {
         await Clipboard.write({
             string: text,
