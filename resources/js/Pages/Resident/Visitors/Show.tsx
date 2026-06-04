@@ -55,8 +55,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         if (!usageLogs.next_page_url || isLoadingMore.current) return;
 
         isLoadingMore.current = true;
-        router.reload({
-            url: usageLogs.next_page_url,
+        router.visit(usageLogs.next_page_url, {
             preserveState: true,
             preserveScroll: true,
             only: ['usageLogs', 'filters'],
@@ -87,8 +86,6 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         setDateFilter(val);
         router.reload({
             data: { date: val },
-            preserveState: true,
-            preserveScroll: true,
             only: ['usageLogs', 'filters'],
         });
     }

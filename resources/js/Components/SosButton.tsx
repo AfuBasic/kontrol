@@ -9,7 +9,7 @@ import SosController from '@/actions/App/Http/Controllers/Resident/SosController
 import type { SharedData } from '@/types';
 
 interface Props {
-    variant?: 'floating' | 'header';
+    variant?: 'floating' | 'header' | 'sidebar' | 'mobile-menu';
 }
 
 export default function SosButton({ variant = 'floating' }: Props) {

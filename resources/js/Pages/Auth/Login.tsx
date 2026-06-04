@@ -1,8 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { motion, useMotionValue, animate as animateX, type PanInfo } from 'framer-motion';
-import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, Megaphone, AlertTriangle } from 'lucide-react';
+import { motion, useMotionValue, animate as animateX } from 'framer-motion';
+import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
@@ -36,6 +36,7 @@ export default function Login() {
     // Ref is the ground truth — avoids stale closure on rapid button taps
     const slideIndexRef = useRef(0);
     const carouselX = useMotionValue(0);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     const onboardingSlides = [
         {
@@ -69,15 +70,25 @@ export default function Login() {
         },
     ];
 
-    const getContainerWidth = () => {
-        return carouselRef.current?.clientWidth || window.innerWidth;
-    };
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Keep carousel aligned on resize
+    /* eslint-disable react-hooks/exhaustive-deps */
+    useEffect(() => {
+        carouselX.set(-currentSlide * windowWidth);
+    }, [windowWidth]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     const goToSlide = (index: number) => {
-        const width = getContainerWidth();
         slideIndexRef.current = index;
         setCurrentSlide(index);
-        animateX(carouselX, -index * width, {
+        animateX(carouselX, -index * windowWidth, {
             type: 'spring',
             stiffness: 300,
             damping: 35,
@@ -87,9 +98,7 @@ export default function Login() {
     // Track active slide index during drag
     useEffect(() => {
         const unsubscribe = carouselX.onChange((latest) => {
-            const width = getContainerWidth();
-            if (!width) return;
-            const raw = -latest / width;
+            const raw = -latest / windowWidth;
             const snapped = Math.round(raw);
             const clamped = Math.max(0, Math.min(onboardingSlides.length - 1, snapped));
 
@@ -99,29 +108,10 @@ export default function Login() {
             }
         });
         return unsubscribe;
-    }, [carouselX]);
-
-    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        const width = getContainerWidth();
-        const velocity = info.velocity.x;
-        let targetIndex = slideIndexRef.current;
-
-        // If flicked with enough velocity, move to adjacent slide
-        if (velocity < -300) {
-            targetIndex = Math.min(onboardingSlides.length - 1, slideIndexRef.current + 1);
-        } else if (velocity > 300) {
-            targetIndex = Math.max(0, slideIndexRef.current - 1);
-        } else {
-            // Otherwise, snap to nearest slide based on position
-            const currentX = carouselX.get();
-            targetIndex = Math.round(-currentX / width);
-            targetIndex = Math.max(0, Math.min(onboardingSlides.length - 1, targetIndex));
-        }
-
-        goToSlide(targetIndex);
-    };
+    }, [carouselX, windowWidth, onboardingSlides.length]);
 
     useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
         const hasSeenOnboarding = localStorage.getItem('seen_public_onboarding');
         if (!hasSeenOnboarding) {
             setShowOnboarding(true);
@@ -148,12 +138,14 @@ export default function Login() {
     };
 
     // Sync external errors to local state on initial mount
+    /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         const extError = page.props.flash?.error || page.props.errors?.email || null;
         if (extError) {
             setLoginError(extError as string);
         }
     }, []);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -250,16 +242,26 @@ export default function Login() {
                 <div ref={carouselRef} className="fixed inset-0 z-50 overflow-hidden">
                     {/* Track: all slides side by side, translated by carouselX */}
                     <motion.div
-                        className="flex h-full cursor-grab active:cursor-grabbing select-none"
+                        className="flex h-full cursor-grab select-none active:cursor-grabbing"
                         style={{
                             width: `${onboardingSlides.length * 100}%`,
                             x: carouselX,
                         }}
                         drag="x"
-                        dragConstraints={carouselRef}
+                        dragConstraints={{
+                            left: -(onboardingSlides.length - 1) * windowWidth,
+                            right: 0,
+                        }}
                         dragElastic={0.15}
-                        dragMomentum={false}
-                        onDragEnd={handleDragEnd}
+                        dragTransition={{
+                            power: 0.2,
+                            timeConstant: 200,
+                            modifyTarget: (target) => {
+                                const slide = Math.round(-target / windowWidth);
+                                const clamped = Math.max(0, Math.min(onboardingSlides.length - 1, slide));
+                                return -clamped * windowWidth;
+                            },
+                        }}
                     >
                         {onboardingSlides.map((slide, i) => {
                             const Icon = slide.icon;
@@ -278,12 +280,8 @@ export default function Login() {
                                         <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 shadow-2xl backdrop-blur-sm">
                                             <Icon className="h-10 w-10 text-white" />
                                         </div>
-                                        <span className="mt-8 text-[11px] font-black tracking-[0.2em] text-white/60 uppercase">
-                                            {slide.subtitle}
-                                        </span>
-                                        <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                                            {slide.title}
-                                        </h2>
+                                        <span className="mt-8 text-[11px] font-black tracking-[0.2em] text-white/60 uppercase">{slide.subtitle}</span>
+                                        <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">{slide.title}</h2>
                                         <p className="mt-6 max-w-xs text-base leading-relaxed font-medium text-white/80 sm:max-w-sm">
                                             {slide.description}
                                         </p>

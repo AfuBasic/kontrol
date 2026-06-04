@@ -297,7 +297,7 @@ export default function SecurityVerify() {
                         if (!decodedValue && jsQR && ctx) {
                             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                             const codeObj = jsQR(imgData.data, imgData.width, imgData.height, {
-                                inversionAttempts: 'attemptInvert', // Patched to intercept low-light items
+                                inversionAttempts: 'attemptBoth', // Patched to intercept low-light items
                             });
                             if (codeObj) decodedValue = codeObj.data;
                         }
@@ -401,7 +401,12 @@ export default function SecurityVerify() {
 
     const recordDecision = async (
         decision: 'admit' | 'reject',
-        extraData: { vehicle_make?: string; vehicle_model?: string; vehicle_plate_number?: string } = {},
+        extraData: {
+            vehicle_make?: string;
+            vehicle_model?: string;
+            vehicle_plate_number?: string;
+            access_log_id?: number | null;
+        } = {},
     ) => {
         const code = submittedFor.current;
         if (!code) {

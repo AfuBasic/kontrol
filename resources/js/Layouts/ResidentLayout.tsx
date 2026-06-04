@@ -114,7 +114,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         };
     }, [auth?.user?.id]);
 
-    const handleNotificationClick = (notification: { id?: string; read_at?: string; [key: string]: unknown }) => {
+    const handleNotificationClick = (notification: Notification) => {
         setSelectedNotification(notification);
 
         // Mark as read in backend
@@ -310,7 +310,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     // Listen for global notification detail requests
     useEffect(() => {
         const handleDetailRequest = (e: Event) => {
-            const detail = (e as CustomEvent<{ id?: string; read_at?: string; [key: string]: unknown }>).detail;
+            const detail = (e as CustomEvent<Notification>).detail;
             handleNotificationClick(detail);
         };
         window.addEventListener('show-notification-detail', handleDetailRequest);
@@ -383,7 +383,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             href: '/resident/property-owner/residents',
             icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
         },
-        { name: 'CREATE_CODE', href: '#' },
+        { name: 'CREATE_CODE', href: '#', icon: () => null },
         {
             name: 'Activity',
             href: '/resident/activity?tab=notifications',

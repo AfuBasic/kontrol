@@ -148,8 +148,6 @@ createInertiaApp({
                     CapacitorApp.addListener('appStateChange', ({ isActive }) => {
                         if (isActive) {
                             router.reload({
-                                preserveScroll: true,
-                                preserveState: true,
                                 onError: (err) => {
                                     console.warn('App background token reconciliation skipped:', err);
                                 },

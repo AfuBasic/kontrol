@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import type { PermissionStatus } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +14,6 @@ import NotificationController from '@/actions/App/Http/Controllers/Security/Noti
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
-import { useForceLogout } from '@/Hooks/useForceLogout';
 import '@/echo';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -99,7 +99,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-    const [lastReceivedNotification, setLastReceivedNotification] = useState<unknown>(null);
+    const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
 
     // Sync unread count when props change
     useEffect(() => {
@@ -158,7 +158,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
                     if (permStatus.receive === 'prompt') {
                         permStatus = await (
-                            PushNotifications as unknown as { requestPermissions: (options: Record<string, unknown>) => Promise<{ receive: string }> }
+                            PushNotifications as unknown as {
+                                requestPermissions: (options: Record<string, unknown>) => Promise<PermissionStatus>;
+                            }
                         ).requestPermissions({
                             ios: { criticalAlert: true },
                         });

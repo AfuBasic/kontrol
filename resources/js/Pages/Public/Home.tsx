@@ -725,7 +725,7 @@ export default function Home({ plans }: Props) {
                                 <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{quarterlyPlan.name}</h3>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{quarterlyPlan?.name}</h3>
                                             <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                                                 Complete access control and premium features, billed quarterly.
                                             </p>
@@ -733,7 +733,7 @@ export default function Home({ plans }: Props) {
                                         <div className="mt-2 flex flex-col gap-1.5">
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                    ₦{(quarterlyPlan.price / 100).toLocaleString()}
+                                                    ₦{((quarterlyPlan?.price ?? 0) / 100).toLocaleString()}
                                                 </span>
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">/ quarter</span>
                                             </div>
@@ -769,7 +769,7 @@ export default function Home({ plans }: Props) {
                                         </ul>
                                     </div>
                                     <Link
-                                        href={`/apply?plan_id=${quarterlyPlan.id}`}
+                                        href={`/apply?plan_id=${quarterlyPlan?.id}`}
                                         className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                                     >
                                         Get Started
@@ -780,9 +780,9 @@ export default function Home({ plans }: Props) {
                             {/* Pro - Semi-Annually Column */}
                             {semiAnnualPlan && (
                                 <div className="relative flex flex-col justify-between rounded-3xl border-2 border-indigo-200 bg-slate-50 p-8 shadow-2xl dark:border-[#4F46E5]/40 dark:bg-[#0f172a]/30">
-                                    {semiAnnualPlan.badge && (
+                                    {semiAnnualPlan?.badge && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4F46E5] px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
-                                            {semiAnnualPlan.badge}
+                                            {semiAnnualPlan?.badge}
                                         </div>
                                     )}
                                     <div className="absolute top-0 right-6 rounded-b-lg bg-[#FF7E67] px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
@@ -790,7 +790,7 @@ export default function Home({ plans }: Props) {
                                     </div>
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{semiAnnualPlan.name}</h3>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{semiAnnualPlan?.name}</h3>
                                             <p className="text-slate-655 mt-1 text-xs dark:text-slate-400">
                                                 Complete access control and premium features, billed semi-annually.
                                             </p>
@@ -798,7 +798,7 @@ export default function Home({ plans }: Props) {
                                         <div className="mt-2 flex flex-col gap-1.5">
                                             <div className="flex items-baseline gap-2">
                                                 <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                    ₦{(semiAnnualPlan.price / 100).toLocaleString()}
+                                                    ₦{((semiAnnualPlan?.price ?? 0) / 100).toLocaleString()}
                                                 </span>
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">/ 6 months</span>
                                                 <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦30,000</span>
@@ -842,7 +842,7 @@ export default function Home({ plans }: Props) {
                                         </ul>
                                     </div>
                                     <Link
-                                        href={`/apply?plan_id=${semiAnnualPlan.id}`}
+                                        href={`/apply?plan_id=${semiAnnualPlan?.id}`}
                                         className="mt-8 w-full rounded-xl bg-[#FF7E67] py-3.5 text-center text-xs font-extrabold text-white shadow-lg transition-colors hover:bg-[#ff8f7a]"
                                     >
                                         Get Started
@@ -853,9 +853,9 @@ export default function Home({ plans }: Props) {
                             {/* Pro - Annually Column */}
                             {annualPlan && (
                                 <div className="relative flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all hover:border-slate-300 dark:border-slate-900 dark:bg-[#0f172a]/20 dark:hover:border-slate-800">
-                                    {annualPlan.badge && (
+                                    {annualPlan?.badge && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[9px] font-extrabold tracking-widest text-white uppercase">
-                                            {annualPlan.badge}
+                                            {annualPlan?.badge}
                                         </div>
                                     )}
                                     <div className="absolute top-0 right-6 rounded-b-lg bg-emerald-500 px-3 py-2 text-[10px] font-black tracking-wider text-white uppercase shadow-lg">
@@ -863,7 +863,7 @@ export default function Home({ plans }: Props) {
                                     </div>
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{annualPlan.name}</h3>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{annualPlan?.name}</h3>
                                             <p className="text-slate-655 mt-1 text-xs dark:text-slate-400">
                                                 Complete access control and premium features, billed annually.
                                             </p>
@@ -871,7 +871,7 @@ export default function Home({ plans }: Props) {
                                         <div className="mt-2 flex flex-col gap-1.5">
                                             <div className="flex items-baseline gap-2">
                                                 <span className="text-4xl font-black text-slate-900 dark:text-white">
-                                                    ₦{(annualPlan.price / 100).toLocaleString()}
+                                                    ₦{((annualPlan?.price ?? 0) / 100).toLocaleString()}
                                                 </span>
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">/ year</span>
                                                 <span className="text-xs text-slate-400 line-through dark:text-slate-500">₦60,000</span>
@@ -915,7 +915,7 @@ export default function Home({ plans }: Props) {
                                         </ul>
                                     </div>
                                     <Link
-                                        href={`/apply?plan_id=${annualPlan.id}`}
+                                        href={`/apply?plan_id=${annualPlan?.id}`}
                                         className="mt-8 w-full rounded-xl border border-transparent bg-slate-900 py-3.5 text-center text-xs font-bold text-white transition-colors hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                                     >
                                         Get Started
