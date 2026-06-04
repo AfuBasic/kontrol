@@ -48,6 +48,23 @@ function formatExpiry(iso: string | null) {
     return `${mins}m`;
 }
 
+async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
+    if (!navigator.onLine) return false;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch('/security/verify/sync?ping=' + Date.now(), {
+            method: 'HEAD',
+            signal: controller.signal,
+        });
+        clearTimeout(id);
+        return response.ok || response.status === 404 || response.status === 405;
+    } catch (e) {
+        clearTimeout(id);
+        return false;
+    }
+}
+
 export default function SecurityVerify() {
     const { flash } = usePage<PageProps>().props;
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
@@ -69,7 +86,10 @@ export default function SecurityVerify() {
     const [pendingLogsCount, setPendingLogsCount] = useState(0);
 
     const syncOfflineLogsAndData = useCallback(async () => {
-        if (!navigator.onLine || syncing) return;
+        if (syncing) return;
+        const online = await checkServerReachable(3000);
+        setIsOnline(online);
+        if (!online) return;
         setSyncing(true);
 
         try {
@@ -168,7 +188,9 @@ export default function SecurityVerify() {
         submittedFor.current = code;
         setSubmitting(true);
 
-        if (!navigator.onLine) {
+        const online = await checkServerReachable(2000);
+        setIsOnline(online);
+        if (!online) {
             try {
                 const codeHash = await sha256(code);
                 const cached = await offlineDb.findActiveCode(codeHash);
@@ -414,7 +436,9 @@ export default function SecurityVerify() {
             return;
         }
 
-        if (!navigator.onLine) {
+        const online = await checkServerReachable(2000);
+        setIsOnline(online);
+        if (!online) {
             try {
                 await offlineDb.queueOfflineLog({
                     code,
