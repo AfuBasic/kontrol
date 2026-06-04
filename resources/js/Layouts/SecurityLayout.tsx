@@ -100,6 +100,20 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
     const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     // Sync unread count when props change
     useEffect(() => {
@@ -290,7 +304,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     <Link
                         href={HomeController.url()}
                         onClick={(e) => {
-                            if (!navigator.onLine && currentPath !== '/security') {
+                            if (!isOnline && currentPath !== '/security') {
                                 e.preventDefault();
                                 setToastMessage('Network offline. Cannot change pages.');
                                 setToastType('error');
@@ -353,7 +367,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                                         <Link
                                             href={item.href}
                                             onClick={(e) => {
-                                                if (!navigator.onLine && !active) {
+                                                if (!isOnline && !active) {
                                                     e.preventDefault();
                                                     setToastMessage('Network offline. Cannot navigate tabs.');
                                                     setToastType('error');
