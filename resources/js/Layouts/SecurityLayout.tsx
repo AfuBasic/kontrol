@@ -287,7 +287,19 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 }`}
             >
                 <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-                    <Link href={HomeController.url()} className="flex items-center gap-2.5">
+                    <Link
+                        href={HomeController.url()}
+                        onClick={(e) => {
+                            if (!navigator.onLine && currentPath !== '/security') {
+                                e.preventDefault();
+                                setToastMessage('Network offline. Cannot change pages.');
+                                setToastType('error');
+                                setShowToast(true);
+                                setTimeout(() => setShowToast(false), 4000);
+                            }
+                        }}
+                        className="flex items-center gap-2.5"
+                    >
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                         <div className="flex flex-col">
                             <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
@@ -340,6 +352,15 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                                     <li key={item.name} className="relative">
                                         <Link
                                             href={item.href}
+                                            onClick={(e) => {
+                                                if (!navigator.onLine && !active) {
+                                                    e.preventDefault();
+                                                    setToastMessage('Network offline. Cannot navigate tabs.');
+                                                    setToastType('error');
+                                                    setShowToast(true);
+                                                    setTimeout(() => setShowToast(false), 4000);
+                                                }
+                                            }}
                                             aria-current={active ? 'page' : undefined}
                                             className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
                                         >
