@@ -160,12 +160,28 @@ export default function SecurityVerify() {
             }
         }, 120000);
 
+        // Periodic reachability heartbeat to auto-recover when online status is restored (webview support)
+        const reachabilityInterval = setInterval(async () => {
+            if (navigator.onLine) {
+                const online = await checkServerReachable(2000);
+                if (online !== isOnline) {
+                    setIsOnline(online);
+                    if (online) {
+                        syncOfflineLogsAndData();
+                    }
+                }
+            } else if (isOnline) {
+                setIsOnline(false);
+            }
+        }, 10000);
+
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             clearInterval(interval);
+            clearInterval(reachabilityInterval);
         };
-    }, [syncOfflineLogsAndData]);
+    }, [isOnline, syncOfflineLogsAndData]);
 
     useEffect(() => {
         if (flash?.validation_result) {

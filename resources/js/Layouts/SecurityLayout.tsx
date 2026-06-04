@@ -109,11 +109,18 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
+        const checkInterval = setInterval(() => {
+            if (navigator.onLine !== isOnline) {
+                setIsOnline(navigator.onLine);
+            }
+        }, 2000);
+
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+            clearInterval(checkInterval);
         };
-    }, []);
+    }, [isOnline]);
 
     // Sync unread count when props change
     useEffect(() => {
