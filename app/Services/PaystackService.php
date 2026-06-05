@@ -220,7 +220,7 @@ class PaystackService
             'business_name' => $data['business_name'],
             'settlement_bank' => $data['settlement_bank'],
             'account_number' => $data['account_number'],
-            'percentage_charge' => $data['percentage_charge'] ?? 1.0, // Platform fee
+            'percentage_charge' => $data['percentage_charge'] ?? 0.5, // Platform fee
         ]);
 
         if (! $response->successful()) {

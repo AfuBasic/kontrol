@@ -17,6 +17,11 @@ class SendInvoiceGeneratedEmail implements ShouldQueue
      */
     public function handle(InvoiceGenerated $event): void
     {
+        // Skip individual resident invoices
+        if ($event->invoice->user_id !== null) {
+            return;
+        }
+
         $email = $event->invoice->estate->email ?? $event->invoice->estate->users()->first()?->email;
 
         if (! $email) {

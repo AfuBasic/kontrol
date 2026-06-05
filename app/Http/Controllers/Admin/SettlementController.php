@@ -72,7 +72,7 @@ class SettlementController extends Controller
                     'business_name' => $estate->name,
                     'settlement_bank' => $validated['bank_code'],
                     'account_number' => $validated['account_number'],
-                    'percentage_charge' => 1.0, // 1% platform fee
+                    'percentage_charge' => 0.5, // 0.5% platform fee
                 ]);
                 $settings->paystack_subaccount_code = $subaccount['subaccount_code'];
             }

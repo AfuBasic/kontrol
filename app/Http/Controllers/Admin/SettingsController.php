@@ -98,7 +98,7 @@ class SettingsController extends Controller
                     'business_name' => $estate->name,
                     'settlement_bank' => $data['bank_code'],
                     'account_number' => $data['account_number'],
-                    'percentage_charge' => 1.0, // 1% Kontrol platform fee
+                    'percentage_charge' => 0.5, // 0.5% Kontrol platform fee
                 ]);
                 $data['paystack_subaccount_code'] = $subaccount['subaccount_code'];
             }

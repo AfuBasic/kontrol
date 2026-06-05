@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Mail\Admin\BillingReminderMail;
 use App\Mail\CommandExecutedMail;
 use App\Models\EstateSubscription;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -31,7 +32,7 @@ class SendBillingReminders extends Command
 
         foreach ($subscriptions as $subscription) {
             $estate = $subscription->estate;
-            $admins = $estate->users()->where('user_type', 'admin')->get();
+            $admins = User::withRole('admin', $estate->id)->get();
 
             foreach ($admins as $admin) {
                 Mail::to($admin->email)->queue(new BillingReminderMail($subscription));
