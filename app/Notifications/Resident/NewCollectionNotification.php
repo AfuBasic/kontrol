@@ -50,15 +50,29 @@ class NewCollectionNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $creator = $this->assignment->collection->creator;
+        setPermissionsTeamId($this->assignment->estate_id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $propertyName = $notifiable->profile?->property?->name;
+
         return (new MailMessage)
-            ->subject("New Payment Collection: {$this->assignment->collection->name}")
+            ->subject($isPropertyOwner ? "New House Bill: {$this->assignment->collection->name}" : "New Payment Collection: {$this->assignment->collection->name}")
             ->view('mail.resident.new-collection', [
                 'assignment' => $this->assignment,
+                'isPropertyOwner' => $isPropertyOwner,
+                'ownerName' => $creator ? $creator->name : null,
+                'propertyName' => $propertyName,
             ]);
     }
 
     public function toArray(object $notifiable): array
     {
+        $creator = $this->assignment->collection->creator;
+        setPermissionsTeamId($this->assignment->estate_id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $propertyName = $notifiable->profile?->property?->name;
+        $houseInfo = $propertyName ? "for your house ({$propertyName})" : 'for your house';
+
         return [
             'type' => 'new_collection',
             'collection_id' => $this->assignment->collection_id,
@@ -66,8 +80,10 @@ class NewCollectionNotification extends Notification implements ShouldQueue
             'amount' => $this->assignment->amount_due,
             'formatted_amount' => number_format($this->assignment->amount_due, 2).' NGN',
             'estate_name' => $this->assignment->estate->name,
-            'title' => 'New Payment Collection Assigned',
-            'message' => "A new payment collection '{$this->assignment->collection->name}' of ".number_format($this->assignment->amount_due, 2).' NGN has been assigned to you.',
+            'title' => $isPropertyOwner ? 'New House Bill' : 'New Payment Collection Assigned',
+            'message' => $isPropertyOwner
+                ? "A new payment collection '{$this->assignment->collection->name}' of ".number_format($this->assignment->amount_due, 2)." NGN has been assigned to you {$houseInfo} by your property owner ({$creator->name}), not the estate."
+                : "A new payment collection '{$this->assignment->collection->name}' of ".number_format($this->assignment->amount_due, 2).' NGN has been assigned to you by the estate.',
             'action_url' => route('resident.collections.show', $this->assignment, false),
         ];
     }

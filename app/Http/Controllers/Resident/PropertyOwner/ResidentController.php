@@ -28,43 +28,77 @@ class ResidentController extends Controller
     /**
      * Display a list of managed residents.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
 
-        $residents = User::query()
+        $totalUnfiltered = User::query()
             ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
-            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
-            ->get()
-            ->map(function ($u) use ($user) {
-                // Calculate outstanding balance for collections created by this Property Owner
-                $outstandingBalance = CollectionAssignment::query()
-                    ->where('user_id', $u->id)
-                    ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
-                    ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
-                    ->get()
-                    ->sum(fn ($assignment) => $assignment->amount_due - $assignment->amount_paid);
+            ->count();
 
-                return [
-                    'id' => $u->id,
-                    'ulid' => $u->ulid,
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'phone' => $u->profile?->phone,
-                    'unit_number' => $u->profile?->unit_number,
-                    'property' => $u->profile?->property?->name,
-                    'property_id' => $u->profile?->property_id,
-                    'outstanding_balance' => $outstandingBalance,
-                    'status' => $u->estates->first()?->pivot?->status ?? 'pending',
-                    'suspended_at' => $u->suspended_at,
-                    'is_active' => $u->suspended_at === null,
-                ];
+        $query = User::query()
+            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->forEstate($estate->id)
+            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)]);
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('email', 'like', '%'.$request->search.'%');
             });
+        }
+
+        if ($request->filled('status')) {
+            $query->whereHas('estates', function ($q) use ($estate, $request) {
+                $q->where('estates.id', $estate->id)
+                    ->where('estate_user.status', $request->status);
+            });
+        }
+
+        $paginated = $query->paginate(10);
+
+        $residentsData = collect($paginated->items())->map(function ($u) use ($user) {
+            // Calculate outstanding balance for collections created by this Property Owner
+            $outstandingBalance = CollectionAssignment::query()
+                ->where('user_id', $u->id)
+                ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+                ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+                ->get()
+                ->sum(fn ($assignment) => $assignment->amount_due - $assignment->amount_paid);
+
+            return [
+                'id' => $u->id,
+                'ulid' => $u->ulid,
+                'name' => $u->name,
+                'email' => $u->email,
+                'phone' => $u->profile?->phone,
+                'unit_number' => $u->profile?->unit_number,
+                'property' => $u->profile?->property?->name,
+                'property_id' => $u->profile?->property_id,
+                'outstanding_balance' => $outstandingBalance,
+                'status' => $u->estates->first()?->pivot?->status ?? 'pending',
+                'suspended_at' => $u->suspended_at,
+                'is_active' => $u->suspended_at === null,
+            ];
+        });
+
+        $residents = [
+            'data' => $residentsData,
+            'total' => $paginated->total(),
+            'per_page' => $paginated->perPage(),
+            'current_page' => $paginated->currentPage(),
+            'links' => $paginated->linkCollection()->toArray(),
+        ];
 
         return Inertia::render('Resident/PropertyOwner/Residents/Index', [
             'residents' => $residents,
+            'totalUnfiltered' => $totalUnfiltered,
+            'filters' => [
+                'search' => $request->search ?? '',
+                'status' => $request->status ?? '',
+            ],
         ]);
     }
 

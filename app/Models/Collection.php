@@ -75,6 +75,7 @@ class Collection extends Model
         'applies_to',
         'status',
         'created_by',
+        'include_creator',
     ];
 
     protected function casts(): array
@@ -86,6 +87,7 @@ class Collection extends Model
             'late_fee' => 'integer',
             'due_day' => 'integer',
             'grace_days' => 'integer',
+            'include_creator' => 'boolean',
         ];
     }
 

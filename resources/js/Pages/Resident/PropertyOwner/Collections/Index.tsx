@@ -1,6 +1,8 @@
-import { WalletIcon, PlusIcon, CalendarIcon, CheckCircleIcon, ArrowUpRightIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { Head, Link } from '@inertiajs/react';
-import { create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
+import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState, useEffect, useCallback } from 'react';
+import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
+import { useDebounce } from '@/Hooks/useDebounce';
 
 interface Collection {
     id: number;
@@ -17,10 +19,48 @@ interface Collection {
 }
 
 interface Props {
-    collections: Collection[];
+    collections: {
+        data: Collection[];
+        total: number;
+        per_page: number;
+        current_page: number;
+        links: any[];
+    };
+    totalUnfiltered: number;
+    filters: {
+        search: string;
+        status: string;
+    };
 }
 
-export default function Index({ collections }: Props) {
+export default function Index({ collections, totalUnfiltered, filters }: Props) {
+    const [search, setSearch] = useState(filters.search || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const debouncedSearch = useDebounce(search, 300);
+
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || '')) {
+            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, preserveScroll: true, replace: true });
+        }
+    }, [debouncedSearch, filters.search, status]);
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = e.target.value;
+        setStatus(newStatus);
+        router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const clearFilters = useCallback(() => {
+        setSearch('');
+        setStatus('');
+        router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
+    }, []);
+
+    const hasActiveFilters = Boolean(search || status);
+    const hasCollections = collections && collections.data && collections.data.length > 0;
+    const showFilters = totalUnfiltered > 1 || hasActiveFilters;
+    const showPagination = collections.total > collections.per_page;
+
     return (
         <div className="space-y-6 pb-24">
             <Head title="Rent & Fees Collections" />
@@ -39,9 +79,54 @@ export default function Index({ collections }: Props) {
                 </Link>
             </div>
 
+            {/* Conditional Filters bar: Only show if records > 1 or filters are active */}
+            {showFilters && (
+                <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="relative flex-1">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <MagnifyingGlassIcon className="h-4.5 w-4.5 text-slate-400" />
+                        </div>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                            placeholder="Search collections..."
+                        />
+                    </div>
+                    <div className="w-full sm:w-48">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <FunnelIcon className="h-4.5 w-4.5 text-slate-400" />
+                            </div>
+                            <select
+                                value={status}
+                                onChange={handleStatusChange}
+                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-8 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="draft">Draft</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                    {hasActiveFilters && (
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs hover:bg-slate-50 transition-all active:scale-95"
+                        >
+                            <XMarkIcon className="h-4 w-4" />
+                            Reset
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {collections.length > 0 ? (
-                    collections.map((col) => {
+                {hasCollections ? (
+                    collections.data.map((col) => {
                         const collectedPct = col.assignments_count > 0 ? Math.round((col.paid_count / col.assignments_count) * 100) : 0;
 
                         return (
@@ -70,7 +155,7 @@ export default function Index({ collections }: Props) {
                                         </h3>
                                         <div className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-400">
                                             <CalendarIcon className="h-4 w-4" />
-                                            <span>Due by {col.due_at}</span>
+                                            <span>Due by {col.due_at || '—'}</span>
                                         </div>
                                     </div>
 
@@ -103,7 +188,7 @@ export default function Index({ collections }: Props) {
                     })
                 ) : (
                     <div className="col-span-full rounded-[32px] bg-white py-16 text-center shadow-xs ring-1 ring-slate-100">
-                        <WalletIcon className="text-slate-350 mx-auto h-12 w-12" />
+                        <WalletIcon className="text-slate-305 mx-auto h-12 w-12" />
                         <h3 className="mt-4 text-lg font-black text-slate-900">No Bills Created</h3>
                         <p className="mt-1 text-sm text-slate-500">You haven't setup any payment collection sheets yet.</p>
                         <Link
@@ -115,6 +200,37 @@ export default function Index({ collections }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Conditional Pagination: Only show if records > per page */}
+            {showPagination && (
+                <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
+                    <div className="w-full flex items-center justify-between border-t border-slate-100 pt-6">
+                        <div>
+                            <p className="text-slate-500 text-xs font-semibold">
+                                Showing <span className="font-bold text-slate-900">{collections.data.length}</span> entries of{' '}
+                                <span className="font-bold text-slate-900">{collections.total}</span>
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            {collections.links.map((link: any, i: number) => {
+                                if (link.url === null) return null;
+                                return (
+                                    <Link
+                                        key={i}
+                                        href={link.url}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/10'
+                                                : 'bg-white text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-slate-50'
+                                        }`}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

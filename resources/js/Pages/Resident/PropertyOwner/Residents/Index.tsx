@@ -9,10 +9,14 @@ import {
     UserPlusIcon,
     PencilSquareIcon,
     TrashIcon,
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { suspend, destroy, edit, create } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { useState, useEffect, useCallback } from 'react';
+import { suspend, destroy, edit, create, index } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { useDebounce } from '@/Hooks/useDebounce';
 
 interface Resident {
     id: number;
@@ -30,11 +34,43 @@ interface Resident {
 }
 
 interface Props {
-    residents: Resident[];
+    residents: {
+        data: Resident[];
+        total: number;
+        per_page: number;
+        current_page: number;
+        links: any[];
+    };
+    totalUnfiltered: number;
+    filters: {
+        search: string;
+        status: string;
+    };
 }
 
-export default function Index({ residents }: Props) {
+export default function Index({ residents, totalUnfiltered, filters }: Props) {
     const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+    const [search, setSearch] = useState(filters.search || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const debouncedSearch = useDebounce(search, 300);
+
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || '')) {
+            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, preserveScroll: true, replace: true });
+        }
+    }, [debouncedSearch, filters.search, status]);
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = e.target.value;
+        setStatus(newStatus);
+        router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const clearFilters = useCallback(() => {
+        setSearch('');
+        setStatus('');
+        router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
+    }, []);
 
     const toggleSuspend = (resident: Resident) => {
         if (confirm("Are you sure you want to change this resident's activation status?")) {
@@ -47,6 +83,11 @@ export default function Index({ residents }: Props) {
             router.delete(destroy.url(resident.ulid));
         }
     };
+
+    const hasActiveFilters = Boolean(search || status);
+    const hasResidents = residents && residents.data && residents.data.length > 0;
+    const showFilters = totalUnfiltered > 1 || hasActiveFilters;
+    const showPagination = residents.total > residents.per_page;
 
     return (
         <div className="space-y-6 pb-24">
@@ -66,9 +107,54 @@ export default function Index({ residents }: Props) {
                 </Link>
             </div>
 
+            {/* Conditional Filters bar: Only show if records > 1 or filters are active */}
+            {showFilters && (
+                <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="relative flex-1">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <MagnifyingGlassIcon className="h-4.5 w-4.5 text-slate-400" />
+                        </div>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                            placeholder="Search by name or email..."
+                        />
+                    </div>
+                    <div className="w-full sm:w-48">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <FunnelIcon className="h-4.5 w-4.5 text-slate-400" />
+                            </div>
+                            <select
+                                value={status}
+                                onChange={handleStatusChange}
+                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-8 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="pending">Pending</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    {hasActiveFilters && (
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs hover:bg-slate-50 transition-all active:scale-95"
+                        >
+                            <XMarkIcon className="h-4 w-4" />
+                            Reset
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {residents.length > 0 ? (
-                    residents.map((resident) => (
+                {hasResidents ? (
+                    residents.data.map((resident) => (
                         <div
                             key={resident.id}
                             className={`group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-lg ${
@@ -79,20 +165,20 @@ export default function Index({ residents }: Props) {
                                 <div className="flex items-center gap-3">
                                     <div
                                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black ${
-                                            resident.suspended_at ? 'bg-rose-105 text-rose-600' : 'bg-indigo-50 text-indigo-600'
+                                            resident.suspended_at ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'
                                         }`}
                                     >
                                         {resident.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-base font-black text-slate-950">{resident.name}</h3>
+                                        <h3 className="truncate text-base font-black text-slate-955">{resident.name}</h3>
                                         <p className="truncate text-xs font-bold text-slate-400">{resident.email}</p>
                                     </div>
                                 </div>
                                 <div className="relative">
                                     <button
                                         onClick={() => setActiveMenuId(activeMenuId === resident.id ? null : resident.id)}
-                                        className="rounded-xl p-1.5 text-slate-500 hover:bg-slate-50"
+                                        className="rounded-xl p-1.5 text-slate-550 hover:bg-slate-50"
                                     >
                                         <EllipsisVerticalIcon className="h-5 w-5" />
                                     </button>
@@ -135,7 +221,7 @@ export default function Index({ residents }: Props) {
                                                         removeDelegation(resident);
                                                         setActiveMenuId(null);
                                                     }}
-                                                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+                                                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-550 hover:bg-rose-50 hover:text-rose-600"
                                                 >
                                                     <TrashIcon className="h-4.5 w-4.5" />
                                                     Remove Delegation
@@ -187,6 +273,37 @@ export default function Index({ residents }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Conditional Pagination: Only show if records > per page */}
+            {showPagination && (
+                <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
+                    <div className="w-full flex items-center justify-between border-t border-slate-100 pt-6">
+                        <div>
+                            <p className="text-slate-500 text-xs font-semibold">
+                                Showing <span className="font-bold text-slate-900">{residents.data.length}</span> entries of{' '}
+                                <span className="font-bold text-slate-900">{residents.total}</span>
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            {residents.links.map((link: any, i: number) => {
+                                if (link.url === null) return null;
+                                return (
+                                    <Link
+                                        key={i}
+                                        href={link.url}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/10'
+                                                : 'bg-white text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-slate-50'
+                                        }`}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

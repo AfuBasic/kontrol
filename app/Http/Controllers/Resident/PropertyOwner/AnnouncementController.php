@@ -25,30 +25,56 @@ class AnnouncementController extends Controller
     /**
      * Display a listing of announcements created by this Property Owner.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
 
-        $announcements = EstateBoardPost::query()
+        $totalUnfiltered = EstateBoardPost::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_owner_id', $user->id)
+            ->count();
+
+        $query = EstateBoardPost::query()
             ->where('estate_id', $estate->id)
             ->where('property_owner_id', $user->id)
             ->withCount(['targets'])
-            ->latest()
-            ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'hashid' => $p->hashid,
-                'title' => $p->title,
-                'body' => $p->body,
-                'status' => $p->status->value,
-                'applies_to' => $p->applies_to,
-                'targets_count' => $p->targets_count,
-                'created_at' => $p->created_at->format('M d, Y'),
-            ]);
+            ->latest();
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%'.$request->search.'%')
+                    ->orWhere('body', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        $paginated = $query->paginate(10);
+
+        $announcementsData = collect($paginated->items())->map(fn ($p) => [
+            'id' => $p->id,
+            'hashid' => $p->hashid,
+            'title' => $p->title,
+            'body' => $p->body,
+            'status' => $p->status->value,
+            'applies_to' => $p->applies_to,
+            'targets_count' => $p->targets_count,
+            'created_at' => $p->created_at->format('M d, Y'),
+        ]);
+
+        $announcements = [
+            'data' => $announcementsData,
+            'total' => $paginated->total(),
+            'per_page' => $paginated->perPage(),
+            'current_page' => $paginated->currentPage(),
+            'links' => $paginated->linkCollection()->toArray(),
+        ];
 
         return Inertia::render('Resident/PropertyOwner/Announcements/Index', [
             'announcements' => $announcements,
+            'totalUnfiltered' => $totalUnfiltered,
+            'filters' => [
+                'search' => $request->search ?? '',
+            ],
         ]);
     }
 

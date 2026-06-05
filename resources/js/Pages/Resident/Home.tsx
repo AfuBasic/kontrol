@@ -90,7 +90,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                                     <Wallet className="h-7 w-7" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h3 className="text-base font-black text-rose-950">Outstanding Estate Dues</h3>
+                                    <h3 className="text-base font-black text-rose-950">Outstanding Dues</h3>
                                     <p className="mt-0.5 text-xs font-semibold text-rose-700/80">
                                         You have pending dues. Click to view and settle your obligations.
                                     </p>

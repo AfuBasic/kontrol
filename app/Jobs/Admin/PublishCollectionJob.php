@@ -85,9 +85,15 @@ class PublishCollectionJob implements ShouldQueue
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                return User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                $userIds = User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
                     ->pluck('users.id')
                     ->toArray();
+
+                if ($collection->include_creator) {
+                    $userIds[] = $creator->id;
+                }
+
+                return array_values(array_unique($userIds));
             }
 
             return User::withRole('resident', $estate->id)
@@ -107,6 +113,12 @@ class PublishCollectionJob implements ShouldQueue
             }
         }
 
-        return array_unique($userIds);
+        if ($collection->include_creator) {
+            $userIds[] = $collection->created_by;
+
+            return array_values(array_unique($userIds));
+        }
+
+        return array_values(array_filter(array_unique($userIds), fn ($id) => $id !== $collection->created_by));
     }
 }

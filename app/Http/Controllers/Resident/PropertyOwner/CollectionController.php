@@ -26,39 +26,67 @@ class CollectionController extends Controller
     /**
      * Display a listing of collections created by this Property Owner.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
 
-        $collections = Collection::query()
+        $totalUnfiltered = Collection::query()
+            ->where('estate_id', $estate->id)
+            ->where('created_by', $user->id)
+            ->count();
+
+        $query = Collection::query()
             ->where('estate_id', $estate->id)
             ->where('created_by', $user->id)
             ->withCount(['assignments'])
-            ->latest()
-            ->get()
-            ->map(function ($c) {
-                $paidCount = $c->assignments()->where('status', 'paid')->count();
-                $totalAmount = $c->assignments()->sum('amount_due');
-                $collectedAmount = $c->assignments()->sum('amount_paid');
+            ->latest();
 
-                return [
-                    'id' => $c->id,
-                    'ulid' => $c->ulid,
-                    'name' => $c->name,
-                    'amount' => $c->amount,
-                    'status' => $c->status,
-                    'due_at' => $c->due_at?->format('M d, Y'),
-                    'assignments_count' => $c->assignments_count,
-                    'paid_count' => $paidCount,
-                    'total_amount' => $totalAmount,
-                    'collected_amount' => $collectedAmount,
-                    'created_at' => $c->created_at->format('M d, Y'),
-                ];
-            });
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%'.$request->search.'%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $paginated = $query->paginate(9);
+
+        $collectionsData = collect($paginated->items())->map(function ($c) {
+            $paidCount = $c->assignments()->where('status', 'paid')->count();
+            $totalAmount = $c->assignments()->sum('amount_due');
+            $collectedAmount = $c->assignments()->sum('amount_paid');
+
+            return [
+                'id' => $c->id,
+                'ulid' => $c->ulid,
+                'name' => $c->name,
+                'amount' => $c->amount,
+                'status' => $c->status,
+                'due_at' => $c->due_at?->format('M d, Y'),
+                'assignments_count' => $c->assignments_count,
+                'paid_count' => $paidCount,
+                'total_amount' => $totalAmount,
+                'collected_amount' => $collectedAmount,
+                'created_at' => $c->created_at->format('M d, Y'),
+            ];
+        });
+
+        $collections = [
+            'data' => $collectionsData,
+            'total' => $paginated->total(),
+            'per_page' => $paginated->perPage(),
+            'current_page' => $paginated->currentPage(),
+            'links' => $paginated->linkCollection()->toArray(),
+        ];
 
         return Inertia::render('Resident/PropertyOwner/Collections/Index', [
             'collections' => $collections,
+            'totalUnfiltered' => $totalUnfiltered,
+            'filters' => [
+                'search' => $request->search ?? '',
+                'status' => $request->status ?? '',
+            ],
         ]);
     }
 
@@ -100,8 +128,15 @@ class CollectionController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'amount' => ['required', 'integer', 'min:1'],
-            'due_at' => ['required', 'date', 'after:today'],
+            'billing_type' => ['required', 'string', 'in:one_time,recurring'],
+            'recurring_interval' => ['required_if:billing_type,recurring', 'nullable', 'string', 'in:monthly,yearly'],
+            'start_date' => ['required_if:billing_type,recurring', 'nullable', 'date'],
+            'due_at' => ['required_if:billing_type,one_time', 'nullable', 'date', 'after:today'],
+            'due_day' => ['required_if:billing_type,recurring', 'nullable', 'integer', 'min:1', 'max:28'],
+            'grace_days' => ['nullable', 'integer', 'min:0'],
+            'late_fee' => ['nullable', 'integer', 'min:0'],
             'applies_to' => ['required', 'string', 'in:all,target'],
+            'include_creator' => ['nullable', 'boolean'],
             'targets' => ['required_if:applies_to,target', 'array'],
             'targets.*.type' => ['required', 'string', 'in:user,property'],
             'targets.*.id' => ['required', 'integer'],
@@ -113,14 +148,17 @@ class CollectionController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'amount' => $validated['amount'],
-                'billing_type' => 'one_time',
-                'start_date' => now()->toDateString(),
-                'due_at' => $validated['due_at'],
-                'due_day' => 1,
-                'grace_days' => 0,
+                'billing_type' => $validated['billing_type'],
+                'recurring_interval' => $validated['recurring_interval'] ?? null,
+                'start_date' => $validated['start_date'] ?? now()->toDateString(),
+                'due_at' => $validated['due_at'] ?? null,
+                'due_day' => $validated['due_day'] ?? 1,
+                'grace_days' => $validated['grace_days'] ?? 0,
+                'late_fee' => $validated['late_fee'] ?? null,
                 'applies_to' => $validated['applies_to'],
                 'status' => 'active',
                 'created_by' => $user->id,
+                'include_creator' => $validated['include_creator'] ?? false,
             ]);
 
             if ($collection->applies_to === 'target') {

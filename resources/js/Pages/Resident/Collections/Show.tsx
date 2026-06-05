@@ -128,7 +128,7 @@ export default function CollectionShow({ assignment }: Props) {
 
                         {assignment.billing_source === 'property_owner' ? (
                             <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                Landlord Bill
+                                Property Owner Bill
                             </span>
                         ) : (
                             <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50">
@@ -140,7 +140,7 @@ export default function CollectionShow({ assignment }: Props) {
                         <p className="mt-2 max-w-[250px] font-medium text-slate-500">
                             {assignment.collection.description ||
                                 (assignment.billing_source === 'property_owner'
-                                    ? 'Levy/charge issued by your Landlord.'
+                                    ? 'Levy/charge issued by your Property Owner.'
                                     : 'Official Estate levy for the current period.')}
                         </p>
 

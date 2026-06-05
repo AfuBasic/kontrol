@@ -56,16 +56,29 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $creator = $this->assignment->collection->creator;
+        setPermissionsTeamId($this->assignment->estate_id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $propertyName = $notifiable->profile?->property?->name;
+
         return (new MailMessage)
-            ->subject("Payment Reminder: {$this->assignment->collection->name}")
+            ->subject($isPropertyOwner ? "House Bill Reminder: {$this->assignment->collection->name}" : "Payment Reminder: {$this->assignment->collection->name}")
             ->view('mail.resident.collection-reminder', [
                 'assignment' => $this->assignment,
+                'isPropertyOwner' => $isPropertyOwner,
+                'ownerName' => $creator ? $creator->name : null,
+                'propertyName' => $propertyName,
             ]);
     }
 
     public function toArray(object $notifiable): array
     {
         $remaining = $this->assignment->amount_due - $this->assignment->amount_paid;
+        $creator = $this->assignment->collection->creator;
+        setPermissionsTeamId($this->assignment->estate_id);
+        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $propertyName = $notifiable->profile?->property?->name;
+        $houseInfo = $propertyName ? "for your house ({$propertyName})" : 'for your house';
 
         return [
             'type' => 'collection_reminder',
@@ -74,10 +87,14 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
             'amount' => $remaining,
             'formatted_amount' => number_format($remaining, 2).' NGN',
             'estate_name' => $this->assignment->estate->name,
-            'title' => 'Payment Reminder',
-            'message' => $this->assignment->amount_paid > 0
-                ? "Reminder: Outstanding balance for {$this->assignment->collection->name} is due."
-                : "Reminder: Payment for {$this->assignment->collection->name} is due.",
+            'title' => $isPropertyOwner ? 'House Bill Reminder' : 'Payment Reminder',
+            'message' => $isPropertyOwner
+                ? ($this->assignment->amount_paid > 0
+                    ? "Reminder: Outstanding balance for '{$this->assignment->collection->name}' {$houseInfo} is due to your property owner ({$creator->name}), not the estate."
+                    : "Reminder: Payment for '{$this->assignment->collection->name}' {$houseInfo} is due to your property owner ({$creator->name}), not the estate.")
+                : ($this->assignment->amount_paid > 0
+                    ? "Reminder: Outstanding balance for {$this->assignment->collection->name} is due to the estate."
+                    : "Reminder: Payment for {$this->assignment->collection->name} is due to the estate."),
             'action_url' => route('resident.collections.show', $this->assignment, false),
         ];
     }

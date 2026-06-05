@@ -2,16 +2,23 @@
 
 use App\Events\Billing\InvoiceGenerated;
 use App\Events\Billing\PaymentReceived;
+use App\Jobs\Admin\PublishCollectionJob;
 use App\Mail\Admin\BillingInvoiceMail;
 use App\Mail\SendInvoiceMail;
+use App\Models\Collection;
+use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\Plan;
+use App\Models\Property;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Models\UserProfile;
 use App\Notifications\Admin\InvoiceGeneratedNotification;
 use App\Notifications\Admin\PaymentReceivedNotification;
+use App\Notifications\Resident\CollectionReminderNotification;
+use App\Notifications\Resident\NewCollectionNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
@@ -175,4 +182,201 @@ test('estate-wide invoice generation and payment notifications go to estate admi
         return $mail->hasTo($estate->email);
     });
     Notification::assertSentTo($admin, PaymentReceivedNotification::class);
+});
+
+test('property owners can create recurring collections successfully', function () {
+    // 1. Setup role, estate, and property owner
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $ownerRole = Role::firstOrCreate(['name' => 'property_owner', 'guard_name' => 'web']);
+    $estate = Estate::factory()->create();
+    $owner = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $owner->assignRole([$residentRole, $ownerRole]);
+    $estate->users()->attach($owner->id, ['status' => 'accepted']);
+
+    // Create resident managed by this property owner
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $resident = User::factory()->create();
+    $resident->assignRole($residentRole);
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    // 2. Act: Post to the store route as the property owner
+    $response = $this->actingAs($owner)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->post(route('resident.property-owner.collections.store'), [
+            'name' => 'Monthly Rent Levy',
+            'description' => 'Test monthly property rent collection',
+            'amount' => 60000,
+            'billing_type' => 'recurring',
+            'recurring_interval' => 'monthly',
+            'start_date' => now()->toDateString(),
+            'due_day' => 5,
+            'grace_days' => 2,
+            'late_fee' => 1500,
+            'applies_to' => 'all',
+        ]);
+
+    // 3. Assert redirect and database entry
+    $response->assertRedirect(route('resident.property-owner.collections.index'));
+
+    $this->assertDatabaseHas('collections', [
+        'name' => 'Monthly Rent Levy',
+        'amount' => 60000,
+        'billing_type' => 'recurring',
+        'recurring_interval' => 'monthly',
+        'due_day' => 5,
+        'grace_days' => 2,
+        'late_fee' => 1500,
+        'created_by' => $owner->id,
+    ]);
+});
+
+test('property owners can create collections and include themselves in the assignments', function () {
+    // 1. Setup role, estate, and property owner
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $ownerRole = Role::firstOrCreate(['name' => 'property_owner', 'guard_name' => 'web']);
+    $estate = Estate::factory()->create();
+    $owner = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $owner->assignRole([$residentRole, $ownerRole]);
+    $estate->users()->attach($owner->id, ['status' => 'accepted']);
+
+    // Create resident managed by this property owner
+    $resident = User::factory()->create();
+    $resident->assignRole($residentRole);
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    // 2. Act: Post to the store route with include_creator = true
+    $response = $this->actingAs($owner)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->post(route('resident.property-owner.collections.store'), [
+            'name' => 'Estate Security Levy',
+            'description' => 'Levy for securing estate gates',
+            'amount' => 25000,
+            'billing_type' => 'one_time',
+            'due_at' => now()->addDays(10)->toDateString(),
+            'applies_to' => 'all',
+            'include_creator' => true,
+        ]);
+
+    $response->assertRedirect(route('resident.property-owner.collections.index'));
+
+    $this->assertDatabaseHas('collections', [
+        'name' => 'Estate Security Levy',
+        'include_creator' => true,
+        'created_by' => $owner->id,
+    ]);
+
+    // Retrieve created collection
+    $collection = Collection::where('name', 'Estate Security Levy')->firstOrFail();
+
+    // 3. Dispatch the publishing job
+    PublishCollectionJob::dispatchSync($collection->id);
+
+    // 4. Assert: BOTH the resident and the property owner (creator) get assigned the bill
+    $this->assertDatabaseHas('collection_assignments', [
+        'collection_id' => $collection->id,
+        'user_id' => $resident->id,
+        'amount_due' => 25000,
+    ]);
+
+    $this->assertDatabaseHas('collection_assignments', [
+        'collection_id' => $collection->id,
+        'user_id' => $owner->id,
+        'amount_due' => 25000,
+    ]);
+});
+
+test('collection notifications and emails reflect property owner and house name details', function () {
+    // 1. Setup role, estate, property, owner, resident
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $ownerRole = Role::firstOrCreate(['name' => 'property_owner', 'guard_name' => 'web']);
+    $estate = Estate::factory()->create(['name' => 'Sunset Valley']);
+    $owner = User::factory()->create(['name' => 'Mr. Landlord']);
+
+    setPermissionsTeamId($estate->id);
+    $owner->assignRole([$residentRole, $ownerRole]);
+    $estate->users()->attach($owner->id, ['status' => 'accepted']);
+
+    $property = Property::create([
+        'estate_id' => $estate->id,
+        'property_owner_id' => $owner->id,
+        'name' => 'Villa 45',
+    ]);
+
+    $resident = User::factory()->create(['name' => 'Alice Resident']);
+    $resident->assignRole($residentRole);
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    UserProfile::create([
+        'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+        'property_id' => $property->id,
+    ]);
+
+    $collection = Collection::create([
+        'estate_id' => $estate->id,
+        'name' => 'Utility Bill',
+        'description' => 'Power and water bill',
+        'amount' => 15000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $owner->id,
+    ]);
+
+    $assignment = CollectionAssignment::create([
+        'collection_id' => $collection->id,
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 15000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5),
+    ]);
+
+    // Test NewCollectionNotification
+    $notification = new NewCollectionNotification($assignment);
+
+    // Test toArray (database/broadcast/fcm array payload)
+    $arrayData = $notification->toArray($resident);
+    expect($arrayData['title'])->toBe('New House Bill');
+    expect($arrayData['message'])->toContain('Utility Bill');
+    expect($arrayData['message'])->toContain('by your property owner (Mr. Landlord)');
+    expect($arrayData['message'])->toContain('for your house (Villa 45)');
+    expect($arrayData['message'])->toContain('not the estate');
+    expect($arrayData['action_url'])->toBe(route('resident.collections.show', $assignment, false));
+
+    // Test toMail
+    $mailMessage = $notification->toMail($resident);
+    expect($mailMessage->subject)->toBe('New House Bill: Utility Bill');
+
+    $viewData = $mailMessage->viewData;
+    expect($viewData['isPropertyOwner'])->toBeTrue();
+    expect($viewData['ownerName'])->toBe('Mr. Landlord');
+    expect($viewData['propertyName'])->toBe('Villa 45');
+
+    // Test CollectionReminderNotification
+    $reminder = new CollectionReminderNotification($assignment);
+
+    // Test toArray
+    $reminderArray = $reminder->toArray($resident);
+    expect($reminderArray['title'])->toBe('House Bill Reminder');
+    expect($reminderArray['message'])->toContain('due to your property owner (Mr. Landlord)');
+    expect($reminderArray['message'])->toContain('for your house (Villa 45)');
+    expect($reminderArray['message'])->toContain('not the estate');
+
+    // Test toMail
+    $reminderMail = $reminder->toMail($resident);
+    expect($reminderMail->subject)->toBe('House Bill Reminder: Utility Bill');
 });

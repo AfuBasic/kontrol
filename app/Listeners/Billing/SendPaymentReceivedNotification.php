@@ -27,7 +27,7 @@ class SendPaymentReceivedNotification
         }
 
         // Send paid invoice email to estate
-        $email = $estate->email ?? $estate->users()->first()?->email;
+        $email = $estate->email ?? User::withRole('admin', $estate->id)->first()?->email;
         if ($email) {
             Mail::to($email)->send(new SendInvoiceMail($event->invoice));
         }

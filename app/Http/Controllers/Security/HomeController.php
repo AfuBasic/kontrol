@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Security;
 
-use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\AccessLog;

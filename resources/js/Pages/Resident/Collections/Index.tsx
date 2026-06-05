@@ -76,7 +76,7 @@ export default function CollectionsIndex({ summary }: Props) {
     const tabs = [
         { id: 'all' as const, label: 'All Bills' },
         { id: 'estate' as const, label: 'Estate Bills' },
-        ...(hasLandlord ? [{ id: 'property_owner' as const, label: 'Landlord Bills' }] : []),
+        ...(hasLandlord ? [{ id: 'property_owner' as const, label: 'Property Owner Bills' }] : []),
     ];
 
     return (
@@ -174,7 +174,7 @@ export default function CollectionsIndex({ summary }: Props) {
                                             <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
                                             {assignment.billing_source === 'property_owner' ? (
                                                 <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                                    Landlord
+                                                    Property Owner
                                                 </span>
                                             ) : (
                                                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50">
@@ -241,7 +241,7 @@ export default function CollectionsIndex({ summary }: Props) {
                                             <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
                                             {assignment.billing_source === 'property_owner' ? (
                                                 <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                                    Landlord
+                                                    Property Owner
                                                 </span>
                                             ) : (
                                                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50">

@@ -1,13 +1,21 @@
 @extends('mail.layout')
 
 @section('content')
-    <div class="badge" style="background-color: #e0f2fe; color: #0369a1;">New Collection</div>
+    @if(isset($isPropertyOwner) && $isPropertyOwner)
+        <div class="badge" style="background-color: #e0f2fe; color: #0369a1;">New House Bill</div>
+    @else
+        <div class="badge" style="background-color: #e0f2fe; color: #0369a1;">New Collection</div>
+    @endif
     <h1>{{ $assignment->collection->name }}</h1>
 
     <p>Hello <span class="bold">{{ $assignment->user->name }}</span>,</p>
 
-    <p>A new payment collection <span class="bold">{{ $assignment->collection->name }}</span> has been set up at <span
-            class="bold">{{ $assignment->estate->name }}</span>.</p>
+    @if(isset($isPropertyOwner) && $isPropertyOwner)
+        <p>A new payment collection <span class="bold">{{ $assignment->collection->name }}</span> has been set up by your property owner, <span class="bold">{{ $ownerName }}</span>, for your house @if(isset($propertyName) && $propertyName)<span class="bold">({{ $propertyName }})</span>@endif. Please note that this is a private bill from your property owner/house, not from the estate administration.</p>
+    @else
+        <p>A new payment collection <span class="bold">{{ $assignment->collection->name }}</span> has been set up at <span
+                class="bold">{{ $assignment->estate->name }}</span>.</p>
+    @endif
 
     <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
         <table style="width: 100%;">
@@ -31,7 +39,7 @@
     <p>Please log in to your mobile app to see details and complete your payment:</p>
 
     <div class="button-container">
-        <a href="{{ url('/resident/billing') }}" class="button shadow"
+        <a href="{{ route('resident.collections.show', $assignment->ulid) }}" class="button shadow"
             style="background-color: #0a3d91; box-shadow: 0 4px 14px 0 rgba(10, 61, 145, 0.3);">View & Pay</a>
     </div>
 

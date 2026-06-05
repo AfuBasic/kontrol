@@ -327,12 +327,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const hasNoticeBoard = useFeature('interactive-notice-board');
     const isHouseholdMember = auth?.user?.roles?.includes('household_member') && !auth?.user?.roles?.includes('resident');
 
+    const showDuesInNav = !isHouseholdMember && hasPaymentCollection;
+    const showAnnouncementsInNav = !showDuesInNav && hasNoticeBoard;
+
     const residentMoreItems = [
         { name: 'Profile', href: '/resident/profile', icon: User },
         ...(hasHousehold && !isHouseholdMember ? [{ name: 'Household', href: '/resident/household', icon: UserCheck }] : []),
-        ...(!isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
+        ...(!showDuesInNav && !isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
         ...(!isHouseholdMember ? [{ name: 'SOS Contacts', href: '/resident/profile?open=emergency_management', icon: Shield }] : []),
-        ...(hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
+        ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
     ];
 
     const navItems = [
@@ -350,18 +353,19 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
         {
-            name: 'Activity',
-            href: '/resident/activity?tab=notifications',
-            show: auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasVisitFeed,
+            name: 'Dues',
+            href: '/resident/dues',
+            show: showDuesInNav,
             icon: (active: boolean) => (
-                <div className="relative">
-                    <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
-                            {unreadCount}
-                        </span>
-                    )}
-                </div>
+                <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
+            ),
+        },
+        {
+            name: 'Announcements',
+            href: '/resident/estate-board',
+            show: showAnnouncementsInNav,
+            icon: (active: boolean) => (
+                <Megaphone className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
             ),
         },
         {
@@ -385,17 +389,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null },
         {
-            name: 'Activity',
-            href: '/resident/activity?tab=notifications',
+            name: 'Manage Dues',
+            href: '/resident/property-owner/collections',
             icon: (active: boolean) => (
-                <div className="relative">
-                    <Bell className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
-                            {unreadCount}
-                        </span>
-                    )}
-                </div>
+                <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
             ),
         },
         {
@@ -492,6 +489,17 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                     <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                                 </div>
+                                <Link
+                                    href="/resident/activity?tab=notifications"
+                                    className="relative rounded-xl p-2 text-slate-500 hover:bg-slate-50 active:scale-95 transition-all"
+                                >
+                                    <Bell className="h-6 w-6" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
                             </div>
                         </div>
                     </header>
@@ -665,7 +673,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 </button>
                             </div>
                             <div className="grid grid-cols-3 gap-4">
-                                {(isPropertyOwner ? poSidebarItems : residentMoreItems).map((item) => {
+                                {(isPropertyOwner ? poSidebarItems.filter(item => item.name !== 'Manage Dues') : residentMoreItems).map((item) => {
                                     if (item.name === 'SOS') {
                                         return (
                                             <div key={item.name} className="flex flex-col items-center gap-1.5">

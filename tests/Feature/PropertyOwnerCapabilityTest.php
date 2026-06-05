@@ -168,7 +168,7 @@ test('property owner dashboard, residents, properties, collections, and announce
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('Resident/PropertyOwner/Residents/Index')
-        ->has('residents', 2)
+        ->has('residents.data', 2)
     );
 
     // 6. Assign resident to property
@@ -187,6 +187,7 @@ test('property owner dashboard, residents, properties, collections, and announce
             'name' => 'July Rent',
             'description' => 'Annual Rent',
             'amount' => 150000,
+            'billing_type' => 'one_time',
             'due_at' => now()->addDays(5)->toDateString(),
             'applies_to' => 'all',
         ]);

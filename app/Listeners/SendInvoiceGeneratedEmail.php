@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\Billing\InvoiceGenerated;
 use App\Mail\SendInvoiceMail;
+use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
@@ -22,7 +23,7 @@ class SendInvoiceGeneratedEmail implements ShouldQueue
             return;
         }
 
-        $email = $event->invoice->estate->email ?? $event->invoice->estate->users()->first()?->email;
+        $email = $event->invoice->estate->email ?? User::withRole('admin', $event->invoice->estate_id)->first()?->email;
 
         if (! $email) {
             return;
