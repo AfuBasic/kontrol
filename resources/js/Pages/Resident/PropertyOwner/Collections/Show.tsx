@@ -72,7 +72,7 @@ export default function Show({ collection, assignments, collected, outstanding }
             <div className="flex items-center gap-3">
                 <Link
                     href={index.url()}
-                    className="text-slate-655 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all hover:bg-slate-50"
+                    className="text-slate-600 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all hover:bg-slate-50"
                 >
                     <ArrowLeftIcon className="h-5 w-5" />
                 </Link>
@@ -91,7 +91,7 @@ export default function Show({ collection, assignments, collected, outstanding }
 
                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
                     <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Outstanding Balance</h3>
-                    <p className="text-slate-955 mt-2 text-2xl font-black">₦{outstanding.toLocaleString()}</p>
+                    <p className="text-slate-950 mt-2 text-2xl font-black">₦{outstanding.toLocaleString()}</p>
                 </div>
 
                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
@@ -103,7 +103,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                         </span>
                     </div>
                     <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div className="bg-indigo-650 h-full transition-all duration-500" style={{ width: `${collectedPct}%` }} />
+                        <div className="bg-indigo-600 h-full transition-all duration-500" style={{ width: `${collectedPct}%` }} />
                     </div>
                 </div>
             </div>
@@ -176,7 +176,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                                             reference: '',
                                                         });
                                                     }}
-                                                    className="text-indigo-650 inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black transition-colors hover:bg-indigo-100"
+                                                    className="text-indigo-600 inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black transition-colors hover:bg-indigo-100"
                                                 >
                                                     Record Payment
                                                 </button>
@@ -203,7 +203,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setRecordingAssignment(null)}
-                            className="bg-slate-905/60 absolute inset-0 backdrop-blur-xs"
+                            className="bg-slate-900/60 absolute inset-0 backdrop-blur-xs"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -215,7 +215,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                 <h3 className="text-lg font-black text-slate-950">Record Offline Payment</h3>
                                 <button
                                     onClick={() => setRecordingAssignment(null)}
-                                    className="hover:text-slate-650 rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-50"
+                                    className="hover:text-slate-700 rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-50"
                                 >
                                     <XMarkIcon className="h-5 w-5" />
                                 </button>
@@ -243,7 +243,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         max={recordingAssignment.amount_due - recordingAssignment.amount_paid}
                                         value={paymentForm.data.amount}
                                         onChange={(e) => paymentForm.setData('amount', e.target.value)}
-                                        className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                         placeholder="Amount"
                                     />
                                     {paymentForm.errors.amount && <p className="mt-1 text-xs font-bold text-rose-600">{paymentForm.errors.amount}</p>}
@@ -258,7 +258,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         id="payment-reference"
                                         value={paymentForm.data.reference}
                                         onChange={(e) => paymentForm.setData('reference', e.target.value)}
-                                        className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 px-4 py-3 text-sm focus:border-indigo-500"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                         placeholder="e.g. Cash, Bank Transfer reference"
                                     />
                                     {paymentForm.errors.reference && (
