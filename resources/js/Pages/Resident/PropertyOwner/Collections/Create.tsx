@@ -40,7 +40,7 @@ export default function Create({ residents, properties }: Props) {
         description: '',
         amount: '',
         billing_type: 'one_time' as 'one_time' | 'recurring',
-        recurring_interval: 'monthly' as 'monthly' | 'yearly',
+        recurring_interval: 'monthly' as 'monthly' | 'weekly' | 'yearly',
         start_date: new Date().toISOString().split('T')[0],
         due_at: '',
         due_day: 1,
@@ -477,9 +477,10 @@ export default function Create({ residents, properties }: Props) {
                                             <select
                                                 id="recurring_interval"
                                                 value={data.recurring_interval}
-                                                onChange={(e) => setData('recurring_interval', e.target.value as 'monthly' | 'yearly')}
+                                                onChange={(e) => setData('recurring_interval', e.target.value as 'monthly' | 'weekly' | 'yearly')}
                                                 className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                             >
+                                                <option value="weekly">Weekly</option>
                                                 <option value="monthly">Monthly</option>
                                                 <option value="yearly">Yearly</option>
                                             </select>

@@ -36,11 +36,22 @@ class RecurringAssignmentJob implements ShouldQueue
     private function processCollection(Collection $collection, Carbon $now): void
     {
         $startDate = Carbon::parse($collection->start_date);
-        $periodFormat = $collection->recurring_interval === 'monthly' ? 'Y-m' : 'Y';
+        $periodFormat = match ($collection->recurring_interval) {
+            'weekly' => 'Y-W',
+            'yearly' => 'Y',
+            default => 'Y-m',   // monthly
+        };
         $currentPeriod = $now->format($periodFormat);
 
         // New assignments are created on the anniversary of start_date each period,
         // NOT on due_day. due_day is when payment is due (used for reminders/overdue logic).
+        if ($collection->recurring_interval === 'weekly') {
+            // Trigger on the same day-of-week as the start_date
+            if ($now->dayOfWeek !== $startDate->dayOfWeek) {
+                return;
+            }
+        }
+
         if ($collection->recurring_interval === 'monthly') {
             if ($now->day !== $startDate->day) {
                 return;
@@ -58,12 +69,17 @@ class RecurringAssignmentJob implements ShouldQueue
         $userIds = $this->getTargetUserIds($collection);
 
         // due_date is due_day of the current period, not today (the start day)
-        $dueDate = $now->copy()->day($collection->due_day);
+        // For weekly collections, the due_date is 7 days from today (start of the week)
+        if ($collection->recurring_interval === 'weekly') {
+            $dueDate = $now->copy()->addDays(7);
+        } else {
+            $dueDate = $now->copy()->day($collection->due_day);
 
-        // Handle edge case: if due_day is less than start day (e.g. starts on 20th, due on 5th),
-        // the due date falls in the next month
-        if ($dueDate->lt($now)) {
-            $dueDate->addMonth();
+            // Handle edge case: if due_day is less than start day (e.g. starts on 20th, due on 5th),
+            // the due date falls in the next month
+            if ($dueDate->lt($now)) {
+                $dueDate->addMonth();
+            }
         }
 
         $graceUntil = $collection->grace_days > 0

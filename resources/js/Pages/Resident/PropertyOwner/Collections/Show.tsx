@@ -120,30 +120,30 @@ export default function Show({ collection, assignments, collected, outstanding }
             <div className="space-y-4">
                 <h2 className="text-lg font-black text-slate-900">Billing Directory</h2>
 
-                <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
+                <div className="overflow-x-auto rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
                     {assignments.length > 0 ? (
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead className="bg-slate-50/50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Resident</th>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Property</th>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Resident</th>
+                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Property</th>
+                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">
                                         Amount Due
                                     </th>
-                                    <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
-                                    <th className="relative px-6 py-4"></th>
+                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
+                                    <th className="relative px-4 py-4"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 bg-white">
                                 {assignments.map((asg) => (
                                     <tr key={asg.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-4 whitespace-nowrap">
                                             <span className="text-sm font-bold text-slate-900">{asg.resident_name}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-slate-500">{asg.property_name}</span>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-slate-500">{asg.property_name || '—'}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-4 whitespace-nowrap">
                                             <div className="text-sm font-bold text-slate-900">
                                                 ₦{(asg.amount_due - asg.amount_paid).toLocaleString()}
                                                 {asg.amount_paid > 0 && (
@@ -153,7 +153,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                                                     asg.status === 'paid'
@@ -166,7 +166,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                                 {asg.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                                        <td className="px-4 py-4 text-right whitespace-nowrap">
                                             {asg.status !== 'paid' && (
                                                 <button
                                                     onClick={() => {

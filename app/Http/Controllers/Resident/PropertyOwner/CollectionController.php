@@ -129,7 +129,7 @@ class CollectionController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
             'amount' => ['required', 'integer', 'min:1'],
             'billing_type' => ['required', 'string', 'in:one_time,recurring'],
-            'recurring_interval' => ['required_if:billing_type,recurring', 'nullable', 'string', 'in:monthly,yearly'],
+            'recurring_interval' => ['required_if:billing_type,recurring', 'nullable', 'string', 'in:weekly,monthly,yearly'],
             'start_date' => ['required_if:billing_type,recurring', 'nullable', 'date'],
             'due_at' => ['required_if:billing_type,one_time', 'nullable', 'date', 'after:today'],
             'due_day' => ['required_if:billing_type,recurring', 'nullable', 'integer', 'min:1', 'max:28'],
