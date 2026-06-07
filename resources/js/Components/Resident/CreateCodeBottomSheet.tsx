@@ -312,10 +312,17 @@ export default function CreateCodeBottomSheet({ isOpen, onClose }: Props) {
                                                     Back
                                                 </button>
                                                 <button
-                                                    onClick={() => setStep('duration')}
-                                                    className="flex-[2] rounded-2xl bg-slate-900 py-4.5 font-black text-white shadow-xl transition-all active:scale-95"
+                                                    onClick={() => {
+                                                        if (form.data.type === 'long_lived') {
+                                                            submit();
+                                                        } else {
+                                                            setStep('duration');
+                                                        }
+                                                    }}
+                                                    disabled={form.processing}
+                                                    className="flex-[2] rounded-2xl bg-slate-900 py-4.5 font-black text-white shadow-xl transition-all active:scale-95 disabled:opacity-50"
                                                 >
-                                                    Next
+                                                    {form.data.type === 'long_lived' ? (form.processing ? 'Generating...' : 'Generate Pass') : 'Next'}
                                                 </button>
                                             </div>
                                         </motion.div>
