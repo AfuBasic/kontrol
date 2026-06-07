@@ -1,8 +1,8 @@
+import { Capacitor } from '@capacitor/core';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Copy, Link as LinkIcon, Mail, Power, QrCode, RefreshCw, Share2, User, X } from 'lucide-react';
+import { CheckCircle, Copy, Link as LinkIcon, Power, QrCode, RefreshCw, Share2, User, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 import {
     index,
     store,
@@ -85,16 +85,16 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
     const handleShareImage = async () => {
         if (!inviteLink?.url) return;
         const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(inviteLink.url)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`;
-        
+
         try {
             const isNative = Capacitor.isNativePlatform();
             if (isNative) {
                 const { Filesystem, Directory } = await import('@capacitor/filesystem');
                 const { Share } = await import('@capacitor/share');
-                
+
                 const response = await fetch(qrImageUrl);
                 const blob = await response.blob();
-                
+
                 const base64Data = await new Promise<string>((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onloadend = () => {
