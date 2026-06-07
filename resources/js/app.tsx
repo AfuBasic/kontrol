@@ -94,11 +94,14 @@ createInertiaApp({
 
             return (
                 <AppErrorBoundary>
-                    <div style={{ display: isBooting ? 'none' : 'block' }}>
-                        <App {...props} />
-                    </div>
-                    {isBooting && <AppLoader isExiting={isExiting} />}
-                    <RouteProgressBar />
+                    {isBooting ? (
+                        <AppLoader isExiting={isExiting} />
+                    ) : (
+                        <>
+                            <App {...props} />
+                            <RouteProgressBar />
+                        </>
+                    )}
                 </AppErrorBoundary>
             );
         }

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import Header from '@/Components/Public/Header';
+import ScrollReveal from '@/Components/Public/ScrollReveal';
 import { VisitorEntryAnimation, LeviesCollectionsAnimation, EmergencySOSAnimation } from '@/Components/Public/RemotionAnimations';
 import type { SharedData } from '@/types';
 
@@ -504,7 +505,7 @@ export default function Home({ plans }: Props) {
                 </div>
 
                 {/* Stats Container block at the bottom */}
-                <div className="z-20 mx-auto mb-16 w-full max-w-7xl px-6">
+                <ScrollReveal variant="slide-up" className="z-20 mx-auto mb-16 w-full max-w-7xl px-6">
                     <div className="grid grid-cols-1 items-stretch gap-6 rounded-2xl border border-slate-200 bg-slate-50/65 p-6 backdrop-blur-md md:grid-cols-3 dark:border-slate-900 dark:bg-slate-950/60">
                         <div className="border-slate-250 flex flex-col gap-1 pr-6 md:border-r dark:border-slate-900/60">
                             <span className="font-mono text-2xl font-black text-slate-900 dark:text-white">99.9%</span>
@@ -522,11 +523,11 @@ export default function Home({ plans }: Props) {
                             <span className="mt-1 text-xs text-slate-600 dark:text-slate-400">Complete transparency and digital accountability.</span>
                         </div>
                     </div>
-                </div>
+                </ScrollReveal>
             </section>{' '}
             <section id="features" className="relative border-b border-slate-200 py-24 dark:border-slate-900">
                 <div className="mx-auto max-w-7xl px-6">
-                    <div className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
+                    <ScrollReveal variant="slide-up" className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
                         <span className="text-xs font-bold tracking-widest text-[#FF7E67] uppercase">How it works</span>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">
                             Simple for security, residents, and managers.
@@ -535,7 +536,7 @@ export default function Home({ plans }: Props) {
                             No complicated systems to learn. Residents create codes, security scans at the gate, and managers oversee everything on a
                             clean dashboard.
                         </p>
-                    </div>
+                    </ScrollReveal>
 
                     <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12">
                         {/* Interactive Tab switches */}
@@ -929,7 +930,7 @@ export default function Home({ plans }: Props) {
             {/* NEW SECTION 2: SECURITY TELEMETRY & OPERATIONS GRID */}
             <section className="relative border-b border-slate-200 py-24 dark:border-slate-900">
                 <div className="mx-auto max-w-7xl px-6">
-                    <div className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
+                    <ScrollReveal variant="slide-up" className="mx-auto mb-16 flex max-w-3xl flex-col gap-4 text-center">
                         <span className="text-xs font-bold tracking-widest text-[#FF7E67] uppercase">Gate Operations</span>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">
                             Digital checkpoint telemetry
@@ -937,69 +938,77 @@ export default function Home({ plans }: Props) {
                         <p className="text-base text-slate-600 sm:text-lg dark:text-slate-400">
                             Give your security guard crew the ultimate digital toolkit. Zero setups, zero servers, zero lag.
                         </p>
-                    </div>
+                    </ScrollReveal>
 
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
                         {/* Telemetry Card 1 */}
-                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
-                                <QrCode className="h-5 w-5 text-[#FF7E67]" />
+                        <ScrollReveal variant="scale-up" delay={0}>
+                            <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                    <QrCode className="h-5 w-5 text-[#FF7E67]" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">Live Activity Audits</h3>
+                                <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                    Complete timeline history of every check-in, check-out, and scan event at your estate gates. Completely digital
+                                    and immutable.
+                                </p>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Live Activity Audits</h3>
-                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
-                                Complete timeline history of every check-in, check-out, and scan event at your estate gates. Completely digital and
-                                immutable.
-                            </p>
-                        </div>
+                        </ScrollReveal>
 
                         {/* Telemetry Card 2 */}
-                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
-                                <Users className="h-5 w-5 text-indigo-500" />
+                        <ScrollReveal variant="scale-up" delay={0.1}>
+                            <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                    <Users className="h-5 w-5 text-indigo-500" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">Guard Shift Rosters</h3>
+                                <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                    Seamless guard handover logs. Assign security guards to specific gates and monitor validation speeds and scans per
+                                    shift.
+                                </p>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Guard Shift Rosters</h3>
-                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
-                                Seamless guard handover logs. Assign security guards to specific gates and monitor validation speeds and scans per
-                                shift.
-                            </p>
-                        </div>
+                        </ScrollReveal>
 
                         {/* Telemetry Card 3 */}
-                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
-                                <WifiOff className="h-5 w-5 text-emerald-400" />
+                        <ScrollReveal variant="scale-up" delay={0.2}>
+                            <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                    <WifiOff className="h-5 w-5 text-emerald-400" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">Offline Scanning</h3>
+                                <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                    Network failure? No problem. Gate scan records cache offline on guard terminals and sync instantly with databases
+                                    when connectivity is restored.
+                                </p>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Offline Scanning</h3>
-                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
-                                Network failure? No problem. Gate scan records cache offline on guard terminals and sync instantly with databases when
-                                connectivity is restored.
-                            </p>
-                        </div>
+                        </ScrollReveal>
 
                         {/* Telemetry Card 4 */}
-                        <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
-                                <Bell className="h-5 w-5 text-[#FF7E67]" />
+                        <ScrollReveal variant="scale-up" delay={0.3}>
+                            <div className="hover:border-slate-350 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/50 p-6 transition-all dark:border-slate-900 dark:bg-slate-950/20 dark:hover:border-slate-800">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
+                                    <Bell className="h-5 w-5 text-[#FF7E67]" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">Instant Arrivals</h3>
+                                <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
+                                    Residents receive real-time push alerts the exact second their guest pass is validated, with name, phone, and
+                                    registration tags.
+                                </p>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white">Instant Arrivals</h3>
-                            <p className="text-slate-550 text-xs leading-relaxed font-medium dark:text-slate-400">
-                                Residents receive real-time push alerts the exact second their guest pass is validated, with name, phone, and
-                                registration tags.
-                            </p>
-                        </div>
+                        </ScrollReveal>
                     </div>
                 </div>
             </section>
             {/* NEW SECTION 3: FAQ ACCORDION */}
             <section className="relative border-b border-slate-200 bg-slate-50/50 py-24 dark:border-slate-900 dark:bg-[#0f172a]/20">
                 <div className="mx-auto max-w-4xl px-6">
-                    <div className="mx-auto mb-16 flex max-w-2xl flex-col gap-4 text-center">
+                    <ScrollReveal variant="slide-up" className="mx-auto mb-16 flex max-w-2xl flex-col gap-4 text-center">
                         <span className="text-xs font-bold tracking-widest text-[#4F46E5] uppercase">Common Questions</span>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl dark:text-white">Frequently Asked Questions</h2>
                         <p className="text-base text-slate-600 sm:text-lg dark:text-slate-400">
                             Got questions about how Kontrol works in gated communities? We have answers.
                         </p>
-                    </div>
+                    </ScrollReveal>
 
                     <div className="flex flex-col gap-4">
                         {[
@@ -1095,9 +1104,14 @@ export default function Home({ plans }: Props) {
                                     Generate access codes, settle levies, and get emergency alerts directly on your Apple device.
                                 </p>
                             </div>
-                            <button className="mt-auto flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-3.5 text-xs font-bold text-slate-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-                                App Store Coming Soon
-                            </button>
+                            <a
+                                href="https://apps.apple.com/us/app/access-kontrol/id6772562083"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-slate-900 bg-slate-900 py-3.5 text-xs font-bold text-white transition-all hover:bg-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+                            >
+                                Download on the App Store
+                            </a>
                         </div>
 
                         {/* Google Play */}

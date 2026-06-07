@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, useMotionValue, animate as animateX } from 'framer-motion';
-import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, AlertTriangle, Check, QrCode, Smartphone, Bell, CreditCard, ShieldAlert, MessageSquare, ArrowRight, Shield, Activity, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
@@ -40,33 +40,186 @@ export default function Login() {
 
     const onboardingSlides = [
         {
-            title: 'Welcome to Kontrol',
-            subtitle: 'Estate access, simplified',
-            description: 'Experience a smarter, safer way of living. Manage visitors, stay informed, and settle dues in one unified platform.',
-            icon: Sparkles,
-            themeBg: 'bg-indigo-600',
+            title: 'Community Living, Reimagined.',
+            subtitle: 'Welcome to Kontrol',
+            description: 'One platform for access, communication, payments, and peace of mind.',
+            visual: (
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+                    {/* Floating Main Access Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30, rotateX: 15 }}
+                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className="relative z-10 w-64 rounded-2xl border border-white/10 bg-slate-900/40 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md"
+                    >
+                        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                            <div>
+                                <h4 className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">Resident Pass</h4>
+                                <p className="mt-0.5 text-xs font-bold text-white">Gateway Estate</p>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/20">
+                                <Shield className="h-4 w-4 text-indigo-400" />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
+                                <Check className="h-4 w-4 text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-medium text-slate-400">Status</p>
+                                <p className="text-xs font-bold text-emerald-400">Active • Verified</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Floating Live Notification */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -30, y: -20 }}
+                        animate={{ opacity: 1, x: 0, y: -10 }}
+                        transition={{ delay: 0.5, duration: 0.8 }}
+                        className="absolute top-10 left-4 z-20 flex w-48 items-center gap-2.5 rounded-xl border border-white/5 bg-slate-900/90 p-2.5 shadow-lg backdrop-blur-md"
+                    >
+                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/20">
+                            <Bell className="h-3 w-3 text-indigo-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[9px] font-bold text-white">Access Verified</p>
+                            <p className="truncate text-[8px] text-slate-400">Gate 1 • 2 mins ago</p>
+                        </div>
+                    </motion.div>
+                </div>
+            ),
         },
         {
-            title: 'Easy Guest Access',
-            subtitle: 'Secure Access Control',
-            description: 'Generate temporary gate codes for your family, friends, or delivery agents. Get notified in real-time when they arrive.',
-            icon: Key,
-            themeBg: 'bg-blue-600',
+            title: 'Let Guests In Without The Calls.',
+            subtitle: 'Visitor Access',
+            description: 'Generate secure visitor passes and receive instant arrival alerts.',
+            visual: (
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+                    {/* Phone Mockup */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="relative z-10 w-44 rounded-[28px] border-4 border-slate-800 bg-slate-950 p-3 shadow-2xl"
+                    >
+                        {/* Screen Area */}
+                        <div className="flex flex-col items-center">
+                            {/* Pass Header */}
+                            <span className="mt-1 text-[8px] font-black tracking-wider text-indigo-400 uppercase">Visitor Pass</span>
+                            {/* QR Code */}
+                            <div className="relative mt-3 rounded-xl bg-white p-2.5">
+                                <QrCode className="h-16 w-16 text-slate-950" />
+                                {/* pulse ray effect */}
+                                <motion.div
+                                    animate={{ y: [0, 64, 0] }}
+                                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                                    className="absolute inset-x-2.5 top-2.5 h-0.5 bg-indigo-500 shadow-md shadow-indigo-500"
+                                />
+                            </div>
+                            <p className="mt-3 text-[10px] font-black tracking-widest text-white">829 - 102</p>
+                            <p className="mt-0.5 text-[7px] text-slate-500">Expires in 2h 14m</p>
+                        </div>
+                    </motion.div>
+
+                    {/* Floating gate checked-in notification */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 30, y: 30 }}
+                        animate={{ opacity: 1, x: 0, y: 15 }}
+                        transition={{ delay: 0.4, duration: 0.8 }}
+                        className="absolute right-2 bottom-12 z-20 flex w-52 items-center gap-3 rounded-xl border border-emerald-500/20 bg-slate-900/95 p-3 shadow-xl backdrop-blur-md"
+                    >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
+                            <Smartphone className="h-4 w-4 text-emerald-400" />
+                        </div>
+                        <div className="min-w-0 text-left">
+                            <p className="text-[9px] font-black text-white uppercase">Gate Notification</p>
+                            <p className="mt-0.5 truncate text-[10px] font-semibold text-emerald-400">Guest "John Doe" checked in.</p>
+                        </div>
+                    </motion.div>
+                </div>
+            ),
         },
         {
-            title: 'Pay Dues in a Tap',
-            subtitle: 'Hassle-Free Payments',
-            description: 'Track and pay your outstanding estate dues, levies, and recurring bills securely all in one place.',
-            icon: Wallet,
-            themeBg: 'bg-purple-600',
+            title: 'Pay Community Dues In Seconds.',
+            subtitle: 'Levies & Payments',
+            description: 'Track and settle estate levies, dues, and contributions effortlessly.',
+            visual: (
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+                    {/* Collection Card */}
+                    <motion.div
+                        initial={{ opacity: 0, rotateY: -10, y: -15 }}
+                        animate={{ opacity: 1, rotateY: 0, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="relative z-10 w-56 rounded-2xl border border-white/10 bg-linear-to-tr from-indigo-950 via-slate-900 to-indigo-900 p-5 shadow-2xl"
+                    >
+                        <div className="flex items-start justify-between">
+                            <CreditCard className="h-6 w-6 text-indigo-400" />
+                            <span className="text-[8px] font-bold tracking-widest text-white/50 uppercase">Secured</span>
+                        </div>
+                        <div className="mt-6">
+                            <p className="text-[8px] font-semibold tracking-wider text-slate-400 uppercase">Security & Levy</p>
+                            <p className="mt-1 text-xl font-black text-white">₦15,000.00</p>
+                        </div>
+                    </motion.div>
+
+                    {/* Paid Stamp */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+                        animate={{ opacity: 1, scale: 1, rotate: -5 }}
+                        transition={{ delay: 0.6, type: 'spring' }}
+                        className="absolute right-4 bottom-10 z-20 flex items-center gap-1.5 rounded-full border border-emerald-500 bg-emerald-950/90 px-3.5 py-1.5 shadow-lg shadow-emerald-950/40"
+                    >
+                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950">
+                            <Check className="h-2.5 w-2.5 font-bold" />
+                        </div>
+                        <span className="text-[9px] font-black tracking-widest text-white uppercase">Paid Successfully</span>
+                    </motion.div>
+                </div>
+            ),
         },
         {
-            title: 'Report Incidents',
-            subtitle: 'Quick Safety Updates',
-            description:
-                'Report security concerns, maintenance issues, or emergencies immediately. Keep the estate security and admins updated in realtime.',
-            icon: AlertTriangle,
-            themeBg: 'bg-rose-500',
+            title: 'Stay Connected When It Matters.',
+            subtitle: 'Alerts & Communications',
+            description: 'Receive updates, report incidents, and stay informed in real time.',
+            visual: (
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden px-6">
+                    <div className="relative z-10 w-64 space-y-3">
+                        {/* Feed Item 1 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -25 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-900/90 p-3 shadow-lg backdrop-blur-sm"
+                        >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/20">
+                                <ShieldAlert className="h-4 w-4 text-rose-400" />
+                            </div>
+                            <div className="min-w-0 flex-1 text-left">
+                                <p className="text-[9px] font-bold text-white">Emergency Dispatch</p>
+                                <p className="mt-0.5 text-[8px] text-slate-400">SOS alert sent to main security gate.</p>
+                            </div>
+                        </motion.div>
+
+                        {/* Feed Item 2 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 25 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-900/90 p-3 shadow-lg backdrop-blur-sm"
+                        >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20">
+                                <MessageSquare className="h-4 w-4 text-indigo-400" />
+                            </div>
+                            <div className="min-w-0 flex-1 text-left">
+                                <p className="text-[9px] font-bold text-white">Estate Announcement</p>
+                                <p className="mt-0.5 text-[8px] text-slate-400">Water supply maintenance scheduled.</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            ),
         },
     ];
 
@@ -117,6 +270,23 @@ export default function Login() {
             setShowOnboarding(true);
         }
     }, []);
+
+    useEffect(() => {
+        if (showOnboarding) {
+            document.documentElement.style.overscrollBehavior = 'none';
+            document.body.style.overscrollBehavior = 'none';
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.documentElement.style.overscrollBehavior = '';
+            document.body.style.overscrollBehavior = '';
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.documentElement.style.overscrollBehavior = '';
+            document.body.style.overscrollBehavior = '';
+            document.body.style.overflow = '';
+        };
+    }, [showOnboarding]);
 
     const handleOnboardingComplete = () => {
         localStorage.setItem('seen_public_onboarding', 'true');
@@ -239,7 +409,7 @@ export default function Login() {
                 <Head title="Welcome" />
 
                 {/* Full-screen clipping viewport */}
-                <div ref={carouselRef} className="fixed inset-0 z-50 overflow-hidden">
+                <div ref={carouselRef} className="fixed inset-0 z-50 overflow-hidden bg-[#0B0F19]">
                     {/* Track: all slides side by side, translated by carouselX */}
                     <motion.div
                         className="flex h-full cursor-grab select-none active:cursor-grabbing"
@@ -264,28 +434,48 @@ export default function Login() {
                         }}
                     >
                         {onboardingSlides.map((slide, i) => {
-                            const Icon = slide.icon;
                             return (
                                 <div
                                     key={i}
-                                    className={`${slide.themeBg} relative flex h-full flex-col items-center justify-center px-10 text-center select-none`}
+                                    className="relative flex h-full flex-col items-center justify-between py-20 px-6 text-center select-none bg-[#0B0F19] text-white"
                                     style={{
                                         width: `${100 / onboardingSlides.length}%`,
                                     }}
                                 >
-                                    {/* Radial glow */}
-                                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.12)_0%,transparent_60%)]" />
+                                    {/* Ambient Glows per slide to give depth */}
+                                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-[80px]" />
+                                        {i === 1 && (
+                                            <div className="absolute bottom-40 right-10 w-[200px] h-[200px] rounded-full bg-emerald-500/5 blur-[60px]" />
+                                        )}
+                                        {i === 2 && (
+                                            <div className="absolute bottom-40 left-10 w-[200px] h-[200px] rounded-full bg-amber-500/5 blur-[60px]" />
+                                        )}
+                                        {i === 3 && (
+                                            <div className="absolute bottom-40 right-10 w-[200px] h-[200px] rounded-full bg-rose-500/5 blur-[60px]" />
+                                        )}
+                                    </div>
 
-                                    <div className="relative z-10 flex flex-col items-center">
-                                        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 shadow-2xl backdrop-blur-sm">
-                                            <Icon className="h-10 w-10 text-white" />
-                                        </div>
-                                        <span className="mt-8 text-[11px] font-black tracking-[0.2em] text-white/60 uppercase">{slide.subtitle}</span>
-                                        <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">{slide.title}</h2>
-                                        <p className="mt-6 max-w-xs text-base leading-relaxed font-medium text-white/80 sm:max-w-sm">
+                                    {/* Visual preview area */}
+                                    <div className="relative flex-1 w-full flex items-center justify-center max-h-[45vh]">
+                                        {slide.visual}
+                                    </div>
+
+                                    {/* Content Area */}
+                                    <div className="relative z-10 flex flex-col items-center mt-6 max-w-sm px-4">
+                                        <span className="text-[10px] font-black tracking-[0.25em] text-indigo-400 uppercase">
+                                            {slide.subtitle}
+                                        </span>
+                                        <h2 className="mt-3.5 text-3xl font-black tracking-tight leading-tight text-white">
+                                            {slide.title}
+                                        </h2>
+                                        <p className="mt-4 text-sm leading-relaxed text-slate-400 font-medium">
                                             {slide.description}
                                         </p>
                                     </div>
+                                    
+                                    {/* Spacer to keep space for bottom controls */}
+                                    <div className="h-24" />
                                 </div>
                             );
                         })}
@@ -294,7 +484,7 @@ export default function Login() {
                     {/* Skip */}
                     <button
                         onClick={handleOnboardingComplete}
-                        className="absolute top-12 right-6 z-20 rounded-full px-3 py-1.5 text-xs font-bold text-white/50 transition-colors hover:text-white"
+                        className="absolute top-12 right-6 z-20 rounded-full px-3.5 py-1.5 text-xs font-bold text-white/50 transition-colors hover:text-white"
                     >
                         Skip
                     </button>
@@ -302,13 +492,13 @@ export default function Login() {
                     {/* Bottom controls */}
                     <div className="absolute right-0 bottom-14 left-0 z-20 flex flex-col items-center gap-7 px-8">
                         {/* Dots */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2.5">
                             {onboardingSlides.map((_, i) => (
                                 <button
                                     key={i}
                                     onClick={() => goToSlide(i)}
-                                    className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
-                                        currentSlide === i ? 'w-8 bg-white' : 'w-1.5 bg-white/35'
+                                    className={`h-1.5 cursor-pointer rounded-full transition-all duration-500 ${
+                                        currentSlide === i ? 'w-8 bg-indigo-500' : 'w-1.5 bg-white/15 hover:bg-white/25'
                                     }`}
                                 />
                             ))}
@@ -319,28 +509,32 @@ export default function Login() {
                             {currentSlide > 0 ? (
                                 <button
                                     onClick={prevSlide}
-                                    className="cursor-pointer rounded-xl px-5 py-3 text-sm font-semibold text-white/60 transition-colors hover:text-white"
+                                    className="cursor-pointer rounded-xl bg-white/5 border border-white/5 px-5 py-3 text-xs font-bold text-slate-300 transition-all hover:bg-white/10 sm:text-sm active:scale-95"
                                 >
                                     Back
                                 </button>
                             ) : (
-                                <div />
+                                <button
+                                    onClick={handleOnboardingComplete}
+                                    className="cursor-pointer rounded-xl px-5 py-3 text-xs font-bold text-slate-400 transition-all hover:text-white sm:text-sm"
+                                >
+                                    Skip
+                                </button>
                             )}
 
                             <button
                                 onClick={nextSlide}
-                                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-2xl px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all active:scale-95 ${
-                                    currentSlide === onboardingSlides.length - 1
-                                        ? 'bg-white/25 ring-1 ring-white/30 backdrop-blur-sm hover:bg-white/35'
-                                        : 'bg-white/20 ring-1 ring-white/20 backdrop-blur-sm hover:bg-white/30'
-                                }`}
+                                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-600/35 transition-all hover:bg-indigo-500 active:scale-95 sm:text-sm"
                             >
                                 {currentSlide === onboardingSlides.length - 1 ? (
-                                    'Get Started'
+                                    <>
+                                        Get Started
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                    </>
                                 ) : (
                                     <>
                                         Next
-                                        <ChevronRight className="h-4 w-4" />
+                                        <ArrowRight className="h-3.5 w-3.5" />
                                     </>
                                 )}
                             </button>
