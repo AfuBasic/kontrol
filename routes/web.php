@@ -106,7 +106,9 @@ Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webho
 |--------------------------------------------------------------------------
 */
 Route::get('/billing/collection/{assignment}', [CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
+Route::get('/billing/collections/bulk', [CollectionPaymentController::class, 'showBulk'])->name('web.billing.collections.show_bulk');
 Route::post('/billing/collection/{assignment}/initiate', [CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');
+Route::post('/billing/collections/bulk/initiate', [CollectionPaymentController::class, 'initiateBulk'])->name('web.billing.collections.initiate_bulk');
 Route::post('/billing/collection/verify/{reference}', [CollectionPaymentController::class, 'verify'])->name('web.billing.collection.verify');
 
 Route::get('/download-app', [LandingController::class, 'downloadApp'])->name('landing.download');

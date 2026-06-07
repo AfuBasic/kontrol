@@ -8,6 +8,7 @@ use App\Models\EstateSettings;
 use App\Models\Payment;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -154,6 +155,31 @@ class CollectionPaymentController extends Controller
                         $assignment->update(['status' => 'partial']);
                     }
                 }
+            } elseif ($payment->raw_payload && isset($payment->raw_payload['assignment_ids'])) {
+                $assignmentIds = $payment->raw_payload['assignment_ids'];
+                $assignments = CollectionAssignment::whereIn('id', $assignmentIds)->lockForUpdate()->get();
+                foreach ($assignments as $assignment) {
+                    $due = $assignment->amount_due - $assignment->amount_paid;
+                    if ($due > 0) {
+                        Payment::create([
+                            'user_id' => $payment->user_id,
+                            'estate_id' => $payment->estate_id,
+                            'collection_assignment_id' => $assignment->id,
+                            'amount' => $due,
+                            'reference' => $reference,
+                            'status' => 'success',
+                            'paid_at' => now(),
+                            'raw_payload' => ['bulk_parent_reference' => $reference],
+                        ]);
+
+                        $assignment->increment('amount_paid', $due);
+                        $assignment->update([
+                            'status' => 'paid',
+                            'paid_at' => now(),
+                            'external_reference' => $reference,
+                        ]);
+                    }
+                }
             }
 
             return ['message' => 'Payment verified successfully', 'status' => 200];
@@ -164,5 +190,104 @@ class CollectionPaymentController extends Controller
         }
 
         return response()->json(['message' => $result['message']], $result['status']);
+    }
+
+    public function showBulk(Request $request): Response
+    {
+        $ulids = explode(',', $request->query('assignments', ''));
+        $assignments = CollectionAssignment::whereIn('ulid', $ulids)
+            ->with(['collection', 'estate', 'user'])
+            ->get();
+
+        abort_if($assignments->isEmpty(), 404, 'No outstanding bills found.');
+
+        $first = $assignments->first();
+        foreach ($assignments as $a) {
+            if ($a->user_id !== $first->user_id || $a->estate_id !== $first->estate_id) {
+                abort(400, 'All selected dues must belong to the same resident and estate.');
+            }
+        }
+
+        return Inertia::render('Web/Billing/PayCollectionBulk', [
+            'assignments' => $assignments,
+            'paystackKey' => config('services.paystack.public_key'),
+            'totalAmount' => $assignments->sum(fn ($a) => max(0, $a->amount_due - $a->amount_paid)),
+        ]);
+    }
+
+    public function initiateBulk(Request $request, PaystackService $paystackService): JsonResponse
+    {
+        $ulids = explode(',', $request->input('assignments', ''));
+        $assignments = CollectionAssignment::whereIn('ulid', $ulids)
+            ->with(['user', 'estate'])
+            ->get();
+
+        if ($assignments->isEmpty()) {
+            return response()->json(['message' => 'No dues found.'], 404);
+        }
+
+        $first = $assignments->first();
+        $user = $first->user;
+        $estateId = $first->estate_id;
+
+        foreach ($assignments as $a) {
+            if ($a->user_id !== $user->id || $a->estate_id !== $estateId) {
+                return response()->json(['message' => 'Mismatch in resident or estate context.'], 400);
+            }
+        }
+
+        $unpaidAssignments = $assignments->filter(fn ($a) => ! $a->isPaid() && ($a->amount_due - $a->amount_paid) > 0);
+
+        if ($unpaidAssignments->isEmpty()) {
+            return response()->json([
+                'already_paid' => true,
+                'message' => 'All selected bills are already settled.',
+            ]);
+        }
+
+        $totalAmount = $unpaidAssignments->sum(fn ($a) => $a->amount_due - $a->amount_paid);
+        $assignmentIds = $unpaidAssignments->pluck('id')->sort()->values()->toArray();
+
+        $existing = Payment::where('user_id', $user->id)
+            ->where('estate_id', $estateId)
+            ->whereNull('collection_assignment_id')
+            ->where('status', 'initiated')
+            ->get()
+            ->first(function ($p) use ($assignmentIds) {
+                $payloadIds = data_get($p->raw_payload, 'assignment_ids', []);
+                sort($payloadIds);
+
+                return $payloadIds === $assignmentIds;
+            });
+
+        if ($existing) {
+            $payment = $existing;
+        } else {
+            // Must start with COLL- to trigger webhook match condition
+            $reference = 'COLL-BULK-'.strtoupper(bin2hex(random_bytes(8)));
+
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'estate_id' => $estateId,
+                'collection_assignment_id' => null,
+                'amount' => $totalAmount,
+                'reference' => $reference,
+                'status' => 'initiated',
+                'raw_payload' => [
+                    'assignment_ids' => $assignmentIds,
+                    'is_bulk' => true,
+                ],
+            ]);
+        }
+
+        $settings = EstateSettings::forEstate($estateId);
+
+        return response()->json([
+            'already_paid' => false,
+            'reference' => $payment->reference,
+            'email' => $user->email,
+            'amount' => $payment->amount,
+            'subaccount' => $settings->paystack_subaccount_code,
+        ]);
     }
 }

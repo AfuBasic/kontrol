@@ -40,10 +40,12 @@ class PaystackWebhookController extends Controller
                     if (str_starts_with($reference, 'COLL-')) {
                         $payment = Payment::where('reference', $reference)->first();
                         if ($payment && $payment->status !== 'success') {
+                            $assignmentIds = data_get($payment->raw_payload, 'assignment_ids');
+
                             $payment->update([
                                 'status' => 'success',
                                 'paid_at' => now(),
-                                'raw_payload' => $data,
+                                'raw_payload' => array_merge($payment->raw_payload ?? [], ['paystack_data' => $data]),
                             ]);
 
                             if ($payment->collection_assignment_id) {
@@ -58,6 +60,30 @@ class PaystackWebhookController extends Controller
                                         ]);
                                     } else {
                                         $assignment->update(['status' => 'partial']);
+                                    }
+                                }
+                            } elseif ($assignmentIds) {
+                                $assignments = CollectionAssignment::whereIn('id', $assignmentIds)->get();
+                                foreach ($assignments as $assignment) {
+                                    $due = $assignment->amount_due - $assignment->amount_paid;
+                                    if ($due > 0) {
+                                        Payment::create([
+                                            'user_id' => $payment->user_id,
+                                            'estate_id' => $payment->estate_id,
+                                            'collection_assignment_id' => $assignment->id,
+                                            'amount' => $due,
+                                            'reference' => $reference,
+                                            'status' => 'success',
+                                            'paid_at' => now(),
+                                            'raw_payload' => ['bulk_parent_reference' => $reference],
+                                        ]);
+
+                                        $assignment->increment('amount_paid', $due);
+                                        $assignment->update([
+                                            'status' => 'paid',
+                                            'paid_at' => now(),
+                                            'external_reference' => $reference,
+                                        ]);
                                     }
                                 }
                             }

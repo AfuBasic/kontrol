@@ -1,7 +1,8 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Copy, Link as LinkIcon, Mail, Power, RefreshCw, Share2, User, X } from 'lucide-react';
+import { CheckCircle, Copy, Link as LinkIcon, Mail, Power, QrCode, RefreshCw, Share2, User, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
     index,
     store,
@@ -36,10 +37,11 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [isCopied, setIsCopied] = useState(false);
     const [isEditingSettings, setIsEditingSettings] = useState(false);
+    const [showQrCode, setShowQrCode] = useState(false);
 
     const [inviteSettings, setInviteSettings] = useState({
         max_usages: inviteLink?.max_usages || '',
-        requires_approval: inviteLink?.requires_approval ?? true,
+        requires_approval: false,
         expires_at: inviteLink?.expires_at ? inviteLink.expires_at.split(' ')[0] : '',
     });
 
@@ -47,7 +49,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
         if (inviteLink) {
             setInviteSettings({
                 max_usages: inviteLink.max_usages ?? '',
-                requires_approval: inviteLink.requires_approval,
+                requires_approval: false,
                 expires_at: inviteLink.expires_at ? inviteLink.expires_at.split(' ')[0] : '',
             });
         }
@@ -80,12 +82,62 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
         }
     };
 
-    const handleShareWhatsApp = () => {
-        if (inviteLink?.url) {
-            const text = encodeURIComponent(
-                `Hi! You've been invited to join Kontrol as a resident under my property.\n\nClick the link below to sign up: ${inviteLink.url}`,
-            );
-            window.open(`https://wa.me/?text=${text}`, '_blank');
+    const handleShareImage = async () => {
+        if (!inviteLink?.url) return;
+        const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(inviteLink.url)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`;
+        
+        try {
+            const isNative = Capacitor.isNativePlatform();
+            if (isNative) {
+                const { Filesystem, Directory } = await import('@capacitor/filesystem');
+                const { Share } = await import('@capacitor/share');
+                
+                const response = await fetch(qrImageUrl);
+                const blob = await response.blob();
+                
+                const base64Data = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64data = reader.result as string;
+                        resolve(base64data.split(',')[1]);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+
+                const fileName = `kontrol_invite_${inviteLink.token.substring(0, 8)}.png`;
+                await Filesystem.writeFile({
+                    path: fileName,
+                    data: base64Data,
+                    directory: Directory.Cache,
+                });
+
+                const uriResult = await Filesystem.getUri({
+                    directory: Directory.Cache,
+                    path: fileName,
+                });
+
+                await Share.share({
+                    title: 'Resident Invite QR Code',
+                    text: `Use this QR code or link to register as a resident: ${inviteLink.url}`,
+                    files: [uriResult.uri],
+                });
+            } else {
+                // Web fallback: download the image
+                const response = await fetch(qrImageUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kontrol_invite_qr.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error('Failed to share or download invite image:', error);
+            alert('Unable to share image. You can copy the link or scan the QR code.');
         }
     };
 
@@ -94,7 +146,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
             storeInviteLink.url(),
             {
                 max_usages: inviteSettings.max_usages || null,
-                requires_approval: inviteSettings.requires_approval,
+                requires_approval: false,
                 expires_at: inviteSettings.expires_at || null,
             },
             {
@@ -211,7 +263,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     required
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                     placeholder="Enter resident's full name"
                                 />
                                 {errors.name && <p className="mt-1 text-sm text-rose-600">{errors.name}</p>}
@@ -228,7 +280,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     required
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                     placeholder="resident@example.com"
                                 />
                                 <p className="mt-1 text-xs text-slate-400">An invitation email will be sent to setup their password.</p>
@@ -245,7 +297,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="phone"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                     placeholder="+234..."
                                 />
                                 {errors.phone && <p className="mt-1 text-sm text-rose-600">{errors.phone}</p>}
@@ -260,7 +312,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="property_id"
                                     value={data.property_id}
                                     onChange={(e) => setData('property_id', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                 >
                                     <option value="">None</option>
                                     {properties.map((prop) => (
@@ -282,7 +334,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     id="unit_number"
                                     value={data.unit_number}
                                     onChange={(e) => setData('unit_number', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                     placeholder="e.g., Flat 4, Block B"
                                 />
                                 {errors.unit_number && <p className="mt-1 text-sm text-rose-600">{errors.unit_number}</p>}
@@ -298,7 +350,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
                                     rows={3}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                     placeholder="Enter resident's full address"
                                 />
                                 {errors.address && <p className="mt-1 text-sm text-rose-600">{errors.address}</p>}
@@ -315,7 +367,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="to-indigo-750 rounded-2xl bg-gradient-to-r from-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
+                                className="rounded-2xl bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98 disabled:opacity-50"
                             >
                                 {processing ? 'Sending Invite...' : 'Invite Resident'}
                             </button>
@@ -380,14 +432,44 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={handleShareWhatsApp}
-                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] text-white shadow-xs transition-all hover:-translate-y-0.5 hover:bg-[#20ba5a] active:translate-y-0 active:scale-95"
-                                                title="Share on WhatsApp"
+                                                onClick={handleShareImage}
+                                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-xs ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:text-slate-900 active:translate-y-0 active:scale-95"
+                                                title="Share QR Code Image"
                                             >
                                                 <Share2 className="h-4.5 w-4.5" />
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowQrCode(!showQrCode)}
+                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+                                                    showQrCode
+                                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                                                        : 'bg-white text-slate-500 shadow-xs ring-1 ring-slate-200 hover:text-slate-900'
+                                                }`}
+                                                title="Show QR Code"
+                                            >
+                                                <QrCode className="h-4.5 w-4.5" />
+                                            </button>
                                         </div>
                                     </div>
+
+                                    {showQrCode && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="mt-6 flex flex-col items-center justify-center border-t border-slate-100 pt-6 text-center"
+                                        >
+                                            <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-xs">
+                                                <img
+                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(inviteLink.url)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`}
+                                                    alt="Invite Link QR Code"
+                                                    className="block h-40 w-40"
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-xs font-bold text-slate-500">Scan QR code to register as a resident</p>
+                                        </motion.div>
+                                    )}
 
                                     <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
                                         <button
@@ -432,7 +514,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                     <button
                                         type="button"
                                         onClick={handleGenerateLink}
-                                        className="to-indigo-750 hover:to-indigo-650 mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:from-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98"
+                                        className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/10 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 active:translate-y-0 active:scale-98"
                                     >
                                         Generate Invite Link
                                     </button>
@@ -453,31 +535,13 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                                 value={inviteSettings.max_usages}
                                                 onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
                                                 placeholder="Unlimited"
-                                                className="block w-full rounded-2xl border border-slate-200 py-2.5 pr-12 pl-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                                className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pr-12 pl-4 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                             />
                                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                                 <span className="text-xs font-semibold text-slate-400">uses</span>
                                             </div>
                                         </div>
                                         <p className="text-[10px] text-slate-400">Leave blank or set to 0 for unlimited uses.</p>
-                                    </div>
-
-                                    {/* Require Approval checkbox */}
-                                    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100/50">
-                                        <label className="flex cursor-pointer items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={inviteSettings.requires_approval}
-                                                onChange={(e) => setInviteSettings((prev) => ({ ...prev, requires_approval: e.target.checked }))}
-                                                className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-slate-900">Require Admin Approval</span>
-                                                <span className="mt-0.5 text-xs text-slate-400">
-                                                    If checked, new residents must be approved by the estate administrator after signing up.
-                                                </span>
-                                            </div>
-                                        </label>
                                     </div>
 
                                     {/* Expiry Date */}
@@ -488,7 +552,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                             min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                             value={inviteSettings.expires_at}
                                             onChange={(e) => setInviteSettings((prev) => ({ ...prev, expires_at: e.target.value }))}
-                                            className="block w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 focus:outline-none"
+                                            className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
                                         />
                                         <p className="text-[10px] text-slate-400">Link will automatically expire after this date.</p>
                                     </div>

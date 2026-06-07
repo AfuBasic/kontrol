@@ -418,10 +418,6 @@ class ResidentController extends Controller
             return back()->with('error', 'No invite link to delete.');
         }
 
-        if ($link->is_active) {
-            return back()->with('error', 'Invite link must be disabled before it can be deleted.');
-        }
-
         $link->delete();
 
         return redirect()->route('resident.property-owner.residents.index')->with('success', 'Invite link deleted successfully.');

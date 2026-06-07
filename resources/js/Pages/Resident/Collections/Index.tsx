@@ -4,6 +4,8 @@ import { Wallet, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import type { SharedData } from '@/types';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 const MotionLink = motion(Link);
 
@@ -36,7 +38,7 @@ type Props = {
 };
 
 export default function CollectionsIndex({ summary }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, app_url: appUrl } = usePage<SharedData>().props;
     const hasLandlord = !!auth?.user?.profile?.property_owner_id;
     const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>('all');
 
@@ -72,6 +74,26 @@ export default function CollectionsIndex({ summary }: Props) {
         if (billFilter === 'all') return true;
         return item.billing_source === billFilter;
     });
+
+    const handlePayAll = async () => {
+        const ulids = filteredOutstanding.map((a) => a.ulid).join(',');
+        const rawPaymentUrl = `/billing/collections/bulk?assignments=${ulids}`;
+        const paymentUrl = rawPaymentUrl.startsWith('//')
+            ? `${appUrl.startsWith('https') ? 'https:' : 'http:'}${rawPaymentUrl}`
+            : `${appUrl}${rawPaymentUrl}`;
+
+        const isNative = Capacitor.isNativePlatform();
+        if (isNative) {
+            try {
+                await Browser.open({ url: paymentUrl });
+            } catch (err) {
+                console.error('Failed to open in-app browser:', err);
+                window.open(paymentUrl, '_system');
+            }
+        } else {
+            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
 
     const tabs = [
         { id: 'all' as const, label: 'All Bills' },
@@ -150,6 +172,14 @@ export default function CollectionsIndex({ summary }: Props) {
             <section>
                 <div className="mb-4 flex items-center justify-between px-2">
                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
+                    {filteredOutstanding.length > 1 && (
+                        <button
+                            onClick={handlePayAll}
+                            className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95 cursor-pointer hover:bg-indigo-100"
+                        >
+                            Pay All ({filteredOutstanding.length})
+                        </button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

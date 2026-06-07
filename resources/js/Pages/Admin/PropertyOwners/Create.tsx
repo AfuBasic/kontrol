@@ -397,7 +397,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         placeholder="Enter property owner's full name"
                                         required
                                     />
-                                    {errors.name && <p className="text-red-650 mt-1 text-sm">{errors.name}</p>}
+                                    {errors.name && <p className="text-red-600 mt-1 text-sm">{errors.name}</p>}
                                 </div>
 
                                 {/* Email */}
@@ -415,7 +415,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         required
                                     />
                                     <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email.</p>
-                                    {errors.email && <p className="text-red-655 mt-1 text-sm">{errors.email}</p>}
+                                    {errors.email && <p className="text-red-600 mt-1 text-sm">{errors.email}</p>}
                                 </div>
 
                                 {/* Phone */}
@@ -431,7 +431,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="+1 (555) 000-0000"
                                     />
-                                    {errors.phone && <p className="text-red-660 mt-1 text-sm">{errors.phone}</p>}
+                                    {errors.phone && <p className="text-red-600 mt-1 text-sm">{errors.phone}</p>}
                                 </div>
 
                                 {/* Unit Number */}
@@ -447,7 +447,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="e.g., Block C, Villa 12"
                                     />
-                                    {errors.unit_number && <p className="text-red-665 mt-1 text-sm">{errors.unit_number}</p>}
+                                    {errors.unit_number && <p className="text-red-600 mt-1 text-sm">{errors.unit_number}</p>}
                                 </div>
 
                                 {/* Address */}
@@ -463,7 +463,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="Enter address details"
                                     />
-                                    {errors.address && <p className="text-red-670 mt-1 text-sm">{errors.address}</p>}
+                                    {errors.address && <p className="text-red-600 mt-1 text-sm">{errors.address}</p>}
                                 </div>
                             </div>
 
