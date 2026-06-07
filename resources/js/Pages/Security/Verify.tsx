@@ -230,6 +230,7 @@ export default function SecurityVerify() {
             VerifyController.validate.url(),
             { code, source },
             {
+                preserveState: true,
                 preserveScroll: true,
                 onFinish: () => setSubmitting(false),
             },
@@ -464,6 +465,7 @@ export default function SecurityVerify() {
                 ...extraData,
             },
             {
+                preserveState: true,
                 preserveScroll: true,
                 onFinish: reset,
             },
