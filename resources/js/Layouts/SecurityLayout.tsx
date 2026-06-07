@@ -47,6 +47,7 @@ interface PageProps {
         success?: string;
         error?: string;
     };
+    is_local?: boolean;
     [key: string]: unknown;
 }
 
@@ -102,7 +103,7 @@ async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
 
 export default function SecurityLayout({ children, hideNav = false, variant = 'light' }: Props & { variant?: 'light' | 'dark' }) {
     const page = usePage<PageProps>();
-    const { auth, estateName, unreadCount: initialUnreadCount = 0, flash } = page.props;
+    const { auth, estateName, unreadCount: initialUnreadCount = 0, flash, is_local } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
 
     // Redirect to download app if accessing on a non-native web browser
@@ -345,7 +346,14 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     >
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                         <div className="flex flex-col">
-                            <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Securitysss</span>
+                                {is_local && (
+                                    <span className="py-0.2 rounded-sm bg-amber-500/15 px-1 text-[8px] font-black tracking-wider text-amber-500 uppercase">
+                                        Local
+                                    </span>
+                                )}
+                            </div>
                             {estateName && (
                                 <span className={`text-[10px] leading-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{estateName}</span>
                             )}

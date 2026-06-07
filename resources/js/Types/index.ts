@@ -34,4 +34,5 @@ export type SharedData = {
     access_code_durations: Array<{ minutes: number; label: string }>;
     access_code_constraints: { min: number; max: number };
     app_url: string;
+    is_local?: boolean;
 };

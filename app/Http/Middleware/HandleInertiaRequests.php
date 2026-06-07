@@ -127,6 +127,7 @@ class HandleInertiaRequests extends Middleware
             'app_subdomain_url' => config('domains.routing_enabled')
                 ? request()->getScheme().'://'.config('domains.app')
                 : url('/'),
+            'is_local' => app()->environment('local'),
         ];
     }
 }

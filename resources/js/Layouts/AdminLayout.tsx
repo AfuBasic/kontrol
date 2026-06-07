@@ -103,7 +103,7 @@ export default function AdminLayout({ children, title }: Props) {
             webpush_public_key?: string;
         }
     >();
-    const { auth, flash, billing_enabled, pendingInvoice, webpush_public_key } = page.props;
+    const { auth, flash, billing_enabled, pendingInvoice, webpush_public_key, is_local } = page.props;
     const { url: fullUrl } = page;
     const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -459,6 +459,9 @@ export default function AdminLayout({ children, title }: Props) {
                         <Link href={DashboardController.url()} className="flex items-center gap-2">
                             <img src="/assets/images/app-icon.png" alt="Kontrol" className="h-7 w-auto" />
                             <span className="text-xl font-black tracking-tighter text-[#0A3D91] uppercase">Kontrol</span>
+                            {is_local && (
+                                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">Local</span>
+                            )}
                         </Link>
 
                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
@@ -506,9 +509,12 @@ export default function AdminLayout({ children, title }: Props) {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="h-28 overflow-hidden"
+                                        className="flex h-28 items-center gap-2 overflow-hidden"
                                     >
                                         <img src="/assets/images/kontrol-white.png" alt="Kontrol" className="h-full w-auto object-contain" />
+                                        {is_local && (
+                                            <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase">Local</span>
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>

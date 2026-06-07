@@ -356,17 +356,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             name: 'Dues',
             href: '/resident/dues',
             show: showDuesInNav,
-            icon: (active: boolean) => (
-                <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
-            ),
+            icon: (active: boolean) => <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
         },
         {
             name: 'Announcements',
             href: '/resident/estate-board',
             show: showAnnouncementsInNav,
-            icon: (active: boolean) => (
-                <Megaphone className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
-            ),
+            icon: (active: boolean) => <Megaphone className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
         },
         {
             name: 'More',
@@ -391,9 +387,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'Manage Dues',
             href: '/resident/property-owner/collections',
-            icon: (active: boolean) => (
-                <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />
-            ),
+            icon: (active: boolean) => <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
         },
         {
             name: 'More',
@@ -424,6 +418,11 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         <div className="flex items-center gap-3 px-2">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                             <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
+                            {props.is_local && (
+                                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
+                                    Local
+                                </span>
+                            )}
                         </div>
                         <nav className="flex flex-col gap-1">
                             {poSidebarItems.map((item) => {
@@ -488,10 +487,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 <div className="flex items-center gap-2">
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                     <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
+                                    {props.is_local && (
+                                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">Local</span>
+                                    )}
                                 </div>
                                 <Link
                                     href="/resident/activity?tab=notifications"
-                                    className="relative rounded-xl p-2 text-slate-500 hover:bg-slate-50 active:scale-95 transition-all"
+                                    className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
                                 >
                                     <Bell className="h-6 w-6" />
                                     {unreadCount > 0 && (
@@ -673,7 +675,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 </button>
                             </div>
                             <div className="grid grid-cols-3 gap-4">
-                                {(isPropertyOwner ? poSidebarItems.filter(item => item.name !== 'Manage Dues') : residentMoreItems).map((item) => {
+                                {(isPropertyOwner ? poSidebarItems.filter((item) => item.name !== 'Manage Dues') : residentMoreItems).map((item) => {
                                     if (item.name === 'SOS') {
                                         return (
                                             <div key={item.name} className="flex flex-col items-center gap-1.5">
