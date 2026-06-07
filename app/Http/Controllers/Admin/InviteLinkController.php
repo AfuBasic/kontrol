@@ -14,7 +14,8 @@ class InviteLinkController extends Controller
 {
     public function __construct(
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     public function index(): Response
     {
@@ -68,7 +69,7 @@ class InviteLinkController extends Controller
         $estate = $this->estateContext->getEstate();
         $link = $estate->inviteLink;
 
-        if (! $link) {
+        if (!$link) {
             return back()->with('error', 'No invite link to regenerate.');
         }
 
@@ -87,7 +88,7 @@ class InviteLinkController extends Controller
         $link = $estate->inviteLink;
 
         if ($link) {
-            $link->update(['is_active' => ! $link->is_active]);
+            $link->update(['is_active' => !$link->is_active]);
             $status = $link->is_active ? 'enabled' : 'disabled';
 
             return back()->with('success', "Invite link {$status} successfully.");
@@ -102,7 +103,7 @@ class InviteLinkController extends Controller
         $estate = $this->estateContext->getEstate();
         $link = $estate->inviteLink;
 
-        if (! $link) {
+        if (!$link) {
             return back()->with('error', 'No invite link to delete.');
         }
 

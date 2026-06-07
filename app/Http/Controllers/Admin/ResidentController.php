@@ -26,7 +26,8 @@ class ResidentController extends Controller
     public function __construct(
         protected ResidentService $residentService,
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of residents.
@@ -38,9 +39,9 @@ class ResidentController extends Controller
         $filters = $request->only(['search', 'status']);
         $estate = $this->estateContext->getEstate();
 
-        $residents = Inertia::defer(fn () => $this->residentService
+        $residents = Inertia::defer(fn() => $this->residentService
             ->getPaginatedResidents(15, $filters)
-            ->through(fn ($user) => [
+            ->through(fn($user) => [
                 'id' => $user->id,
                 'ulid' => $user->ulid,
                 'name' => $user->name,
@@ -58,8 +59,8 @@ class ResidentController extends Controller
                 'created_at' => $user->created_at->format('M d, Y'),
             ]));
 
-        $pendingCount = Inertia::defer(fn () => User::query()
-            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+        $pendingCount = Inertia::defer(fn() => User::query()
+            ->whereHas('estates', fn($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
             ->count());
 
         return Inertia::render('Admin/Residents/Index', [
@@ -95,7 +96,7 @@ class ResidentController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
-                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+                ->map(fn($u) => ['id' => $u->id, 'name' => $u->name]),
             'properties' => Property::query()
                 ->where('estate_id', $estate->id)
                 ->whereNull('archived_at')
@@ -147,7 +148,7 @@ class ResidentController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
-                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+                ->map(fn($u) => ['id' => $u->id, 'name' => $u->name]),
         ]);
     }
 
@@ -276,17 +277,17 @@ class ResidentController extends Controller
 
         if ($request->boolean('all')) {
             $query = User::query()
-                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id));
+                ->whereHas('estates', fn($q) => $q->where('estates.id', $estate->id));
 
             if ($request->filled('filters.search')) {
                 $search = $request->input('filters.search');
-                $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
+                $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%"));
             }
 
             if ($request->filled('filters.status')) {
                 $status = $request->input('filters.status');
-                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)
+                $query->whereHas('estates', fn($q) => $q->where('estates.id', $estate->id)
                     ->where('estate_users_membership.status', $status));
             }
 

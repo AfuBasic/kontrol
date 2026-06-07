@@ -23,7 +23,8 @@ class ResidentController extends Controller
 {
     public function __construct(
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     /**
      * Display a list of managed residents.
@@ -34,19 +35,19 @@ class ResidentController extends Controller
         $user = auth()->user();
 
         $totalUnfiltered = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->whereHas('profile', fn($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
             ->count();
 
         $query = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->whereHas('profile', fn($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
-            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)]);
+            ->with(['profile.property', 'estates' => fn($q) => $q->where('estates.id', $estate->id)]);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('email', 'like', '%'.$request->search.'%');
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -63,10 +64,10 @@ class ResidentController extends Controller
             // Calculate outstanding balance for collections created by this Property Owner
             $outstandingBalance = CollectionAssignment::query()
                 ->where('user_id', $u->id)
-                ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+                ->whereHas('collection', fn($q) => $q->where('created_by', $user->id))
                 ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
                 ->get()
-                ->sum(fn ($assignment) => $assignment->amount_due - $assignment->amount_paid);
+                ->sum(fn($assignment) => $assignment->amount_due - $assignment->amount_paid);
 
             return [
                 'id' => $u->id,
@@ -304,7 +305,7 @@ class ResidentController extends Controller
                 ->performedOn($resident)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('property owner invited resident '.$resident->email);
+                ->log('property owner invited resident ' . $resident->email);
         });
 
         return redirect()
@@ -366,7 +367,7 @@ class ResidentController extends Controller
             ->where('role', 'resident')
             ->first();
 
-        if (! $link) {
+        if (!$link) {
             return back()->with('error', 'No invite link to regenerate.');
         }
 
@@ -392,7 +393,7 @@ class ResidentController extends Controller
             ->first();
 
         if ($link) {
-            $link->update(['is_active' => ! $link->is_active]);
+            $link->update(['is_active' => !$link->is_active]);
             $status = $link->is_active ? 'enabled' : 'disabled';
 
             return back()->with('success', "Invite link {$status} successfully.");
@@ -414,7 +415,7 @@ class ResidentController extends Controller
             ->where('role', 'resident')
             ->first();
 
-        if (! $link) {
+        if (!$link) {
             return back()->with('error', 'No invite link to delete.');
         }
 

@@ -18,7 +18,8 @@ class PropertyOwnerController extends Controller
 {
     public function __construct(
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of property owners.
@@ -33,9 +34,9 @@ class PropertyOwnerController extends Controller
         $propertyOwners = User::query()
             ->forEstate($estate->id)
             ->withRole('property_owner', $estate->id)
-            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['profile', 'estates' => fn($q) => $q->where('estates.id', $estate->id)])
             ->withCount([
-                'properties' => fn ($q) => $q->where('estate_id', $estate->id),
+                'properties' => fn($q) => $q->where('estate_id', $estate->id),
                 'managedResidents',
             ])
             ->when($filters['search'] ?? null, function ($query, $search) {
@@ -49,15 +50,15 @@ class PropertyOwnerController extends Controller
                     $query->whereNotNull('suspended_at');
                 } elseif ($status === 'active') {
                     $query->active()
-                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
+                        ->whereHas('estates', fn($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'pending') {
                     $query->whereNull('suspended_at')
-                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+                        ->whereHas('estates', fn($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
             ->orderBy('name')
             ->paginate(15)
-            ->through(fn ($user) => [
+            ->through(fn($user) => [
                 'id' => $user->id,
                 'ulid' => $user->ulid,
                 'name' => $user->name,
@@ -240,12 +241,12 @@ class PropertyOwnerController extends Controller
         $estate = $this->estateContext->getEstate();
 
         $residents = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $propertyOwner->id))
+            ->whereHas('profile', fn($q) => $q->where('property_owner_id', $propertyOwner->id))
             ->forEstate($estate->id)
-            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['profile.property', 'estates' => fn($q) => $q->where('estates.id', $estate->id)])
             ->orderBy('name')
             ->get()
-            ->map(fn ($user) => [
+            ->map(fn($user) => [
                 'id' => $user->id,
                 'ulid' => $user->ulid,
                 'name' => $user->name,
@@ -279,7 +280,7 @@ class PropertyOwnerController extends Controller
             ->withCount(['residents'])
             ->orderBy('name')
             ->get()
-            ->map(fn ($property) => [
+            ->map(fn($property) => [
                 'id' => $property->id,
                 'ulid' => $property->ulid,
                 'name' => $property->name,
