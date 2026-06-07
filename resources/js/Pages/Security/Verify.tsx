@@ -226,15 +226,24 @@ export default function SecurityVerify() {
             return;
         }
 
-        router.post(
-            VerifyController.validate.url(),
-            { code, source },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onFinish: () => setSubmitting(false),
-            },
-        );
+        try {
+            const response = await axios.post(
+                VerifyController.validate.url(),
+                { code, source },
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                },
+            );
+            if (response.data?.validation_result) {
+                setResult(response.data.validation_result);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
+        }
     }, []);
 
     // FIXED: Unified Sequential Processing Pipeline
@@ -457,19 +466,25 @@ export default function SecurityVerify() {
             return;
         }
 
-        router.post(
-            VerifyController.decision.url(),
-            {
-                decision,
-                code,
-                ...extraData,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onFinish: reset,
-            },
-        );
+        try {
+            await axios.post(
+                VerifyController.decision.url(),
+                {
+                    decision,
+                    code,
+                    ...extraData,
+                },
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                },
+            );
+        } catch (err) {
+            console.error(err);
+        } finally {
+            reset();
+        }
     };
 
     return (

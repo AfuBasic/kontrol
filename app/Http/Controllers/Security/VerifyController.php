@@ -34,7 +34,7 @@ class VerifyController extends Controller
         ]);
     }
 
-    public function validate(ValidateAccessCodeRequest $request): RedirectResponse
+    public function validate(ValidateAccessCodeRequest $request): RedirectResponse|JsonResponse
     {
         $user = $request->user();
         $estate = $user->getCurrentEstate();
@@ -56,8 +56,22 @@ class VerifyController extends Controller
 
             $result['access_log_id'] = $log->id;
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'validation_result' => $result,
+                ]);
+            }
+
             return back()->with([
                 'success' => "Code Verified: Found access code for {$result['visitor_name']}.",
+                'validation_result' => $result,
+            ]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
                 'validation_result' => $result,
             ]);
         }
@@ -65,7 +79,7 @@ class VerifyController extends Controller
         return back()->with('validation_result', $result);
     }
 
-    public function decision(Request $request): RedirectResponse
+    public function decision(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'reason' => 'nullable|string|max:500',
@@ -103,6 +117,10 @@ class VerifyController extends Controller
                     vehicleData: $request->only(['vehicle_make', 'vehicle_model', 'vehicle_plate_number'])
                 );
             }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
         }
 
         return back();
