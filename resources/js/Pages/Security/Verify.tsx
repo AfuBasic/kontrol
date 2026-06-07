@@ -687,6 +687,26 @@ type ResultPanelProps = {
 function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
+    const [countdown, setCountdown] = useState(10);
+
+    useEffect(() => {
+        if (!valid || result.status === 'offline_not_found' || result.has_vehicle) {
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    onReset();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [valid, result.has_vehicle, result.status, onReset]);
 
     if (result.status === 'offline_not_found') {
         return (
@@ -790,10 +810,10 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                         {!result.has_vehicle && (
                             <button
                                 type="button"
-                                onClick={() => onAdmit()}
+                                onClick={onReset}
                                 className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98]"
                             >
-                                Admit Visitor
+                                Okay ({countdown}s)
                             </button>
                         )}
 
