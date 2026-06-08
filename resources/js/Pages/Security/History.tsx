@@ -12,7 +12,7 @@ type Log = {
     code: string;
     visitor: {
         name: string;
-        phone: string;
+        phone: string | null;
         type: string | null;
     };
     host: {
@@ -294,18 +294,20 @@ export default function History({ logs, filters, hosts }: Props) {
                             </div>
 
                             {/* Visitor Contact */}
-                            <div className="rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200/50">
-                                <div className="mb-5 flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-100">
-                                        <Phone className="h-5 w-5" />
+                            {selectedLog.visitor.phone && (
+                                <div className="rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200/50">
+                                    <div className="mb-5 flex items-center gap-3">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-100">
+                                            <Phone className="h-5 w-5" />
+                                        </div>
+                                        <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Visitor Contact</h4>
                                     </div>
-                                    <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Visitor Contact</h4>
+                                    <div>
+                                        <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Phone Number</p>
+                                        <p className="text-lg font-bold text-slate-900">{selectedLog.visitor.phone}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Phone Number</p>
-                                    <p className="text-lg font-bold text-slate-900">{selectedLog.visitor.phone}</p>
-                                </div>
-                            </div>
+                            )}
 
                             {/* Vehicle Information */}
                             {selectedLog.vehicle && (

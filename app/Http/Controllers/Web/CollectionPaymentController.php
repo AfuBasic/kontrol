@@ -31,6 +31,7 @@ class CollectionPaymentController extends Controller
 
     public function initiate(CollectionAssignment $assignment, PaystackService $paystackService): JsonResponse
     {
+        $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
         // 1. If assignment is already paid, return early
@@ -41,7 +42,23 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // 2. Check all initiated/pending payments to see if any succeeded on Paystack
+        // 2. Resolve subaccount & check configuration
+        $subaccount = $this->resolveSubaccount($assignment);
+        if (empty($subaccount)) {
+            $collection = $assignment->collection;
+            $creator = $collection->creator;
+            if ($creator && $creator->hasRole('property_owner')) {
+                return response()->json([
+                    'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
+                ], 400);
+            }
+
+            return response()->json([
+                'message' => 'Estate has not configured its settlement account. Please contact the estate administrator.',
+            ], 400);
+        }
+
+        // 3. Check all initiated/pending payments to see if any succeeded on Paystack
         $initiatedPayments = Payment::where('collection_assignment_id', $assignment->id)
             ->where('status', '!=', 'success')
             ->get();
@@ -85,7 +102,7 @@ class CollectionPaymentController extends Controller
             }
         }
 
-        // 3. Find the latest initiated payment to reuse for idempotency
+        // 4. Find the latest initiated payment to reuse for idempotency
         $existing = $initiatedPayments->sortByDesc('created_at')->first();
 
         if ($existing) {
@@ -109,14 +126,12 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        $settings = EstateSettings::forEstate($assignment->estate_id);
-
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
             'email' => $user->email,
             'amount' => $payment->amount,
-            'subaccount' => $settings->paystack_subaccount_code,
+            'subaccount' => $subaccount,
         ]);
     }
 
@@ -196,15 +211,41 @@ class CollectionPaymentController extends Controller
     {
         $ulids = explode(',', $request->query('assignments', ''));
         $assignments = CollectionAssignment::whereIn('ulid', $ulids)
-            ->with(['collection', 'estate', 'user'])
+            ->with(['collection.creator.profile', 'estate', 'user'])
             ->get();
 
         abort_if($assignments->isEmpty(), 404, 'No outstanding bills found.');
 
         $first = $assignments->first();
+        $firstSubaccount = $this->resolveSubaccount($first);
+
+        if (empty($firstSubaccount)) {
+            $collection = $first->collection;
+            $creator = $collection->creator;
+            if ($creator && $creator->hasRole('property_owner')) {
+                abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
+            }
+            abort(400, 'Estate settlement account is not configured.');
+        }
+
         foreach ($assignments as $a) {
             if ($a->user_id !== $first->user_id || $a->estate_id !== $first->estate_id) {
                 abort(400, 'All selected dues must belong to the same resident and estate.');
+            }
+
+            $currentSubaccount = $this->resolveSubaccount($a);
+
+            if (empty($currentSubaccount)) {
+                $collection = $a->collection;
+                $creator = $collection->creator;
+                if ($creator && $creator->hasRole('property_owner')) {
+                    abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
+                }
+                abort(400, 'Estate settlement account is not configured.');
+            }
+
+            if ($currentSubaccount !== $firstSubaccount) {
+                abort(400, 'All selected bills must be routed to the same settlement account. You cannot mix estate and landlord bills or bills from different landlords.');
             }
         }
 
@@ -219,7 +260,7 @@ class CollectionPaymentController extends Controller
     {
         $ulids = explode(',', $request->input('assignments', ''));
         $assignments = CollectionAssignment::whereIn('ulid', $ulids)
-            ->with(['user', 'estate'])
+            ->with(['user', 'estate', 'collection.creator.profile'])
             ->get();
 
         if ($assignments->isEmpty()) {
@@ -229,10 +270,47 @@ class CollectionPaymentController extends Controller
         $first = $assignments->first();
         $user = $first->user;
         $estateId = $first->estate_id;
+        $firstSubaccount = $this->resolveSubaccount($first);
+
+        if (empty($firstSubaccount)) {
+            $collection = $first->collection;
+            $creator = $collection->creator;
+            if ($creator && $creator->hasRole('property_owner')) {
+                return response()->json([
+                    'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
+                ], 400);
+            }
+
+            return response()->json([
+                'message' => 'Estate has not configured its settlement account. Please contact the estate administrator.',
+            ], 400);
+        }
 
         foreach ($assignments as $a) {
             if ($a->user_id !== $user->id || $a->estate_id !== $estateId) {
                 return response()->json(['message' => 'Mismatch in resident or estate context.'], 400);
+            }
+
+            $currentSubaccount = $this->resolveSubaccount($a);
+
+            if (empty($currentSubaccount)) {
+                $collection = $a->collection;
+                $creator = $collection->creator;
+                if ($creator && $creator->hasRole('property_owner')) {
+                    return response()->json([
+                        'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
+                    ], 400);
+                }
+
+                return response()->json([
+                    'message' => 'Estate has not configured its settlement account. Please contact the estate administrator.',
+                ], 400);
+            }
+
+            if ($currentSubaccount !== $firstSubaccount) {
+                return response()->json([
+                    'message' => 'All selected bills must be routed to the same settlement account. You cannot mix estate and landlord bills or bills from different landlords.',
+                ], 400);
             }
         }
 
@@ -280,14 +358,30 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        $settings = EstateSettings::forEstate($estateId);
-
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
             'email' => $user->email,
             'amount' => $payment->amount,
-            'subaccount' => $settings->paystack_subaccount_code,
+            'subaccount' => $firstSubaccount,
         ]);
+    }
+
+    /**
+     * Resolve the Paystack subaccount for a collection assignment.
+     */
+    private function resolveSubaccount(CollectionAssignment $assignment): ?string
+    {
+        $assignment->loadMissing(['collection.creator.profile']);
+        $collection = $assignment->collection;
+        $creator = $collection->creator;
+
+        if ($creator && $creator->hasRole('property_owner')) {
+            return $creator->profile?->paystack_subaccount_code;
+        }
+
+        $settings = EstateSettings::forEstate($assignment->estate_id);
+
+        return $settings->paystack_subaccount_code;
     }
 }

@@ -194,6 +194,9 @@ test('property owners can create recurring collections successfully', function (
     setPermissionsTeamId($estate->id);
     $owner->assignRole([$residentRole, $ownerRole]);
     $estate->users()->attach($owner->id, ['status' => 'accepted']);
+    $owner->profile()->updateOrCreate([], [
+        'paystack_subaccount_code' => 'ACCT_test123',
+    ]);
 
     // Create resident managed by this property owner
     $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
@@ -246,6 +249,9 @@ test('property owners can create collections and include themselves in the assig
     setPermissionsTeamId($estate->id);
     $owner->assignRole([$residentRole, $ownerRole]);
     $estate->users()->attach($owner->id, ['status' => 'accepted']);
+    $owner->profile()->updateOrCreate([], [
+        'paystack_subaccount_code' => 'ACCT_test123',
+    ]);
 
     // Create resident managed by this property owner
     $resident = User::factory()->create();

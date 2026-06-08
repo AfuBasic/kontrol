@@ -50,7 +50,7 @@ class HistoryController extends Controller
                 'code' => $log->accessCode?->code,
                 'visitor' => [
                     'name' => $log->accessCode?->visitor_name ?? 'N/A',
-                    'phone' => $log->accessCode?->visitor_phone ?? 'N/A',
+                    'phone' => null,
                     'type' => $log->accessCode?->type,
                 ],
                 'host' => [

@@ -93,10 +93,16 @@ class CollectionController extends Controller
     /**
      * Show form for creating a new collection.
      */
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
+
+        if (empty($user->profile?->paystack_subaccount_code)) {
+            return redirect()
+                ->route('resident.property-owner.settlement.index')
+                ->withErrors(['message' => 'You must set up your settlement account before creating collections.']);
+        }
 
         $residents = User::query()
             ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
@@ -123,6 +129,12 @@ class CollectionController extends Controller
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
+
+        if (empty($user->profile?->paystack_subaccount_code)) {
+            return redirect()
+                ->route('resident.property-owner.settlement.index')
+                ->withErrors(['message' => 'You must set up your settlement account before creating collections.']);
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],

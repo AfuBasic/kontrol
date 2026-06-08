@@ -41,6 +41,11 @@ class UserProfile extends Model
         'metadata',
         'property_owner_id',
         'property_id',
+        'bank_name',
+        'bank_code',
+        'account_number',
+        'account_name',
+        'paystack_subaccount_code',
     ];
 
     protected function casts(): array

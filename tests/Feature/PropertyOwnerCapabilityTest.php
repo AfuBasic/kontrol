@@ -6,11 +6,13 @@ use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
 use App\Models\EstateInviteLink;
+use App\Models\EstateSettings;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
 use App\Models\Property;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\PaystackService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -122,6 +124,7 @@ test('property owner dashboard, residents, properties, collections, and announce
     $owner = User::factory()->create();
     UserProfile::create([
         'user_id' => $owner->id,
+        'paystack_subaccount_code' => 'ACCT_owner123',
     ]);
     setPermissionsTeamId($this->estate->id);
     $owner->assignRole('resident');
@@ -559,4 +562,188 @@ test('resident can distinguish between estate and property owner notices and col
         ->where('summary.outstanding.0.billing_source', 'estate')
         ->where('summary.outstanding.1.billing_source', 'property_owner')
     );
+});
+
+test('property owner can set up banking settlement account', function () {
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $owner->id]);
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+
+    $this->mock(PaystackService::class, function ($mock) {
+        $mock->shouldReceive('getBanks')->andReturn([
+            ['name' => 'Access Bank', 'code' => '044'],
+        ]);
+        $mock->shouldReceive('resolveAccountNumber')->with('0123456789', '044')->andReturn([
+            'account_name' => 'Verified Landlord Name',
+        ]);
+        $mock->shouldReceive('createSubaccount')->andReturn([
+            'subaccount_code' => 'ACCT_landlord123',
+        ]);
+    });
+
+    $this->actingAs($owner);
+
+    // 1. Visit settlement config index
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.property-owner.settlement.index'));
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/PropertyOwner/Settlement')
+        ->has('banks', 1)
+    );
+
+    // 2. Resolve account name
+    $response = $this->postJson(route('resident.property-owner.settlement.resolve'), [
+        'account_number' => '0123456789',
+        'bank_code' => '044',
+    ]);
+    $response->assertOk();
+    $response->assertJsonPath('account_name', 'Verified Landlord Name');
+
+    // 3. Save settlement account details
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->put(route('resident.property-owner.settlement.update'), [
+            'bank_name' => 'Access Bank',
+            'bank_code' => '044',
+            'account_number' => '0123456789',
+        ]);
+    $response->assertRedirect();
+
+    $owner->refresh();
+    expect($owner->profile->bank_name)->toBe('Access Bank');
+    expect($owner->profile->account_number)->toBe('0123456789');
+    expect($owner->profile->account_name)->toBe('Verified Landlord Name');
+    expect($owner->profile->paystack_subaccount_code)->toBe('ACCT_landlord123');
+});
+
+test('property owner cannot create collections without configuring settlement account first', function () {
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $owner->id]); // no paystack_subaccount_code
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+
+    $this->actingAs($owner);
+
+    // 1. Trying to view collection create page redirects to settlement
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.property-owner.collections.create'));
+    $response->assertRedirect(route('resident.property-owner.settlement.index'));
+    $response->assertSessionHasErrors(['message']);
+
+    // 2. Trying to store a collection redirects to settlement
+    $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.property-owner.collections.store'), [
+            'name' => 'July Rent',
+            'amount' => 150000,
+            'billing_type' => 'one_time',
+            'due_at' => now()->addDays(5)->toDateString(),
+            'applies_to' => 'all',
+        ]);
+    $response->assertRedirect(route('resident.property-owner.settlement.index'));
+    $response->assertSessionHasErrors(['message']);
+});
+
+test('payment routing dynamically switches subaccounts and prevents bulk mismatch', function () {
+    // 1. Setup Property Owner with settlement configured
+    $owner = User::factory()->create();
+    $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $owner->id,
+        'paystack_subaccount_code' => 'ACCT_owner123',
+    ]);
+
+    // 2. Setup Resident
+    $resident = User::factory()->create();
+    $resident->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create([
+        'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    setPermissionsTeamId($this->estate->id);
+    $owner->assignRole('property_owner');
+    $owner->assignRole('resident');
+    $resident->assignRole('resident');
+
+    // 3. Create Estate settings subaccount
+    $settings = EstateSettings::forEstate($this->estate->id);
+    $settings->update(['paystack_subaccount_code' => 'ACCT_estate123']);
+
+    // 4. Create landlord collection & assignment
+    $ownerCollection = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Landlord Rent',
+        'amount' => 100000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'due_day' => 1,
+        'grace_days' => 0,
+        'applies_to' => 'all',
+        'status' => 'active',
+        'created_by' => $owner->id,
+    ]);
+    $ownerAssignment = CollectionAssignment::create([
+        'collection_id' => $ownerCollection->id,
+        'user_id' => $resident->id,
+        'estate_id' => $this->estate->id,
+        'amount_due' => 100000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    // 5. Create Estate Collection & assignment
+    $estateCollection = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Estate Levy',
+        'amount' => 5000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'due_day' => 1,
+        'grace_days' => 0,
+        'applies_to' => 'all',
+        'status' => 'active',
+        'created_by' => $this->adminUser->id,
+    ]);
+    $estateAssignment = CollectionAssignment::create([
+        'collection_id' => $estateCollection->id,
+        'user_id' => $resident->id,
+        'estate_id' => $this->estate->id,
+        'amount_due' => 5000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $this->actingAs($resident);
+
+    // 6. Test Single Payment Routing for Landlord Bill
+    $response = $this->postJson(url("/billing/collection/{$ownerAssignment->id}/initiate"));
+    $response->assertOk();
+    $response->assertJsonPath('subaccount', 'ACCT_owner123');
+
+    // 7. Test Single Payment Routing for Estate Bill
+    $response = $this->postJson(url("/billing/collection/{$estateAssignment->id}/initiate"));
+    $response->assertOk();
+    $response->assertJsonPath('subaccount', 'ACCT_estate123');
+
+    // 8. Test Bulk Mismatch (cannot mix landlord and estate bills)
+    $mismatchedUlids = "{$ownerAssignment->ulid},{$estateAssignment->ulid}";
+
+    // showBulk fails
+    $response = $this->get(url("/billing/collections/bulk?assignments={$mismatchedUlids}"));
+    $response->assertStatus(400);
+
+    // initiateBulk fails
+    $response = $this->postJson(url('/billing/collections/bulk/initiate'), [
+        'assignments' => $mismatchedUlids,
+    ]);
+    $response->assertStatus(400);
 });

@@ -19,6 +19,7 @@ use App\Http\Controllers\Resident\PropertyOwner\CollectionController as POCollec
 use App\Http\Controllers\Resident\PropertyOwner\DashboardController as PODashboardController;
 use App\Http\Controllers\Resident\PropertyOwner\PropertyController as POPropertyController;
 use App\Http\Controllers\Resident\PropertyOwner\ResidentController as POResidentController;
+use App\Http\Controllers\Resident\PropertyOwner\SettlementController as POSettlementController;
 use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Resident\TelegramLinkController;
 use Illuminate\Support\Facades\Route;
@@ -162,5 +163,10 @@ Route::middleware('role:resident')->group(function (): void {
 
         // Scoped Announcements
         Route::resource('/announcements', POAnnouncementController::class)->names('announcements');
+
+        // Settlement Account configuration
+        Route::get('/settlement', [POSettlementController::class, 'index'])->name('settlement.index');
+        Route::put('/settlement', [POSettlementController::class, 'update'])->name('settlement.update');
+        Route::post('/settlement/resolve', [POSettlementController::class, 'resolve'])->name('settlement.resolve');
     });
 });
