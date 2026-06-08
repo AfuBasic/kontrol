@@ -347,7 +347,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
                         <div className="flex flex-col">
                             <div className="flex items-center gap-1.5">
-                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Securitysss</span>
+                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
                                 {is_local && (
                                     <span className="py-0.2 rounded-sm bg-amber-500/15 px-1 text-[8px] font-black tracking-wider text-amber-500 uppercase">
                                         Local

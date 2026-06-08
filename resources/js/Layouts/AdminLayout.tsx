@@ -460,7 +460,9 @@ export default function AdminLayout({ children, title }: Props) {
                             <img src="/assets/images/app-icon.png" alt="Kontrol" className="h-7 w-auto" />
                             <span className="text-xl font-black tracking-tighter text-[#0A3D91] uppercase">Kontrol</span>
                             {is_local && (
-                                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">Local</span>
+                                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
+                                    Local
+                                </span>
                             )}
                         </Link>
 
@@ -513,7 +515,9 @@ export default function AdminLayout({ children, title }: Props) {
                                     >
                                         <img src="/assets/images/kontrol-white.png" alt="Kontrol" className="h-full w-auto object-contain" />
                                         {is_local && (
-                                            <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase">Local</span>
+                                            <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase">
+                                                Local
+                                            </span>
                                         )}
                                     </motion.div>
                                 )}
