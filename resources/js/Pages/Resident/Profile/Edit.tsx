@@ -131,20 +131,14 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
 
                 {/* 2. STATS OVERVIEW */}
                 <div className="flex items-center rounded-[32px] bg-white py-6 shadow-sm ring-1 ring-slate-200">
-                    <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                    <div className={`flex-1 ${!isHouseholdMember ? 'border-r border-slate-50' : ''} px-2 text-center`}>
                         <p className="text-xl font-black text-slate-900">{stats.active_codes_count}</p>
                         <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Codes</p>
                     </div>
                     {!isHouseholdMember && (
-                        <div className="flex-1 border-r border-slate-50 px-2 text-center">
+                        <div className="flex-1 px-2 text-center">
                             <p className="text-xl font-black text-slate-900">{stats.household_members_count}</p>
                             <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Family</p>
-                        </div>
-                    )}
-                    {!isHouseholdMember && (
-                        <div className="flex-1 px-2 text-center">
-                            <p className="text-xl font-black text-slate-900">{emergency_contacts.length}</p>
-                            <p className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">SOS Contacts</p>
                         </div>
                     )}
                 </div>
@@ -179,17 +173,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                                             onClick={() => {}}
                                         />
                                     </Link>
-                                </>
-                            )}
-                            {!isHouseholdMember && (
-                                <>
-                                    <div className="mx-6 h-px bg-slate-50" />
-                                    <SettingsRow
-                                        icon={<Shield className="h-5 w-5" />}
-                                        label="Emergency Contacts"
-                                        description="Manage SOS alert recipients"
-                                        onClick={() => setActiveSheet('emergency_management')}
-                                    />
                                 </>
                             )}
                         </div>

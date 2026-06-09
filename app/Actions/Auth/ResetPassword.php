@@ -20,6 +20,7 @@ class ResetPassword
             $user->forceFill([
                 'password' => Hash::make($password),
                 'remember_token' => Str::random(60),
+                'email_verified_at' => $user->email_verified_at ?? now(),
             ])->save();
 
             event(new PasswordReset($user));

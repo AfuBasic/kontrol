@@ -334,7 +334,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Profile', href: '/resident/profile', icon: User },
         ...(hasHousehold && !isHouseholdMember ? [{ name: 'Household', href: '/resident/household', icon: UserCheck }] : []),
         ...(!showDuesInNav && !isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
-        ...(!isHouseholdMember ? [{ name: 'SOS Contacts', href: '/resident/profile?open=emergency_management', icon: Shield }] : []),
         ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
     ];
 

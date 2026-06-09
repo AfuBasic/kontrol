@@ -106,8 +106,11 @@ class SocialLoginController
             return redirect()->route('login')->with('error', 'No account found for this email. We don\'t allow signup with Google. Please contact your administrator to create an account.');
         }
 
-        if (! $user->google_id) {
-            $user->update(['google_id' => $googleUser->getId()]);
+        if (! $user->google_id || ! $user->email_verified_at) {
+            $user->update([
+                'google_id' => $user->google_id ?? $googleUser->getId(),
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ]);
         }
 
         if (! $checkTrustedDevice->execute($user, $request)) {

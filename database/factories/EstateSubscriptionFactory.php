@@ -17,8 +17,8 @@ class EstateSubscriptionFactory extends Factory
             'estate_id' => Estate::factory(),
             'plan_id' => Plan::factory(),
             'status' => 'active',
-            'billing_interval' => 'monthly',
-            'next_billing_date' => now()->addMonth(),
+            'billing_interval' => 'annually',
+            'next_billing_date' => now()->addYear(),
         ];
     }
 }

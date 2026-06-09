@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Estate;
+use App\Models\EstateSubscription;
+use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,6 +17,11 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
 
     // 2. Create estate using resident billing
     $estate = Estate::factory()->create();
+    $plan = Plan::factory()->create();
+    EstateSubscription::factory()->create([
+        'estate_id' => $estate->id,
+        'plan_id' => $plan->id,
+    ]);
     $estate->settings()->create([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
@@ -75,6 +82,7 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
     $sub = ResidentSubscription::where('user_id', $resident->id)->first();
     expect($sub->status)->toBe('trial');
     expect($sub->estate_id)->toBe($estate->id);
+    expect($sub->plan_id)->toBe($plan->id);
 
     // Session for resident with missing sub should be deleted
     expect(DB::table('sessions')->where('user_id', $resident->id)->exists())->toBeFalse();
