@@ -6,7 +6,6 @@ use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -96,12 +95,6 @@ class BulkInviteResidentsAction
                 ];
             }
             UserProfile::insert($profilesData);
-
-            // Create resident subscriptions if required
-            $subscriptionService = app(ResidentSubscriptionService::class);
-            foreach ($newUsers as $newUser) {
-                $subscriptionService->createForUser($newUser, $estate);
-            }
 
             // Log activity for bulk invite
             activity()

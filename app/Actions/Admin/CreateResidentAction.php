@@ -6,16 +6,13 @@ use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
 {
-    public function __construct(
-        protected ResidentSubscriptionService $subscriptionService
-    ) {}
+    public function __construct() {}
 
     /**
      * @param  array{name: string, email: string, phone?: string|null, unit_number?: string|null, address?: string|null}  $data
@@ -51,9 +48,6 @@ class CreateResidentAction
                 'property_owner_id' => $data['property_owner_id'] ?? null,
                 'property_id' => $data['property_id'] ?? null,
             ]);
-
-            // Create resident subscription if required
-            $this->subscriptionService->createForUser($user, $estate);
 
             // 5. Dispatch event for side effects (invitation email)
             event(new ResidentCreated($user, $estate, false));
