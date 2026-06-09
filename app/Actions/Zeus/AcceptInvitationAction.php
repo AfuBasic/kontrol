@@ -4,6 +4,7 @@ namespace App\Actions\Zeus;
 
 use App\Models\User;
 use App\Notifications\Admin\ResidentAcceptedInvitation;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -28,6 +29,15 @@ class AcceptInvitationAction
                 ->update(['status' => 'accepted']);
 
             $user->estates()->update(['estates.status' => 'active']);
+
+            // Create resident subscriptions for all accepted estates that require them
+            $subscriptionService = app(ResidentSubscriptionService::class);
+            foreach ($user->estates()->wherePivot('status', 'accepted')->get() as $est) {
+                $existingSub = $user->residentSubscription()->where('estate_id', $est->id)->exists();
+                if (! $existingSub) {
+                    $subscriptionService->createForUser($user, $est);
+                }
+            }
 
             // Notify Estate Admins
             $estate = $user->estates()->first();
