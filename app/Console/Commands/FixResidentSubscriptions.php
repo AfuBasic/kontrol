@@ -42,7 +42,10 @@ class FixResidentSubscriptions extends Command
 
             $estatePlanId = $estate->subscriptionRecord?->plan_id;
 
-            $users = User::forEstate($estate->id)
+            $users = User::whereHas('estates', function ($q) use ($estate) {
+                $q->where('estates.id', $estate->id)
+                    ->where('estate_users_membership.status', 'accepted');
+            })
                 ->where(function ($query) use ($estate) {
                     $query->whereExists(function ($q) use ($estate) {
                         $q->select(DB::raw(1))
@@ -74,6 +77,11 @@ class FixResidentSubscriptions extends Command
             }
 
             foreach ($users as $user) {
+                setPermissionsTeamId($estate->id);
+                if ($user->hasRole('household_member') || ! $user->hasRole('resident')) {
+                    continue;
+                }
+
                 $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
 
                 if (! $sub) {

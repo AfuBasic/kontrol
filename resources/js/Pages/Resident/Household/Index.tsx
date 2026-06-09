@@ -150,14 +150,14 @@ export default function HouseholdIndex({ members }: Props) {
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="p-1">
-                            <p className="mb-6 text-sm font-bold text-slate-400">
+                            <p className="mb-6 text-sm font-bold text-slate-400 dark:text-slate-500">
                                 They'll receive an email invitation to set up their account. Household members can generate visitor access codes and
                                 view the estate board.
                             </p>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="name" className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">
+                                    <label htmlFor="name" className="mb-2 block text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                                         Full Name
                                     </label>
                                     <input
@@ -166,13 +166,13 @@ export default function HouseholdIndex({ members }: Props) {
                                         value={form.data.name}
                                         onChange={(e) => form.setData('name', e.target.value)}
                                         placeholder="e.g. Jane Doe"
-                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                        className="w-full rounded-[20px] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-5 py-4 text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                     />
                                     {form.errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.name}</p>}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="email" className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">
+                                    <label htmlFor="email" className="mb-2 block text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                                         Email Address
                                     </label>
                                     <input
@@ -181,7 +181,7 @@ export default function HouseholdIndex({ members }: Props) {
                                         value={form.data.email}
                                         onChange={(e) => form.setData('email', e.target.value)}
                                         placeholder="e.g. jane@example.com"
-                                        className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                        className="w-full rounded-[20px] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-5 py-4 text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                     />
                                     {form.errors.email && <p className="mt-2 text-xs font-bold text-rose-500">{form.errors.email}</p>}
                                 </div>
@@ -191,7 +191,7 @@ export default function HouseholdIndex({ members }: Props) {
                                 <button
                                     type="submit"
                                     disabled={form.processing}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-[24px] bg-slate-900 dark:bg-white py-4 text-base font-black text-white dark:text-slate-900 shadow-xl shadow-slate-200 dark:shadow-none transition-all hover:bg-slate-800 dark:hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
                                 >
                                     {form.processing ? (
                                         <span className="flex items-center gap-2">
@@ -223,13 +223,12 @@ export default function HouseholdIndex({ members }: Props) {
                                         form.reset();
                                         form.clearErrors();
                                     }}
-                                    className="w-full py-2 text-sm font-black text-slate-400 transition-colors hover:text-slate-900"
+                                    className="w-full py-2 text-sm font-black text-slate-400 dark:text-slate-500 transition-colors hover:text-slate-900 dark:hover:text-white"
                                 >
                                     Cancel
                                 </button>
                             </div>
-                        </form>
-                    )}
+                        </form>                    )}
                 </MobileSheet>
 
                 {/* Members List */}

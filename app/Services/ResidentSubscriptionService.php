@@ -13,6 +13,11 @@ class ResidentSubscriptionService
      */
     public function createForUser(User $user, Estate $estate): ?ResidentSubscription
     {
+        setPermissionsTeamId($estate->id);
+        if ($user->hasRole('household_member') || ! $user->hasRole('resident')) {
+            return null;
+        }
+
         $settings = $estate->settings;
 
         if ($settings->charge_type !== 'residents') {

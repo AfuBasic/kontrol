@@ -91,19 +91,51 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
         'payload' => 'payload_data',
         'last_activity' => time(),
     ]);
+    // 6. Create a resident with PENDING invitation status
+    $residentWithPendingInvite = User::factory()->create();
+    $residentWithPendingInvite->assignRole($residentRole);
+    $estate->users()->attach($residentWithPendingInvite->id, ['status' => 'pending']);
+
+    DB::table('sessions')->insert([
+        'id' => 'session_id_abc',
+        'user_id' => $residentWithPendingInvite->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Symfony',
+        'payload' => 'payload_data',
+        'last_activity' => time(),
+    ]);
+
+    // 7. Create a household member who has accepted invitation (should NOT get a subscription)
+    $householdRole = Role::firstOrCreate(['name' => 'household_member', 'guard_name' => 'web']);
+    $householdMember = User::factory()->create();
+    $householdMember->assignRole($householdRole);
+    $estate->users()->attach($householdMember->id, ['status' => 'accepted']);
+
+    DB::table('sessions')->insert([
+        'id' => 'session_id_household',
+        'user_id' => $householdMember->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Symfony',
+        'payload' => 'payload_data',
+        'last_activity' => time(),
+    ]);
 
     // Assert initial state
     expect(ResidentSubscription::where('user_id', $resident->id)->exists())->toBeFalse();
+    expect(ResidentSubscription::where('user_id', $residentWithPendingInvite->id)->exists())->toBeFalse();
+    expect(ResidentSubscription::where('user_id', $householdMember->id)->exists())->toBeFalse();
     expect(DB::table('sessions')->where('user_id', $resident->id)->exists())->toBeTrue();
     expect(DB::table('sessions')->where('user_id', $residentWithNullPlan->id)->exists())->toBeTrue();
     expect(DB::table('sessions')->where('user_id', $residentWithCompleteSub->id)->exists())->toBeTrue();
+    expect(DB::table('sessions')->where('user_id', $residentWithPendingInvite->id)->exists())->toBeTrue();
+    expect(DB::table('sessions')->where('user_id', $householdMember->id)->exists())->toBeTrue();
 
-    // 6. Run the command
+    // 8. Run the command
     $this->artisan('kontrol:fix-resident-subscriptions')
         ->assertExitCode(0);
 
-    // 7. Assertions
-    // Missing subscription should be created
+    // 9. Assertions
+    // Missing subscription should be created for the valid primary resident
     expect(ResidentSubscription::where('user_id', $resident->id)->exists())->toBeTrue();
     $sub = ResidentSubscription::where('user_id', $resident->id)->first();
     expect($sub->status)->toBe('trial');
@@ -121,4 +153,12 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
 
     // Resident with complete subscription should not be affected (session remains)
     expect(DB::table('sessions')->where('user_id', $residentWithCompleteSub->id)->exists())->toBeTrue();
+
+    // Resident with pending invitation should NOT get a subscription and their session should remain
+    expect(ResidentSubscription::where('user_id', $residentWithPendingInvite->id)->exists())->toBeFalse();
+    expect(DB::table('sessions')->where('user_id', $residentWithPendingInvite->id)->exists())->toBeTrue();
+
+    // Household member should NOT get a subscription and their session should remain
+    expect(ResidentSubscription::where('user_id', $householdMember->id)->exists())->toBeFalse();
+    expect(DB::table('sessions')->where('user_id', $householdMember->id)->exists())->toBeTrue();
 });

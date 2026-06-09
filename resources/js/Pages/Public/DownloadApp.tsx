@@ -24,6 +24,31 @@ export default function DownloadApp({ autologinToken }: Props) {
         }
     }, []);
 
+    const handleOpenApp = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+
+        const deepLink = autologinToken ? `kontrol://login?token=${autologinToken}` : 'kontrol://login';
+
+        if (deviceType === 'apple') {
+            const storeLink = 'https://apps.apple.com/us/app/access-kontrol/id6772562083';
+
+            // Try to open deep link
+            window.location.href = deepLink;
+
+            // Fallback to store if the app doesn't open within 2 seconds
+            const start = Date.now();
+            setTimeout(() => {
+                if (Date.now() - start < 2200) {
+                    window.location.href = storeLink;
+                }
+            }, 2000);
+        } else if (deviceType === 'android') {
+            alert('Android app integration is coming soon! Please download the app from the Play Store once available.');
+        } else {
+            window.location.href = deepLink;
+        }
+    };
+
     return (
         <div className="flex min-h-[100dvh] flex-col justify-between bg-white pb-12 font-sans text-slate-900 transition-colors duration-300 selection:bg-[#FF7E67]/30 selection:text-white dark:bg-[#020617] dark:text-slate-100">
             <Head>
@@ -68,7 +93,8 @@ export default function DownloadApp({ autologinToken }: Props) {
                     {/* Primary Button: Deep Link to Open App */}
                     <div className="mt-2 flex w-full flex-col gap-6">
                         <a
-                            href="kontrol://login"
+                            href="#"
+                            onClick={handleOpenApp}
                             className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4 text-sm font-extrabold text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95"
                         >
                             <Smartphone className="h-5 w-5" />
@@ -89,7 +115,9 @@ export default function DownloadApp({ autologinToken }: Props) {
                         {/* Download Options Grid */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <a
-                                href="#"
+                                href="https://apps.apple.com/us/app/access-kontrol/id6772562083"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
                                 <Apple className="h-5 w-5 fill-current text-white dark:text-slate-950" />
@@ -103,6 +131,10 @@ export default function DownloadApp({ autologinToken }: Props) {
 
                             <a
                                 href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    alert('Android app integration is coming soon! Please download the app from the Play Store once available.');
+                                }}
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
                                 <Play className="h-5 w-5 fill-current text-white dark:text-slate-950" />

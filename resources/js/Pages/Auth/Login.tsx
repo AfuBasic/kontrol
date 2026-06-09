@@ -2,7 +2,26 @@ import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, useMotionValue, animate as animateX } from 'framer-motion';
-import { Eye, EyeOff, Sparkles, Key, Wallet, ChevronRight, AlertTriangle, Check, QrCode, Smartphone, Bell, CreditCard, ShieldAlert, MessageSquare, ArrowRight, Shield, Activity, Users } from 'lucide-react';
+import {
+    Eye,
+    EyeOff,
+    Sparkles,
+    Key,
+    Wallet,
+    ChevronRight,
+    AlertTriangle,
+    Check,
+    QrCode,
+    Smartphone,
+    Bell,
+    CreditCard,
+    ShieldAlert,
+    MessageSquare,
+    ArrowRight,
+    Shield,
+    Activity,
+    Users,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
@@ -437,43 +456,35 @@ export default function Login() {
                             return (
                                 <div
                                     key={i}
-                                    className="relative flex h-full flex-col items-center justify-between py-20 px-6 text-center select-none bg-[#0B0F19] text-white"
+                                    className="relative flex h-full flex-col items-center justify-between bg-[#0B0F19] px-6 py-20 text-center text-white select-none"
                                     style={{
                                         width: `${100 / onboardingSlides.length}%`,
                                     }}
                                 >
                                     {/* Ambient Glows per slide to give depth */}
-                                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-[80px]" />
+                                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                                        <div className="absolute top-10 left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-[80px]" />
                                         {i === 1 && (
-                                            <div className="absolute bottom-40 right-10 w-[200px] h-[200px] rounded-full bg-emerald-500/5 blur-[60px]" />
+                                            <div className="absolute right-10 bottom-40 h-[200px] w-[200px] rounded-full bg-emerald-500/5 blur-[60px]" />
                                         )}
                                         {i === 2 && (
-                                            <div className="absolute bottom-40 left-10 w-[200px] h-[200px] rounded-full bg-amber-500/5 blur-[60px]" />
+                                            <div className="absolute bottom-40 left-10 h-[200px] w-[200px] rounded-full bg-amber-500/5 blur-[60px]" />
                                         )}
                                         {i === 3 && (
-                                            <div className="absolute bottom-40 right-10 w-[200px] h-[200px] rounded-full bg-rose-500/5 blur-[60px]" />
+                                            <div className="absolute right-10 bottom-40 h-[200px] w-[200px] rounded-full bg-rose-500/5 blur-[60px]" />
                                         )}
                                     </div>
 
                                     {/* Visual preview area */}
-                                    <div className="relative flex-1 w-full flex items-center justify-center max-h-[45vh]">
-                                        {slide.visual}
-                                    </div>
+                                    <div className="relative flex max-h-[45vh] w-full flex-1 items-center justify-center">{slide.visual}</div>
 
                                     {/* Content Area */}
-                                    <div className="relative z-10 flex flex-col items-center mt-6 max-w-sm px-4">
-                                        <span className="text-[10px] font-black tracking-[0.25em] text-indigo-400 uppercase">
-                                            {slide.subtitle}
-                                        </span>
-                                        <h2 className="mt-3.5 text-3xl font-black tracking-tight leading-tight text-white">
-                                            {slide.title}
-                                        </h2>
-                                        <p className="mt-4 text-sm leading-relaxed text-slate-400 font-medium">
-                                            {slide.description}
-                                        </p>
+                                    <div className="relative z-10 mt-6 flex max-w-sm flex-col items-center px-4">
+                                        <span className="text-[10px] font-black tracking-[0.25em] text-indigo-400 uppercase">{slide.subtitle}</span>
+                                        <h2 className="mt-3.5 text-3xl leading-tight font-black tracking-tight text-white">{slide.title}</h2>
+                                        <p className="mt-4 text-sm leading-relaxed font-medium text-slate-400">{slide.description}</p>
                                     </div>
-                                    
+
                                     {/* Spacer to keep space for bottom controls */}
                                     <div className="h-24" />
                                 </div>
@@ -509,7 +520,7 @@ export default function Login() {
                             {currentSlide > 0 ? (
                                 <button
                                     onClick={prevSlide}
-                                    className="cursor-pointer rounded-xl bg-white/5 border border-white/5 px-5 py-3 text-xs font-bold text-slate-300 transition-all hover:bg-white/10 sm:text-sm active:scale-95"
+                                    className="cursor-pointer rounded-xl border border-white/5 bg-white/5 px-5 py-3 text-xs font-bold text-slate-300 transition-all hover:bg-white/10 active:scale-95 sm:text-sm"
                                 >
                                     Back
                                 </button>
@@ -765,13 +776,13 @@ export default function Login() {
 
                         <p className="mt-8 text-center text-xs text-slate-500">
                             By signing in, you agree to our{' '}
-                            <a href="/terms" className="font-medium text-slate-700 hover:text-slate-900">
+                            <Link href="/terms" className="font-medium text-slate-700 hover:text-slate-900">
                                 Terms of Service
-                            </a>{' '}
+                            </Link>{' '}
                             and{' '}
-                            <a href="/privacy" className="font-medium text-slate-700 hover:text-slate-900">
+                            <Link href="/privacy" className="font-medium text-slate-700 hover:text-slate-900">
                                 Privacy Policy
-                            </a>
+                            </Link>
                             .
                         </p>
                     </div>
