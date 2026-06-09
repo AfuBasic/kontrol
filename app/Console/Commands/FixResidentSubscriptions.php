@@ -40,6 +40,8 @@ class FixResidentSubscriptions extends Command
         foreach ($estates as $estate) {
             $this->info("Scanning Estate: {$estate->name} (ID: {$estate->id})...");
 
+            $estatePlanId = $estate->subscriptionRecord?->plan_id;
+
             $users = User::forEstate($estate->id)
                 ->where(function ($query) use ($estate) {
                     $query->whereExists(function ($q) use ($estate) {
@@ -52,25 +54,38 @@ class FixResidentSubscriptions extends Command
                             ->where('model_has_roles.estate_id', $estate->id);
                     });
                 })
-                ->whereDoesntHave('residentSubscription', function ($q) use ($estate) {
-                    $q->where('estate_id', $estate->id);
+                ->where(function ($query) use ($estate) {
+                    $query->whereDoesntHave('residentSubscription', function ($q) use ($estate) {
+                        $q->where('estate_id', $estate->id);
+                    })->orWhereHas('residentSubscription', function ($q) use ($estate) {
+                        $q->where('estate_id', $estate->id)->whereNull('plan_id');
+                    });
                 })
                 ->get();
 
             if ($users->isEmpty()) {
-                $this->line('  No missing subscriptions found for this estate.');
+                $this->line('  No missing or incomplete subscriptions found for this estate.');
 
                 continue;
             }
 
             foreach ($users as $user) {
-                // 1. Create subscription
-                $subscriptionService->createForUser($user, $estate);
+                $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
 
-                // 2. Clear user sessions (support database session driver)
+                if (! $sub) {
+                    // 1. Create subscription
+                    $subscriptionService->createForUser($user, $estate);
+                    $reason = 'Subscription created';
+                } else {
+                    // 2. Update existing missing plan_id
+                    $sub->update(['plan_id' => $estatePlanId]);
+                    $reason = "plan_id set to {$estatePlanId}";
+                }
+
+                // 3. Clear user sessions (support database session driver)
                 DB::table('sessions')->where('user_id', $user->id)->delete();
 
-                $this->warn("  -> Fixed resident: {$user->email} (Subscription created & sessions cleared)");
+                $this->warn("  -> Fixed resident: {$user->email} ({$reason} & sessions cleared)");
                 $fixedCount++;
             }
         }
