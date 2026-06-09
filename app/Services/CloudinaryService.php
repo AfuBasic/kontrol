@@ -22,9 +22,29 @@ class CloudinaryService
     ];
 
     /**
+     * Allowed media MIME types (images and videos) for upload.
+     *
+     * @var array<string>
+     */
+    protected array $allowedMediaMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'video/mp4',
+        'video/quicktime',
+        'video/webm',
+        'video/ogg',
+    ];
+
+    /**
      * Maximum file size in bytes (5MB).
      */
     protected int $maxFileSizeBytes = 5 * 1024 * 1024;
+
+    /**
+     * Maximum media file size in bytes (20MB).
+     */
+    protected int $maxMediaFileSizeBytes = 20 * 1024 * 1024;
 
     /**
      * Upload an image to Cloudinary with deduplication.
@@ -80,6 +100,56 @@ class CloudinaryService
             ]);
 
             throw new \RuntimeException('Failed to upload image: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Upload a media file (image or video) to Cloudinary.
+     *
+     * @return array{url: string, path: string, size_bytes: int, hash: string, type: string}
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function uploadMedia(UploadedFile $file, Estate $estate, string $folder = 'incidents'): array
+    {
+        $mimeType = $file->getMimeType();
+        if (! in_array($mimeType, $this->allowedMediaMimeTypes, true)) {
+            throw new \InvalidArgumentException(
+                'Invalid file type. Allowed types: '.implode(', ', $this->allowedMediaMimeTypes)
+            );
+        }
+
+        if ($file->getSize() > $this->maxMediaFileSizeBytes) {
+            throw new \InvalidArgumentException(
+                'File size exceeds maximum allowed size of '.($this->maxMediaFileSizeBytes / 1024 / 1024).'MB'
+            );
+        }
+
+        $hash = hash_file('sha256', $file->getRealPath());
+        $uploadPath = "{$folder}/estate-{$estate->id}";
+        $isImage = str_starts_with($mimeType, 'image/');
+        $resourceType = $isImage ? 'image' : 'video';
+
+        try {
+            $response = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                'folder' => $uploadPath,
+                'resource_type' => $resourceType,
+            ]);
+
+            return [
+                'url' => $response['secure_url'],
+                'path' => $response['public_id'],
+                'size_bytes' => $response['bytes'] ?? $file->getSize(),
+                'hash' => $hash,
+                'type' => $resourceType,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Cloudinary media upload failed', [
+                'estate_id' => $estate->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException('Failed to upload media: '.$e->getMessage());
         }
     }
 

@@ -22,6 +22,10 @@ class EnsureResidentSubscriptionActive
             return $next($request);
         }
 
+        if ($user->hasRole('admin') || $user->hasRole('property_owner')) {
+            return $next($request);
+        }
+
         // Get the current estate from the request or session
         // Assuming current_estate_id is stored in session or we can infer it
         $estateId = $request->route('estate')?->id ?? session('current_estate_id');

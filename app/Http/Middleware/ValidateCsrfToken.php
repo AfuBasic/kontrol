@@ -15,7 +15,7 @@ class ValidateCsrfToken extends BaseValidateCsrfToken
      *
      * @throws TokenMismatchException
      */
-    public function handle(Request $request, Closure $next): mixed
+    public function handle($request, Closure $next)
     {
         if ($request->header('X-Capacitor-App') === 'true' || $request->cookie('is_native_app') === 'true') {
             return $next($request);

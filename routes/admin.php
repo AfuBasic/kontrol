@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
+use App\Http\Controllers\Admin\IncidentCommentController;
+use App\Http\Controllers\Admin\IncidentController;
+use App\Http\Controllers\Admin\IncidentStatusController;
 use App\Http\Controllers\Admin\InviteLinkController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\NotificationController;
@@ -182,5 +185,16 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::get('/{collection}/export', [CollectionController::class, 'export'])->name('export');
         Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->name('assignments.record-payment');
         Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+    });
+
+    // Incidents management
+    Route::prefix('incidents')->name('incidents.')->group(function () {
+        Route::get('/', [IncidentController::class, 'index'])->name('index');
+        Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
+        Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
+        Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->name('status.update');
+
+        Route::post('/{incident}/comments', [IncidentCommentController::class, 'store'])->name('comments.store');
+        Route::delete('/comments/{comment}', [IncidentCommentController::class, 'destroy'])->name('comments.destroy');
     });
 });

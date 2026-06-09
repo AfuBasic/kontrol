@@ -10,6 +10,10 @@ use App\Http\Controllers\Resident\EstateBoardController;
 use App\Http\Controllers\Resident\EstateContactController;
 use App\Http\Controllers\Resident\HomeController;
 use App\Http\Controllers\Resident\HouseholdMemberController;
+use App\Http\Controllers\Resident\IncidentCloseController;
+use App\Http\Controllers\Resident\IncidentCommentController;
+use App\Http\Controllers\Resident\IncidentController;
+use App\Http\Controllers\Resident\IncidentUpvoteController;
 use App\Http\Controllers\Resident\NotificationController;
 use App\Http\Controllers\Resident\PasswordController;
 use App\Http\Controllers\Resident\PaymentCallbackController;
@@ -168,5 +172,24 @@ Route::middleware('role:resident')->group(function (): void {
         Route::get('/settlement', [POSettlementController::class, 'index'])->name('settlement.index');
         Route::put('/settlement', [POSettlementController::class, 'update'])->name('settlement.update');
         Route::post('/settlement/resolve', [POSettlementController::class, 'resolve'])->name('settlement.resolve');
+    });
+});
+
+// Incidents: community issue tracker (accessible by resident, household_member, property_owner)
+Route::middleware('role:resident,household_member,property_owner')->group(function (): void {
+    Route::prefix('incidents')->name('resident.incidents.')->middleware('resident.active')->group(function () {
+        Route::get('/', [IncidentController::class, 'index'])->name('index');
+        Route::get('/create', [IncidentController::class, 'create'])->name('create');
+        Route::post('/', [IncidentController::class, 'store'])->name('store');
+        Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
+
+        // Rate-limited comments
+        Route::middleware('throttle:incident-comments')->group(function () {
+            Route::post('/{incident}/comments', [IncidentCommentController::class, 'store'])->name('comments.store');
+            Route::delete('/comments/{comment}', [IncidentCommentController::class, 'destroy'])->name('comments.destroy');
+        });
+
+        Route::post('/{incident}/upvote', [IncidentUpvoteController::class, 'store'])->name('upvote');
+        Route::post('/{incident}/close', IncidentCloseController::class)->name('close');
     });
 });

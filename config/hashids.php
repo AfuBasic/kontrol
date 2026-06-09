@@ -40,6 +40,12 @@ return [
             'alphabet' => 'abcdefghijklmnopqrstuvwxyz1234567890',
         ],
 
+        'incidents' => [
+            'salt' => env('HASHIDS_SALT', env('APP_KEY')).'incidents',
+            'length' => 12,
+            'alphabet' => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
+        ],
+
     ],
 
 ];

@@ -335,6 +335,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         ...(hasHousehold && !isHouseholdMember ? [{ name: 'Household', href: '/resident/household', icon: UserCheck }] : []),
         ...(!showDuesInNav && !isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
         ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
+        ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
     ];
 
     const navItems = [
@@ -397,6 +398,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const poSidebarItems = [
         { name: 'Home', href: '/resident/home', icon: Home },
+        { name: 'Incidents', href: '/resident/incidents', icon: ClipboardList },
         { name: 'Residents', href: '/resident/property-owner/residents', icon: Users },
         { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
         { name: 'Manage Dues', href: '/resident/property-owner/collections', icon: Wallet },

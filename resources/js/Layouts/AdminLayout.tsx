@@ -33,6 +33,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Admin/Notific
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
@@ -84,6 +85,7 @@ const baseNav: NavItem[] = [
         feature: 'payment-collection',
     },
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
+    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon },
     { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
