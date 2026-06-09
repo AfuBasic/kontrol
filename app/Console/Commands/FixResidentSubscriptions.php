@@ -58,7 +58,11 @@ class FixResidentSubscriptions extends Command
                     $query->whereDoesntHave('residentSubscription', function ($q) use ($estate) {
                         $q->where('estate_id', $estate->id);
                     })->orWhereHas('residentSubscription', function ($q) use ($estate) {
-                        $q->where('estate_id', $estate->id)->whereNull('plan_id');
+                        $q->where('estate_id', $estate->id)
+                            ->where(function ($sq) {
+                                $sq->whereNull('plan_id')
+                                    ->orWhereNull('current_period_end');
+                            });
                     });
                 })
                 ->get();
@@ -77,9 +81,32 @@ class FixResidentSubscriptions extends Command
                     $subscriptionService->createForUser($user, $estate);
                     $reason = 'Subscription created';
                 } else {
-                    // 2. Update existing missing plan_id
-                    $sub->update(['plan_id' => $estatePlanId]);
-                    $reason = "plan_id set to {$estatePlanId}";
+                    // 2. Update existing missing plan_id and/or dates
+                    $updates = [];
+                    $reasons = [];
+
+                    if ($sub->plan_id === null) {
+                        $updates['plan_id'] = $estatePlanId;
+                        $reasons[] = "plan_id set to {$estatePlanId}";
+                    }
+
+                    if ($sub->current_period_end === null) {
+                        if ($sub->status === 'trial') {
+                            $trialDays = $estate->settings->free_trial_days ?? 30;
+                            $updates['trial_ends_at'] = $sub->created_at->copy()->addDays($trialDays);
+                            $updates['current_period_start'] = $sub->created_at;
+                            $updates['current_period_end'] = $sub->created_at->copy()->addDays($trialDays);
+                        } else {
+                            $updates['current_period_start'] = $sub->created_at;
+                            $updates['current_period_end'] = $sub->created_at;
+                        }
+                        $reasons[] = 'dates healed';
+                    }
+
+                    if (! empty($updates)) {
+                        $sub->update($updates);
+                    }
+                    $reason = implode(' & ', $reasons);
                 }
 
                 // 3. Clear user sessions (support database session driver)
