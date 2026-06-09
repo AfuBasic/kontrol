@@ -14,6 +14,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -99,6 +100,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
+
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+            return back()->with('error', 'Your session expired. Please try again.');
+        });
 
         $exceptions->render(function (InvalidSignatureException $e, Request $request) {
             if (str_starts_with($request->path(), 'invitation')) {
