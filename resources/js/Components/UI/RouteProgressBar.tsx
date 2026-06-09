@@ -9,7 +9,10 @@ export default function RouteProgressBar() {
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | null = null;
 
-        const start = () => {
+        const start = (event: any) => {
+            const isSilent = event?.detail?.visit?.silent || event?.detail?.visit?.headers?.['X-Background-Reload'];
+            if (isSilent) return;
+
             setProgress(0);
             setVisible(true);
             
@@ -22,7 +25,10 @@ export default function RouteProgressBar() {
             }, 200);
         };
 
-        const end = () => {
+        const end = (event: any) => {
+            const isSilent = event?.detail?.visit?.silent || event?.detail?.visit?.headers?.['X-Background-Reload'];
+            if (isSilent) return;
+
             if (interval) clearInterval(interval);
             setProgress(100);
             
@@ -33,9 +39,9 @@ export default function RouteProgressBar() {
             }, 400);
         };
 
-        const startListener = router.on('start', start);
-        const finishListener = router.on('finish', end);
-        const errorListener = router.on('error', end);
+        const startListener = router.on('start', (e) => start(e));
+        const finishListener = router.on('finish', (e) => end(e));
+        const errorListener = router.on('error', (e) => end(e));
 
         return () => {
             if (interval) clearInterval(interval);

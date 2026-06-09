@@ -6,6 +6,7 @@ use App\Jobs\Admin\SendBulkPropertyOwnerInvitationsJob;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +107,12 @@ class BulkInvitePropertyOwnersAction
                 ];
             }
             UserProfile::insert($profilesData);
+
+            // Create resident subscriptions if required
+            $subscriptionService = app(ResidentSubscriptionService::class);
+            foreach ($newUsers as $newUser) {
+                $subscriptionService->createForUser($newUser, $estate);
+            }
 
             // Log activity for bulk invite
             activity()
