@@ -137,7 +137,12 @@ class LandingController extends Controller
         Auth::loginUsingId($userId);
         $request->session()->regenerate();
 
-        $redirectUrl = $determineRedirect->execute(Auth::user());
+        $redirect = $request->query('redirect');
+        if ($redirect && (str_starts_with($redirect, '/') || parse_url($redirect, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST))) {
+            $redirectUrl = $redirect;
+        } else {
+            $redirectUrl = $determineRedirect->execute(Auth::user());
+        }
 
         return redirect()->intended($redirectUrl);
     }

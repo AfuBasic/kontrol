@@ -7,6 +7,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ResidentTrialEndingNotification extends Notification implements ShouldQueue
 {
@@ -32,14 +34,25 @@ class ResidentTrialEndingNotification extends Notification implements ShouldQueu
     public function toMail(object $notifiable): MailMessage
     {
         $estateName = $this->subscription->estate->name;
+        $trialEndsAt = $this->subscription->trial_ends_at ? $this->subscription->trial_ends_at->format('M d, Y') : '';
+
+        // Generate autologin token
+        $token = Str::random(40);
+        Cache::put('autologin_'.$token, $notifiable->id, now()->addDays(7)); // Token valid for 7 days
+
+        $url = route('autologin', [
+            'token' => $token,
+            'redirect' => '/resident/billing',
+        ]);
 
         return (new MailMessage)
             ->subject('Your Kontrol access trial is ending soon')
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Your access trial for {$estateName} is ending soon.")
-            ->line('To ensure uninterrupted access to your estate features, please visit the Kontrol web platform to manage your subscription.')
-            ->action('Manage Access on Web', config('app.url'))
-            ->line('Thank you for using Kontrol!');
+            ->view('mail.resident.trial-ending', [
+                'name' => $notifiable->name,
+                'estateName' => $estateName,
+                'trialEndsAt' => $trialEndsAt,
+                'url' => $url,
+            ]);
     }
 
     /**
