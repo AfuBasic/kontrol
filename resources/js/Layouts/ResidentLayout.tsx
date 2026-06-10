@@ -4,10 +4,11 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, Shield, Landmark } from 'lucide-react';
+import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, Shield, Landmark, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import PullToRefresh from '@/Components/PullToRefresh';
 import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
@@ -321,6 +322,24 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const hasVisitFeed = useFeature('real-time-visit-feed');
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            if (Capacitor.isNativePlatform()) {
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+                await FirebaseAuthentication.signOut().catch(() => {});
+            }
+        } catch (error) {
+            console.error('Logout failed (Firebase):', error);
+        } finally {
+            localStorage.removeItem('seen_resident_welcome');
+            router.post('/logout');
+        }
+    };
 
     const hasHousehold = useFeature('household-management');
     const hasPaymentCollection = useFeature('payment-collection');
@@ -466,15 +485,21 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Property Owner</p>
                             </div>
                         </div>
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            onClick={() => localStorage.removeItem('seen_resident_welcome')}
+                        <button
+                            onClick={() => {
+                                const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                                if (isIPadOrDesktop) {
+                                    if (window.confirm('Are you sure you want to sign out of your account?')) {
+                                        handleLogout();
+                                    }
+                                } else {
+                                    setShowLogoutConfirmation(true);
+                                }
+                            }}
                             className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 transition-all hover:bg-rose-50/50"
                         >
                             Sign out
-                        </Link>
+                        </button>
                     </div>
                 </aside>
             )}
@@ -713,6 +738,25 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     );
                                 })}
                             </div>
+                            <div className="mt-6 border-t border-slate-100 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setMoreMenuOpen(false);
+                                        const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                                        if (isIPadOrDesktop) {
+                                            if (window.confirm('Are you sure you want to sign out of your account?')) {
+                                                handleLogout();
+                                            }
+                                        } else {
+                                            setShowLogoutConfirmation(true);
+                                        }
+                                    }}
+                                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-black text-rose-600 transition-all hover:bg-rose-100/70"
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                    Sign out
+                                </button>
+                            </div>
                         </motion.div>
                     </>
                 )}
@@ -721,6 +765,16 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             {/* Modals and Sheets */}
             <CreateCodeBottomSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />
             <NotificationDetailSheet notification={selectedNotification} onClose={() => setSelectedNotification(null)} />
+            <ConfirmationSheet
+                isOpen={showLogoutConfirmation}
+                onClose={() => !loggingOut && setShowLogoutConfirmation(false)}
+                onConfirm={handleLogout}
+                title="Sign Out"
+                message="Are you sure you want to sign out of your account?"
+                confirmLabel="Sign Out"
+                type="danger"
+                isLoading={loggingOut}
+            />
 
             {/* Toast Notification */}
             <AnimatePresence>

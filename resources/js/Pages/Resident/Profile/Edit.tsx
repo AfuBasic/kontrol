@@ -47,24 +47,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
     const parentResidentName = auth.user?.resident_subscription?.parent_resident_name;
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
-    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-    const [loggingOut, setLoggingOut] = useState(false);
 
-    const handleLogout = async () => {
-        if (loggingOut) return;
-        setLoggingOut(true);
-        try {
-            if (Capacitor.isNativePlatform()) {
-                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
-                await FirebaseAuthentication.signOut().catch(() => {});
-            }
-        } catch (error) {
-            console.error('Logout failed (Firebase):', error);
-        } finally {
-            localStorage.removeItem('seen_resident_welcome');
-            router.post('/logout');
-        }
-    };
 
     const CONTACT_LIMIT = 5;
 
@@ -205,25 +188,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                         </section>
                     )}
 
-                    {/* Logout */}
-                    <div className="px-2">
-                        <button
-                            onClick={() => {
-                                const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-                                if (isIPadOrDesktop) {
-                                    if (window.confirm('Are you sure you want to sign out of your account?')) {
-                                        handleLogout();
-                                    }
-                                } else {
-                                    setShowLogoutConfirmation(true);
-                                }
-                            }}
-                            className="flex w-full items-center justify-center gap-3 rounded-[24px] bg-rose-50 py-4 text-sm font-black text-rose-600 ring-1 ring-rose-100 transition-all hover:bg-rose-100 active:scale-[0.98]"
-                        >
-                            <LogOut className="h-5 w-5" />
-                            Sign Out Account
-                        </button>
-                    </div>
+
                 </div>
             </div>
             {/* PROFILE INFORMATION SHEET */}
@@ -253,16 +218,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                 </div>
             </MobileSheet>
 
-            <ConfirmationSheet
-                isOpen={showLogoutConfirmation}
-                onClose={() => !loggingOut && setShowLogoutConfirmation(false)}
-                onConfirm={handleLogout}
-                title="Sign Out"
-                message="Are you sure you want to sign out of your account?"
-                confirmLabel="Sign Out"
-                type="danger"
-                isLoading={loggingOut}
-            />
+
         </>
     );
 }
