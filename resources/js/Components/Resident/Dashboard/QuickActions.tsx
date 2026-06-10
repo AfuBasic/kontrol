@@ -6,12 +6,12 @@ import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/H
 
 const actions = [
     {
-        name: 'Estate Board',
+        name: 'Announcements',
         description: 'Latest community news & posts',
         icon: Megaphone,
         href: '/resident/estate-board',
         color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
+        bg: 'bg-emerald-50/70 border border-emerald-100/50',
     },
     {
         name: 'Invite Family',
@@ -19,7 +19,7 @@ const actions = [
         icon: UserPlus,
         href: '/resident/household',
         color: 'text-indigo-600',
-        bg: 'bg-indigo-50',
+        bg: 'bg-indigo-50/70 border border-indigo-100/50',
     },
     {
         name: 'View History',
@@ -27,7 +27,7 @@ const actions = [
         icon: History,
         href: '/resident/visitors',
         color: 'text-amber-600',
-        bg: 'bg-amber-50',
+        bg: 'bg-amber-50/70 border border-amber-100/50',
     },
 ];
 
@@ -52,35 +52,27 @@ export default function QuickActions() {
 
     return (
         <div
-            className={`grid grid-cols-1 ${
-                visibleActions.length === 2 ? 'sm:grid-cols-2' : visibleActions.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-1'
-            } gap-4`}
+            className={`grid gap-3 ${
+                visibleActions.length === 2 ? 'grid-cols-2' : visibleActions.length === 3 ? 'grid-cols-3' : 'grid-cols-1'
+            }`}
         >
             {visibleActions.map((action, index) => (
                 <motion.div
                     key={action.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="h-full"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * index }}
                 >
                     <Link
                         href={action.href}
-                        className="group relative flex flex-row items-center justify-between gap-4 overflow-hidden rounded-[32px] bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/50 transition-all hover:shadow-lg active:scale-[0.98] sm:min-h-[160px] sm:flex-col sm:items-start sm:justify-between sm:gap-5"
+                        className="group flex flex-col items-center justify-center text-center p-4 bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.015)] border border-slate-200/50 transition-all hover:shadow-[0_8px_25px_rgba(0,0,0,0.03)] hover:border-slate-300 active:scale-95 min-h-[110px]"
                     >
-                        <div className="flex flex-1 flex-row items-center gap-4 sm:w-full sm:flex-col sm:items-start sm:gap-4">
-                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${action.bg} ${action.color}`}>
-                                <action.icon className="h-7 w-7" strokeWidth={2.5} />
-                            </div>
-                            <div className="min-w-0 flex-1 sm:w-full">
-                                <h4 className="text-base leading-tight font-black text-slate-900">{action.name}</h4>
-                                <p className="mt-0.5 text-xs leading-normal font-bold text-slate-400">{action.description}</p>
-                            </div>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2.5 transition-transform duration-300 group-hover:scale-105 ${action.bg} ${action.color}`}>
+                            <action.icon className="h-6 w-6" strokeWidth={2.4} />
                         </div>
-
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all group-hover:bg-indigo-600 group-hover:text-white sm:self-end">
-                            <ArrowRight className="h-5 w-5" />
-                        </div>
+                        <span className="text-xs font-black text-slate-800 leading-tight truncate w-full">
+                            {action.name}
+                        </span>
                     </Link>
                 </motion.div>
             ))}
