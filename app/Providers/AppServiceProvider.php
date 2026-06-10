@@ -95,6 +95,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('estate-board-comments', function ($request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('incident-comments', function ($request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
     }
 
     protected function configureDefaults(): void
