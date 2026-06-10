@@ -91,7 +91,7 @@ export default function Create({ categories }: Props) {
                         <select
                             value={data.category}
                             onChange={e => setData('category', e.target.value)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
                             required
                         >
                             <option value="">Select a category</option>
@@ -111,15 +111,20 @@ export default function Create({ categories }: Props) {
 
                     {/* Title */}
                     <div>
-                        <label className="block text-xs font-black tracking-wider text-slate-400 uppercase mb-2">
-                            Title <span className="text-red-500">*</span>
-                        </label>
+                        <div className="mb-2 flex items-center justify-between">
+                            <label className="block text-xs font-black tracking-wider text-slate-400 uppercase">
+                                Title <span className="text-red-500">*</span>
+                            </label>
+                            <span className="text-[10px] font-bold text-slate-400">
+                                {data.title.length} / 150 characters
+                            </span>
+                        </div>
                         <input
                             type="text"
                             placeholder="e.g., Damaged street light on Road 4"
                             value={data.title}
                             onChange={e => setData('title', e.target.value)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
                             required
                             maxLength={150}
                         />
@@ -146,7 +151,7 @@ export default function Create({ categories }: Props) {
                             value={data.body}
                             onChange={e => setData('body', e.target.value)}
                             rows={6}
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
                             required
                             minLength={20}
                             maxLength={5000}

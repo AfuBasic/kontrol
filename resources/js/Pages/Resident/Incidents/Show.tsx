@@ -336,7 +336,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                         placeholder="Add to the discussion..."
                                         value={commentText}
                                         onChange={e => setCommentText(e.target.value)}
-                                        className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                                        className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
                                         maxLength={2000}
                                         required
                                     />
