@@ -55,11 +55,10 @@ class ResidentRejected extends Notification implements ShouldBroadcast, ShouldQu
     {
         return (new MailMessage)
             ->subject("Update on your application to {$this->estate->name}")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Thank you for your interest in joining {$this->estate->name}.")
-            ->line('Unfortunately, your application has not been approved at this time.')
-            ->line('If you believe this is a mistake, please contact the estate administration directly.')
-            ->line('Thank you.');
+            ->view('mail.resident.rejected', [
+                'name' => $notifiable->name,
+                'estateName' => $this->estate->name,
+            ]);
     }
 
     /**

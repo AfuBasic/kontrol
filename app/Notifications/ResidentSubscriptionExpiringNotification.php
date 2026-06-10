@@ -7,6 +7,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ResidentSubscriptionExpiringNotification extends Notification implements ShouldQueue
 {
@@ -34,13 +36,23 @@ class ResidentSubscriptionExpiringNotification extends Notification implements S
         $estateName = $this->subscription->estate->name;
         $daysLeft = now()->diffInDays($this->subscription->current_period_end);
 
+        // Generate autologin token
+        $token = Str::random(40);
+        Cache::put('autologin_'.$token, $notifiable->id, now()->addDays(7)); // Token valid for 7 days
+
+        $url = route('autologin', [
+            'token' => $token,
+            'redirect' => '/resident/billing',
+        ]);
+
         return (new MailMessage)
             ->subject("Your estate access will expire in {$daysLeft} days")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Your access subscription for {$estateName} will expire in {$daysLeft} days.")
-            ->line('To maintain full access to all features, please visit the Kontrol web platform to renew your subscription.')
-            ->action('Manage Access on Web', config('app.url'))
-            ->line('Thank you for using Kontrol!');
+            ->view('mail.resident.subscription-expiring', [
+                'name' => $notifiable->name,
+                'estateName' => $estateName,
+                'daysLeft' => $daysLeft,
+                'url' => $url,
+            ]);
     }
 
     /**
