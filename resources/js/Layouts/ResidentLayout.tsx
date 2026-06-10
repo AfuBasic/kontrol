@@ -348,7 +348,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'Visitors',
             href: '/resident/visitors',
-            icon: (active: boolean) => <ClipboardList className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
             show: hasAccessCodes,
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null, show: hasAccessCodes },
@@ -381,7 +381,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'Visitor Passes',
             href: '/resident/visitors',
-            icon: (active: boolean) => <ClipboardList className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
+            icon: (active: boolean) => <Users className={`h-6 w-6 ${active ? 'fill-current' : ''}`} />,
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null },
         {
@@ -406,7 +406,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'My Dues', href: '/resident/dues', icon: Wallet },
         { name: 'Manage Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
         { name: 'My Announcements', href: '/resident/estate-board', icon: Megaphone },
-        { name: 'Visitor Passes', href: '/resident/visitors', icon: ClipboardList },
+        { name: 'Visitor Passes', href: '/resident/visitors', icon: Users },
         { name: 'Household Members', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
@@ -490,7 +490,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
                                     <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
                                     {props.is_local && (
-                                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">Local</span>
+                                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
+                                            Local
+                                        </span>
                                     )}
                                 </div>
                                 <Link
@@ -511,16 +513,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                 {/* Main Content */}
                 <main
-                    className={`relative mx-auto w-full flex-1 pb-8 ${isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'} ${
+                    className={`relative mx-auto w-full flex-1 ${
+                        !isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-32' : 'pb-8'
+                    } ${isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'} ${
                         !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'
                     }`}
                 >
                     {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
-                        <div className="mb-4 p-0">
+                        <div className="mb-4 px-4">
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
                     )}
-                    <PullToRefresh className="px-2 md:px-10">{children}</PullToRefresh>
+                    <PullToRefresh className="px-4 md:px-10">{children}</PullToRefresh>
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}

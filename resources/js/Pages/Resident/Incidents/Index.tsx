@@ -13,11 +13,13 @@ import {
     Wrench,
     Zap,
     Filter,
+    ArrowRight,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import MobileSheet from '@/Components/MobileSheet';
 import Modal from '@/Components/Modal';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { Incident, IncidentCategory, IncidentStatus, PaginatedData, SharedData } from '@/types';
 
 type Props = {
@@ -36,41 +38,41 @@ const getStatusStyles = (status: IncidentStatus) => {
     switch (status) {
         case 'pending':
             return {
-                bg: 'bg-amber-50',
-                text: 'text-amber-700',
+                bg: 'bg-amber-50/70',
+                text: 'text-amber-800',
                 border: 'border-amber-200/50',
                 icon: <Clock className="h-3 w-3" />,
-                label: 'Pending',
+                label: 'Pending Review',
             };
         case 'acknowledged':
             return {
-                bg: 'bg-blue-50',
-                text: 'text-blue-700',
+                bg: 'bg-blue-50/70',
+                text: 'text-blue-800',
                 border: 'border-blue-200/50',
                 icon: <Eye className="h-3 w-3" />,
                 label: 'Acknowledged',
             };
         case 'resolving':
             return {
-                bg: 'bg-indigo-50',
-                text: 'text-indigo-700',
+                bg: 'bg-indigo-50/70',
+                text: 'text-indigo-800',
                 border: 'border-indigo-200/50',
                 icon: <Wrench className="h-3 w-3" />,
                 label: 'Resolving',
             };
         case 'solved':
             return {
-                bg: 'bg-emerald-50',
-                text: 'text-emerald-700',
+                bg: 'bg-emerald-50/70',
+                text: 'text-emerald-800',
                 border: 'border-emerald-200/50',
                 icon: <CheckCircle2 className="h-3 w-3" />,
-                label: 'Solved',
+                label: 'Proposed Solved',
             };
         case 'closed':
             return {
-                bg: 'bg-slate-100',
+                bg: 'bg-slate-100/70',
                 text: 'text-slate-600',
-                border: 'border-slate-200',
+                border: 'border-slate-200/60',
                 icon: <CheckCircle2 className="h-3 w-3" />,
                 label: 'Closed',
             };
@@ -80,7 +82,7 @@ const getStatusStyles = (status: IncidentStatus) => {
                 text: 'text-slate-600',
                 border: 'border-slate-200',
                 icon: <Clock className="h-3 w-3" />,
-                label: 'Unknown',
+                label: 'Reported',
             };
     }
 };
@@ -88,11 +90,11 @@ const getStatusStyles = (status: IncidentStatus) => {
 const getCategoryIcon = (category: IncidentCategory) => {
     switch (category) {
         case 'electricity':
-            return <Zap className="h-4 w-4" />;
+            return <Zap className="h-3.5 w-3.5" />;
         case 'security':
-            return <AlertTriangle className="h-4 w-4" />;
+            return <AlertTriangle className="h-3.5 w-3.5" />;
         default:
-            return <Wrench className="h-4 w-4" />;
+            return <Wrench className="h-3.5 w-3.5" />;
     }
 };
 
@@ -123,7 +125,6 @@ export default function Index({ incidents, filters, categories }: Props) {
             ...newParams,
         };
 
-        // remove undefined values
         Object.keys(params).forEach(key => {
             if (params[key] === undefined) {
                 delete params[key];
@@ -141,21 +142,6 @@ export default function Index({ incidents, filters, categories }: Props) {
         applyFilters({ search });
     };
 
-    const handleCategoryChange = (val: string) => {
-        setCategory(val);
-        applyFilters({ category: val || undefined });
-    };
-
-    const handleTabChange = (tabId: string) => {
-        setTab(tabId);
-        applyFilters({ tab: tabId || undefined });
-    };
-
-    const handleSortChange = (sortId: string) => {
-        setSort(sortId);
-        applyFilters({ sort: sortId || undefined });
-    };
-
     const handleUpvote = (e: React.MouseEvent, incident: Incident) => {
         e.preventDefault();
         e.stopPropagation();
@@ -165,15 +151,12 @@ export default function Index({ incidents, filters, categories }: Props) {
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    // Handled automatically by Inertia reloading props
-                },
             }
         );
     };
 
     const filterFormContent = (
-        <div className="space-y-6 pt-4">
+        <div className="space-y-6 pt-2">
             {/* Sort Options */}
             <div>
                 <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
@@ -183,9 +166,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                     <button
                         type="button"
                         onClick={() => setSort('newest')}
-                        className={`rounded-xl py-3 text-sm font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-xs font-bold transition-all ring-1 ${
                             sort === 'newest'
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
+                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -194,9 +177,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                     <button
                         type="button"
                         onClick={() => setSort('popular')}
-                        className={`rounded-xl py-3 text-sm font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-xs font-bold transition-all ring-1 ${
                             sort === 'popular'
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
+                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -208,21 +191,21 @@ export default function Index({ incidents, filters, categories }: Props) {
             {/* Status Options */}
             <div>
                 <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Status
+                    Status Group
                 </label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
                         { id: 'all', label: 'All' },
-                        { id: 'open', label: 'Open' },
+                        { id: 'open', label: 'Active' },
                         { id: 'solved', label: 'Solved' },
                     ].map((item) => (
                         <button
                             key={item.id}
                             type="button"
                             onClick={() => setTab(item.id)}
-                            className={`rounded-xl py-3 text-xs font-bold transition-all ring-1 ${
+                            className={`min-h-[44px] rounded-2xl py-2 px-3 text-xs font-bold transition-all ring-1 ${
                                 tab === item.id
-                                    ? 'bg-indigo-600 text-white ring-indigo-600'
+                                    ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                             }`}
                         >
@@ -235,15 +218,15 @@ export default function Index({ incidents, filters, categories }: Props) {
             {/* Category Options */}
             <div>
                 <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Category
+                    Category Filters
                 </label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div className="mt-2 grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
                     <button
                         type="button"
                         onClick={() => setCategory('')}
-                        className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-left text-xs font-bold transition-all ring-1 ${
                             !category
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
+                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -254,9 +237,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                             key={c.value}
                             type="button"
                             onClick={() => setCategory(c.value)}
-                            className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 truncate ${
+                            className={`min-h-[44px] rounded-2xl py-2 px-4 text-left text-xs font-bold transition-all ring-1 truncate ${
                                 category === c.value
-                                    ? 'bg-indigo-600 text-white ring-indigo-600'
+                                    ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                             }`}
                         >
@@ -283,7 +266,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-1 rounded-2xl bg-slate-100 py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
+                    className="flex-1 min-h-[44px] rounded-2xl bg-slate-100 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
                 >
                     Reset All
                 </button>
@@ -297,7 +280,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-[2] rounded-2xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
+                    className="flex-[2] min-h-[44px] rounded-2xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
                 >
                     Apply Filters
                 </button>
@@ -309,37 +292,43 @@ export default function Index({ incidents, filters, categories }: Props) {
         <>
             <Head title="Community Incidents" />
 
-            {/* Header */}
-            <div className="mb-6 flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-center">
-                <div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900">
-                        Community Incidents
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Transparent, estate-wide issue tracking and resolution.
-                    </p>
-                </div>
-                <div>
-                    <Link
-                        href="/resident/incidents/create"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 hover:shadow-indigo-200"
-                    >
-                        <Plus className="h-4 w-4" strokeWidth={3} />
-                        Report Incident
-                    </Link>
+            {/* Header section with decorative ambient glow */}
+            <div className="relative mb-6 overflow-hidden rounded-3xl bg-slate-900 px-5 py-6 text-white shadow-xl shadow-slate-100/50">
+                <div className="absolute right-[-40px] top-[-40px] h-32 w-32 rounded-full bg-indigo-500/20 blur-3xl" />
+                <div className="relative z-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                    <div>
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300">
+                            Community Issue Tracker
+                        </span>
+                        <h1 className="mt-1 text-2xl font-black tracking-tight">
+                            Incident Board
+                        </h1>
+                        <p className="mt-1.5 text-xs leading-relaxed text-slate-300 max-w-md">
+                            Collaborative issue logging, progress status notifications, and real-time resolution updates.
+                        </p>
+                    </div>
+                    <div>
+                        <Link
+                            href="/resident/incidents/create"
+                            className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-500/20 transition-all hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/30 active:scale-95"
+                        >
+                            <Plus className="h-4 w-4" strokeWidth={3} />
+                            Report Incident
+                        </Link>
+                    </div>
                 </div>
             </div>
 
-            {/* Filters Bar */}
+            {/* Search and Filters Controls */}
             <div className="mb-6">
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                     <form onSubmit={handleSearchSubmit} className="relative flex-1">
                         <input
                             type="text"
-                            placeholder="Search incidents..."
+                            placeholder="Search keywords, locations, description..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            className="w-full min-h-[44px] rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-xs text-slate-800 placeholder-slate-400 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
                         />
                         <Search className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
                     </form>
@@ -347,16 +336,16 @@ export default function Index({ incidents, filters, categories }: Props) {
                     <button
                         type="button"
                         onClick={() => setIsFilterSheetOpen(true)}
-                        className={`flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold ring-1 ring-slate-200/80 transition-all active:scale-95 ${
+                        className={`flex min-h-[44px] items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-bold border transition-all active:scale-95 ${
                             category || tab !== 'all' || sort !== 'newest'
-                                ? 'text-indigo-600 ring-indigo-500/30 bg-indigo-50/20'
-                                : 'text-slate-500 hover:text-slate-800'
+                                ? 'text-indigo-600 border-indigo-500 bg-indigo-50/10'
+                                : 'text-slate-500 border-slate-200 hover:text-slate-800'
                         }`}
                     >
                         <Filter className="h-4.5 w-4.5" />
-                        <span className="hidden sm:inline">Filters</span>
+                        <span className="hidden sm:inline">Filter View</span>
                         {(category || tab !== 'all' || sort !== 'newest') && (
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-black text-white">
                                 {[category && 1, tab !== 'all' && 1, sort !== 'newest' && 1].filter(Boolean).length}
                             </span>
                         )}
@@ -364,7 +353,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                 </div>
             </div>
 
-            {/* Filter Sheet / Modal */}
+            {/* Filter Drawer sheet / modal */}
             {isMobile ? (
                 <MobileSheet
                     isOpen={isFilterSheetOpen}
@@ -397,85 +386,102 @@ export default function Index({ incidents, filters, categories }: Props) {
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.04 }}
-                                className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)]"
+                                className="group rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.035)] hover:border-slate-300 transition-all duration-300"
                             >
                                 <Link
                                     href={`/resident/incidents/${incident.hashid}`}
-                                    className="block"
+                                    className="flex gap-4 items-start"
                                 >
-                                    {/* Top Metadata */}
-                                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            {/* Status Badge */}
-                                            <span
-                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}
-                                            >
-                                                {statusStyles.icon}
-                                                {statusStyles.label}
-                                            </span>
-
-                                            {/* Category */}
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-semibold text-slate-500">
-                                                {getCategoryIcon(incident.category)}
-                                                {incident.category.replace('_', ' ')}
-                                            </span>
-                                        </div>
-
-                                        <span className="text-xs text-slate-400">
-                                            {formatDistanceToNow(new Date(incident.created_at), {
-                                                addSuffix: true,
-                                            })}
-                                        </span>
+                                    {/* Left Column: Avatar */}
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200/60 font-black text-slate-700 text-base shadow-xs select-none">
+                                        {incident.reporter.name.charAt(0).toUpperCase()}
                                     </div>
 
-                                    {/* Title & Body */}
-                                    <h2 className="mb-1 text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
-                                        {incident.title}
-                                    </h2>
-                                    <p className="line-clamp-2 text-sm leading-relaxed text-slate-500 mb-4">
-                                        {incident.body}
-                                    </p>
+                                    {/* Right Column: All Content & Actions */}
+                                    <div className="flex-1 min-w-0 space-y-3.5">
+                                        {/* User Meta Header Row */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                    <span className="text-sm font-black text-slate-900 hover:text-indigo-650 transition-colors leading-tight">
+                                                        {incident.reporter.name}
+                                                    </span>
+                                                    <span className="text-xs text-slate-400 font-medium truncate">
+                                                        @{incident.reporter.name.toLowerCase().replace(/[^a-z0-9]/g, '')}
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider hidden xs:inline">
+                                                        &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
+                                                    </span>
+                                                </div>
 
-                                    {/* Bottom Info & Interactions */}
-                                    <div className="flex items-center justify-between border-t border-slate-50 pt-3.5">
-                                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600">
-                                                {incident.reporter.name.charAt(0).toUpperCase()}
+                                                {/* Category Hashtag & Tags */}
+                                                <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                    <span className="text-[10px] font-black text-indigo-600 tracking-wider uppercase font-mono">
+                                                        #{incident.category}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider xs:hidden">
+                                                        &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span>{incident.reporter.name}</span>
+
+                                            {/* Status Badge */}
+                                            <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black tracking-wider border ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}>
+                                                {statusStyles.icon}
+                                                {statusStyles.label.toUpperCase()}
+                                            </span>
                                         </div>
 
-                                        <div className="flex items-center gap-3">
-                                            {/* Comments count */}
-                                            <div className="flex items-center gap-1.5 text-slate-400">
-                                                <MessageSquare className="h-4.5 w-4.5" />
-                                                <span className="text-xs font-black">
-                                                    {incident.comments_count}
-                                                </span>
-                                            </div>
+                                        {/* Post Content */}
+                                        <div className="space-y-1.5">
+                                            <h2 className="text-base font-black text-slate-900 group-hover:text-indigo-650 transition-colors flex items-center gap-1.5">
+                                                {incident.title}
+                                                <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-indigo-650" />
+                                            </h2>
+                                            <p className="text-xs leading-relaxed text-slate-500 line-clamp-3">
+                                                {incident.body}
+                                            </p>
+                                        </div>
 
-                                            {/* Upvote Button */}
-                                            <button
-                                                onClick={e => handleUpvote(e, incident)}
-                                                disabled={isMyReport}
-                                                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all ${
-                                                    incident.is_upvoted
-                                                        ? 'bg-indigo-50 text-indigo-600 font-black'
-                                                        : isMyReport
-                                                          ? 'text-slate-300 cursor-not-allowed'
-                                                          : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                                                }`}
-                                            >
-                                                <ThumbsUp
-                                                    className="h-4 w-4"
-                                                    fill={
-                                                        incident.is_upvoted ? 'currentColor' : 'none'
-                                                    }
+                                        {/* Large Full-Width Media Preview */}
+                                        {incident.attachment_url && incident.attachment_type === 'image' && (
+                                            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 aspect-video max-h-64 w-full relative group/media">
+                                                <img
+                                                    src={incident.attachment_url}
+                                                    alt={incident.title}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-[1.015]"
                                                 />
-                                                <span className="text-xs font-bold">
-                                                    {incident.upvotes_count}
-                                                </span>
-                                            </button>
+                                            </div>
+                                        )}
+
+                                        {/* Footer Action Icons */}
+                                        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                                            <div className="flex items-center gap-4">
+                                                {/* Upvote Icon button */}
+                                                <button
+                                                    onClick={e => handleUpvote(e, incident)}
+                                                    disabled={isMyReport}
+                                                    className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full transition-all text-xs font-bold ${
+                                                        incident.is_upvoted
+                                                            ? 'text-indigo-600 bg-indigo-50 font-black'
+                                                            : isMyReport
+                                                              ? 'text-slate-350 cursor-not-allowed'
+                                                              : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    <ThumbsUp
+                                                        className="h-4 w-4 transition-transform group-hover:scale-110"
+                                                        fill={incident.is_upvoted ? 'currentColor' : 'none'}
+                                                    />
+                                                    <span>{incident.upvotes_count}</span>
+                                                </button>
+
+                                                {/* Comments count link */}
+                                                <div className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-slate-50 text-xs font-bold transition-all">
+                                                    <MessageSquare className="h-4 w-4" />
+                                                    <span>{incident.comments_count}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>
@@ -485,8 +491,8 @@ export default function Index({ incidents, filters, categories }: Props) {
 
                     {/* Pagination Links */}
                     {incidents.links && incidents.links.length > 3 && (
-                        <div className="mt-6 flex justify-center">
-                            <div className="flex flex-wrap gap-1">
+                        <div className="mt-8 flex justify-center">
+                            <div className="flex flex-wrap gap-1 bg-slate-50 border border-slate-100 p-1.5 rounded-2xl">
                                 {incidents.links.map((link, i) => (
                                     <Link
                                         key={i}
@@ -495,10 +501,10 @@ export default function Index({ incidents, filters, categories }: Props) {
                                         disabled={!link.url}
                                         className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                             link.active
-                                                ? 'bg-indigo-600 text-white'
+                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
                                                 : link.url
-                                                  ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                  : 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                                                  ? 'text-slate-600 hover:bg-white'
+                                                  : 'text-slate-300 cursor-not-allowed'
                                         }`}
                                     />
                                 ))}
@@ -527,3 +533,5 @@ export default function Index({ incidents, filters, categories }: Props) {
         </>
     );
 }
+
+Index.layout = (page: React.ReactNode) => <ResidentLayout children={page} />;
