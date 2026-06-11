@@ -8,7 +8,6 @@ use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentCreatedNotification;
 use App\Services\CloudinaryService;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -20,7 +19,7 @@ class CreateIncidentAction
     ) {}
 
     /**
-     * @param  array{title: string, body: string, category: string, attachment?: UploadedFile|null}  $data
+     * @param  array{title: string, body: string, category: string, attachment_url?: string|null, attachment_type?: string|null, attachment_hash?: string|null}  $data
      */
     public function execute(array $data, Estate $estate): Incident
     {
@@ -34,13 +33,10 @@ class CreateIncidentAction
                 'body' => $data['body'],
                 'category' => $data['category'],
                 'status' => IncidentStatus::Pending,
+                'attachment_url' => $data['attachment_url'] ?? null,
+                'attachment_type' => $data['attachment_type'] ?? null,
+                'attachment_hash' => $data['attachment_hash'] ?? null,
             ]);
-
-            if (! empty($data['attachment'])) {
-                $uploadResult = $this->cloudinaryService->uploadMedia($data['attachment'], $estate);
-                $incident->attachment_url = $uploadResult['url'];
-                $incident->attachment_type = $uploadResult['type'];
-            }
 
             $incident->save();
 

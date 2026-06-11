@@ -4,6 +4,7 @@ namespace App\Actions\Incidents;
 
 use App\Models\Incident;
 use App\Models\IncidentComment;
+use App\Models\IncidentUpvote;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentCommentNotification;
 use Illuminate\Support\Facades\Auth;
@@ -39,9 +40,33 @@ class AddIncidentCommentAction
                 ->withProperties(['estate_id' => $incident->estate_id, 'comment_id' => $comment->id])
                 ->log('added comment to incident');
 
-            // Send notification to reporter and any users who have commented on this incident, excluding the commenter themselves
-            $recipientIds = IncidentComment::where('incident_id', $incident->id)
+            // Fetch admins of this estate
+            $adminIds = User::forEstate($incident->estate_id)
+                ->active()
+                ->get()
+                ->filter(function ($u) use ($incident) {
+                    setPermissionsTeamId($incident->estate_id);
+
+                    return $u->hasRole('admin');
+                })
+                ->pluck('id')
+                ->toArray();
+
+            // Fetch upvoters of this incident
+            $upvoterIds = IncidentUpvote::where('incident_id', $incident->id)
                 ->pluck('user_id')
+                ->toArray();
+
+            // Fetch commenters on this incident
+            $commenterIds = IncidentComment::where('incident_id', $incident->id)
+                ->pluck('user_id')
+                ->toArray();
+
+            // Notify reporter, upvoters, commenters, and admins, excluding the commenter themselves
+            $recipientIds = collect([])
+                ->concat($adminIds)
+                ->concat($upvoterIds)
+                ->concat($commenterIds)
                 ->push($incident->reporter_id)
                 ->unique()
                 ->filter(fn ($id) => $id !== $user->id)

@@ -59,11 +59,12 @@ export default function Show({ incident, comments, canClose }: Props) {
     const authUser = auth?.user;
 
     const [commentText, setCommentText] = useState('');
-    const [replyToId, setReplyToId] = useState<number | null>(null);
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     const isReporter = incident.reporter_id === authUser?.id;
+    const reporterName = isReporter ? 'you' : (incident.reporter?.name || 'Anonymous');
+    const avatarLetter = (incident.reporter?.name || 'Anonymous').charAt(0).toUpperCase();
 
     // Get current status index
     const currentStatusIdx = statusSteps.findIndex(s => s.key === incident.status);
@@ -86,6 +87,12 @@ export default function Show({ incident, comments, canClose }: Props) {
         });
     };
 
+    const handleDelete = () => {
+        if (confirm('Are you sure you want to delete this incident report? This action cannot be undone.')) {
+            router.delete(`/resident/incidents/${incident.hashid}`);
+        }
+    };
+
     const handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!commentText.trim()) return;
@@ -95,13 +102,11 @@ export default function Show({ incident, comments, canClose }: Props) {
             `/resident/incidents/${incident.hashid}/comments`,
             {
                 body: commentText,
-                parent_id: replyToId,
             },
             {
                 preserveScroll: true,
                 onSuccess: () => {
                     setCommentText('');
-                    setReplyToId(null);
                 },
                 onFinish: () => {
                     setSubmittingComment(false);
@@ -192,38 +197,50 @@ export default function Show({ incident, comments, canClose }: Props) {
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5 mt-4">
-                            <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-black text-slate-600 text-[9px]">
-                                    {incident.reporter.name.charAt(0).toUpperCase()}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
+                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-black text-slate-600 text-[9px]">
+                                        {avatarLetter}
+                                    </div>
+                                    <span>Reported by <b>{reporterName}</b></span>
                                 </div>
-                                <span>Reported by <b>{incident.reporter.name}</b></span>
-                            </div>
 
-                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleUpvote}
                                     disabled={isReporter}
-                                    className={`flex min-h-[44px] items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
+                                    className={`flex min-h-[38px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all ${
                                         incident.is_upvoted
                                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
                                             : isReporter
-                                              ? 'text-slate-300 cursor-not-allowed border border-slate-100 bg-slate-50'
+                                              ? 'text-slate-400 cursor-not-allowed border border-slate-200 bg-slate-50'
                                               : 'border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-700 active:scale-95'
                                     }`}
                                 >
                                     <ThumbsUp
-                                        className="h-4 w-4"
+                                        className="h-3.5 w-3.5"
                                         fill={incident.is_upvoted ? 'currentColor' : 'none'}
                                     />
                                     <span>{incident.upvotes_count} Upvotes</span>
                                 </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {isReporter && incident.status === 'pending' && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-red-200 text-red-500 bg-white hover:bg-red-50 hover:text-red-750 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Delete Report
+                                    </button>
+                                )}
 
                                 {canClose && (
                                     <button
                                         onClick={handleClose}
-                                        className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
+                                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-emerald-100 transition-all active:scale-95"
                                     >
-                                        <CheckCircle2 className="h-4.5 w-4.5" />
+                                        <CheckCircle2 className="h-4 w-4" />
                                         Close Incident
                                     </button>
                                 )}
@@ -281,14 +298,6 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                 <p className="text-xs leading-relaxed text-slate-600">
                                                     {comment.body}
                                                 </p>
-                                                {incident.status !== 'closed' && (
-                                                    <button
-                                                        onClick={() => setReplyToId(comment.id)}
-                                                        className="mt-2 text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800 min-h-[44px] flex items-center"
-                                                    >
-                                                        Reply
-                                                    </button>
-                                                )}
                                             </div>
                                         </div>
 
@@ -344,18 +353,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                         {/* Comment Input - Premium Capsule style */}
                         {incident.status !== 'closed' ? (
                             <form onSubmit={handleCommentSubmit} className="space-y-3">
-                                {replyToId && (
-                                    <div className="flex items-center justify-between rounded-xl bg-indigo-50 border border-indigo-100/60 px-4 py-2.5 text-xs text-indigo-700">
-                                        <span>Replying to active thread...</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setReplyToId(null)}
-                                            className="text-indigo-500 hover:text-indigo-700 font-black uppercase text-[10px] tracking-wider min-h-[44px] flex items-center px-2"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                )}
+
                                 <div className="flex gap-2 items-center bg-slate-50 border border-slate-200/80 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all">
                                     <input
                                         type="text"

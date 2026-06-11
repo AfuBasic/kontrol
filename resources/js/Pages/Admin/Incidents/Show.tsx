@@ -33,17 +33,53 @@ type Props = {
 const getStatusStyles = (status: IncidentStatus) => {
     switch (status) {
         case 'pending':
-            return { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-200/50', icon: <Clock className="h-4 w-4 text-white" />, label: 'Pending' };
+            return {
+                bg: 'bg-amber-500',
+                text: 'text-amber-700',
+                border: 'border-amber-200/50',
+                icon: <Clock className="h-4 w-4 text-white" />,
+                label: 'Pending',
+            };
         case 'acknowledged':
-            return { bg: 'bg-blue-500', text: 'text-blue-700', border: 'border-blue-200/50', icon: <Eye className="h-4 w-4 text-white" />, label: 'Acknowledged' };
+            return {
+                bg: 'bg-blue-500',
+                text: 'text-blue-700',
+                border: 'border-blue-200/50',
+                icon: <Eye className="h-4 w-4 text-white" />,
+                label: 'Acknowledged',
+            };
         case 'resolving':
-            return { bg: 'bg-indigo-500', text: 'text-indigo-700', border: 'border-indigo-200/50', icon: <Wrench className="h-4 w-4 text-white" />, label: 'Resolving' };
+            return {
+                bg: 'bg-indigo-500',
+                text: 'text-indigo-700',
+                border: 'border-indigo-200/50',
+                icon: <Wrench className="h-4 w-4 text-white" />,
+                label: 'Resolving',
+            };
         case 'solved':
-            return { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200/50', icon: <CheckCircle2 className="h-4 w-4 text-white" />, label: 'Solved' };
+            return {
+                bg: 'bg-emerald-500',
+                text: 'text-emerald-700',
+                border: 'border-emerald-200/50',
+                icon: <CheckCircle2 className="h-4 w-4 text-white" />,
+                label: 'Solved',
+            };
         case 'closed':
-            return { bg: 'bg-slate-500', text: 'text-slate-700', border: 'border-slate-300', icon: <CheckCircle2 className="h-4 w-4 text-white" />, label: 'Closed' };
+            return {
+                bg: 'bg-slate-500',
+                text: 'text-slate-700',
+                border: 'border-slate-300',
+                icon: <CheckCircle2 className="h-4 w-4 text-white" />,
+                label: 'Closed',
+            };
         default:
-            return { bg: 'bg-slate-500', text: 'text-slate-700', border: 'border-slate-300', icon: <Clock className="h-4 w-4 text-white" />, label: 'Unknown' };
+            return {
+                bg: 'bg-slate-500',
+                text: 'text-slate-700',
+                border: 'border-slate-300',
+                icon: <Clock className="h-4 w-4 text-white" />,
+                label: 'Unknown',
+            };
     }
 };
 
@@ -52,23 +88,86 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
     const authUser = auth?.user;
 
     const [commentText, setCommentText] = useState('');
+    const [replyToId, setReplyToId] = useState<number | null>(null);
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     // Form for updating status & assignment
-    const { data, setData, put, processing: updatingStatus, errors } = useForm({
+    const {
+        data,
+        setData,
+        put,
+        processing: updatingStatus,
+        errors,
+    } = useForm({
         status: incident.status,
         assigned_to: incident.assigned_to?.id || '',
     });
 
-    const handleStatusUpdate = (e: React.FormEvent) => {
-        e.preventDefault();
-        put(`/admin/incidents/${incident.hashid}/status`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Status updated
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [targetStatus, setTargetStatus] = useState<IncidentStatus | null>(null);
+
+    const nextStatusMap: Record<
+        IncidentStatus,
+        { next: IncidentStatus | null; label: string; confirmTitle: string; confirmText: string; colorClass: string } | null
+    > = {
+        pending: {
+            next: 'acknowledged',
+            label: 'Acknowledge Incident',
+            confirmTitle: 'Acknowledge Incident',
+            confirmText:
+                'Are you sure you want to acknowledge this incident? This will notify the resident that the estate office has received the report and is reviewing it.',
+            colorClass: 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 text-white',
+        },
+        acknowledged: {
+            next: 'resolving',
+            label: 'Start Resolving',
+            confirmTitle: 'Start Incident Resolution',
+            confirmText:
+                'Are you sure you want to start resolving this incident? This will notify the resident that active work or investigation has begun.',
+            colorClass: 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 text-white',
+        },
+        resolving: {
+            next: 'solved',
+            label: 'Mark as Solved',
+            confirmTitle: 'Mark Incident as Solved',
+            confirmText:
+                'Are you sure you want to mark this incident as solved? This will notify the resident to verify and close the incident report.',
+            colorClass: 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 text-white',
+        },
+        solved: null,
+        closed: null,
+    };
+
+    const handleAdvanceStatus = (nextStatus: IncidentStatus) => {
+        router.put(
+            `/admin/incidents/${incident.hashid}/status`,
+            {
+                status: nextStatus,
+                assigned_to: data.assigned_to,
             },
-        });
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsConfirmModalOpen(false);
+                    setTargetStatus(null);
+                },
+            },
+        );
+    };
+
+    const handleAssigneeChange = (staffId: string) => {
+        setData('assigned_to', staffId);
+        router.put(
+            `/admin/incidents/${incident.hashid}/status`,
+            {
+                status: incident.status,
+                assigned_to: staffId,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
@@ -80,16 +179,18 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
             `/admin/incidents/${incident.hashid}/comments`,
             {
                 body: commentText,
+                parent_id: replyToId,
             },
             {
                 preserveScroll: true,
                 onSuccess: () => {
                     setCommentText('');
+                    setReplyToId(null);
                 },
                 onFinish: () => {
                     setSubmittingComment(false);
                 },
-            }
+            },
         );
     };
 
@@ -98,12 +199,6 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
             router.delete(`/admin/incidents/comments/${commentId}`, {
                 preserveScroll: true,
             });
-        }
-    };
-
-    const handleDeleteIncident = () => {
-        if (confirm('Are you sure you want to delete this incident report? This action cannot be undone.')) {
-            router.delete(`/admin/incidents/${incident.hashid}`);
         }
     };
 
@@ -117,7 +212,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
             <div className="mb-4">
                 <Link
                     href="/admin/incidents"
-                    className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                    className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-800"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to incidents
@@ -127,30 +222,24 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
             {/* Main Grid */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Left/Main Content */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                     {/* Details Card */}
                     <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <span className="text-[9px] font-black tracking-[0.2em] text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 uppercase">
+                            <span className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-indigo-600 uppercase">
                                 {incident.category.replace('_', ' ')}
                             </span>
-                            <span className="text-xs text-slate-400 font-medium">
-                                Reported {format(new Date(incident.created_at), 'PPP')}
-                            </span>
+                            <span className="text-xs font-medium text-slate-400">Reported {format(new Date(incident.created_at), 'PPP')}</span>
                         </div>
 
-                        <h1 className="text-xl font-black text-slate-900 sm:text-2xl mb-4 leading-tight">
-                            {incident.title}
-                        </h1>
+                        <h1 className="mb-4 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
 
-                        <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap mb-6">
-                            {incident.body}
-                        </p>
+                        <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">{incident.body}</p>
 
                         {/* Attachment Preview / Lightbox Trigger */}
                         {incident.attachment_url && (
-                            <div 
-                                className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 relative group cursor-zoom-in shadow-xs"
+                            <div
+                                className="group relative mb-6 cursor-zoom-in overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-xs"
                                 onClick={() => {
                                     if (incident.attachment_type === 'image') {
                                         setIsLightboxOpen(true);
@@ -164,8 +253,8 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                             alt="Attachment"
                                             className="max-h-96 w-full object-contain transition-transform duration-300 group-hover:scale-[1.01]"
                                         />
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="bg-white/95 text-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-transform">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <span className="flex items-center gap-1.5 rounded-xl bg-white/95 px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-lg transition-transform active:scale-95">
                                                 <ZoomIn className="h-4 w-4" /> Click to Expand View
                                             </span>
                                         </div>
@@ -182,21 +271,15 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                         )}
 
                         {/* Reporter & Metadata */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5 mt-4">
-                            <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-black text-slate-600 text-[9px]">
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[9px] font-black text-slate-600">
                                     {incident.reporter.name.charAt(0).toUpperCase()}
                                 </div>
-                                <span>Reported by <b>{incident.reporter.name}</b> ({incident.reporter.email})</span>
+                                <span>
+                                    Reported by <b>{incident.reporter.name}</b> ({incident.reporter.email})
+                                </span>
                             </div>
-
-                            <button
-                                onClick={handleDeleteIncident}
-                                className="inline-flex min-h-[44px] items-center gap-1 text-xs font-bold text-red-500 hover:text-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Report
-                            </button>
                         </div>
                     </div>
 
@@ -207,94 +290,106 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                 <MessageSquareMore className="h-5 w-5 text-indigo-500" />
                                 Comments & Updates
                             </h3>
-                            <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase bg-slate-50 border border-slate-100/80 px-2.5 py-1 rounded-md">
+                            <span className="rounded-md border border-slate-100/80 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 {incident.comments_count} Updates
                             </span>
                         </div>
 
                         {comments.data.length > 0 ? (
-                            <div className="space-y-5 mb-6">
-                                {comments.data.map(comment => (
+                            <div className="mb-6 space-y-5">
+                                {comments.data.map((comment) => (
                                     <div key={comment.id} className="space-y-4">
-                                        <div className="flex gap-3 items-start">
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-bold text-slate-600 text-xs">
+                                        <div className="flex items-start gap-3.5">
+                                            {/* Initials Avatar */}
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/65 bg-slate-50 text-xs font-black text-slate-700 shadow-2xs select-none">
                                                 {comment.author.name.charAt(0).toUpperCase()}
                                             </div>
-                                            <div className="flex-1 rounded-2xl border border-slate-150 bg-slate-50/50 p-4">
-                                                <div className="mb-1 flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                        {comment.author.name}
+
+                                            {/* Comment Box */}
+                                            <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 transition-all hover:bg-slate-50/80">
+                                                <div className="mb-1.5 flex items-center justify-between gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-xs font-black text-slate-900">{comment.author.name}</span>
                                                         {comment.is_official && (
-                                                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase border border-blue-150">
+                                                            <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
                                                                 Official
                                                             </span>
                                                         )}
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] text-slate-400 font-medium">
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                                                             {formatDistanceToNow(new Date(comment.created_at), {
                                                                 addSuffix: true,
                                                             })}
                                                         </span>
                                                         <button
                                                             onClick={() => handleDeleteComment(comment.id)}
-                                                            className="text-slate-450 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                            title="Delete/Moderate Comment"
+                                                            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
+                                                            title="Delete Comment"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <p className="text-xs leading-relaxed text-slate-600">
-                                                    {comment.body}
-                                                </p>
+                                                <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{comment.body}</p>
+                                                {incident.status !== 'closed' && (
+                                                    <div className="mt-2.5 flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => setReplyToId(comment.id)}
+                                                            className="flex min-h-[32px] items-center text-[10px] font-black tracking-wider text-indigo-600 uppercase transition-colors hover:text-indigo-800"
+                                                        >
+                                                            Reply
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Threaded replies */}
-                                        {comment.replies && comment.replies.map(reply => (
-                                            <div key={reply.id} className="relative flex gap-3 items-start pl-11">
-                                                <div className="absolute left-5 top-0 bottom-6 w-0.5 bg-slate-200/80" />
-                                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-bold text-slate-600 text-[10px] z-10">
-                                                    {reply.author.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="flex-1 rounded-2xl border border-slate-150 bg-slate-50/25 p-3.5">
-                                                    <div className="mb-1 flex items-center justify-between">
-                                                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                            {reply.author.name}
-                                                            {reply.is_official && (
-                                                                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase border border-blue-150">
-                                                                    Official
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] text-slate-400 font-medium">
-                                                                {formatDistanceToNow(new Date(reply.created_at), {
-                                                                    addSuffix: true,
-                                                                })}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => handleDeleteComment(reply.id)}
-                                                                className="text-slate-455 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                                title="Delete/Moderate Comment"
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        </div>
+                                        {comment.replies &&
+                                            comment.replies.map((reply) => (
+                                                <div key={reply.id} className="relative flex items-start gap-3.5 pl-11">
+                                                    <div className="absolute top-0 bottom-4 left-[33px] w-0.5 bg-slate-200/60" />
+                                                    {/* Mini Initials Avatar */}
+                                                    <div className="shadow-3xs z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-slate-50 text-[10px] font-black text-slate-600 select-none">
+                                                        {reply.author.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <p className="text-xs leading-relaxed text-slate-600">
-                                                        {reply.body}
-                                                    </p>
+
+                                                    <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/20 p-3.5 transition-all hover:bg-slate-50/50">
+                                                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="text-xs font-black text-slate-900">{reply.author.name}</span>
+                                                                {reply.is_official && (
+                                                                    <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
+                                                                        Official
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                                                                    {formatDistanceToNow(new Date(reply.created_at), {
+                                                                        addSuffix: true,
+                                                                    })}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handleDeleteComment(reply.id)}
+                                                                    className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
+                                                                    title="Delete Reply"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{reply.body}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="py-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 mb-6">
-                                <MessageSquare className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                            <div className="mb-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
+                                <MessageSquare className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                                 <p className="text-xs text-slate-400">No comments yet.</p>
                             </div>
                         )}
@@ -302,27 +397,39 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                         {/* Comment Input Form - Capsule layout */}
                         {incident.status !== 'closed' ? (
                             <form onSubmit={handleCommentSubmit} className="space-y-3">
-                                <div className="flex gap-2 items-center bg-slate-50 border border-slate-200/80 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all">
+                                {replyToId && (
+                                    <div className="border-slate-150 animate-fadeIn flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600">
+                                        <span>Replying to comment...</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setReplyToId(null)}
+                                            className="min-h-[32px] text-[10px] font-black tracking-wider text-slate-400 uppercase hover:text-slate-700"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-1.5 transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100">
                                     <input
                                         type="text"
-                                        placeholder="Add an official administrator response..."
+                                        placeholder={replyToId ? 'Write a reply...' : 'Add an official administrator response...'}
                                         value={commentText}
-                                        onChange={e => setCommentText(e.target.value)}
-                                        className="flex-1 min-h-[44px] bg-transparent border-0 px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        className="min-h-[44px] flex-1 border-0 bg-transparent px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
                                         maxLength={2000}
                                         required
                                     />
                                     <button
                                         type="submit"
                                         disabled={submittingComment || !commentText.trim()}
-                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
+                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:shadow-none"
                                     >
                                         <Send className="h-4 w-4" />
                                     </button>
                                 </div>
                             </form>
                         ) : (
-                            <p className="text-center text-xs text-slate-400 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="rounded-2xl border border-slate-100 bg-slate-50 py-3 text-center text-xs text-slate-400">
                                 This incident is closed. Discussion has been locked.
                             </p>
                         )}
@@ -333,78 +440,117 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                 <div className="space-y-6">
                     {/* Status Update Card */}
                     <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
-                        <h3 className="mb-4 text-[10px] font-black tracking-[0.2em] text-slate-405 uppercase">
-                            Status & Assignment
-                        </h3>
+                        <h3 className="text-slate-405 mb-4 text-[10px] font-black tracking-[0.2em] uppercase">Status & Assignment</h3>
 
                         {incident.status !== 'closed' ? (
-                            <form onSubmit={handleStatusUpdate} className="space-y-4">
-                                {/* Status Selection */}
+                            <div className="space-y-4">
+                                {/* Current Status Info */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-wider text-slate-400 uppercase mb-1.5">
-                                        Resolution Status
+                                    <label className="mb-2 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                                        Current Status
                                     </label>
-                                    <select
-                                        value={data.status}
-                                        onChange={e => setData('status', e.target.value as IncidentStatus)}
-                                        className="w-full min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4 font-semibold"
+                                    <div
+                                        className={`inline-flex items-center gap-2 rounded-xl border ${statusInfo.border} px-3 py-1.5 text-xs font-bold ${statusInfo.text} bg-slate-50`}
                                     >
-                                        {statuses.map(s => (
-                                            <option key={s.value} value={s.value}>
-                                                {s.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.status && (
-                                        <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.status}</p>
-                                    )}
+                                        <div className={`h-2 w-2 rounded-full ${statusInfo.bg}`} />
+                                        <span>{statusInfo.label}</span>
+                                    </div>
                                 </div>
 
                                 {/* Assignee Selection */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-wider text-slate-400 uppercase mb-1.5">
+                                    <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Assign To Staff
                                     </label>
                                     <select
                                         value={data.assigned_to}
-                                        onChange={e => setData('assigned_to', e.target.value)}
-                                        className="w-full min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4 font-semibold"
+                                        onChange={(e) => handleAssigneeChange(e.target.value)}
+                                        className="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 ring-indigo-100 outline-hidden transition-all focus:border-indigo-500 focus:ring-4"
                                     >
                                         <option value="">Unassigned</option>
-                                        {admins.map(adm => (
+                                        {admins.map((adm) => (
                                             <option key={adm.id} value={adm.id}>
                                                 {adm.name}
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.assigned_to && (
-                                        <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.assigned_to}</p>
-                                    )}
+                                    {errors.assigned_to && <p className="mt-1 text-[10px] font-bold text-red-500">{errors.assigned_to}</p>}
                                 </div>
 
-                                {/* Save Button */}
-                                <button
-                                    type="submit"
-                                    disabled={updatingStatus}
-                                    className="w-full inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
-                                >
-                                    Save Changes
-                                </button>
-                            </form>
+                                {/* Advance Status Action */}
+                                {nextStatusMap[incident.status] ? (
+                                    <div className="pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const mapping = nextStatusMap[incident.status];
+                                                if (mapping && mapping.next) {
+                                                    setTargetStatus(mapping.next);
+                                                    setIsConfirmModalOpen(true);
+                                                }
+                                            }}
+                                            className={`inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all active:scale-95 ${
+                                                nextStatusMap[incident.status]?.colorClass
+                                            }`}
+                                        >
+                                            {nextStatusMap[incident.status]?.label}
+                                        </button>
+                                    </div>
+                                ) : incident.status === 'solved' ? (
+                                    <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500">
+                                        Awaiting the reporter to verify and close the incident report.
+                                    </div>
+                                ) : null}
+                            </div>
                         ) : (
                             <div className="space-y-3">
-                                <div className="flex items-center gap-2 rounded-xl bg-slate-100 p-3 text-xs text-slate-600 border border-slate-200">
+                                <div className="text-slate-605 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 p-3 text-xs">
                                     <CheckCircle2 className="h-4 w-4 text-slate-500" />
                                     <span>This incident is marked as Closed by the reporter.</span>
                                 </div>
                                 <div className="text-xs text-slate-500">
-                                    {incident.closed_at && (
-                                        <p>Closed on {format(new Date(incident.closed_at), 'PPP')}</p>
-                                    )}
+                                    {incident.closed_at && <p>Closed on {format(new Date(incident.closed_at), 'PPP')}</p>}
                                 </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Confirmation Modal */}
+                    <Modal
+                        isOpen={isConfirmModalOpen}
+                        onClose={() => {
+                            setIsConfirmModalOpen(false);
+                            setTargetStatus(null);
+                        }}
+                        title={targetStatus ? nextStatusMap[incident.status]?.confirmTitle : ''}
+                    >
+                        {targetStatus && (
+                            <div className="space-y-4">
+                                <p className="text-slate-650 text-xs leading-relaxed">{nextStatusMap[incident.status]?.confirmText}</p>
+                                <div className="flex justify-end gap-3 pt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsConfirmModalOpen(false);
+                                            setTargetStatus(null);
+                                        }}
+                                        className="inline-flex min-h-[38px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAdvanceStatus(targetStatus)}
+                                        className={`inline-flex min-h-[38px] items-center justify-center rounded-xl px-4 py-2 text-xs font-bold transition-all active:scale-95 ${
+                                            nextStatusMap[incident.status]?.colorClass
+                                        }`}
+                                    >
+                                        Confirm & Advance
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </Modal>
                 </div>
             </div>
 
@@ -418,10 +564,10 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                         className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-xs"
                     >
                         {/* Top Navigation Bar (Notch/Status Bar Safe) */}
-                        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-6 py-4 pt-safe z-10">
+                        <div className="pt-safe absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
                             <button
                                 onClick={() => setIsLightboxOpen(false)}
-                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all"
+                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 active:scale-95"
                                 aria-label="Close preview"
                             >
                                 <X className="h-6 w-6" />

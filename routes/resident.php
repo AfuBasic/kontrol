@@ -180,8 +180,11 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
     Route::prefix('incidents')->name('resident.incidents.')->middleware('resident.active')->group(function () {
         Route::get('/', [IncidentController::class, 'index'])->name('index');
         Route::get('/create', [IncidentController::class, 'create'])->name('create');
+        Route::post('/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
+        Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
         Route::post('/', [IncidentController::class, 'store'])->name('store');
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
+        Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
 
         // Rate-limited comments
         Route::middleware('throttle:incident-comments')->group(function () {

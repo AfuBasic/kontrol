@@ -31,9 +31,17 @@ class UpdateIncidentStatusAction
             }
 
             // 3. Prevent backwards or illegal transitions if necessary
-            // E.g., if Solved, only Closed is allowed, so status cannot change back.
-            if ($incident->status === IncidentStatus::Solved && $newStatus !== IncidentStatus::Solved) {
-                throw new \InvalidArgumentException('This incident is solved and can only be closed by the reporter.');
+            if ($newStatus !== $incident->status) {
+                $expectedStatus = match ($incident->status) {
+                    IncidentStatus::Pending => IncidentStatus::Acknowledged,
+                    IncidentStatus::Acknowledged => IncidentStatus::Resolving,
+                    IncidentStatus::Resolving => IncidentStatus::Solved,
+                    default => null,
+                };
+
+                if ($expectedStatus === null || $newStatus !== $expectedStatus) {
+                    throw new \InvalidArgumentException("Invalid status transition from {$incident->status->value} to {$newStatus->value}.");
+                }
             }
 
             $incident->status = $newStatus;

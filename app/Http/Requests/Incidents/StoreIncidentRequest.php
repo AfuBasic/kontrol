@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Incidents;
 
 use App\Enums\IncidentCategory;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,16 +13,15 @@ class StoreIncidentRequest extends FormRequest
         return true;
     }
 
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'min:5', 'max:150'],
             'body' => ['required', 'string', 'min:20', 'max:5000'],
             'category' => ['required', Rule::enum(IncidentCategory::class)],
-            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,mp4,mov,ogg,webm', 'max:20480'],
+            'attachment_url' => ['nullable', 'string', 'url'],
+            'attachment_type' => ['nullable', 'string', 'in:image,video'],
+            'attachment_hash' => ['nullable', 'string'],
         ];
     }
 
@@ -40,8 +38,6 @@ class StoreIncidentRequest extends FormRequest
             'body.min' => 'Description must be at least 20 characters.',
             'body.max' => 'Description cannot exceed 5000 characters.',
             'category.required' => 'Category is required.',
-            'attachment.max' => 'Attachment must not exceed 20MB.',
-            'attachment.mimes' => 'Attachment must be a JPG, PNG, WebP image or MP4, MOV, WebM video.',
         ];
     }
 }

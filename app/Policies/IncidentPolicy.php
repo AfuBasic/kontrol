@@ -115,9 +115,7 @@ class IncidentPolicy
      */
     public function delete(User $user, Incident $incident): bool
     {
-        setPermissionsTeamId($incident->estate_id);
-
         return $incident->reporter_id === $user->id
-            || $user->hasRole('admin');
+            && $incident->status === IncidentStatus::Pending;
     }
 }

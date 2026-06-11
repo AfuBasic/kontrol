@@ -36,6 +36,7 @@ class Incident extends Model
         'comments_count',
         'attachment_url',
         'attachment_type',
+        'attachment_hash',
         'acknowledged_at',
         'resolving_at',
         'solved_at',

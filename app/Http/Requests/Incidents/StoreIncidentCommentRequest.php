@@ -17,10 +17,17 @@ class StoreIncidentCommentRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'body' => ['required', 'string', 'min:2', 'max:2000'],
-            'parent_id' => ['nullable', 'integer', 'exists:incident_comments,id'],
         ];
+
+        if ($this->user()?->hasRole('admin')) {
+            $rules['parent_id'] = ['nullable', 'integer', 'exists:incident_comments,id'];
+        } else {
+            $rules['parent_id'] = ['prohibited'];
+        }
+
+        return $rules;
     }
 
     /**
