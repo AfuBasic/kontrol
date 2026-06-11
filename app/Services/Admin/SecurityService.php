@@ -43,7 +43,7 @@ class SecurityService
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'pending'));
                 }
             })
-            ->orderBy('name')
+            ->latest()
             ->paginate($perPage)
             ->withQueryString();
     }

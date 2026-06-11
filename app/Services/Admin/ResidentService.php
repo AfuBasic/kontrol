@@ -45,7 +45,7 @@ class ResidentService
                     $query->withRole('property_owner', $estate->id);
                 }
             })
-            ->orderBy('name')
+            ->latest()
             ->paginate($perPage)
             ->withQueryString();
     }
