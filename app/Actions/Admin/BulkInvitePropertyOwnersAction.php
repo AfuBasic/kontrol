@@ -9,6 +9,7 @@ use App\Models\UserProfile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class BulkInvitePropertyOwnersAction
@@ -57,6 +58,7 @@ class BulkInvitePropertyOwnersAction
             $usersData = [];
             foreach ($newEmails as $email) {
                 $usersData[] = [
+                    'ulid' => (string) Str::ulid(),
                     'name' => $this->extractNameFromEmail($email),
                     'email' => $email,
                     'password' => null,

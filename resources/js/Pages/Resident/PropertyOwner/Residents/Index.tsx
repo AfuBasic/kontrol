@@ -11,7 +11,7 @@ import {
     TrashIcon,
     MagnifyingGlassIcon,
     FunnelIcon,
-    XMarkIcon
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
@@ -118,7 +118,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                            className="text-slate-955 block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             placeholder="Search by name or email..."
                         />
                     </div>
@@ -130,7 +130,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             <select
                                 value={status}
                                 onChange={handleStatusChange}
-                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-8 text-sm font-semibold text-slate-955 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="text-slate-955 block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="accepted">Accepted</option>
@@ -143,7 +143,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs hover:bg-slate-50 transition-all active:scale-95"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs transition-all hover:bg-slate-50 active:scale-95"
                         >
                             <XMarkIcon className="h-4 w-4" />
                             Reset
@@ -171,14 +171,14 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                         {resident.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-base font-black text-slate-955">{resident.name}</h3>
+                                        <h3 className="truncate text-base font-black text-slate-900">{resident.name}</h3>
                                         <p className="truncate text-xs font-bold text-slate-400">{resident.email}</p>
                                     </div>
                                 </div>
                                 <div className="relative">
                                     <button
                                         onClick={() => setActiveMenuId(activeMenuId === resident.id ? null : resident.id)}
-                                        className="rounded-xl p-1.5 text-slate-550 hover:bg-slate-50"
+                                        className="text-slate-550 rounded-xl p-1.5 hover:bg-slate-50"
                                     >
                                         <EllipsisVerticalIcon className="h-5 w-5" />
                                     </button>
@@ -221,7 +221,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                                         removeDelegation(resident);
                                                         setActiveMenuId(null);
                                                     }}
-                                                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-550 hover:bg-rose-50 hover:text-rose-600"
+                                                    className="text-slate-550 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold hover:bg-rose-50 hover:text-rose-600"
                                                 >
                                                     <TrashIcon className="h-4.5 w-4.5" />
                                                     Remove Delegation
@@ -277,9 +277,9 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
             {/* Conditional Pagination: Only show if records > per page */}
             {showPagination && (
                 <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                    <div className="w-full flex items-center justify-between border-t border-slate-100 pt-6">
+                    <div className="flex w-full items-center justify-between border-t border-slate-100 pt-6">
                         <div>
-                            <p className="text-slate-500 text-xs font-semibold">
+                            <p className="text-xs font-semibold text-slate-500">
                                 Showing <span className="font-bold text-slate-900">{residents.data.length}</span> entries of{' '}
                                 <span className="font-bold text-slate-900">{residents.total}</span>
                             </p>

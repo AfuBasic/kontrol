@@ -66,7 +66,7 @@ export default function Properties({ propertyOwner, properties }: Props) {
                                         <tr key={property.id} className="transition-colors hover:bg-slate-50/50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 font-bold text-indigo-600">
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
                                                         <BuildingOffice2Icon className="h-5 w-5" />
                                                     </div>
                                                     <span className="text-sm font-bold text-slate-900">{property.name}</span>
