@@ -282,158 +282,6 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Admin Comments Thread */}
-                    <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
-                        <div className="mb-5 flex items-center justify-between">
-                            <h3 className="flex items-center gap-2 text-base font-black text-slate-900">
-                                <MessageSquareMore className="h-5 w-5 text-indigo-500" />
-                                Comments & Updates
-                            </h3>
-                            <span className="rounded-md border border-slate-100/80 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                                {incident.comments_count} Updates
-                            </span>
-                        </div>
-
-                        {comments.data.length > 0 ? (
-                            <div className="mb-6 space-y-5">
-                                {comments.data.map((comment) => (
-                                    <div key={comment.id} className="space-y-4">
-                                        <div className="flex items-start gap-3.5">
-                                            {/* Initials Avatar */}
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/65 bg-slate-50 text-xs font-black text-slate-700 shadow-2xs select-none">
-                                                {comment.author.name.charAt(0).toUpperCase()}
-                                            </div>
-
-                                            {/* Comment Box */}
-                                            <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 transition-all hover:bg-slate-50/80">
-                                                <div className="mb-1.5 flex items-center justify-between gap-2">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="text-xs font-black text-slate-900">{comment.author.name}</span>
-                                                        {comment.is_official && (
-                                                            <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
-                                                                Official
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                                                            {formatDistanceToNow(new Date(comment.created_at), {
-                                                                addSuffix: true,
-                                                            })}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => handleDeleteComment(comment.id)}
-                                                            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
-                                                            title="Delete Comment"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{comment.body}</p>
-                                                {incident.status !== 'closed' && (
-                                                    <div className="mt-2.5 flex items-center gap-3">
-                                                        <button
-                                                            onClick={() => setReplyToId(comment.id)}
-                                                            className="flex min-h-[32px] items-center text-[10px] font-black tracking-wider text-indigo-600 uppercase transition-colors hover:text-indigo-800"
-                                                        >
-                                                            Reply
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Threaded replies */}
-                                        {comment.replies &&
-                                            comment.replies.map((reply) => (
-                                                <div key={reply.id} className="relative flex items-start gap-3.5 pl-11">
-                                                    <div className="absolute top-0 bottom-4 left-[33px] w-0.5 bg-slate-200/60" />
-                                                    {/* Mini Initials Avatar */}
-                                                    <div className="shadow-3xs z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-slate-50 text-[10px] font-black text-slate-600 select-none">
-                                                        {reply.author.name.charAt(0).toUpperCase()}
-                                                    </div>
-
-                                                    <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/20 p-3.5 transition-all hover:bg-slate-50/50">
-                                                        <div className="mb-1.5 flex items-center justify-between gap-2">
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="text-xs font-black text-slate-900">{reply.author.name}</span>
-                                                                {reply.is_official && (
-                                                                    <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
-                                                                        Official
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                                                                    {formatDistanceToNow(new Date(reply.created_at), {
-                                                                        addSuffix: true,
-                                                                    })}
-                                                                </span>
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(reply.id)}
-                                                                    className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
-                                                                    title="Delete Reply"
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{reply.body}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="mb-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
-                                <MessageSquare className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-                                <p className="text-xs text-slate-400">No comments yet.</p>
-                            </div>
-                        )}
-
-                        {/* Comment Input Form - Capsule layout */}
-                        {incident.status !== 'closed' ? (
-                            <form onSubmit={handleCommentSubmit} className="space-y-3">
-                                {replyToId && (
-                                    <div className="border-slate-150 animate-fadeIn flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600">
-                                        <span>Replying to comment...</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setReplyToId(null)}
-                                            className="min-h-[32px] text-[10px] font-black tracking-wider text-slate-400 uppercase hover:text-slate-700"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-1.5 transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100">
-                                    <input
-                                        type="text"
-                                        placeholder={replyToId ? 'Write a reply...' : 'Add an official administrator response...'}
-                                        value={commentText}
-                                        onChange={(e) => setCommentText(e.target.value)}
-                                        className="min-h-[44px] flex-1 border-0 bg-transparent px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
-                                        maxLength={2000}
-                                        required
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={submittingComment || !commentText.trim()}
-                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:shadow-none"
-                                    >
-                                        <Send className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <p className="rounded-2xl border border-slate-100 bg-slate-50 py-3 text-center text-xs text-slate-400">
-                                This incident is closed. Discussion has been locked.
-                            </p>
-                        )}
-                    </div>
                 </div>
 
                 {/* Right Column: Admin Management Controls */}
@@ -512,6 +360,151 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                     {incident.closed_at && <p>Closed on {format(new Date(incident.closed_at), 'PPP')}</p>}
                                 </div>
                             </div>
+                        )}
+                    </div>
+
+                    {/* Admin Comments Thread */}
+                    <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
+                        <div className="mb-5 flex items-center justify-between">
+                            <h3 className="flex items-center gap-2 text-base font-black text-slate-900">
+                                <MessageSquareMore className="h-5 w-5 text-indigo-500" />
+                                Comments & Updates
+                            </h3>
+                            <span className="rounded-md border border-slate-100/80 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                                {incident.comments_count} Updates
+                            </span>
+                        </div>
+
+                        {comments.data.length > 0 ? (
+                            <div className="mb-6 space-y-5">
+                                {comments.data.map((comment) => (
+                                    <div key={comment.id} className="space-y-4">
+                                        <div className="flex items-start gap-3.5">
+                                            {/* Initials Avatar */}
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/65 bg-slate-50 text-xs font-black text-slate-700 shadow-2xs select-none">
+                                                {comment.author.name.charAt(0).toUpperCase()}
+                                            </div>
+
+                                            <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 transition-all hover:bg-slate-50/80">
+                                                <div className="mb-2 flex items-start justify-between gap-4">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-xs font-black text-slate-900">{comment.author.name}</span>
+                                                        {comment.is_official && (
+                                                            <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
+                                                                Official
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-2">
+                                                        <button
+                                                            onClick={() => handleDeleteComment(comment.id)}
+                                                            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500 -mr-2 -mt-2"
+                                                            title="Delete Comment"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{comment.body}</p>
+                                                <div className="mt-2 flex justify-end">
+                                                    <span className="text-[9px] tracking-wider text-slate-400 font-bold uppercase">
+                                                        {formatDistanceToNow(new Date(comment.created_at), {
+                                                            addSuffix: true,
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Threaded replies */}
+                                        {comment.replies &&
+                                            comment.replies.map((reply) => (
+                                                <div key={reply.id} className="relative flex items-start gap-3.5 pl-11">
+                                                    <div className="absolute top-0 bottom-4 left-[33px] w-0.5 bg-slate-200/60" />
+                                                    {/* Mini Initials Avatar */}
+                                                    <div className="shadow-3xs z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-slate-50 text-[10px] font-black text-slate-600 select-none">
+                                                        {reply.author.name.charAt(0).toUpperCase()}
+                                                    </div>
+
+                                                    <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50/20 p-3.5 transition-all hover:bg-slate-50/50">
+                                                        <div className="mb-2 flex items-start justify-between gap-4">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="text-xs font-black text-slate-900">{reply.author.name}</span>
+                                                                {reply.is_official && (
+                                                                    <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[8px] font-black tracking-widest text-indigo-700 uppercase">
+                                                                        Official
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex shrink-0 items-center gap-2">
+                                                                <button
+                                                                    onClick={() => handleDeleteComment(reply.id)}
+                                                                    className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500 -mr-2 -mt-2"
+                                                                    title="Delete Reply"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{reply.body}</p>
+                                                        <div className="mt-2 flex justify-end">
+                                                            <span className="text-[9px] tracking-wider text-slate-400 font-bold uppercase">
+                                                                {formatDistanceToNow(new Date(reply.created_at), {
+                                                                    addSuffix: true,
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="mb-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
+                                <MessageSquare className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                                <p className="text-xs text-slate-400">No comments yet.</p>
+                            </div>
+                        )}
+
+                        {/* Comment Input Form - Capsule layout */}
+                        {incident.status !== 'closed' ? (
+                            <form onSubmit={handleCommentSubmit} className="space-y-3">
+                                {replyToId && (
+                                    <div className="border-slate-150 animate-fadeIn flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600">
+                                        <span>Replying to comment...</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setReplyToId(null)}
+                                            className="min-h-[32px] text-[10px] font-black tracking-wider text-slate-400 uppercase hover:text-slate-700"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-1.5 transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100">
+                                    <input
+                                        type="text"
+                                        placeholder={replyToId ? 'Write a reply...' : 'Add an official administrator response...'}
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        className="min-h-[44px] flex-1 border-0 bg-transparent px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
+                                        maxLength={2000}
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={submittingComment || !commentText.trim()}
+                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:shadow-none"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <p className="rounded-2xl border border-slate-100 bg-slate-50 py-3 text-center text-xs text-slate-400">
+                                This incident is closed. Discussion has been locked.
+                            </p>
                         )}
                     </div>
 

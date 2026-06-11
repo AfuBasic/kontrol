@@ -342,7 +342,7 @@ export default function Create({ categories }: Props) {
                             {uploadingMedia ? (
                                 <>
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    Uploading to Cloudinary...
+                                    Uploading...
                                 </>
                             ) : processing ? (
                                 <>

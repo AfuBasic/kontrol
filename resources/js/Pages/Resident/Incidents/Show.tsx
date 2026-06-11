@@ -63,28 +63,35 @@ export default function Show({ incident, comments, canClose }: Props) {
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     const isReporter = incident.reporter_id === authUser?.id;
-    const reporterName = isReporter ? 'you' : (incident.reporter?.name || 'Anonymous');
-    const avatarLetter = (incident.reporter?.name || 'Anonymous').charAt(0).toUpperCase();
+    const reporterName = isReporter ? 'you' : incident.reporter?.name || 'Deleted User';
 
     // Get current status index
-    const currentStatusIdx = statusSteps.findIndex(s => s.key === incident.status);
+    const currentStatusIdx = statusSteps.findIndex((s) => s.key === incident.status);
 
     const handleUpvote = () => {
         if (isReporter) return;
 
-        router.post(`/resident/incidents/${incident.hashid}/upvote`, {}, {
-            preserveScroll: true,
-        });
+        router.post(
+            `/resident/incidents/${incident.hashid}/upvote`,
+            {},
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleClose = () => {
         if (!canClose) return;
 
-        router.post(`/resident/incidents/${incident.hashid}/close`, {}, {
-            onSuccess: () => {
-                // Marks as closed
+        router.post(
+            `/resident/incidents/${incident.hashid}/close`,
+            {},
+            {
+                onSuccess: () => {
+                    // Marks as closed
+                },
             },
-        });
+        );
     };
 
     const handleDelete = () => {
@@ -111,7 +118,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                 onFinish: () => {
                     setSubmittingComment(false);
                 },
-            }
+            },
         );
     };
 
@@ -131,7 +138,7 @@ export default function Show({ incident, comments, canClose }: Props) {
             <div className="mb-4">
                 <Link
                     href="/resident/incidents"
-                    className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                    className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-800"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Incident Feed
@@ -141,30 +148,24 @@ export default function Show({ incident, comments, canClose }: Props) {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Left/Main Column: Incident Details & Timeline */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                     {/* Details Card */}
                     <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <span className="text-[9px] font-black tracking-[0.2em] text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 uppercase">
+                            <span className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-indigo-600 uppercase">
                                 {incident.category.replace('_', ' ')}
                             </span>
-                            <span className="text-xs text-slate-400 font-medium">
-                                Reported on {format(new Date(incident.created_at), 'PPP')}
-                            </span>
+                            <span className="text-xs font-medium text-slate-400">Reported on {format(new Date(incident.created_at), 'PPP')}</span>
                         </div>
 
-                        <h1 className="text-xl font-black text-slate-900 sm:text-2xl mb-4 leading-tight">
-                            {incident.title}
-                        </h1>
+                        <h1 className="mb-4 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
 
-                        <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap mb-6">
-                            {incident.body}
-                        </p>
+                        <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">{incident.body}</p>
 
                         {/* Media Preview / Interactive Expandable Card */}
                         {incident.attachment_url && (
-                            <div 
-                                className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 relative group cursor-zoom-in shadow-xs"
+                            <div
+                                className="group relative mb-6 cursor-zoom-in overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-xs"
                                 onClick={() => {
                                     if (incident.attachment_type === 'image') {
                                         setIsLightboxOpen(true);
@@ -178,8 +179,8 @@ export default function Show({ incident, comments, canClose }: Props) {
                                             alt="Attachment"
                                             className="max-h-96 w-full object-contain transition-transform duration-300 group-hover:scale-[1.01]"
                                         />
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="bg-white/95 text-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-transform">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <span className="flex items-center gap-1.5 rounded-xl bg-white/95 px-3.5 py-2.5 text-xs font-bold text-slate-800 shadow-lg transition-transform active:scale-95">
                                                 <ZoomIn className="h-4 w-4" /> Click to Expand View
                                             </span>
                                         </div>
@@ -196,30 +197,26 @@ export default function Show({ incident, comments, canClose }: Props) {
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5 mt-4">
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
-                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-black text-slate-600 text-[9px]">
-                                        {avatarLetter}
-                                    </div>
-                                    <span>Reported by <b>{reporterName}</b></span>
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                    <span>
+                                        Reported by <b className="capitalize">{reporterName}</b>
+                                    </span>
                                 </div>
 
                                 <button
                                     onClick={handleUpvote}
                                     disabled={isReporter}
-                                    className={`flex min-h-[38px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all ${
+                                    className={`flex min-h-[38px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-black tracking-wider uppercase transition-all ${
                                         incident.is_upvoted
                                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
                                             : isReporter
-                                              ? 'text-slate-400 cursor-not-allowed border border-slate-200 bg-slate-50'
-                                              : 'border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-700 active:scale-95'
+                                              ? 'cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400'
+                                              : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 active:scale-95'
                                     }`}
                                 >
-                                    <ThumbsUp
-                                        className="h-3.5 w-3.5"
-                                        fill={incident.is_upvoted ? 'currentColor' : 'none'}
-                                    />
+                                    <ThumbsUp className="h-3.5 w-3.5" fill={incident.is_upvoted ? 'currentColor' : 'none'} />
                                     <span>{incident.upvotes_count} Upvotes</span>
                                 </button>
                             </div>
@@ -228,7 +225,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                 {isReporter && incident.status === 'pending' && (
                                     <button
                                         onClick={handleDelete}
-                                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-red-200 text-red-500 bg-white hover:bg-red-50 hover:text-red-750 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+                                        className="hover:text-red-750 inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-black tracking-wider text-red-500 uppercase transition-all hover:bg-red-50 active:scale-95"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
                                         Delete Report
@@ -238,7 +235,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                 {canClose && (
                                     <button
                                         onClick={handleClose}
-                                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-emerald-100 transition-all active:scale-95"
+                                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black tracking-wider text-white uppercase shadow-md shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95"
                                     >
                                         <CheckCircle2 className="h-4 w-4" />
                                         Close Incident
@@ -255,126 +252,126 @@ export default function Show({ incident, comments, canClose }: Props) {
                                 <MessageSquareMore className="h-5 w-5 text-indigo-500" />
                                 Comments & Updates
                             </h3>
-                            <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase bg-slate-50 border border-slate-100/80 px-2.5 py-1 rounded-md">
+                            <span className="rounded-md border border-slate-100/80 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 {incident.comments_count} Updates
                             </span>
                         </div>
 
                         {/* Discussion thread */}
                         {comments.data.length > 0 ? (
-                            <div className="space-y-5 mb-6">
-                                {comments.data.map(comment => (
+                            <div className="mb-6 space-y-5">
+                                {comments.data.map((comment) => (
                                     <div key={comment.id} className="space-y-4">
-                                        <div className="flex gap-3 items-start">
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-bold text-slate-600 text-xs">
+                                        <div className="flex items-start gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600">
                                                 {comment.author.name.charAt(0).toUpperCase()}
                                             </div>
-                                            <div className="flex-1 rounded-2xl border border-slate-150 bg-slate-50/50 p-4">
-                                                <div className="mb-1 flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                        {comment.author.name}
+                                            <div className="border-slate-150 flex-1 rounded-2xl border bg-slate-50/50 p-4">
+                                                <div className="mb-2 flex items-start justify-between gap-4">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-xs font-bold text-slate-800">
+                                                            {comment.author.name}
+                                                        </span>
                                                         {comment.is_official && (
-                                                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase border border-blue-150">
+                                                            <span className="border-blue-150 inline-flex items-center rounded-full border bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase">
                                                                 Official
                                                             </span>
                                                         )}
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] text-slate-400 font-medium">
-                                                            {formatDistanceToNow(new Date(comment.created_at), {
-                                                                addSuffix: true,
-                                                            })}
-                                                        </span>
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-2">
                                                         {comment.author.id === authUser?.id && (
                                                             <button
                                                                 onClick={() => handleDeleteComment(comment.id)}
-                                                                className="text-slate-450 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                                                className="text-slate-400 -mt-2 -mr-2 flex min-h-[32px] min-w-[32px] items-center justify-center hover:text-red-500"
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" />
                                                             </button>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <p className="text-xs leading-relaxed text-slate-600">
-                                                    {comment.body}
-                                                </p>
+                                                <p className="text-xs leading-relaxed text-slate-600">{comment.body}</p>
+                                                <div className="mt-2 flex justify-end">
+                                                    <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
+                                                        {formatDistanceToNow(new Date(comment.created_at), {
+                                                            addSuffix: true,
+                                                        })}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Replies - Threaded view with guide branches */}
-                                        {comment.replies && comment.replies.map(reply => (
-                                            <div key={reply.id} className="relative flex gap-3 items-start pl-11">
-                                                <div className="absolute left-5 top-0 bottom-6 w-0.5 bg-slate-200/80" />
-                                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 border border-slate-200 font-bold text-slate-600 text-[10px] z-10">
-                                                    {reply.author.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="flex-1 rounded-2xl border border-slate-150 bg-slate-50/20 p-3.5">
-                                                    <div className="mb-1 flex items-center justify-between">
-                                                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                            {reply.author.name}
-                                                            {reply.is_official && (
-                                                                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase border border-blue-150">
-                                                                    Official
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] text-slate-400 font-medium">
+                                        {comment.replies &&
+                                            comment.replies.map((reply) => (
+                                                <div key={reply.id} className="relative flex items-start gap-3 pl-11">
+                                                    <div className="absolute top-0 bottom-6 left-5 w-0.5 bg-slate-200/80" />
+                                                    <div className="z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[10px] font-bold text-slate-600">
+                                                        {reply.author.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="border-slate-150 flex-1 rounded-2xl border bg-slate-50/20 p-3.5">
+                                                        <div className="mb-2 flex items-center justify-between">
+                                                            <span className="text-xs font-bold text-slate-800">{reply.author.name}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                {reply.is_official && (
+                                                                    <span className="border-blue-150 inline-flex items-center rounded-full border bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-800 uppercase">
+                                                                        Official
+                                                                    </span>
+                                                                )}
+                                                                {reply.author.id === authUser?.id && (
+                                                                    <button
+                                                                        onClick={() => handleDeleteComment(reply.id)}
+                                                                        className="text-slate-400 -mt-2 -mr-2 flex min-h-[32px] min-w-[32px] items-center justify-center hover:text-red-500"
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs leading-relaxed text-slate-600">{reply.body}</p>
+                                                        <div className="mt-2 flex justify-end">
+                                                            <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                                 {formatDistanceToNow(new Date(reply.created_at), {
                                                                     addSuffix: true,
                                                                 })}
                                                             </span>
-                                                            {reply.author.id === authUser?.id && (
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(reply.id)}
-                                                                    className="text-slate-450 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                                </button>
-                                                            )}
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs leading-relaxed text-slate-600">
-                                                        {reply.body}
-                                                    </p>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="py-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 mb-6">
-                                <MessageSquare className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                                <p className="text-xs text-slate-405 font-bold">No comments yet. Start the conversation!</p>
+                            <div className="mb-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
+                                <MessageSquare className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                                <p className="text-slate-405 text-xs font-bold">No comments yet. Start the conversation!</p>
                             </div>
                         )}
 
                         {/* Comment Input - Premium Capsule style */}
                         {incident.status !== 'closed' ? (
                             <form onSubmit={handleCommentSubmit} className="space-y-3">
-
-                                <div className="flex gap-2 items-center bg-slate-50 border border-slate-200/80 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all">
+                                <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-1.5 transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100">
                                     <input
                                         type="text"
                                         placeholder="Add to the discussion..."
                                         value={commentText}
-                                        onChange={e => setCommentText(e.target.value)}
-                                        className="flex-1 min-h-[44px] bg-transparent border-0 px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        className="min-h-[44px] flex-1 border-0 bg-transparent px-3 text-xs text-slate-800 placeholder-slate-400 outline-hidden focus:ring-0"
                                         maxLength={2000}
                                         required
                                     />
                                     <button
                                         type="submit"
                                         disabled={submittingComment || !commentText.trim()}
-                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
+                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:shadow-none"
                                     >
                                         <Send className="h-4 w-4" />
                                     </button>
                                 </div>
                             </form>
                         ) : (
-                            <p className="text-center text-xs text-slate-400 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="rounded-2xl border border-slate-100 bg-slate-50 py-3 text-center text-xs text-slate-400">
                                 This incident is closed. Discussion has been locked.
                             </p>
                         )}
@@ -384,51 +381,52 @@ export default function Show({ incident, comments, canClose }: Props) {
                 {/* Right Column: Status Tracker Timeline */}
                 <div className="space-y-6">
                     <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
-                        <h3 className="mb-6 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                            Resolution Timeline
-                        </h3>
+                        <h3 className="mb-6 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Resolution Timeline</h3>
 
-                        <div className="relative border-l-2 border-slate-100 pl-6 ml-3 space-y-8">
+                        <div className="ml-2">
                             {statusSteps.map((step, idx) => {
                                 const isCompleted = idx <= currentStatusIdx;
                                 const isCurrent = idx === currentStatusIdx;
                                 const stepStyles = getStatusStyles(step.key);
+                                const isLast = idx === statusSteps.length - 1;
 
                                 return (
-                                    <div key={step.key} className="relative">
-                                        {/* Timeline Dot/Icon */}
-                                        <div
-                                            className={`absolute left-[-35px] top-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all ${
-                                                isCurrent
-                                                    ? `${stepStyles.bg} border-white shadow-lg scale-110`
-                                                    : isCompleted
-                                                      ? 'bg-slate-800 border-white text-white'
-                                                      : 'bg-white border-slate-200 text-slate-350'
-                                            }`}
-                                        >
-                                            {isCurrent ? (
-                                                stepStyles.icon
-                                            ) : isCompleted ? (
-                                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                            ) : (
-                                                <div className="h-1.5 w-1.5 rounded-full bg-slate-350" />
+                                    <div key={step.key} className="relative flex gap-5">
+                                        {/* Timeline Dot & Line Column */}
+                                        <div className="flex flex-col items-center">
+                                            <div
+                                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all relative z-10 ${
+                                                    isCurrent
+                                                        ? `${stepStyles.bg} scale-110 border-white shadow-lg`
+                                                        : isCompleted
+                                                          ? 'border-white bg-slate-800 text-white'
+                                                          : 'text-slate-400 border-slate-200 bg-white'
+                                                }`}
+                                            >
+                                                {isCurrent ? (
+                                                    stepStyles.icon
+                                                ) : isCompleted ? (
+                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                ) : (
+                                                    <div className="bg-slate-300 h-1.5 w-1.5 rounded-full" />
+                                                )}
+                                            </div>
+                                            {/* Line connecting to next item */}
+                                            {!isLast && (
+                                                <div className="w-0.5 bg-slate-100 grow my-1" />
                                             )}
                                         </div>
 
                                         {/* Step Content */}
-                                        <div>
+                                        <div className={`flex-1 ${!isLast ? 'pb-8' : ''}`}>
                                             <h4
-                                                className={`text-[10px] font-black uppercase tracking-wider ${
-                                                    isCurrent
-                                                        ? stepStyles.text
-                                                        : isCompleted
-                                                          ? 'text-slate-800'
-                                                          : 'text-slate-400'
+                                                className={`h-7 flex items-center text-[10px] font-black tracking-wider uppercase ${
+                                                    isCurrent ? stepStyles.text : isCompleted ? 'text-slate-800' : 'text-slate-400'
                                                 }`}
                                             >
                                                 {step.label}
                                             </h4>
-                                            <p className="text-xs text-slate-450 mt-0.5 leading-relaxed">{step.desc}</p>
+                                            <p className={`mt-0.5 text-xs leading-relaxed ${isCurrent ? 'text-slate-600 font-semibold' : isCompleted ? 'text-slate-500' : 'text-slate-400/80'}`}>{step.desc}</p>
                                         </div>
                                     </div>
                                 );
@@ -448,10 +446,10 @@ export default function Show({ incident, comments, canClose }: Props) {
                         className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-xs"
                     >
                         {/* Top Navigation Bar (Notch/Status Bar Safe) */}
-                        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-6 py-4 pt-safe z-10">
+                        <div className="pt-safe absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-4">
                             <button
                                 onClick={() => setIsLightboxOpen(false)}
-                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all"
+                                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 active:scale-95"
                                 aria-label="Close preview"
                             >
                                 <X className="h-6 w-6" />
