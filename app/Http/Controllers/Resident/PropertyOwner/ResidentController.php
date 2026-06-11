@@ -40,7 +40,8 @@ class ResidentController extends Controller
         $query = User::query()
             ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
-            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)]);
+            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -52,7 +53,7 @@ class ResidentController extends Controller
         if ($request->filled('status')) {
             $query->whereHas('estates', function ($q) use ($estate, $request) {
                 $q->where('estates.id', $estate->id)
-                    ->where('estate_user.status', $request->status);
+                    ->where('estate_users_membership.status', $request->status);
             });
         }
 
@@ -275,7 +276,7 @@ class ResidentController extends Controller
                 'password' => null,
             ]);
 
-            $estate->users()->attach($resident->id, ['status' => 'accepted']);
+            $estate->users()->attach($resident->id, ['status' => 'pending']);
 
             $role = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
