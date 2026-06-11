@@ -28,11 +28,15 @@ export default function Create({ categories }: Props) {
         body: string;
         category: string;
         attachment: File | null;
+        location: string;
+        is_private: boolean;
     }>({
         title: '',
         body: '',
         category: '',
         attachment: null,
+        location: '',
+        is_private: false,
     });
 
     const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
@@ -148,6 +152,8 @@ export default function Create({ categories }: Props) {
                 attachment_url: attachmentUrl,
                 attachment_type: attachmentTypeParam,
                 attachment_hash: attachmentHash,
+                location: data.location || null,
+                is_private: data.is_private,
             }, {
                 onFinish: () => setUploadingMedia(false),
             });
@@ -208,6 +214,27 @@ export default function Create({ categories }: Props) {
                             <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600 font-bold">
                                 <AlertCircle className="h-3.5 w-3.5" />
                                 {errors.category}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                        <label className="block text-xs font-black tracking-wider text-slate-400 uppercase mb-2">
+                            Location
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., Near the gatehouse, Road 4"
+                            value={data.location}
+                            onChange={e => setData('location', e.target.value)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            maxLength={255}
+                        />
+                        {errors.location && (
+                            <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600 font-bold">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                {errors.location}
                             </p>
                         )}
                     </div>
@@ -330,6 +357,37 @@ export default function Create({ categories }: Props) {
                                 {customError}
                             </p>
                         )}
+                    </div>
+
+                    {/* Privacy Option */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <label htmlFor="is_private" className="block text-sm font-bold text-slate-700 cursor-pointer">
+                                    Mark as Private Incident
+                                </label>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    If enabled, this incident will only be visible to you and the estate administration. It won't appear in the public feed for other residents.
+                                </p>
+                            </div>
+                            {/* Custom Toggle Switch */}
+                            <button
+                                type="button"
+                                id="is_private"
+                                role="switch"
+                                aria-checked={data.is_private}
+                                onClick={() => setData('is_private', !data.is_private)}
+                                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                    data.is_private ? 'bg-indigo-600' : 'bg-slate-200'
+                                }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                                        data.is_private ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Submit Section */}

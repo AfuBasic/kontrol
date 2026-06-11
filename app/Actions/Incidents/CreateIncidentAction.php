@@ -36,6 +36,8 @@ class CreateIncidentAction
                 'attachment_url' => $data['attachment_url'] ?? null,
                 'attachment_type' => $data['attachment_type'] ?? null,
                 'attachment_hash' => $data['attachment_hash'] ?? null,
+                'location' => $data['location'] ?? null,
+                'is_private' => $data['is_private'] ?? false,
             ]);
 
             $incident->save();

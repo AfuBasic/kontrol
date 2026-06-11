@@ -8,6 +8,8 @@ import {
     Clock,
     Download,
     Eye,
+    Lock,
+    MapPin,
     MessageSquare,
     MessageSquareMore,
     Send,
@@ -226,13 +228,28 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                     {/* Details Card */}
                     <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] sm:p-6">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <span className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-indigo-600 uppercase">
-                                {incident.category.replace('_', ' ')}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-indigo-600 uppercase">
+                                    {incident.category.replace('_', ' ')}
+                                </span>
+                                {incident.is_private && (
+                                    <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-amber-700 uppercase flex items-center gap-1">
+                                        <Lock className="h-3 w-3" />
+                                        Private
+                                    </span>
+                                )}
+                            </div>
                             <span className="text-xs font-medium text-slate-400">Reported {format(new Date(incident.created_at), 'PPP')}</span>
                         </div>
 
-                        <h1 className="mb-4 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
+                        <h1 className="mb-3 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
+
+                        {incident.location && (
+                            <div className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-1.5 w-fit">
+                                <MapPin className="h-3.5 w-3.5 text-indigo-500" />
+                                <span>{incident.location}</span>
+                            </div>
+                        )}
 
                         <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">{incident.body}</p>
 

@@ -22,6 +22,8 @@ class StoreIncidentRequest extends FormRequest
             'attachment_url' => ['nullable', 'string', 'url'],
             'attachment_type' => ['nullable', 'string', 'in:image,video'],
             'attachment_hash' => ['nullable', 'string'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'is_private' => ['boolean'],
         ];
     }
 

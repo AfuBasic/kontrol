@@ -6,6 +6,8 @@ import {
     CheckCircle2,
     Clock,
     Eye,
+    Lock,
+    MapPin,
     MessageSquare,
     Plus,
     Search,
@@ -418,6 +420,21 @@ export default function Index({ incidents, filters, categories }: Props) {
                                                 <div className="mt-1 flex flex-wrap items-center gap-2">
                                                     <span className="text-[10px] font-black text-indigo-600 tracking-wider uppercase font-mono">
                                                         #{incident.category}
+                                                    </span>
+                                                    {incident.is_private && (
+                                                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
+                                                            <Lock className="h-2.5 w-2.5" />
+                                                            Private
+                                                        </span>
+                                                    )}
+                                                    {incident.location && (
+                                                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">
+                                                            <MapPin className="h-2.5 w-2.5 text-indigo-500" />
+                                                            {incident.location}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider tracking-wider hidden xs:inline">
+                                                        &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider xs:hidden">
                                                         &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}

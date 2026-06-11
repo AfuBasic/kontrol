@@ -25,10 +25,22 @@ class IncidentPolicy
      */
     public function view(User $user, Incident $incident): bool
     {
-        return $user->estates()
+        $hasEstateAccess = $user->estates()
             ->wherePivot('status', 'accepted')
             ->where('estates.id', $incident->estate_id)
             ->exists();
+
+        if (! $hasEstateAccess) {
+            return false;
+        }
+
+        if ($incident->is_private) {
+            setPermissionsTeamId($incident->estate_id);
+
+            return $incident->reporter_id === $user->id || $user->hasRole('admin');
+        }
+
+        return true;
     }
 
     /**
@@ -59,10 +71,22 @@ class IncidentPolicy
      */
     public function comment(User $user, Incident $incident): bool
     {
-        return $user->estates()
+        $hasEstateAccess = $user->estates()
             ->wherePivot('status', 'accepted')
             ->where('estates.id', $incident->estate_id)
             ->exists();
+
+        if (! $hasEstateAccess) {
+            return false;
+        }
+
+        if ($incident->is_private) {
+            setPermissionsTeamId($incident->estate_id);
+
+            return $incident->reporter_id === $user->id || $user->hasRole('admin');
+        }
+
+        return true;
     }
 
     /**
@@ -70,6 +94,10 @@ class IncidentPolicy
      */
     public function upvote(User $user, Incident $incident): bool
     {
+        if ($incident->is_private) {
+            return false;
+        }
+
         if ($incident->reporter_id === $user->id) {
             return false;
         }

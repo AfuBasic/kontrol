@@ -36,6 +36,8 @@ export type Incident = {
     attachment_type: 'image' | 'video' | null;
     is_upvoted?: boolean;
     can_close?: boolean;
+    location?: string | null;
+    is_private: boolean;
     created_at: string;
     updated_at: string;
     acknowledged_at?: string | null;

@@ -41,6 +41,8 @@ class Incident extends Model
         'resolving_at',
         'solved_at',
         'closed_at',
+        'location',
+        'is_private',
     ];
 
     protected $appends = ['hashid'];
@@ -65,6 +67,7 @@ class Incident extends Model
             'resolving_at' => 'datetime',
             'solved_at' => 'datetime',
             'closed_at' => 'datetime',
+            'is_private' => 'boolean',
         ];
     }
 

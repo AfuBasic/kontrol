@@ -17,7 +17,10 @@ class IncidentService
      */
     public function getFeed(int $estateId, array $filters = []): LengthAwarePaginator
     {
+        $user = Auth::user();
         $userId = Auth::id();
+        setPermissionsTeamId($estateId);
+        $isAdmin = $user && $user->hasRole('admin');
 
         $query = Incident::query()
             ->forEstate($estateId)
@@ -25,6 +28,13 @@ class IncidentService
             ->withExists(['upvotes as is_upvoted' => function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             }]);
+
+        if (! $isAdmin) {
+            $query->where(function ($q) use ($userId) {
+                $q->where('is_private', false)
+                    ->orWhere('reporter_id', $userId);
+            });
+        }
 
         // Filter by category
         if (! empty($filters['category'])) {
