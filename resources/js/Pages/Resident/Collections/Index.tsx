@@ -245,8 +245,16 @@ export default function CollectionsIndex({ summary }: Props) {
                                         {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                        <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                        <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                                            Due{' '}
+                                            {new Date(assignment.due_date).toLocaleDateString(undefined, {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })}
+                                        </p>
+                                        <div className="mt-1.5 flex">
                                             {assignment.billing_source === 'property_owner' ? (
                                                 <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
                                                     Property Owner
@@ -257,14 +265,6 @@ export default function CollectionsIndex({ summary }: Props) {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="mt-0.5 text-xs font-bold tracking-widest text-slate-400 uppercase">
-                                            Due{' '}
-                                            {new Date(assignment.due_date).toLocaleDateString(undefined, {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                            })}
-                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -312,8 +312,11 @@ export default function CollectionsIndex({ summary }: Props) {
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                        <p className="text-xs font-semibold text-slate-500 capitalize">
+                                            {assignment.period || 'One-time'}
+                                        </p>
+                                        <div className="mt-1 flex">
                                             {assignment.billing_source === 'property_owner' ? (
                                                 <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
                                                     Property Owner
@@ -324,9 +327,6 @@ export default function CollectionsIndex({ summary }: Props) {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                            {assignment.period || 'One-time'}
-                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
