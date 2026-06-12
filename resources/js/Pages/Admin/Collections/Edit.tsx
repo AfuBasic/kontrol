@@ -10,6 +10,7 @@ type Resident = {
     id: number;
     name: string;
     email: string;
+    is_property_owner?: boolean;
 };
 
 type CollectionTarget = {
@@ -30,7 +31,7 @@ type Collection = {
     due_day: number;
     grace_days: number;
     late_fee: number | null;
-    applies_to: 'all' | 'target';
+    applies_to: 'all' | 'target' | 'property_owner';
     targets?: CollectionTarget[];
 };
 
@@ -272,6 +273,7 @@ export default function EditCollection({ collection, residents }: Props) {
                                     className="appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pr-10 pl-4 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
                                 >
                                     <option value="all">Everyone</option>
+                                    <option value="property_owner">Property Owners</option>
                                     <option value="target">Specific List</option>
                                 </select>
                                 <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -321,7 +323,14 @@ export default function EditCollection({ collection, residents }: Props) {
                                                                 <User className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
                                                             </div>
                                                             <div className="text-left">
-                                                                <p className="text-sm font-black tracking-tight">{resident.name}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="text-sm font-black tracking-tight">{resident.name}</p>
+                                                                    {resident.is_property_owner && (
+                                                                        <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                                            Property Owner
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                                 <p className="text-[10px] font-bold text-slate-400">{resident.email}</p>
                                                             </div>
                                                         </div>
@@ -406,7 +415,9 @@ export default function EditCollection({ collection, residents }: Props) {
                                     className="rounded-3xl bg-blue-50/50 p-8 text-center ring-1 ring-blue-100"
                                 >
                                     <p className="text-sm font-bold text-blue-700">
-                                        This collection will apply to all current and future residents of the estate.
+                                        {data.applies_to === 'property_owner'
+                                            ? 'This collection will apply to all current and future property owners of the estate.'
+                                            : 'This collection will apply to all current and future residents of the estate.'}
                                     </p>
                                 </motion.div>
                             )}

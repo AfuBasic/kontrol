@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
+use App\Models\User;
+use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -89,6 +91,22 @@ class CollectionPaymentController extends Controller
                                 ]);
                             } else {
                                 $lockedAssignment->update(['status' => 'partial']);
+                            }
+
+                            $lockedAssignment->loadMissing('collection.creator');
+                            $creator = $lockedAssignment->collection?->creator;
+                            if ($creator && $creator->hasRole('property_owner')) {
+                                $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
+                            } else {
+                                $admins = User::role('admin')
+                                    ->whereHas('estates', function ($query) use ($lockedAssignment) {
+                                        $query->where('estates.id', $lockedAssignment->estate_id);
+                                    })
+                                    ->get();
+
+                                foreach ($admins as $admin) {
+                                    $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
+                                }
                             }
                         }
                     });
@@ -175,6 +193,22 @@ class CollectionPaymentController extends Controller
                     } else {
                         $assignment->update(['status' => 'partial']);
                     }
+
+                    $assignment->loadMissing('collection.creator');
+                    $creator = $assignment->collection?->creator;
+                    if ($creator && $creator->hasRole('property_owner')) {
+                        $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
+                    } else {
+                        $admins = User::role('admin')
+                            ->whereHas('estates', function ($query) use ($assignment) {
+                                $query->where('estates.id', $assignment->estate_id);
+                            })
+                            ->get();
+
+                        foreach ($admins as $admin) {
+                            $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
+                        }
+                    }
                 }
             } elseif ($payment->raw_payload && isset($payment->raw_payload['assignment_ids'])) {
                 $assignmentIds = $payment->raw_payload['assignment_ids'];
@@ -187,7 +221,7 @@ class CollectionPaymentController extends Controller
                             'estate_id' => $payment->estate_id,
                             'collection_assignment_id' => $assignment->id,
                             'amount' => $due,
-                            'reference' => $reference,
+                            'reference' => $reference.'-'.$assignment->id,
                             'status' => 'success',
                             'paid_at' => now(),
                             'raw_payload' => ['bulk_parent_reference' => $reference],
@@ -199,6 +233,22 @@ class CollectionPaymentController extends Controller
                             'paid_at' => now(),
                             'external_reference' => $reference,
                         ]);
+
+                        $assignment->loadMissing('collection.creator');
+                        $creator = $assignment->collection?->creator;
+                        if ($creator && $creator->hasRole('property_owner')) {
+                            $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
+                        } else {
+                            $admins = User::role('admin')
+                                ->whereHas('estates', function ($query) use ($assignment) {
+                                    $query->where('estates.id', $assignment->estate_id);
+                                })
+                                ->get();
+
+                            foreach ($admins as $admin) {
+                                $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
+                            }
+                        }
                     }
                 }
             }
@@ -340,27 +390,27 @@ class CollectionPaymentController extends Controller
             ->whereNull('collection_assignment_id')
             ->get()
             ->filter(function ($p) use ($assignmentIds) {
-                $payloadIds = data_get($p->raw_payload, 'assignment_ids', []);
+                $payloadIds = array_map('intval', data_get($p->raw_payload, 'assignment_ids', []));
                 sort($payloadIds);
 
                 return $payloadIds === $assignmentIds;
             });
 
-        // 1. Check the latest non-success attempt to see if it succeeded or is pending on Paystack
-        $latestPayment = $previousPayments->where('status', '!=', 'success')->sortByDesc('created_at')->first();
+        // 1. Check all non-success attempts to see if any succeeded on Paystack
+        $initiatedPayments = $previousPayments->where('status', '!=', 'success')->sortByDesc('created_at');
 
-        if ($latestPayment) {
+        foreach ($initiatedPayments as $p) {
             try {
-                $verification = $paystackService->verifyPayment($latestPayment->reference);
+                $verification = $paystackService->verifyPayment($p->reference);
                 $status = $verification['status'] ?? null;
 
-                Log::info("Paystack Bulk Verification: Ref={$latestPayment->reference}, Status={$status}", [
+                Log::info("Paystack Bulk Verification: Ref={$p->reference}, Status={$status}", [
                     'verification_response' => $verification,
                 ]);
 
                 if ($status === 'success') {
-                    DB::transaction(function () use ($latestPayment, $unpaidAssignments) {
-                        $lockedPayment = Payment::where('id', $latestPayment->id)->lockForUpdate()->first();
+                    DB::transaction(function () use ($p, $unpaidAssignments) {
+                        $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
 
                         if ($lockedPayment && $lockedPayment->status !== 'success') {
                             $lockedPayment->update([
@@ -378,7 +428,7 @@ class CollectionPaymentController extends Controller
                                             'estate_id' => $lockedPayment->estate_id,
                                             'collection_assignment_id' => $lockedAssignment->id,
                                             'amount' => $due,
-                                            'reference' => $lockedPayment->reference,
+                                            'reference' => $lockedPayment->reference.'-'.$lockedAssignment->id,
                                             'status' => 'success',
                                             'paid_at' => now(),
                                             'raw_payload' => ['bulk_parent_reference' => $lockedPayment->reference],
@@ -390,6 +440,22 @@ class CollectionPaymentController extends Controller
                                             'paid_at' => now(),
                                             'external_reference' => $lockedPayment->reference,
                                         ]);
+
+                                        $lockedAssignment->loadMissing('collection.creator');
+                                        $creator = $lockedAssignment->collection ?? null ? $lockedAssignment->collection->creator : null;
+                                        if ($creator && $creator->hasRole('property_owner')) {
+                                            $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
+                                        } else {
+                                            $admins = User::role('admin')
+                                                ->whereHas('estates', function ($query) use ($lockedAssignment) {
+                                                    $query->where('estates.id', $lockedAssignment->estate_id);
+                                                })
+                                                ->get();
+
+                                            foreach ($admins as $admin) {
+                                                $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -405,7 +471,7 @@ class CollectionPaymentController extends Controller
                         'message' => 'You have a pending payment session for these bills. Please wait a few moments for confirmation or check back later.',
                     ], 400);
                 } elseif (in_array($status, ['failed', 'abandoned'])) {
-                    $latestPayment->update(['status' => 'failed']);
+                    $p->update(['status' => 'failed']);
                 }
             } catch (\Exception $e) {
                 // If it fails verification because it doesn't exist on Paystack yet, we keep it as initiated

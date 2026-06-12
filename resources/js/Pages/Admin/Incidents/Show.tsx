@@ -101,9 +101,12 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
         put,
         processing: updatingStatus,
         errors,
-    } = useForm({
+    } = useForm<{
+        status: IncidentStatus;
+        assigned_to: number | string;
+    }>({
         status: incident.status,
-        assigned_to: incident.assigned_to?.id || '',
+        assigned_to: incident.assignee?.id || '',
     });
 
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);

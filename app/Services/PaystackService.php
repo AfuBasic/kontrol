@@ -19,7 +19,7 @@ class PaystackService
 
         Log::info('PaystackService instantiated', [
             'base_url' => $baseUrl,
-            'has_secret_key' => !empty($secretKey),
+            'has_secret_key' => ! empty($secretKey),
         ]);
 
         $this->client = Http::baseUrl($baseUrl)
@@ -53,7 +53,7 @@ class PaystackService
             ],
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $status = $response->status();
             $body = $response->body();
 
@@ -104,8 +104,8 @@ class PaystackService
     {
         $response = $this->client->get("/transaction/verify/{$reference}");
 
-        if (!$response->successful()) {
-            throw new \Exception('Failed to verify Paystack payment: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Failed to verify Paystack payment: '.$response->body());
         }
 
         $data = $response->json();
@@ -137,8 +137,8 @@ class PaystackService
             'metadata' => $metadata,
         ]);
 
-        if (!$response->successful()) {
-            throw new \Exception('Paystack charge authorization failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Paystack charge authorization failed: '.$response->body());
         }
 
         return $response->json('data');
@@ -158,8 +158,8 @@ class PaystackService
             'metadata' => $metadata,
         ]);
 
-        if (!$response->successful()) {
-            throw new \Exception('Paystack initialization failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Paystack initialization failed: '.$response->body());
         }
 
         $data = $response->json();
@@ -192,8 +192,8 @@ class PaystackService
 
         $response = $this->client->post('/refund', $payload);
 
-        if (!$response->successful()) {
-            throw new \Exception('Paystack refund failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Paystack refund failed: '.$response->body());
         }
 
         return $response->json('data');
@@ -224,17 +224,17 @@ class PaystackService
                 'percentage_charge' => $data['percentage_charge'] ?? 0.5, // Platform fee
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 if (app()->environment('local', 'testing')) {
                     Log::warning('Paystack createSubaccount failed in local/testing. Returning mock code.', [
                         'response' => $response->body(),
                     ]);
 
                     return [
-                        'subaccount_code' => 'ACCT_mock_' . strtolower(str_random(8)),
+                        'subaccount_code' => 'ACCT_mock_'.strtolower(str_random(8)),
                     ];
                 }
-                throw new \Exception('Failed to create Paystack subaccount: ' . $response->body());
+                throw new \Exception('Failed to create Paystack subaccount: '.$response->body());
             }
 
             return $response->json('data');
@@ -245,7 +245,7 @@ class PaystackService
                 ]);
 
                 return [
-                    'subaccount_code' => 'ACCT_mock_' . strtolower(str_random(8)),
+                    'subaccount_code' => 'ACCT_mock_'.strtolower(str_random(8)),
                 ];
             }
             throw $e;
@@ -260,7 +260,7 @@ class PaystackService
         try {
             $response = $this->client->put("/subaccount/{$subaccountCode}", $data);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 if (app()->environment('local', 'testing')) {
                     Log::warning('Paystack updateSubaccount failed in local/testing. Returning mock data.', [
                         'response' => $response->body(),
@@ -270,7 +270,7 @@ class PaystackService
                         'subaccount_code' => $subaccountCode,
                     ];
                 }
-                throw new \Exception('Failed to update Paystack subaccount: ' . $response->body());
+                throw new \Exception('Failed to update Paystack subaccount: '.$response->body());
             }
 
             return $response->json('data');
@@ -300,7 +300,7 @@ class PaystackService
                 'bank_code' => $bankCode,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 if (app()->environment('local', 'testing')) {
                     Log::warning('Paystack resolveAccountNumber failed in local/testing environment. Returning mock data.', [
                         'response' => $response->body(),
@@ -311,7 +311,7 @@ class PaystackService
                         'account_number' => $accountNumber,
                     ];
                 }
-                throw new \Exception('Failed to resolve account: ' . $response->body());
+                throw new \Exception('Failed to resolve account: '.$response->body());
             }
 
             return $response->json('data');

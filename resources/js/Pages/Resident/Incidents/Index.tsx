@@ -119,7 +119,7 @@ export default function Index({ incidents, filters, categories }: Props) {
     }, []);
 
     const applyFilters = (newParams: Record<string, string | undefined>) => {
-        const params = {
+        const params: Record<string, string | undefined> = {
             search: search || undefined,
             category: category || undefined,
             tab: tab !== 'all' ? tab : undefined,

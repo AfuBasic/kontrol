@@ -157,10 +157,10 @@ createInertiaApp({
                                 headers: {
                                     'X-Background-Reload': 'true',
                                 },
-                                onError: (err) => {
+                                onError: (err: any) => {
                                     console.warn('App background token reconciliation skipped:', err);
                                 },
-                            });
+                            } as any);
                         }
                     });
 

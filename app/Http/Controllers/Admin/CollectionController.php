@@ -49,7 +49,25 @@ class CollectionController extends Controller
     {
         $this->ensureBankingIsSetup();
         $estate = $this->estateContext->getEstate();
-        $residents = User::withRole('resident', $estate->id)->get();
+        $residents = User::forEstate($estate->id)
+            ->where(function ($query) use ($estate) {
+                $query->withRole('resident', $estate->id)
+                    ->orWhere(function ($q) use ($estate) {
+                        $q->withRole('property_owner', $estate->id);
+                    });
+            })
+            ->get()
+            ->map(function ($user) use ($estate) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_property_owner' => $user->roles()
+                        ->where('roles.name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estate->id)
+                        ->exists(),
+                ];
+            });
 
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
@@ -146,7 +164,25 @@ class CollectionController extends Controller
         $this->ensureIsDraft($collection);
         $collection->load('targets')->loadCount('targets');
         $estate = $this->estateContext->getEstate();
-        $residents = User::withRole('resident', $estate->id)->get();
+        $residents = User::forEstate($estate->id)
+            ->where(function ($query) use ($estate) {
+                $query->withRole('resident', $estate->id)
+                    ->orWhere(function ($q) use ($estate) {
+                        $q->withRole('property_owner', $estate->id);
+                    });
+            })
+            ->get()
+            ->map(function ($user) use ($estate) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_property_owner' => $user->roles()
+                        ->where('roles.name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estate->id)
+                        ->exists(),
+                ];
+            });
 
         return Inertia::render('Admin/Collections/Edit', [
             'collection' => $collection,

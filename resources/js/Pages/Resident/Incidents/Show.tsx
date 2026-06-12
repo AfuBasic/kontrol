@@ -64,7 +64,7 @@ export default function Show({ incident, comments, canClose }: Props) {
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-    const isReporter = incident.reporter_id === authUser?.id;
+    const isReporter = incident.reporter.id === authUser?.id;
     const reporterName = isReporter ? 'you' : incident.reporter?.name || 'Deleted User';
 
     // Get current status index

@@ -216,3 +216,80 @@ test('resident can view bulk payment screen for only landlord bills', function (
         'subaccount' => 'ACCT_landlord_test',
     ]);
 });
+
+test('bulk payment verification creates child payment records with unique references and marks assignments as paid', function () {
+    $c1 = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Rent 1',
+        'amount' => 12000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->owner->id,
+    ]);
+    $a1 = CollectionAssignment::create([
+        'collection_id' => $c1->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 12000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $c2 = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Rent 2',
+        'amount' => 13000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->owner->id,
+    ]);
+    $a2 = CollectionAssignment::create([
+        'collection_id' => $c2->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 13000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $this->actingAs($this->resident);
+
+    // 1. Initiate bulk payment
+    $responsePost = $this->postJson(route('web.billing.collections.initiate_bulk', [
+        'assignments' => "{$a1->ulid},{$a2->ulid}",
+    ]));
+    $responsePost->assertOk();
+    $ref = $responsePost->json('reference');
+
+    // 2. Call verify endpoint
+    $verifyResponse = $this->postJson(route('web.billing.collection.verify', ['reference' => $ref]));
+    $verifyResponse->assertOk();
+
+    // 3. Assert parent payment updated to success
+    $this->assertDatabaseHas('payments', [
+        'reference' => $ref,
+        'status' => 'success',
+        'collection_assignment_id' => null,
+    ]);
+
+    // 4. Assert child payments created with unique references
+    $this->assertDatabaseHas('payments', [
+        'reference' => "{$ref}-{$a1->id}",
+        'status' => 'success',
+        'collection_assignment_id' => $a1->id,
+        'amount' => 12000,
+    ]);
+
+    $this->assertDatabaseHas('payments', [
+        'reference' => "{$ref}-{$a2->id}",
+        'status' => 'success',
+        'collection_assignment_id' => $a2->id,
+        'amount' => 13000,
+    ]);
+
+    // 5. Assert assignments are marked paid
+    expect($a1->fresh()->isPaid())->toBeTrue();
+    expect($a2->fresh()->isPaid())->toBeTrue();
+});

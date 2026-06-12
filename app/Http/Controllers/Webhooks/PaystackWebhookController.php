@@ -72,7 +72,7 @@ class PaystackWebhookController extends Controller
                                             'estate_id' => $payment->estate_id,
                                             'collection_assignment_id' => $assignment->id,
                                             'amount' => $due,
-                                            'reference' => $reference,
+                                            'reference' => $reference.'-'.$assignment->id,
                                             'status' => 'success',
                                             'paid_at' => now(),
                                             'raw_payload' => ['bulk_parent_reference' => $reference],

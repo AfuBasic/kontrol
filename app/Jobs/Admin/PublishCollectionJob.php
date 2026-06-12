@@ -101,6 +101,12 @@ class PublishCollectionJob implements ShouldQueue
                 ->toArray();
         }
 
+        if ($collection->applies_to === 'property_owner') {
+            return User::withRole('property_owner', $estate->id)
+                ->pluck('users.id')
+                ->toArray();
+        }
+
         $userIds = [];
         foreach ($collection->targets as $target) {
             if ($target->target_type === User::class || $target->target_type === 'user') {
