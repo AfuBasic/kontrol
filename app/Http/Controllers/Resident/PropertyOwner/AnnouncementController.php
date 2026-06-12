@@ -13,6 +13,8 @@ use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\EstateBoard\NewPostNotification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -157,6 +159,37 @@ class AnnouncementController extends Controller
                         'target_id' => $t['id'],
                     ]);
                 }
+            }
+
+            // Notify relevant residents
+            $usersToNotify = collect();
+
+            if ($post->applies_to === 'all') {
+                $usersToNotify = User::query()
+                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+                    ->forEstate($estate->id)
+                    ->active()
+                    ->get();
+            } else {
+                foreach ($validated['targets'] as $t) {
+                    if ($t['type'] === 'user') {
+                        $targetUser = User::find($t['id']);
+                        if ($targetUser && $targetUser->profile?->property_owner_id === $user->id) {
+                            $usersToNotify->push($targetUser);
+                        }
+                    } else {
+                        $propertyUsers = User::query()
+                            ->whereHas('profile', fn ($q) => $q->where('property_id', $t['id'])->where('property_owner_id', $user->id))
+                            ->active()
+                            ->get();
+                        $usersToNotify = $usersToNotify->merge($propertyUsers);
+                    }
+                }
+                $usersToNotify = $usersToNotify->unique('id');
+            }
+
+            if ($usersToNotify->isNotEmpty()) {
+                Notification::send($usersToNotify, new NewPostNotification($post));
             }
         });
 

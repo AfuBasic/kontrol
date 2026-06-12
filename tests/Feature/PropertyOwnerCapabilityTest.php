@@ -202,6 +202,8 @@ test('property owner dashboard, residents, properties, collections, and announce
     expect($collection->assignments()->count())->toBe(2);
 
     // 8. Create Announcement
+    \Illuminate\Support\Facades\Notification::fake();
+
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->post(route('resident.property-owner.announcements.store'), [
             'title' => 'Renovation Notice',
@@ -213,6 +215,13 @@ test('property owner dashboard, residents, properties, collections, and announce
     $announcement = EstateBoardPost::where('title', 'Renovation Notice')->first();
     expect($announcement)->not->toBeNull();
     expect($announcement->property_owner_id)->toBe($owner->id);
+
+    // Verify notifications were sent to managed residents
+    \Illuminate\Support\Facades\Notification::assertSentTo(
+        [$resident1, $resident2],
+        \App\Notifications\EstateBoard\NewPostNotification::class,
+        fn ($notification) => $notification->post->id === $announcement->id
+    );
 });
 
 test('admin can bulk invite property owners', function () {
