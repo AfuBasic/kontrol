@@ -191,7 +191,11 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
         Route::post('/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
         Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
         Route::post('/', [IncidentController::class, 'store'])->name('store');
-        Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
+        Route::get('/{incident}', [IncidentController::class, 'show'])
+            ->name('show')
+            ->missing(function () {
+                return redirect()->route('resident.incidents.index')->with('error', 'This incident no longer exists.');
+            });
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
 
         // Rate-limited comments
