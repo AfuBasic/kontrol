@@ -87,6 +87,7 @@ class CollectionController extends Controller
                 'search' => $request->search ?? '',
                 'status' => $request->status ?? '',
             ],
+            'hasSettlementAccount' => ! empty($user->profile?->paystack_subaccount_code),
         ]);
     }
 

@@ -31,9 +31,10 @@ interface Props {
         search: string;
         status: string;
     };
+    hasSettlementAccount: boolean;
 }
 
-export default function Index({ collections, totalUnfiltered, filters }: Props) {
+export default function Index({ collections, totalUnfiltered, filters, hasSettlementAccount }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -87,6 +88,30 @@ export default function Index({ collections, totalUnfiltered, filters }: Props) 
                     </Link>
                 </div>
             </div>
+
+            {!hasSettlementAccount && (
+                <div className="rounded-[24px] border border-amber-100 bg-amber-50 p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
+                                <CreditCardIcon className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900">Settlement Account Setup Required</h3>
+                                <p className="mt-0.5 text-xs text-slate-500 font-medium">
+                                    Before you can create collections and receive payments from your residents, you must set up your settlement bank account.
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/resident/property-owner/settlement"
+                            className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition-all active:scale-98 w-full sm:w-auto whitespace-nowrap"
+                        >
+                            Setup Account
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* Conditional Filters bar: Only show if records > 1 or filters are active */}
             {showFilters && (
