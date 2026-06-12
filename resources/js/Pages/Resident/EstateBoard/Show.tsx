@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users, Home } from 'lucide-react';
@@ -97,8 +97,15 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
 }
 
 export default function EstateBoardShow({ post, comments }: Props) {
+    const { auth } = usePage<any>().props;
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
+
+    const handleDeletePost = () => {
+        if (confirm('Are you sure you want to delete this announcement?')) {
+            router.delete(`/resident/property-owner/announcements/${post.hashid}`);
+        }
+    };
 
     const {
         data,
@@ -165,7 +172,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-6"
+                className="mb-6 flex items-center justify-between"
             >
                 <Link
                     href={index.url()}
@@ -174,6 +181,16 @@ export default function EstateBoardShow({ post, comments }: Props) {
                     <ArrowLeft className="h-4 w-4" />
                     Back to Feed
                 </Link>
+
+                {post.property_owner_id === auth?.user?.id && post.comments_count === 0 && (
+                    <button
+                        onClick={handleDeletePost}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-700 shadow-sm transition-colors hover:bg-rose-100"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Announcement
+                    </button>
+                )}
             </motion.div>
 
             {/* Post Header */}
