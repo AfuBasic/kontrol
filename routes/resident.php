@@ -84,7 +84,11 @@ Route::middleware('role:resident,household_member')->group(function (): void {
     // Estate Board (read-only + comments)
     Route::prefix('estate-board')->name('resident.estate-board.')->middleware(['check-estate-feature:interactive-notice-board', 'resident.active'])->group(function (): void {
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
-        Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
+        Route::get('/{post}', [EstateBoardController::class, 'show'])
+            ->name('show')
+            ->missing(function () {
+                return redirect()->route('resident.estate-board.index')->with('error', 'This announcement no longer exists.');
+            });
 
         // Rate-limited comment routes
         Route::middleware('throttle:estate-board-comments')->group(function (): void {
@@ -130,7 +134,11 @@ Route::middleware('role:resident')->group(function (): void {
     // Estate Collections (Dues)
     Route::prefix('dues')->name('resident.collections.')->middleware('check-estate-feature:payment-collection')->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
-        Route::get('/{assignment}', [CollectionController::class, 'show'])->name('show');
+        Route::get('/{assignment}', [CollectionController::class, 'show'])
+            ->name('show')
+            ->missing(function () {
+                return redirect()->route('resident.collections.index')->with('error', 'This bill no longer exists.');
+            });
         Route::post('/{assignment}/verify', [CollectionController::class, 'verify'])->name('verify');
     });
 

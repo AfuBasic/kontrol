@@ -10,6 +10,7 @@ use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -137,16 +138,21 @@ class CollectionPaymentController extends Controller
 
     public function verify(string $reference): JsonResponse
     {
+        Log::info("Paystack Verification Endpoint Hit: Ref={$reference}");
         $result = DB::transaction(function () use ($reference) {
             // 1. Find the payment and lock it
             $payment = Payment::where('reference', $reference)->lockForUpdate()->first();
 
             if (! $payment) {
+                Log::warning("Paystack Verification failed: Payment not found for Ref={$reference}");
+
                 return ['error' => 'Payment not found', 'status' => 404];
             }
 
             // 2. If already success, just return success
             if ($payment->status === 'success') {
+                Log::info("Paystack Verification: Already success for Ref={$reference}");
+
                 return ['message' => 'Payment already verified', 'status' => 200];
             }
 
@@ -196,6 +202,8 @@ class CollectionPaymentController extends Controller
                     }
                 }
             }
+
+            Log::info("Paystack Verification completed successfully for Ref={$reference}");
 
             return ['message' => 'Payment verified successfully', 'status' => 200];
         });
@@ -326,37 +334,101 @@ class CollectionPaymentController extends Controller
         $totalAmount = $unpaidAssignments->sum(fn ($a) => $a->amount_due - $a->amount_paid);
         $assignmentIds = $unpaidAssignments->pluck('id')->sort()->values()->toArray();
 
-        $existing = Payment::where('user_id', $user->id)
+        // Find all previous payment attempts for these assignments
+        $previousPayments = Payment::where('user_id', $user->id)
             ->where('estate_id', $estateId)
             ->whereNull('collection_assignment_id')
-            ->where('status', 'initiated')
             ->get()
-            ->first(function ($p) use ($assignmentIds) {
+            ->filter(function ($p) use ($assignmentIds) {
                 $payloadIds = data_get($p->raw_payload, 'assignment_ids', []);
                 sort($payloadIds);
 
                 return $payloadIds === $assignmentIds;
             });
 
-        if ($existing) {
-            $payment = $existing;
-        } else {
-            // Must start with COLL- to trigger webhook match condition
-            $reference = 'COLL-BULK-'.strtoupper(bin2hex(random_bytes(8)));
+        // 1. Check the latest non-success attempt to see if it succeeded or is pending on Paystack
+        $latestPayment = $previousPayments->where('status', '!=', 'success')->sortByDesc('created_at')->first();
 
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'estate_id' => $estateId,
-                'collection_assignment_id' => null,
-                'amount' => $totalAmount,
-                'reference' => $reference,
-                'status' => 'initiated',
-                'raw_payload' => [
-                    'assignment_ids' => $assignmentIds,
-                    'is_bulk' => true,
-                ],
-            ]);
+        if ($latestPayment) {
+            try {
+                $verification = $paystackService->verifyPayment($latestPayment->reference);
+                $status = $verification['status'] ?? null;
+
+                Log::info("Paystack Bulk Verification: Ref={$latestPayment->reference}, Status={$status}", [
+                    'verification_response' => $verification,
+                ]);
+
+                if ($status === 'success') {
+                    DB::transaction(function () use ($latestPayment, $unpaidAssignments) {
+                        $lockedPayment = Payment::where('id', $latestPayment->id)->lockForUpdate()->first();
+
+                        if ($lockedPayment && $lockedPayment->status !== 'success') {
+                            $lockedPayment->update([
+                                'status' => 'success',
+                                'paid_at' => now(),
+                            ]);
+
+                            foreach ($unpaidAssignments as $assignment) {
+                                $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
+                                if ($lockedAssignment) {
+                                    $due = $lockedAssignment->amount_due - $lockedAssignment->amount_paid;
+                                    if ($due > 0) {
+                                        Payment::create([
+                                            'user_id' => $lockedPayment->user_id,
+                                            'estate_id' => $lockedPayment->estate_id,
+                                            'collection_assignment_id' => $lockedAssignment->id,
+                                            'amount' => $due,
+                                            'reference' => $lockedPayment->reference,
+                                            'status' => 'success',
+                                            'paid_at' => now(),
+                                            'raw_payload' => ['bulk_parent_reference' => $lockedPayment->reference],
+                                        ]);
+
+                                        $lockedAssignment->increment('amount_paid', $due);
+                                        $lockedAssignment->update([
+                                            'status' => 'paid',
+                                            'paid_at' => now(),
+                                            'external_reference' => $lockedPayment->reference,
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    return response()->json([
+                        'already_paid' => true,
+                        'message' => 'Payment already completed.',
+                    ]);
+                } elseif (in_array($status, ['ongoing', 'pending', 'processing'])) {
+                    return response()->json([
+                        'message' => 'You have a pending payment session for these bills. Please wait a few moments for confirmation or check back later.',
+                    ], 400);
+                } elseif (in_array($status, ['failed', 'abandoned'])) {
+                    $latestPayment->update(['status' => 'failed']);
+                }
+            } catch (\Exception $e) {
+                // If it fails verification because it doesn't exist on Paystack yet, we keep it as initiated
+            }
         }
+
+        // 2. Generate a new payment record with a unique attempt suffix to prevent reference collisions on Paystack
+        $attemptsCount = $previousPayments->count();
+        $suffix = $attemptsCount > 0 ? '-'.($attemptsCount + 1) : '';
+        $reference = 'COLL-BULK-'.strtoupper(bin2hex(random_bytes(6))).$suffix;
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'estate_id' => $estateId,
+            'collection_assignment_id' => null,
+            'amount' => $totalAmount,
+            'reference' => $reference,
+            'status' => 'initiated',
+            'raw_payload' => [
+                'assignment_ids' => $assignmentIds,
+                'is_bulk' => true,
+            ],
+        ]);
 
         return response()->json([
             'already_paid' => false,

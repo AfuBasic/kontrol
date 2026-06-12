@@ -6,6 +6,7 @@ import { show } from '@/actions/App/Http/Controllers/Resident/CollectionControll
 import type { SharedData } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import MobileSheet from '@/Components/MobileSheet';
 
 const MotionLink = motion(Link);
 
@@ -41,6 +42,7 @@ export default function CollectionsIndex({ summary }: Props) {
     const { auth, app_url: appUrl } = usePage<SharedData>().props;
     const hasLandlord = !!auth?.user?.profile?.property_owner_id;
     const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>('all');
+    const [showChoiceModal, setShowChoiceModal] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -75,8 +77,51 @@ export default function CollectionsIndex({ summary }: Props) {
         return item.billing_source === billFilter;
     });
 
+    const estateOutstanding = filteredOutstanding.filter(a => a.billing_source === 'estate');
+    const propertyOwnerOutstanding = filteredOutstanding.filter(a => a.billing_source === 'property_owner');
+
+    const estateTotal = estateOutstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
+    const propertyOwnerTotal = propertyOwnerOutstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
+
+    const showPayAllButton = billFilter === 'all'
+        ? (estateOutstanding.length > 1 || propertyOwnerOutstanding.length > 1)
+        : (billFilter === 'estate' ? estateOutstanding.length > 1 : propertyOwnerOutstanding.length > 1);
+
+    const payAllCount = billFilter === 'all'
+        ? (
+            (estateOutstanding.length > 1 && propertyOwnerOutstanding.length > 1)
+                ? filteredOutstanding.length
+                : (estateOutstanding.length > 1 ? estateOutstanding.length : propertyOwnerOutstanding.length)
+          )
+        : (billFilter === 'estate' ? estateOutstanding.length : propertyOwnerOutstanding.length);
+
     const handlePayAll = async () => {
-        const ulids = filteredOutstanding.map((a) => a.ulid).join(',');
+        if (billFilter === 'estate') {
+            redirectToCheckout(estateOutstanding);
+        } else if (billFilter === 'property_owner') {
+            redirectToCheckout(propertyOwnerOutstanding);
+        } else {
+            const estateEligible = estateOutstanding.length > 1;
+            const poEligible = propertyOwnerOutstanding.length > 1;
+
+            if (estateEligible && poEligible) {
+                setShowChoiceModal(true);
+            } else if (estateEligible) {
+                redirectToCheckout(estateOutstanding);
+            } else if (poEligible) {
+                redirectToCheckout(propertyOwnerOutstanding);
+            }
+        }
+    };
+
+    const handleSelectPaymentGroup = (group: 'estate' | 'property_owner') => {
+        setShowChoiceModal(false);
+        const dues = filteredOutstanding.filter(a => a.billing_source === group);
+        redirectToCheckout(dues);
+    };
+
+    const redirectToCheckout = async (dues: Assignment[]) => {
+        const ulids = dues.map((a) => a.ulid).join(',');
         const rawPaymentUrl = `/billing/collections/bulk?assignments=${ulids}`;
         const paymentUrl = rawPaymentUrl.startsWith('//')
             ? `${appUrl.startsWith('https') ? 'https:' : 'http:'}${rawPaymentUrl}`
@@ -172,12 +217,12 @@ export default function CollectionsIndex({ summary }: Props) {
             <section>
                 <div className="mb-4 flex items-center justify-between px-2">
                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
-                    {filteredOutstanding.length > 1 && (
+                    {showPayAllButton && (
                         <button
                             onClick={handlePayAll}
                             className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95 cursor-pointer hover:bg-indigo-100"
                         >
-                            Pay All ({filteredOutstanding.length})
+                            Pay All ({payAllCount})
                         </button>
                     )}
                 </div>
@@ -293,6 +338,61 @@ export default function CollectionsIndex({ summary }: Props) {
                     </div>
                 </section>
             )}
+
+            <MobileSheet
+                isOpen={showChoiceModal}
+                onClose={() => setShowChoiceModal(false)}
+                title="Select Payment Group"
+            >
+                <div className="flex flex-col gap-5 py-2">
+                    <p className="text-sm font-medium text-slate-500">
+                        Estate and property owner dues use different settlement accounts and must be paid separately. Select which bills to pay:
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                        {estateOutstanding.length > 0 && (
+                            <button
+                                onClick={() => handleSelectPaymentGroup('estate')}
+                                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-98 cursor-pointer"
+                            >
+                                <div className="text-left">
+                                    <div className="text-sm font-black text-slate-900">Pay Estate Dues</div>
+                                    <div className="text-xs font-bold text-slate-400 mt-0.5">
+                                        {estateOutstanding.length} pending {estateOutstanding.length === 1 ? 'obligation' : 'obligations'}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm font-black text-slate-900">{formatCurrency(estateTotal)}</div>
+                                </div>
+                            </button>
+                        )}
+
+                        {propertyOwnerOutstanding.length > 0 && (
+                            <button
+                                onClick={() => handleSelectPaymentGroup('property_owner')}
+                                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-98 cursor-pointer"
+                            >
+                                <div className="text-left">
+                                    <div className="text-sm font-black text-slate-900">Pay Property Owner Dues</div>
+                                    <div className="text-xs font-bold text-slate-400 mt-0.5">
+                                        {propertyOwnerOutstanding.length} pending {propertyOwnerOutstanding.length === 1 ? 'obligation' : 'obligations'}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm font-black text-slate-900">{formatCurrency(propertyOwnerTotal)}</div>
+                                </div>
+                            </button>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => setShowChoiceModal(false)}
+                        className="w-full rounded-2xl bg-slate-100 py-3 text-center text-xs font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-200 active:scale-95 cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </MobileSheet>
         </div>
     );
 }

@@ -82,7 +82,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 return;
             }
 
-            const { reference, email, amount } = data;
+            const { reference, email, amount, subaccount } = data;
 
             // 2. Open Paystack Popup
             if (!window.PaystackPop) {
@@ -91,11 +91,17 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 return;
             }
 
+            // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
+            const cleanSubaccount = (subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord'))
+                ? subaccount
+                : undefined;
+
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
                 email: email,
                 amount: amount * 100, // Paystack requires amount in kobo
                 ref: reference,
+                subaccount: cleanSubaccount,
                 channels: ['bank_transfer'],
                 onClose: () => {
                     setIsProcessing(false);
