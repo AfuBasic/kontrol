@@ -120,10 +120,17 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
         // Mark as read in backend
         if (notification.id && !notification.read_at) {
-            axios.post(NotificationController.markAsRead.url({ id: notification.id })).then(() => {
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-                router.reload({ only: ['auth'] });
-            });
+            router.post(
+                NotificationController.markAsRead.url({ id: notification.id }),
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        setUnreadCount((prev) => Math.max(0, prev - 1));
+                    },
+                }
+            );
         }
     };
 
