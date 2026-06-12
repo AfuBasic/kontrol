@@ -25,11 +25,45 @@ class CollectionController extends Controller
         private PaystackService $paystackService,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $estate = $this->estateContext->getEstate();
-        $collections = $this->collectionService->getCollections($estate);
         $settings = EstateSettings::forEstate($estate->id);
+
+        $query = Collection::where('estate_id', $estate->id)
+            ->whereDoesntHave('creator.roles', function ($q) use ($estate) {
+                $q->where('name', 'property_owner')
+                    ->where('model_has_roles.estate_id', $estate->id);
+            })
+            ->withCount(['assignments', 'targets'])
+            ->latest();
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%'.$request->search.'%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $collections = $query->paginate(10)->withQueryString();
+
+        $stats = [
+            'total_expected' => (int) CollectionAssignment::whereHas('collection', function ($q) use ($estate) {
+                $q->where('estate_id', $estate->id)
+                    ->whereDoesntHave('creator.roles', function ($sq) use ($estate) {
+                        $sq->where('name', 'property_owner')
+                            ->where('model_has_roles.estate_id', $estate->id);
+                    });
+            })->sum('amount_due'),
+            'total_realised' => (int) CollectionAssignment::whereHas('collection', function ($q) use ($estate) {
+                $q->where('estate_id', $estate->id)
+                    ->whereDoesntHave('creator.roles', function ($sq) use ($estate) {
+                        $sq->where('name', 'property_owner')
+                            ->where('model_has_roles.estate_id', $estate->id);
+                    });
+            })->sum('amount_paid'),
+        ];
 
         return Inertia::render('Admin/Collections/Index', [
             'collections' => $collections,
@@ -42,6 +76,11 @@ class CollectionController extends Controller
                 'account_number' => $settings->account_number,
                 'account_name' => $settings->account_name,
             ],
+            'filters' => [
+                'search' => $request->search ?? '',
+                'status' => $request->status ?? '',
+            ],
+            'stats' => $stats,
         ]);
     }
 

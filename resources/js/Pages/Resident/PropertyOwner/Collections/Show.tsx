@@ -9,9 +9,29 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
 import { index, recordPayment } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
+
+function AnimatedNumber({ value }: { value: number }) {
+    const motionValue = useMotionValue(0);
+    const ref = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        const controls = animate(motionValue, value, {
+            duration: 1.4,
+            ease: [0.16, 1, 0.3, 1], // ultra premium ease-out curve
+            onUpdate: (latest) => {
+                if (ref.current) {
+                    ref.current.textContent = '₦' + Math.round(latest).toLocaleString();
+                }
+            }
+        });
+        return () => controls.stop();
+    }, [value, motionValue]);
+
+    return <span ref={ref}>₦0</span>;
+}
 
 interface Assignment {
     id: number;
@@ -82,28 +102,67 @@ export default function Show({ collection, assignments, collected, outstanding }
                 </div>
             </div>
 
-            {/* Collection Metrics */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Collected</h3>
-                    <p className="mt-2 text-2xl font-black text-slate-950">₦{collected.toLocaleString()}</p>
-                </div>
-
-                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Outstanding Balance</h3>
-                    <p className="text-slate-950 mt-2 text-2xl font-black">₦{outstanding.toLocaleString()}</p>
-                </div>
-
-                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                    <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Collection Rate</h3>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-slate-950">{collectedPct}%</span>
-                        <span className="text-xs font-bold text-slate-400">
-                            ({paidBillsCount}/{totalBillsCount} paid)
-                        </span>
+            {/* Unified Premium Financial Overview Card */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20 border border-slate-900">
+                {/* Background glow effects */}
+                <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
+                
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collection Progress</span>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black tracking-wider text-emerald-400 uppercase border border-emerald-500/20">
+                                {collectedPct}% Collected ({paidBillsCount}/{totalBillsCount} paid)
+                            </span>
+                        </div>
                     </div>
-                    <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div className="bg-indigo-600 h-full transition-all duration-500" style={{ width: `${collectedPct}%` }} />
+
+                    <div className="mt-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                        <div>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Collection Value</p>
+                            <h2 className="mt-1 text-3xl font-black tracking-tight">
+                                <AnimatedNumber value={Number(collected) + Number(outstanding)} />
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-1.5 rounded-xl bg-slate-900/50 px-3 py-1.5 border border-slate-800 text-[10px] font-bold text-slate-400">
+                            <CalendarIcon className="h-4 w-4 text-indigo-400" />
+                            <span>Due by {new Date(collection.due_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-6">
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-900 border border-slate-800">
+                            <motion.div 
+                                className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full" 
+                                initial={{ width: '0%' }}
+                                animate={{ width: `${collectedPct}%` }}
+                                transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Split details */}
+                    <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-900/60 pt-4">
+                        <div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Collected</span>
+                            </div>
+                            <p className="mt-1 text-base font-black text-white">
+                                <AnimatedNumber value={Number(collected)} />
+                            </p>
+                        </div>
+                        <div className="border-l border-slate-900/60 pl-4">
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2 w-2 rounded-full bg-indigo-400" />
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Outstanding</span>
+                            </div>
+                            <p className="mt-1 text-base font-black text-white">
+                                <AnimatedNumber value={Number(outstanding)} />
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,57 +175,68 @@ export default function Show({ collection, assignments, collected, outstanding }
                 </div>
             )}
 
-            {/* Assignment Table */}
+            {/* Assignment List */}
             <div className="space-y-4">
                 <h2 className="text-lg font-black text-slate-900">Billing Directory</h2>
 
-                <div className="overflow-x-auto rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
-                    {assignments.length > 0 ? (
-                        <table className="min-w-full divide-y divide-slate-100">
-                            <thead className="bg-slate-50/50">
-                                <tr>
-                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Resident</th>
-                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Property</th>
-                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">
-                                        Amount Due
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
-                                    <th className="relative px-4 py-4"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                                {assignments.map((asg) => (
-                                    <tr key={asg.id}>
-                                        <td className="px-4 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-slate-900">{asg.resident_name}</span>
-                                        </td>
-                                        <td className="px-4 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-slate-500">{asg.property_name || '—'}</span>
-                                        </td>
-                                        <td className="px-4 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-bold text-slate-900">
-                                                ₦{(asg.amount_due - asg.amount_paid).toLocaleString()}
-                                                {asg.amount_paid > 0 && (
-                                                    <span className="ml-1.5 text-xs font-bold text-slate-400">
-                                                        (paid ₦{asg.amount_paid.toLocaleString()})
+                {assignments.length > 0 ? (
+                    <div className="space-y-3">
+                        {assignments.map((asg) => {
+                            const unpaid = asg.amount_due - asg.amount_paid;
+                            const initials = asg.resident_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+                            
+                            return (
+                                <div 
+                                    key={asg.id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[2rem] bg-white p-5 shadow-xs ring-1 ring-slate-200/60 transition-all hover:shadow-md hover:ring-slate-300/80"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 font-black text-sm text-indigo-600 tracking-wider">
+                                            {initials}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black tracking-tight text-slate-900">{asg.resident_name}</h4>
+                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">{asg.property_name || '—'}</p>
+                                            
+                                            {/* Date displays inside the cards */}
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                                    <CalendarIcon className="h-3.5 w-3.5" />
+                                                    <span>Due: {new Date(asg.due_date).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
+                                                </span>
+                                                {asg.paid_at && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                                                        <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-500" />
+                                                        <span>Paid: {new Date(asg.paid_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
                                                     </span>
                                                 )}
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-4 whitespace-nowrap">
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-slate-50 pt-3 sm:border-t-0 sm:pt-0">
+                                        <div className="sm:text-right">
+                                            <p className="text-[9px] font-bold text-slate-440 uppercase tracking-wider">Amount Due</p>
+                                            <p className="text-sm font-black text-slate-900">
+                                                ₦{unpaid.toLocaleString()}
+                                                {asg.amount_paid > 0 && (
+                                                    <span className="ml-1 text-[10px] text-slate-400 font-semibold block sm:inline">
+                                                        (paid ₦{asg.amount_paid.toLocaleString()})
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
                                             <span
-                                                className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase border ${
                                                     asg.status === 'paid'
-                                                        ? 'bg-emerald-100 text-emerald-700'
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-250/20'
                                                         : asg.status === 'partial'
-                                                          ? 'bg-amber-100 text-amber-700'
-                                                          : 'bg-slate-100 text-slate-700'
+                                                          ? 'bg-amber-50 text-amber-700 border-amber-250/20'
+                                                          : 'bg-slate-50 text-slate-600 border-slate-200'
                                                 }`}
                                             >
                                                 {asg.status}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-4 text-right whitespace-nowrap">
                                             {asg.status !== 'paid' && (
                                                 <button
                                                     onClick={() => {
@@ -176,22 +246,22 @@ export default function Show({ collection, assignments, collected, outstanding }
                                                             reference: '',
                                                         });
                                                     }}
-                                                    className="text-indigo-600 inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black transition-colors hover:bg-indigo-100"
+                                                    className="text-indigo-600 inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-black transition-all hover:bg-indigo-100 active:scale-95 cursor-pointer"
                                                 >
-                                                    Record Payment
+                                                    Record
                                                 </button>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div className="py-12 text-center text-sm font-bold text-slate-400">
-                            No billing targets matched for this collection sheet.
-                        </div>
-                    )}
-                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="rounded-[32px] bg-white py-12 text-center shadow-xs ring-1 ring-slate-100 text-sm font-bold text-slate-400">
+                        No billing targets matched for this collection sheet.
+                    </div>
+                )}
             </div>
 
             {/* Record Payment Modal */}
@@ -222,7 +292,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                             </div>
 
                             <form onSubmit={handleRecordPayment} className="mt-6 space-y-4">
-                                <div className="rounded-2xl bg-slate-50 p-4">
+                                <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">Resident</p>
                                     <p className="mt-0.5 text-sm font-black text-slate-900">{recordingAssignment.resident_name}</p>
                                     <p className="mt-3 text-[10px] font-bold text-slate-400 uppercase">Outstanding balance</p>

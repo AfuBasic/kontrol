@@ -1,8 +1,29 @@
 import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { motion, animate, useMotionValue } from 'framer-motion';
+
+function AnimatedNumber({ value }: { value: number }) {
+    const motionValue = useMotionValue(0);
+    const ref = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        const controls = animate(motionValue, value, {
+            duration: 1.4,
+            ease: [0.16, 1, 0.3, 1], // ultra premium ease-out curve
+            onUpdate: (latest) => {
+                if (ref.current) {
+                    ref.current.textContent = '₦' + Math.round(latest).toLocaleString();
+                }
+            }
+        });
+        return () => controls.stop();
+    }, [value, motionValue]);
+
+    return <span ref={ref}>₦0</span>;
+}
 
 interface Collection {
     id: number;
@@ -94,22 +115,60 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                 </div>
             </div>
 
-            {/* Stats Cards Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-[24px] bg-slate-900 p-5 text-white shadow-xl shadow-slate-900/5 relative overflow-hidden">
-                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Total Expected</p>
-                    <h3 className="mt-2 text-2xl font-black tracking-tight">₦{Number(stats.expecting_amount).toLocaleString()}</h3>
-                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-blue-600/10 blur-xl" />
-                </div>
-                <div className="rounded-[24px] bg-white p-5 shadow-xs ring-1 ring-slate-100 relative overflow-hidden">
-                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Total Realised</p>
-                    <h3 className="mt-2 text-2xl font-black text-slate-900 tracking-tight">₦{Number(stats.realised_amount).toLocaleString()}</h3>
-                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-emerald-600/10 blur-xl" />
-                </div>
-                <div className="rounded-[24px] bg-white p-5 shadow-xs ring-1 ring-slate-100 relative overflow-hidden">
-                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collections Count</p>
-                    <h3 className="mt-2 text-2xl font-black text-slate-900 tracking-tight">{stats.total_collections}</h3>
-                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-indigo-600/10 blur-xl" />
+            {/* Unified Premium Financial Overview Card */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20 border border-slate-900">
+                {/* Background glow effects */}
+                <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
+                
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Financial Overview</span>
+                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black tracking-wider text-emerald-400 uppercase border border-emerald-500/20">
+                            {stats.expecting_amount > 0 ? Math.round((stats.realised_amount / stats.expecting_amount) * 100) : 0}% Realised
+                        </span>
+                    </div>
+
+                    <div className="mt-4">
+                        <p className="text-[9px] font-bold text-slate-450 uppercase tracking-widest">Total Expected Collection</p>
+                        <h2 className="mt-1 text-3.5xl font-black tracking-tight">
+                            <AnimatedNumber value={stats.expecting_amount} />
+                        </h2>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-6">
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-900 border border-slate-800">
+                            <motion.div 
+                                className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full" 
+                                initial={{ width: '0%' }}
+                                animate={{ width: `${stats.expecting_amount > 0 ? Math.min(100, (stats.realised_amount / stats.expecting_amount) * 100) : 0}%` }}
+                                transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Split details */}
+                    <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-900/60 pt-4">
+                        <div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Realised</span>
+                            </div>
+                            <p className="mt-1 text-lg font-black text-white">
+                                <AnimatedNumber value={stats.realised_amount} />
+                            </p>
+                        </div>
+                        <div className="border-l border-slate-900/60 pl-4">
+                            <div className="flex items-center gap-1.5">
+                                <div className="h-2 w-2 rounded-full bg-indigo-400" />
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Outstanding</span>
+                            </div>
+                            <p className="mt-1 text-lg font-black text-white">
+                                <AnimatedNumber value={stats.expecting_amount - stats.realised_amount} />
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -211,9 +270,15 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                                         <h3 className="text-base font-black text-slate-900 transition-colors group-hover:text-indigo-600">
                                             {col.name}
                                         </h3>
-                                        <div className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                            <CalendarIcon className="h-4 w-4" />
-                                            <span>Due by {col.due_at || '—'}</span>
+                                        <div className="mt-2 flex flex-col gap-1 text-xs font-bold text-slate-400">
+                                            <div className="flex items-center gap-1.5">
+                                                <CalendarIcon className="h-3.5 w-3.5 text-slate-300" />
+                                                <span>Created: {col.created_at}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <CalendarIcon className="h-3.5 w-3.5 text-slate-300" />
+                                                <span>Due: {col.due_at || '—'}</span>
+                                            </div>
                                         </div>
                                     </div>
 
