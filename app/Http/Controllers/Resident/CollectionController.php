@@ -26,9 +26,12 @@ class CollectionController extends Controller
 
         $estate = $this->estateContext->getEstate();
         $propertyOwnerId = $user->profile?->property_owner_id;
+        $searchPaid = request()->query('search_paid');
+        $sourcePaid = request()->query('source_paid');
 
-        $assignments = CollectionAssignment::where('user_id', $user->id)
+        $outstandingAssignments = CollectionAssignment::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
+            ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->with(['collection.creator'])
             ->latest()
             ->get()
@@ -40,14 +43,52 @@ class CollectionController extends Controller
                 return $assignment;
             });
 
-        $summary = [
-            'outstanding' => $assignments->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])->values(),
-            'paid' => $assignments->where('status', 'paid')->values(),
-        ];
+        $paidQuery = CollectionAssignment::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->where('status', 'paid')
+            ->with(['collection.creator']);
+
+        if ($sourcePaid === 'estate') {
+            $paidQuery->whereHas('collection', function ($q) use ($propertyOwnerId) {
+                if ($propertyOwnerId) {
+                    $q->where('created_by', '!=', $propertyOwnerId);
+                }
+            });
+        } elseif ($sourcePaid === 'property_owner') {
+            $paidQuery->whereHas('collection', function ($q) use ($propertyOwnerId) {
+                if ($propertyOwnerId) {
+                    $q->where('created_by', $propertyOwnerId);
+                } else {
+                    $q->whereRaw('1 = 0');
+                }
+            });
+        }
+
+        if (! empty($searchPaid)) {
+            $paidQuery->whereHas('collection', function ($q) use ($searchPaid) {
+                $q->where('name', 'like', "%{$searchPaid}%");
+            });
+        }
+
+        $paidPaginated = $paidQuery->latest()->paginate(5, ['*'], 'page_paid')->withQueryString();
+
+        $paidPaginated->getCollection()->transform(function ($assignment) use ($propertyOwnerId) {
+            $isPoBill = $propertyOwnerId && $assignment->collection->created_by == $propertyOwnerId;
+            $assignment->is_property_owner_bill = $isPoBill;
+            $assignment->billing_source = $isPoBill ? 'property_owner' : 'estate';
+
+            return $assignment;
+        });
 
         return Inertia::render('Resident/Collections/Index', [
-            'summary' => $summary,
-            'allAssignments' => $assignments,
+            'summary' => [
+                'outstanding' => $outstandingAssignments,
+            ],
+            'paid' => Inertia::scroll(fn () => $paidPaginated),
+            'filters' => [
+                'search_paid' => $searchPaid,
+                'source_paid' => $sourcePaid,
+            ],
         ]);
     }
 

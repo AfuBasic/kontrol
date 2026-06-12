@@ -13,6 +13,20 @@ export default function RouteProgressBar() {
             const isSilent = event?.detail?.visit?.silent || event?.detail?.visit?.headers?.['X-Background-Reload'];
             if (isSilent) return;
 
+            // Only show loader if we are navigating to a different route/pathname
+            try {
+                const visitUrl = event?.detail?.visit?.url;
+                const destPath = typeof visitUrl === 'string'
+                    ? new URL(visitUrl, window.location.origin).pathname
+                    : visitUrl?.pathname;
+
+                if (destPath && destPath === window.location.pathname) {
+                    return;
+                }
+            } catch (err) {
+                // Fallback to show progress if error occurs
+            }
+
             setProgress(0);
             setVisible(true);
             

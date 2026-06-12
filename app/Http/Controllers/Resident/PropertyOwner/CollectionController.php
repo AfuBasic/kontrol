@@ -80,6 +80,20 @@ class CollectionController extends Controller
             'links' => $paginated->linkCollection()->toArray(),
         ];
 
+        $stats = [
+            'total_collections' => Collection::where('estate_id', $estate->id)
+                ->where('created_by', $user->id)
+                ->count(),
+            'expecting_amount' => (int) CollectionAssignment::whereHas('collection', function ($q) use ($user, $estate) {
+                $q->where('estate_id', $estate->id)
+                    ->where('created_by', $user->id);
+            })->sum('amount_due'),
+            'realised_amount' => (int) CollectionAssignment::whereHas('collection', function ($q) use ($user, $estate) {
+                $q->where('estate_id', $estate->id)
+                    ->where('created_by', $user->id);
+            })->sum('amount_paid'),
+        ];
+
         return Inertia::render('Resident/PropertyOwner/Collections/Index', [
             'collections' => $collections,
             'totalUnfiltered' => $totalUnfiltered,
@@ -88,6 +102,7 @@ class CollectionController extends Controller
                 'status' => $request->status ?? '',
             ],
             'hasSettlementAccount' => ! empty($user->profile?->paystack_subaccount_code),
+            'stats' => $stats,
         ]);
     }
 

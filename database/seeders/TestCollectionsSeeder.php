@@ -122,6 +122,9 @@ class TestCollectionsSeeder extends Seeder
 
         // 6. Create 4 Estate Collections & Assignments
         for ($i = 1; $i <= 4; $i++) {
+            $appliesTo = ($i >= 3) ? 'property_owner' : 'all';
+            $targetUserId = ($i >= 3) ? $owner->id : $resident->id;
+
             $estateCollection = Collection::create([
                 'estate_id' => $estate->id,
                 'name' => "Estate Levy {$i}",
@@ -130,13 +133,14 @@ class TestCollectionsSeeder extends Seeder
                 'start_date' => now()->toDateString(),
                 'due_at' => now()->addDays(5 + $i)->toDateString(),
                 'status' => 'active',
+                'applies_to' => $appliesTo,
                 'created_by' => $admin->id,
             ]);
 
             CollectionAssignment::create([
                 'collection_id' => $estateCollection->id,
                 'estate_id' => $estate->id,
-                'user_id' => $resident->id,
+                'user_id' => $targetUserId,
                 'amount_due' => 5000 * $i,
                 'status' => 'pending',
                 'due_date' => now()->addDays(5 + $i)->toDateString(),

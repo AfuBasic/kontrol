@@ -4,8 +4,14 @@ use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
+use App\Models\EstateSubscription;
+use App\Models\Plan;
 use App\Models\User;
+use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
+use Database\Seeders\FeatureSeeder;
+use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -18,6 +24,17 @@ beforeEach(function () {
 
     // 2. Setup Estate
     $this->estate = Estate::factory()->create();
+
+    // Seed features, plans and create subscription
+    $this->seed(FeatureSeeder::class);
+    $this->seed(PlanSeeder::class);
+    $plan = Plan::first();
+    EstateSubscription::create([
+        'estate_id' => $this->estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'billing_interval' => 'quarterly',
+    ]);
 
     // 3. Configure Estate Settlement Account
     $settings = EstateSettings::forEstate($this->estate->id);
@@ -292,4 +309,129 @@ test('bulk payment verification creates child payment records with unique refere
     // 5. Assert assignments are marked paid
     expect($a1->fresh()->isPaid())->toBeTrue();
     expect($a2->fresh()->isPaid())->toBeTrue();
+});
+
+test('bulk payment triggers property owner notification when paid', function () {
+    Notification::fake();
+
+    $c = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Rent 1',
+        'amount' => 12000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->owner->id,
+    ]);
+    $a = CollectionAssignment::create([
+        'collection_id' => $c->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 12000,
+        'status' => 'pending',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $this->actingAs($this->resident);
+
+    $responsePost = $this->postJson(route('web.billing.collections.initiate_bulk', [
+        'assignments' => "{$a->ulid}",
+    ]));
+    $responsePost->assertOk();
+    $ref = $responsePost->json('reference');
+
+    $verifyResponse = $this->postJson(route('web.billing.collection.verify', ['reference' => $ref]));
+    $verifyResponse->assertOk();
+
+    Notification::assertSentTo(
+        $this->owner,
+        CollectionPaymentReceivedNotification::class
+    );
+});
+
+test('resident collections paginates paid dues and supports search and filter', function () {
+    $c1 = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Estate Levy A',
+        'amount' => 1000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->adminUser->id,
+    ]);
+    $a1 = CollectionAssignment::create([
+        'collection_id' => $c1->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 1000,
+        'amount_paid' => 1000,
+        'status' => 'paid',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $c2 = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Estate Levy B',
+        'amount' => 2000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->adminUser->id,
+    ]);
+    $a2 = CollectionAssignment::create([
+        'collection_id' => $c2->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 2000,
+        'amount_paid' => 2000,
+        'status' => 'paid',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $this->actingAs($this->resident);
+
+    $response = $this->get(route('resident.collections.index', [
+        'search_paid' => 'Levy A',
+    ]), ['X-Bypass-Mobile-Restrict' => 'true']);
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/Collections/Index')
+        ->has('paid.data', 1)
+        ->where('paid.data.0.collection.name', 'Estate Levy A')
+    );
+});
+
+test('property owner collections calculates expectation and realization stats', function () {
+    $c = Collection::create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Rent A',
+        'amount' => 50000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addDays(5)->toDateString(),
+        'created_by' => $this->owner->id,
+    ]);
+
+    $a1 = CollectionAssignment::create([
+        'collection_id' => $c->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->resident->id,
+        'amount_due' => 50000,
+        'amount_paid' => 30000,
+        'status' => 'partial',
+        'due_date' => now()->addDays(5)->toDateString(),
+    ]);
+
+    $this->actingAs($this->owner);
+
+    $response = $this->get(route('resident.property-owner.collections.index'), ['X-Bypass-Mobile-Restrict' => 'true']);
+    $response->assertOk();
+
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/PropertyOwner/Collections/Index')
+        ->where('stats.total_collections', 1)
+        ->where('stats.expecting_amount', 50000)
+        ->where('stats.realised_amount', 30000)
+    );
 });

@@ -1,12 +1,13 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, InfiniteScroll, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Wallet, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
+import { Wallet, Clock, CheckCircle2, AlertCircle, Search, X, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import type { SharedData } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import MobileSheet from '@/Components/MobileSheet';
+import { useDebounce } from '@/Hooks/useDebounce';
 
 const MotionLink = motion(Link);
 
@@ -33,16 +34,52 @@ type Assignment = {
 type Props = {
     summary: {
         outstanding: Assignment[];
-        paid: Assignment[];
     };
-    allAssignments: Assignment[];
+    paid: {
+        data: Assignment[];
+        links: any[];
+        next_page_url: string | null;
+        current_page: number;
+    };
+    filters: {
+        search_paid: string | null;
+        source_paid: string | null;
+    };
 };
 
-export default function CollectionsIndex({ summary }: Props) {
+export default function CollectionsIndex({ summary, paid, filters }: Props) {
     const { auth, app_url: appUrl } = usePage<SharedData>().props;
     const hasLandlord = !!auth?.user?.profile?.property_owner_id;
-    const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>('all');
+    const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>(
+        (filters?.source_paid as 'all' | 'estate' | 'property_owner') || 'all'
+    );
+    const [searchPaid, setSearchPaid] = useState(filters?.search_paid || '');
     const [showChoiceModal, setShowChoiceModal] = useState(false);
+
+    const debouncedSearch = useDebounce(searchPaid, 300);
+
+    useEffect(() => {
+        router.get(
+            index.url(),
+            {
+                search_paid: debouncedSearch,
+                source_paid: billFilter,
+            },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    }, [debouncedSearch]);
+
+    const handleFilterChange = (filter: 'all' | 'estate' | 'property_owner') => {
+        setBillFilter(filter);
+        router.get(
+            index.url(),
+            {
+                search_paid: searchPaid,
+                source_paid: filter,
+            },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -68,11 +105,6 @@ export default function CollectionsIndex({ summary }: Props) {
     const totalOutstanding = summary.outstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
 
     const filteredOutstanding = summary.outstanding.filter((item) => {
-        if (billFilter === 'all') return true;
-        return item.billing_source === billFilter;
-    });
-
-    const filteredPaid = summary.paid.filter((item) => {
         if (billFilter === 'all') return true;
         return item.billing_source === billFilter;
     });
@@ -193,7 +225,7 @@ export default function CollectionsIndex({ summary }: Props) {
                                 <button
                                     key={tab.id}
                                     type="button"
-                                    onClick={() => setBillFilter(tab.id)}
+                                    onClick={() => handleFilterChange(tab.id)}
                                     className={`relative flex flex-1 items-center justify-center rounded-lg py-2 text-xs font-semibold transition-all ${
                                         isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                                     }`}
@@ -294,18 +326,44 @@ export default function CollectionsIndex({ summary }: Props) {
             </section>
 
             {/* Recently Paid Section */}
-            {summary.paid.length > 0 && (
-                <section>
-                    <div className="mb-4 flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Paid History</h3>
+            <section>
+                <div className="mb-4 flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Paid History</h3>
+                    <div className="relative w-full sm:max-w-xs">
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search paid dues..."
+                            value={searchPaid}
+                            onChange={(e) => setSearchPaid(e.target.value)}
+                            className="w-full rounded-full bg-slate-100 py-1.5 pr-10 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                        />
+                        {searchPaid && (
+                            <button
+                                onClick={() => setSearchPaid('')}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {filteredPaid.slice(0, 3).map((assignment) => (
+                {paid.data.length > 0 ? (
+                    <InfiniteScroll
+                        data="paid"
+                        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                        loading={
+                            <div className="col-span-full flex justify-center py-4">
+                                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                            </div>
+                        }
+                    >
+                        {paid.data.map((assignment) => (
                             <Link
                                 key={assignment.id}
                                 href={show.url(assignment.ulid)}
-                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200"
+                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200 transition-all hover:opacity-100 hover:shadow-md"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
@@ -335,9 +393,19 @@ export default function CollectionsIndex({ summary }: Props) {
                                 </div>
                             </Link>
                         ))}
+                    </InfiniteScroll>
+                ) : (
+                    <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                            <CheckCircle2 className="h-8 w-8 text-slate-300" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-900">No payment records</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {searchPaid ? "We couldn't find any records matching your search." : 'Your paid history is empty.'}
+                        </p>
                     </div>
-                </section>
-            )}
+                )}
+            </section>
 
             <MobileSheet
                 isOpen={showChoiceModal}

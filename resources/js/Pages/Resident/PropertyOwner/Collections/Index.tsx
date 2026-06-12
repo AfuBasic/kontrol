@@ -32,9 +32,14 @@ interface Props {
         status: string;
     };
     hasSettlementAccount: boolean;
+    stats: {
+        total_collections: number;
+        expecting_amount: number;
+        realised_amount: number;
+    };
 }
 
-export default function Index({ collections, totalUnfiltered, filters, hasSettlementAccount }: Props) {
+export default function Index({ collections, totalUnfiltered, filters, hasSettlementAccount, stats }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const debouncedSearch = useDebounce(search, 300);
@@ -86,6 +91,25 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         <PlusIcon className="h-5 w-5" />
                         New Collection
                     </Link>
+                </div>
+            </div>
+
+            {/* Stats Cards Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-[24px] bg-slate-900 p-5 text-white shadow-xl shadow-slate-900/5 relative overflow-hidden">
+                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Total Expected</p>
+                    <h3 className="mt-2 text-2xl font-black tracking-tight">₦{Number(stats.expecting_amount).toLocaleString()}</h3>
+                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-blue-600/10 blur-xl" />
+                </div>
+                <div className="rounded-[24px] bg-white p-5 shadow-xs ring-1 ring-slate-100 relative overflow-hidden">
+                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Total Realised</p>
+                    <h3 className="mt-2 text-2xl font-black text-slate-900 tracking-tight">₦{Number(stats.realised_amount).toLocaleString()}</h3>
+                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-emerald-600/10 blur-xl" />
+                </div>
+                <div className="rounded-[24px] bg-white p-5 shadow-xs ring-1 ring-slate-100 relative overflow-hidden">
+                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collections Count</p>
+                    <h3 className="mt-2 text-2xl font-black text-slate-900 tracking-tight">{stats.total_collections}</h3>
+                    <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-indigo-600/10 blur-xl" />
                 </div>
             </div>
 

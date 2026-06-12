@@ -34,6 +34,7 @@ class CollectionPaymentController extends Controller
 
     public function initiate(CollectionAssignment $assignment, PaystackService $paystackService): JsonResponse
     {
+        setPermissionsTeamId($assignment->estate_id);
         $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
@@ -167,6 +168,8 @@ class CollectionPaymentController extends Controller
                 return ['error' => 'Payment not found', 'status' => 404];
             }
 
+            setPermissionsTeamId($payment->estate_id);
+
             // 2. If already success, just return success
             if ($payment->status === 'success') {
                 Log::info("Paystack Verification: Already success for Ref={$reference}");
@@ -275,6 +278,7 @@ class CollectionPaymentController extends Controller
         abort_if($assignments->isEmpty(), 404, 'No outstanding bills found.');
 
         $first = $assignments->first();
+        setPermissionsTeamId($first->estate_id);
         $firstSubaccount = $this->resolveSubaccount($first);
 
         if (empty($firstSubaccount)) {
@@ -326,6 +330,7 @@ class CollectionPaymentController extends Controller
         }
 
         $first = $assignments->first();
+        setPermissionsTeamId($first->estate_id);
         $user = $first->user;
         $estateId = $first->estate_id;
         $firstSubaccount = $this->resolveSubaccount($first);

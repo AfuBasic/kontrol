@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\User;
+use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
 use App\Services\Billing\BillingFinalizationService;
 use App\Services\PaystackService;
 use Exception;
@@ -40,6 +42,7 @@ class PaystackWebhookController extends Controller
                     if (str_starts_with($reference, 'COLL-')) {
                         $payment = Payment::where('reference', $reference)->first();
                         if ($payment && $payment->status !== 'success') {
+                            setPermissionsTeamId($payment->estate_id);
                             $assignmentIds = data_get($payment->raw_payload, 'assignment_ids');
 
                             $payment->update([
@@ -60,6 +63,22 @@ class PaystackWebhookController extends Controller
                                         ]);
                                     } else {
                                         $assignment->update(['status' => 'partial']);
+                                    }
+
+                                    $assignment->loadMissing('collection.creator');
+                                    $creator = $assignment->collection?->creator;
+                                    if ($creator && $creator->hasRole('property_owner')) {
+                                        $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
+                                    } else {
+                                        $admins = User::role('admin')
+                                            ->whereHas('estates', function ($query) use ($assignment) {
+                                                $query->where('estates.id', $assignment->estate_id);
+                                            })
+                                            ->get();
+
+                                        foreach ($admins as $admin) {
+                                            $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
+                                        }
                                     }
                                 }
                             } elseif ($assignmentIds) {
@@ -84,6 +103,22 @@ class PaystackWebhookController extends Controller
                                             'paid_at' => now(),
                                             'external_reference' => $reference,
                                         ]);
+
+                                        $assignment->loadMissing('collection.creator');
+                                        $creator = $assignment->collection?->creator;
+                                        if ($creator && $creator->hasRole('property_owner')) {
+                                            $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
+                                        } else {
+                                            $admins = User::role('admin')
+                                                ->whereHas('estates', function ($query) use ($assignment) {
+                                                    $query->where('estates.id', $assignment->estate_id);
+                                                })
+                                                ->get();
+
+                                            foreach ($admins as $admin) {
+                                                $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
+                                            }
+                                        }
                                     }
                                 }
                             }
