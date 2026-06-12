@@ -12,10 +12,12 @@ use App\Models\Plan;
 use App\Models\Property;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Notifications\EstateBoard\NewPostNotification;
 use App\Services\PaystackService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -202,7 +204,7 @@ test('property owner dashboard, residents, properties, collections, and announce
     expect($collection->assignments()->count())->toBe(2);
 
     // 8. Create Announcement
-    \Illuminate\Support\Facades\Notification::fake();
+    Notification::fake();
 
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->post(route('resident.property-owner.announcements.store'), [
@@ -217,9 +219,9 @@ test('property owner dashboard, residents, properties, collections, and announce
     expect($announcement->property_owner_id)->toBe($owner->id);
 
     // Verify notifications were sent to managed residents
-    \Illuminate\Support\Facades\Notification::assertSentTo(
+    Notification::assertSentTo(
         [$resident1, $resident2],
-        \App\Notifications\EstateBoard\NewPostNotification::class,
+        NewPostNotification::class,
         fn ($notification) => $notification->post->id === $announcement->id
     );
 });

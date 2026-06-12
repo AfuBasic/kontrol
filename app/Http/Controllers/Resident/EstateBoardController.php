@@ -29,14 +29,11 @@ class EstateBoardController extends Controller
         EstateBoardPostAudience::Residents,
     ];
 
-    /**
-     * Display the estate board feed.
-     */
     public function index(): Response
     {
         $this->authorize('viewAny', EstateBoardPost::class);
 
-        $filter = request('filter');
+        $filter = request('filter', 'estate');
         $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences, $filter);
 

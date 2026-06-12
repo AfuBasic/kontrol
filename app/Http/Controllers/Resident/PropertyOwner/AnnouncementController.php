@@ -9,12 +9,12 @@ use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostTarget;
 use App\Models\Property;
 use App\Models\User;
+use App\Notifications\EstateBoard\NewPostNotification;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\EstateBoard\NewPostNotification;
 use Inertia\Inertia;
 use Inertia\Response;
 
