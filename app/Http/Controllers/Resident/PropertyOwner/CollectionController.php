@@ -93,16 +93,12 @@ class CollectionController extends Controller
     /**
      * Show form for creating a new collection.
      */
-    public function create(): Response|RedirectResponse
+    public function create(): Response
     {
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
 
-        if (empty($user->profile?->paystack_subaccount_code)) {
-            return redirect()
-                ->route('resident.property-owner.settlement.index')
-                ->withErrors(['message' => 'You must set up your settlement account before creating collections.']);
-        }
+        $hasSettlementAccount = ! empty($user->profile?->paystack_subaccount_code);
 
         $residents = User::query()
             ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
@@ -119,6 +115,7 @@ class CollectionController extends Controller
         return Inertia::render('Resident/PropertyOwner/Collections/Create', [
             'residents' => $residents,
             'properties' => $properties,
+            'hasSettlementAccount' => $hasSettlementAccount,
         ]);
     }
 
@@ -131,9 +128,7 @@ class CollectionController extends Controller
         $user = auth()->user();
 
         if (empty($user->profile?->paystack_subaccount_code)) {
-            return redirect()
-                ->route('resident.property-owner.settlement.index')
-                ->withErrors(['message' => 'You must set up your settlement account before creating collections.']);
+            return back()->withErrors(['message' => 'You must set up your settlement account before creating collections.']);
         }
 
         $validated = $request->validate([

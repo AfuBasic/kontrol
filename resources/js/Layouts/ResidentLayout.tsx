@@ -421,7 +421,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Residents', href: '/resident/property-owner/residents', icon: Users },
         { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
         { name: 'Manage Dues', href: '/resident/property-owner/collections', icon: Wallet },
-        { name: 'Settlement Account', href: '/resident/property-owner/settlement', icon: Landmark },
         { name: 'My Dues', href: '/resident/dues', icon: Wallet },
         { name: 'Manage Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
         { name: 'My Announcements', href: '/resident/estate-board', icon: Megaphone },

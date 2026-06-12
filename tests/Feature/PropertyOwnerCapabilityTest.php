@@ -631,14 +631,18 @@ test('property owner cannot create collections without configuring settlement ac
 
     $this->actingAs($owner);
 
-    // 1. Trying to view collection create page redirects to settlement
+    // 1. Trying to view collection create page is successful but passes hasSettlementAccount = false
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->get(route('resident.property-owner.collections.create'));
-    $response->assertRedirect(route('resident.property-owner.settlement.index'));
-    $response->assertSessionHasErrors(['message']);
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/PropertyOwner/Collections/Create')
+        ->where('hasSettlementAccount', false)
+    );
 
-    // 2. Trying to store a collection redirects to settlement
+    // 2. Trying to store a collection redirects back with error
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->from(route('resident.property-owner.collections.create'))
         ->post(route('resident.property-owner.collections.store'), [
             'name' => 'July Rent',
             'amount' => 150000,
@@ -646,7 +650,7 @@ test('property owner cannot create collections without configuring settlement ac
             'due_at' => now()->addDays(5)->toDateString(),
             'applies_to' => 'all',
         ]);
-    $response->assertRedirect(route('resident.property-owner.settlement.index'));
+    $response->assertRedirect(route('resident.property-owner.collections.create'));
     $response->assertSessionHasErrors(['message']);
 });
 

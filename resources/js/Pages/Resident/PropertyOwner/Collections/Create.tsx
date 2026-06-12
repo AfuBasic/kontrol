@@ -12,10 +12,11 @@ import {
     CreditCardIcon,
     UserGroupIcon
 } from '@heroicons/react/24/outline';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
+import { index as settlementIndex } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/SettlementController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
 interface TargetItem {
@@ -27,9 +28,10 @@ interface TargetItem {
 interface Props {
     residents: Array<{ id: number; name: string }>;
     properties: Array<{ id: number; name: string }>;
+    hasSettlementAccount: boolean;
 }
 
-export default function Create({ residents, properties }: Props) {
+export default function Create({ residents, properties, hasSettlementAccount }: Props) {
     const [step, setStep] = useState(1);
     const [search, setSearch] = useState('');
     const [selectedTargets, setSelectedTargets] = useState<TargetItem[]>([]);
@@ -837,6 +839,17 @@ export default function Create({ residents, properties }: Props) {
                 message="This means you'll also have to pay the bill. Do you agree?"
                 confirmLabel="Yes, Agree"
                 cancelLabel="Cancel"
+                type="info"
+            />
+
+            <ConfirmationModal
+                isOpen={!hasSettlementAccount}
+                onClose={() => router.visit(index.url())}
+                onConfirm={() => router.visit(settlementIndex.url())}
+                title="Settlement Account Required"
+                message="Setup your settlement account before creating a collection. This ensures that payments collected from your residents are correctly remitted to your bank account."
+                confirmLabel="Setup Settlement Account"
+                cancelLabel="Go Back"
                 type="info"
             />
         </div>

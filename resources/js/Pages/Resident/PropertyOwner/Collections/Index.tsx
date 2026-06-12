@@ -1,4 +1,4 @@
-import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
@@ -63,20 +63,29 @@ export default function Index({ collections, totalUnfiltered, filters }: Props) 
 
     return (
         <div className="space-y-6 pb-24">
-            <Head title="Rent & Fees Collections" />
+            <Head title="Collections" />
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Rent & Fees</h1>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Collections</h1>
                     <p className="mt-1 text-sm text-slate-500">Create and track rent, utility, and generator fee collections.</p>
                 </div>
-                <Link
-                    href={create.url()}
-                    className="shadow-indigo-650/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98"
-                >
-                    <PlusIcon className="h-5 w-5" />
-                    New Collection
-                </Link>
+                <div className="inline-flex rounded-xl shadow-lg shadow-indigo-600/10">
+                    <Link
+                        href={create.url()}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-l-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-indigo-700 active:scale-98 whitespace-nowrap"
+                    >
+                        <PlusIcon className="h-5 w-5" />
+                        New Collection
+                    </Link>
+                    <Link
+                        href="/resident/property-owner/settlement"
+                        title="Settlement Account Settings"
+                        className="inline-flex items-center justify-center rounded-r-xl border-l border-indigo-500/50 bg-indigo-600 px-3.5 py-2.5 text-white transition-all hover:bg-indigo-700 active:scale-98"
+                    >
+                        <CreditCardIcon className="h-5 w-5 text-white/90" />
+                    </Link>
+                </div>
             </div>
 
             {/* Conditional Filters bar: Only show if records > 1 or filters are active */}
