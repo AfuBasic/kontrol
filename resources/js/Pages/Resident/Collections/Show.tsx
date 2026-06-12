@@ -136,8 +136,8 @@ export default function CollectionShow({ assignment }: Props) {
                             </span>
                         )}
 
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900">{assignment.collection.name}</h1>
-                        <p className="mt-2 max-w-[250px] font-medium text-slate-500">
+                        <h1 className="text-xl font-black tracking-tight text-slate-900">{assignment.collection.name}</h1>
+                        <p className="mt-2 max-w-[280px] text-xs font-medium text-slate-500">
                             {assignment.collection.description ||
                                 (assignment.billing_source === 'property_owner'
                                     ? 'Levy/charge issued by your Property Owner.'
@@ -146,18 +146,18 @@ export default function CollectionShow({ assignment }: Props) {
 
                         <div className="mt-8 flex w-full flex-col gap-4 rounded-3xl bg-slate-50 p-6">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">Amount Due</span>
-                                <span className="text-xl font-black text-slate-900">{formatCurrency(assignment.amount_due)}</span>
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount Due</span>
+                                <span className="text-base font-black text-slate-900">{formatCurrency(assignment.amount_due)}</span>
                             </div>
                             {assignment.amount_paid > 0 && (
                                 <div className="flex items-center justify-between border-t border-slate-200 pt-4">
-                                    <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">Paid Already</span>
+                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Paid Already</span>
                                     <span className="text-sm font-black text-emerald-600">-{formatCurrency(assignment.amount_paid)}</span>
                                 </div>
                             )}
                             <div className="flex items-center justify-between border-t border-slate-200 pt-4">
-                                <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">Balance</span>
-                                <span className="text-2xl font-black text-[#1F6FDB]">
+                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Balance</span>
+                                <span className="text-lg font-black text-[#1F6FDB]">
                                     {formatCurrency(assignment.amount_due - assignment.amount_paid)}
                                 </span>
                             </div>
