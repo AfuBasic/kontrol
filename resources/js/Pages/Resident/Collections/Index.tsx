@@ -246,84 +246,86 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
             )}
 
             {/* Outstanding Section */}
-            <section>
-                <div className="mb-4 flex items-center justify-between px-2">
-                    <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
-                    {showPayAllButton && (
-                        <button
-                            onClick={handlePayAll}
-                            className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95 cursor-pointer hover:bg-indigo-100"
-                        >
-                            Pay All ({payAllCount})
-                        </button>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {filteredOutstanding.length > 0 ? (
-                        filteredOutstanding.map((assignment) => (
-                            <MotionLink
-                                key={assignment.id}
-                                href={show.url(assignment.ulid)}
-                                layoutId={`collection-card-${assignment.ulid}`}
-                                className="group flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
+            {(filteredOutstanding.length > 0 || paid.data.length === 0) && (
+                <section>
+                    <div className="mb-4 flex items-center justify-between px-2">
+                        <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Outstanding Dues</h3>
+                        {showPayAllButton && (
+                            <button
+                                onClick={handlePayAll}
+                                className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95 cursor-pointer hover:bg-indigo-100"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div
-                                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-                                            assignment.status === 'overdue' ? 'bg-error-50 text-error-500' : 'bg-warning-50 text-warning-500'
-                                        }`}
-                                    >
-                                        {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
-                                        <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                                            Due{' '}
-                                            {new Date(assignment.due_date).toLocaleDateString(undefined, {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                            })}
-                                        </p>
-                                        <div className="mt-1.5 flex">
-                                            {assignment.billing_source === 'property_owner' ? (
-                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
-                                                    Property Owner
-                                                </span>
-                                            ) : (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50 whitespace-nowrap">
-                                                    Estate
-                                                </span>
-                                            )}
+                                Pay All ({payAllCount})
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {filteredOutstanding.length > 0 ? (
+                            filteredOutstanding.map((assignment) => (
+                                <MotionLink
+                                    key={assignment.id}
+                                    href={show.url(assignment.ulid)}
+                                    layoutId={`collection-card-${assignment.ulid}`}
+                                    className="group flex items-center justify-between rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                                                assignment.status === 'overdue' ? 'bg-error-50 text-error-500' : 'bg-warning-50 text-warning-500'
+                                            }`}
+                                        >
+                                            {assignment.status === 'overdue' ? <AlertCircle className="h-7 w-7" /> : <Clock className="h-7 w-7" />}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black tracking-tight text-slate-900">{assignment.collection.name}</h4>
+                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                                                Due{' '}
+                                                {new Date(assignment.due_date).toLocaleDateString(undefined, {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric',
+                                                })}
+                                            </p>
+                                            <div className="mt-1.5 flex">
+                                                {assignment.billing_source === 'property_owner' ? (
+                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
+                                                        Property Owner
+                                                    </span>
+                                                ) : (
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50 whitespace-nowrap">
+                                                        Estate
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-black tracking-tight text-slate-900">
-                                        {formatCurrency(assignment.amount_due - assignment.amount_paid)}
+                                    <div className="text-right">
+                                        <div className="font-black tracking-tight text-slate-900">
+                                            {formatCurrency(assignment.amount_due - assignment.amount_paid)}
+                                        </div>
+                                        <div className="mt-1 flex justify-end">
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${getStatusStyles(assignment.status)}`}
+                                            >
+                                                {assignment.status}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="mt-1 flex justify-end">
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${getStatusStyles(assignment.status)}`}
-                                        >
-                                            {assignment.status}
-                                        </span>
-                                    </div>
+                                </MotionLink>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
+                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-success-500 shadow-sm">
+                                    <CheckCircle2 className="h-8 w-8" />
                                 </div>
-                            </MotionLink>
-                        ))
-                    ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-success-500 shadow-sm">
-                                <CheckCircle2 className="h-8 w-8" />
+                                <p className="text-sm font-bold text-slate-900">All caught up!</p>
+                                <p className="mt-1 text-xs text-slate-500">You have no outstanding dues.</p>
                             </div>
-                            <p className="text-sm font-bold text-slate-900">All caught up!</p>
-                            <p className="mt-1 text-xs text-slate-500">You have no outstanding dues.</p>
-                        </div>
-                    )}
-                </div>
-            </section>
+                        )}
+                    </div>
+                </section>
+            )}
 
             {/* Recently Paid Section */}
             <section>
