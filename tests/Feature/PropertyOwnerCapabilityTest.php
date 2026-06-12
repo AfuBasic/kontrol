@@ -534,13 +534,14 @@ test('resident can distinguish between estate and property owner notices and col
     // 6. Act: Access Notice Feed as Resident
     $this->actingAs($resident);
 
-    // All Notices
+    // Default Notices (defaults to estate)
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->get(route('resident.estate-board.index'));
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('Resident/EstateBoard/Index')
-        ->has('posts.data', 2)
+        ->has('posts.data', 1)
+        ->where('posts.data.0.title', 'Estate Notice Title')
     );
 
     // Filter by Estate Notices

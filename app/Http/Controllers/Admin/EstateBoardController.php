@@ -132,6 +132,10 @@ class EstateBoardController extends Controller
     {
         $this->authorize('delete', $post);
 
+        if ($post->comments()->exists()) {
+            return back()->withErrors(['message' => 'Post cannot be deleted because it has comments.']);
+        }
+
         $estate = $this->estateContext->getEstate();
         $action->execute($post, $estate);
 

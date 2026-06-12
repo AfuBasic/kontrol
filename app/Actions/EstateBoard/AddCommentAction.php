@@ -5,6 +5,7 @@ namespace App\Actions\EstateBoard;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
+use App\Notifications\EstateBoard\NewCommentNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -30,6 +31,11 @@ class AddCommentAction
                 'body' => $data['body'],
                 'parent_id' => $data['parent_id'] ?? null,
             ]);
+
+            // Notify post author if they are not the commenter
+            if ($post->user_id !== $user->id && $post->author) {
+                $post->author->notify(new NewCommentNotification($comment));
+            }
 
             return $comment->load('author:id,name,email');
         });

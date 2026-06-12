@@ -91,6 +91,10 @@ class EstateBoardPostPolicy
      */
     public function delete(User $user, EstateBoardPost $post): bool
     {
+        if ($post->comments()->exists()) {
+            return false;
+        }
+
         setPermissionsTeamId($post->estate_id);
 
         return $post->user_id === $user->id

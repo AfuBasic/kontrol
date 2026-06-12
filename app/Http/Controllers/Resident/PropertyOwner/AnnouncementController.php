@@ -245,6 +245,10 @@ class AnnouncementController extends Controller
         $user = auth()->user();
         abort_if($announcement->property_owner_id !== $user->id, 403);
 
+        if ($announcement->comments()->exists()) {
+            return back()->withErrors(['message' => 'Announcement cannot be deleted because it has comments.']);
+        }
+
         $announcement->delete();
 
         return redirect()
