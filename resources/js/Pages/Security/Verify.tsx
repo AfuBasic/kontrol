@@ -1,4 +1,5 @@
 import { Head, usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
 import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff } from 'lucide-react';
@@ -6,7 +7,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 import { offlineDb, sha256 } from '@/Utils/offlineDb';
-import axios from 'axios';
 
 const CODE_LENGTH = 6;
 

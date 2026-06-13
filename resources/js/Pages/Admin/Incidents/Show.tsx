@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
+import AdminLayout from '@/Layouts/AdminLayout';
 import type { Incident, IncidentComment, IncidentStatus, PaginatedData, SharedData } from '@/types';
 
 type Props = {

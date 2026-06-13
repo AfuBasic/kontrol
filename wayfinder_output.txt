@@ -1,5 +1,0 @@
-
-[32m [Wayfinder] Generated actions in /Library/WebServer/Documents/projects/kontrol/resources/js/actions[39m
-
-[32m [Wayfinder] Generated routes in /Library/WebServer/Documents/projects/kontrol/resources/js/routes[39m
-

@@ -1,6 +1,7 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { clsx, type ClassValue } from 'clsx';
+import { motion, animate, useMotionValue } from 'framer-motion';
 import { 
     Wallet, 
     Users, 
@@ -19,12 +20,11 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { motion, animate, useMotionValue } from 'framer-motion';
 import { index, create, show, edit, publish } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import BankingSetupModal from '@/Components/BankingSetupModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import AdminLayout from '@/Layouts/AdminLayout';
 import { useDebounce } from '@/Hooks/useDebounce';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));

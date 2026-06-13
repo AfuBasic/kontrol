@@ -29,11 +29,11 @@ import BillingController from '@/actions/App/Http/Controllers/Admin/BillingContr
 import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
 import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';

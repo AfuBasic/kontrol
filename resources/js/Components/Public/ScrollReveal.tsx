@@ -1,4 +1,5 @@
-import { motion, Variants } from 'framer-motion';
+import type { Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import React from 'react';
 
 type Variant = 'fade' | 'slide-up' | 'slide-down' | 'slide-left' | 'slide-right' | 'scale' | 'scale-up';

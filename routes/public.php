@@ -8,6 +8,11 @@
 
 use App\Http\Controllers\Web\LandingController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing.home');
-Route::get('/autologin', [LandingController::class, 'autologin'])->name('autologin');
+Route::get('/support', fn () => Inertia::render('Public/Support'))->name('public.support');
+Route::get('/apply', fn () => Inertia::render('Public/Apply'))->name('public.apply');
+
+Route::get('/privacy', fn () => Inertia::render('Public/Privacy'))->name('public.privacy');
+Route::get('/terms', fn () => Inertia::render('Public/Terms'))->name('public.terms');

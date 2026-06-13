@@ -1,9 +1,9 @@
 import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
+import { motion, animate, useMotionValue } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
 import { useDebounce } from '@/Hooks/useDebounce';
-import { motion, animate, useMotionValue } from 'framer-motion';
 
 function AnimatedNumber({ value }: { value: number }) {
     const motionValue = useMotionValue(0);

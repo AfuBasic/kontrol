@@ -1,13 +1,13 @@
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { Head, Link, usePage, InfiniteScroll, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Wallet, Clock, CheckCircle2, AlertCircle, Search, X, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
-import type { SharedData } from '@/types';
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 import MobileSheet from '@/Components/MobileSheet';
 import { useDebounce } from '@/Hooks/useDebounce';
+import type { SharedData } from '@/types';
 
 const MotionLink = motion(Link);
 
