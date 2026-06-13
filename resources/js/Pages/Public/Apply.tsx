@@ -275,54 +275,68 @@ export default function Apply() {
                                                     <label className="mb-4 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
                                                         Select Subscription Plan
                                                     </label>
-                                                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-4">
                                                     {plans?.map((plan) => {
                                                         const isSelected = data.plan_id === String(plan.id);
                                                         const isAnnual = plan.billing_interval?.toLowerCase() === 'year' || plan.billing_interval?.toLowerCase() === 'annual' || plan.name?.toLowerCase().includes('annual');
 
                                                         return (
-                                                        <label
-                                                            key={plan.id}
-                                                            className={`relative flex flex-col cursor-pointer rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 ${
-                                                                isSelected
-                                                                    ? 'border-blue-600 bg-blue-50/50 shadow-md shadow-blue-500/10 dark:bg-blue-900/20 dark:border-blue-500'
-                                                                    : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700'
-                                                            }`}
-                                                        >
-                                                            {isAnnual && (
-                                                                <span className="absolute -top-3 left-1/2 w-max -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-0.5 text-xs font-bold tracking-wide text-white shadow-sm">
-                                                                    BEST VALUE
-                                                                </span>
-                                                            )}
-                                                            <input
-                                                                type="radio"
-                                                                name="plan_id"
-                                                                value={plan.id}
-                                                                className="sr-only"
-                                                                onChange={(e) => setData('plan_id', e.target.value)}
-                                                            />
-                                                            <div className="flex items-center justify-between mb-4">
-                                                                <span className={`text-base font-bold ${isSelected ? 'text-blue-700 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
-                                                                    {plan.name}
-                                                                </span>
-                                                                <div className={`flex h-6 w-6 items-center justify-center rounded-full border ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-300 dark:border-slate-600'}`}>
-                                                                    <div className={`h-2 w-2 rounded-full bg-white ${isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-50'} transition-all duration-200`} />
+                                                            <label
+                                                                key={plan.id}
+                                                                className={`relative group flex cursor-pointer flex-col rounded-[2rem] p-6 transition-all duration-300 ${
+                                                                    isSelected
+                                                                        ? 'bg-blue-600 text-white shadow-2xl shadow-blue-600/30 ring-2 ring-blue-600 ring-offset-2 ring-offset-slate-50 scale-105 z-10 dark:ring-offset-slate-900'
+                                                                        : 'bg-white text-slate-900 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 hover:scale-105 hover:shadow-2xl dark:bg-slate-800 dark:text-white dark:shadow-none dark:ring-slate-700'
+                                                                }`}
+                                                            >
+                                                                {/* Background glow for selected state */}
+                                                                {isSelected && (
+                                                                    <div className="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-blue-400 to-blue-600 opacity-50 blur-xl transition-opacity duration-300"></div>
+                                                                )}
+                                                                
+                                                                {isAnnual && (
+                                                                    <div className={`absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1 text-xs font-extrabold uppercase tracking-widest shadow-md transition-colors duration-300 ${
+                                                                        isSelected ? 'bg-white text-blue-600' : 'bg-slate-900 text-white dark:bg-blue-500 dark:text-white'
+                                                                    }`}>
+                                                                        Best Value
+                                                                    </div>
+                                                                )}
+                                                                
+                                                                <input
+                                                                    type="radio"
+                                                                    name="plan_id"
+                                                                    value={plan.id}
+                                                                    className="sr-only"
+                                                                    onChange={(e) => setData('plan_id', e.target.value)}
+                                                                />
+                                                                
+                                                                <div className="flex items-center justify-between mb-8">
+                                                                    <h3 className={`text-xl font-bold transition-colors duration-300 ${isSelected ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                                                                        {plan.name}
+                                                                    </h3>
+                                                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 ${
+                                                                        isSelected 
+                                                                            ? 'bg-white text-blue-600 scale-110 shadow-lg' 
+                                                                            : 'bg-slate-50 text-transparent border border-slate-200 dark:bg-slate-900 dark:border-slate-700'
+                                                                    }`}>
+                                                                        <CheckCircle2 className={`h-5 w-5 ${isSelected ? 'fill-current' : ''}`} />
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            
-                                                            <div className="mt-auto">
-                                                                <div className="flex items-baseline gap-1">
-                                                                    <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                                                                        {plan.formatted_price}
+
+                                                                <div className="mt-auto pt-4 border-t transition-colors duration-300 border-white/10 dark:border-slate-700">
+                                                                    <div className="flex items-end gap-1 mb-1">
+                                                                        <span className="text-3xl font-black tracking-tight">
+                                                                            {plan.formatted_price}
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className={`text-sm font-medium transition-colors duration-300 ${isSelected ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                                        Per resident / {plan.billing_interval}
                                                                     </span>
                                                                 </div>
-                                                                <span className="mt-1 block text-sm font-medium text-slate-500 dark:text-slate-400">
-                                                                    Per resident / {plan.billing_interval}
-                                                                </span>
-                                                            </div>
-                                                        </label>
-                                                    )})}
-                                                    </div>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
                                                     {errors.plan_id && <p className="mt-2 text-sm text-red-500">{errors.plan_id}</p>}
                                                 </div>
                                             </motion.div>
