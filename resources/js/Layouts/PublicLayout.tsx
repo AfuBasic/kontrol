@@ -259,12 +259,12 @@ export default function PublicLayout({ children }: Props) {
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
-                            <a
-                                href="mailto:support@usekontrol.com"
+                            <Link
+                                href="/support"
                                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                             >
-                                support@usekontrol.com
-                            </a>
+                                Support
+                            </Link>
                             <Link
                                 href="/privacy"
                                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
