@@ -438,35 +438,14 @@ export default function Home() {
             </section>
 
             {/* BIG CTA FOOTER */}
-            <section id="download" className="relative overflow-hidden bg-slate-950 py-40 sm:py-56 shadow-[inset_0_32px_64px_-16px_rgba(0,0,0,0.4)]">
-                {/* Advanced Layering & Texture (3D Scene effect) */}
-                <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
-                    {/* Mesh Gradients */}
-                    <div className="absolute top-0 right-0 h-[80%] w-[50%] animate-pulse rounded-full bg-indigo-600/20 blur-[120px]" />
-                    <div className="absolute bottom-0 left-0 h-[70%] w-[50%] rounded-full bg-blue-500/20 blur-[100px]" />
-                    <div className="absolute top-1/2 left-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[100px]" />
-
-                    {/* Grain Texture Overlay */}
-                    <div
-                        className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
-                        style={{
-                            backgroundImage:
-                                "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
-                        }}
-                    />
-
-                    {/* Subtle Grid / Pattern */}
-                    <div
-                        className="absolute inset-0 opacity-[0.05]"
-                        style={{
-                            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-                            backgroundSize: '32px 32px',
-                        }}
-                    />
-
-                    {/* Glass Glow */}
-                    <div className="absolute top-0 right-0 left-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
-                </div>
+            <section id="download" className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
+                {/* Simple Dotted Pattern Background */}
+                <div 
+                    className="absolute inset-0 opacity-[0.05]" 
+                    style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '32px 32px' }} 
+                />
+                {/* Glow Effect */}
+                <div className="absolute inset-0 z-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]" />
 
                 <div className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8">
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>
