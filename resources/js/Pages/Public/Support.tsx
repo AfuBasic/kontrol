@@ -1,9 +1,9 @@
 import { Head, usePage } from '@inertiajs/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Mail, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Mail, CheckCircle2 } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef } from 'react';
+import { type FormEventHandler, useRef } from 'react';
 
 export default function Support() {
     const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm({
