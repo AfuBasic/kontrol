@@ -28,9 +28,37 @@ class LandingController extends Controller
             'message' => 'required|string|min:10|max:5000',
         ]);
 
-        // Here you would normally send an email or save to DB.
-        // Mail::to('support@usekontrol.com')->send(new SupportRequest($validated));
+        \Illuminate\Support\Facades\Mail::to('support@usekontrol.com')
+            ->send(new \App\Mail\SupportRequestMail($validated));
 
         return back()->with('success', 'Thanks for reaching out! We will get back to you soon.');
+    }
+
+    /**
+     * Handle the application form submission.
+     */
+    public function apply(Request $request)
+    {
+        $validated = $request->validate([
+            'estateName' => 'required|string|max:255',
+            'estateLocation' => 'required|string|max:255',
+            'contactName' => 'required|string|max:255',
+            'contactEmail' => 'required|email|max:255',
+            'contactPhone' => 'nullable|string|max:20',
+        ]);
+
+        $application = \App\Models\EstateApplication::create([
+            'estate_name' => $validated['estateName'],
+            'address' => $validated['estateLocation'],
+            'email' => $validated['contactEmail'],
+            'phone' => $validated['contactPhone'] ?? '',
+            'notes' => 'Contact Name: ' . $validated['contactName'],
+            'status' => 'pending',
+        ]);
+
+        \Illuminate\Support\Facades\Mail::to('afutunde@gmail.com')
+            ->send(new \App\Mail\EstateApplicationMail($application));
+
+        return back()->with('success', 'Application received successfully!');
     }
 }
