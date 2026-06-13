@@ -195,7 +195,7 @@ export default function Home() {
             </section>
 
             {/* PREMIUM FEATURE SHOWCASE */}
-            <section className="overflow-hidden bg-slate-50 py-32 sm:py-48 dark:bg-slate-950">
+            <section id="features" className="overflow-hidden bg-slate-50 py-32 sm:py-48 dark:bg-slate-950">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="space-y-48">
                         {/* Feature 1 */}
@@ -453,7 +453,7 @@ export default function Home() {
                             href="/apply"
                             className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-12 py-6 text-2xl font-bold text-slate-900 shadow-[0_0_50px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-slate-50"
                         >
-                            Apply for your estate
+                            Upgrade Your Estate
                             <ChevronRight className="h-8 w-8" />
                         </Link>
                     </div>
