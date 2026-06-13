@@ -88,33 +88,30 @@ export default function Apply() {
             {/* Parallax Hero Section */}
             <section ref={heroRef} className="relative flex min-h-[40vh] items-center justify-center overflow-hidden bg-slate-950 pt-24 pb-16">
                 <div className="absolute inset-0 z-0">
-                    <motion.div style={{ y: yBg }} className="absolute -inset-y-16 inset-x-0">
-                        <img 
-                            src="/assets/images/premium-estate-hero.png" 
-                            alt="Estate Application" 
-                            className="h-full w-full object-cover opacity-50 mix-blend-overlay" 
+                    <motion.div style={{ y: yBg }} className="absolute inset-x-0 -inset-y-16">
+                        <img
+                            src="/assets/images/premium-estate-hero.png"
+                            alt="Estate Application"
+                            className="h-full w-full object-cover opacity-50 mix-blend-overlay"
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-950" />
                     </motion.div>
                 </div>
 
-                <motion.div 
-                    style={{ opacity: opacityHero }}
-                    className="relative z-10 mx-auto max-w-3xl px-6 text-center lg:px-8"
-                >
-                    <motion.h1 
+                <motion.div style={{ opacity: opacityHero }} className="relative z-10 mx-auto max-w-3xl px-6 text-center lg:px-8">
+                    <motion.h1
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl drop-shadow-md"
+                        className="text-5xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-6xl"
                     >
                         Join Kontrol
                     </motion.h1>
-                    <motion.p 
+                    <motion.p
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-6 text-xl leading-8 text-slate-300 drop-shadow-sm font-medium"
+                        className="mt-6 text-xl leading-8 font-medium text-slate-300 drop-shadow-sm"
                     >
                         Start your free trial and experience modern estate management.
                     </motion.p>
@@ -122,20 +119,20 @@ export default function Apply() {
             </section>
 
             {/* Application Content Section */}
-            <div className="bg-slate-50 py-24 dark:bg-slate-950 min-h-[60vh]">
+            <div className="min-h-[60vh] bg-slate-50 py-24 dark:bg-slate-950">
                 <div className="mx-auto max-w-3xl px-6 lg:px-8">
                     {!flash?.success ? (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="rounded-3xl bg-white p-8 shadow-2xl shadow-slate-200/50 ring-1 ring-slate-100 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800 sm:p-12"
+                            className="rounded-3xl bg-white p-8 shadow-2xl ring-1 shadow-slate-200/50 ring-slate-100 sm:p-12 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800"
                         >
                             {/* Progress Indicator */}
-                            <div className="mb-12 flex items-center justify-between relative">
-                                <div className="absolute left-0 top-1/2 -z-10 h-1 w-full -translate-y-1/2 bg-slate-100 dark:bg-slate-800">
+                            <div className="relative mb-12 flex items-center justify-between">
+                                <div className="absolute top-1/2 left-0 -z-10 h-1 w-full -translate-y-1/2 bg-slate-100 dark:bg-slate-800">
                                     <motion.div
-                                        className="h-full bg-blue-600 rounded-full"
+                                        className="h-full rounded-full bg-blue-600"
                                         initial={{ width: '0%' }}
                                         animate={{ width: `${((step - 1) / 2) * 100}%` }}
                                         transition={{ duration: 0.3 }}
@@ -165,39 +162,45 @@ export default function Apply() {
                                             exit={{ opacity: 0, x: -20 }}
                                             className="space-y-6"
                                         >
-                                            <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4 dark:border-slate-800">
+                                            <div className="mb-8 flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30">
                                                     <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Estate Details</h3>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-2">Estate Name</label>
+                                                <label className="mb-2 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Estate Name
+                                                </label>
                                                 <input
                                                     type="text"
                                                     name="estateName"
                                                     value={data.estateName}
-                                                    onChange={e => setData('estateName', e.target.value)}
-                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.estateName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset dark:bg-slate-800 dark:text-white dark:ring-slate-700 sm:text-sm sm:leading-6`}
+                                                    onChange={(e) => setData('estateName', e.target.value)}
+                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.estateName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-white dark:ring-slate-700`}
                                                     placeholder="E.g., Aethewood Estate"
                                                 />
                                                 {errors.estateName && <p className="mt-2 text-sm text-red-500">{errors.estateName}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-2">Location / City</label>
+                                                <label className="mb-2 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Location / City
+                                                </label>
                                                 <input
                                                     type="text"
                                                     name="estateLocation"
                                                     value={data.estateLocation}
-                                                    onChange={e => setData('estateLocation', e.target.value)}
-                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.estateLocation ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset dark:bg-slate-800 dark:text-white dark:ring-slate-700 sm:text-sm sm:leading-6`}
+                                                    onChange={(e) => setData('estateLocation', e.target.value)}
+                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.estateLocation ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-white dark:ring-slate-700`}
                                                     placeholder="E.g., Lagos, Nigeria"
                                                 />
                                                 {errors.estateLocation && <p className="mt-2 text-sm text-red-500">{errors.estateLocation}</p>}
                                             </div>
-                                            
+
                                             <div className="pt-4">
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-4">Select Subscription Plan</label>
+                                                <label className="mb-4 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Select Subscription Plan
+                                                </label>
                                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                                     {plans?.map((plan) => (
                                                         <label
@@ -246,44 +249,50 @@ export default function Apply() {
                                             exit={{ opacity: 0, x: -20 }}
                                             className="space-y-6"
                                         >
-                                            <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4 dark:border-slate-800">
+                                            <div className="mb-8 flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30">
                                                     <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Contact Information</h3>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-2">Full Name</label>
+                                                <label className="mb-2 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Full Name
+                                                </label>
                                                 <input
                                                     type="text"
                                                     name="contactName"
                                                     value={data.contactName}
-                                                    onChange={e => setData('contactName', e.target.value)}
-                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.contactName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset dark:bg-slate-800 dark:text-white dark:ring-slate-700 sm:text-sm sm:leading-6`}
+                                                    onChange={(e) => setData('contactName', e.target.value)}
+                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.contactName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-white dark:ring-slate-700`}
                                                     placeholder="Your Name"
                                                 />
                                                 {errors.contactName && <p className="mt-2 text-sm text-red-500">{errors.contactName}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-2">Email Address</label>
+                                                <label className="mb-2 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Email Address
+                                                </label>
                                                 <input
                                                     type="email"
                                                     name="contactEmail"
                                                     value={data.contactEmail}
-                                                    onChange={e => setData('contactEmail', e.target.value)}
-                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.contactEmail ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset dark:bg-slate-800 dark:text-white dark:ring-slate-700 sm:text-sm sm:leading-6`}
+                                                    onChange={(e) => setData('contactEmail', e.target.value)}
+                                                    className={`block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.contactEmail ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-white dark:ring-slate-700`}
                                                     placeholder="you@example.com"
                                                 />
                                                 {errors.contactEmail && <p className="mt-2 text-sm text-red-500">{errors.contactEmail}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-2">Phone Number <span className="text-slate-400 font-normal">(Optional)</span></label>
+                                                <label className="mb-2 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
+                                                    Phone Number <span className="font-normal text-slate-400">(Optional)</span>
+                                                </label>
                                                 <input
                                                     type="tel"
                                                     name="contactPhone"
                                                     value={data.contactPhone}
-                                                    onChange={e => setData('contactPhone', e.target.value)}
-                                                    className="block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:bg-slate-800 dark:text-white dark:ring-slate-700 sm:text-sm sm:leading-6"
+                                                    onChange={(e) => setData('contactPhone', e.target.value)}
+                                                    className="block w-full rounded-xl border-0 px-4 py-3.5 text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset focus:ring-2 focus:ring-blue-600 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-white dark:ring-slate-700"
                                                     placeholder="+234..."
                                                 />
                                             </div>
@@ -298,7 +307,7 @@ export default function Apply() {
                                             exit={{ opacity: 0, x: -20 }}
                                             className="space-y-6"
                                         >
-                                            <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4 dark:border-slate-800">
+                                            <div className="mb-8 flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30">
                                                     <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                                 </div>
@@ -307,37 +316,40 @@ export default function Apply() {
                                             <div className="rounded-2xl bg-slate-50 p-8 ring-1 ring-slate-100 dark:bg-slate-800/50 dark:ring-slate-800">
                                                 <dl className="space-y-6 text-base text-slate-600 dark:text-slate-300">
                                                     <div>
-                                                        <dt className="font-medium text-slate-500 dark:text-slate-400 text-sm mb-1">Estate Name</dt>
+                                                        <dt className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">Estate Name</dt>
                                                         <dd className="font-semibold text-slate-900 dark:text-white">{data.estateName}</dd>
                                                     </div>
                                                     <div>
-                                                        <dt className="font-medium text-slate-500 dark:text-slate-400 text-sm mb-1">Location</dt>
+                                                        <dt className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">Location</dt>
                                                         <dd className="font-semibold text-slate-900 dark:text-white">{data.estateLocation}</dd>
                                                     </div>
                                                     <div>
-                                                        <dt className="font-medium text-slate-500 dark:text-slate-400 text-sm mb-1">Contact Details</dt>
+                                                        <dt className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                            Contact Details
+                                                        </dt>
                                                         <dd className="font-semibold text-slate-900 dark:text-white">{data.contactName}</dd>
-                                                        <dd className="text-sm mt-0.5">{data.contactEmail}</dd>
-                                                        {data.contactPhone && <dd className="text-sm mt-0.5">{data.contactPhone}</dd>}
+                                                        <dd className="mt-0.5 text-sm">{data.contactEmail}</dd>
+                                                        {data.contactPhone && <dd className="mt-0.5 text-sm">{data.contactPhone}</dd>}
                                                     </div>
                                                 </dl>
                                             </div>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center px-4">
-                                                By submitting this application, our team will review your details and reach out within 24 hours to help you start your trial.
+                                            <p className="px-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                                                By submitting this application, our team will review your details and reach out within 24 hours to
+                                                help you start your trial.
                                             </p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
 
-                                <div className="mt-10 flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <div className="mt-10 flex items-center justify-between border-t border-slate-100 pt-6 dark:border-slate-800">
                                     <button
                                         type="button"
                                         onClick={prevStep}
-                                        className={`text-base font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors ${step === 1 ? 'invisible' : ''}`}
+                                        className={`text-base font-semibold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white ${step === 1 ? 'invisible' : ''}`}
                                     >
                                         Back
                                     </button>
-                                    
+
                                     {step < 3 ? (
                                         <button
                                             key="continue-btn"
@@ -346,7 +358,7 @@ export default function Apply() {
                                                 e.preventDefault();
                                                 nextStep();
                                             }}
-                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:shadow-blue-600/40 transition-all"
+                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 hover:shadow-blue-600/40"
                                         >
                                             Continue <ArrowRight className="h-5 w-5" />
                                         </button>
@@ -355,7 +367,7 @@ export default function Apply() {
                                             key="submit-btn"
                                             type="submit"
                                             disabled={processing}
-                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:shadow-blue-600/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 hover:shadow-blue-600/40 disabled:cursor-not-allowed disabled:opacity-70"
                                         >
                                             {processing ? 'Submitting...' : 'Submit Application'}
                                         </button>
@@ -367,16 +379,15 @@ export default function Apply() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="rounded-3xl bg-white p-12 text-center shadow-2xl shadow-slate-200/50 ring-1 ring-slate-100 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800 max-w-2xl mx-auto"
+                            className="mx-auto max-w-2xl rounded-3xl bg-white p-12 text-center shadow-2xl ring-1 shadow-slate-200/50 ring-slate-100 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800"
                         >
-                            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50 mb-8">
+                            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
                                 <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
                             </div>
-                            <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-                                Application Received!
-                            </h2>
-                            <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-400 mb-10">
-                                Thank you for choosing Kontrol. Our team is reviewing your application and will be in touch with you shortly at <strong className="text-slate-900 dark:text-white">{data.contactEmail}</strong> to help you set up your trial.
+                            <h2 className="mb-6 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Application Received!</h2>
+                            <p className="mb-10 text-xl leading-relaxed text-slate-600 dark:text-slate-400">
+                                Thank you for choosing Kontrol. Our team is reviewing your application and will be in touch with you shortly at{' '}
+                                <strong className="text-slate-900 dark:text-white">{data.contactEmail}</strong> to help you set up your trial.
                             </p>
                             <a
                                 href="/"
