@@ -340,14 +340,19 @@ export default function Apply() {
                                     
                                     {step < 3 ? (
                                         <button
+                                            key="continue-btn"
                                             type="button"
-                                            onClick={nextStep}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                nextStep();
+                                            }}
                                             className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:shadow-blue-600/40 transition-all"
                                         >
                                             Continue <ArrowRight className="h-5 w-5" />
                                         </button>
                                     ) : (
                                         <button
+                                            key="submit-btn"
                                             type="submit"
                                             disabled={processing}
                                             className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:shadow-blue-600/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
