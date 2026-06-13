@@ -66,7 +66,7 @@ export default function PublicLayout({ children }: Props) {
                             Home
                         </Link>
                         <a
-                            href="#features"
+                            href="/#features"
                             onClick={(e) => {
                                 if (window.location.pathname === '/') {
                                     e.preventDefault();
@@ -78,7 +78,7 @@ export default function PublicLayout({ children }: Props) {
                             Features
                         </a>
                         <a
-                            href="#pricing"
+                            href="/#pricing"
                             onClick={(e) => {
                                 if (window.location.pathname === '/') {
                                     e.preventDefault();
