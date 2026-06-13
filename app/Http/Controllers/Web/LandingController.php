@@ -50,6 +50,7 @@ class LandingController extends Controller
             'contactName' => 'required|string|max:255',
             'contactEmail' => 'required|email|max:255',
             'contactPhone' => 'nullable|string|max:20',
+            'plan_id' => 'required|exists:plans,id',
         ]);
 
         $application = EstateApplication::create([
@@ -58,6 +59,7 @@ class LandingController extends Controller
             'email' => $validated['contactEmail'],
             'phone' => $validated['contactPhone'] ?? '',
             'notes' => 'Contact Name: '.$validated['contactName'],
+            'plan_id' => $validated['plan_id'],
             'status' => 'pending',
         ]);
 

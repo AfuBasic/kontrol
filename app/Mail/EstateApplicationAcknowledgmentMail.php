@@ -2,9 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\EstateApplication;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -19,7 +17,7 @@ class EstateApplicationAcknowledgmentMail extends Mailable implements ShouldQueu
     /**
      * Create a new message instance.
      */
-    public function __construct(public EstateApplication $application)
+    public function __construct()
     {
         //
     }
@@ -30,7 +28,7 @@ class EstateApplicationAcknowledgmentMail extends Mailable implements ShouldQueu
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Application Received - Kontrol',
+            subject: 'Estate Application Acknowledgment Mail',
         );
     }
 
@@ -40,10 +38,7 @@ class EstateApplicationAcknowledgmentMail extends Mailable implements ShouldQueu
     public function content(): Content
     {
         return new Content(
-            view: 'mail.estate-application-acknowledgment',
-            with: [
-                'application' => $this->application,
-            ],
+            markdown: 'mail.estate-application-acknowledgment',
         );
     }
 

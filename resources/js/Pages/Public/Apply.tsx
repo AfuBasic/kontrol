@@ -14,7 +14,10 @@ export default function Apply() {
         contactName: '',
         contactEmail: '',
         contactPhone: '',
+        plan_id: '',
     });
+
+    const { plans } = usePage().props as unknown as { plans: any[] };
 
     const { flash } = usePage().props as unknown as { flash: { success?: string } };
 
@@ -40,6 +43,10 @@ export default function Apply() {
                 setError('estateLocation', 'Estate Location is required');
                 hasErrors = true;
             }
+            if (!data.plan_id) {
+                setError('plan_id', 'Please select a subscription plan');
+                hasErrors = true;
+            }
         }
 
         if (step === 2) {
@@ -63,6 +70,10 @@ export default function Apply() {
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
+        if (step < 3) {
+            nextStep();
+            return;
+        }
         post('/apply', {
             preserveScroll: true,
         });
@@ -183,6 +194,46 @@ export default function Apply() {
                                                     placeholder="E.g., Lagos, Nigeria"
                                                 />
                                                 {errors.estateLocation && <p className="mt-2 text-sm text-red-500">{errors.estateLocation}</p>}
+                                            </div>
+                                            
+                                            <div className="pt-4">
+                                                <label className="block text-sm font-semibold leading-6 text-slate-900 dark:text-slate-300 mb-4">Select Subscription Plan</label>
+                                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                    {plans?.map((plan) => (
+                                                        <label
+                                                            key={plan.id}
+                                                            className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none ${
+                                                                data.plan_id === String(plan.id)
+                                                                    ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600 dark:bg-blue-900/20'
+                                                                    : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="plan_id"
+                                                                value={plan.id}
+                                                                className="sr-only"
+                                                                onChange={(e) => setData('plan_id', e.target.value)}
+                                                            />
+                                                            <div className="flex flex-1">
+                                                                <div className="flex flex-col">
+                                                                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                                                                        {plan.name}
+                                                                    </span>
+                                                                    <span className="mt-1 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                                                        {plan.formatted_price} / {plan.billing_interval}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <CheckCircle2
+                                                                className={`h-5 w-5 ${
+                                                                    data.plan_id === String(plan.id) ? 'text-blue-600' : 'invisible'
+                                                                }`}
+                                                            />
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                {errors.plan_id && <p className="mt-2 text-sm text-red-500">{errors.plan_id}</p>}
                                             </div>
                                         </motion.div>
                                     )}
