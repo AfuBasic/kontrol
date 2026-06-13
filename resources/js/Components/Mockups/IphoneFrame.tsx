@@ -9,47 +9,42 @@ export default function IphoneFrame({ src, alt, className = '' }: Props) {
         <div className={`relative mx-auto w-[280px] shrink-0 sm:w-[320px] ${className}`}>
             {/* The iPhone frame body */}
             <div className="relative z-10 aspect-[1170/2532] overflow-hidden rounded-[3rem] border-[8px] border-slate-900 bg-slate-900 shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-800 dark:bg-slate-800 dark:shadow-blue-900/20 dark:ring-white/10">
-                {/* Dynamic Island / Notch area with Status Bar */}
+                {/* Dynamic Island with Status Bar */}
                 <div className="absolute inset-x-0 top-0 z-20 h-14 w-full">
-                    <div className="flex h-12 w-full items-center justify-between px-6">
-                        <span className="text-[12px] font-semibold text-slate-900 dark:text-white">9:41</span>
-                        <div className="flex items-center gap-1.5 text-slate-900 dark:text-white">
-                            <svg
-                                className="h-3.5 w-3.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-                                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-                                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                                <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                    {/* Dynamic Island */}
+                    <div className="absolute top-3 left-1/2 h-[30px] w-[95px] -translate-x-1/2 rounded-full bg-black"></div>
+                    
+                    <div className="flex h-[44px] w-full items-center justify-between px-7 pt-1">
+                        {/* Time */}
+                        <span className="text-[13px] font-semibold tracking-wide text-white drop-shadow-sm">18:23</span>
+                        
+                        {/* Right Icons */}
+                        <div className="flex items-center gap-1.5 text-white">
+                            {/* Cellular Signal (4 dots) */}
+                            <div className="flex gap-[2px] items-end pb-[1px]">
+                                <div className="h-1.5 w-1.5 rounded-full bg-white opacity-40"></div>
+                                <div className="h-1.5 w-1.5 rounded-full bg-white opacity-40"></div>
+                                <div className="h-1.5 w-1.5 rounded-full bg-white opacity-40"></div>
+                                <div className="h-1.5 w-1.5 rounded-full bg-white opacity-40"></div>
+                            </div>
+                            
+                            {/* Wi-Fi */}
+                            <svg className="h-[14px] w-[16px] -mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 21C10.6 21 9.4 20 8.8 18.7L1.2 7.3C.4 6.1 1.2 4.4 2.6 4.2C8.6 3.4 15.4 3.4 21.4 4.2C22.8 4.4 23.6 6.1 22.8 7.3L15.2 18.7C14.6 20 13.4 21 12 21Z" fill="currentColor"/>
                             </svg>
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M2 12h2v8H2v-8zm4-3h2v11H6V9zm4-4h2v15h-2V5zm4-4h2v19h-2V1z"></path>
-                            </svg>
-                            <svg
-                                className="h-4 w-4"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <rect x="1" y="6" width="18" height="12" rx="2" ry="2"></rect>
-                                <line x1="23" y1="13" x2="23" y2="11"></line>
+                            
+                            {/* Battery */}
+                            <svg className="h-[12px] w-[25px]" viewBox="0 0 24 11" fill="none">
+                                <rect x="0.5" y="0.5" width="20" height="10" rx="3.5" stroke="currentColor" strokeWidth="1"/>
+                                <rect x="2" y="2" width="17" height="7" rx="2" fill="currentColor"/>
+                                <path d="M22 4C22.5523 4 23 4.44772 23 5V6C23 6.55228 22.5523 7 22 7V4Z" fill="currentColor"/>
                             </svg>
                         </div>
                     </div>
-                    <div className="absolute top-0 left-1/2 h-7 w-[120px] -translate-x-1/2 rounded-b-3xl bg-slate-900 dark:bg-slate-800"></div>
                 </div>
 
                 {/* The Mobile Screenshot */}
-                <div className="pt-14 h-full w-full bg-white dark:bg-slate-900">
+                <div className="pt-0 h-full w-full bg-white dark:bg-slate-900">
                     <img
                         src={src}
                         alt={alt}
