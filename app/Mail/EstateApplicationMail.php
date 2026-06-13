@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\EstateApplication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -9,8 +10,6 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-
-use App\Models\EstateApplication;
 
 class EstateApplicationMail extends Mailable implements ShouldQueue
 {
@@ -30,7 +29,7 @@ class EstateApplicationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Estate Application: ' . $this->application->estate_name,
+            subject: 'New Estate Application: '.$this->application->estate_name,
         );
     }
 

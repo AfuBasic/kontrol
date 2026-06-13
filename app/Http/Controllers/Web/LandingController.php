@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Support\Facades\Mail;
+use App\Mail\EstateApplicationMail;
 use App\Mail\SupportRequestMail;
 use App\Models\EstateApplication;
-use App\Mail\EstateApplicationMail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LandingController extends Controller
 {
@@ -56,7 +56,7 @@ class LandingController extends Controller
             'address' => $validated['estateLocation'],
             'email' => $validated['contactEmail'],
             'phone' => $validated['contactPhone'] ?? '',
-            'notes' => 'Contact Name: ' . $validated['contactName'],
+            'notes' => 'Contact Name: '.$validated['contactName'],
             'status' => 'pending',
         ]);
 

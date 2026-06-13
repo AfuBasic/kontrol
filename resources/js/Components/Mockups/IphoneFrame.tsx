@@ -44,7 +44,7 @@ export default function IphoneFrame({ src, alt, className = '' }: Props) {
                 </div>
 
                 {/* The Mobile Screenshot */}
-                <div className="pt-0 h-full w-full bg-white dark:bg-slate-900">
+                <div className="pt-14 h-full w-full bg-white dark:bg-slate-900">
                     <img
                         src={src}
                         alt={alt}
