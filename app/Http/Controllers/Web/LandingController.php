@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EstateApplicationAcknowledgmentMail;
 use App\Mail\EstateApplicationMail;
 use App\Mail\SupportRequestMail;
 use App\Models\EstateApplication;
@@ -62,6 +63,9 @@ class LandingController extends Controller
 
         Mail::to('afutunde@gmail.com')
             ->send(new EstateApplicationMail($application));
+
+        Mail::to($validated['contactEmail'])
+            ->send(new EstateApplicationAcknowledgmentMail($application));
 
         return back()->with('success', 'Application received successfully!');
     }
