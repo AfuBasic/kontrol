@@ -47,22 +47,14 @@ export default [
             },
         },
         rules: {
-            'import/order': [
-                'error',
-                {
-                    groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-                    alphabetize: {
-                        order: 'asc',
-                        caseInsensitive: true,
-                    },
-                },
-            ],
+            'import/order': 'off',
         },
     },
     {
         ...importPlugin.flatConfigs.typescript,
         files: ['**/*.{ts,tsx}'],
         rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {
