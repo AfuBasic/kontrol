@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Building, User, ArrowRight, ShieldCheck, Clock } from 'lucide-react';
+import { CheckCircle2, Building, User, Users, ArrowRight, ShieldCheck, Clock } from 'lucide-react';
 import { useState, useRef, type FormEventHandler } from 'react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { useForm } from '@inertiajs/react';
@@ -144,8 +144,8 @@ export default function Apply() {
 
                         <div className="gsap-hero-stagger-item mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-slate-300">
                             <div className="flex items-center gap-2">
-                                <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                                Bank-level Security
+                                <Users className="h-5 w-5 text-emerald-400" />
+                                Unlimited Residents
                             </div>
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -160,7 +160,40 @@ export default function Apply() {
                 </section>
 
                 {/* Application Content Section */}
-                <div className="min-h-[60vh] bg-slate-50 py-24 dark:bg-slate-950">
+                <div className="min-h-[60vh] bg-slate-50 pb-24 pt-16 dark:bg-slate-950">
+                    {/* 3 Steps Flow */}
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8 mb-24">
+                        <div className="mx-auto max-w-2xl text-center">
+                            <h2 className="gsap-fade-up text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">Three steps to a smarter estate</h2>
+                            <p className="gsap-fade-up mt-4 text-lg leading-8 text-slate-600 dark:text-slate-400">
+                                We've made the transition as seamless as possible. No downtime, no complex onboarding.
+                            </p>
+                        </div>
+                        <div className="gsap-stagger-section mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:max-w-none lg:grid-cols-3">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">1</span>
+                                </div>
+                                <h3 className="mb-2 text-xl font-bold text-slate-900 dark:text-white">Submit Details</h3>
+                                <p className="text-slate-600 dark:text-slate-400">Tell us a bit about your estate and choose a plan that fits your community size.</p>
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                                    <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">2</span>
+                                </div>
+                                <h3 className="mb-2 text-xl font-bold text-slate-900 dark:text-white">Rapid Verification</h3>
+                                <p className="text-slate-600 dark:text-slate-400">Our team verifies your estate within 24 hours to ensure a secure, trusted network.</p>
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                    <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">3</span>
+                                </div>
+                                <h3 className="mb-2 text-xl font-bold text-slate-900 dark:text-white">Go Live</h3>
+                                <p className="text-slate-600 dark:text-slate-400">Invite residents, arm your security gates, and experience total control.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mx-auto max-w-3xl px-6 lg:px-8">
                         {!flash?.success ? (
                             <motion.div
@@ -242,40 +275,53 @@ export default function Apply() {
                                                     <label className="mb-4 block text-sm leading-6 font-semibold text-slate-900 dark:text-slate-300">
                                                         Select Subscription Plan
                                                     </label>
-                                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                                        {plans?.map((plan) => (
-                                                            <label
-                                                                key={plan.id}
-                                                                className={`relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none ${
-                                                                    data.plan_id === String(plan.id)
-                                                                        ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600 dark:bg-blue-900/20'
-                                                                        : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'
-                                                                }`}
-                                                            >
-                                                                <input
-                                                                    type="radio"
-                                                                    name="plan_id"
-                                                                    value={plan.id}
-                                                                    className="sr-only"
-                                                                    onChange={(e) => setData('plan_id', e.target.value)}
-                                                                />
-                                                                <div className="flex flex-1">
-                                                                    <div className="flex flex-col">
-                                                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">
-                                                                            {plan.name}
-                                                                        </span>
-                                                                        <span className="mt-1 flex items-center text-sm text-slate-500 dark:text-slate-400">
-                                                                            {plan.formatted_price} / {plan.billing_interval}
-                                                                        </span>
-                                                                    </div>
+                                                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                                    {plans?.map((plan) => {
+                                                        const isSelected = data.plan_id === String(plan.id);
+                                                        const isAnnual = plan.billing_interval?.toLowerCase() === 'year' || plan.billing_interval?.toLowerCase() === 'annual' || plan.name?.toLowerCase().includes('annual');
+
+                                                        return (
+                                                        <label
+                                                            key={plan.id}
+                                                            className={`relative flex flex-col cursor-pointer rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 ${
+                                                                isSelected
+                                                                    ? 'border-blue-600 bg-blue-50/50 shadow-md shadow-blue-500/10 dark:bg-blue-900/20 dark:border-blue-500'
+                                                                    : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700'
+                                                            }`}
+                                                        >
+                                                            {isAnnual && (
+                                                                <span className="absolute -top-3 left-1/2 w-max -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-0.5 text-xs font-bold tracking-wide text-white shadow-sm">
+                                                                    BEST VALUE
+                                                                </span>
+                                                            )}
+                                                            <input
+                                                                type="radio"
+                                                                name="plan_id"
+                                                                value={plan.id}
+                                                                className="sr-only"
+                                                                onChange={(e) => setData('plan_id', e.target.value)}
+                                                            />
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <span className={`text-base font-bold ${isSelected ? 'text-blue-700 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
+                                                                    {plan.name}
+                                                                </span>
+                                                                <div className={`flex h-6 w-6 items-center justify-center rounded-full border ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-300 dark:border-slate-600'}`}>
+                                                                    <div className={`h-2 w-2 rounded-full bg-white ${isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-50'} transition-all duration-200`} />
                                                                 </div>
-                                                                <CheckCircle2
-                                                                    className={`h-5 w-5 ${
-                                                                        data.plan_id === String(plan.id) ? 'text-blue-600' : 'invisible'
-                                                                    }`}
-                                                                />
-                                                            </label>
-                                                        ))}
+                                                            </div>
+                                                            
+                                                            <div className="mt-auto">
+                                                                <div className="flex items-baseline gap-1">
+                                                                    <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                                                                        {plan.formatted_price}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="mt-1 block text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                                    Per resident / {plan.billing_interval}
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    )})}
                                                     </div>
                                                     {errors.plan_id && <p className="mt-2 text-sm text-red-500">{errors.plan_id}</p>}
                                                 </div>
