@@ -12,6 +12,7 @@ use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing.home');
 Route::get('/support', fn () => Inertia::render('Public/Support'))->name('public.support');
+Route::post('/support', [LandingController::class, 'support'])->name('public.support.post');
 Route::get('/apply', fn () => Inertia::render('Public/Apply'))->name('public.apply');
 
 Route::get('/privacy', fn () => Inertia::render('Public/Privacy'))->name('public.privacy');
