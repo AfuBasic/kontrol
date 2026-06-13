@@ -1,10 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, ChevronRight, Apple, Play } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import DesktopFrame from '@/Components/Mockups/DesktopFrame';
 import IphoneFrame from '@/Components/Mockups/IphoneFrame';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { useRef } from 'react';
 
 const fadeUp = {
@@ -439,7 +438,7 @@ export default function Home() {
             </section>
 
             {/* BIG CTA FOOTER */}
-            <section className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
+            <section id="download" className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
                 <div className="absolute inset-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]"></div>
                 <div className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8">
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>
@@ -454,6 +453,22 @@ export default function Home() {
                             Upgrade Your Estate
                             <ChevronRight className="h-8 w-8" />
                         </Link>
+                    </div>
+                    <div className="mt-16 flex flex-col items-center justify-center gap-6 sm:flex-row">
+                        <a href="#" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
+                           <Apple className="h-8 w-8" /> 
+                           <div className="text-left">
+                               <p className="text-xs font-medium text-slate-400">Download on the</p>
+                               <p className="text-xl font-bold">App Store</p>
+                           </div>
+                        </a>
+                        <a href="#" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
+                           <Play className="h-8 w-8 text-green-400" /> 
+                           <div className="text-left">
+                               <p className="text-xs font-medium text-slate-400">GET IT ON</p>
+                               <p className="text-xl font-bold">Google Play</p>
+                           </div>
+                        </a>
                     </div>
                 </div>
             </section>

@@ -89,6 +89,18 @@ export default function PublicLayout({ children }: Props) {
                         >
                             Pricing
                         </a>
+                        <a
+                            href="/#download"
+                            onClick={(e) => {
+                                if (window.location.pathname === '/') {
+                                    e.preventDefault();
+                                    document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                        >
+                            Download App
+                        </a>
                         <Link
                             href="/support"
                             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
@@ -184,6 +196,19 @@ export default function PublicLayout({ children }: Props) {
                                 className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             >
                                 Pricing
+                            </a>
+                            <a
+                                href="/#download"
+                                onClick={(e) => {
+                                    handleNavClick();
+                                    if (window.location.pathname === '/') {
+                                        e.preventDefault();
+                                        document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                Download App
                             </a>
                             <Link
                                 href="/support"
