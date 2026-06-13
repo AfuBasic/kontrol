@@ -51,28 +51,19 @@ export default function QuickActions() {
     });
 
     return (
-        <div
-            className={`grid gap-3 ${
-                visibleActions.length === 2 ? 'grid-cols-2' : visibleActions.length === 3 ? 'grid-cols-3' : 'grid-cols-1'
-            }`}
-        >
+        <div className={`grid gap-3 ${visibleActions.length === 2 ? 'grid-cols-2' : visibleActions.length === 3 ? 'grid-cols-3' : 'grid-cols-1'}`}>
             {visibleActions.map((action, index) => (
-                <motion.div
-                    key={action.name}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * index }}
-                >
+                <motion.div key={action.name} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * index }}>
                     <Link
                         href={action.href}
-                        className="group flex flex-col items-center justify-center text-center p-4 bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.015)] border border-slate-200/50 transition-all hover:shadow-[0_8px_25px_rgba(0,0,0,0.03)] hover:border-slate-300 active:scale-95 min-h-[110px]"
+                        className="group flex min-h-[110px] flex-col items-center justify-center rounded-[24px] border border-slate-200/50 bg-white p-4 text-center shadow-[0_4px_20px_rgba(0,0,0,0.015)] transition-all hover:border-slate-300 hover:shadow-[0_8px_25px_rgba(0,0,0,0.03)] active:scale-95"
                     >
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2.5 transition-transform duration-300 group-hover:scale-105 ${action.bg} ${action.color}`}>
+                        <div
+                            className={`mb-2.5 flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 ${action.bg} ${action.color}`}
+                        >
                             <action.icon className="h-6 w-6" strokeWidth={2.4} />
                         </div>
-                        <span className="text-xs font-black text-slate-800 leading-tight truncate w-full">
-                            {action.name}
-                        </span>
+                        <span className="w-full truncate text-xs leading-tight font-black text-slate-800">{action.name}</span>
                     </Link>
                 </motion.div>
             ))}

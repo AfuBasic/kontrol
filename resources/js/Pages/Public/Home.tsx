@@ -6,9 +6,16 @@ import DesktopFrame from '@/Components/Mockups/DesktopFrame';
 import IphoneFrame from '@/Components/Mockups/IphoneFrame';
 import { useRef } from 'react';
 
-const fadeUp = {
+import { Variants } from 'framer-motion';
+
+const fadeUp: Variants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+};
+
+const sectionFadeUp: Variants = {
+    hidden: { opacity: 0, y: 60 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
 const staggerContainer = {
@@ -135,10 +142,10 @@ export default function Home() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mx-auto max-w-4xl text-center">
                         <motion.h2
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-100px' }}
-                            transition={{ duration: 0.6 }}
+                            variants={sectionFadeUp}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.1 }}
                             className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white"
                         >
                             Stop running your estate on spreadsheets and phone calls.
@@ -149,7 +156,7 @@ export default function Home() {
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{ once: true, margin: '-100px' }}
+                        viewport={{ once: true, amount: 0.1 }}
                         className="mx-auto mt-24 grid max-w-lg grid-cols-1 gap-12 sm:max-w-none sm:grid-cols-3"
                     >
                         {[
@@ -187,10 +194,10 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            variants={fadeUp}
+                            variants={sectionFadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true, margin: '-100px' }}
+                            viewport={{ once: true, amount: 0.1 }}
                             className="flex flex-col gap-16 lg:flex-row lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pr-16">
@@ -237,10 +244,10 @@ export default function Home() {
                 <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/50">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            variants={fadeUp}
+                            variants={sectionFadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true, margin: '-100px' }}
+                            viewport={{ once: true, amount: 0.1 }}
                             className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pl-16">
@@ -287,10 +294,10 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            variants={fadeUp}
+                            variants={sectionFadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true, margin: '-100px' }}
+                            viewport={{ once: true, amount: 0.1 }}
                             className="flex flex-col gap-16 lg:flex-row lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pr-16">
@@ -339,16 +346,18 @@ export default function Home() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mx-auto mb-24 max-w-3xl text-center">
                         <motion.h2
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
+                            variants={sectionFadeUp}
+                            initial="hidden"
+                            whileInView="visible"
                             viewport={{ once: true }}
                             className="text-5xl font-extrabold tracking-tight text-slate-900 sm:text-7xl dark:text-white"
                         >
                             Simple, transparent pricing.
                         </motion.h2>
                         <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
+                            variants={sectionFadeUp}
+                            initial="hidden"
+                            whileInView="visible"
                             viewport={{ once: true }}
                             transition={{ delay: 0.1 }}
                             className="mt-8 text-2xl text-slate-600 dark:text-slate-400"
@@ -361,7 +370,7 @@ export default function Home() {
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{ once: true, margin: '-100px' }}
+                        viewport={{ once: true, amount: 0.1 }}
                         className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3 lg:gap-12"
                     >
                         {/* Quarterly */}
@@ -468,10 +477,10 @@ export default function Home() {
                 <div className="absolute inset-0 z-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]" />
 
                 <motion.div
-                    variants={fadeUp}
+                    variants={sectionFadeUp}
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, margin: '-100px' }}
+                    viewport={{ once: true, amount: 0.1 }}
                     className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8"
                 >
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>

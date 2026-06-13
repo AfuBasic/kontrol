@@ -51,7 +51,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
     const { auth, app_url: appUrl } = usePage<SharedData>().props;
     const hasLandlord = !!auth?.user?.profile?.property_owner_id;
     const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>(
-        (filters?.source_paid as 'all' | 'estate' | 'property_owner') || 'all'
+        (filters?.source_paid as 'all' | 'estate' | 'property_owner') || 'all',
     );
     const [searchPaid, setSearchPaid] = useState(filters?.search_paid || '');
     const [showChoiceModal, setShowChoiceModal] = useState(false);
@@ -65,7 +65,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                 search_paid: debouncedSearch,
                 source_paid: billFilter,
             },
-            { preserveState: true, preserveScroll: true, replace: true }
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     }, [debouncedSearch]);
 
@@ -77,7 +77,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                 search_paid: searchPaid,
                 source_paid: filter,
             },
-            { preserveState: true, preserveScroll: true, replace: true }
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     };
 
@@ -109,23 +109,29 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
         return item.billing_source === billFilter;
     });
 
-    const estateOutstanding = filteredOutstanding.filter(a => a.billing_source === 'estate');
-    const propertyOwnerOutstanding = filteredOutstanding.filter(a => a.billing_source === 'property_owner');
+    const estateOutstanding = filteredOutstanding.filter((a) => a.billing_source === 'estate');
+    const propertyOwnerOutstanding = filteredOutstanding.filter((a) => a.billing_source === 'property_owner');
 
     const estateTotal = estateOutstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
     const propertyOwnerTotal = propertyOwnerOutstanding.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
 
-    const showPayAllButton = billFilter === 'all'
-        ? (estateOutstanding.length > 1 || propertyOwnerOutstanding.length > 1)
-        : (billFilter === 'estate' ? estateOutstanding.length > 1 : propertyOwnerOutstanding.length > 1);
+    const showPayAllButton =
+        billFilter === 'all'
+            ? estateOutstanding.length > 1 || propertyOwnerOutstanding.length > 1
+            : billFilter === 'estate'
+              ? estateOutstanding.length > 1
+              : propertyOwnerOutstanding.length > 1;
 
-    const payAllCount = billFilter === 'all'
-        ? (
-            (estateOutstanding.length > 1 && propertyOwnerOutstanding.length > 1)
+    const payAllCount =
+        billFilter === 'all'
+            ? estateOutstanding.length > 1 && propertyOwnerOutstanding.length > 1
                 ? filteredOutstanding.length
-                : (estateOutstanding.length > 1 ? estateOutstanding.length : propertyOwnerOutstanding.length)
-          )
-        : (billFilter === 'estate' ? estateOutstanding.length : propertyOwnerOutstanding.length);
+                : estateOutstanding.length > 1
+                  ? estateOutstanding.length
+                  : propertyOwnerOutstanding.length
+            : billFilter === 'estate'
+              ? estateOutstanding.length
+              : propertyOwnerOutstanding.length;
 
     const handlePayAll = async () => {
         if (billFilter === 'estate') {
@@ -148,7 +154,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
 
     const handleSelectPaymentGroup = (group: 'estate' | 'property_owner') => {
         setShowChoiceModal(false);
-        const dues = filteredOutstanding.filter(a => a.billing_source === group);
+        const dues = filteredOutstanding.filter((a) => a.billing_source === group);
         redirectToCheckout(dues);
     };
 
@@ -253,7 +259,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                         {showPayAllButton && (
                             <button
                                 onClick={handlePayAll}
-                                className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all active:scale-95 cursor-pointer hover:bg-indigo-100"
+                                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all hover:bg-indigo-100 active:scale-95"
                             >
                                 Pay All ({payAllCount})
                             </button>
@@ -289,11 +295,11 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                                             </p>
                                             <div className="mt-1.5 flex">
                                                 {assignment.billing_source === 'property_owner' ? (
-                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
+                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
                                                         Property Owner
                                                     </span>
                                                 ) : (
-                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50 whitespace-nowrap">
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
                                                         Estate
                                                     </span>
                                                 )}
@@ -338,7 +344,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                             placeholder="Search paid dues..."
                             value={searchPaid}
                             onChange={(e) => setSearchPaid(e.target.value)}
-                            className="w-full rounded-full bg-slate-100 py-1.5 pr-10 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                            className="w-full rounded-full bg-slate-100 py-1.5 pr-10 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-hidden"
                         />
                         {searchPaid && (
                             <button
@@ -373,16 +379,14 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
-                                        <p className="text-xs font-semibold text-slate-500 capitalize">
-                                            {assignment.period || 'One-time'}
-                                        </p>
+                                        <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
                                         <div className="mt-1 flex">
                                             {assignment.billing_source === 'property_owner' ? (
-                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
+                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
                                                     Property Owner
                                                 </span>
                                             ) : (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-100/50 whitespace-nowrap">
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
                                                     Estate
                                                 </span>
                                             )}
@@ -409,11 +413,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                 )}
             </section>
 
-            <MobileSheet
-                isOpen={showChoiceModal}
-                onClose={() => setShowChoiceModal(false)}
-                title="Select Payment Group"
-            >
+            <MobileSheet isOpen={showChoiceModal} onClose={() => setShowChoiceModal(false)} title="Select Payment Group">
                 <div className="flex flex-col gap-5 py-2">
                     <p className="text-sm font-medium text-slate-500">
                         Estate and property owner dues use different settlement accounts and must be paid separately. Select which bills to pay:
@@ -423,11 +423,11 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                         {estateOutstanding.length > 0 && (
                             <button
                                 onClick={() => handleSelectPaymentGroup('estate')}
-                                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-98 cursor-pointer"
+                                className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:border-slate-300 hover:bg-slate-100 active:scale-98"
                             >
                                 <div className="text-left">
                                     <div className="text-sm font-black text-slate-900">Pay Estate Dues</div>
-                                    <div className="text-xs font-bold text-slate-400 mt-0.5">
+                                    <div className="mt-0.5 text-xs font-bold text-slate-400">
                                         {estateOutstanding.length} pending {estateOutstanding.length === 1 ? 'obligation' : 'obligations'}
                                     </div>
                                 </div>
@@ -440,12 +440,13 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                         {propertyOwnerOutstanding.length > 0 && (
                             <button
                                 onClick={() => handleSelectPaymentGroup('property_owner')}
-                                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-98 cursor-pointer"
+                                className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:border-slate-300 hover:bg-slate-100 active:scale-98"
                             >
                                 <div className="text-left">
                                     <div className="text-sm font-black text-slate-900">Pay Property Owner Dues</div>
-                                    <div className="text-xs font-bold text-slate-400 mt-0.5">
-                                        {propertyOwnerOutstanding.length} pending {propertyOwnerOutstanding.length === 1 ? 'obligation' : 'obligations'}
+                                    <div className="mt-0.5 text-xs font-bold text-slate-400">
+                                        {propertyOwnerOutstanding.length} pending{' '}
+                                        {propertyOwnerOutstanding.length === 1 ? 'obligation' : 'obligations'}
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -457,7 +458,7 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
 
                     <button
                         onClick={() => setShowChoiceModal(false)}
-                        className="w-full rounded-2xl bg-slate-100 py-3 text-center text-xs font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-200 active:scale-95 cursor-pointer"
+                        className="w-full cursor-pointer rounded-2xl bg-slate-100 py-3 text-center text-xs font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-200 active:scale-95"
                     >
                         Cancel
                     </button>

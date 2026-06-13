@@ -85,11 +85,9 @@ function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
                         <span className="h-1 w-1 rounded-full bg-slate-200" />
                         <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5 text-slate-400" />
-                            {code.status === 'used' && code.used_at ? (
-                                `Arrived ${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
-                            ) : (
-                                code.time_remaining
-                            )}
+                            {code.status === 'used' && code.used_at
+                                ? `Arrived ${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
+                                : code.time_remaining}
                         </span>
                     </div>
                 </div>

@@ -236,7 +236,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                     {incident.category.replace('_', ' ')}
                                 </span>
                                 {incident.is_private && (
-                                    <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-amber-700 uppercase flex items-center gap-1">
+                                    <span className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-[0.2em] text-amber-700 uppercase">
                                         <Lock className="h-3 w-3" />
                                         Private
                                     </span>
@@ -248,7 +248,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                         <h1 className="mb-3 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
 
                         {incident.location && (
-                            <div className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-1.5 w-fit">
+                            <div className="mb-4 flex w-fit items-center gap-1.5 rounded-xl border border-slate-200/50 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
                                 <MapPin className="h-3.5 w-3.5 text-indigo-500" />
                                 <span>{incident.location}</span>
                             </div>
@@ -418,7 +418,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                                     <div className="flex shrink-0 items-center gap-2">
                                                         <button
                                                             onClick={() => handleDeleteComment(comment.id)}
-                                                            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500 -mr-2 -mt-2"
+                                                            className="-mt-2 -mr-2 flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
                                                             title="Delete Comment"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
@@ -427,7 +427,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                                 </div>
                                                 <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{comment.body}</p>
                                                 <div className="mt-2 flex justify-end">
-                                                    <span className="text-[9px] tracking-wider text-slate-400 font-bold uppercase">
+                                                    <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                         {formatDistanceToNow(new Date(comment.created_at), {
                                                             addSuffix: true,
                                                         })}
@@ -459,7 +459,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                                             <div className="flex shrink-0 items-center gap-2">
                                                                 <button
                                                                     onClick={() => handleDeleteComment(reply.id)}
-                                                                    className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500 -mr-2 -mt-2"
+                                                                    className="-mt-2 -mr-2 flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50/30 hover:text-red-500"
                                                                     title="Delete Reply"
                                                                 >
                                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -468,7 +468,7 @@ export default function Show({ incident, comments, admins, statuses }: Props) {
                                                         </div>
                                                         <p className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">{reply.body}</p>
                                                         <div className="mt-2 flex justify-end">
-                                                            <span className="text-[9px] tracking-wider text-slate-400 font-bold uppercase">
+                                                            <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                                 {formatDistanceToNow(new Date(reply.created_at), {
                                                                     addSuffix: true,
                                                                 })}

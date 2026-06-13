@@ -10,7 +10,7 @@ import {
     ArrowRightIcon,
     ClockIcon,
     CreditCardIcon,
-    UserGroupIcon
+    UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -149,9 +149,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
 
     // Step navigations & validation
     const isStep1Valid = data.name.trim() !== '' && data.amount !== '' && Number(data.amount) > 0;
-    const isStep2Valid = data.billing_type === 'one_time' 
-        ? data.due_at !== '' 
-        : data.start_date !== '' && data.due_day >= 1 && data.due_day <= 28;
+    const isStep2Valid = data.billing_type === 'one_time' ? data.due_at !== '' : data.start_date !== '' && data.due_day >= 1 && data.due_day <= 28;
     const isStep3Valid = data.applies_to === 'all' || selectedTargets.length > 0;
 
     const nextStep = () => {
@@ -211,7 +209,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                             </div>
                             <span
                                 className={`hidden text-xs font-black tracking-wide sm:inline ${
-                                    isActive ? 'text-slate-900 font-bold' : 'text-slate-400'
+                                    isActive ? 'font-bold text-slate-900' : 'text-slate-400'
                                 }`}
                             >
                                 {s.label}
@@ -235,7 +233,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                         >
                             <div>
                                 <h3 className="text-sm font-black text-slate-900">Step 1: Bill details</h3>
-                                <p className="text-xs text-slate-500 mt-0.5">Specify basic details about the charges.</p>
+                                <p className="mt-0.5 text-xs text-slate-500">Specify basic details about the charges.</p>
                             </div>
 
                             {/* Name */}
@@ -319,49 +317,43 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                         >
                             <div>
                                 <h3 className="text-sm font-black text-slate-900">Step 2: Frequency & Schedule</h3>
-                                <p className="text-xs text-slate-500 mt-0.5">Define when and how often residents will be charged.</p>
+                                <p className="mt-0.5 text-xs text-slate-500">Define when and how often residents will be charged.</p>
                             </div>
 
                             {/* Billing Type Toggle */}
                             <div>
-                                <label className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
-                                    Billing Frequency
-                                </label>
+                                <label className="block text-xs font-bold tracking-wider text-slate-700 uppercase">Billing Frequency</label>
                                 <div className="mt-2 grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setData('billing_type', 'one_time')}
-                                        className={`flex flex-col items-start rounded-2xl p-4 text-left border-2 transition-all ${
+                                        className={`flex flex-col items-start rounded-2xl border-2 p-4 text-left transition-all ${
                                             data.billing_type === 'one_time'
                                                 ? 'border-indigo-600 bg-indigo-50/20'
                                                 : 'border-slate-200 bg-slate-50 hover:bg-white'
                                         }`}
                                     >
                                         <span className="text-sm font-bold text-slate-900">One-time Bill</span>
-                                        <span className="text-[10px] text-slate-400 mt-1">Single collection with a fixed due date</span>
+                                        <span className="mt-1 text-[10px] text-slate-400">Single collection with a fixed due date</span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setData('billing_type', 'recurring')}
-                                        className={`flex flex-col items-start rounded-2xl p-4 text-left border-2 transition-all ${
+                                        className={`flex flex-col items-start rounded-2xl border-2 p-4 text-left transition-all ${
                                             data.billing_type === 'recurring'
                                                 ? 'border-indigo-600 bg-indigo-50/20'
                                                 : 'border-slate-200 bg-slate-50 hover:bg-white'
                                         }`}
                                     >
                                         <span className="text-sm font-bold text-slate-900">Recurring Collection</span>
-                                        <span className="text-[10px] text-slate-400 mt-1">Automatically generates bills at intervals</span>
+                                        <span className="mt-1 text-[10px] text-slate-400">Automatically generates bills at intervals</span>
                                     </button>
                                 </div>
                             </div>
 
                             {/* One-Time Billing Fields */}
                             {data.billing_type === 'one_time' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-4"
-                                >
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                                     {/* Due Date */}
                                     <div className="min-w-0">
                                         <label htmlFor="due_at" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
@@ -374,7 +366,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                             min={getTomorrowDate()}
                                             value={data.due_at}
                                             onChange={(e) => setData('due_at', e.target.value)}
-                                            className="mt-2 block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                            className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                         />
                                         {/* Friendly Date Shortcuts */}
                                         <div className="mt-2 flex flex-wrap gap-2">
@@ -384,7 +376,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getTomorrowDate()
                                                         ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                 }`}
                                             >
                                                 Tomorrow
@@ -395,7 +387,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getNextWeekDate()
                                                         ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                 }`}
                                             >
                                                 Next Week
@@ -406,7 +398,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                                     data.due_at === getEndOfMonthDate()
                                                         ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                        : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                 }`}
                                             >
                                                 End of Month
@@ -419,11 +411,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
 
                             {/* Recurring Billing Fields */}
                             {data.billing_type === 'recurring' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-4"
-                                >
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         {/* Start Date */}
                                         <div className="min-w-0">
@@ -437,7 +425,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 min={getTodayDate()}
                                                 value={data.start_date}
                                                 onChange={(e) => setData('start_date', e.target.value)}
-                                                className="mt-2 block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                                className="mt-2 block w-full max-w-full min-w-0 appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                             />
                                             {/* Start Date Shortcuts */}
                                             <div className="mt-2 flex flex-wrap gap-2">
@@ -447,7 +435,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getTodayDate()
                                                             ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                     }`}
                                                 >
                                                     Today
@@ -458,7 +446,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getTomorrowDate()
                                                             ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                     }`}
                                                 >
                                                     Tomorrow
@@ -469,7 +457,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition-all ${
                                                         data.start_date === getFirstOfNextMonthDate()
                                                             ? 'bg-indigo-500 text-white ring-indigo-500'
-                                                            : 'bg-white text-slate-700 hover:bg-indigo-50/50 ring-slate-200'
+                                                            : 'bg-white text-slate-700 ring-slate-200 hover:bg-indigo-50/50'
                                                     }`}
                                                 >
                                                     1st of Next Month
@@ -480,7 +468,10 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
 
                                         {/* Billing Interval */}
                                         <div>
-                                            <label htmlFor="recurring_interval" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
+                                            <label
+                                                htmlFor="recurring_interval"
+                                                className="block text-xs font-bold tracking-wider text-slate-700 uppercase"
+                                            >
                                                 Billing Interval
                                             </label>
                                             <select
@@ -493,7 +484,9 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 <option value="monthly">Monthly</option>
                                                 <option value="yearly">Yearly</option>
                                             </select>
-                                            {errors.recurring_interval && <p className="mt-1 text-xs font-bold text-rose-600">{errors.recurring_interval}</p>}
+                                            {errors.recurring_interval && (
+                                                <p className="mt-1 text-xs font-bold text-rose-600">{errors.recurring_interval}</p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -591,7 +584,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                         >
                             <div>
                                 <h3 className="text-sm font-black text-slate-900">Step 3: Audience & Summary Review</h3>
-                                <p className="text-xs text-slate-500 mt-0.5">Select billing targets and confirm options before publishing.</p>
+                                <p className="mt-0.5 text-xs text-slate-500">Select billing targets and confirm options before publishing.</p>
                             </div>
 
                             {/* Target Audience */}
@@ -619,19 +612,21 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         id="include_creator"
                                         checked={data.include_creator}
                                         onChange={handleIncludeCreatorChange}
-                                        className="before:content-[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-indigo-600 checked:bg-indigo-600 focus:outline-none"
+                                        className="peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all before:content-[''] checked:border-indigo-600 checked:bg-indigo-600 focus:outline-none"
                                     />
                                     {data.include_creator && (
-                                        <span className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white">
+                                        <span className="pointer-events-none absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4 text-white">
                                             <CheckIcon className="h-3.5 w-3.5" strokeWidth={3} />
                                         </span>
                                     )}
                                 </label>
                                 <div>
-                                    <label htmlFor="include_creator" className="block text-xs font-bold text-slate-900 cursor-pointer">
+                                    <label htmlFor="include_creator" className="block cursor-pointer text-xs font-bold text-slate-900">
                                         Include me (Property Owner)
                                     </label>
-                                    <p className="text-[10px] font-medium text-slate-500 mt-0.5">Assign this bill to yourself as well as your residents.</p>
+                                    <p className="mt-0.5 text-[10px] font-medium text-slate-500">
+                                        Assign this bill to yourself as well as your residents.
+                                    </p>
                                 </div>
                             </div>
 
@@ -681,7 +676,9 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                                             <div
                                                                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'}`}
                                                                             >
-                                                                                {selected && <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />}
+                                                                                {selected && (
+                                                                                    <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />
+                                                                                )}
                                                                             </div>
                                                                             <UserIcon className="h-4 w-4 shrink-0 text-indigo-400" />
                                                                             <span className="text-sm font-semibold text-slate-800">{r.name}</span>
@@ -708,7 +705,9 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                                             <div
                                                                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${selected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300 bg-white'}`}
                                                                             >
-                                                                                {selected && <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />}
+                                                                                {selected && (
+                                                                                    <CheckIcon className="h-3 w-3 text-white" strokeWidth={3} />
+                                                                                )}
                                                                             </div>
                                                                             <BuildingOfficeIcon className="h-4 w-4 shrink-0 text-emerald-400" />
                                                                             <span className="text-sm font-semibold text-slate-800">{p.name}</span>
@@ -755,31 +754,31 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                             </AnimatePresence>
 
                             {/* Summary Review Card */}
-                            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5 mt-4">
+                            <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                                 <h4 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Billing Summary Review</h4>
                                 <div className="mt-3 grid grid-cols-2 gap-4 text-xs font-bold text-slate-800">
                                     <div>
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Bill Title</p>
-                                        <p className="mt-0.5 text-sm text-slate-900 font-black">{data.name}</p>
+                                        <p className="mt-0.5 text-sm font-black text-slate-900">{data.name}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Amount Due</p>
-                                        <p className="mt-0.5 text-sm text-indigo-600 font-black">₦{Number(data.amount).toLocaleString()}</p>
+                                        <p className="mt-0.5 text-sm font-black text-indigo-600">₦{Number(data.amount).toLocaleString()}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Billing Frequency</p>
-                                        <p className="mt-0.5 text-slate-900 font-black capitalize">{data.billing_type.replace('_', ' ')}</p>
+                                        <p className="mt-0.5 font-black text-slate-900 capitalize">{data.billing_type.replace('_', ' ')}</p>
                                     </div>
                                     <div>
                                         {data.billing_type === 'one_time' ? (
                                             <>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Due Date</p>
-                                                <p className="mt-0.5 text-slate-900 font-black">{data.due_at || '—'}</p>
+                                                <p className="mt-0.5 font-black text-slate-900">{data.due_at || '—'}</p>
                                             </>
                                         ) : (
                                             <>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Schedule</p>
-                                                <p className="mt-0.5 text-slate-900 font-black capitalize">
+                                                <p className="mt-0.5 font-black text-slate-900 capitalize">
                                                     {data.recurring_interval} (Starts {data.start_date || '—'}, Due Day {data.due_day})
                                                 </p>
                                             </>
@@ -789,17 +788,19 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         <>
                                             <div>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Grace Period</p>
-                                                <p className="mt-0.5 text-slate-900 font-black">{data.grace_days} Days</p>
+                                                <p className="mt-0.5 font-black text-slate-900">{data.grace_days} Days</p>
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Late Fee Override</p>
-                                                <p className="mt-0.5 text-slate-900 font-black">{data.late_fee ? `₦${Number(data.late_fee).toLocaleString()}` : 'None'}</p>
+                                                <p className="mt-0.5 font-black text-slate-900">
+                                                    {data.late_fee ? `₦${Number(data.late_fee).toLocaleString()}` : 'None'}
+                                                </p>
                                             </div>
                                         </>
                                     )}
                                     <div className="col-span-2">
                                         <p className="text-[10px] font-semibold text-slate-400 uppercase">Recipients Scope</p>
-                                        <p className="mt-0.5 text-slate-900 font-black">
+                                        <p className="mt-0.5 font-black text-slate-900">
                                             {data.applies_to === 'all'
                                                 ? `All Managed Residents${data.include_creator ? ' + Yourself' : ''}`
                                                 : `${selectedTargets.length} selected target(s)${data.include_creator ? ' + Yourself' : ''}`}
@@ -809,11 +810,13 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                             </div>
 
                             {/* Warnings/Reminders */}
-                            <div className="flex gap-2 items-start rounded-xl bg-amber-50/50 border border-amber-100 p-3.5 text-[11px] font-medium text-amber-800">
-                                <CheckCircleIcon className="h-4.5 w-4.5 shrink-0 text-amber-500 mt-0.5" />
+                            <div className="flex items-start gap-2 rounded-xl border border-amber-100 bg-amber-50/50 p-3.5 text-[11px] font-medium text-amber-800">
+                                <CheckCircleIcon className="mt-0.5 h-4.5 w-4.5 shrink-0 text-amber-500" />
                                 <div>
                                     <p className="font-bold text-amber-900">Please confirm all details.</p>
-                                    <p className="mt-0.5 text-amber-700/90">Billing invoices will be automatically generated and sent to target residents accordingly.</p>
+                                    <p className="mt-0.5 text-amber-700/90">
+                                        Billing invoices will be automatically generated and sent to target residents accordingly.
+                                    </p>
                                 </div>
                             </div>
 

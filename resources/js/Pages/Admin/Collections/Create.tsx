@@ -299,7 +299,7 @@ export default function CreateCollection({ residents }: Props) {
                                                                 <div className="flex items-center gap-2">
                                                                     <p className="text-sm font-black tracking-tight">{resident.name}</p>
                                                                     {resident.is_property_owner && (
-                                                                        <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
+                                                                        <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
                                                                             Property Owner
                                                                         </span>
                                                                     )}

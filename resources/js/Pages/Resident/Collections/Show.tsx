@@ -127,11 +127,11 @@ export default function CollectionShow({ assignment }: Props) {
                         </span>
 
                         {assignment.billing_source === 'property_owner' ? (
-                            <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50 whitespace-nowrap">
+                            <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-0.5 text-[9px] font-black tracking-widest whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
                                 Property Owner Bill
                             </span>
                         ) : (
-                            <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50 whitespace-nowrap">
+                            <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-0.5 text-[9px] font-black tracking-widest whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
                                 Estate Dues
                             </span>
                         )}

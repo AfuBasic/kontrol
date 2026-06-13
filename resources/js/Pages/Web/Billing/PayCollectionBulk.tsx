@@ -45,7 +45,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
     const firstAssignment = assignments[0];
-    const ulidsString = assignments.map(a => a.ulid).join(',');
+    const ulidsString = assignments.map((a) => a.ulid).join(',');
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -92,9 +92,8 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
             }
 
             // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
-            const cleanSubaccount = (subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord'))
-                ? subaccount
-                : undefined;
+            const cleanSubaccount =
+                subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
 
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
@@ -213,14 +212,17 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Selected Bills ({assignments.length})</span>
                     </div>
 
-                    <div className="max-h-48 overflow-y-auto mb-6 space-y-3 pr-2 scrollbar-thin">
+                    <div className="scrollbar-thin mb-6 max-h-48 space-y-3 overflow-y-auto pr-2">
                         {assignments.map((assignment) => (
-                            <div key={assignment.id} className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 border border-slate-100">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <FileText className="h-5 w-5 text-slate-400 shrink-0" />
-                                    <span className="text-sm font-bold text-slate-700 truncate">{assignment.collection.name}</span>
+                            <div
+                                key={assignment.id}
+                                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                            >
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <FileText className="h-5 w-5 shrink-0 text-slate-400" />
+                                    <span className="truncate text-sm font-bold text-slate-700">{assignment.collection.name}</span>
                                 </div>
-                                <span className="text-sm font-black text-slate-900 ml-4 shrink-0">
+                                <span className="ml-4 shrink-0 text-sm font-black text-slate-900">
                                     {formatCurrency(assignment.amount_due - assignment.amount_paid)}
                                 </span>
                             </div>
@@ -250,7 +252,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                             >
                                 {isProcessing ? (
                                     <Loader2 className="h-6 w-6 animate-spin" />
-                               ) : (
+                                ) : (
                                     <>
                                         Complete Payment
                                         <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />

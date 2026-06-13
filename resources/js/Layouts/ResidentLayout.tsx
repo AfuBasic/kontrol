@@ -4,7 +4,24 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, Shield, Landmark, LogOut, AlertCircle } from 'lucide-react';
+import {
+    Bell,
+    Home,
+    Users,
+    User,
+    Plus,
+    Wallet,
+    Megaphone,
+    Building,
+    ClipboardList,
+    UserCheck,
+    Menu,
+    X,
+    Shield,
+    Landmark,
+    LogOut,
+    AlertCircle,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -137,7 +154,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     onSuccess: () => {
                         setUnreadCount((prev) => Math.max(0, prev - 1));
                     },
-                }
+                },
             );
         }
     };
@@ -812,14 +829,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             whileTap={{ scale: 0.95 }}
                             className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-4 text-slate-900 shadow-2xl ring-1 ring-slate-100 backdrop-blur-xl transition-all"
                         >
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                toastType === 'error'
-                                    ? 'bg-rose-50 text-rose-600'
-                                    : (toastType === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')
-                            }`}>
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                                    toastType === 'error'
+                                        ? 'bg-rose-50 text-rose-600'
+                                        : toastType === 'success'
+                                          ? 'bg-emerald-50 text-emerald-600'
+                                          : 'bg-blue-50 text-blue-600'
+                                }`}
+                            >
                                 {toastType === 'error' ? <AlertCircle className="h-5.5 w-5.5" /> : <Bell className="h-5 w-5" />}
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm leading-tight font-bold">{toastMessage}</p>
                                 <p className="mt-0.5 text-[10px] font-medium text-slate-400">Tap to dismiss · Swipe to hide</p>
                             </div>

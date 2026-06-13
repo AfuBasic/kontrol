@@ -232,7 +232,7 @@ export default function SecurityVerify() {
                 { code, source },
                 {
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                     },
                 },
             );
@@ -476,7 +476,7 @@ export default function SecurityVerify() {
                 },
                 {
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                     },
                 },
             );

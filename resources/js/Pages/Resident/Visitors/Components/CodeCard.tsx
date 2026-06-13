@@ -90,8 +90,9 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                     <>
                                         <CheckCircle2 className="h-3 w-3 text-blue-500" />
                                         <span>
-                                            Arrived {code.used_at 
-                                                ? `${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} (${formatDistanceToNow(new Date(code.used_at), { addSuffix: true })})` 
+                                            Arrived{' '}
+                                            {code.used_at
+                                                ? `${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} (${formatDistanceToNow(new Date(code.used_at), { addSuffix: true })})`
                                                 : 'Recently'}
                                         </span>
                                     </>

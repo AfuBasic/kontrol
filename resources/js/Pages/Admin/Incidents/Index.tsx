@@ -135,14 +135,12 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
         <div className="space-y-6 pt-4">
             {/* Sort Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Sort By
-                </label>
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Sort By</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                     <button
                         type="button"
                         onClick={() => setSort('newest')}
-                        className={`rounded-xl py-3 text-sm font-bold transition-all ring-1 ${
+                        className={`rounded-xl py-3 text-sm font-bold ring-1 transition-all ${
                             sort === 'newest'
                                 ? 'bg-indigo-600 text-white ring-indigo-600'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
@@ -153,7 +151,7 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                     <button
                         type="button"
                         onClick={() => setSort('popular')}
-                        className={`rounded-xl py-3 text-sm font-bold transition-all ring-1 ${
+                        className={`rounded-xl py-3 text-sm font-bold ring-1 transition-all ${
                             sort === 'popular'
                                 ? 'bg-indigo-600 text-white ring-indigo-600'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
@@ -166,17 +164,13 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
 
             {/* Status Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Status
-                </label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Status</label>
+                <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1">
                     <button
                         type="button"
                         onClick={() => setStatus('')}
-                        className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 ${
-                            !status
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
-                                : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
+                        className={`rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
+                            !status ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
                         All Statuses
@@ -186,7 +180,7 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                             key={s.value}
                             type="button"
                             onClick={() => setStatus(s.value)}
-                            className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 truncate ${
+                            className={`truncate rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
                                 status === s.value
                                     ? 'bg-indigo-600 text-white ring-indigo-600'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
@@ -200,17 +194,13 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
 
             {/* Category Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Category
-                </label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Category</label>
+                <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1">
                     <button
                         type="button"
                         onClick={() => setCategory('')}
-                        className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 ${
-                            !category
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
-                                : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
+                        className={`rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
+                            !category ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
                         All Categories
@@ -220,7 +210,7 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                             key={c.value}
                             type="button"
                             onClick={() => setCategory(c.value)}
-                            className={`rounded-xl py-3 px-4 text-left text-xs font-bold transition-all ring-1 truncate ${
+                            className={`truncate rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
                                 category === c.value
                                     ? 'bg-indigo-600 text-white ring-indigo-600'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
@@ -233,7 +223,7 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <div className="flex gap-3 border-t border-slate-100 pt-4">
                 <button
                     type="button"
                     onClick={() => {
@@ -289,8 +279,8 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                             type="text"
                             placeholder="Search incidents..."
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm ring-indigo-100 outline-hidden transition-all focus:border-indigo-500 focus:ring-4"
                         />
                         <Search className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
                     </form>
@@ -300,7 +290,7 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                         onClick={() => setIsFilterSheetOpen(true)}
                         className={`flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold ring-1 ring-slate-200/80 transition-all active:scale-95 ${
                             category || status || sort !== 'newest'
-                                ? 'text-indigo-600 ring-indigo-500/30 bg-indigo-50/20'
+                                ? 'bg-indigo-50/20 text-indigo-600 ring-indigo-500/30'
                                 : 'text-slate-500 hover:text-slate-800'
                         }`}
                     >
@@ -317,20 +307,11 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
 
             {/* Filter Sheet / Modal */}
             {isMobile ? (
-                <MobileSheet
-                    isOpen={isFilterSheetOpen}
-                    onClose={() => setIsFilterSheetOpen(false)}
-                    title="Filter Incidents"
-                >
+                <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents">
                     {filterFormContent}
                 </MobileSheet>
             ) : (
-                <Modal
-                    isOpen={isFilterSheetOpen}
-                    onClose={() => setIsFilterSheetOpen(false)}
-                    title="Filter Incidents"
-                    maxWidth="md"
-                >
+                <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents" maxWidth="md">
                     {filterFormContent}
                 </Modal>
             )}
@@ -355,30 +336,18 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                                     const statusInfo = getStatusStyles(incident.status);
 
                                     return (
-                                        <tr
-                                            key={incident.id}
-                                            className="group hover:bg-slate-50/30 transition-colors"
-                                        >
+                                        <tr key={incident.id} className="group transition-colors hover:bg-slate-50/30">
                                             <td className="px-6 py-4">
-                                                <Link
-                                                    href={`/admin/incidents/${incident.hashid}`}
-                                                    className="block"
-                                                >
-                                                    <span className="block font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                <Link href={`/admin/incidents/${incident.hashid}`} className="block">
+                                                    <span className="block font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
                                                         {incident.title}
                                                     </span>
-                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                                                        Reported{' '}
-                                                        {formatDistanceToNow(
-                                                            new Date(incident.created_at),
-                                                            { addSuffix: true }
-                                                        )}
+                                                    <span className="mt-1 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                        Reported {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
                                                 </Link>
                                             </td>
-                                            <td className="px-6 py-4 text-xs font-medium text-slate-500">
-                                                {incident.reporter.name}
-                                            </td>
+                                            <td className="px-6 py-4 text-xs font-medium text-slate-500">{incident.reporter.name}</td>
                                             <td className="px-6 py-4 text-xs text-slate-500">
                                                 <span className="inline-flex rounded-full bg-slate-50 px-2 py-0.5 font-medium">
                                                     {incident.category.replace('_', ' ')}
@@ -394,13 +363,9 @@ export default function Index({ incidents, filters, categories, statuses }: Prop
                                             </td>
                                             <td className="px-6 py-4 text-xs text-slate-500">
                                                 {incident.assignee ? (
-                                                    <span className="font-semibold text-slate-700">
-                                                        {incident.assignee.name}
-                                                    </span>
+                                                    <span className="font-semibold text-slate-700">{incident.assignee.name}</span>
                                                 ) : (
-                                                    <span className="text-slate-300 italic">
-                                                        Unassigned
-                                                    </span>
+                                                    <span className="text-slate-300 italic">Unassigned</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-right">

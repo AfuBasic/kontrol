@@ -24,26 +24,20 @@ const variants: Record<Variant, Variants> = {
     'scale-up': { hidden: { opacity: 0, scale: 0.95, y: 15 }, visible: { opacity: 1, scale: 1, y: 0 } },
 };
 
-export default function ScrollReveal({
-    children,
-    variant = 'slide-up',
-    delay = 0,
-    duration = 0.5,
-    className,
-    once = true,
-    amount = 0.05,
-}: Props) {
+export default function ScrollReveal({ children, variant = 'slide-up', delay = 0, duration = 0.5, className, once = true, amount = 0.05 }: Props) {
     return (
         <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{
-                once,
-                amount,
-                fallback: true,
-            } as any}
+            viewport={
+                {
+                    once,
+                    amount,
+                    fallback: true,
+                } as any
+            }
             variants={variants[variant]}
-            transition={{ duration, delay, ease: [0.215, 0.610, 0.355, 1] }}
+            transition={{ duration, delay, ease: [0.215, 0.61, 0.355, 1] }}
             className={className}
         >
             {children}

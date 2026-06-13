@@ -365,7 +365,7 @@ export default function Show({ property, residents, outstandingCollections, paym
 
                                 {/* Payment Logs */}
                                 <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                    <h3 className="text-slate-900 font-black">Recent Receipts</h3>
+                                    <h3 className="font-black text-slate-900">Recent Receipts</h3>
                                     <div className="mt-4 divide-y divide-slate-100">
                                         {payments.length > 0 ? (
                                             payments.map((p) => (

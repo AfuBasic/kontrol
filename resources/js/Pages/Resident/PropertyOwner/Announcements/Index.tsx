@@ -84,7 +84,7 @@ export default function Index({ announcements, totalUnfiltered, filters }: Props
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             placeholder="Search title or content..."
                         />
                     </div>
@@ -92,7 +92,7 @@ export default function Index({ announcements, totalUnfiltered, filters }: Props
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs hover:bg-slate-50 transition-all active:scale-95"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs transition-all hover:bg-slate-50 active:scale-95"
                         >
                             <XMarkIcon className="h-4 w-4" />
                             Reset
@@ -159,9 +159,9 @@ export default function Index({ announcements, totalUnfiltered, filters }: Props
             {/* Conditional Pagination: Only show if records > per page */}
             {showPagination && (
                 <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                    <div className="w-full flex items-center justify-between border-t border-slate-100 pt-6">
+                    <div className="flex w-full items-center justify-between border-t border-slate-100 pt-6">
                         <div>
-                            <p className="text-slate-500 text-xs font-semibold">
+                            <p className="text-xs font-semibold text-slate-500">
                                 Showing <span className="font-bold text-slate-900">{announcements.data.length}</span> entries of{' '}
                                 <span className="font-bold text-slate-900">{announcements.total}</span>
                             </p>

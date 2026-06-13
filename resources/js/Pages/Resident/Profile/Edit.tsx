@@ -48,7 +48,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
     const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
 
-
     const CONTACT_LIMIT = 5;
 
     // Support deep-linking via query param
@@ -187,8 +186,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                             </div>
                         </section>
                     )}
-
-
                 </div>
             </div>
             {/* PROFILE INFORMATION SHEET */}
@@ -217,8 +214,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                     <AddEmergencyContactForm onSuccess={() => setIsAddContactSheetOpen(false)} />
                 </div>
             </MobileSheet>
-
-
         </>
     );
 }

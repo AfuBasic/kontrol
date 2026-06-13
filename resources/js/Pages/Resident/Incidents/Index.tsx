@@ -127,7 +127,7 @@ export default function Index({ incidents, filters, categories }: Props) {
             ...newParams,
         };
 
-        Object.keys(params).forEach(key => {
+        Object.keys(params).forEach((key) => {
             if (params[key] === undefined) {
                 delete params[key];
             }
@@ -153,7 +153,7 @@ export default function Index({ incidents, filters, categories }: Props) {
             {},
             {
                 preserveScroll: true,
-            }
+            },
         );
     };
 
@@ -161,16 +161,14 @@ export default function Index({ incidents, filters, categories }: Props) {
         <div className="space-y-6 pt-2">
             {/* Sort Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Sort By
-                </label>
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Sort By</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                     <button
                         type="button"
                         onClick={() => setSort('newest')}
-                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-xs font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-xs font-bold ring-1 transition-all ${
                             sort === 'newest'
-                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-indigo-600'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -179,9 +177,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                     <button
                         type="button"
                         onClick={() => setSort('popular')}
-                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-xs font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-xs font-bold ring-1 transition-all ${
                             sort === 'popular'
-                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-indigo-600'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -192,9 +190,7 @@ export default function Index({ incidents, filters, categories }: Props) {
 
             {/* Status Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Status Group
-                </label>
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Status Group</label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
                         { id: 'all', label: 'All' },
@@ -205,9 +201,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                             key={item.id}
                             type="button"
                             onClick={() => setTab(item.id)}
-                            className={`min-h-[44px] rounded-2xl py-2 px-3 text-xs font-bold transition-all ring-1 ${
+                            className={`min-h-[44px] rounded-2xl px-3 py-2 text-xs font-bold ring-1 transition-all ${
                                 tab === item.id
-                                    ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-indigo-600'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                             }`}
                         >
@@ -219,16 +215,14 @@ export default function Index({ incidents, filters, categories }: Props) {
 
             {/* Category Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Category Filters
-                </label>
-                <div className="mt-2 grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Category Filters</label>
+                <div className="mt-2 grid max-h-48 grid-cols-1 gap-2 overflow-y-auto pr-1">
                     <button
                         type="button"
                         onClick={() => setCategory('')}
-                        className={`min-h-[44px] rounded-2xl py-2 px-4 text-left text-xs font-bold transition-all ring-1 ${
+                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-left text-xs font-bold ring-1 transition-all ${
                             !category
-                                ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-indigo-600'
                                 : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -239,9 +233,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                             key={c.value}
                             type="button"
                             onClick={() => setCategory(c.value)}
-                            className={`min-h-[44px] rounded-2xl py-2 px-4 text-left text-xs font-bold transition-all ring-1 truncate ${
+                            className={`min-h-[44px] truncate rounded-2xl px-4 py-2 text-left text-xs font-bold ring-1 transition-all ${
                                 category === c.value
-                                    ? 'bg-indigo-600 text-white ring-indigo-600 shadow-md shadow-indigo-100'
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-indigo-600'
                                     : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
                             }`}
                         >
@@ -252,7 +246,7 @@ export default function Index({ incidents, filters, categories }: Props) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <div className="flex gap-3 border-t border-slate-100 pt-4">
                 <button
                     type="button"
                     onClick={() => {
@@ -268,7 +262,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-1 min-h-[44px] rounded-2xl bg-slate-100 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
+                    className="min-h-[44px] flex-1 rounded-2xl bg-slate-100 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
                 >
                     Reset All
                 </button>
@@ -282,7 +276,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-[2] min-h-[44px] rounded-2xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
+                    className="min-h-[44px] flex-[2] rounded-2xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
                 >
                     Apply Filters
                 </button>
@@ -296,16 +290,12 @@ export default function Index({ incidents, filters, categories }: Props) {
 
             {/* Header section with decorative ambient glow */}
             <div className="relative mb-6 overflow-hidden rounded-3xl bg-slate-900 px-5 py-6 text-white shadow-xl shadow-slate-100/50">
-                <div className="absolute right-[-40px] top-[-40px] h-32 w-32 rounded-full bg-indigo-500/20 blur-3xl" />
+                <div className="absolute top-[-40px] right-[-40px] h-32 w-32 rounded-full bg-indigo-500/20 blur-3xl" />
                 <div className="relative z-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300">
-                            Community Issue Tracker
-                        </span>
-                        <h1 className="mt-1 text-2xl font-black tracking-tight">
-                            Incident Board
-                        </h1>
-                        <p className="mt-1.5 text-xs leading-relaxed text-slate-300 max-w-md">
+                        <span className="text-[9px] font-black tracking-[0.2em] text-indigo-300 uppercase">Community Issue Tracker</span>
+                        <h1 className="mt-1 text-2xl font-black tracking-tight">Incident Board</h1>
+                        <p className="mt-1.5 max-w-md text-xs leading-relaxed text-slate-300">
                             Collaborative issue logging, progress status notifications, and real-time resolution updates.
                         </p>
                     </div>
@@ -329,8 +319,8 @@ export default function Index({ incidents, filters, categories }: Props) {
                             type="text"
                             placeholder="Search keywords, locations, description..."
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="w-full min-h-[44px] rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-xs text-slate-800 placeholder-slate-400 outline-hidden ring-indigo-100 transition-all focus:border-indigo-500 focus:ring-4"
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="min-h-[44px] w-full rounded-2xl border border-slate-200 bg-white py-2.5 pr-4 pl-11 text-xs text-slate-800 placeholder-slate-400 ring-indigo-100 outline-hidden transition-all focus:border-indigo-500 focus:ring-4"
                         />
                         <Search className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
                     </form>
@@ -338,10 +328,10 @@ export default function Index({ incidents, filters, categories }: Props) {
                     <button
                         type="button"
                         onClick={() => setIsFilterSheetOpen(true)}
-                        className={`flex min-h-[44px] items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-bold border transition-all active:scale-95 ${
+                        className={`flex min-h-[44px] items-center gap-2 rounded-2xl border bg-white px-4 py-2 text-xs font-bold transition-all active:scale-95 ${
                             category || tab !== 'all' || sort !== 'newest'
-                                ? 'text-indigo-600 border-indigo-500 bg-indigo-50/10'
-                                : 'text-slate-500 border-slate-200 hover:text-slate-800'
+                                ? 'border-indigo-500 bg-indigo-50/10 text-indigo-600'
+                                : 'border-slate-200 text-slate-500 hover:text-slate-800'
                         }`}
                     >
                         <Filter className="h-4.5 w-4.5" />
@@ -357,20 +347,11 @@ export default function Index({ incidents, filters, categories }: Props) {
 
             {/* Filter Drawer sheet / modal */}
             {isMobile ? (
-                <MobileSheet
-                    isOpen={isFilterSheetOpen}
-                    onClose={() => setIsFilterSheetOpen(false)}
-                    title="Filter Incidents"
-                >
+                <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents">
                     {filterFormContent}
                 </MobileSheet>
             ) : (
-                <Modal
-                    isOpen={isFilterSheetOpen}
-                    onClose={() => setIsFilterSheetOpen(false)}
-                    title="Filter Incidents"
-                    maxWidth="md"
-                >
+                <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents" maxWidth="md">
                     {filterFormContent}
                 </Modal>
             )}
@@ -388,62 +369,61 @@ export default function Index({ incidents, filters, categories }: Props) {
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.04 }}
-                                className="group rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.035)] hover:border-slate-300 transition-all duration-300"
+                                className="group rounded-3xl border border-slate-200/60 bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.01)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.035)]"
                             >
-                                <Link
-                                    href={`/resident/incidents/${incident.hashid}`}
-                                    className="flex gap-4 items-start"
-                                >
+                                <Link href={`/resident/incidents/${incident.hashid}`} className="flex items-start gap-4">
                                     {/* Left Column: Avatar */}
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200/60 font-black text-slate-700 text-base shadow-xs select-none">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-slate-50 text-base font-black text-slate-700 shadow-xs select-none">
                                         {incident.reporter.name.charAt(0).toUpperCase()}
                                     </div>
 
                                     {/* Right Column: All Content & Actions */}
-                                    <div className="flex-1 min-w-0 space-y-3.5">
+                                    <div className="min-w-0 flex-1 space-y-3.5">
                                         {/* User Meta Header Row */}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                                    <span className="text-sm font-black text-slate-900 hover:text-indigo-650 transition-colors leading-tight">
+                                                    <span className="hover:text-indigo-650 text-sm leading-tight font-black text-slate-900 transition-colors">
                                                         {incident.reporter.name}
                                                     </span>
-                                                    <span className="text-xs text-slate-400 font-medium truncate">
+                                                    <span className="truncate text-xs font-medium text-slate-400">
                                                         @{incident.reporter.name.toLowerCase().replace(/[^a-z0-9]/g, '')}
                                                     </span>
-                                                    <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider hidden xs:inline">
+                                                    <span className="xs:inline hidden text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                                                         &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
                                                 </div>
 
                                                 {/* Category Hashtag & Tags */}
                                                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                    <span className="text-[10px] font-black text-indigo-600 tracking-wider uppercase font-mono">
+                                                    <span className="font-mono text-[10px] font-black tracking-wider text-indigo-600 uppercase">
                                                         #{incident.category}
                                                     </span>
                                                     {incident.is_private && (
-                                                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-200/50 bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
                                                             <Lock className="h-2.5 w-2.5" />
                                                             Private
                                                         </span>
                                                     )}
                                                     {incident.location && (
-                                                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">
                                                             <MapPin className="h-2.5 w-2.5 text-indigo-500" />
                                                             {incident.location}
                                                         </span>
                                                     )}
-                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider tracking-wider hidden xs:inline">
+                                                    <span className="xs:inline hidden text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                                                         &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider xs:hidden">
+                                                    <span className="xs:hidden text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                                                         &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
                                                 </div>
                                             </div>
 
                                             {/* Status Badge */}
-                                            <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black tracking-wider border ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}>
+                                            <span
+                                                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider ${statusStyles.bg} ${statusStyles.text} ${statusStyles.border}`}
+                                            >
                                                 {statusStyles.icon}
                                                 {statusStyles.label.toUpperCase()}
                                             </span>
@@ -451,22 +431,20 @@ export default function Index({ incidents, filters, categories }: Props) {
 
                                         {/* Post Content */}
                                         <div className="space-y-1.5">
-                                            <h2 className="text-base font-black text-slate-900 group-hover:text-indigo-650 transition-colors flex items-center gap-1.5">
+                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black text-slate-900 transition-colors">
                                                 {incident.title}
-                                                <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-indigo-650" />
+                                                <ArrowRight className="text-indigo-650 h-4 w-4 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                                             </h2>
-                                            <p className="text-xs leading-relaxed text-slate-500 line-clamp-3">
-                                                {incident.body}
-                                            </p>
+                                            <p className="line-clamp-3 text-xs leading-relaxed text-slate-500">{incident.body}</p>
                                         </div>
 
                                         {/* Large Full-Width Media Preview */}
                                         {incident.attachment_url && incident.attachment_type === 'image' && (
-                                            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 aspect-video max-h-64 w-full relative group/media">
+                                            <div className="group/media relative aspect-video max-h-64 w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
                                                 <img
                                                     src={incident.attachment_url}
                                                     alt={incident.title}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-[1.015]"
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover/media:scale-[1.015]"
                                                 />
                                             </div>
                                         )}
@@ -476,14 +454,14 @@ export default function Index({ incidents, filters, categories }: Props) {
                                             <div className="flex items-center gap-4">
                                                 {/* Upvote Icon button */}
                                                 <button
-                                                    onClick={e => handleUpvote(e, incident)}
+                                                    onClick={(e) => handleUpvote(e, incident)}
                                                     disabled={isMyReport}
-                                                    className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full transition-all text-xs font-bold ${
+                                                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                                                         incident.is_upvoted
-                                                            ? 'text-indigo-600 bg-indigo-50 font-black'
+                                                            ? 'bg-indigo-50 font-black text-indigo-600'
                                                             : isMyReport
                                                               ? 'text-slate-350 cursor-not-allowed'
-                                                              : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50'
+                                                              : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
                                                     }`}
                                                 >
                                                     <ThumbsUp
@@ -494,7 +472,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                                 </button>
 
                                                 {/* Comments count link */}
-                                                <div className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-slate-50 text-xs font-bold transition-all">
+                                                <div className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600">
                                                     <MessageSquare className="h-4 w-4" />
                                                     <span>{incident.comments_count}</span>
                                                 </div>
@@ -509,7 +487,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                     {/* Pagination Links */}
                     {incidents.links && incidents.links.length > 3 && (
                         <div className="mt-8 flex justify-center">
-                            <div className="flex flex-wrap gap-1 bg-slate-50 border border-slate-100 p-1.5 rounded-2xl">
+                            <div className="flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-slate-50 p-1.5">
                                 {incidents.links.map((link, i) => (
                                     <Link
                                         key={i}
@@ -521,7 +499,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
                                                 : link.url
                                                   ? 'text-slate-600 hover:bg-white'
-                                                  : 'text-slate-300 cursor-not-allowed'
+                                                  : 'cursor-not-allowed text-slate-300'
                                         }`}
                                     />
                                 ))}

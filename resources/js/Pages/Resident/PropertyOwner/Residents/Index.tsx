@@ -118,7 +118,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="text-slate-900 block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             placeholder="Search by name or email..."
                         />
                     </div>
@@ -130,7 +130,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             <select
                                 value={status}
                                 onChange={handleStatusChange}
-                                className="text-slate-900 block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="accepted">Accepted</option>
@@ -162,7 +162,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             }`}
                         >
                             <div className="flex items-start justify-between gap-4">
-                                <div className="flex flex-1 items-center gap-3 min-w-0">
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <div
                                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black ${
                                             resident.suspended_at ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'
@@ -171,7 +171,9 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                         {resident.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h3 className="truncate text-base font-black text-slate-900" title={resident.name}>{resident.name}</h3>
+                                        <h3 className="truncate text-base font-black text-slate-900" title={resident.name}>
+                                            {resident.name}
+                                        </h3>
                                         <p className="truncate text-xs font-bold text-slate-400">{resident.email}</p>
                                         <div className="mt-1.5">
                                             <span
@@ -246,26 +248,26 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                             </div>
 
                             <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
-                                <div className="text-slate-600 flex items-center gap-2.5 text-sm font-semibold">
-                                    <MapPinIcon className="h-4.5 w-4.5 shrink-0 text-slate-450" />
+                                <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-600">
+                                    <MapPinIcon className="text-slate-450 h-4.5 w-4.5 shrink-0" />
                                     <span>
                                         {resident.property ? (
                                             <>
                                                 <span className="font-bold text-slate-800">{resident.property}</span>
                                                 {resident.unit_number && (
-                                                    <span className="text-slate-500 font-medium"> (Unit {resident.unit_number})</span>
+                                                    <span className="font-medium text-slate-500"> (Unit {resident.unit_number})</span>
                                                 )}
                                             </>
                                         ) : resident.unit_number ? (
                                             <span className="font-bold text-slate-800">Unit {resident.unit_number}</span>
                                         ) : (
-                                            <span className="text-slate-400 italic font-medium">No Property Assigned</span>
+                                            <span className="font-medium text-slate-400 italic">No Property Assigned</span>
                                         )}
                                     </span>
                                 </div>
                                 {resident.phone && resident.phone.trim() !== '' && resident.phone !== 'null' && resident.phone !== 'undefined' && (
-                                    <div className="text-slate-600 flex items-center gap-2.5 text-sm font-semibold">
-                                        <PhoneIcon className="h-4.5 w-4.5 shrink-0 text-slate-450" />
+                                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-600">
+                                        <PhoneIcon className="text-slate-450 h-4.5 w-4.5 shrink-0" />
                                         <span>{resident.phone}</span>
                                     </div>
                                 )}

@@ -205,7 +205,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                                         setIsVerified(false);
                                     }}
                                     placeholder="10-digit number"
-                                    className="block w-full rounded-2xl border-slate-200 border bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                    className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                                 />
                                 {resolvingBank && (
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-4">
@@ -244,9 +244,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                                     <CheckCircle2 className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black tracking-widest text-indigo-600/60 uppercase">
-                                        Verified Account Name
-                                    </p>
+                                    <p className="text-[10px] font-black tracking-widest text-indigo-600/60 uppercase">Verified Account Name</p>
                                     <p className="text-sm font-black text-slate-900">{data.account_name}</p>
                                 </div>
                             </div>
@@ -267,7 +265,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                         </div>
                     )}
 
-                    <div className="pt-4 border-t border-slate-100">
+                    <div className="border-t border-slate-100 pt-4">
                         <button
                             type="submit"
                             disabled={processing || !isVerified}

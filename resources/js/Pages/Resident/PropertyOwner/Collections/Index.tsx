@@ -17,7 +17,7 @@ function AnimatedNumber({ value }: { value: number }) {
                 if (ref.current) {
                     ref.current.textContent = '₦' + Math.round(latest).toLocaleString();
                 }
-            }
+            },
         });
         return () => controls.stop();
     }, [value, motionValue]);
@@ -101,13 +101,13 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                     <Link
                         href="/resident/property-owner/settlement"
                         title="Settlement Account Settings"
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-xs hover:bg-slate-50 transition-all active:scale-98"
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-xs transition-all hover:bg-slate-50 active:scale-98"
                     >
                         <CreditCardIcon className="h-5 w-5 text-slate-500" />
                     </Link>
                     <Link
                         href={create.url()}
-                        className="shadow-indigo-650/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98 whitespace-nowrap"
+                        className="shadow-indigo-650/15 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold whitespace-nowrap text-white shadow-lg transition-all hover:bg-indigo-700 active:scale-98"
                     >
                         <PlusIcon className="h-5 w-5" />
                         New Collection
@@ -116,33 +116,35 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
             </div>
 
             {/* Unified Premium Financial Overview Card */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20 border border-slate-900">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-2xl shadow-indigo-950/20">
                 {/* Background glow effects */}
-                <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl animate-pulse" />
+                <div className="absolute -top-24 -right-24 h-56 w-56 animate-pulse rounded-full bg-indigo-600/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-emerald-600/10 blur-3xl" />
-                
+
                 <div className="relative z-10">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Financial Overview</span>
-                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black tracking-wider text-emerald-400 uppercase border border-emerald-500/20">
+                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black tracking-wider text-emerald-400 uppercase">
                             {stats.expecting_amount > 0 ? Math.round((stats.realised_amount / stats.expecting_amount) * 100) : 0}% Realised
                         </span>
                     </div>
 
                     <div className="mt-4">
-                        <p className="text-[9px] font-bold text-slate-450 uppercase tracking-widest">Total Expected Collection</p>
-                        <h2 className="mt-1 text-3.5xl font-black tracking-tight">
+                        <p className="text-slate-450 text-[9px] font-bold tracking-widest uppercase">Total Expected Collection</p>
+                        <h2 className="text-3.5xl mt-1 font-black tracking-tight">
                             <AnimatedNumber value={stats.expecting_amount} />
                         </h2>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="mt-6">
-                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-900 border border-slate-800">
-                            <motion.div 
-                                className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full" 
+                        <div className="h-2.5 w-full overflow-hidden rounded-full border border-slate-800 bg-slate-900">
+                            <motion.div
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500"
                                 initial={{ width: '0%' }}
-                                animate={{ width: `${stats.expecting_amount > 0 ? Math.min(100, (stats.realised_amount / stats.expecting_amount) * 100) : 0}%` }}
+                                animate={{
+                                    width: `${stats.expecting_amount > 0 ? Math.min(100, (stats.realised_amount / stats.expecting_amount) * 100) : 0}%`,
+                                }}
                                 transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
                             />
                         </div>
@@ -153,7 +155,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         <div>
                             <div className="flex items-center gap-1.5">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Realised</span>
+                                <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">Realised</span>
                             </div>
                             <p className="mt-1 text-lg font-black text-white">
                                 <AnimatedNumber value={stats.realised_amount} />
@@ -162,7 +164,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         <div className="border-l border-slate-900/60 pl-4">
                             <div className="flex items-center gap-1.5">
                                 <div className="h-2 w-2 rounded-full bg-indigo-400" />
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Outstanding</span>
+                                <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">Outstanding</span>
                             </div>
                             <p className="mt-1 text-lg font-black text-white">
                                 <AnimatedNumber value={stats.expecting_amount - stats.realised_amount} />
@@ -181,14 +183,15 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                             </div>
                             <div>
                                 <h3 className="text-sm font-black text-slate-900">Settlement Account Setup Required</h3>
-                                <p className="mt-0.5 text-xs text-slate-500 font-medium">
-                                    Before you can create collections and receive payments from your residents, you must set up your settlement bank account.
+                                <p className="mt-0.5 text-xs font-medium text-slate-500">
+                                    Before you can create collections and receive payments from your residents, you must set up your settlement bank
+                                    account.
                                 </p>
                             </div>
                         </div>
                         <Link
                             href="/resident/property-owner/settlement"
-                            className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition-all active:scale-98 w-full sm:w-auto whitespace-nowrap"
+                            className="inline-flex w-full items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold whitespace-nowrap text-white shadow-sm transition-all hover:bg-amber-700 active:scale-98 sm:w-auto"
                         >
                             Setup Account
                         </Link>
@@ -207,7 +210,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             placeholder="Search collections..."
                         />
                     </div>
@@ -219,7 +222,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                             <select
                                 value={status}
                                 onChange={handleStatusChange}
-                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-8 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="active">Active</option>
@@ -232,7 +235,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs hover:bg-slate-50 transition-all active:scale-95"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs transition-all hover:bg-slate-50 active:scale-95"
                         >
                             <XMarkIcon className="h-4 w-4" />
                             Reset
@@ -327,9 +330,9 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
             {/* Conditional Pagination: Only show if records > per page */}
             {showPagination && (
                 <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                    <div className="w-full flex items-center justify-between border-t border-slate-100 pt-6">
+                    <div className="flex w-full items-center justify-between border-t border-slate-100 pt-6">
                         <div>
-                            <p className="text-slate-500 text-xs font-semibold">
+                            <p className="text-xs font-semibold text-slate-500">
                                 Showing <span className="font-bold text-slate-900">{collections.data.length}</span> entries of{' '}
                                 <span className="font-bold text-slate-900">{collections.total}</span>
                             </p>

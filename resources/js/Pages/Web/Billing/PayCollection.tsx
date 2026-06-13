@@ -88,9 +88,8 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
             }
 
             // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
-            const cleanSubaccount = (subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord'))
-                ? subaccount
-                : undefined;
+            const cleanSubaccount =
+                subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
 
             const handler = window.PaystackPop.setup({
                 key: paystackKey,

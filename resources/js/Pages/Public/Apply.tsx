@@ -326,9 +326,10 @@ export default function Apply() {
                                                     <div>
                                                         <dt className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">Selected Plan</dt>
                                                         <dd className="font-semibold text-slate-900 dark:text-white">
-                                                            {plans?.find(p => String(p.id) === String(data.plan_id))?.name || 'None'}
+                                                            {plans?.find((p) => String(p.id) === String(data.plan_id))?.name || 'None'}
                                                             <span className="ml-2 font-normal text-slate-500 dark:text-slate-400">
-                                                                ({plans?.find(p => String(p.id) === String(data.plan_id))?.formatted_price || ''} / {plans?.find(p => String(p.id) === String(data.plan_id))?.billing_interval || ''})
+                                                                ({plans?.find((p) => String(p.id) === String(data.plan_id))?.formatted_price || ''} /{' '}
+                                                                {plans?.find((p) => String(p.id) === String(data.plan_id))?.billing_interval || ''})
                                                             </span>
                                                         </dd>
                                                     </div>

@@ -1,18 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    X, 
-    ChevronRight, 
-    QrCode, 
-    Check, 
-    Bell, 
-    CreditCard, 
-    ArrowRight, 
-    Smartphone, 
-    ShieldAlert, 
-    Sparkles, 
-    Home, 
+import {
+    X,
+    ChevronRight,
+    QrCode,
+    Check,
+    Bell,
+    CreditCard,
+    ArrowRight,
+    Smartphone,
+    ShieldAlert,
+    Sparkles,
+    Home,
     Send,
-    MessageSquare
+    MessageSquare,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -37,10 +37,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
                     {/* Ambient Glows */}
                     <div className="absolute top-1/4 left-1/4 h-32 w-32 rounded-full bg-indigo-500/10 blur-2xl"></div>
-                    <div className="absolute bottom-1/4 right-1/4 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl"></div>
+                    <div className="absolute right-1/4 bottom-1/4 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl"></div>
 
                     {/* Floating Main Access Card */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 30, rotateX: 15 }}
                         animate={{ opacity: 1, y: 0, rotateX: 0 }}
                         transition={{ duration: 1, ease: 'easeOut' }}
@@ -49,15 +49,15 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <div>
                                 <h4 className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">Resident Pass</h4>
-                                <p className="text-xs font-bold text-white mt-0.5">{userName}</p>
+                                <p className="mt-0.5 text-xs font-bold text-white">{userName}</p>
                             </div>
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 border border-indigo-500/30">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/20">
                                 <Home className="h-4 w-4 text-indigo-400" />
                             </div>
                         </div>
 
                         <div className="mt-4 flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
                                 <Check className="h-4 w-4 text-emerald-400" />
                             </div>
                             <div>
@@ -78,12 +78,12 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             <Bell className="h-3 w-3 text-amber-400" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="text-[9px] font-bold text-white truncate">Estate Notice</p>
-                            <p className="text-[8px] text-slate-400 truncate">Meeting starts at 6 PM</p>
+                            <p className="truncate text-[9px] font-bold text-white">Estate Notice</p>
+                            <p className="truncate text-[8px] text-slate-400">Meeting starts at 6 PM</p>
                         </div>
                     </motion.div>
                 </div>
-            )
+            ),
         },
         {
             title: 'Let Guests In Without The Calls.',
@@ -105,7 +105,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         </div>
                         <div className="mt-4 text-center">
                             <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Invite Code</p>
-                            <p className="text-sm font-bold text-white tracking-widest mt-0.5">829 - 102</p>
+                            <p className="mt-0.5 text-sm font-bold tracking-widest text-white">829 - 102</p>
                         </div>
                     </motion.div>
 
@@ -114,18 +114,18 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4, duration: 0.8 }}
-                        className="absolute bottom-6 left-6 right-6 z-20 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-slate-900/90 p-3 shadow-xl backdrop-blur-md"
+                        className="absolute right-6 bottom-6 left-6 z-20 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-slate-900/90 p-3 shadow-xl backdrop-blur-md"
                     >
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/25">
                             <Smartphone className="h-4 w-4 text-emerald-400" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-white uppercase">Gate Notification</p>
-                            <p className="text-[11px] text-emerald-400 font-semibold mt-0.5">Guest "John Doe" has checked in.</p>
+                            <p className="mt-0.5 text-[11px] font-semibold text-emerald-400">Guest "John Doe" has checked in.</p>
                         </div>
                     </motion.div>
                 </div>
-            )
+            ),
         },
         {
             title: 'Pay Community Dues In Seconds.',
@@ -133,7 +133,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Track, view, and settle outstanding community dues, security levies, and contributions seamlessly via secured gateways.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 bg-radial-at-c from-emerald-500/10 via-transparent to-transparent"></div>
+                    <div className="bg-radial-at-c absolute inset-0 from-emerald-500/10 via-transparent to-transparent"></div>
 
                     {/* Floating Credit Card */}
                     <motion.div
@@ -142,13 +142,13 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         transition={{ duration: 0.8 }}
                         className="relative z-10 w-56 rounded-xl border border-white/10 bg-gradient-to-tr from-emerald-600 to-indigo-600 p-4 shadow-xl shadow-slate-950/45"
                     >
-                        <div className="flex justify-between items-start">
+                        <div className="flex items-start justify-between">
                             <CreditCard className="h-7 w-7 text-white" />
-                            <span className="text-[8px] font-bold text-white/70 tracking-widest uppercase">Secured</span>
+                            <span className="text-[8px] font-bold tracking-widest text-white/70 uppercase">Secured</span>
                         </div>
                         <div className="mt-8">
-                            <p className="text-[8px] text-white/50 tracking-wider">OUTSTANDING BALANCE</p>
-                            <p className="text-lg font-black text-white mt-0.5">₦25,000.00</p>
+                            <p className="text-[8px] tracking-wider text-white/50">OUTSTANDING BALANCE</p>
+                            <p className="mt-0.5 text-lg font-black text-white">₦25,000.00</p>
                         </div>
                     </motion.div>
 
@@ -162,10 +162,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950">
                             <Check className="h-2.5 w-2.5 font-bold" />
                         </div>
-                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Transaction Settled</span>
+                        <span className="text-[10px] font-bold tracking-wider text-white uppercase">Transaction Settled</span>
                     </motion.div>
                 </div>
-            )
+            ),
         },
         {
             title: 'Stay Connected When It Matters.',
@@ -175,7 +175,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden px-6">
                     <div className="absolute top-1/4 left-1/3 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl"></div>
 
-                    <div className="w-full space-y-3 relative z-10">
+                    <div className="relative z-10 w-full space-y-3">
                         {/* Feed Item 1 */}
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
@@ -186,9 +186,9 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20">
                                 <ShieldAlert className="h-4 w-4 text-rose-400" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-bold text-white">Emergency Broadcast</p>
-                                <p className="text-[9px] text-slate-400 truncate mt-0.5">Alert dispatched to main gate post.</p>
+                                <p className="mt-0.5 truncate text-[9px] text-slate-400">Alert dispatched to main gate post.</p>
                             </div>
                         </motion.div>
 
@@ -202,15 +202,15 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
                                 <MessageSquare className="h-4 w-4 text-indigo-400" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-bold text-white">Admins & Notices</p>
-                                <p className="text-[9px] text-slate-400 truncate mt-0.5">Estate dues reconciliation is complete.</p>
+                                <p className="mt-0.5 truncate text-[9px] text-slate-400">Estate dues reconciliation is complete.</p>
                             </div>
                         </motion.div>
                     </div>
                 </div>
-            )
-        }
+            ),
+        },
     ];
 
     // Property Owner Slideshow Flow
@@ -230,21 +230,21 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         className="w-64 rounded-xl border border-white/10 bg-slate-900/90 p-5 shadow-2xl"
                     >
                         <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Property Owner</h4>
-                        <h3 className="text-sm font-black text-white mt-1">{estateName} Portfolio</h3>
-                        
+                        <h3 className="mt-1 text-sm font-black text-white">{estateName} Portfolio</h3>
+
                         <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-lg bg-slate-950 p-2.5 border border-white/5 text-center">
-                                <span className="text-[9px] font-medium text-slate-400 block">Total Units</span>
-                                <span className="text-base font-black text-indigo-400 mt-0.5 block">12</span>
+                            <div className="rounded-lg border border-white/5 bg-slate-950 p-2.5 text-center">
+                                <span className="block text-[9px] font-medium text-slate-400">Total Units</span>
+                                <span className="mt-0.5 block text-base font-black text-indigo-400">12</span>
                             </div>
-                            <div className="rounded-lg bg-slate-950 p-2.5 border border-white/5 text-center">
-                                <span className="text-[9px] font-medium text-slate-400 block">Occupied</span>
-                                <span className="text-base font-black text-emerald-400 mt-0.5 block">9</span>
+                            <div className="rounded-lg border border-white/5 bg-slate-950 p-2.5 text-center">
+                                <span className="block text-[9px] font-medium text-slate-400">Occupied</span>
+                                <span className="mt-0.5 block text-base font-black text-emerald-400">9</span>
                             </div>
                         </div>
                     </motion.div>
                 </div>
-            )
+            ),
         },
         {
             title: 'Settle Levies & Charges Effortlessly.',
@@ -252,7 +252,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Automate billing cycles, collect service charges, and check payment statuses instantly for all assigned tenants.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 bg-radial-at-c from-indigo-500/10 via-transparent to-transparent"></div>
+                    <div className="bg-radial-at-c absolute inset-0 from-indigo-500/10 via-transparent to-transparent"></div>
 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -265,19 +265,19 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             <CreditCard className="h-4 w-4 text-indigo-400" />
                         </div>
                         <div className="mt-3 space-y-2.5">
-                            <div className="flex justify-between items-center text-[10px]">
+                            <div className="flex items-center justify-between text-[10px]">
                                 <span className="text-slate-300">Unit 4B - Rent</span>
                                 <span className="font-bold text-emerald-400">+ ₦450k</span>
                             </div>
-                            <div className="flex justify-between items-center text-[10px]">
+                            <div className="flex items-center justify-between text-[10px]">
                                 <span className="text-slate-300">Unit 2A - Service</span>
                                 <span className="font-bold text-emerald-400">+ ₦50k</span>
                             </div>
                         </div>
                     </motion.div>
                 </div>
-            )
-        }
+            ),
+        },
     ];
 
     const slides = isPropertyOwner ? propertyOwnerSlides : residentSlides;
@@ -347,15 +347,9 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             transition={{ duration: 0.3, ease: 'easeOut' }}
                             className="text-center"
                         >
-                            <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase sm:text-xs">
-                                {slide.subtitle}
-                            </span>
-                            <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl leading-snug">
-                                {slide.title}
-                            </h2>
-                            <p className="mt-3 text-xs leading-relaxed font-semibold text-slate-400 sm:text-sm">
-                                {slide.description}
-                            </p>
+                            <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase sm:text-xs">{slide.subtitle}</span>
+                            <h2 className="mt-2 text-2xl leading-snug font-black tracking-tight text-white sm:text-3xl">{slide.title}</h2>
+                            <p className="mt-3 text-xs leading-relaxed font-semibold text-slate-400 sm:text-sm">{slide.description}</p>
                         </motion.div>
                     </AnimatePresence>
                 </div>
@@ -380,7 +374,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         {currentSlide > 0 ? (
                             <button
                                 onClick={prevSlide}
-                                className="cursor-pointer rounded-xl bg-white/5 border border-white/5 px-5 py-3 text-xs font-bold text-slate-300 transition-all hover:bg-white/10 sm:text-sm active:scale-95"
+                                className="cursor-pointer rounded-xl border border-white/5 bg-white/5 px-5 py-3 text-xs font-bold text-slate-300 transition-all hover:bg-white/10 active:scale-95 sm:text-sm"
                             >
                                 Back
                             </button>

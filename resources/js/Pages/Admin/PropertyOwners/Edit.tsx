@@ -83,7 +83,7 @@ export default function Edit({ propertyOwner }: Props) {
                                 ? 'Email is verified and cannot be changed for security.'
                                 : "You can edit the email address because the owner hasn't verified it yet."}
                         </p>
-                        {errors.email && <p className="text-red-600 mt-1 text-sm">{errors.email}</p>}
+                        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                     </div>
 
                     <div className="my-6 h-px bg-gray-100" />
@@ -102,7 +102,7 @@ export default function Edit({ propertyOwner }: Props) {
                             placeholder="Enter owner's full name"
                             required
                         />
-                        {errors.name && <p className="text-red-600 mt-1 text-sm">{errors.name}</p>}
+                        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                     </div>
 
                     {/* Phone */}
@@ -118,7 +118,7 @@ export default function Edit({ propertyOwner }: Props) {
                             className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-blue-50 focus:outline-none"
                             placeholder="+234..."
                         />
-                        {errors.phone && <p className="text-red-600 mt-1 text-sm">{errors.phone}</p>}
+                        {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                     </div>
 
                     {/* Unit Number & Address */}
@@ -135,7 +135,7 @@ export default function Edit({ propertyOwner }: Props) {
                                 className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-blue-50 focus:outline-none"
                                 placeholder="e.g., Block C, Villa 12"
                             />
-                            {errors.unit_number && <p className="text-red-600 mt-1 text-sm">{errors.unit_number}</p>}
+                            {errors.unit_number && <p className="mt-1 text-sm text-red-600">{errors.unit_number}</p>}
                         </div>
 
                         <div>
@@ -150,7 +150,7 @@ export default function Edit({ propertyOwner }: Props) {
                                 className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-blue-50 focus:outline-none"
                                 placeholder="e.g., 123 Palm Street"
                             />
-                            {errors.address && <p className="text-red-600 mt-1 text-sm">{errors.address}</p>}
+                            {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                         </div>
                     </div>
                 </div>
