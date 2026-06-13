@@ -65,6 +65,30 @@ export default function PublicLayout({ children }: Props) {
                         >
                             Home
                         </Link>
+                        <a
+                            href="#features"
+                            onClick={(e) => {
+                                if (window.location.pathname === '/') {
+                                    e.preventDefault();
+                                    document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                        >
+                            Features
+                        </a>
+                        <a
+                            href="#pricing"
+                            onClick={(e) => {
+                                if (window.location.pathname === '/') {
+                                    e.preventDefault();
+                                    document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                        >
+                            Pricing
+                        </a>
                         <Link
                             href="/support"
                             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
@@ -135,6 +159,32 @@ export default function PublicLayout({ children }: Props) {
                             >
                                 Home
                             </Link>
+                            <a
+                                href="#features"
+                                onClick={(e) => {
+                                    handleNavClick();
+                                    if (window.location.pathname === '/') {
+                                        e.preventDefault();
+                                        document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                Features
+                            </a>
+                            <a
+                                href="#pricing"
+                                onClick={(e) => {
+                                    handleNavClick();
+                                    if (window.location.pathname === '/') {
+                                        e.preventDefault();
+                                        document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                Pricing
+                            </a>
                             <Link
                                 href="/support"
                                 onClick={handleNavClick}
@@ -173,12 +223,26 @@ export default function PublicLayout({ children }: Props) {
                             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Kontrol</span>
                         </div>
 
-                        <div className="flex items-center gap-8">
+                        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+                            <a href="mailto:support@usekontrol.com" className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
+                                support@usekontrol.com
+                            </a>
+                            <a 
+                                href="https://wa.me/2347036481189" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-[#25D366] dark:text-slate-400"
+                            >
+                                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12.031 0C5.385 0 .002 5.385.002 12.032c0 2.124.553 4.195 1.603 6.015L.053 24l6.141-1.611a12.035 12.035 0 005.837 1.503c6.645 0 12.029-5.385 12.029-12.033C24.06 5.385 18.675 0 12.031 0zm0 22.016c-1.8 0-3.56-.484-5.11-1.403l-.366-.217-3.799.996.996-3.799-.217-.366A9.988 9.988 0 012.017 12.03c0-5.526 4.498-10.025 10.024-10.025 5.527 0 10.025 4.499 10.025 10.025 0 5.527-4.498 10.025-10.025 10.025zm5.508-7.514c-.302-.151-1.787-.881-2.064-.982-.277-.101-.478-.151-.679.151-.201.302-.781.982-.958 1.183-.176.201-.353.226-.655.075-.302-.151-1.275-.471-2.428-1.503-.896-.803-1.501-1.796-1.678-2.098-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.529.151-.176.201-.302.302-.503.101-.201.05-.378-.025-.529-.075-.151-.679-1.637-.931-2.241-.245-.589-.494-.509-.679-.518-.176-.008-.378-.008-.579-.008-.201 0-.529.075-.805.378-.277.302-1.057 1.032-1.057 2.517 0 1.485 1.082 2.92 1.233 3.121.151.201 2.128 3.248 5.155 4.555.719.31 1.28.495 1.718.634.721.229 1.378.196 1.896.119.58-.087 1.787-.73 2.039-1.436.252-.705.252-1.309.176-1.436-.075-.127-.277-.202-.579-.353z" />
+                                </svg>
+                                WhatsApp
+                            </a>
                             <Link href="/privacy" className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
-                                Privacy Policy
+                                Privacy
                             </Link>
                             <Link href="/terms" className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
-                                Terms of Service
+                                Terms
                             </Link>
                         </div>
 

@@ -1,12 +1,15 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ShieldCheck, Smartphone, Users, Bell, Clock, FileText, CheckCircle2, ChevronRight, Home as HomeIcon } from 'lucide-react';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, ChevronRight } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
+import DesktopFrame from '@/Components/Mockups/DesktopFrame';
+import IphoneFrame from '@/Components/Mockups/IphoneFrame';
+import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { useRef } from 'react';
 
-const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+const fadeUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const staggerContainer = {
@@ -14,329 +17,445 @@ const staggerContainer = {
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.2,
+            staggerChildren: 0.15,
         },
     },
 };
 
 export default function Home() {
     const { scrollYProgress } = useScroll();
-    const yHero = useTransform(scrollYProgress, [0, 1], [0, 200]);
+    const heroRef = useRef(null);
+    const { scrollYProgress: heroProgress } = useScroll({
+        target: heroRef,
+        offset: ["start start", "end start"]
+    });
+
+    // Parallax values for Hero
+    const yBg = useTransform(heroProgress, [0, 1], [0, 300]);
+    const yDesktop = useTransform(heroProgress, [0, 1], [0, -100]);
+    const yMobile = useTransform(heroProgress, [0, 1], [0, -250]);
+    const opacityHeroText = useTransform(heroProgress, [0, 0.4], [1, 0]);
 
     return (
         <PublicLayout>
             <Head>
-                <title>Modern Estate Access Control</title>
+                <title>Modern Estate Access Control - Kontrol</title>
             </Head>
 
-            {/* HERO SECTION */}
-            <section className="relative min-h-[90vh] overflow-hidden pt-20">
-                {/* Background Image (Light/Dark via CSS classes) */}
-                <div className="absolute inset-0 z-0">
-                    <motion.div style={{ y: yHero }} className="h-full w-full">
+            {/* PREMIUM HERO SECTION */}
+            <section ref={heroRef} className="relative bg-slate-950 pt-32 sm:pt-40">
+                {/* Parallax Background */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
+                    <motion.div style={{ y: yBg }} className="absolute -inset-y-32 inset-x-0">
                         <img 
-                            src="/assets/images/estate-light.png" 
-                            alt="Aethewood Estate" 
-                            className="h-full w-full object-cover dark:hidden" 
+                            src="/assets/images/premium-estate-hero.png" 
+                            alt="Premium Real Estate" 
+                            className="h-full w-full object-cover opacity-60 mix-blend-overlay" 
                         />
-                        <img 
-                            src="/assets/images/estate-dark.png" 
-                            alt="Aethewood Estate Night" 
-                            className="hidden h-full w-full object-cover dark:block" 
-                        />
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] dark:bg-slate-950/60" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-slate-950" />
+                        {/* Glowing orb effect */}
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[800px] rounded-full bg-blue-600/30 blur-[120px]" />
                     </motion.div>
                 </div>
 
-                <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="flex min-h-[80vh] flex-col items-center justify-center text-center">
-                        <motion.div
-                            initial="hidden"
-                            animate="visible"
-                            variants={staggerContainer}
-                            className="max-w-4xl rounded-3xl bg-white/40 p-8 backdrop-blur-xl dark:bg-slate-900/40 md:p-12"
+                <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 pb-64 sm:pb-80 lg:pb-[400px]">
+                    <motion.div
+                        style={{ opacity: opacityHeroText }}
+                        initial="hidden"
+                        animate="visible"
+                        variants={staggerContainer}
+                        className="mx-auto max-w-5xl text-center"
+                    >
+                        <motion.h1 
+                            variants={fadeUp} 
+                            className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl drop-shadow-sm"
                         >
-                            <motion.h1 variants={fadeInUp} className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-6xl">
-                                Everything Your Estate Needs, <br className="hidden sm:block" />
-                                In One Place.
-                            </motion.h1>
-                            <motion.p variants={fadeInUp} className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-700 dark:text-slate-300">
-                                Manage visitors, payments, announcements, and resident complaints from one simple platform. Apply for your estate and try Kontrol before making any commitment.
-                            </motion.p>
-                            <motion.div variants={fadeInUp} className="mt-10 flex items-center justify-center gap-x-6">
-                                <Link
-                                    href="/apply"
-                                    className="rounded-xl bg-blue-600 px-6 py-3.5 text-base font-medium text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-blue-600/30"
-                                >
-                                    Bring Kontrol To Your Estate
-                                </Link>
-                                <a href={LoginController.show.url()} className="text-base font-medium text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
-                                    Sign In <span aria-hidden="true">→</span>
-                                </a>
+                            The Operating System <br className="hidden lg:block" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                                For Your Estate.
+                            </span>
+                        </motion.h1>
+                        <motion.p 
+                            variants={fadeUp} 
+                            className="mx-auto mt-8 max-w-2xl text-xl leading-8 text-slate-300 sm:text-2xl font-medium drop-shadow-sm"
+                        >
+                            Ditch the paper logs and WhatsApp groups. Manage visitors, collections, and residents with one seamlessly integrated platform.
+                        </motion.p>
+                        
+                        <motion.div variants={fadeUp} className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
+                            <Link
+                                href="/apply"
+                                className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.7)]"
+                            >
+                                Get Started Free
+                                <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                            <a 
+                                href={LoginController.show.url()} 
+                                className="text-lg font-semibold text-slate-300 transition-colors hover:text-white"
+                            >
+                                Sign in to Dashboard
+                            </a>
+                        </motion.div>
+                    </motion.div>
+                </div>
+
+                {/* OVERLAPPING HERO MOCKUPS */}
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[40%] sm:translate-y-1/2 z-20 w-full max-w-[1200px] px-4 sm:px-6 pointer-events-none">
+                    <div className="relative pointer-events-auto">
+                        {/* Desktop Dashboard */}
+                        <motion.div 
+                            style={{ y: yDesktop }} 
+                            className="relative z-10 w-full"
+                        >
+                            <DesktopFrame 
+                                src="/assets/images/screenshots/large-desktop.png" 
+                                alt="Kontrol Desktop Dashboard" 
+                            />
+                        </motion.div>
+
+                        {/* Floating Mobile App */}
+                        <motion.div 
+                            style={{ y: yMobile }} 
+                            className="absolute -right-4 md:-right-12 bottom-12 md:bottom-24 z-20 hidden md:block"
+                        >
+                            <motion.div
+                                animate={{ y: [0, -20, 0] }}
+                                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                            >
+                                <IphoneFrame 
+                                    src="/assets/images/screenshots/frictionless-access.png" 
+                                    alt="Kontrol Mobile App" 
+                                    className="scale-90 md:scale-100 origin-bottom-right drop-shadow-2xl"
+                                />
                             </motion.div>
                         </motion.div>
 
-                        {/* Floating Activity Cards */}
-                        <div className="absolute left-10 top-1/3 hidden md:block">
-                            <motion.div
-                                animate={{ y: [0, -10, 0] }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                                className="flex items-center gap-3 rounded-2xl bg-white/80 p-4 shadow-xl backdrop-blur-md dark:bg-slate-900/80"
-                            >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                                    <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        {/* Floating Activity Card */}
+                        <motion.div 
+                            className="absolute -left-4 md:-left-12 top-1/3 z-20 hidden lg:block"
+                            animate={{ y: [0, 15, 0] }}
+                            transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+                        >
+                            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-2xl backdrop-blur-xl">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20">
+                                    <ShieldCheck className="h-6 w-6 text-blue-400" />
                                 </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">Visitor Arrived</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">Just now</p>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Visitor Approved</p>
+                                    <p className="text-xs text-slate-400">David Smith • Just now</p>
                                 </div>
-                            </motion.div>
-                        </div>
-                        
-                        <div className="absolute right-10 bottom-1/3 hidden md:block">
-                            <motion.div
-                                animate={{ y: [0, 10, 0] }}
-                                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-                                className="flex items-center gap-3 rounded-2xl bg-white/80 p-4 shadow-xl backdrop-blur-md dark:bg-slate-900/80"
-                            >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">Estate Due Paid</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">2 mins ago</p>
-                                </div>
-                            </motion.div>
-                        </div>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* THE PROBLEM SECTION */}
-            <section className="bg-slate-50 py-24 sm:py-32 dark:bg-slate-950">
+            {/* THE PROBLEM SECTION - HIGH CONTRAST */}
+            <section className="bg-white pt-48 pb-32 sm:pt-64 sm:pb-40 lg:pt-[450px] dark:bg-slate-900">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center">
+                    <div className="mx-auto max-w-4xl text-center">
                         <motion.h2 
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl"
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                            className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl"
                         >
-                            Most Estates Still Run On Calls, Chats, And Paper.
+                            Stop running your estate on spreadsheets and phone calls.
                         </motion.h2>
                     </div>
+                    
                     <motion.div 
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{ once: true }}
-                        className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:max-w-none lg:grid-cols-3"
+                        viewport={{ once: true, margin: "-100px" }}
+                        className="mx-auto mt-24 grid max-w-lg grid-cols-1 gap-12 sm:max-w-none sm:grid-cols-3"
                     >
                         {[
-                            { icon: Smartphone, title: 'Visitor approvals through phone calls' },
-                            { icon: FileText, title: 'Manual visitor logs' },
-                            { icon: Users, title: 'Scattered WhatsApp groups' },
-                            { icon: Bell, title: 'Missed announcements' },
-                            { icon: Clock, title: 'Untracked resident complaints' },
-                            { icon: ShieldCheck, title: 'Difficult collection processes' },
+                            { icon: ShieldCheck, title: 'No more gate bottlenecks.', desc: 'Residents generate secure passes. Security simply scans them. Fast, secure, and fully logged.' },
+                            { icon: Zap, title: 'Instant Due Collections.', desc: 'Automated billing, instant receipts, and complete transparency for all estate finances.' },
+                            { icon: MessageSquare, title: 'Organized Communication.', desc: 'Move away from chaotic WhatsApp groups. Send targeted announcements and track complaints directly.' },
                         ].map((item, index) => (
                             <motion.div 
                                 key={index} 
-                                variants={fadeInUp}
-                                className="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md dark:bg-slate-900 dark:ring-slate-800"
+                                variants={fadeUp}
+                                className="flex flex-col items-center text-center group"
                             >
-                                <item.icon className="mb-4 h-8 w-8 text-slate-400 dark:text-slate-500" />
-                                <h3 className="text-lg font-medium text-slate-900 dark:text-white">{item.title}</h3>
+                                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-50 ring-1 ring-slate-200 transition-all group-hover:scale-110 group-hover:bg-blue-50 group-hover:ring-blue-200 dark:bg-slate-800 dark:ring-slate-700 dark:group-hover:bg-blue-900/30 dark:group-hover:ring-blue-500/30">
+                                    <item.icon className="h-10 w-10 text-slate-600 transition-colors group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400" />
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">{item.title}</h3>
+                                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">{item.desc}</p>
                             </motion.div>
                         ))}
                     </motion.div>
                 </div>
             </section>
 
-            {/* FEATURE SHOWCASE */}
-            <section className="py-24 sm:py-32 bg-white dark:bg-slate-900">
+            {/* PREMIUM FEATURE SHOWCASE */}
+            <section className="overflow-hidden bg-slate-50 py-32 sm:py-48 dark:bg-slate-950">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="space-y-24">
-                        {[
-                            { title: 'Manage Visitors', desc: 'Generate visitor passes and know when guests arrive.', reverse: false },
-                            { title: 'Collect Estate Dues', desc: 'Keep community payments organized and transparent.', reverse: true },
-                            { title: 'Send Announcements', desc: 'Keep residents informed about important updates.', reverse: false },
-                            { title: 'Track Resident Complaints', desc: 'Residents can report issues while management tracks progress.', reverse: true },
-                        ].map((feature, idx) => (
-                            <motion.div 
-                                key={idx}
-                                initial={{ opacity: 0, y: 40 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-100px" }}
-                                className={`flex flex-col gap-12 lg:flex-row lg:items-center ${feature.reverse ? 'lg:flex-row-reverse' : ''}`}
-                            >
-                                <div className="lg:w-1/2">
-                                    <h3 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{feature.title}</h3>
-                                    <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">{feature.desc}</p>
-                                </div>
-                                <div className="lg:w-1/2">
-                                    <div className="aspect-[4/3] rounded-2xl bg-slate-100 p-2 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                                        <div className="h-full w-full rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse flex items-center justify-center">
-                                            <span className="text-slate-400 dark:text-slate-500">Screenshot Placeholder</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* A DAY WITH KONTROL */}
-            <section className="bg-slate-50 py-24 sm:py-32 dark:bg-slate-950">
-                <div className="mx-auto max-w-3xl px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">A Day With Kontrol</h2>
-                    </div>
-                    <div className="space-y-8">
-                        {[
-                            { time: 'Morning', event: 'Visitor pass generated.' },
-                            { time: 'Midday', event: 'Guest arrives.' },
-                            { time: 'Afternoon', event: 'Announcement sent.' },
-                            { time: 'Evening', event: 'Complaint reported.' },
-                            { time: 'Shortly After', event: 'Complaint acknowledged.' },
-                        ].map((item, idx) => (
-                            <motion.div 
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                className="flex gap-6 items-center"
-                            >
-                                <div className="w-32 flex-shrink-0 text-right">
-                                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{item.time}</span>
-                                </div>
-                                <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-                                    <div className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400" />
-                                </div>
-                                <div className="flex-1 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-                                    <p className="text-lg font-medium text-slate-900 dark:text-white">{item.event}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* WHO IT'S FOR */}
-            <section className="py-24 sm:py-32 bg-white dark:bg-slate-900">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center mb-16">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Who It's For</h2>
-                    </div>
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                        {['Residents', 'Property Owners', 'Estate Managers', 'Security Teams'].map((role, idx) => (
-                            <motion.div 
-                                key={idx}
-                                whileHover={{ y: -5 }}
-                                className="rounded-2xl bg-slate-50 p-8 ring-1 ring-slate-200 dark:bg-slate-800/50 dark:ring-slate-700"
-                            >
-                                <HomeIcon className="mb-4 h-8 w-8 text-blue-600 dark:text-blue-400" />
-                                <h3 className="text-xl font-medium text-slate-900 dark:text-white">{role}</h3>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* FREE TRIAL */}
-            <section className="bg-blue-600 py-24 sm:py-32 dark:bg-blue-900">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Try Kontrol In Your Estate First.</h2>
-                    <p className="mx-auto mt-6 max-w-xl text-lg text-blue-100">
-                        We'll help you set it up and your community can test it before making any commitment.
-                    </p>
-                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
-                        <div className="flex flex-col items-center">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white font-bold text-lg">1</span>
-                            <span className="mt-4 text-white font-medium">Apply</span>
-                        </div>
-                        <ChevronRight className="hidden sm:block h-6 w-6 text-blue-300" />
-                        <div className="flex flex-col items-center">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white font-bold text-lg">2</span>
-                            <span className="mt-4 text-white font-medium">Get Approved</span>
-                        </div>
-                        <ChevronRight className="hidden sm:block h-6 w-6 text-blue-300" />
-                        <div className="flex flex-col items-center">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white font-bold text-lg">3</span>
-                            <span className="mt-4 text-white font-medium">Start Your Trial</span>
-                        </div>
-                    </div>
-                    <div className="mt-12">
-                        <Link
-                            href="/apply"
-                            className="rounded-xl bg-white px-8 py-4 text-lg font-semibold text-blue-600 shadow-sm transition-all hover:bg-slate-50 hover:scale-105"
+                    <div className="space-y-48">
+                        {/* Feature 1 */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true, margin: "-200px" }}
+                            className="flex flex-col gap-16 lg:flex-row lg:items-center"
                         >
-                            Apply Now
-                        </Link>
+                            <div className="lg:w-1/2 lg:pr-16">
+                                <h2 className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl mb-8 leading-tight">
+                                    Frictionless Access Control.
+                                </h2>
+                                <p className="text-xl text-slate-600 dark:text-slate-400 mb-12 leading-relaxed">
+                                    Empower your residents to invite guests with a single tap. Generate unique QR codes that security can instantly scan at the gate.
+                                </p>
+                                <ul className="space-y-8">
+                                    {[
+                                        { title: 'Instant QR Passes', desc: 'Secure, time-bound access codes for visitors.' },
+                                        { title: 'Real-time Notifications', desc: 'Know exactly when your guest arrives at the gate.' },
+                                        { title: 'Digital Logs', desc: 'A complete, searchable history of everyone entering the estate.' },
+                                    ].map((benefit, idx) => (
+                                        <li key={idx} className="flex gap-5">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                                                <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-xl">{benefit.title}</h4>
+                                                <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="lg:w-1/2 flex justify-center">
+                                <motion.div 
+                                    initial={{ x: 100, opacity: 0 }}
+                                    whileInView={{ x: 0, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 40, damping: 20 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <IphoneFrame src="/assets/images/screenshots/frictionless-access.png" alt="Access Control App" />
+                                </motion.div>
+                            </div>
+                        </motion.div>
+
+                        {/* Feature 2 */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true, margin: "-200px" }}
+                            className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center"
+                        >
+                            <div className="lg:w-1/2 lg:pl-16">
+                                <h2 className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl mb-8 leading-tight">
+                                    Automated Collections.
+                                </h2>
+                                <p className="text-xl text-slate-600 dark:text-slate-400 mb-12 leading-relaxed">
+                                    End the hassle of chasing payments. Invoice residents automatically, track balances, and generate instant financial reports.
+                                </p>
+                                <ul className="space-y-8">
+                                    {[
+                                        { title: 'Instant Billing', desc: 'Send dues to all residents with a single click.' },
+                                        { title: 'Defaulter Tracking', desc: 'Automatically restrict gate access for outstanding balances.' },
+                                        { title: 'Transparent Receipts', desc: 'Residents receive instant digital receipts upon payment.' },
+                                    ].map((benefit, idx) => (
+                                        <li key={idx} className="flex gap-5">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
+                                                <Lock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-xl">{benefit.title}</h4>
+                                                <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="lg:w-1/2 flex justify-center">
+                                <motion.div 
+                                    initial={{ x: -100, opacity: 0 }}
+                                    whileInView={{ x: 0, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 40, damping: 20 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <IphoneFrame src="/assets/images/screenshots/collections.png" alt="Billing and Payments" />
+                                </motion.div>
+                            </div>
+                        </motion.div>
+
+                        {/* Feature 3 */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true, margin: "-200px" }}
+                            className="flex flex-col gap-16 lg:flex-row lg:items-center"
+                        >
+                            <div className="lg:w-1/2 lg:pr-16">
+                                <h2 className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl mb-8 leading-tight">
+                                    Instant Communication.
+                                </h2>
+                                <p className="text-xl text-slate-600 dark:text-slate-400 mb-12 leading-relaxed">
+                                    Replace messy chat groups with an organized system. Send estate-wide announcements and manage resident complaints in real-time.
+                                </p>
+                                <ul className="space-y-8">
+                                    {[
+                                        { title: 'Push Announcements', desc: 'Ensure every resident gets important updates instantly.' },
+                                        { title: 'Complaint Tracking', desc: 'Residents can report issues and track resolution progress.' },
+                                        { title: 'Organized History', desc: 'A clean log of all past communications and resolved issues.' },
+                                    ].map((benefit, idx) => (
+                                        <li key={idx} className="flex gap-5">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/40">
+                                                <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-xl">{benefit.title}</h4>
+                                                <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="lg:w-1/2 flex justify-center">
+                                <motion.div 
+                                    initial={{ x: 100, opacity: 0 }}
+                                    whileInView={{ x: 0, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 40, damping: 20 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <IphoneFrame src="/assets/images/screenshots/incidents.png" alt="Announcements and Complaints" />
+                                </motion.div>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* PRICING */}
-            <section className="py-24 sm:py-32 bg-white dark:bg-slate-900" id="pricing">
+            {/* PRICING - STRIPE INSPIRED */}
+            <section className="py-32 sm:py-48 bg-white dark:bg-slate-900" id="pricing">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center mb-16">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Simple Pricing</h2>
-                        <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">One platform for your entire community.</p>
+                    <div className="mx-auto max-w-3xl text-center mb-24">
+                        <motion.h2 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-7xl"
+                        >
+                            Simple, transparent pricing.
+                        </motion.h2>
+                        <motion.p 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="mt-8 text-2xl text-slate-600 dark:text-slate-400"
+                        >
+                            One powerful platform for your entire community. No hidden fees.
+                        </motion.p>
                     </div>
                     
-                    <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3">
+                    <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3 lg:gap-12">
                         {/* Quarterly */}
-                        <div className="rounded-3xl p-8 ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900">
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Quarterly</h3>
-                            <p className="mt-4 flex items-baseline gap-x-2">
-                                <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">₦15,000</span>
-                            </p>
-                            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">Per Resident<br/>Per Quarter</p>
-                            <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Visitor Management</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Estate Payments</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Announcements</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Resident Complaints</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Platform Updates</li>
-                            </ul>
-                        </div>
+                        <motion.div 
+                            whileHover={{ y: -8 }}
+                            className="rounded-[2.5rem] p-10 ring-1 ring-slate-200 dark:ring-slate-800 bg-slate-50/50 dark:bg-slate-900/50 transition-shadow hover:shadow-xl flex flex-col"
+                        >
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Quarterly</h3>
+                            <div className="mt-6 flex items-baseline gap-x-2">
+                                <span className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">₦15k</span>
+                            </div>
+                            <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">Per resident / Quarter</p>
+                            
+                            <div className="mt-10 flex-1 space-y-4">
+                                <p className="font-semibold text-slate-900 dark:text-white mb-4">Everything included:</p>
+                                {['Visitor Management', 'Estate Payments', 'Announcements', 'Resident Complaints', 'Unlimited Residents'].map((feature, i) => (
+                                    <div key={i} className="flex gap-x-3 text-base text-slate-700 dark:text-slate-300">
+                                        <CheckCircle2 className="h-6 w-6 text-slate-400 shrink-0" />
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
 
-                        {/* Semi-Annual */}
-                        <div className="rounded-3xl p-8 ring-2 ring-blue-600 bg-slate-50 dark:bg-slate-800 relative">
-                            <span className="absolute -top-4 right-8 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold leading-5 text-white">Most Popular</span>
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Semi-Annual</h3>
-                            <p className="mt-4 flex items-baseline gap-x-2">
-                                <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">₦27,000</span>
-                            </p>
-                            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">Per Resident<br/>Every 6 Months</p>
-                            <div className="mt-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">Save 10%</div>
-                            <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Visitor Management</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Estate Payments</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Announcements</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Resident Complaints</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Platform Updates</li>
-                            </ul>
-                        </div>
+                        {/* Semi-Annual - HIGHLIGHTED */}
+                        <motion.div 
+                            whileHover={{ y: -8 }}
+                            className="relative rounded-[2.5rem] p-10 ring-2 ring-blue-600 bg-white dark:bg-slate-800 shadow-2xl shadow-blue-900/20 flex flex-col"
+                        >
+                            <div className="absolute -top-5 inset-x-0 flex justify-center">
+                                <span className="rounded-full bg-blue-600 px-6 py-2 text-sm font-bold tracking-wide text-white shadow-lg">
+                                    RECOMMENDED
+                                </span>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semi-Annual</h3>
+                            <div className="mt-6 flex items-baseline gap-x-2">
+                                <span className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">₦27k</span>
+                            </div>
+                            <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">Per resident / 6 Months</p>
+                            <div className="mt-4 inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 self-start">
+                                Save 10%
+                            </div>
+                            <div className="mt-10 flex-1 space-y-4">
+                                <p className="font-semibold text-slate-900 dark:text-white mb-4">Everything included:</p>
+                                {['Visitor Management', 'Estate Payments', 'Announcements', 'Resident Complaints', 'Unlimited Residents'].map((feature, i) => (
+                                    <div key={i} className="flex gap-x-3 text-base font-medium text-slate-900 dark:text-white">
+                                        <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400 shrink-0" />
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+                            <Link href="/apply" className="mt-12 block w-full rounded-2xl bg-blue-600 px-3 py-4 text-center text-base font-bold text-white transition-all hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/30">
+                                Start Free Trial
+                            </Link>
+                        </motion.div>
 
                         {/* Annual */}
-                        <div className="rounded-3xl p-8 ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900">
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Annual</h3>
-                            <p className="mt-4 flex items-baseline gap-x-2">
-                                <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">₦48,000</span>
-                            </p>
-                            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">Per Resident<br/>Per Year</p>
-                            <div className="mt-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">Save 20% - Best Value</div>
-                            <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Visitor Management</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Estate Payments</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Announcements</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Resident Complaints</li>
-                                <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-blue-600" /> Platform Updates</li>
-                            </ul>
-                        </div>
+                        <motion.div 
+                            whileHover={{ y: -8 }}
+                            className="rounded-[2.5rem] p-10 ring-1 ring-slate-200 dark:ring-slate-800 bg-slate-50/50 dark:bg-slate-900/50 transition-shadow hover:shadow-xl flex flex-col"
+                        >
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Annual</h3>
+                            <div className="mt-6 flex items-baseline gap-x-2">
+                                <span className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">₦48k</span>
+                            </div>
+                            <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">Per resident / Year</p>
+                            <div className="mt-4 inline-flex rounded-full bg-slate-200 px-3 py-1 text-sm font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300 self-start">
+                                Save 20%
+                            </div>
+                            <div className="mt-10 flex-1 space-y-4">
+                                <p className="font-semibold text-slate-900 dark:text-white mb-4">Everything included:</p>
+                                {['Visitor Management', 'Estate Payments', 'Announcements', 'Resident Complaints', 'Unlimited Residents'].map((feature, i) => (
+                                    <div key={i} className="flex gap-x-3 text-base text-slate-700 dark:text-slate-300">
+                                        <CheckCircle2 className="h-6 w-6 text-slate-400 shrink-0" />
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* BIG CTA FOOTER */}
+            <section className="bg-slate-900 py-40 sm:py-56 relative overflow-hidden">
+                <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full translate-y-1/2 scale-150"></div>
+                <div className="relative z-10 mx-auto max-w-5xl px-6 lg:px-8 text-center">
+                    <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">
+                        Ready to upgrade your estate?
+                    </h2>
+                    <p className="mx-auto mt-10 max-w-2xl text-2xl text-slate-300">
+                        Join modern communities using Kontrol to simplify their operations.
+                    </p>
+                    <div className="mt-16">
+                        <Link
+                            href="/apply"
+                            className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-12 py-6 text-2xl font-bold text-slate-900 shadow-[0_0_50px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-slate-50"
+                        >
+                            Apply for your estate
+                            <ChevronRight className="h-8 w-8" />
+                        </Link>
                     </div>
                 </div>
             </section>
