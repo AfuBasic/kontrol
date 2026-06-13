@@ -279,7 +279,7 @@ export default function PublicLayout({ children }: Props) {
                             </Link>
                         </div>
 
-                        <p className="text-sm text-slate-400 dark:text-slate-500">&copy; {currentYear} Kontrol. All rights reserved.</p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">&copy; {currentYear} Afutunde Solutions. All rights reserved.</p>
                     </div>
                 </div>
             </footer>
