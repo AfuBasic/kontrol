@@ -19,9 +19,8 @@ const sectionFadeUp: Variants = {
 };
 
 const staggerContainer = {
-    hidden: { opacity: 0 },
+    hidden: {},
     visible: {
-        opacity: 1,
         transition: {
             staggerChildren: 0.15,
         },
@@ -145,7 +144,7 @@ export default function Home() {
                             variants={sectionFadeUp}
                             initial="hidden"
                             whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
+                            viewport={{ once: true, amount: 'some' }}
                             className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white"
                         >
                             Stop running your estate on spreadsheets and phone calls.
@@ -193,14 +192,14 @@ export default function Home() {
                 {/* Feature 1 */}
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <motion.div
-                            variants={sectionFadeUp}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
-                            className="flex flex-col gap-16 lg:flex-row lg:items-center"
-                        >
-                            <div className="lg:w-1/2 lg:pr-16">
+                        <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
+                            <motion.div 
+                                variants={sectionFadeUp}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, amount: 'some' }}
+                                className="lg:w-1/2 lg:pr-16"
+                            >
                                 <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-6xl dark:text-white">
                                     Frictionless Access Control.
                                 </h2>
@@ -236,21 +235,21 @@ export default function Home() {
                                     <IphoneFrame src="/assets/images/screenshots/frictionless-access.png" alt="Access Control App" />
                                 </motion.div>
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
 
                 {/* Feature 2 */}
                 <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/50">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <motion.div
-                            variants={sectionFadeUp}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
-                            className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center"
-                        >
-                            <div className="lg:w-1/2 lg:pl-16">
+                        <div className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center">
+                            <motion.div 
+                                variants={sectionFadeUp}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, amount: 'some' }}
+                                className="lg:w-1/2 lg:pl-16"
+                            >
                                 <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-white sm:text-6xl">
                                     Automated Collections.
                                 </h2>
@@ -286,21 +285,21 @@ export default function Home() {
                                     <IphoneFrame src="/assets/images/screenshots/collections.png" alt="Billing and Payments" />
                                 </motion.div>
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
 
                 {/* Feature 3 */}
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <motion.div
-                            variants={sectionFadeUp}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
-                            className="flex flex-col gap-16 lg:flex-row lg:items-center"
-                        >
-                            <div className="lg:w-1/2 lg:pr-16">
+                        <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
+                            <motion.div 
+                                variants={sectionFadeUp}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, amount: 'some' }}
+                                className="lg:w-1/2 lg:pr-16"
+                            >
                                 <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-6xl dark:text-white">
                                     Instant Communication.
                                 </h2>
@@ -336,7 +335,7 @@ export default function Home() {
                                     <IphoneFrame src="/assets/images/screenshots/incidents.png" alt="Announcements and Complaints" />
                                 </motion.div>
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -366,11 +365,11 @@ export default function Home() {
                         </motion.p>
                     </div>
 
-                    <motion.div
+                    <motion.div 
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{ once: true, amount: 0.1 }}
+                        viewport={{ once: true, amount: 'some' }}
                         className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3 lg:gap-12"
                     >
                         {/* Quarterly */}
@@ -476,11 +475,11 @@ export default function Home() {
                 {/* Glow Effect */}
                 <div className="absolute inset-0 z-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]" />
 
-                <motion.div
+                <motion.div 
                     variants={sectionFadeUp}
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, amount: 0.1 }}
+                    viewport={{ once: true, amount: 'some' }}
                     className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8"
                 >
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>
