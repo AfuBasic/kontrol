@@ -438,8 +438,36 @@ export default function Home() {
             </section>
 
             {/* BIG CTA FOOTER */}
-            <section id="download" className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
-                <div className="absolute inset-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]"></div>
+            <section id="download" className="relative overflow-hidden bg-slate-950 py-40 sm:py-56 shadow-[inset_0_32px_64px_-16px_rgba(0,0,0,0.4)]">
+                {/* Advanced Layering & Texture (3D Scene effect) */}
+                <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+                    {/* Mesh Gradients */}
+                    <div className="absolute top-0 right-0 h-[80%] w-[50%] animate-pulse rounded-full bg-indigo-600/20 blur-[120px]" />
+                    <div className="absolute bottom-0 left-0 h-[70%] w-[50%] rounded-full bg-blue-500/20 blur-[100px]" />
+                    <div className="absolute top-1/2 left-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[100px]" />
+
+                    {/* Grain Texture Overlay */}
+                    <div
+                        className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
+                        style={{
+                            backgroundImage:
+                                "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
+                        }}
+                    />
+
+                    {/* Subtle Grid / Pattern */}
+                    <div
+                        className="absolute inset-0 opacity-[0.05]"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+                            backgroundSize: '32px 32px',
+                        }}
+                    />
+
+                    {/* Glass Glow */}
+                    <div className="absolute top-0 right-0 left-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+
                 <div className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8">
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>
                     <p className="mx-auto mt-10 max-w-2xl text-2xl text-slate-300">
@@ -451,23 +479,30 @@ export default function Home() {
                             className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-12 py-6 text-2xl font-bold text-slate-900 shadow-[0_0_50px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-slate-50"
                         >
                             Upgrade Your Estate
-                            <ChevronRight className="h-8 w-8" />
                         </Link>
                     </div>
                     <div className="mt-16 flex flex-col items-center justify-center gap-6 sm:flex-row">
-                        <a href="https://apps.apple.com/ng/app/access-kontrol/id6772562083" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
-                           <Apple className="h-8 w-8" /> 
-                           <div className="text-left">
-                               <p className="text-xs font-medium text-slate-400">Download on the</p>
-                               <p className="text-xl font-bold">App Store</p>
-                           </div>
+                        <a
+                            href="https://apps.apple.com/ng/app/access-kontrol/id6772562083"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20"
+                        >
+                            <Apple className="h-8 w-8" />
+                            <div className="text-left">
+                                <p className="text-xs font-medium text-slate-400">Download on the</p>
+                                <p className="text-xl font-bold">App Store</p>
+                            </div>
                         </a>
-                        <a href="#" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
-                           <img src="/assets/images/google-play.svg" alt="Google Play" className="h-8 w-8" /> 
-                           <div className="text-left">
-                               <p className="text-xs font-medium text-slate-400">GET IT ON</p>
-                               <p className="text-xl font-bold">Google Play</p>
-                           </div>
+                        <a
+                            href="#"
+                            className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20"
+                        >
+                            <img src="/assets/images/google-play.svg" alt="Google Play" className="h-8 w-8" />
+                            <div className="text-left">
+                                <p className="text-xs font-medium text-slate-400">GET IT ON</p>
+                                <p className="text-xl font-bold">Google Play</p>
+                            </div>
                         </a>
                     </div>
                 </div>
