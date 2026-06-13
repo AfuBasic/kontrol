@@ -455,7 +455,7 @@ export default function Home() {
                         </Link>
                     </div>
                     <div className="mt-16 flex flex-col items-center justify-center gap-6 sm:flex-row">
-                        <a href="#" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
+                        <a href="https://apps.apple.com/ng/app/access-kontrol/id6772562083" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
                            <Apple className="h-8 w-8" /> 
                            <div className="text-left">
                                <p className="text-xs font-medium text-slate-400">Download on the</p>
@@ -463,7 +463,7 @@ export default function Home() {
                            </div>
                         </a>
                         <a href="#" className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-slate-700 hover:ring-white/20">
-                           <Play className="h-8 w-8 text-green-400" /> 
+                           <img src="/assets/images/google-play.svg" alt="Google Play" className="h-8 w-8" /> 
                            <div className="text-left">
                                <p className="text-xs font-medium text-slate-400">GET IT ON</p>
                                <p className="text-xl font-bold">Google Play</p>
