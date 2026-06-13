@@ -182,10 +182,10 @@ export default function Home() {
             </section>
 
             {/* PREMIUM FEATURE SHOWCASE */}
-            <section id="features" className="overflow-hidden bg-slate-50 py-32 sm:py-48 dark:bg-slate-950">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="space-y-48">
-                        {/* Feature 1 */}
+            <div id="features" className="bg-slate-50 dark:bg-slate-950">
+                {/* Feature 1 */}
+                <section className="overflow-hidden py-24 sm:py-32">
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
@@ -229,8 +229,12 @@ export default function Home() {
                                 </motion.div>
                             </div>
                         </motion.div>
+                    </div>
+                </section>
 
-                        {/* Feature 2 */}
+                {/* Feature 2 */}
+                <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/50">
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
@@ -238,10 +242,10 @@ export default function Home() {
                             className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pl-16">
-                                <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-6xl dark:text-white">
+                                <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-white sm:text-6xl">
                                     Automated Collections.
                                 </h2>
-                                <p className="mb-12 text-xl leading-relaxed text-slate-600 dark:text-slate-400">
+                                <p className="mb-12 text-xl leading-relaxed text-slate-400">
                                     End the hassle of chasing payments. Invoice residents automatically, track balances, and generate instant
                                     financial reports.
                                 </p>
@@ -252,12 +256,12 @@ export default function Home() {
                                         { title: 'Transparent Receipts', desc: 'Residents receive instant digital receipts upon payment.' },
                                     ].map((benefit, idx) => (
                                         <li key={idx} className="flex gap-5">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
-                                                <Lock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-900/40">
+                                                <Lock className="h-5 w-5 text-green-400" />
                                             </div>
                                             <div>
-                                                <h4 className="text-xl font-bold text-slate-900 dark:text-white">{benefit.title}</h4>
-                                                <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
+                                                <h4 className="text-xl font-bold text-white">{benefit.title}</h4>
+                                                <p className="mt-2 text-lg text-slate-400">{benefit.desc}</p>
                                             </div>
                                         </li>
                                     ))}
@@ -274,8 +278,12 @@ export default function Home() {
                                 </motion.div>
                             </div>
                         </motion.div>
+                    </div>
+                </section>
 
-                        {/* Feature 3 */}
+                {/* Feature 3 */}
+                <section className="overflow-hidden py-24 sm:py-32">
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
@@ -320,8 +328,8 @@ export default function Home() {
                             </div>
                         </motion.div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
             {/* PRICING - STRIPE INSPIRED */}
             <section className="bg-white py-32 sm:py-48 dark:bg-slate-900" id="pricing">
