@@ -187,9 +187,10 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true, margin: '-200px' }}
+                            variants={fadeUp}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: '-100px' }}
                             className="flex flex-col gap-16 lg:flex-row lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pr-16">
@@ -236,9 +237,10 @@ export default function Home() {
                 <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/50">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true, margin: '-200px' }}
+                            variants={fadeUp}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: '-100px' }}
                             className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pl-16">
@@ -285,9 +287,10 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true, margin: '-200px' }}
+                            variants={fadeUp}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: '-100px' }}
                             className="flex flex-col gap-16 lg:flex-row lg:items-center"
                         >
                             <div className="lg:w-1/2 lg:pr-16">
@@ -354,9 +357,16 @@ export default function Home() {
                         </motion.p>
                     </div>
 
-                    <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3 lg:gap-12">
+                    <motion.div
+                        variants={staggerContainer}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: '-100px' }}
+                        className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-5xl lg:grid-cols-3 lg:gap-12"
+                    >
                         {/* Quarterly */}
                         <motion.div
+                            variants={fadeUp}
                             whileHover={{ y: -8 }}
                             className="flex flex-col rounded-[2.5rem] bg-slate-50/50 p-10 ring-1 ring-slate-200 transition-shadow hover:shadow-xl dark:bg-slate-900/50 dark:ring-slate-800"
                         >
@@ -381,6 +391,7 @@ export default function Home() {
 
                         {/* Semi-Annual - HIGHLIGHTED */}
                         <motion.div
+                            variants={fadeUp}
                             whileHover={{ y: -8 }}
                             className="relative flex flex-col rounded-[2.5rem] bg-white p-10 shadow-2xl ring-2 shadow-blue-900/20 ring-blue-600 dark:bg-slate-800"
                         >
@@ -418,6 +429,7 @@ export default function Home() {
 
                         {/* Annual */}
                         <motion.div
+                            variants={fadeUp}
                             whileHover={{ y: -8 }}
                             className="flex flex-col rounded-[2.5rem] bg-slate-50/50 p-10 ring-1 ring-slate-200 transition-shadow hover:shadow-xl dark:bg-slate-900/50 dark:ring-slate-800"
                         >
@@ -441,21 +453,27 @@ export default function Home() {
                                 )}
                             </div>
                         </motion.div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
             {/* BIG CTA FOOTER */}
             <section id="download" className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
                 {/* Simple Dotted Pattern Background */}
-                <div 
-                    className="absolute inset-0 opacity-[0.05]" 
-                    style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '32px 32px' }} 
+                <div
+                    className="absolute inset-0 opacity-[0.05]"
+                    style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '32px 32px' }}
                 />
                 {/* Glow Effect */}
                 <div className="absolute inset-0 z-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]" />
 
-                <div className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8">
+                <motion.div
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: '-100px' }}
+                    className="relative z-10 mx-auto max-w-5xl px-6 text-center lg:px-8"
+                >
                     <h2 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl">Ready to upgrade your estate?</h2>
                     <p className="mx-auto mt-10 max-w-2xl text-2xl text-slate-300">
                         Join modern communities using Kontrol to simplify their operations.
@@ -492,7 +510,7 @@ export default function Home() {
                             </div>
                         </a>
                     </div>
-                </div>
+                </motion.div>
             </section>
         </PublicLayout>
     );
