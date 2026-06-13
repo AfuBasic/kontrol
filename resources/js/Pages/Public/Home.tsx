@@ -18,7 +18,7 @@ const sectionFadeUp: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
     hidden: {},
     visible: {
         transition: {
@@ -193,7 +193,7 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
-                            <motion.div 
+                            <motion.div
                                 variants={sectionFadeUp}
                                 initial="hidden"
                                 whileInView="visible"
@@ -224,7 +224,7 @@ export default function Home() {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </motion.div>
                             <div className="flex justify-center lg:w-1/2">
                                 <motion.div
                                     initial={{ x: 100, opacity: 0 }}
@@ -243,7 +243,7 @@ export default function Home() {
                 <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/50">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center">
-                            <motion.div 
+                            <motion.div
                                 variants={sectionFadeUp}
                                 initial="hidden"
                                 whileInView="visible"
@@ -274,7 +274,7 @@ export default function Home() {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </motion.div>
                             <div className="flex justify-center lg:w-1/2">
                                 <motion.div
                                     initial={{ x: -100, opacity: 0 }}
@@ -293,7 +293,7 @@ export default function Home() {
                 <section className="overflow-hidden py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
-                            <motion.div 
+                            <motion.div
                                 variants={sectionFadeUp}
                                 initial="hidden"
                                 whileInView="visible"
@@ -324,7 +324,7 @@ export default function Home() {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </motion.div>
                             <div className="flex justify-center lg:w-1/2">
                                 <motion.div
                                     initial={{ x: 100, opacity: 0 }}
@@ -365,7 +365,7 @@ export default function Home() {
                         </motion.p>
                     </div>
 
-                    <motion.div 
+                    <motion.div
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="visible"
@@ -475,7 +475,7 @@ export default function Home() {
                 {/* Glow Effect */}
                 <div className="absolute inset-0 z-0 translate-y-1/2 scale-150 rounded-full bg-blue-600/20 blur-[100px]" />
 
-                <motion.div 
+                <motion.div
                     variants={sectionFadeUp}
                     initial="hidden"
                     whileInView="visible"
