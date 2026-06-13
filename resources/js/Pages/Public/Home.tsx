@@ -1,20 +1,19 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, ChevronRight, Apple, Play } from 'lucide-react';
-import PublicLayout from '@/Layouts/PublicLayout';
+import type { Variants } from 'framer-motion';
+import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, Apple } from 'lucide-react';
+import { useRef } from 'react';
 import DesktopFrame from '@/Components/Mockups/DesktopFrame';
 import IphoneFrame from '@/Components/Mockups/IphoneFrame';
-import { useRef } from 'react';
-
-import { Variants } from 'framer-motion';
+import PublicLayout from '@/Layouts/PublicLayout';
 
 const fadeUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 25 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
 const sectionFadeUp: Variants = {
-    hidden: { opacity: 0, y: 60 },
+    hidden: { opacity: 0, y: 40 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
@@ -28,7 +27,6 @@ const staggerContainer: Variants = {
 };
 
 export default function Home() {
-    const { scrollYProgress } = useScroll();
     const heroRef = useRef(null);
     const { scrollYProgress: heroProgress } = useScroll({
         target: heroRef,
@@ -39,7 +37,7 @@ export default function Home() {
     const yBg = useTransform(heroProgress, [0, 1], [0, 300]);
     const yDesktop = useTransform(heroProgress, [0, 1], [0, -100]);
     const yMobile = useTransform(heroProgress, [0, 1], [0, -250]);
-    const opacityHeroText = useTransform(heroProgress, [0, 0.4], [1, 0]);
+    const opacityHeroContent = useTransform(heroProgress, [0, 0.4], [1, 0]);
 
     return (
         <PublicLayout>
@@ -51,7 +49,7 @@ export default function Home() {
             <section ref={heroRef} className="relative bg-slate-950 pt-32 sm:pt-40">
                 {/* Parallax Background */}
                 <div className="absolute inset-0 z-0 overflow-hidden">
-                    <motion.div style={{ y: yBg }} className="absolute inset-x-0 -inset-y-32">
+                    <motion.div style={{ y: yBg }} className="absolute inset-x-0 -inset-y-32 will-change-transform">
                         <img
                             src="/assets/images/premium-estate-hero.png"
                             alt="Premium Real Estate"
@@ -64,35 +62,32 @@ export default function Home() {
                 </div>
 
                 <div className="relative z-10 mx-auto max-w-7xl px-6 pb-64 sm:pb-80 lg:px-8 lg:pb-[400px]">
-                    <motion.div
-                        style={{ opacity: opacityHeroText }}
-                        initial="hidden"
-                        animate="visible"
-                        variants={staggerContainer}
-                        className="mx-auto max-w-5xl text-center"
-                    >
-                        <motion.h1
-                            variants={fadeUp}
-                            className="text-6xl font-extrabold tracking-tight text-white drop-shadow-sm sm:text-7xl lg:text-8xl"
-                        >
-                            The Operating System <br className="hidden lg:block" />
-                            <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">For Your Estate.</span>
-                        </motion.h1>
-                        <motion.p
-                            variants={fadeUp}
-                            className="mx-auto mt-8 max-w-2xl text-xl leading-8 font-medium text-slate-300 drop-shadow-sm sm:text-2xl"
-                        >
-                            Ditch the paper logs and WhatsApp groups. Manage visitors, collections, and residents with one seamlessly integrated
-                            platform.
-                        </motion.p>
-
-                        <motion.div variants={fadeUp} className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
-                            <Link
-                                href="/apply"
-                                className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.7)]"
+                    {/* Isolated scroll-opacity wrapper — decoupled from stagger entry */}
+                    <motion.div style={{ opacity: opacityHeroContent }} className="will-change-transform">
+                        <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="mx-auto max-w-5xl text-center">
+                            <motion.h1
+                                variants={fadeUp}
+                                className="text-6xl font-extrabold tracking-tight text-white drop-shadow-sm sm:text-7xl lg:text-8xl"
                             >
-                                Get Started Free
-                            </Link>
+                                The Operating System <br className="hidden lg:block" />
+                                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">For Your Estate.</span>
+                            </motion.h1>
+                            <motion.p
+                                variants={fadeUp}
+                                className="mx-auto mt-8 max-w-2xl text-xl leading-8 font-medium text-slate-300 drop-shadow-sm sm:text-2xl"
+                            >
+                                Ditch the paper logs and WhatsApp groups. Manage visitors, collections, and residents with one seamlessly integrated
+                                platform.
+                            </motion.p>
+
+                            <motion.div variants={fadeUp} className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
+                                <Link
+                                    href="/apply"
+                                    className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.7)]"
+                                >
+                                    Get Started Free
+                                </Link>
+                            </motion.div>
                         </motion.div>
                     </motion.div>
                 </div>
@@ -101,13 +96,21 @@ export default function Home() {
                 <div className="pointer-events-none absolute bottom-0 left-1/2 z-20 w-full max-w-[1200px] -translate-x-1/2 translate-y-[40%] px-4 sm:translate-y-1/2 sm:px-6">
                     <div className="pointer-events-auto relative">
                         {/* Desktop Dashboard */}
-                        <motion.div style={{ y: yDesktop }} className="relative z-10 w-full">
+                        <motion.div style={{ y: yDesktop }} className="relative z-10 w-full will-change-transform">
                             <DesktopFrame src="/assets/images/screenshots/large-desktop.png" alt="Kontrol Desktop Dashboard" />
                         </motion.div>
 
                         {/* Floating Mobile App */}
-                        <motion.div style={{ y: yMobile }} className="absolute -right-4 bottom-12 z-20 hidden md:-right-12 md:bottom-24 md:block">
-                            <motion.div animate={{ y: [0, -20, 0] }} transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}>
+                        <motion.div
+                            style={{ y: yMobile }}
+                            className="absolute -right-4 bottom-12 z-20 hidden will-change-transform md:-right-12 md:bottom-24 md:block"
+                        >
+                            <motion.div
+                                animate={{ y: [0, -20, 0] }}
+                                transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+                                className="will-change-transform"
+                                style={{ backfaceVisibility: 'hidden' }}
+                            >
                                 <IphoneFrame
                                     src="/assets/images/screenshots/frictionless-access.png"
                                     alt="Kontrol Mobile App"
@@ -118,9 +121,10 @@ export default function Home() {
 
                         {/* Floating Activity Card */}
                         <motion.div
-                            className="absolute top-1/3 -left-4 z-20 hidden md:-left-12 lg:block"
+                            className="absolute top-1/3 -left-4 z-20 hidden will-change-transform md:-left-12 lg:block"
                             animate={{ y: [0, 15, 0] }}
                             transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut', delay: 1 }}
+                            style={{ backfaceVisibility: 'hidden' }}
                         >
                             <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-2xl backdrop-blur-xl">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20">
