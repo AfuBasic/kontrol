@@ -49,7 +49,13 @@ export default function IphoneFrame({ src, alt, className = '' }: Props) {
                 </div>
 
                 {/* The Mobile Screenshot */}
-                <img src={src} alt={alt} className="h-full w-full bg-white object-cover" />
+                <div className="pt-14 h-full w-full bg-white dark:bg-slate-900">
+                    <img
+                        src={src}
+                        alt={alt}
+                        className="h-full w-full object-cover"
+                    />
+                </div>
             </div>
 
             {/* Subtle glow behind the phone */}

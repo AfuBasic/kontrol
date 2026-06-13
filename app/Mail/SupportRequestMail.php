@@ -39,7 +39,10 @@ class SupportRequestMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.support-request',
+            view: 'mail.support-request',
+            with: [
+                'data' => $this->data,
+            ],
         );
     }
 

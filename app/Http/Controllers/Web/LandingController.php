@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SupportRequestMail;
+use App\Models\EstateApplication;
+use App\Mail\EstateApplicationMail;
 
 class LandingController extends Controller
 {
@@ -28,8 +32,8 @@ class LandingController extends Controller
             'message' => 'required|string|min:10|max:5000',
         ]);
 
-        \Illuminate\Support\Facades\Mail::to('support@usekontrol.com')
-            ->send(new \App\Mail\SupportRequestMail($validated));
+        Mail::to('support@usekontrol.com')
+            ->send(new SupportRequestMail($validated));
 
         return back()->with('success', 'Thanks for reaching out! We will get back to you soon.');
     }
@@ -47,7 +51,7 @@ class LandingController extends Controller
             'contactPhone' => 'nullable|string|max:20',
         ]);
 
-        $application = \App\Models\EstateApplication::create([
+        $application = EstateApplication::create([
             'estate_name' => $validated['estateName'],
             'address' => $validated['estateLocation'],
             'email' => $validated['contactEmail'],
@@ -56,8 +60,8 @@ class LandingController extends Controller
             'status' => 'pending',
         ]);
 
-        \Illuminate\Support\Facades\Mail::to('afutunde@gmail.com')
-            ->send(new \App\Mail\EstateApplicationMail($application));
+        Mail::to('afutunde@gmail.com')
+            ->send(new EstateApplicationMail($application));
 
         return back()->with('success', 'Application received successfully!');
     }

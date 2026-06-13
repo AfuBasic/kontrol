@@ -40,7 +40,7 @@ class EstateApplicationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.estate-application',
+            view: 'mail.estate-application',
             with: [
                 'application' => $this->application,
             ],
