@@ -5,39 +5,33 @@ namespace App\Services\Zeus;
 use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\EstateSubscription;
-use App\Models\ResidentSubscription;
 use Illuminate\Support\Facades\DB;
 
 class PlatformAnalyticsService
 {
     public function getFounderBriefing(): array
     {
-        $newApplications = EstateApplication::where('created_at', '>=', now()->subDays(7))->count();
+        $hour = now()->hour;
+        $greeting = 'Good evening';
+        if ($hour < 12) {
+            $greeting = 'Good morning';
+        } elseif ($hour < 17) {
+            $greeting = 'Good afternoon';
+        }
+
         $newEstates = Estate::where('created_at', '>=', now()->subDays(7))->count();
+        $pendingApplications = EstateApplication::where('status', 'pending')->count();
         $mrr = number_format($this->calculateMRR(), 0);
 
         return [
-            'greeting' => $this->getGreeting(),
+            'greeting' => $greeting,
             'headline' => 'Platform momentum is building.',
             'highlights' => [
                 'estates_added' => $newEstates,
                 'mrr' => $mrr,
-                'pending_apps' => $newApplications,
+                'pending_apps' => $pendingApplications,
             ],
         ];
-    }
-
-    private function getGreeting(): string
-    {
-        $hour = now()->format('H');
-        if ($hour < 12) {
-            return 'Good morning';
-        }
-        if ($hour < 17) {
-            return 'Good afternoon';
-        }
-
-        return 'Good evening';
     }
 
     public function getExecutiveMetrics(): array
@@ -53,7 +47,7 @@ class PlatformAnalyticsService
         $activeSubscriptionsCurrent = DB::table('resident_subscriptions')
             ->where('status', 'active')
             ->count();
-            
+
         $activeSubscriptionsLastMonth = DB::table('resident_subscriptions')
             ->where('status', 'active')
             ->where('created_at', '<=', $endOfLastMonth)
@@ -123,12 +117,12 @@ class PlatformAnalyticsService
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
-    public function getPlatformGrowthChart(): array
+    public function getPlatformGrowthChart(int $months = 6): array
     {
         $data = [];
         $now = now();
 
-        for ($i = 5; $i >= 0; $i--) {
+        for ($i = $months - 1; $i >= 0; $i--) {
             $targetMonth = $now->copy()->subMonths($i);
             $endOfMonth = $targetMonth->copy()->endOfMonth();
             $startOfMonth = $targetMonth->copy()->startOfMonth();
@@ -144,7 +138,7 @@ class PlatformAnalyticsService
                 ->where('resident_subscriptions.created_at', '<=', $endOfMonth)
                 ->where(function ($query) use ($startOfMonth) {
                     $query->where('resident_subscriptions.current_period_end', '>=', $startOfMonth)
-                          ->orWhereNull('resident_subscriptions.current_period_end'); // Lifetime/Trials with no end
+                        ->orWhereNull('resident_subscriptions.current_period_end'); // Lifetime/Trials with no end
                 })
                 ->where('resident_subscriptions.status', 'active')
                 ->selectRaw('SUM(

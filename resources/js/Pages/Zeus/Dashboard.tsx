@@ -24,7 +24,7 @@ interface BriefingData {
         estates_added: number;
         mrr: string;
         pending_apps: number;
-    }
+    };
 }
 
 interface Props {
@@ -36,9 +36,10 @@ interface Props {
         trials: MetricData;
     };
     growthChart: GrowthChartData[];
+    chartRange: number;
 }
 
-export default function Dashboard({ briefing, metrics, growthChart }: Props) {
+export default function Dashboard({ briefing, metrics, growthChart, chartRange }: Props) {
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -46,6 +47,12 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(value);
+    };
+
+    const handleRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        import('@inertiajs/react').then(({ router }) => {
+            router.get(route('zeus.dashboard'), { chart_range: e.target.value }, { preserveState: true, replace: true });
+        });
     };
 
     const containerVariants = {
@@ -84,14 +91,19 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
                     </span>
                 </div>
             </div>
-            
+
             {/* Ultra-subtle background swoop */}
-            <div className="absolute -bottom-6 -right-6 h-32 w-40 opacity-[0.03] transition-opacity duration-500 group-hover:opacity-5 dark:opacity-[0.02] dark:group-hover:opacity-[0.04]">
-                <svg viewBox="0 0 100 100" className={`h-full w-full ${data.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`} fill="currentColor">
-                    {data.trend === 'up' 
-                        ? <path d="M0 100 V 80 Q 25 70 50 40 T 100 20 V 100 Z" /> 
-                        : <path d="M0 100 V 20 Q 25 40 50 70 T 100 80 V 100 Z" />
-                    }
+            <div className="absolute -right-6 -bottom-6 h-32 w-40 opacity-[0.03] transition-opacity duration-500 group-hover:opacity-5 dark:opacity-[0.02] dark:group-hover:opacity-[0.04]">
+                <svg
+                    viewBox="0 0 100 100"
+                    className={`h-full w-full ${data.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}
+                    fill="currentColor"
+                >
+                    {data.trend === 'up' ? (
+                        <path d="M0 100 V 80 Q 25 70 50 40 T 100 20 V 100 Z" />
+                    ) : (
+                        <path d="M0 100 V 20 Q 25 40 50 70 T 100 80 V 100 Z" />
+                    )}
                 </svg>
             </div>
         </motion.div>
@@ -102,14 +114,20 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
             <Head title="Founder Briefing" />
 
             <motion.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-7xl">
-                
                 {/* Founder Briefing Hero */}
                 <motion.div variants={itemVariants} className="mb-14 max-w-3xl pt-4">
-                    <h1 className="text-3xl font-medium tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
+                    <h1 className="text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
                         {briefing.greeting}, <span className="text-slate-400 dark:text-slate-500">Idris.</span>
                     </h1>
-                    <p className="mt-4 text-lg leading-relaxed text-slate-500 dark:text-slate-400 sm:text-xl">
-                        {briefing.headline} You acquired <span className="font-semibold text-slate-900 dark:text-slate-200">{briefing.highlights.estates_added} new estates</span> this week, pushing MRR to <span className="font-semibold text-slate-900 dark:text-slate-200">₦{briefing.highlights.mrr}</span>. You have <span className="font-semibold text-primary-600 dark:text-primary-400">{briefing.highlights.pending_apps} pending applications</span> in the pipeline.
+                    <p className="mt-4 text-lg leading-relaxed text-slate-500 sm:text-xl dark:text-slate-400">
+                        {briefing.headline} You acquired{' '}
+                        <span className="font-semibold text-slate-900 dark:text-slate-200">{briefing.highlights.estates_added} new estates</span> this
+                        week, pushing MRR to <span className="font-semibold text-slate-900 dark:text-slate-200">₦{briefing.highlights.mrr}</span>. You
+                        have{' '}
+                        <span className="font-semibold text-primary-600 dark:text-primary-400">
+                            {briefing.highlights.pending_apps} pending applications
+                        </span>{' '}
+                        in the pipeline.
                     </p>
                 </motion.div>
 
@@ -123,9 +141,22 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
 
                 {/* Platform Growth Visualizer */}
                 <div className="rounded-2xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40">
-                    <div className="mb-10">
-                        <h2 className="text-base font-semibold text-slate-900 dark:text-white">Platform Trajectory</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Revenue and acquisition growth over the last 6 months.</p>
+                    <div className="mb-10 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Platform Trajectory</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                Revenue and acquisition growth over the last {chartRange} months.
+                            </p>
+                        </div>
+                        <select
+                            value={chartRange}
+                            onChange={handleRangeChange}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-primary-500 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                            <option value={3}>Last 3 Months</option>
+                            <option value={6}>Last 6 Months</option>
+                            <option value={12}>Last 12 Months</option>
+                        </select>
                     </div>
 
                     <div className="w-full">
@@ -141,79 +172,75 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
                                         <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis 
-                                    dataKey="month" 
-                                    axisLine={false} 
-                                    tickLine={false} 
+                                <XAxis
+                                    dataKey="month"
+                                    axisLine={false}
+                                    tickLine={false}
                                     tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
                                     dy={16}
                                 />
-                                <YAxis 
+                                <YAxis
                                     yAxisId="left"
-                                    axisLine={false} 
-                                    tickLine={false} 
+                                    axisLine={false}
+                                    tickLine={false}
                                     tick={{ fontSize: 11, fill: '#64748b' }}
                                     tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`}
                                     dx={-10}
                                 />
-                                <YAxis 
+                                <YAxis
                                     yAxisId="right"
                                     orientation="right"
-                                    axisLine={false} 
-                                    tickLine={false} 
+                                    axisLine={false}
+                                    tickLine={false}
                                     tick={{ fontSize: 11, fill: '#64748b' }}
                                     dx={10}
                                 />
-                                <Tooltip 
-                                    contentStyle={{ 
-                                        borderRadius: '16px', 
-                                        border: '1px solid rgba(255,255,255,0.05)', 
-                                        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)', 
-                                        backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+                                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
                                         backdropFilter: 'blur(12px)',
                                         color: '#fff',
-                                        padding: '16px 20px'
+                                        padding: '16px 20px',
                                     }}
                                     itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500, padding: '4px 0' }}
                                     cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    formatter={(value: number, name: string) => [
-                                        name === 'Revenue' ? formatCurrency(value) : value, 
-                                        name
-                                    ]}
+                                    formatter={(value: number, name: string) => [name === 'Revenue' ? formatCurrency(value) : value, name]}
                                 />
-                                <Legend 
-                                    verticalAlign="top" 
-                                    height={36} 
+                                <Legend
+                                    verticalAlign="top"
+                                    height={36}
                                     iconType="circle"
                                     wrapperStyle={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}
                                 />
-                                <Area 
+                                <Area
                                     yAxisId="left"
-                                    type="monotone" 
-                                    dataKey="mrr" 
+                                    type="monotone"
+                                    dataKey="mrr"
                                     name="Revenue"
-                                    stroke="#818cf8" 
-                                    strokeWidth={2} 
-                                    fillOpacity={1} 
-                                    fill="url(#colorMrr)" 
+                                    stroke="#818cf8"
+                                    strokeWidth={2}
+                                    fillOpacity={1}
+                                    fill="url(#colorMrr)"
                                     activeDot={{ r: 4, strokeWidth: 0, fill: '#818cf8' }}
                                 />
-                                <Area 
+                                <Area
                                     yAxisId="right"
-                                    type="monotone" 
-                                    dataKey="estates" 
+                                    type="monotone"
+                                    dataKey="estates"
                                     name="Estates"
-                                    stroke="#34d399" 
-                                    strokeWidth={2} 
-                                    fillOpacity={1} 
-                                    fill="url(#colorEstates)" 
+                                    stroke="#34d399"
+                                    strokeWidth={2}
+                                    fillOpacity={1}
+                                    fill="url(#colorEstates)"
                                     activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
-                
             </motion.div>
         </ZeusLayout>
     );
