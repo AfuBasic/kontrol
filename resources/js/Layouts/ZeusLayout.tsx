@@ -10,6 +10,7 @@ import {
     UsersIcon,
     XMarkIcon,
     HandRaisedIcon,
+    InboxStackIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -32,6 +33,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
+    { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
     { name: 'Subscriptions', href: '/zeus/subscriptions', icon: UsersIcon },
     { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
@@ -76,7 +78,7 @@ export default function ZeusLayout({ children, backUrl }: Props) {
 
     return (
         <AnimatedLayout>
-            <div className="flex min-h-screen bg-white">
+            <div className="flex min-h-screen bg-slate-50 dark:bg-[#0a0e17]">
                 {/* Sidebar */}
                 <motion.aside
                     initial={{ x: -20, opacity: 0 }}

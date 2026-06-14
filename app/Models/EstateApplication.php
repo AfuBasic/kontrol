@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -18,7 +19,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property int|null $plan_id
+ * @property int|null $assigned_to
+ * @property string|null $challenges
  * @property-read Plan|null $plan
+ * @property-read User|null $assignedTo
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ApplicationNote> $notesList
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ApplicationTimeline> $timelineEvents
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newQuery()
@@ -53,6 +59,8 @@ class EstateApplication extends Model
         'plan_id',
         'status',
         'reviewed_at',
+        'assigned_to',
+        'challenges',
     ];
 
     /**
@@ -114,5 +122,29 @@ class EstateApplication extends Model
             'status' => 'rejected',
             'reviewed_at' => now(),
         ]);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * @return HasMany<ApplicationNote, $this>
+     */
+    public function notesList(): HasMany
+    {
+        return $this->hasMany(ApplicationNote::class);
+    }
+
+    /**
+     * @return HasMany<ApplicationTimeline, $this>
+     */
+    public function timelineEvents(): HasMany
+    {
+        return $this->hasMany(ApplicationTimeline::class);
     }
 }

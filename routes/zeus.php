@@ -53,6 +53,10 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
 
         // Application management
+        Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
+        Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
+        Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status.update');
+        Route::post('/applications/{application}/notes', [ApplicationController::class, 'addNote'])->name('applications.notes.store');
         Route::post('/applications/{application}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');
         Route::post('/applications/{application}/reject', [ApplicationController::class, 'reject'])->name('applications.reject');
         Route::post('/applications/{application}/contacted', [ApplicationController::class, 'markContacted'])->name('applications.contacted');

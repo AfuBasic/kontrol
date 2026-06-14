@@ -51,6 +51,7 @@
         "@capacitor/status-bar": "^8.0.2",
         "@gsap/react": "^2.1.2",
         "@headlessui/react": "^2.2.9",
+        "@hello-pangea/dnd": "^18.0.1",
         "@heroicons/react": "^2.2.0",
         "@inertiajs/react": "^2.3.7",
         "@remotion/player": "^4.0.465",
