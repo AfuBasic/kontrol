@@ -129,16 +129,38 @@ class PlatformAnalyticsService
         $now = now();
 
         for ($i = 5; $i >= 0; $i--) {
-            $month = $now->copy()->subMonths($i);
+            $targetMonth = $now->copy()->subMonths($i);
+            $endOfMonth = $targetMonth->copy()->endOfMonth();
+            $startOfMonth = $targetMonth->copy()->startOfMonth();
 
-            // Mock historical trajectory to produce a realistic visual growth curve
-            $baseEstates = 10 + ((5 - $i) * 15) + rand(-5, 5);
-            $baseMrr = ($baseEstates * 25000) + rand(-50000, 50000);
+            // Real historical estates created up to that month
+            $estatesCount = Estate::where('created_at', '<=', $endOfMonth)->count();
+
+            // Real historical MRR calculation for that month
+            // A subscription was active in that month if it was created before the month ended,
+            // and its current period end is after the month started.
+            $historicalMrrKobo = DB::table('resident_subscriptions')
+                ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
+                ->where('resident_subscriptions.created_at', '<=', $endOfMonth)
+                ->where(function ($query) use ($startOfMonth) {
+                    $query->where('resident_subscriptions.current_period_end', '>=', $startOfMonth)
+                          ->orWhereNull('resident_subscriptions.current_period_end'); // Lifetime/Trials with no end
+                })
+                ->where('resident_subscriptions.status', 'active')
+                ->selectRaw('SUM(
+                    CASE 
+                        WHEN plans.billing_interval = "annually" THEN plans.price / 12
+                        WHEN plans.billing_interval = "semi-annually" THEN plans.price / 6
+                        WHEN plans.billing_interval = "quarterly" THEN plans.price / 3
+                        ELSE plans.price
+                    END
+                ) as total_mrr')
+                ->value('total_mrr') ?? 0;
 
             $data[] = [
-                'month' => $month->format('M Y'),
-                'estates' => max(0, $baseEstates),
-                'mrr' => max(0, $baseMrr),
+                'month' => $targetMonth->format('M Y'),
+                'estates' => $estatesCount,
+                'mrr' => (float) $historicalMrrKobo / 100,
             ];
         }
 

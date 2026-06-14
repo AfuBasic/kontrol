@@ -1,7 +1,7 @@
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon } from '@heroicons/react/20/solid';
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface MetricData {
@@ -177,14 +177,21 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
                                     itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500, padding: '4px 0' }}
                                     cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
                                     formatter={(value: number, name: string) => [
-                                        name === 'mrr' ? formatCurrency(value) : value, 
-                                        name === 'mrr' ? 'Revenue' : 'Estates'
+                                        name === 'Revenue' ? formatCurrency(value) : value, 
+                                        name
                                     ]}
+                                />
+                                <Legend 
+                                    verticalAlign="top" 
+                                    height={36} 
+                                    iconType="circle"
+                                    wrapperStyle={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}
                                 />
                                 <Area 
                                     yAxisId="left"
                                     type="monotone" 
                                     dataKey="mrr" 
+                                    name="Revenue"
                                     stroke="#818cf8" 
                                     strokeWidth={2} 
                                     fillOpacity={1} 
@@ -195,6 +202,7 @@ export default function Dashboard({ briefing, metrics, growthChart }: Props) {
                                     yAxisId="right"
                                     type="monotone" 
                                     dataKey="estates" 
+                                    name="Estates"
                                     stroke="#34d399" 
                                     strokeWidth={2} 
                                     fillOpacity={1} 
