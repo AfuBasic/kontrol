@@ -1,15 +1,21 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Globe, Image as ImageIcon, Megaphone, MessageCircle, Plus, Settings, Shield, Users } from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { Globe, Image as ImageIcon, Megaphone, MessageCircle, Plus, Settings, Shield, Users, Search, Filter, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { create, show } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { manage } from '@/routes/admin/estate-board/index';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
+import { useDebounce } from '@/Hooks/useDebounce';
 
 type Props = {
     posts: CursorPaginatedPosts;
+    filters: {
+        search: string;
+        audience: string;
+    };
 };
 
 function getAudienceConfig(audience: PostAudience) {
@@ -152,9 +158,24 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
     );
 }
 
-export default function EstateBoardIndex({ posts }: Props) {
+export default function EstateBoardIndex({ posts, filters }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
+
+    const [search, setSearch] = useState(filters.search || '');
+    const [audience, setAudience] = useState(filters.audience || 'all');
+    const debouncedSearch = useDebounce(search, 400);
+
+    // Apply filters when they change
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || '') || audience !== (filters.audience || 'all')) {
+            router.get(
+                boardIndex.url(),
+                { search: debouncedSearch, audience },
+                { preserveState: true, preserveScroll: true, replace: true }
+            );
+        }
+    }, [debouncedSearch, audience, filters.search, filters.audience]);
 
     const loadMore = useCallback(() => {
         if (!posts.next_page_url || isLoadingMore.current) return;
@@ -235,6 +256,45 @@ export default function EstateBoardIndex({ posts }: Props) {
                 </div>
             </motion.div>
 
+            {/* Filters Section */}
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Search */}
+                <div className="relative flex-1">
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search posts..."
+                        className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch('')}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Audience Filter */}
+                <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex items-center rounded-xl border border-gray-200 bg-white px-3 shadow-sm focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500">
+                        <Filter className="h-4 w-4 text-gray-400" />
+                        <select
+                            value={audience}
+                            onChange={(e) => setAudience(e.target.value)}
+                            className="border-none bg-transparent py-2.5 pl-2 pr-8 text-sm font-medium text-gray-700 focus:ring-0 focus:outline-none cursor-pointer"
+                        >
+                            <option value="all">All Audiences</option>
+                            <option value="residents">Residents Only</option>
+                            <option value="security">Security Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             {/* Posts Feed */}
             {posts.data.length > 0 ? (
                 <>
@@ -244,7 +304,6 @@ export default function EstateBoardIndex({ posts }: Props) {
                         ))}
                     </div>
 
-                    {/* Load More */}
                     {posts.next_page_url && (
                         <div ref={loadMoreRef} className="mt-10 flex justify-center">
                             <div className="flex items-center gap-3">
@@ -255,6 +314,28 @@ export default function EstateBoardIndex({ posts }: Props) {
                         </div>
                     )}
                 </>
+            ) : (search || audience !== 'all') ? (
+                /* Filter Empty State */
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-20 text-center"
+                >
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100">
+                        <Search className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">No matching posts found</h3>
+                    <p className="mt-2 max-w-md text-gray-500">
+                        Try adjusting your search query or audience filter to find what you're looking for.
+                    </p>
+                    <button
+                        onClick={() => { setSearch(''); setAudience('all'); }}
+                        className="mt-6 font-semibold text-primary-600 hover:text-primary-700"
+                    >
+                        Clear filters
+                    </button>
+                </motion.div>
             ) : (
                 /* Empty State */
                 <motion.div

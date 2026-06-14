@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\CollectionAnalyticsController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
@@ -175,6 +176,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     // Collections (Resident dues management)
     Route::prefix('collections')->name('collections.')->middleware('feature:payment-collection')->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
+        Route::get('/analytics', [CollectionAnalyticsController::class, 'index'])->name('analytics');
         Route::get('/create', [CollectionController::class, 'create'])->name('create');
         Route::post('/', [CollectionController::class, 'store'])->name('store');
         Route::get('/{collection}', [CollectionController::class, 'show'])->name('show');

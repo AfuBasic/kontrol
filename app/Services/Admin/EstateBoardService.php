@@ -16,9 +16,10 @@ class EstateBoardService
      *
      * @param  array<EstateBoardPostAudience>|null  $audiences  Filter by audience (null = all audiences for admins)
      * @param  string|null  $filter  Filter by source ('estate' | 'property_owner' | null)
+     * @param  string|null  $search  Filter by search text
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null): CursorPaginator
     {
         $user = auth()->user();
         if ($user) {
@@ -63,6 +64,13 @@ class EstateBoardService
                     if ($isPropertyOwner) {
                         $q->orWhere('property_owner_id', $user->id);
                     }
+                });
+            })
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $term = '%' . $search . '%';
+                    $sub->where('title', 'like', $term)
+                        ->orWhere('body', 'like', $term);
                 });
             })
             ->with([

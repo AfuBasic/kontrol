@@ -63,6 +63,34 @@ class CollectionController extends Controller
                             ->where('model_has_roles.estate_id', $estate->id);
                     });
             })->sum('amount_paid'),
+            'active_collections' => Collection::where('estate_id', $estate->id)
+                ->where('status', 'active')
+                ->whereDoesntHave('creator.roles', function ($sq) use ($estate) {
+                    $sq->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estate->id);
+                })->count(),
+            'defaulters_count' => CollectionAssignment::whereHas('collection', function ($q) use ($estate) {
+                $q->where('estate_id', $estate->id)
+                    ->whereDoesntHave('creator.roles', function ($sq) use ($estate) {
+                        $sq->where('name', 'property_owner')
+                            ->where('model_has_roles.estate_id', $estate->id);
+                    });
+            })
+            ->whereRaw('(amount_due - amount_paid) > 0')
+            ->where(function($q) {
+                $q->where('status', 'overdue')
+                  ->orWhere(function($sq) {
+                      $sq->whereIn('status', ['pending', 'partial'])
+                         ->where(function($subq) {
+                             $subq->whereNotNull('grace_until')->where('grace_until', '<', Carbon::today())
+                                  ->orWhere(function($ssq) {
+                                      $ssq->whereNull('grace_until')->where('due_date', '<', Carbon::today());
+                                  });
+                         });
+                  });
+            })
+            ->distinct('user_id')
+            ->count('user_id'),
         ];
 
         return Inertia::render('Admin/Collections/Index', [
