@@ -48,8 +48,11 @@ class LandingController extends Controller
             'estateName' => 'required|string|max:255',
             'estateLocation' => 'required|string|max:255',
             'contactName' => 'required|string|max:255',
-            'contactEmail' => 'required|email|max:255',
-            'contactPhone' => 'nullable|string|max:20',
+            'contactEmail' => 'required|email|max:255|unique:estate_applications,email|unique:estates,email',
+            'contactPhone' => 'nullable|string|max:20|unique:estate_applications,phone',
+        ], [
+            'contactEmail.unique' => "Application Error. Your application couldn't be processed at this time.",
+            'contactPhone.unique' => "Application Error. Your application couldn't be processed at this time.",
         ]);
 
         $application = EstateApplication::create([
@@ -58,7 +61,7 @@ class LandingController extends Controller
             'email' => $validated['contactEmail'],
             'phone' => $validated['contactPhone'] ?? '',
             'notes' => 'Contact Name: '.$validated['contactName'],
-            'status' => 'pending',
+            'status' => 'received',
         ]);
 
         Mail::to('afutunde@gmail.com')

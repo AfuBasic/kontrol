@@ -274,7 +274,7 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                         </div>
 
                                         {/* Cards */}
-                                        <div className="flex flex-col gap-3 min-h-[120px]">
+                                        <div className="flex h-[calc(100vh-28rem)] min-h-[400px] flex-col gap-3 overflow-y-auto overflow-x-hidden pb-4 pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
                                             {groupApps.map((app, index) => (
                                                 <Draggable draggableId={app.id.toString()} index={index} key={app.id}>
                                                     {(provided, snapshot) => (
