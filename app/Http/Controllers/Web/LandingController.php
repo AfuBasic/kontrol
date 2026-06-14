@@ -69,4 +69,25 @@ class LandingController extends Controller
 
         return back()->with('success', 'Application received successfully!');
     }
+
+    /**
+     * Handle the smart app download redirect based on User-Agent.
+     */
+    public function downloadApp(Request $request)
+    {
+        $userAgent = $request->header('User-Agent');
+
+        if (stripos($userAgent, 'android') !== false) {
+            // Android redirect (Update with real Play Store URL when available)
+            return redirect('https://play.google.com/store/apps/details?id=com.usekontrol.app');
+        }
+
+        if (stripos($userAgent, 'iphone') !== false || stripos($userAgent, 'ipad') !== false) {
+            // iOS redirect
+            return redirect('https://apps.apple.com/ng/app/access-kontrol/id6772562083');
+        }
+
+        // Fallback for desktop
+        return redirect('/#download');
+    }
 }
