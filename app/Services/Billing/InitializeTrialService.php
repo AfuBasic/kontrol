@@ -19,7 +19,7 @@ class InitializeTrialService
      * If free trial is enabled and estate was created less than trial_days ago, set to trial status.
      * If trial expired or disabled, set to active and generate first invoice if needed.
      */
-    public function initializeForEstate(Estate $estate): EstateSubscription
+    public function initializeForEstate(Estate $estate): ?EstateSubscription
     {
         return DB::transaction(function () use ($estate) {
             $subscription = $estate->subscriptionRecord;

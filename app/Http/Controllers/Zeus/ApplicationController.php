@@ -43,7 +43,7 @@ class ApplicationController extends Controller
     public function updateStatus(EstateApplication $application, Request $request): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|string',
+            'status' => 'required|string|in:received,under_review,approved,rejected',
         ]);
 
         $oldStatus = $application->status;

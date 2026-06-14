@@ -133,15 +133,10 @@ export default function ApplicationShow({ application }: Props) {
     }
 
     const availableStatuses = [
-        'application_received',
+        'received',
         'under_review',
-        'contacted',
-        'demo_scheduled',
         'approved',
-        'trial_started',
-        'converted',
         'rejected',
-        'archived',
     ];
 
     return (
