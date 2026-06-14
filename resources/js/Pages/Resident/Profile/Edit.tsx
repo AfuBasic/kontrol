@@ -1,8 +1,6 @@
-import { Capacitor } from '@capacitor/core';
-import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { User, Lock, Shield, ChevronRight, LogOut, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { User, Lock, Shield, ChevronRight, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
@@ -133,8 +131,8 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                 {!isHouseholdMember && subscription?.expires_at && (
                     <div className="relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/60">
                         {/* Subtle Background Flare */}
-                        <div className="absolute top-0 right-0 h-40 w-40 -translate-y-20 translate-x-12 rounded-full bg-indigo-500/5 blur-[50px]" />
-                        
+                        <div className="absolute top-0 right-0 h-40 w-40 translate-x-12 -translate-y-20 rounded-full bg-indigo-500/5 blur-[50px]" />
+
                         <div className="relative flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="group relative flex h-14 w-14 items-center justify-center rounded-[22px] bg-linear-to-br from-indigo-50 to-indigo-100/50 shadow-inner ring-1 ring-indigo-100/50 transition-transform hover:scale-105">
@@ -148,7 +146,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {subscription.status === 'active' ? (
                                 <div className="flex items-center gap-2 rounded-full bg-emerald-50/80 px-4 py-2 ring-1 ring-emerald-200/50 backdrop-blur-md">
                                     <div className="relative flex h-2 w-2 items-center justify-center">
