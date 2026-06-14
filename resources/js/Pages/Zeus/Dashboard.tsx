@@ -3,6 +3,8 @@ import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import DateRangePicker from '@/Components/UI/DateRangePicker';
+import { dashboard } from '@/routes/zeus';
 
 interface MetricData {
     current: number;
@@ -12,7 +14,7 @@ interface MetricData {
 }
 
 interface GrowthChartData {
-    month: string;
+    period: string;
     estates: number;
     mrr: number;
 }
@@ -36,10 +38,11 @@ interface Props {
         trials: MetricData;
     };
     growthChart: GrowthChartData[];
-    chartRange: number;
+    startDate: string;
+    endDate: string;
 }
 
-export default function Dashboard({ briefing, metrics, growthChart, chartRange }: Props) {
+export default function Dashboard({ briefing, metrics, growthChart, startDate, endDate }: Props) {
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -49,9 +52,9 @@ export default function Dashboard({ briefing, metrics, growthChart, chartRange }
         }).format(value);
     };
 
-    const handleRangeChange = (months: number) => {
+    const handleRangeChange = (start: string, end: string) => {
         import('@inertiajs/react').then(({ router }) => {
-            router.get(route('zeus.dashboard'), { chart_range: months }, { preserveState: true, replace: true });
+            router.get(dashboard.url({ query: { start_date: start, end_date: end } }), {}, { preserveState: true, replace: true });
         });
     };
 
@@ -141,32 +144,12 @@ export default function Dashboard({ briefing, metrics, growthChart, chartRange }
 
                 {/* Platform Growth Visualizer */}
                 <div className="rounded-2xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40">
-                    <div className="mb-10 flex items-center justify-between">
+                    <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                         <div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-white">Platform Trajectory</h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                Revenue and acquisition growth over the last {chartRange} months.
-                            </p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Revenue and acquisition growth over the selected period.</p>
                         </div>
-                        <div className="flex items-center gap-1 rounded-lg border border-slate-200/50 bg-slate-100/50 p-1 dark:border-white/[0.04] dark:bg-slate-800/50">
-                            {[
-                                { label: '3M', value: 3 },
-                                { label: '6M', value: 6 },
-                                { label: '1Y', value: 12 },
-                            ].map((option) => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => handleRangeChange(option.value)}
-                                    className={`rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-all ${
-                                        chartRange === option.value
-                                            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-700 dark:text-white dark:ring-white/10'
-                                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                    }`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
+                        <DateRangePicker startDate={startDate} endDate={endDate} onChange={handleRangeChange} />
                     </div>
 
                     <div className="w-full">
@@ -183,7 +166,7 @@ export default function Dashboard({ briefing, metrics, growthChart, chartRange }
                                     </linearGradient>
                                 </defs>
                                 <XAxis
-                                    dataKey="month"
+                                    dataKey="period"
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}

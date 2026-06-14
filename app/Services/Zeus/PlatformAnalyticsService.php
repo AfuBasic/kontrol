@@ -5,6 +5,7 @@ namespace App\Services\Zeus;
 use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\EstateSubscription;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class PlatformAnalyticsService
@@ -117,28 +118,54 @@ class PlatformAnalyticsService
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
-    public function getPlatformGrowthChart(int $months = 6): array
+    public function getPlatformGrowthChart(string $startDate, string $endDate): array
     {
         $data = [];
-        $now = now();
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->endOfDay();
 
-        for ($i = $months - 1; $i >= 0; $i--) {
-            $targetMonth = $now->copy()->subMonths($i);
-            $endOfMonth = $targetMonth->copy()->endOfMonth();
-            $startOfMonth = $targetMonth->copy()->startOfMonth();
+        $diffDays = $start->diffInDays($end);
 
-            // Real historical estates created up to that month
-            $estatesCount = Estate::where('created_at', '<=', $endOfMonth)->count();
+        $interval = 'month';
+        $format = 'M Y';
+        if ($diffDays <= 31) {
+            $interval = 'day';
+            $format = 'M j';
+        } elseif ($diffDays <= 90) {
+            $interval = 'week';
+            $format = 'M j';
+        }
 
-            // Real historical MRR calculation for that month
-            // A subscription was active in that month if it was created before the month ended,
-            // and its current period end is after the month started.
+        $current = $start->copy();
+
+        while ($current <= $end) {
+            $periodEnd = $current->copy();
+            $periodStart = $current->copy();
+
+            if ($interval === 'month') {
+                $periodEnd->endOfMonth();
+                $periodStart->startOfMonth();
+                $next = $current->copy()->addMonth();
+            } elseif ($interval === 'week') {
+                $periodEnd->endOfWeek();
+                $periodStart->startOfWeek();
+                $next = $current->copy()->addWeek();
+            } else {
+                $periodEnd->endOfDay();
+                $periodStart->startOfDay();
+                $next = $current->copy()->addDay();
+            }
+
+            // Real historical estates created up to that period end
+            $estatesCount = Estate::where('created_at', '<=', $periodEnd)->count();
+
+            // Real historical MRR calculation for that period
             $historicalMrrKobo = DB::table('resident_subscriptions')
                 ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
-                ->where('resident_subscriptions.created_at', '<=', $endOfMonth)
-                ->where(function ($query) use ($startOfMonth) {
-                    $query->where('resident_subscriptions.current_period_end', '>=', $startOfMonth)
-                        ->orWhereNull('resident_subscriptions.current_period_end'); // Lifetime/Trials with no end
+                ->where('resident_subscriptions.created_at', '<=', $periodEnd)
+                ->where(function ($query) use ($periodStart) {
+                    $query->where('resident_subscriptions.current_period_end', '>=', $periodStart)
+                        ->orWhereNull('resident_subscriptions.current_period_end');
                 })
                 ->where('resident_subscriptions.status', 'active')
                 ->selectRaw('SUM(
@@ -151,11 +178,18 @@ class PlatformAnalyticsService
                 ) as total_mrr')
                 ->value('total_mrr') ?? 0;
 
+            $label = $current->format($format);
+            if ($interval === 'week') {
+                $label .= ' - '.$periodEnd->format('M j');
+            }
+
             $data[] = [
-                'month' => $targetMonth->format('M Y'),
+                'period' => $label,
                 'estates' => $estatesCount,
                 'mrr' => (float) $historicalMrrKobo / 100,
             ];
+
+            $current = $next;
         }
 
         return $data;

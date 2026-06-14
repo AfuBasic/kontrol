@@ -16,13 +16,16 @@ class DashboardController extends Controller
 
     public function __invoke(Request $request): Response
     {
-        $chartRange = (int) $request->query('chart_range', 6);
+        // Default to Last 6 Months
+        $startDate = $request->query('start_date', now()->subMonths(6)->toDateString());
+        $endDate = $request->query('end_date', now()->toDateString());
 
         return Inertia::render('Zeus/Dashboard', [
             'briefing' => $this->platformAnalyticsService->getFounderBriefing(),
             'metrics' => $this->platformAnalyticsService->getExecutiveMetrics(),
-            'growthChart' => $this->platformAnalyticsService->getPlatformGrowthChart($chartRange),
-            'chartRange' => $chartRange,
+            'growthChart' => $this->platformAnalyticsService->getPlatformGrowthChart($startDate, $endDate),
+            'startDate' => $startDate,
+            'endDate' => $endDate,
         ]);
     }
 }
