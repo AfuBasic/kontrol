@@ -182,16 +182,4 @@ class ResidentSubscription extends Model
 
         return false;
     }
-
-    /**
-     * Check if the subscription plan has a specific feature.
-     */
-    public function hasFeature(string $slug): bool
-    {
-        if (! $this->plan) {
-            return false;
-        }
-
-        return $this->plan->hasFeature($slug);
-    }
 }

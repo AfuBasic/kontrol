@@ -31,13 +31,17 @@ interface Props {
         phone: string;
         relationship: string | null;
     }[];
+    subscription?: {
+        expires_at?: string;
+        status?: string;
+    };
 }
 
 import { useFeature } from '@/Hooks/useFeature';
 import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
-export default function Edit({ telegram, profile, stats, emergency_contacts }: Props) {
+export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
@@ -124,6 +128,52 @@ export default function Edit({ telegram, profile, stats, emergency_contacts }: P
                         </div>
                     )}
                 </div>
+
+                {/* 2.5. SUBSCRIPTION STATUS */}
+                {!isHouseholdMember && subscription?.expires_at && (
+                    <div className="relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/60">
+                        {/* Subtle Background Flare */}
+                        <div className="absolute top-0 right-0 h-40 w-40 -translate-y-20 translate-x-12 rounded-full bg-indigo-500/5 blur-[50px]" />
+                        
+                        <div className="relative flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="group relative flex h-14 w-14 items-center justify-center rounded-[22px] bg-linear-to-br from-indigo-50 to-indigo-100/50 shadow-inner ring-1 ring-indigo-100/50 transition-transform hover:scale-105">
+                                    <Crown className="h-6 w-6 text-indigo-600" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Current Plan</p>
+                                    <div className="flex items-baseline gap-1.5">
+                                        <p className="text-base font-black tracking-tight text-slate-900">Valid till</p>
+                                        <p className="text-base font-bold text-indigo-600">{subscription.expires_at}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {subscription.status === 'active' ? (
+                                <div className="flex items-center gap-2 rounded-full bg-emerald-50/80 px-4 py-2 ring-1 ring-emerald-200/50 backdrop-blur-md">
+                                    <div className="relative flex h-2 w-2 items-center justify-center">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-widest text-emerald-700 uppercase">Active</span>
+                                </div>
+                            ) : subscription.status === 'trial' ? (
+                                <div className="flex items-center gap-2 rounded-full bg-amber-50/80 px-4 py-2 ring-1 ring-amber-200/50 backdrop-blur-md">
+                                    <div className="relative flex h-2 w-2 items-center justify-center">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-widest text-amber-700 uppercase">Trial</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 rounded-full bg-rose-50/80 px-4 py-2 ring-1 ring-rose-200/50 backdrop-blur-md">
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
+                                    <span className="text-[10px] font-black tracking-widest text-rose-700 uppercase">Expired</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* 3. SETTINGS HUB */}
                 <div className="space-y-8">

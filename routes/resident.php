@@ -124,9 +124,8 @@ Route::middleware('role:resident')->group(function (): void {
     Route::prefix('billing')->name('resident.billing.')->group(function (): void {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::patch('/preference', [BillingController::class, 'updatePreference'])->name('preference.update');
-        Route::post('/pay', [BillingController::class, 'payOutstanding'])->name('pay-outstanding');
+        Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
-        Route::post('/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('invoices.pay');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
         Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
     });

@@ -24,7 +24,7 @@ use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
-test('a pending invoice is automatically generated when a resident subscription is expiring in 4 days', function () {
+test('a resident can initiate a subscription payment which generates a pending invoice', function () {
     // 1. Setup role and estate
     Role::create(['name' => 'resident']);
     $estate = Estate::factory()->create();
@@ -36,26 +36,19 @@ test('a pending invoice is automatically generated when a resident subscription 
         'free_trial_days' => 5,
     ]);
 
-    // Create a plan and assign subscription record to the estate
-    $plan = Plan::factory()->create(['price' => 15000]);
-    $estateSub = EstateSubscription::create([
-        'estate_id' => $estate->id,
-        'plan_id' => $plan->id,
-        'status' => 'active',
-        'billing_interval' => 'quarterly',
-        'next_billing_date' => now()->addMonth(),
-    ]);
+    // Create a plan
+    $plan = Plan::factory()->create(['price' => 15000, 'billing_interval' => 'quarterly']);
 
     $resident = User::factory()->create();
     setPermissionsTeamId($estate->id);
     $resident->assignRole('resident');
     $resident->estates()->attach($estate->id, ['status' => 'accepted']);
 
-    // Create a resident subscription expiring in 4 days
+    // Create an active resident subscription
     $subscription = ResidentSubscription::create([
         'user_id' => $resident->id,
         'estate_id' => $estate->id,
-        'plan_id' => $plan->id,
+        'plan_id' => null,
         'status' => 'trial',
         'trial_ends_at' => now()->addDays(4),
         'current_period_start' => now()->subDay(),
@@ -65,11 +58,25 @@ test('a pending invoice is automatically generated when a resident subscription 
     // Ensure no invoice exists initially
     expect(Invoice::where('user_id', $resident->id)->count())->toBe(0);
 
-    // 2. Act: visit the billing index
-    $response = $this->actingAs($resident)
-        ->get(route('resident.billing.index'));
+    Illuminate\Support\Facades\Http::fake([
+        'api.paystack.co/transaction/initialize' => Illuminate\Support\Facades\Http::response([
+            'status' => true,
+            'message' => 'Authorization URL created',
+            'data' => [
+                'authorization_url' => 'https://checkout.paystack.com/test-auth-url',
+                'access_code' => 'test-access-code',
+                'reference' => 'test-ref-123',
+            ],
+        ], 200),
+    ]);
 
-    $response->assertOk();
+    // 2. Act: hit the subscribe route
+    $response = $this->actingAs($resident)
+        ->post(route('resident.billing.subscribe'), [
+            'plan_id' => $plan->id,
+        ]);
+
+    $response->assertRedirectContains('paystack.com');
 
     // 3. Assert: a pending invoice is created for the plan amount
     expect(Invoice::where('user_id', $resident->id)->count())->toBe(1);
@@ -77,6 +84,7 @@ test('a pending invoice is automatically generated when a resident subscription 
     $invoice = Invoice::where('user_id', $resident->id)->first();
     expect($invoice->amount)->toBe(15000);
     expect($invoice->status)->toBe('pending');
+    expect($invoice->plan_id)->toBe($plan->id);
 });
 
 test('resident invoice generation and payment notifications do not go to estate admins', function () {

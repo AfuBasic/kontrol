@@ -58,12 +58,6 @@ class SubscriptionSyncService
             return;
         }
 
-        // Clean up plan_id if null
-        if ($subscription->plan_id === null) {
-            $subscription->update(['plan_id' => $estatePlanId]);
-            Log::info("Initialized resident {$user->id} with estate default plan {$estatePlanId}");
-        }
-
         // Heal dates if they are missing
         if ($subscription->current_period_end === null) {
             if ($subscription->status === 'trial') {

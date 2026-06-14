@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Jobs\Billing\ProcessSubscriptionReminderJob;
 use App\Mail\CommandExecutedMail;
 use App\Models\ResidentSubscription;
-use App\Services\Billing\InvoiceGenerationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -32,17 +31,13 @@ class CheckResidentSubscriptions extends Command
     {
         $this->info('Starting optimized resident subscription check...');
 
-        $generationService = app(InvoiceGenerationService::class);
-
         // 1. Trials that have ended
         ResidentSubscription::query()
             ->where('status', 'trial')
             ->where('current_period_end', '<', now())
-            ->chunkById(500, function ($subscriptions) use ($generationService) {
+            ->chunkById(500, function ($subscriptions) {
                 foreach ($subscriptions as $subscription) {
                     $subscription->update(['status' => 'past_due']);
-                    // Generate invoice for the resident
-                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
                 }
             });
 
@@ -50,20 +45,9 @@ class CheckResidentSubscriptions extends Command
         ResidentSubscription::query()
             ->where('status', 'active')
             ->where('current_period_end', '<', now())
-            ->chunkById(500, function ($subscriptions) use ($generationService) {
+            ->chunkById(500, function ($subscriptions) {
                 foreach ($subscriptions as $subscription) {
                     $subscription->update(['status' => 'past_due']);
-                    // Generate invoice for the resident
-                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
-                }
-            });
-
-        // 3. Catch-all: Ensure all past_due residents have an invoice
-        ResidentSubscription::query()
-            ->where('status', 'past_due')
-            ->chunkById(500, function ($subscriptions) use ($generationService) {
-                foreach ($subscriptions as $subscription) {
-                    $generationService->getOrCreatePendingInvoiceForResident($subscription);
                 }
             });
 

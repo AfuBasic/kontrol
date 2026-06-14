@@ -5,9 +5,7 @@ namespace App\Actions\Billing;
 use App\Events\Billing\InvoiceGenerated;
 use App\Models\Estate;
 use App\Models\Invoice;
-use App\Models\ResidentSubscription;
 use App\Models\User;
-use App\Notifications\Resident\NewInvoiceNotification;
 use App\Services\BillingCycleService;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -80,63 +78,6 @@ class GenerateInvoiceAction
 
             // Dispatch event
             InvoiceGenerated::dispatch($invoice);
-
-            return $invoice;
-        });
-    }
-
-    /**
-     * Generate an individual invoice for a resident.
-     */
-    public function executeForResident(ResidentSubscription $subscription): ?Invoice
-    {
-        $estate = $subscription->estate;
-        $estateSub = $estate->subscriptionRecord;
-
-        if (! $estateSub || ! $estateSub->plan) {
-            return null;
-        }
-
-        return DB::transaction(function () use ($estate, $estateSub, $subscription) {
-            // Period dates for the resident
-            $periodStart = $subscription->current_period_end ?? now()->startOfDay();
-            $periodEnd = $this->billingCycleService->calculatePeriodEnd($periodStart, $estateSub->billing_interval);
-            $dueDate = $periodStart->copy()->addDays(7);
-
-            // Amount is simply the estate plan price (individual resident payment)
-            $amount = $estateSub->plan->price;
-
-            // Generate unique invoice number
-            $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
-
-            // Create invoice
-            $invoice = Invoice::create([
-                'estate_id' => $estate->id,
-                'user_id' => $subscription->user_id,
-                'plan_id' => $estateSub->plan_id,
-                'estate_subscription_id' => $estateSub->id,
-                'invoice_number' => $invoiceNumber,
-                'amount' => $amount,
-                'resident_count' => 1,
-                'billing_period_start' => $periodStart,
-                'billing_period_end' => $periodEnd,
-                'due_date' => $dueDate,
-                'status' => 'pending',
-            ]);
-
-            // Log activity
-            activity()
-                ->on($subscription->user)
-                ->withProperties(['invoice_id' => $invoice->id, 'amount' => $amount])
-                ->log('Individual resident invoice generated');
-
-            // Dispatch event
-            InvoiceGenerated::dispatch($invoice);
-
-            // Send notification to resident
-            if ($invoice->user_id && $invoice->user) {
-                $invoice->user->notify(new NewInvoiceNotification($invoice));
-            }
 
             return $invoice;
         });

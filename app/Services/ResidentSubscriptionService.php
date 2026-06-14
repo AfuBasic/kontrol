@@ -26,15 +26,13 @@ class ResidentSubscriptionService
 
         $now = now();
         $isTrialAvailable = $settings->free_trial_enabled && ($settings->free_trial_days ?? 0) > 0;
-        $planId = $estate->subscriptionRecord?->plan_id;
-
         if ($isTrialAvailable) {
             $trialDays = $settings->free_trial_days;
 
             return ResidentSubscription::create([
                 'user_id' => $user->id,
                 'estate_id' => $estate->id,
-                'plan_id' => $planId,
+                'plan_id' => null,
                 'status' => 'trial',
                 'trial_ends_at' => $now->copy()->addDays($trialDays),
                 'current_period_start' => $now,
@@ -46,7 +44,7 @@ class ResidentSubscriptionService
         return ResidentSubscription::create([
             'user_id' => $user->id,
             'estate_id' => $estate->id,
-            'plan_id' => $planId,
+            'plan_id' => null,
             'status' => 'past_due',
             'trial_ends_at' => null,
             'current_period_start' => $now,

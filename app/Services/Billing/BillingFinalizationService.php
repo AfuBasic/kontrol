@@ -57,8 +57,7 @@ class BillingFinalizationService
             ->first();
 
         if ($subscription) {
-            $estateSub = $invoice->estate->subscriptionRecord;
-            $interval = $estateSub->billing_interval ?? 'monthly';
+            $interval = $invoice->plan ? $invoice->plan->billing_interval : 'monthly';
 
             // Accurate capture: if they were overdue/trial, start from today.
             // Otherwise, start from the end of the previous period.
@@ -69,6 +68,7 @@ class BillingFinalizationService
             $newEnd = $this->billingCycleService->calculatePeriodEnd($newStart, $interval);
 
             $subscription->update([
+                'plan_id' => $invoice->plan_id, // Save the plan they just bought
                 'status' => 'active',
                 'current_period_start' => $newStart,
                 'current_period_end' => $newEnd,

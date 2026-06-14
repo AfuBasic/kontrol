@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Resident;
 
 use App\Actions\Auth\GenerateMagicLoginUrlAction;
 use App\Actions\Billing\InitializeCardSetupAction;
-use App\Actions\Billing\InitializeInvoicePaymentAction;
 use App\Actions\Billing\PaymentInitializationException;
+use App\Actions\Billing\ProcessResidentPaymentAction;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\EstateContextService;
@@ -15,6 +16,7 @@ use App\Services\ResidentSubscriptionService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -46,24 +48,25 @@ class BillingController extends Controller
             return redirect()->route('resident.home')->with('info', 'Billing is managed by your estate.');
         }
 
-        // Ensure pending invoice exists if subscription is due or expiring soon
-        $this->invoiceGenerationService->getOrCreatePendingInvoiceForResident($subscription);
-
-        $estateSub = $estate->subscriptionRecord;
-
         $invoices = Invoice::where('user_id', $user->id)
             ->where('estate_id', $estate->id)
+            ->whereIn('status', ['paid', 'failed']) // Only show finalized transactions
             ->latest()
             ->paginate(5);
 
-        $outstandingInvoices = Invoice::where('user_id', $user->id)
-            ->where('estate_id', $estate->id)
-            ->whereIn('status', ['pending', 'overdue'])
-            ->orderBy('due_date')
-            ->get();
-
-        $outstandingAmount = (int) $outstandingInvoices->sum('amount');
-        $nextPayableInvoice = $outstandingInvoices->first();
+        $plans = Plan::where('is_active', true)
+            ->where('visibility', 'public') // Assuming residents see public plans
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'price', 'billing_interval'])
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'price' => $plan->price,
+                    'billing_interval' => $plan->billing_interval,
+                    'formatted_price' => $plan->formatted_price,
+                ];
+            });
 
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => [
@@ -73,35 +76,33 @@ class BillingController extends Controller
                 'card_last4' => $subscription->card_last4,
                 'current_period_end' => $subscription->current_period_end?->toDateString(),
                 'trial_ends_at' => $subscription->trial_ends_at?->toDateString(),
+                'plan_id' => $subscription->plan_id,
             ],
-            'estatePlan' => $estateSub ? [
-                'name' => $estateSub->plan->name,
-                'price' => $estateSub->plan->price,
-                'interval' => $estateSub->billing_interval,
-            ] : null,
+            'plans' => $plans,
             'recentInvoices' => $invoices,
-            'outstanding' => [
-                'amount' => $outstandingAmount,
-                'formatted_amount' => '₦'.number_format($outstandingAmount / 100, 2),
-                'invoice_count' => $outstandingInvoices->count(),
-                'next_invoice_id' => $nextPayableInvoice?->id,
-                'next_invoice_ulid' => $nextPayableInvoice?->ulid,
-                'next_due_date' => $nextPayableInvoice?->due_date?->toDateString(),
-            ],
         ]);
     }
 
-    public function pay(Invoice $invoice, InitializeInvoicePaymentAction $initialize): RedirectResponse|SymfonyResponse
+    public function subscribe(Request $request, ProcessResidentPaymentAction $initialize): RedirectResponse|SymfonyResponse
     {
+        $request->validate([
+            'plan_id' => ['required', 'exists:plans,id'],
+        ]);
+
         $user = auth()->user();
         $estate = $this->estateContext->getEstate();
+        $plan = Plan::findOrFail($request->plan_id);
 
-        abort_if($invoice->user_id !== $user->id, 404);
-        abort_if($invoice->estate_id !== $estate->id, 404);
+        $subscription = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
+
+        abort_if(! $subscription, 403, 'No resident subscription found.');
 
         try {
             $result = $initialize->execute(
-                $invoice,
+                $subscription,
+                $plan,
                 route('resident.billing.payment.callback'),
                 route('resident.billing.index'),
             );
@@ -120,24 +121,6 @@ class BillingController extends Controller
         }
 
         return $redirect;
-    }
-
-    public function payOutstanding(InitializeInvoicePaymentAction $initialize): RedirectResponse|SymfonyResponse
-    {
-        $user = auth()->user();
-        $estate = $this->estateContext->getEstate();
-
-        $invoice = Invoice::where('user_id', $user->id)
-            ->where('estate_id', $estate->id)
-            ->whereIn('status', ['pending', 'overdue'])
-            ->orderBy('due_date')
-            ->first();
-
-        if (! $invoice) {
-            return back()->with('info', 'You have no outstanding payments.');
-        }
-
-        return $this->pay($invoice, $initialize);
     }
 
     public function setupPaymentMethod(InitializeCardSetupAction $action): RedirectResponse|SymfonyResponse

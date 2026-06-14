@@ -19,6 +19,7 @@ class MarkOverdueInvoices extends Command
         $today = now()->toDateString();
 
         $count = Invoice::where('status', 'pending')
+            ->whereNotNull('estate_subscription_id') // Only estate-level bulk invoices
             ->whereDate('due_date', '<=', $today)
             ->update(['status' => 'overdue']);
 

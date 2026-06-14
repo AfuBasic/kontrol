@@ -28,6 +28,14 @@ type Invoice = {
     created_at: string;
 };
 
+type Plan = {
+    id: number;
+    name: string;
+    price: number;
+    billing_interval: string;
+    formatted_price: string;
+};
+
 type Props = {
     subscription: {
         status: SubscriptionStatus | string;
@@ -37,23 +45,13 @@ type Props = {
         card_last4?: string;
         current_period_end?: string;
         trial_ends_at?: string;
+        plan_id?: number;
     };
-    estatePlan: {
-        name: string;
-        price: number;
-        interval: string;
-    } | null;
+    plans: Plan[];
     recentInvoices: {
         data: Invoice[];
         next_page_url: string | null;
         total: number;
-    };
-    outstanding: {
-        amount: number;
-        formatted_amount: string;
-        invoice_count: number;
-        next_invoice_ulid: string | null;
-        next_due_date?: string;
     };
 };
 
@@ -101,33 +99,23 @@ const TONE_STYLES: Record<StatusMeta['tone'], { dot: string; pill: string; ring:
 };
 
 type StatusBannerProps = {
-    hasOutstanding: boolean;
     needsAttention: boolean;
     statusKey: SubscriptionStatus;
     statusLabel: string;
     statusDescription: string;
-    outstanding: Props['outstanding'];
     isNative: boolean;
-    paying: boolean;
-    onSettle: () => void;
     onOpenWeb: () => void;
-    daysRemaining: number;
 };
 
 function StatusBanner({
-    hasOutstanding,
     needsAttention,
     statusKey,
     statusLabel,
     statusDescription,
-    outstanding,
     isNative,
-    paying,
-    onSettle,
     onOpenWeb,
-    daysRemaining,
 }: StatusBannerProps) {
-    if (!hasOutstanding && !needsAttention) {
+    if (!needsAttention) {
         return null;
     }
 
@@ -135,16 +123,6 @@ function StatusBanner({
     const accent = isCritical
         ? { iconBg: 'bg-rose-100', icon: 'text-rose-600', surface: 'bg-rose-50/70 border-rose-200/70' }
         : { iconBg: 'bg-amber-100', icon: 'text-amber-700', surface: 'bg-amber-50/60 border-amber-200/70' };
-
-    const title = hasOutstanding ? `${outstanding.formatted_amount} outstanding` : statusLabel;
-
-    const subtext = hasOutstanding
-        ? `${outstanding.invoice_count === 1 ? '1 unpaid invoice' : `${outstanding.invoice_count} unpaid invoices`} · ${
-              statusKey === 'past_due' || statusKey === 'expired' ? 'Access is currently limited' : 'Settle to clear your account'
-          }`
-        : statusDescription;
-
-    const showSettle = !isNative || daysRemaining <= 3;
 
     return (
         <motion.div
@@ -158,30 +136,11 @@ function StatusBanner({
             </span>
 
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
-                <p className="truncate text-xs text-slate-500">{subtext}</p>
+                <p className="truncate text-sm font-semibold text-slate-900">{statusLabel}</p>
+                <p className="truncate text-xs text-slate-500">{statusDescription}</p>
             </div>
 
-            {showSettle ? (
-                hasOutstanding ? (
-                    <button
-                        type="button"
-                        onClick={onSettle}
-                        disabled={paying}
-                        className="inline-flex shrink-0 items-center rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
-                    >
-                        {paying ? 'Redirecting…' : 'Settle Now'}
-                    </button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={onOpenWeb}
-                        className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-50"
-                    >
-                        Manage
-                    </button>
-                )
-            ) : (
+            {isNative && (
                 <button
                     type="button"
                     onClick={onOpenWeb}
@@ -195,9 +154,9 @@ function StatusBanner({
     );
 }
 
-export default function ResidentBillingPage({ subscription, estatePlan, recentInvoices, outstanding }: Props) {
+export default function ResidentBillingPage({ subscription, plans, recentInvoices }: Props) {
     const [isNative, setIsNative] = useState(false);
-    const [paying, setPaying] = useState(false);
+    const [payingPlanId, setPayingPlanId] = useState<number | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
     useEffect(() => {
@@ -261,8 +220,7 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         displayDescription = status.description(formatDate(subscription.current_period_end || subscription.trial_ends_at));
     }
 
-    const hasOutstanding = outstanding.amount > 0;
-    const needsAttention = isExpiringSoon || (!hasOutstanding && (statusKey === 'past_due' || statusKey === 'expired'));
+    const needsAttention = isExpiringSoon || (statusKey === 'past_due' || statusKey === 'expired');
 
     const openWebApp = async () => {
         try {
@@ -280,19 +238,18 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
         }
     };
 
-    const handleAction = () => {
-        if (paying) return;
-        setPaying(true);
+    const handleSubscribe = (planId: number) => {
+        if (payingPlanId) return;
+        setPayingPlanId(planId);
 
-        if (outstanding.amount > 0) {
-            router.post(ResidentBillingController.payOutstanding.url(), {}, { onFinish: () => setPaying(false) });
-        } else {
-            setPaying(false);
-        }
-    };
-
-    const handleSettleInvoice = (invoiceUlid: string) => {
-        router.post(ResidentBillingController.pay.url(invoiceUlid));
+        router.post(
+            ResidentBillingController.subscribe.url(),
+            { plan_id: planId },
+            {
+                preserveScroll: true,
+                onFinish: () => setPayingPlanId(null),
+            }
+        );
     };
 
     const loadMore = () => {
@@ -335,118 +292,97 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
 
             <main className="mx-auto max-w-2xl px-5 py-6 sm:px-8 sm:py-10">
                 <StatusBanner
-                    hasOutstanding={hasOutstanding}
                     needsAttention={needsAttention}
                     statusKey={statusKey}
                     statusLabel={displayLabel}
                     statusDescription={displayDescription}
-                    outstanding={outstanding}
                     isNative={isNative}
-                    paying={paying}
-                    onSettle={handleAction}
                     onOpenWeb={openWebApp}
-                    daysRemaining={daysRemaining}
                 />
 
-                {hasOutstanding && (
-                    <motion.section
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-6 overflow-hidden rounded-3xl border border-rose-100 bg-gradient-to-br from-rose-50/50 to-white p-6 shadow-[0_1px_3px_rgba(244,63,94,0.05),0_12px_24px_-8px_rgba(244,63,94,0.08)] sm:p-8"
-                    >
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <span className="text-xs font-bold tracking-wider text-rose-600 uppercase">Outstanding Balance</span>
-                                <h3 className="mt-1 text-3xl font-extrabold text-slate-900">{outstanding.formatted_amount}</h3>
-                                <p className="mt-1.5 text-xs text-slate-500">
-                                    {outstanding.invoice_count === 1 ? '1 invoice' : `${outstanding.invoice_count} invoices`} unpaid.
-                                    {outstanding.next_due_date && (
-                                        <>
-                                            {' '}
-                                            Due by <span className="font-semibold text-slate-700">{formatDate(outstanding.next_due_date)}</span>
-                                        </>
-                                    )}
-                                </p>
-                            </div>
-
-                            {!isNative ? (
-                                <button
-                                    type="button"
-                                    onClick={handleAction}
-                                    disabled={paying}
-                                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-rose-500 active:scale-[0.98] disabled:opacity-60"
-                                >
-                                    {paying ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin text-white" />
-                                            Redirecting to Paystack…
-                                        </>
-                                    ) : (
-                                        `Pay ${outstanding.formatted_amount}`
-                                    )}
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={openWebApp}
-                                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-white px-6 py-3.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-50"
-                                >
-                                    Open Web to Pay
-                                    <ArrowTopRightOnSquareIcon className="h-4 w-4" strokeWidth={2} />
-                                </button>
-                            )}
-                        </div>
-                    </motion.section>
-                )}
-
-                {/* Plan card */}
+                {/* Subscription Status Card */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]"
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] mb-6"
                 >
-                    <div className="px-6 pt-6 sm:px-8 sm:pt-8">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className={`inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
-                                <span
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tone.pill}`}
-                                >
-                                    {displayLabel}
-                                </span>
-                            </div>
-                            {estatePlan && (
-                                <span className="text-xs font-medium text-slate-500">
-                                    Billed {estatePlan.interval === 'monthly' ? 'monthly' : estatePlan.interval}
-                                </span>
-                            )}
+                    <div className="px-6 py-6 sm:px-8">
+                        <div className="flex items-center gap-2">
+                            <span className={`inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+                            <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tone.pill}`}
+                            >
+                                {displayLabel}
+                            </span>
                         </div>
-
-                        <div className="mt-5">
-                            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{estatePlan?.name ?? 'Standard plan'}</h2>
-                            {estatePlan && (
-                                <p className="mt-1 text-sm text-slate-500">
-                                    <span className="text-base font-semibold text-slate-900">{formatCurrency(estatePlan.price)}</span>
-                                    <span className="text-slate-500"> / {estatePlan.interval === 'monthly' ? 'month' : estatePlan.interval}</span>
-                                </p>
-                            )}
+                        
+                        <div className="mt-4">
+                            <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                                {isTrialExpired ? 'Trial expired on' : isSubscriptionExpired || statusKey === 'expired' ? 'Subscription expired on' : statusKey === 'trial' ? 'Trial ends' : 'Valid through'}
+                            </h2>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</p>
                         </div>
                     </div>
+                </motion.section>
 
-                    <dl className="mt-6 grid grid-cols-1 border-t border-slate-100">
-                        <div className="px-6 py-4 sm:px-8">
-                            <dt className="text-xs font-medium text-slate-500">
-                                {isTrialExpired
-                                    ? 'Trial expired on'
-                                    : isSubscriptionExpired || statusKey === 'expired'
-                                      ? 'Subscription expired on'
-                                      : statusKey === 'trial'
-                                        ? 'Trial ends'
-                                        : 'Next billing'}
-                            </dt>
-                            <dd className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</dd>
-                        </div>
-                    </dl>
+                {/* Plan Selection */}
+                <motion.section
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="mb-6"
+                >
+                    <h3 className="mb-4 text-sm font-semibold text-slate-900 px-1">Select a billing term</h3>
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                        {plans.map((plan) => {
+                            const isCurrent = subscription.plan_id === plan.id && (statusKey === 'active' || statusKey === 'trial');
+                            const isPaying = payingPlanId === plan.id;
+                            
+                            return (
+                                <div
+                                    key={plan.id}
+                                    className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all ${
+                                        isCurrent 
+                                            ? 'border-indigo-200 bg-indigo-50/30 shadow-sm' 
+                                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
+                                    }`}
+                                >
+                                    {isCurrent && (
+                                        <span className="absolute top-0 right-0 rounded-bl-xl rounded-tr-xl bg-indigo-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                                            Current
+                                        </span>
+                                    )}
+                                    
+                                    <div>
+                                        <h4 className="text-base font-semibold text-slate-900">{plan.name}</h4>
+                                        <p className="mt-2 flex items-baseline gap-1">
+                                            <span className="text-2xl font-bold tracking-tight text-slate-900">{plan.formatted_price}</span>
+                                        </p>
+                                        <p className="text-sm text-slate-500 mt-1 capitalize">{plan.billing_interval}</p>
+                                    </div>
+                                    
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSubscribe(plan.id)}
+                                        disabled={payingPlanId !== null || isCurrent}
+                                        className={`mt-6 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                                            isCurrent
+                                                ? 'bg-indigo-50 text-indigo-400 cursor-default'
+                                                : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]'
+                                        } disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center`}
+                                    >
+                                        {isPaying ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : isCurrent ? (
+                                            'Active'
+                                        ) : (
+                                            'Select'
+                                        )}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </motion.section>
 
                 {/* Transaction history */}
@@ -486,14 +422,6 @@ export default function ResidentBillingPage({ subscription, estatePlan, recentIn
                                                             {formatDate(invoice.created_at)} · {invoice.invoice_number}
                                                         </p>
                                                     </div>
-                                                    {!paid && !isNative && (
-                                                        <button
-                                                            onClick={() => handleSettleInvoice(invoice.ulid)}
-                                                            className="ml-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold text-white transition hover:bg-slate-800"
-                                                        >
-                                                            Settle
-                                                        </button>
-                                                    )}
                                                 </div>
                                             </div>
                                             <span className={`text-xs font-medium ${paid ? 'text-emerald-700' : 'text-amber-700'}`}>

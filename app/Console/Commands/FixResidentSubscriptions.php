@@ -40,8 +40,6 @@ class FixResidentSubscriptions extends Command
         foreach ($estates as $estate) {
             $this->info("Scanning Estate: {$estate->name} (ID: {$estate->id})...");
 
-            $estatePlanId = $estate->subscriptionRecord?->plan_id;
-
             $users = User::whereHas('estates', function ($q) use ($estate) {
                 $q->where('estates.id', $estate->id)
                     ->where('estate_users_membership.status', 'accepted');
@@ -63,8 +61,7 @@ class FixResidentSubscriptions extends Command
                     })->orWhereHas('residentSubscription', function ($q) use ($estate) {
                         $q->where('estate_id', $estate->id)
                             ->where(function ($sq) {
-                                $sq->whereNull('plan_id')
-                                    ->orWhereNull('current_period_end');
+                                $sq->whereNull('current_period_end');
                             });
                     });
                 })
@@ -92,11 +89,6 @@ class FixResidentSubscriptions extends Command
                     // 2. Update existing missing plan_id and/or dates
                     $updates = [];
                     $reasons = [];
-
-                    if ($sub->plan_id === null) {
-                        $updates['plan_id'] = $estatePlanId;
-                        $reasons[] = "plan_id set to {$estatePlanId}";
-                    }
 
                     if ($sub->current_period_end === null) {
                         if ($sub->status === 'trial') {

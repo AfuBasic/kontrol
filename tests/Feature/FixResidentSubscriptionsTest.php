@@ -140,16 +140,16 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
     $sub = ResidentSubscription::where('user_id', $resident->id)->first();
     expect($sub->status)->toBe('trial');
     expect($sub->estate_id)->toBe($estate->id);
-    expect($sub->plan_id)->toBe($plan->id);
+    expect($sub->plan_id)->toBeNull();
 
     // Session for resident with missing sub should be deleted
     expect(DB::table('sessions')->where('user_id', $resident->id)->exists())->toBeFalse();
 
-    // Resident with null plan subscription should have their plan_id populated
+    // Resident with null plan subscription should NOT have their plan_id populated (no longer healed)
     $subWithNullPlan->refresh();
-    expect($subWithNullPlan->plan_id)->toBe($plan->id);
-    // Session for resident with null plan subscription should be deleted
-    expect(DB::table('sessions')->where('user_id', $residentWithNullPlan->id)->exists())->toBeFalse();
+    expect($subWithNullPlan->plan_id)->toBeNull();
+    // Session for resident with null plan subscription should not be deleted (since no dates needed healing)
+    expect(DB::table('sessions')->where('user_id', $residentWithNullPlan->id)->exists())->toBeTrue();
 
     // Resident with complete subscription should not be affected (session remains)
     expect(DB::table('sessions')->where('user_id', $residentWithCompleteSub->id)->exists())->toBeTrue();

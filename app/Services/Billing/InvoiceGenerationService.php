@@ -5,7 +5,6 @@ namespace App\Services\Billing;
 use App\Actions\Billing\GenerateInvoiceAction;
 use App\Models\Estate;
 use App\Models\Invoice;
-use App\Models\ResidentSubscription;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -60,48 +59,6 @@ class InvoiceGenerationService
         }
 
         return null;
-    }
-
-    /**
-     * Get or create a pending invoice for a resident.
-     */
-    public function getOrCreatePendingInvoiceForResident(ResidentSubscription $subscription): ?Invoice
-    {
-        // Check if resident has an unpaid invoice (pending or overdue)
-        $unpaidInvoice = Invoice::where('user_id', $subscription->user_id)
-            ->where('estate_id', $subscription->estate_id)
-            ->whereIn('status', ['pending', 'overdue'])
-            ->latest('created_at')
-            ->first();
-
-        // If no unpaid invoice, generate one if they are due, past due, or expiring within 5 days
-        if (! $unpaidInvoice) {
-            $isExpiringSoon = $subscription->current_period_end && $subscription->current_period_end->lte(now()->addDays(5));
-
-            $isDue = $subscription->status === 'past_due' ||
-                     ($subscription->current_period_end && $subscription->current_period_end->isPast()) ||
-                     ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast()) ||
-                     $isExpiringSoon;
-
-            if ($isDue) {
-                return $this->generateInvoiceAction->executeForResident($subscription);
-            }
-
-            return null;
-        }
-
-        // If unpaid invoice exists, ensure amount is updated to current estate plan price
-        $estateSub = $subscription->estate->subscriptionRecord;
-        if ($estateSub && $estateSub->plan) {
-            $newAmount = $estateSub->plan->price;
-
-            if ($unpaidInvoice->amount !== $newAmount) {
-                $unpaidInvoice->update(['amount' => $newAmount]);
-                $unpaidInvoice->refresh();
-            }
-        }
-
-        return $unpaidInvoice;
     }
 
     /**
