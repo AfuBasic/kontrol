@@ -32,6 +32,13 @@ type Assignment = {
 type Props = {
     assignment: Assignment;
     paystackKey: string;
+    feeBreakdown: {
+        kontrol_fee: number;
+        paystack_fee: number;
+        total_amount: number;
+        transaction_charge: number;
+    };
+    hasSubscription: boolean;
 };
 
 declare global {
@@ -40,7 +47,7 @@ declare global {
     }
 }
 
-export default function PayCollection({ assignment, paystackKey }: Props) {
+export default function PayCollection({ assignment, paystackKey, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -212,11 +219,53 @@ export default function PayCollection({ assignment, paystackKey }: Props) {
 
                     <div className="space-y-6">
                         <div className="rounded-3xl bg-slate-50 p-8 ring-1 ring-slate-100">
+                            <div className="mb-6 space-y-4 border-b border-slate-200 pb-6">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-bold text-slate-500">Base Due</span>
+                                    <span className="font-black text-slate-900">{formatCurrency(amountToPay)}</span>
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-bold text-slate-500">Processing Fee (0.5%)</span>
+                                    {hasSubscription ? (
+                                        <span className="font-black text-emerald-600 line-through decoration-emerald-500/30">
+                                            {formatCurrency(amountToPay * 0.005)}
+                                        </span>
+                                    ) : (
+                                        <span className="font-black text-slate-900">{formatCurrency(feeBreakdown.kontrol_fee)}</span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-bold text-slate-500">Gateway Fee (Paystack)</span>
+                                    <span className="font-black text-slate-900">{formatCurrency(feeBreakdown.paystack_fee)}</span>
+                                </div>
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-bold tracking-widest text-slate-400 uppercase">Total to pay</span>
-                                <span className="text-4xl font-black tracking-tight text-slate-900">{formatCurrency(amountToPay)}</span>
+                                <span className="text-4xl font-black tracking-tight text-slate-900">{formatCurrency(feeBreakdown.total_amount)}</span>
                             </div>
                         </div>
+
+                        {!hasSubscription && amountToPay > 0 && (
+                            <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 p-4 text-amber-700 ring-1 ring-amber-200/50">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <p className="text-xs leading-relaxed font-bold">
+                                    <span className="block text-amber-800">Processing Fee Applied</span>
+                                    This 0.5% processing fee could be avoided if you had an active Kontrol subscription.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-3 rounded-2xl bg-blue-50/50 p-4 text-blue-700">
                             <ShieldCheck className="h-5 w-5 shrink-0" />

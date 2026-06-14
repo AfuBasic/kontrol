@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Lock, Shield, ChevronRight, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
+import { User, Lock, Shield, ChevronRight, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet, CheckCircle2 } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
@@ -129,46 +129,52 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
 
                 {/* 2.5. SUBSCRIPTION STATUS */}
                 {!isHouseholdMember && subscription?.expires_at && (
-                    <div className="relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200/60">
-                        {/* Subtle Background Flare */}
-                        <div className="absolute top-0 right-0 h-40 w-40 translate-x-12 -translate-y-20 rounded-full bg-indigo-500/5 blur-[50px]" />
-
-                        <div className="relative flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="group relative flex h-14 w-14 items-center justify-center rounded-[22px] bg-linear-to-br from-indigo-50 to-indigo-100/50 shadow-inner ring-1 ring-indigo-100/50 transition-transform hover:scale-105">
-                                    <Crown className="h-6 w-6 text-indigo-600" />
+                    <div className="group relative overflow-hidden rounded-3xl bg-[#0B101E] p-6 shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:ring-white/10 hover:shadow-2xl">
+                        {/* Subtle Top Edge Highlight */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        {/* Soft Deep Glow */}
+                        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/10 blur-[60px]" />
+                        
+                        <div className="relative z-10 flex flex-col gap-8">
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 text-slate-300">
+                                    <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
+                                    <h2 className="text-[14px] font-medium tracking-wide">Estate Subscription</h2>
                                 </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Current Plan</p>
-                                    <div className="flex items-baseline gap-1.5">
-                                        <p className="text-base font-black tracking-tight text-slate-900">Valid till</p>
-                                        <p className="text-base font-bold text-indigo-600">{subscription.expires_at}</p>
+                                {subscription.status === 'active' || subscription.status === 'trial' ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                                        <span className="text-[13px] font-medium text-emerald-400">
+                                            {subscription.status === 'active' ? 'Active' : 'Trial'}
+                                        </span>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                                        <span className="text-[13px] font-medium text-rose-400">Expired</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {subscription.status === 'active' ? (
-                                <div className="flex items-center gap-2 rounded-full bg-emerald-50/80 px-4 py-2 ring-1 ring-emerald-200/50 backdrop-blur-md">
-                                    <div className="relative flex h-2 w-2 items-center justify-center">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                    </div>
-                                    <span className="text-[10px] font-black tracking-widest text-emerald-700 uppercase">Active</span>
-                                </div>
-                            ) : subscription.status === 'trial' ? (
-                                <div className="flex items-center gap-2 rounded-full bg-amber-50/80 px-4 py-2 ring-1 ring-amber-200/50 backdrop-blur-md">
-                                    <div className="relative flex h-2 w-2 items-center justify-center">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
-                                    </div>
-                                    <span className="text-[10px] font-black tracking-widest text-amber-700 uppercase">Trial</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2 rounded-full bg-rose-50/80 px-4 py-2 ring-1 ring-rose-200/50 backdrop-blur-md">
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
-                                    <span className="text-[10px] font-black tracking-widest text-rose-700 uppercase">Expired</span>
-                                </div>
-                            )}
+                            {/* Body */}
+                            <div className="flex flex-col gap-1">
+                                <h3 className="text-[28px] font-medium tracking-tight text-white">
+                                    {subscription.expires_at}
+                                </h3>
+                                {subscription.expires_at &&
+                                    !isNaN(new Date(subscription.expires_at).getTime()) &&
+                                    (() => {
+                                        const diffTime = new Date(subscription.expires_at).getTime() - new Date().getTime();
+                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        return (
+                                            <p className="text-[14px] font-medium text-slate-500">
+                                                {diffDays > 0 ? `${diffDays} Days Remaining` : `${Math.abs(diffDays)} Days Ago`}
+                                            </p>
+                                        );
+                                    })()}
+                            </div>
                         </div>
                     </div>
                 )}
