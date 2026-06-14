@@ -38,9 +38,9 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
         'analytics_id' => env('GOOGLE_ANALYTICS_ID', 'G-VN8M864LJF'),
-        'mobile_ids' => array_values(array_filter(explode(',', env('GOOGLE_IOS_CLIENT_ID', '') . ',' . env('GOOGLE_ANDROID_CLIENT_ID', '')))),
+        'mobile_ids' => array_values(array_filter(explode(',', env('GOOGLE_IOS_CLIENT_ID', '').','.env('GOOGLE_ANDROID_CLIENT_ID', '')))),
     ],
 
     'telegram' => [

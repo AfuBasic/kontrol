@@ -76,21 +76,21 @@ class CollectionController extends Controller
                             ->where('model_has_roles.estate_id', $estate->id);
                     });
             })
-            ->whereRaw('(amount_due - amount_paid) > 0')
-            ->where(function($q) {
-                $q->where('status', 'overdue')
-                  ->orWhere(function($sq) {
-                      $sq->whereIn('status', ['pending', 'partial'])
-                         ->where(function($subq) {
-                             $subq->whereNotNull('grace_until')->where('grace_until', '<', Carbon::today())
-                                  ->orWhere(function($ssq) {
-                                      $ssq->whereNull('grace_until')->where('due_date', '<', Carbon::today());
-                                  });
-                         });
-                  });
-            })
-            ->distinct('user_id')
-            ->count('user_id'),
+                ->whereRaw('(amount_due - amount_paid) > 0')
+                ->where(function ($q) {
+                    $q->where('status', 'overdue')
+                        ->orWhere(function ($sq) {
+                            $sq->whereIn('status', ['pending', 'partial'])
+                                ->where(function ($subq) {
+                                    $subq->whereNotNull('grace_until')->where('grace_until', '<', Carbon::today())
+                                        ->orWhere(function ($ssq) {
+                                            $ssq->whereNull('grace_until')->where('due_date', '<', Carbon::today());
+                                        });
+                                });
+                        });
+                })
+                ->distinct('user_id')
+                ->count('user_id'),
         ];
 
         return Inertia::render('Admin/Collections/Index', [

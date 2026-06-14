@@ -26,14 +26,14 @@ class CollectionPaymentController extends Controller
         // For production, a signed URL is better for mobile-to-web handoff.
 
         $assignment->load(['collection', 'estate', 'user']);
-        
+
         $baseAmount = max(0, $assignment->amount_due - $assignment->amount_paid);
         $hasActiveSubscription = ResidentSubscription::where('user_id', $assignment->user_id)
             ->where('estate_id', $assignment->estate_id)
             ->get()
             ->first()
             ?->isActive() ?? false;
-            
+
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
         return Inertia::render('Web/Billing/PayCollection', [
@@ -344,7 +344,7 @@ class CollectionPaymentController extends Controller
             ->get()
             ->first()
             ?->isActive() ?? false;
-            
+
         $fees = $this->calculateFees($totalBaseAmount, $hasActiveSubscription);
 
         return Inertia::render('Web/Billing/PayCollectionBulk', [
@@ -587,15 +587,15 @@ class CollectionPaymentController extends Controller
     private function calculateFees(float $baseAmount, bool $hasActiveSubscription): array
     {
         $kontrolFee = $hasActiveSubscription ? 0 : round($baseAmount * 0.005, 2);
-        
+
         $target = $baseAmount + $kontrolFee;
-        
+
         // Guess total assuming < 2500 logic
         $total1 = $target / 0.985;
-        
+
         // Guess total assuming >= 2500 logic
         $total2 = ($target + 100) / 0.985;
-        
+
         if ($total1 < 2500) {
             $total = $total1;
             $paystackFee = $total * 0.015;
@@ -603,20 +603,20 @@ class CollectionPaymentController extends Controller
             $total = $total2;
             $paystackFee = $total * 0.015 + 100;
         }
-        
+
         // Apply Paystack cap
         if ($paystackFee > 2000) {
             $paystackFee = 2000;
             $total = $target + $paystackFee;
         }
-        
+
         // Round strictly upward to ensure we don't lose a kobo to rounding issues
         $total = ceil($total * 100) / 100;
         $paystackFee = $total - $target;
-        
+
         // Calculate the transaction charge passed to Paystack as an integer in kobo
         $transactionChargeNaira = round($kontrolFee + $paystackFee, 2);
-        
+
         return [
             'kontrol_fee' => $kontrolFee,
             'paystack_fee' => round($paystackFee, 2),

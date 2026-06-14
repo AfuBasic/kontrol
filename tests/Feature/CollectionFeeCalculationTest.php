@@ -6,6 +6,7 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Models\UserProfile;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -19,7 +20,7 @@ it('calculates fees exactly and charges 0.5% processing fee when resident has no
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     $admin->assignRole('admin', $estate->id);
-    
+
     EstateSettings::factory()->create([
         'estate_id' => $estate->id,
         'paystack_subaccount_code' => 'ACCT_ESTATE_123',
@@ -44,9 +45,9 @@ it('calculates fees exactly and charges 0.5% processing fee when resident has no
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]));
-    
+
     $response->assertStatus(200);
-    
+
     // Base Amount: 1000
     // Kontrol Fee (0.5%): 5
     // Target: 1005
@@ -55,7 +56,7 @@ it('calculates fees exactly and charges 0.5% processing fee when resident has no
     // Paystack Fee: 1020.31 - 1005 = 15.31
     // Kontrol Fee: 5.0
     // Transaction Charge (Kontrol + Paystack) in Kobo: (5.0 + 15.31) * 100 = 2031
-    
+
     $response->assertJson([
         'already_paid' => false,
         'base_amount' => 1000,
@@ -72,7 +73,7 @@ it('waives the 0.5% processing fee when resident has an active subscription', fu
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     $admin->assignRole('admin', $estate->id);
-    
+
     EstateSettings::factory()->create([
         'estate_id' => $estate->id,
         'paystack_subaccount_code' => 'ACCT_ESTATE_123',
@@ -105,9 +106,9 @@ it('waives the 0.5% processing fee when resident has an active subscription', fu
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]));
-    
+
     $response->assertStatus(200);
-    
+
     // Base Amount: 1000
     // Kontrol Fee (0.5%): 0 (waived)
     // Target: 1000
@@ -116,7 +117,7 @@ it('waives the 0.5% processing fee when resident has an active subscription', fu
     // Paystack Fee: 1015.23 - 1000 = 15.23
     // Kontrol Fee: 0
     // Transaction Charge (Kontrol + Paystack) in Kobo: (0 + 15.23) * 100 = 1523
-    
+
     $response->assertJson([
         'already_paid' => false,
         'base_amount' => 1000,
@@ -131,7 +132,7 @@ it('waives the 0.5% processing fee when resident has an active subscription', fu
 
 it('resolves the correct subaccount for property owner collections', function () {
     $estate = Estate::factory()->create();
-    
+
     // Estate has one subaccount
     EstateSettings::factory()->create([
         'estate_id' => $estate->id,
@@ -140,9 +141,9 @@ it('resolves the correct subaccount for property owner collections', function ()
 
     $propertyOwner = User::factory()->create();
     $propertyOwner->assignRole('property_owner', $estate->id);
-    
+
     // Property Owner has a different subaccount
-    \App\Models\UserProfile::factory()->create([
+    UserProfile::factory()->create([
         'user_id' => $propertyOwner->id,
         'paystack_subaccount_code' => 'ACCT_LANDLORD_999',
     ]);
@@ -167,9 +168,9 @@ it('resolves the correct subaccount for property owner collections', function ()
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]));
-    
+
     $response->assertStatus(200);
-    
+
     // Base Amount: 5000
     // Kontrol Fee (0.5%): 25
     // Target: 5025
@@ -178,7 +179,7 @@ it('resolves the correct subaccount for property owner collections', function ()
     // Paystack Fee: 5203.05 - 5025 = 178.05
     // Kontrol Fee: 25.0
     // Transaction Charge (Kontrol + Paystack) in Kobo: (25.0 + 178.05) * 100 = 20305
-    
+
     $response->assertJson([
         'already_paid' => false,
         'base_amount' => 5000,
@@ -190,4 +191,3 @@ it('resolves the correct subaccount for property owner collections', function ()
         'transaction_charge' => 20305,
     ]);
 });
-

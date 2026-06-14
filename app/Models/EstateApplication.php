@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,8 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $challenges
  * @property-read Plan|null $plan
  * @property-read User|null $assignedTo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ApplicationNote> $notesList
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ApplicationTimeline> $timelineEvents
+ * @property-read Collection<int, ApplicationNote> $notesList
+ * @property-read Collection<int, ApplicationTimeline> $timelineEvents
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newQuery()

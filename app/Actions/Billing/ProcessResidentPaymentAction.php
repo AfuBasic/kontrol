@@ -80,8 +80,8 @@ class ProcessResidentPaymentAction
         $invoice = DB::transaction(function () use ($subscription, $plan) {
             $estate = $subscription->estate;
 
-            // Period starts when the resident's current active period ends, or today if expired/trial/past_due
-            $periodStart = ($subscription->status === 'active' && $subscription->current_period_end && $subscription->current_period_end->isFuture())
+            // Period starts when the resident's current active/trial period ends, or today if past due
+            $periodStart = (in_array($subscription->status, ['active', 'trial']) && $subscription->current_period_end && $subscription->current_period_end->isFuture())
                 ? $subscription->current_period_end
                 : now()->startOfDay();
 

@@ -8,7 +8,6 @@ use App\Mail\SendInvoiceMail;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
-use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\Property;
@@ -20,6 +19,7 @@ use App\Notifications\Admin\PaymentReceivedNotification;
 use App\Notifications\Resident\CollectionReminderNotification;
 use App\Notifications\Resident\NewCollectionNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -58,8 +58,8 @@ test('a resident can initiate a subscription payment which generates a pending i
     // Ensure no invoice exists initially
     expect(Invoice::where('user_id', $resident->id)->count())->toBe(0);
 
-    Illuminate\Support\Facades\Http::fake([
-        'api.paystack.co/transaction/initialize' => Illuminate\Support\Facades\Http::response([
+    Http::fake([
+        'api.paystack.co/transaction/initialize' => Http::response([
             'status' => true,
             'message' => 'Authorization URL created',
             'data' => [

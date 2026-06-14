@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\EstateApplication;
-use function Pest\Laravel\actingAs;
+
 use function Pest\Laravel\assertDatabaseHas;
 
 it('can update application status and create timeline event', function () {
@@ -17,8 +17,8 @@ it('can update application status and create timeline event', function () {
     config(['zeus.username' => 'Test Zeus Admin']);
 
     $this->patch(route('zeus.applications.status.update', $application), [
-            'status' => 'under_review',
-        ])
+        'status' => 'under_review',
+    ])
         ->assertRedirect()
         ->assertSessionHas('success');
 
@@ -47,8 +47,8 @@ it('can add an internal note and create timeline event', function () {
     config(['zeus.username' => 'Test Zeus Admin']);
 
     $this->post(route('zeus.applications.notes.store', $application), [
-            'body' => 'This is a test internal note',
-        ])
+        'body' => 'This is a test internal note',
+    ])
         ->assertRedirect()
         ->assertSessionHas('success');
 

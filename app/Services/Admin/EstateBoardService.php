@@ -68,7 +68,7 @@ class EstateBoardService
             })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
-                    $term = '%' . $search . '%';
+                    $term = '%'.$search.'%';
                     $sub->where('title', 'like', $term)
                         ->orWhere('body', 'like', $term);
                 });

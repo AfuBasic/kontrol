@@ -13,10 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('estate_applications', function (Blueprint $table) {
-            if (!Schema::hasColumn('estate_applications', 'assigned_to')) {
+            if (! Schema::hasColumn('estate_applications', 'assigned_to')) {
                 $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             }
-            if (!Schema::hasColumn('estate_applications', 'challenges')) {
+            if (! Schema::hasColumn('estate_applications', 'challenges')) {
                 $table->text('challenges')->nullable();
             }
         });

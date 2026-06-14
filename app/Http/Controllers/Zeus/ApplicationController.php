@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Zeus;
 use App\Actions\Zeus\ApproveEstateApplicationAction;
 use App\Http\Controllers\Controller;
 use App\Mail\EstateApplicationRejectedMail;
-use App\Models\EstateApplication;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use App\Models\ApplicationNote;
 use App\Models\ApplicationTimeline;
+use App\Models\EstateApplication;
 use App\Services\Zeus\ApplicationAnalyticsService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -89,6 +89,7 @@ class ApplicationController extends Controller
 
         return back()->with('success', 'Note added.');
     }
+
     public function approve(EstateApplication $application, ApproveEstateApplicationAction $action): RedirectResponse
     {
         if (! in_array($application->status, ['received', 'under_review'])) {

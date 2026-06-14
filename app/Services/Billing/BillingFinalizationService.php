@@ -59,11 +59,11 @@ class BillingFinalizationService
         if ($subscription) {
             $interval = $invoice->plan ? $invoice->plan->billing_interval : 'monthly';
 
-            // Accurate capture: if they were overdue/trial, start from today.
-            // Otherwise, start from the end of the previous period.
-            $newStart = ($subscription->status === 'trial' || $subscription->status === 'past_due')
-                ? now()
-                : ($subscription->current_period_end ?? now());
+            // Accurate capture: if they have a future end date and are active or on trial, start from that end date.
+            // Otherwise (e.g. past due), start from today.
+            $newStart = (in_array($subscription->status, ['active', 'trial']) && $subscription->current_period_end && $subscription->current_period_end->isFuture())
+                ? $subscription->current_period_end
+                : now();
 
             $newEnd = $this->billingCycleService->calculatePeriodEnd($newStart, $interval);
 

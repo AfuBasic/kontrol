@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\EstateBoard\CreatePostAction;
 use App\Actions\EstateBoard\DeletePostAction;
 use App\Actions\EstateBoard\UpdatePostAction;
+use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EstateBoard\StorePostRequest;
 use App\Http\Requests\EstateBoard\UpdatePostRequest;
@@ -32,11 +33,11 @@ class EstateBoardController extends Controller
         $this->authorize('viewAny', EstateBoardPost::class);
 
         $estateId = $this->estateContext->getEstateId();
-        
+
         $search = request('search');
         $audience = request('audience');
-        $audiences = ($audience && $audience !== 'all') 
-            ? [\App\Enums\EstateBoardPostAudience::from($audience)] 
+        $audiences = ($audience && $audience !== 'all')
+            ? [EstateBoardPostAudience::from($audience)]
             : null;
 
         $posts = $this->boardService->getFeed($estateId, 10, $audiences, null, $search);
