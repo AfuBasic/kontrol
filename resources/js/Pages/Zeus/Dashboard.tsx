@@ -49,9 +49,9 @@ export default function Dashboard({ briefing, metrics, growthChart, chartRange }
         }).format(value);
     };
 
-    const handleRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleRangeChange = (months: number) => {
         import('@inertiajs/react').then(({ router }) => {
-            router.get(route('zeus.dashboard'), { chart_range: e.target.value }, { preserveState: true, replace: true });
+            router.get(route('zeus.dashboard'), { chart_range: months }, { preserveState: true, replace: true });
         });
     };
 
@@ -148,15 +148,25 @@ export default function Dashboard({ briefing, metrics, growthChart, chartRange }
                                 Revenue and acquisition growth over the last {chartRange} months.
                             </p>
                         </div>
-                        <select
-                            value={chartRange}
-                            onChange={handleRangeChange}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-primary-500 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                            <option value={3}>Last 3 Months</option>
-                            <option value={6}>Last 6 Months</option>
-                            <option value={12}>Last 12 Months</option>
-                        </select>
+                        <div className="flex items-center gap-1 rounded-lg border border-slate-200/50 bg-slate-100/50 p-1 dark:border-white/[0.04] dark:bg-slate-800/50">
+                            {[
+                                { label: '3M', value: 3 },
+                                { label: '6M', value: 6 },
+                                { label: '1Y', value: 12 },
+                            ].map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => handleRangeChange(option.value)}
+                                    className={`rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-all ${
+                                        chartRange === option.value
+                                            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-700 dark:text-white dark:ring-white/10'
+                                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="w-full">
