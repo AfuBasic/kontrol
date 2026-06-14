@@ -18,12 +18,12 @@ class CreateEstateAction
     ) {}
 
     /**
-     * @param  array{name: string, email: string, address?: string|null, plan_id: int, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
+     * @param  array{name: string, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
      */
     public function execute(array $data): Estate
     {
         return DB::transaction(function () use ($data) {
-            $plan = Plan::findOrFail($data['plan_id']);
+            $plan = isset($data['plan_id']) ? Plan::find($data['plan_id']) : null;
 
             // 1. Create the estate
             $estate = Estate::create([
@@ -54,11 +54,13 @@ class CreateEstateAction
             $user->assignRole('admin');
 
             // 5. Create the subscription
-            $estate->subscriptionRecord()->create([
-                'plan_id' => $plan->id,
-                'status' => 'active',
-                'billing_interval' => $plan->billing_interval,
-            ]);
+            if ($plan) {
+                $estate->subscriptionRecord()->create([
+                    'plan_id' => $plan->id,
+                    'status' => 'active',
+                    'billing_interval' => $plan->billing_interval,
+                ]);
+            }
 
             // 6. Create estate settings with billing model and free trial configuration
             $settingsData = [

@@ -30,17 +30,8 @@ class ApproveEstateApplicationAction
                 'name' => $application->estate_name,
                 'email' => $application->email,
                 'address' => $application->address,
+                'plan_id' => $application->plan_id,
             ]);
-
-            // If a plan was selected, create a subscription for it
-            if ($application->plan_id) {
-                EstateSubscription::create([
-                    'estate_id' => $estate->id,
-                    'plan_id' => $application->plan_id,
-                    'status' => 'active',
-                    'billing_interval' => 'monthly',
-                ]);
-            }
 
             // Mark the application as approved
             $application->markAsApproved();

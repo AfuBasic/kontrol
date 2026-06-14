@@ -216,6 +216,7 @@ export default function Apply() {
     };
 
     const prevStep = () => {
+        clearErrors();
         if (step > 1) setStep(step - 1);
     };
 
@@ -777,6 +778,17 @@ export default function Apply() {
                                                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Review & Submit</h3>
                                                     <p className="text-slate-600 dark:text-slate-400 mt-2">Please confirm your details below.</p>
                                                 </div>
+
+                                                {Object.keys(errors).length > 0 && (
+                                                    <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-500/30">
+                                                        <div className="flex items-center gap-3">
+                                                            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                                                            <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                                                                {errors.contactEmail || errors.contactPhone || errors.estateName || errors.estateLocation || errors.contactName || 'An error occurred. Please go back and check your details.'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 
                                                 <div className="rounded-[2rem] bg-slate-50 dark:bg-slate-900/80 p-8 ring-1 ring-slate-200 dark:ring-white/10">
                                                     <dl className="space-y-6 text-base text-slate-700 dark:text-slate-300">

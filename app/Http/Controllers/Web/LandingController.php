@@ -48,7 +48,7 @@ class LandingController extends Controller
             'estateName' => 'required|string|max:255',
             'estateLocation' => 'required|string|max:255',
             'contactName' => 'required|string|max:255',
-            'contactEmail' => 'required|email|max:255|unique:estate_applications,email|unique:estates,email',
+            'contactEmail' => 'required|email|max:255|unique:estate_applications,email|unique:estates,email|unique:users,email',
             'contactPhone' => 'nullable|string|max:20|unique:estate_applications,phone',
         ], [
             'contactEmail.unique' => "Application Error. Your application couldn't be processed at this time.",
