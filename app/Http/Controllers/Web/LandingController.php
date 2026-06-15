@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Auth\DetermineUserRedirect;
 use App\Http\Controllers\Controller;
 use App\Mail\EstateApplicationAcknowledgmentMail;
 use App\Mail\EstateApplicationMail;
 use App\Mail\SupportRequestMail;
 use App\Models\EstateApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -94,8 +98,8 @@ class LandingController extends Controller
 
         $token = null;
         if (auth()->check()) {
-            $token = \Illuminate\Support\Str::random(40);
-            \Illuminate\Support\Facades\Cache::put('autologin_'.$token, auth()->id(), now()->addMinutes(5));
+            $token = Str::random(40);
+            Cache::put('autologin_'.$token, auth()->id(), now()->addMinutes(5));
         }
 
         return Inertia::render('Public/DownloadApp', [
@@ -106,26 +110,26 @@ class LandingController extends Controller
     /**
      * Autologin from mobile app deep links.
      */
-    public function autologin(Request $request, \App\Actions\Auth\DetermineUserRedirect $determineRedirect)
+    public function autologin(Request $request, DetermineUserRedirect $determineRedirect)
     {
         $token = $request->query('token');
         if (! $token) {
             return redirect()->route('login');
         }
 
-        $userId = \Illuminate\Support\Facades\Cache::pull('autologin_'.$token);
+        $userId = Cache::pull('autologin_'.$token);
         if (! $userId) {
             return redirect()->route('login')->with('error', 'Authentication link expired.');
         }
 
-        \Illuminate\Support\Facades\Auth::loginUsingId($userId);
+        Auth::loginUsingId($userId);
         $request->session()->regenerate();
 
         $redirect = $request->query('redirect');
         if ($redirect && (str_starts_with($redirect, '/') || parse_url($redirect, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST))) {
             $redirectUrl = $redirect;
         } else {
-            $redirectUrl = $determineRedirect->execute(\Illuminate\Support\Facades\Auth::user());
+            $redirectUrl = $determineRedirect->execute(Auth::user());
         }
 
         return redirect()->intended($redirectUrl);
