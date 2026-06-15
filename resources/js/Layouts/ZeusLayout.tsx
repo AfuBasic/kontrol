@@ -34,8 +34,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
-    { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
+    { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
     { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
     { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
