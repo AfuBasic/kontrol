@@ -1,6 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import { Building2, Settings, Mail, MapPin, ArrowLeft, Save, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
 
 interface Props {
     estate: {
@@ -35,189 +36,284 @@ export default function EditEstate({ estate }: Props) {
     }
 
     return (
-        <ZeusLayout backUrl="/zeus/dashboard">
+        <ZeusLayout>
             <Head title={`Edit ${estate.name} - Zeus`} />
 
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-4xl pb-12">
+                {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
                     className="mb-8"
                 >
-                    <h1 className="text-2xl font-semibold text-gray-900">Edit Estate</h1>
-                    <p className="mt-1 text-gray-500">Update estate details.</p>
+                    <Link
+                        href={`/zeus/estates/${estate.id}`}
+                        className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Estate
+                    </Link>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Edit Estate</h1>
+                    <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Configure settings and billing properties for {estate.name}.
+                    </p>
                 </motion.div>
 
                 <motion.form
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                     onSubmit={handleSubmit}
-                    className="rounded-xl border border-gray-200 bg-white p-6"
+                    className="space-y-8"
                 >
-                    <div className="space-y-6">
-                        {/* Name */}
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                Estate Name
-                            </label>
-                            <input
-                                type="text"
-                                id="name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                placeholder="Enter estate name"
-                            />
-                            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                    {/* Basic Information Card */}
+                    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
+                        <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                Basic Information
+                            </h2>
                         </div>
-
-                        {/* Email */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Admin Email
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                className={`mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none ${
-                                    estate.admin_accepted ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''
-                                }`}
-                                placeholder="admin@estate.com"
-                                disabled={estate.admin_accepted}
-                            />
-                            {estate.admin_accepted && (
-                                <p className="mt-1 text-xs text-gray-500">Email cannot be changed after the admin has accepted the invitation.</p>
-                            )}
-                            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                        </div>
-
-                        {/* Address */}
-                        <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                                Address <span className="text-gray-400">(optional)</span>
-                            </label>
-                            <textarea
-                                id="address"
-                                value={data.address}
-                                onChange={(e) => setData('address', e.target.value)}
-                                rows={3}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                placeholder="Enter estate address"
-                            />
-                            {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
-                        </div>
-
-                        {/* Status */}
-                        <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                                Status
-                            </label>
-                            <select
-                                id="status"
-                                value={data.status}
-                                onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
-                                className={`mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none ${
-                                    !estate.admin_accepted ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''
-                                }`}
-                                disabled={!estate.admin_accepted}
-                            >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            {!estate.admin_accepted && (
-                                <p className="mt-1 text-xs text-gray-500">Estate cannot be activated until the admin accepts the invitation.</p>
-                            )}
-                            {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
-                        </div>
-
-                        {/* Billing Model */}
-                        <div>
-                            <label htmlFor="charge_type" className="block text-sm font-medium text-gray-700">
-                                Billing Model
-                            </label>
-                            <select
-                                id="charge_type"
-                                value={data.charge_type}
-                                onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                            >
-                                <option value="estate">Charge Estate</option>
-                                <option value="residents">Charge Residents</option>
-                            </select>
-                            {errors.charge_type && <p className="mt-1 text-sm text-red-600">{errors.charge_type}</p>}
-                        </div>
-
-                        {/* Free Trial Enabled */}
-                        <div>
-                            <label className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    checked={data.free_trial_enabled}
-                                    onChange={(e) => setData('free_trial_enabled', e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Enable Free Trial</span>
-                            </label>
-                            <p className="mt-1 text-xs text-gray-500">Allow this estate to start with a trial period before billing begins.</p>
-                        </div>
-
-                        {/* Free Trial Days */}
-                        {data.free_trial_enabled && (
-                            <div>
-                                <label htmlFor="free_trial_days" className="block text-sm font-medium text-gray-700">
-                                    Trial Duration (Days)
+                        <div className="grid gap-6 p-8 md:grid-cols-2">
+                            <div className="col-span-full">
+                                <label htmlFor="name" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                    Estate Name
                                 </label>
-                                <input
-                                    type="number"
-                                    id="free_trial_days"
-                                    min="1"
-                                    max="365"
-                                    value={data.free_trial_days}
-                                    onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
-                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                />
-                                <p className="mt-1 text-xs text-gray-500">Number of days from estate creation before billing begins (default: 30)</p>
-                                {errors.free_trial_days && <p className="mt-1 text-sm text-red-600">{errors.free_trial_days}</p>}
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        <Building2 className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                        placeholder="Enter estate name"
+                                    />
+                                </div>
+                                {errors.name && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.name}</p>}
                             </div>
-                        )}
 
-                        {/* Grace Period Days */}
-                        <div>
-                            <label htmlFor="grace_period_days" className="block text-sm font-medium text-gray-700">
-                                Grace Period (Days)
-                            </label>
-                            <input
-                                type="number"
-                                id="grace_period_days"
-                                min="1"
-                                max="30"
-                                value={data.grace_period_days}
-                                onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">
-                                Number of days allowed for access if no trial exists or trial has ended (default: 2)
-                            </p>
-                            {errors.grace_period_days && <p className="mt-1 text-sm text-red-600">{errors.grace_period_days}</p>}
+                            <div className="col-span-full">
+                                <label htmlFor="email" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                    Admin Email
+                                </label>
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        <Mail className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        className={`block w-full rounded-2xl border border-slate-200 py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-white ${
+                                            estate.admin_accepted ? 'cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'
+                                        }`}
+                                        placeholder="admin@estate.com"
+                                        disabled={estate.admin_accepted}
+                                    />
+                                </div>
+                                {estate.admin_accepted && (
+                                    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                        Email locked because admin has accepted the invitation.
+                                    </p>
+                                )}
+                                {errors.email && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.email}</p>}
+                            </div>
+
+                            <div className="col-span-full">
+                                <label htmlFor="address" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                    Address <span className="font-normal text-slate-400">(Optional)</span>
+                                </label>
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute top-3.5 left-0 flex items-start pl-4">
+                                        <MapPin className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <textarea
+                                        id="address"
+                                        value={data.address}
+                                        onChange={(e) => setData('address', e.target.value)}
+                                        rows={3}
+                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                        placeholder="Enter estate address"
+                                    />
+                                </div>
+                                {errors.address && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.address}</p>}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="mt-8 flex items-center justify-end gap-4">
+                    {/* Settings & Billing Card */}
+                    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
+                        <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                <Settings className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                Settings & Billing
+                            </h2>
+                        </div>
+                        <div className="grid gap-8 p-8 md:grid-cols-2">
+                            {/* Status */}
+                            <div>
+                                <label htmlFor="status" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                    Estate Status
+                                </label>
+                                <select
+                                    id="status"
+                                    value={data.status}
+                                    onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
+                                    className={`block w-full rounded-2xl border border-slate-200 py-3 px-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-white ${
+                                        !estate.admin_accepted ? 'cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'
+                                    }`}
+                                    disabled={!estate.admin_accepted}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                {!estate.admin_accepted && (
+                                    <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                        Estate cannot be activated until the admin accepts the invitation.
+                                    </p>
+                                )}
+                                {errors.status && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.status}</p>}
+                            </div>
+
+                            {/* Billing Model */}
+                            <div>
+                                <label htmlFor="charge_type" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                    Billing Model
+                                </label>
+                                <select
+                                    id="charge_type"
+                                    value={data.charge_type}
+                                    onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
+                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 px-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                >
+                                    <option value="estate">Charge Estate (Bulk)</option>
+                                    <option value="residents">Charge Residents (Individual)</option>
+                                </select>
+                                {errors.charge_type && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.charge_type}</p>}
+                            </div>
+
+                            {/* Free Trial Toggle */}
+                            <div className="col-span-full rounded-2xl border border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Free Trial</h3>
+                                        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Allow this estate to start with a trial period before billing begins.
+                                        </p>
+                                    </div>
+                                    <div 
+                                        onClick={() => setData('free_trial_enabled', !data.free_trial_enabled)}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${data.free_trial_enabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${data.free_trial_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </div>
+                                </div>
+
+                                {/* Free Trial Days & Grace Period - Animated Reveal */}
+                                {data.free_trial_enabled && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="mt-6 grid gap-6 border-t border-slate-200 pt-6 dark:border-slate-700 md:grid-cols-2"
+                                    >
+                                        <div>
+                                            <label htmlFor="free_trial_days" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                Trial Duration (Days)
+                                            </label>
+                                            <div className="relative">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                    <Clock className="h-5 w-5 text-slate-400" />
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    id="free_trial_days"
+                                                    min="1"
+                                                    max="365"
+                                                    value={data.free_trial_days}
+                                                    onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                />
+                                            </div>
+                                            {errors.free_trial_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.free_trial_days}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="grace_period_days" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                Grace Period (Days)
+                                            </label>
+                                            <div className="relative">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                    <CreditCard className="h-5 w-5 text-slate-400" />
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    id="grace_period_days"
+                                                    min="1"
+                                                    max="30"
+                                                    value={data.grace_period_days}
+                                                    onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                />
+                                            </div>
+                                            {errors.grace_period_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.grace_period_days}</p>}
+                                        </div>
+                                    </motion.div>
+                                )}
+                                
+                                {!data.free_trial_enabled && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="mt-6 border-t border-slate-200 pt-6 dark:border-slate-700"
+                                    >
+                                        <div className="md:w-1/2">
+                                            <label htmlFor="grace_period_days_no_trial" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                Grace Period (Days)
+                                            </label>
+                                            <div className="relative">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                    <CreditCard className="h-5 w-5 text-slate-400" />
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    id="grace_period_days_no_trial"
+                                                    min="1"
+                                                    max="30"
+                                                    value={data.grace_period_days}
+                                                    onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                Days allowed for payment before service suspension.
+                                            </p>
+                                            {errors.grace_period_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.grace_period_days}</p>}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-4">
                         <Link
-                            href="/zeus/dashboard"
-                            className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                            href={`/zeus/estates/${estate.id}`}
+                            className="rounded-2xl px-6 py-3 text-sm font-bold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                         >
                             Cancel
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
+                            <Save className="h-4 w-4" />
                             {processing ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
