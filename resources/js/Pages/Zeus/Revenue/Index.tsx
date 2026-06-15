@@ -29,12 +29,23 @@ interface Props {
 }
 
 export default function RevenueIndex({ forecastData, revenueBreakdown, topPerformers }: Props) {
-    const formatCurrency = (value: number) => {
+    const formatExactCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
             currency: 'NGN',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    const formatCompactCurrency = (value: number) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            notation: 'compact',
+            compactDisplay: 'short',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1,
         }).format(value);
     };
 
@@ -112,7 +123,7 @@ export default function RevenueIndex({ forecastData, revenueBreakdown, topPerfor
                                             backdropFilter: 'blur(8px)',
                                         }}
                                         formatter={(value: number, name: string) => [
-                                            formatCurrency(value),
+                                            formatExactCurrency(value),
                                             name === 'actual' ? 'Actual MRR' : 'Projected MRR',
                                         ]}
                                         labelStyle={{ color: '#64748b', fontWeight: 600, fontSize: '12px', marginBottom: '4px' }}
@@ -151,7 +162,7 @@ export default function RevenueIndex({ forecastData, revenueBreakdown, topPerfor
                             className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40"
                         >
                             <h2 className="mb-1 text-base font-semibold text-slate-900 dark:text-white">Active MRR by Plan</h2>
-                            <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Total: {formatCurrency(totalActiveMRR)}</p>
+                            <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Total: {formatExactCurrency(totalActiveMRR)}</p>
 
                             <div className="flex items-center justify-center">
                                 <ResponsiveContainer width="100%" height={220}>
@@ -171,7 +182,7 @@ export default function RevenueIndex({ forecastData, revenueBreakdown, topPerfor
                                             ))}
                                         </Pie>
                                         <Tooltip
-                                            formatter={(value: number) => formatCurrency(value)}
+                                            formatter={(value: number) => formatExactCurrency(value)}
                                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgb(0 0 0 / 0.1)' }}
                                         />
                                     </PieChart>
@@ -220,7 +231,7 @@ export default function RevenueIndex({ forecastData, revenueBreakdown, topPerfor
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                {formatCurrency(estate.total_revenue)}
+                                                {formatCompactCurrency(estate.total_revenue)}
                                             </span>
                                             <ArrowUpRight className="h-3 w-3 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-600" />
                                         </div>

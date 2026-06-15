@@ -28,12 +28,23 @@ interface Props {
 }
 
 export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
-    const formatCurrency = (value: number) => {
+    const formatExactCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
             currency: 'NGN',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    const formatCompactCurrency = (value: number) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            notation: 'compact',
+            compactDisplay: 'short',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1,
         }).format(value);
     };
 
@@ -132,14 +143,14 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                                             background: 'rgba(255, 255, 255, 0.9)',
                                             backdropFilter: 'blur(8px)',
                                         }}
-                                        formatter={(value: number) => [formatCurrency(value), 'Amount']}
+                                        formatter={(value: number) => [formatExactCurrency(value), 'Amount']}
                                     />
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
-                                        <LabelList 
-                                            dataKey="value" 
-                                            position="right" 
-                                            formatter={(value: number) => formatCurrency(value)} 
-                                            style={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} 
+                                        <LabelList
+                                            dataKey="value"
+                                            position="right"
+                                            formatter={(value: number) => formatCompactCurrency(value)}
+                                            style={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
                                         />
                                         {funnel.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -188,7 +199,7 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                                             background: 'rgba(255, 255, 255, 0.9)',
                                             backdropFilter: 'blur(8px)',
                                         }}
-                                        formatter={(value: number) => [formatCurrency(value), 'Value at Risk']}
+                                        formatter={(value: number) => [formatExactCurrency(value), 'Value at Risk']}
                                     />
                                     {/* The longer it ages, the more intense the color gets (orange -> red) */}
                                     <Bar dataKey="amount" radius={[4, 4, 0, 0]} barSize={48}>

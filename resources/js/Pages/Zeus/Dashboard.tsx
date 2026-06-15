@@ -43,12 +43,23 @@ interface Props {
 }
 
 export default function Dashboard({ briefing, metrics, growthChart, startDate, endDate }: Props) {
-    const formatCurrency = (value: number) => {
+    const formatExactCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
             currency: 'NGN',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    const formatCompactCurrency = (value: number) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            notation: 'compact',
+            compactDisplay: 'short',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1,
         }).format(value);
     };
 
@@ -80,7 +91,7 @@ export default function Dashboard({ briefing, metrics, growthChart, startDate, e
                 <h3 className="text-[11px] font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">{title}</h3>
                 <div className="mt-4 flex items-end gap-3">
                     <span className="text-4xl font-medium tracking-tight text-slate-900 dark:text-white">
-                        {isCurrency ? formatCurrency(data.current) : data.current}
+                        {isCurrency ? formatCompactCurrency(data.current) : data.current}
                     </span>
                     <span
                         className={`mb-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide ${
@@ -200,7 +211,10 @@ export default function Dashboard({ briefing, metrics, growthChart, startDate, e
                                     }}
                                     itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500, padding: '4px 0' }}
                                     cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    formatter={(value: number, name: string) => [name === 'Revenue' ? formatCurrency(value) : value, name]}
+                                    formatter={(value: number, name: string) => [
+                                        name === 'mrr' ? formatExactCurrency(value) : value,
+                                        name === 'mrr' ? 'Revenue' : 'Estates',
+                                    ]}
                                 />
                                 <Legend
                                     verticalAlign="top"
