@@ -132,28 +132,36 @@ export default function SubscriptionsIndex({
                             <Activity className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Active Subscriptions</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{kpis.active_subscriptions.toLocaleString('en-US')}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.active_subscriptions.toLocaleString('en-US')}>
+                            {kpis.active_subscriptions.toLocaleString('en-US')}
+                        </p>
                     </div>
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                             <TrendingUp className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Total MRR</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{formatCurrency(kpis.total_mrr)}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(kpis.total_mrr)}>
+                            {formatCurrency(kpis.total_mrr)}
+                        </p>
                     </div>
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                             <TrendingDown className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Churned (MTD)</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{kpis.churned_this_month.toLocaleString('en-US')}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.churned_this_month.toLocaleString('en-US')}>
+                            {kpis.churned_this_month.toLocaleString('en-US')}
+                        </p>
                     </div>
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
                             <AlertCircle className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Past Due</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{kpis.past_due_subscriptions.toLocaleString('en-US')}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.past_due_subscriptions.toLocaleString('en-US')}>
+                            {kpis.past_due_subscriptions.toLocaleString('en-US')}
+                        </p>
                     </div>
                 </motion.div>
 
