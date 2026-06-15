@@ -68,15 +68,16 @@ class InvitationController extends Controller
             $user->unsetRelation('roles');
         }
 
-        if ($user->hasRole('security')) {
-            return redirect()->route('security.dashboard');
-        }
-
-        if ($user->hasRole('resident')) {
-            return redirect()->route('resident.dashboard');
+        if ($user->hasRole(['security', 'resident'])) {
+            return redirect()->route('invitation.success');
         }
 
         return redirect()->route('admin.dashboard');
+    }
+
+    public function success(): Response
+    {
+        return Inertia::render('Invitation/Success');
     }
 
     public function invalid(): Response
