@@ -136,9 +136,6 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                         >
                             Edit Estate
                         </Link>
-                        <button className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-white px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 dark:hover:bg-slate-200 active:scale-95">
-                            Manage Plan
-                        </button>
                     </div>
                 </div>
 
