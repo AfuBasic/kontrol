@@ -247,7 +247,15 @@ export default function Login() {
             setWindowWidth(window.innerWidth);
         };
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+
+        // Force body to be white to prevent Android Webview black bars
+        const originalBg = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = '#ffffff';
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            document.body.style.backgroundColor = originalBg;
+        };
     }, []);
 
     // Keep carousel aligned on resize
@@ -558,7 +566,8 @@ export default function Login() {
 
     return (
         <>
-            <div className="flex min-h-screen flex-col bg-white lg:flex-row">
+            <Head title="Login" />
+            <div className="flex min-h-[100dvh] flex-col bg-white lg:flex-row">
                 {/* Branded panel — hidden on mobile, left side on desktop */}
                 <div className="relative hidden overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
