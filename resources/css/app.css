@@ -624,3 +624,28 @@ textarea,
         top: 95%;
     }
 }
+
+
+/* Fix Capacitor Android keyboard resizing the body (resize: 'body')
+   This ensures that Tailwind's h-screen/min-h-screen responds to the physically
+   resized body instead of staying at the original 100vh, preventing the UI from
+   overflowing into the background. */
+html.capacitor-native,
+html.capacitor-native body {
+    height: 100%;
+    overflow: hidden;
+}
+
+html.capacitor-native #app {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+html.capacitor-native .min-h-screen {
+    min-height: 100% !important;
+}
+
+html.capacitor-native .h-screen {
+    height: 100% !important;
+}

@@ -31,9 +31,11 @@ export default defineConfig({
     //     },
     // },
     esbuild: {
+        target: ["es2015", "chrome60", "safari11"],
         jsx: 'automatic',
     },
     build: {
+        target: ["es2015", "chrome60", "safari11"],
         rollupOptions: {
             output: {
                 manualChunks: {

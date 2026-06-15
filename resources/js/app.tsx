@@ -110,6 +110,12 @@ createInertiaApp({
 
         // Handle Capacitor specific logic
         if (Capacitor.isNativePlatform()) {
+            document.documentElement.classList.add('capacitor-native');
+            const appEl = document.getElementById('app');
+            if (appEl) {
+                appEl.setAttribute('scroll-region', 'true');
+            }
+
             // Set a cookie so that all browser document/page load requests include the native identifier
             document.cookie = 'is_native_app=true; path=/; max-age=31536000; SameSite=Lax; Secure';
 

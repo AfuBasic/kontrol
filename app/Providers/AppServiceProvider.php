@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -49,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->registerEventListeners();
         $this->configureTunnelSupport();
+        
+        // Force HTTPS if we are behind a proxy that terminates SSL
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+            URL::forceScheme('https');
+        }
 
         // Allow admins to bypass all permission checks
         Gate::before(function ($user, $_ability) {

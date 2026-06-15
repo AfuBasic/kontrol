@@ -15,30 +15,22 @@ use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
+use App\Services\Zeus\EstateHealthService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EstateController extends Controller
 {
-    public function index(): Response
+    public function index(EstateHealthService $healthService): Response
     {
         $search = request('search');
         $status = request('status');
 
-        $query = Estate::query()
-            ->with('subscriptionRecord.plan:id,name,billing_interval');
-
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
-        }
-
-        if ($status) {
-            $query->where('status', $status);
-        }
-
-        $estates = $query->paginate(15);
+        $estates = $healthService->getEstateExplorerData([
+            'search' => $search,
+            'status' => $status,
+        ]);
 
         return Inertia::render('Zeus/Estates/Index', [
             'estates' => $estates,

@@ -1,360 +1,368 @@
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Search, 
+    Plus, 
+    Building2, 
+    Users, 
+    Home, 
+    Activity, 
+    X, 
+    TrendingUp, 
+    MapPin,
+    AlertCircle,
+    CheckCircle2
+} from 'lucide-react';
+import { index, toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 
-interface Plan {
+type EstateExplorerData = {
     id: number;
+    ulid: string;
     name: string;
-    billing_interval: 'quarterly' | 'semi-annually' | 'annually';
-}
-
-interface SubscriptionRecord {
-    id: number;
-    estate_id: number;
-    plan: Plan;
-}
-
-interface Estate {
-    id: number;
-    name: string;
-    email: string;
-    address: string | null;
+    address: string;
     status: 'active' | 'inactive';
-    admin_accepted: boolean;
+    billing_mode: string;
+    total_residents: number;
+    total_properties: number;
+    health_score: number;
+    mrr: number;
     created_at: string;
-    subscriptionRecord?: SubscriptionRecord;
-}
+};
 
-interface PaginationLinks {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
-interface PaginatedEstates {
-    data: Estate[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    links: PaginationLinks[];
-    from: number | null;
-    to: number | null;
-}
-
-interface Props {
-    estates: PaginatedEstates;
+type Props = {
+    estates: EstateExplorerData[];
     filters: {
         search: string;
         status: string;
     };
-}
+};
 
-export default function EstatesIndex({ estates, filters }: Props) {
-    const [search, setSearch] = useState(filters.search);
-    const [status, setStatus] = useState(filters.status);
+export default function EstateExplorer({ estates, filters }: Props) {
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || '');
+    const [selectedEstate, setSelectedEstate] = useState<EstateExplorerData | null>(null);
 
-    function formatDate(dateString: string): string {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    }
-
-    function handleSearch(e: React.FormEvent) {
+    const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/zeus/estates', { search, status }, { preserveState: true });
-    }
+        router.get(
+            index.url(),
+            { search: searchQuery, status: statusFilter },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
 
-    function handleStatusChange(newStatus: string) {
-        setStatus(newStatus);
-        router.get('/zeus/estates', { search, status: newStatus }, { preserveState: true });
-    }
-
-    function handlePageChange(url: string | null) {
-        if (url) {
-            router.get(url, {}, { preserveState: true });
+    const handleToggleStatus = (estateId: number, currentStatus: string) => {
+        if (confirm(`Are you sure you want to ${currentStatus === 'active' ? 'deactivate' : 'activate'} this estate?`)) {
+            router.post(toggleStatus.url({ estate: estateId }), {}, { preserveScroll: true });
         }
-    }
+    };
 
-    function clearFilters() {
-        setSearch('');
-        setStatus('');
-        router.get('/zeus/estates', {}, { preserveState: true });
-    }
-
-    function handleToggleStatus(estateId: number) {
-        router.post(`/zeus/estates/${estateId}/toggle-status`, {}, { preserveState: true });
-    }
-
-    function handleResetPassword(estateId: number) {
-        if (confirm('Send a password reset link to the estate admin?')) {
-            router.post(`/zeus/estates/${estateId}/reset-password`, {}, { preserveState: true });
+    const handleDelete = (estateId: number, name: string) => {
+        if (confirm(`Are you sure you want to completely delete "${name}"? This action cannot be undone.`)) {
+            router.delete(destroy.url({ estate: estateId }), { preserveScroll: true });
         }
-    }
+    };
 
-    function handleDelete(estateId: number, estateName: string) {
-        if (confirm(`Are you sure you want to delete "${estateName}"? This action cannot be undone.`)) {
-            router.delete(`/zeus/estates/${estateId}`, { preserveState: true });
+    const handleResetPassword = (estateId: number) => {
+        if (confirm("Are you sure you want to reset the admin password for this estate?")) {
+            router.post(resetPassword.url({ estate: estateId }), {}, { preserveScroll: true });
         }
-    }
+    };
 
-    const hasFilters = filters.search || filters.status;
+    const getHealthColor = (score: number) => {
+        if (score >= 90) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+        if (score >= 70) return 'text-amber-600 bg-amber-50 border-amber-200';
+        return 'text-rose-600 bg-rose-50 border-rose-200';
+    };
+
+    const getHealthProgressColor = (score: number) => {
+        if (score >= 90) return 'stroke-emerald-500';
+        if (score >= 70) return 'stroke-amber-500';
+        return 'stroke-rose-500';
+    };
 
     return (
         <ZeusLayout>
-            <Head title="Manage Estates" />
+            <Head title="Estate Explorer" />
 
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
-                className="mb-8 flex items-end justify-between gap-6"
-            >
+            {/* Header & Actions */}
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <div className="mb-1 flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                        <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Infrastructure</span>
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Manage <span className="font-light text-slate-400">Estates</span>
-                    </h1>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Estate Explorer</h1>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                        Deep behavioral profiling and health monitoring across all estates.
+                    </p>
                 </div>
-                <Link
-                    href="/zeus/estates/create"
-                    className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 hover:shadow-md active:scale-95"
-                >
-                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                    New Estate
-                </Link>
-            </motion.div>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/zeus/estates/create"
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Estate
+                    </Link>
+                </div>
+            </div>
 
-            {/* Estates Table */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 }}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white"
-            >
-                <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <h2 className="text-[13px] font-bold tracking-wider text-slate-900 uppercase">All Estates</h2>
+            {/* Filters */}
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <form onSubmit={handleSearch} className="flex flex-1 items-center gap-3">
+                    <div className="relative flex-1 sm:max-w-xs">
+                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full rounded-xl border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="rounded-xl border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <button
+                        type="submit"
+                        className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800"
+                    >
+                        Filter
+                    </button>
+                </form>
+            </div>
 
-                        {/* Search and Filters */}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <form onSubmit={handleSearch} className="flex gap-2">
-                                <div className="relative">
-                                    <MagnifyingGlassIcon className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Search estates..."
-                                        className="rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-                                    />
+            {/* Estate Card Grid */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {estates.length === 0 ? (
+                    <div className="col-span-full py-12 text-center">
+                        <Building2 className="mx-auto h-12 w-12 text-slate-300" />
+                        <h3 className="mt-4 text-lg font-black text-slate-900">No estates found</h3>
+                        <p className="mt-1 text-sm text-slate-500">Adjust your search or add a new estate to get started.</p>
+                    </div>
+                ) : (
+                    estates.map((estate) => (
+                        <motion.div
+                            layoutId={`estate-${estate.id}`}
+                            key={estate.id}
+                            onClick={() => setSelectedEstate(estate)}
+                            className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
+                        >
+                            <div className="p-6">
+                                <div className="mb-4 flex items-start justify-between">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                        <Building2 className="h-6 w-6" />
+                                    </div>
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                            estate.status === 'active'
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : 'bg-slate-100 text-slate-600'
+                                        }`}
+                                    >
+                                        {estate.status === 'active' ? (
+                                            <CheckCircle2 className="h-3 w-3" />
+                                        ) : (
+                                            <AlertCircle className="h-3 w-3" />
+                                        )}
+                                        {estate.status}
+                                    </span>
                                 </div>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-xl bg-linear-to-r from-primary-500 to-primary-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md"
-                                >
-                                    Search
-                                </button>
-                            </form>
 
-                            <select
-                                value={status}
-                                onChange={(e) => handleStatusChange(e.target.value)}
-                                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-                            >
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                                <h3 className="text-lg font-black text-slate-900 line-clamp-1">{estate.name}</h3>
+                                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500 line-clamp-1">
+                                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                    {estate.address}
+                                </p>
 
-                            {hasFilters && (
-                                <button onClick={clearFilters} className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-                                    Clear
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                                <div className="mt-6 grid grid-cols-2 gap-4">
+                                    <div className="rounded-2xl bg-slate-50 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500">
+                                            <Users className="h-4 w-4" />
+                                            <span className="text-xs font-bold uppercase tracking-wider">Residents</span>
+                                        </div>
+                                        <p className="mt-1.5 text-lg font-black text-slate-900">{estate.total_residents}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500">
+                                            <Home className="h-4 w-4" />
+                                            <span className="text-xs font-bold uppercase tracking-wider">Properties</span>
+                                        </div>
+                                        <p className="mt-1.5 text-lg font-black text-slate-900">{estate.total_properties}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="border-b border-gray-200/80 bg-linear-to-r from-gray-50/80 to-white">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Estate</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Account</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Plan</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">State</th>
-                                <th className="px-6 py-4 text-left text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Registered</th>
-                                <th className="px-6 py-4 text-right text-[10px] font-bold tracking-[0.15em] text-slate-400 uppercase">Management</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {estates.data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        {hasFilters ? 'No estates match your filters.' : 'No estates found.'}
-                                    </td>
-                                </tr>
-                            ) : (
-                                estates.data.map((estate) => (
-                                    <tr key={estate.id} className="group transition-colors hover:bg-primary-50/30">
-                                        <td className="px-6 py-4 text-sm font-semibold whitespace-nowrap text-gray-900">{estate.name}</td>
-                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">{estate.email}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {estate.subscriptionRecord?.plan ? (
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="font-medium text-gray-900">{estate.subscriptionRecord.plan.name}</span>
-                                                    <span className="text-xs text-gray-400 capitalize">
-                                                        {estate.subscriptionRecord.plan.billing_interval}
-                                                    </span>
+                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                    {/* Circular Progress for Health Score */}
+                                    <div className="relative h-10 w-10">
+                                        <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
+                                            <path
+                                                className="stroke-slate-200"
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                fill="none"
+                                                strokeWidth="3"
+                                            />
+                                            <path
+                                                className={getHealthProgressColor(estate.health_score)}
+                                                strokeDasharray={`${estate.health_score}, 100`}
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                fill="none"
+                                                strokeWidth="3"
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="text-xs font-black text-slate-700">{estate.health_score}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-600">Health Score</span>
+                                </div>
+                                <Activity className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-600" />
+                            </div>
+                        </motion.div>
+                    ))
+                )}
+            </div>
+
+            {/* Estate Insights Modal (Slide-over) */}
+            <AnimatePresence>
+                {selectedEstate && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedEstate(null)}
+                            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+                        />
+
+                        {/* Slide-over Panel */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+                            className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 bg-white shadow-2xl"
+                        >
+                            <div className="flex flex-col h-full">
+                                {/* Panel Header */}
+                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/80 px-6 py-4 backdrop-blur-md">
+                                    <h2 className="text-lg font-black text-slate-900">Estate Insights</h2>
+                                    <button
+                                        onClick={() => setSelectedEstate(null)}
+                                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+
+                                {/* Panel Content */}
+                                <div className="flex-1 p-6">
+                                    <div className="mb-8">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 shadow-inner">
+                                            <Building2 className="h-8 w-8" />
+                                        </div>
+                                        <h1 className="mt-4 text-2xl font-black text-slate-900">{selectedEstate.name}</h1>
+                                        <p className="mt-1 text-sm font-medium text-slate-500">{selectedEstate.address}</p>
+                                    </div>
+
+                                    {/* Main Stats */}
+                                    <div className="mb-8 grid grid-cols-2 gap-4">
+                                        <div className={`rounded-3xl border p-5 ${getHealthColor(selectedEstate.health_score)}`}>
+                                            <div className="flex items-center justify-between">
+                                                <Activity className="h-5 w-5 opacity-75" />
+                                                <span className="text-2xl font-black">{selectedEstate.health_score}</span>
+                                            </div>
+                                            <p className="mt-2 text-xs font-bold uppercase tracking-wider opacity-75">Health Score</p>
+                                        </div>
+                                        <div className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-600">
+                                            <div className="flex items-center justify-between">
+                                                <TrendingUp className="h-5 w-5 opacity-75" />
+                                                <span className="text-xl font-black">
+                                                    ₦{(selectedEstate.mrr).toLocaleString('en-NG')}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-xs font-bold uppercase tracking-wider opacity-75">Est. MRR</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Additional Metrics (Placeholder for trendlines/charts) */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h3 className="mb-3 text-sm font-black text-slate-900 uppercase tracking-widest">Demographics</h3>
+                                            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5">
+                                                <div className="flex justify-between border-b border-slate-200 pb-3">
+                                                    <span className="text-sm font-medium text-slate-600">Total Residents</span>
+                                                    <span className="text-sm font-black text-slate-900">{selectedEstate.total_residents}</span>
                                                 </div>
-                                            ) : (
-                                                <span className="text-gray-300">—</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span
-                                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                                    estate.status === 'active'
-                                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200/80'
-                                                        : 'bg-gray-100 text-gray-600'
-                                                }`}
-                                            >
-                                                {estate.status === 'active' && <span className="h-1.5 w-1.5 rounded-full bg-green-500" />}
-                                                {estate.status === 'active' ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">{formatDate(estate.created_at)}</td>
-                                        <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
-                                            <div className="flex items-center justify-end gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <div className="flex justify-between pt-3">
+                                                    <span className="text-sm font-medium text-slate-600">Total Properties</span>
+                                                    <span className="text-sm font-black text-slate-900">{selectedEstate.total_properties}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="mb-3 text-sm font-black text-slate-900 uppercase tracking-widest">Actions</h3>
+                                            <div className="flex flex-col gap-3">
                                                 <Link
-                                                    href={`/zeus/estates/${estate.id}`}
-                                                    className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                                    title="View Details"
+                                                    href={`/zeus/estates/${selectedEstate.id}`}
+                                                    className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98]"
                                                 >
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                        />
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                                        />
-                                                    </svg>
+                                                    View Full Details
                                                 </Link>
                                                 <Link
-                                                    href={`/zeus/estates/${estate.id}/edit`}
-                                                    className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                                    title="Edit"
+                                                    href={`/zeus/estates/${selectedEstate.id}/edit`}
+                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
                                                 >
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                        />
-                                                    </svg>
+                                                    Edit Settings
                                                 </Link>
-                                                {estate.admin_accepted && (
+                                                <div className="mt-4 grid grid-cols-2 gap-3">
                                                     <button
-                                                        onClick={() => handleToggleStatus(estate.id)}
-                                                        className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                                        title={estate.status === 'active' ? 'Deactivate' : 'Activate'}
+                                                        onClick={() => {
+                                                            handleToggleStatus(selectedEstate.id, selectedEstate.status);
+                                                            setSelectedEstate(null);
+                                                        }}
+                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95"
                                                     >
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth={2}
-                                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                            />
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth={2}
-                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                                            />
-                                                        </svg>
+                                                        Toggle Status
                                                     </button>
-                                                )}
+                                                    <button
+                                                        onClick={() => {
+                                                            handleResetPassword(selectedEstate.id);
+                                                            setSelectedEstate(null);
+                                                        }}
+                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95"
+                                                    >
+                                                        Reset Password
+                                                    </button>
+                                                </div>
                                                 <button
-                                                    onClick={() => handleResetPassword(estate.id)}
-                                                    className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                                    title="Reset Password"
+                                                    onClick={() => {
+                                                        handleDelete(selectedEstate.id, selectedEstate.name);
+                                                        setSelectedEstate(null);
+                                                    }}
+                                                    className="mt-2 w-full rounded-2xl bg-rose-50 py-3 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 active:scale-[0.98]"
                                                 >
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(estate.id, estate.name)}
-                                                    className="rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                                                    title="Delete"
-                                                >
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                        />
-                                                    </svg>
+                                                    Delete Estate
                                                 </button>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {estates.last_page > 1 && (
-                    <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/60 px-6 py-3.5">
-                        <p className="text-xs text-gray-500">
-                            Showing {estates.from}–{estates.to} of {estates.total}
-                        </p>
-                        <div className="flex items-center gap-1">
-                            {estates.links.map((link, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => handlePageChange(link.url)}
-                                    disabled={!link.url}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                                        link.active
-                                            ? 'bg-primary-600 text-white'
-                                            : link.url
-                                              ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                              : 'cursor-not-allowed text-gray-300'
-                                    }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
-            </motion.div>
+            </AnimatePresence>
         </ZeusLayout>
     );
 }

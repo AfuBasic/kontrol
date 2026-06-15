@@ -395,7 +395,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     {resident.suspended_at
                                                         ? 'Suspended'
                                                         : !resident.email_verified_at
-                                                          ? 'Inactive'
+                                                          ? 'Pending Setup'
                                                           : resident.status === 'accepted'
                                                             ? 'Active'
                                                             : 'Pending'}
@@ -520,7 +520,7 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                                     {resident.suspended_at
                                                         ? 'Suspended'
                                                         : !resident.email_verified_at
-                                                          ? 'Inactive'
+                                                          ? 'Pending Setup'
                                                           : resident.status === 'accepted'
                                                             ? 'Active'
                                                             : 'Pending'}
