@@ -20,7 +20,6 @@ import {
     CreditCard,
     TrendingUp,
     TrendingDown,
-    Building2,
     Users,
     Clock
 } from 'lucide-react';
@@ -35,7 +34,6 @@ interface Kpis {
 
 interface PlanAnalytics {
     plan_name: string;
-    estates_count: number;
     residents_count: number;
     mrr: number;
     color: string;
@@ -57,7 +55,6 @@ interface RecentChange {
     id: number;
     entity_name: string;
     entity_id: number;
-    entity_type: 'estate' | 'resident';
     old_plan: string;
     new_plan: string;
     type: 'upgrade' | 'downgrade';
@@ -67,7 +64,6 @@ interface RecentChange {
 interface PastDue {
     id: string;
     entity_name: string;
-    entity_type: 'estate' | 'resident';
     plan_name: string;
     amount_due: number;
     past_due_since: string;
@@ -125,7 +121,7 @@ export default function SubscriptionsIndex({
                 <motion.div variants={itemVariants} className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Subscription Intelligence</h1>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                        Monitor retention cohorts, plan popularity, and migration flows across Estates and Residents.
+                        Monitor retention cohorts, plan popularity, and migration flows for active residents.
                     </p>
                 </motion.div>
 
@@ -189,7 +185,7 @@ export default function SubscriptionsIndex({
                                             {formatCurrency(cohort.mrr)}
                                         </p>
                                         <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            from {cohort.count} subscriptions
+                                            from {cohort.count} residents
                                         </p>
                                     </div>
                                     {idx === 0 && (
@@ -213,7 +209,7 @@ export default function SubscriptionsIndex({
                                 Plan Distribution
                             </h3>
                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                Breakdown of Estates and Residents per plan tier.
+                                Breakdown of residents per plan tier.
                             </p>
                         </div>
                         <div className="p-8">
@@ -236,14 +232,13 @@ export default function SubscriptionsIndex({
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
                                             formatter={(value: number, name: string) => {
                                                 if (name === 'mrr') return [formatCurrency(value), 'MRR'];
-                                                if (name === 'estates_count') return [value, 'Estates'];
                                                 if (name === 'residents_count') return [value, 'Residents'];
                                                 return [value, name];
                                             }}
                                         />
                                         <Legend wrapperStyle={{ fontSize: '12px', color: '#64748b' }} />
-                                        <Bar dataKey="estates_count" name="Estates" fill="#818cf8" radius={[0, 4, 4, 0]} barSize={12} stackId="a" />
-                                        <Bar dataKey="residents_count" name="Residents" fill="#38bdf8" radius={[0, 4, 4, 0]} barSize={12} stackId="a" />
+                                        <Bar dataKey="residents_count" name="Residents" fill="#38bdf8" radius={[0, 4, 4, 0]} barSize={16} />
+                                        <Bar dataKey="mrr" name="MRR" fill="#34d399" radius={[0, 4, 4, 0]} barSize={16} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -324,18 +319,8 @@ export default function SubscriptionsIndex({
                                             <tr key={change.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-                                                        {change.entity_type === 'estate' ? (
-                                                            <Building2 className="h-3.5 w-3.5 text-indigo-500" />
-                                                        ) : (
-                                                            <Users className="h-3.5 w-3.5 text-sky-500" />
-                                                        )}
-                                                        {change.entity_type === 'estate' ? (
-                                                            <Link href={`/zeus/estates/${change.entity_id}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                                                                {change.entity_name}
-                                                            </Link>
-                                                        ) : (
-                                                            <span>{change.entity_name}</span>
-                                                        )}
+                                                        <Users className="h-3.5 w-3.5 text-sky-500" />
+                                                        <span>{change.entity_name}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -361,7 +346,7 @@ export default function SubscriptionsIndex({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center p-12 text-center">
-                                <Building2 className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-3" />
+                                <Users className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-3" />
                                 <p className="text-sm font-bold text-slate-900 dark:text-white">No historical changes</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Plan migrations will appear here.</p>
                             </div>
@@ -391,11 +376,7 @@ export default function SubscriptionsIndex({
                                             <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
-                                                        {item.entity_type === 'estate' ? (
-                                                            <Building2 className="h-3.5 w-3.5 text-indigo-500" />
-                                                        ) : (
-                                                            <Users className="h-3.5 w-3.5 text-sky-500" />
-                                                        )}
+                                                        <Users className="h-3.5 w-3.5 text-sky-500" />
                                                         <div>
                                                             <div className="text-sm font-semibold text-slate-900 dark:text-white">{item.entity_name}</div>
                                                             <div className="text-[10px] text-slate-500 dark:text-slate-400">{item.plan_name}</div>
