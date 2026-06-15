@@ -219,7 +219,17 @@ class PlatformAnalyticsService
         return EstateApplication::where('status', 'pending')
             ->latest()
             ->limit($limit)
-            ->get(['id', 'estate_name', 'contact_name', 'contact_email', 'contact_phone', 'created_at'])
+            ->get(['id', 'estate_name', 'email as contact_email', 'phone as contact_phone', 'created_at'])
+            ->map(function ($app) {
+                return [
+                    'id' => $app->id,
+                    'estate_name' => $app->estate_name,
+                    'contact_name' => 'Pending Applicant', // The schema doesn't have contact_name
+                    'contact_email' => $app->contact_email,
+                    'contact_phone' => $app->contact_phone,
+                    'created_at' => clone $app->created_at,
+                ];
+            })
             ->toArray();
     }
 
