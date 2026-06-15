@@ -225,7 +225,8 @@ export default function SubscriptionsIndex({
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={planAnalytics} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(148, 163, 184, 0.1)" />
-                                        <XAxis type="number" hide />
+                                        <XAxis type="number" hide xAxisId="residents" />
+                                        <XAxis type="number" hide xAxisId="mrr" />
                                         <YAxis dataKey="plan_name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                                         <RechartsTooltip
                                             cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
@@ -239,14 +240,14 @@ export default function SubscriptionsIndex({
                                             }}
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
                                             formatter={(value: number, name: string) => {
-                                                if (name === 'mrr') return [formatCurrency(value), 'MRR'];
-                                                if (name === 'residents_count') return [value, 'Residents'];
+                                                if (name === 'MRR') return [formatCurrency(value), 'MRR'];
+                                                if (name === 'Residents') return [value, 'Residents'];
                                                 return [value, name];
                                             }}
                                         />
                                         <Legend wrapperStyle={{ fontSize: '12px', color: '#64748b' }} />
-                                        <Bar dataKey="residents_count" name="Residents" fill="#38bdf8" radius={[0, 4, 4, 0]} barSize={16} />
-                                        <Bar dataKey="mrr" name="MRR" fill="#34d399" radius={[0, 4, 4, 0]} barSize={16} />
+                                        <Bar xAxisId="residents" dataKey="residents_count" name="Residents" fill="#38bdf8" radius={[0, 4, 4, 0]} barSize={16} />
+                                        <Bar xAxisId="mrr" dataKey="mrr" name="MRR" fill="#34d399" radius={[0, 4, 4, 0]} barSize={16} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>

@@ -353,19 +353,22 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                     Edit Settings
                                                 </Link>
                                                 <div className="mt-4 grid grid-cols-2 gap-3">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEstateToToggle({ id: selectedEstate.id, status: selectedEstate.status });
-                                                        }}
-                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500 transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-95"
+                                                    <div 
+                                                        onClick={() => setEstateToToggle({ id: selectedEstate.id, status: selectedEstate.status })}
+                                                        className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-3 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
                                                     >
-                                                        Toggle Status
-                                                    </button>
+                                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                                            {selectedEstate.status === 'active' ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                        <div className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${selectedEstate.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${selectedEstate.status === 'active' ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                        </div>
+                                                    </div>
                                                     <button
                                                         onClick={() => {
                                                             setEstateToReset(selectedEstate.id);
                                                         }}
-                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500 transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-95"
+                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
                                                     >
                                                         Reset Password
                                                     </button>

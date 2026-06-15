@@ -200,8 +200,8 @@ class SubscriptionIntelligenceService
                     $oldPlan = $plans->get($oldPlanId);
                     $newPlan = $plans->get($newPlanId);
 
-                    $subscription = ResidentSubscription::with('user:id,first_name,last_name')->find($activity->subject_id);
-                    $entityName = $subscription?->user ? trim($subscription->user->first_name.' '.$subscription->user->last_name) : null;
+                    $subscription = ResidentSubscription::with('user:id,name')->find($activity->subject_id);
+                    $entityName = $subscription?->user ? trim($subscription->user->name) : null;
                     $entityId = $subscription?->user?->id;
 
                     if ($oldPlan && $newPlan && $entityName) {
@@ -233,7 +233,7 @@ class SubscriptionIntelligenceService
      */
     public function getPastDueSubscriptions(): array
     {
-        return ResidentSubscription::with(['user:id,first_name,last_name', 'plan:id,name,price'])
+        return ResidentSubscription::with(['user:id,name', 'plan:id,name,price'])
             ->where('status', 'past_due')
             ->latest('updated_at')
             ->limit(10)
@@ -241,7 +241,7 @@ class SubscriptionIntelligenceService
             ->map(function ($sub) {
                 return [
                     'id' => 'resident_'.$sub->id,
-                    'entity_name' => $sub->user ? trim($sub->user->first_name.' '.$sub->user->last_name) : 'Unknown Resident',
+                    'entity_name' => $sub->user ? trim($sub->user->name) : 'Unknown Resident',
                     'plan_name' => $sub->plan->name ?? 'Unknown',
                     'amount_due' => $sub->plan->price ?? 0,
                     'past_due_since' => clone $sub->updated_at,

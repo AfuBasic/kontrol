@@ -9,6 +9,7 @@ use App\Http\Controllers\Zeus\MoneyFlowController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\ReferrerController;
 use App\Http\Controllers\Zeus\RevenueController;
+use App\Http\Controllers\Zeus\RiskCenterController;
 use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Controllers\Zeus\TransactionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
@@ -28,6 +29,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::get('/revenue', RevenueController::class)->name('revenue');
         Route::get('/money-flow', MoneyFlowController::class)->name('money-flow');
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::get('/risk-center', [RiskCenterController::class, 'index'])->name('risk-center');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         // Plans management

@@ -9,19 +9,18 @@ import {
     ChevronRight,
     X,
     Eye,
-    ArrowUpRight,
-    AlertCircle,
     CheckCircle2,
     Clock,
     CreditCard,
     DollarSign,
     TrendingUp,
     Activity,
-    Users,
     ChevronDown,
     RotateCcw,
+    AlertTriangle
 } from 'lucide-react';
 import { useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Transaction {
@@ -52,9 +51,14 @@ interface Transaction {
 interface Stats {
     total_volume: number;
     monthly_volume: number;
+    failed_volume: number;
     success_rate: number;
-    resident_trials: number;
-    estate_trials: number;
+    average_value: number;
+}
+
+interface VolumeTrend {
+    date: string;
+    volume: number;
 }
 
 interface Props {
@@ -74,9 +78,10 @@ interface Props {
         date_to: string;
     };
     stats: Stats;
+    volumeTrend: VolumeTrend[];
 }
 
-export default function TransactionsIndex({ transactions, estates, filters, stats }: Props) {
+export default function TransactionsIndex({ transactions, estates, filters, stats, volumeTrend }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [estateId, setEstateId] = useState(filters.estate_id || '');
@@ -87,17 +92,8 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
     const handleFilter = () => {
         router.get(
             '/zeus/transactions',
-            {
-                search,
-                status,
-                estate_id: estateId,
-                date_from: dateFrom,
-                date_to: dateTo,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            },
+            { search, status, estate_id: estateId, date_from: dateFrom, date_to: dateTo },
+            { preserveState: true, replace: true }
         );
     };
 
@@ -111,11 +107,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            minimumFractionDigits: 0,
-        }).format(amount / 100);
+        return '₦' + (amount / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     };
 
     const formatDate = (dateString: string) => {
@@ -123,6 +115,8 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
@@ -130,21 +124,21 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         switch (status) {
             case 'success':
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-emerald-700 uppercase ring-1 ring-emerald-200 ring-inset">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-emerald-700 uppercase ring-1 ring-emerald-200 ring-inset dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Paid
                     </span>
                 );
             case 'failed':
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-rose-700 uppercase ring-1 ring-rose-200 ring-inset">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-rose-700 uppercase ring-1 ring-rose-200 ring-inset dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20">
                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                         Failed
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-amber-700 uppercase ring-1 ring-amber-200 ring-inset">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-tight text-amber-700 uppercase ring-1 ring-amber-200 ring-inset dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
                         <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                         Pending
                     </span>
@@ -152,245 +146,323 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         }
     };
 
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-lg dark:border-slate-800 dark:bg-[#0a0e17]">
+                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{label}</p>
+                    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">
+                        {formatCurrency(payload[0].value)}
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
         <ZeusLayout>
             <Head title="Platform Transactions" />
 
-            {/* Header Section */}
-            <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tight text-slate-900">Transactions</h1>
-                    <p className="mt-1 font-medium text-slate-500">Real-time financial monitor for the platform.</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Activity className="h-4 w-4" />
-                    <span>Updated just now</span>
-                </div>
-            </div>
-
-            {/* Stats Metrics Grid */}
-            <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                {[
-                    { label: 'Total Volume', value: formatCurrency(stats?.total_volume || 0), icon: DollarSign, color: 'indigo' },
-                    { label: 'Monthly Rev', value: formatCurrency(stats?.monthly_volume || 0), icon: TrendingUp, color: 'emerald' },
-                    { label: 'Success Rate', value: `${stats?.success_rate || 0}%`, icon: CheckCircle2, color: 'blue' },
-                    { label: 'Resident Trials', value: stats?.resident_trials || 0, icon: Users, color: 'amber' },
-                    { label: 'Estate Trials', value: stats?.estate_trials || 0, icon: Building2, color: 'rose' },
-                ].map((stat, i) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="group relative overflow-hidden rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md"
-                    >
-                        <div
-                            className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 transition-transform group-hover:scale-110`}
-                        >
-                            <stat.icon className="h-6 w-6" />
-                        </div>
-                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">{stat.label}</p>
-                        <p className="mt-1 text-3xl font-black text-slate-900">{stat.value}</p>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Advanced Filtering Section */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 space-y-4">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                    {/* Search Field */}
-                    <div className="relative flex-1">
-                        <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by resident, reference, or email..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-                            className="w-full rounded-2xl border-slate-100 bg-white py-3 pr-4 pl-11 text-sm font-medium shadow-sm transition-all focus:border-slate-900 focus:ring-0"
-                        />
-                    </div>
-
-                    {/* Filters Row */}
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="relative">
-                            <Building2 className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <select
-                                value={estateId}
-                                onChange={(e) => setEstateId(e.target.value)}
-                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
-                            >
-                                <option value="">All Estates</option>
-                                {estates.map((e) => (
-                                    <option key={e.id} value={e.id}>
-                                        {e.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
-                        </div>
-
-                        <div className="relative">
-                            <Filter className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <select
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                                className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="success">Paid</option>
-                                <option value="failed">Failed</option>
-                                <option value="pending">Pending</option>
-                            </select>
-                            <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
-                        </div>
-
-                        <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm">
-                            <input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                                className="border-none bg-transparent py-1.5 text-xs font-bold focus:ring-0"
-                            />
-                            <span className="text-slate-300">→</span>
-                            <input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                                className="border-none bg-transparent py-1.5 text-xs font-bold focus:ring-0"
-                            />
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleFilter}
-                                className="flex h-11 items-center gap-2 rounded-2xl bg-slate-900 px-6 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
-                            >
-                                Apply Filters
-                            </button>
-                            <button
-                                onClick={resetFilters}
-                                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 transition-all hover:text-slate-900 active:scale-95"
-                                title="Reset Filters"
-                            >
-                                <RotateCcw className="h-4 w-4" />
-                            </button>
-                        </div>
+            <div className="mx-auto max-w-7xl">
+                {/* Header */}
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                            <Activity className="h-8 w-8 text-indigo-500" />
+                            Financial Activity
+                        </h1>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                            Real-time transaction monitoring and volume trends.
+                        </p>
                     </div>
                 </div>
-            </motion.div>
 
-            {/* Transactions Table Section */}
-            <div className="overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-slate-50 bg-slate-50/30">
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Date & Reference</th>
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident / Estate</th>
-                                <th className="px-8 py-5 text-right text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount</th>
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Method</th>
-                                <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {transactions.data.length === 0 ? (
+                {/* Main KPI Grid */}
+                <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                            <DollarSign className="h-5 w-5" />
+                        </div>
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Total Volume</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.total_volume || 0)}>
+                            {formatCurrency(stats?.total_volume || 0)}
+                        </p>
+                    </div>
+                    
+                    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                            <TrendingUp className="h-5 w-5" />
+                        </div>
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">30-Day Volume</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.monthly_volume || 0)}>
+                            {formatCurrency(stats?.monthly_volume || 0)}
+                        </p>
+                    </div>
+
+                    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                            <CreditCard className="h-5 w-5" />
+                        </div>
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Average Transaction</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.average_value || 0)}>
+                            {formatCurrency(stats?.average_value || 0)}
+                        </p>
+                    </div>
+
+                    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </div>
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Success Rate</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+                            {stats?.success_rate || 0}%
+                        </p>
+                    </div>
+                </div>
+
+                {/* Chart Section */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">30-Day Volume Trend</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Daily successful transaction volume</p>
+                        </div>
+                    </div>
+                    <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={volumeTrend} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                                <XAxis 
+                                    dataKey="date" 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tick={{ fontSize: 10, fill: '#64748b' }} 
+                                    dy={10}
+                                />
+                                <YAxis 
+                                    hide={true} 
+                                    domain={['dataMin', 'dataMax + 10000']} 
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="volume" 
+                                    stroke="#6366f1" 
+                                    strokeWidth={3} 
+                                    fillOpacity={1} 
+                                    fill="url(#colorVolume)" 
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+
+                {/* Filters */}
+                <div className="mb-6 space-y-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                        <div className="relative flex-1">
+                            <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by resident, reference, or email..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                                className="w-full rounded-2xl border-slate-100 bg-white py-3 pr-4 pl-11 text-sm font-medium shadow-sm transition-all focus:border-slate-900 focus:ring-0 dark:border-slate-800 dark:bg-[#0f1423] dark:text-white dark:focus:border-slate-600"
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="relative">
+                                <Building2 className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <select
+                                    value={estateId}
+                                    onChange={(e) => setEstateId(e.target.value)}
+                                    className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0 dark:border-slate-800 dark:bg-[#0f1423] dark:text-white dark:focus:border-slate-600"
+                                >
+                                    <option value="">All Estates</option>
+                                    {estates.map((e) => (
+                                        <option key={e.id} value={e.id}>{e.name}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                            </div>
+
+                            <div className="relative">
+                                <Filter className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="appearance-none rounded-2xl border-slate-100 bg-white py-3 pr-10 pl-11 text-sm font-bold shadow-sm focus:border-slate-900 focus:ring-0 dark:border-slate-800 dark:bg-[#0f1423] dark:text-white dark:focus:border-slate-600"
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option value="success">Paid</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                                <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                            </div>
+
+                            <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    className="border-none bg-transparent py-1.5 text-xs font-bold focus:ring-0 dark:text-white dark:[color-scheme:dark]"
+                                />
+                                <span className="text-slate-300 dark:text-slate-600">→</span>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    className="border-none bg-transparent py-1.5 text-xs font-bold focus:ring-0 dark:text-white dark:[color-scheme:dark]"
+                                />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleFilter}
+                                    className="flex h-11 items-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-95 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                                >
+                                    Apply
+                                </button>
+                                <button
+                                    onClick={resetFilters}
+                                    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 transition-all hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white"
+                                    title="Reset Filters"
+                                >
+                                    <RotateCcw className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Transactions Table */}
+                <div className="overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50/50 dark:bg-slate-800/20">
                                 <tr>
-                                    <td colSpan={6} className="px-8 py-20 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="rounded-full bg-slate-50 p-4">
-                                                <Search className="h-8 w-8 text-slate-300" />
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-900">No transactions found</p>
-                                            <p className="text-xs text-slate-500">Try adjusting your filters to find what you're looking for.</p>
-                                        </div>
-                                    </td>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Date & Ref</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Customer / Estate</th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Amount</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Status</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Method</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500"></th>
                                 </tr>
-                            ) : (
-                                transactions.data.map((tx) => (
-                                    <tr
-                                        key={tx.id}
-                                        onClick={() => setSelectedTransaction(tx)}
-                                        className="group cursor-pointer transition-colors hover:bg-slate-50/50"
-                                    >
-                                        <td className="px-8 py-6">
-                                            <div className="text-sm font-bold text-slate-900">{formatDate(tx.created_at)}</div>
-                                            <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] tracking-tighter text-slate-400 uppercase">
-                                                {tx.paystack_reference}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="text-sm font-bold text-slate-900">
-                                                {tx.invoice?.user?.name || tx.customer_email || 'System Payment'}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-slate-400">{tx.estate?.name || 'Kontrol HQ'}</div>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="text-sm font-black text-slate-900">{formatCurrency(tx.amount)}</div>
-                                        </td>
-                                        <td className="px-8 py-6">{getStatusBadge(tx.status)}</td>
-                                        <td className="px-8 py-6">
-                                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                                <CreditCard className="h-3 w-3" />
-                                                {tx.payment_method || 'Paystack'}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="flex justify-end opacity-0 transition-opacity group-hover:opacity-100">
-                                                <div className="rounded-lg bg-slate-900 p-2 text-white">
-                                                    <Eye className="h-4 w-4" />
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
+                                {transactions.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-8 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="rounded-full bg-slate-50 p-4 dark:bg-slate-800/50">
+                                                    <Search className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                                                 </div>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">No transactions found</p>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ) : (
+                                    transactions.data.map((tx) => (
+                                        <tr
+                                            key={tx.id}
+                                            onClick={() => setSelectedTransaction(tx)}
+                                            className="group cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                        >
+                                            <td className="px-8 py-5">
+                                                <div className="text-sm font-semibold text-slate-900 dark:text-white">{formatDate(tx.created_at)}</div>
+                                                <div className="mt-1 flex items-center gap-1.5 font-mono text-[10px] tracking-tighter text-slate-400 uppercase">
+                                                    {tx.paystack_reference}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                    {tx.invoice?.user?.name || tx.customer_email || 'System Payment'}
+                                                </div>
+                                                <div className="mt-0.5 text-[11px] text-slate-400">{tx.estate?.name || 'Kontrol HQ'}</div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <div className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(tx.amount)}</div>
+                                            </td>
+                                            <td className="px-8 py-5">{getStatusBadge(tx.status)}</td>
+                                            <td className="px-8 py-5">
+                                                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    <CreditCard className="h-3 w-3" />
+                                                    {tx.payment_method || 'Paystack'}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <div className="flex justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                                                    <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                                                        <Eye className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                {/* Refined Pagination Section */}
-                <div className="flex items-center justify-between border-t border-slate-50 bg-slate-50/20 px-8 py-6">
-                    <p className="text-xs font-bold tracking-tight text-slate-400 uppercase">
-                        Page {transactions.current_page} of {transactions.last_page} · Total {transactions.total} records
-                    </p>
-                    <div className="flex gap-2">
-                        <button
-                            disabled={transactions.current_page === 1}
-                            onClick={() => router.get(transactions.links.find((l) => l.label === '&laquo; Previous')?.url || '')}
-                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
-                        >
-                            <ChevronLeft className="h-4 w-4" /> Previous
-                        </button>
-                        <button
-                            disabled={transactions.current_page === transactions.last_page}
-                            onClick={() => router.get(transactions.links.find((l) => l.label === 'Next &raquo;')?.url || '')}
-                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
-                        >
-                            Next <ChevronRight className="h-4 w-4" />
-                        </button>
+                    <div className="flex items-center justify-between border-t border-slate-50 bg-slate-50/20 px-8 py-5 dark:border-slate-800/30 dark:bg-slate-800/10">
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            Page {transactions.current_page} of {transactions.last_page} · Total {transactions.total} records
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                disabled={transactions.current_page === 1}
+                                onClick={() => router.get(transactions.links.find((l) => l.label === '&laquo; Previous')?.url || '')}
+                                className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                <ChevronLeft className="h-4 w-4" /> Prev
+                            </button>
+                            <button
+                                disabled={transactions.current_page === transactions.last_page}
+                                onClick={() => router.get(transactions.links.find((l) => l.label === 'Next &raquo;')?.url || '')}
+                                className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                Next <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Transaction Detail Modal */}
-            <AnimatePresence>
-                {selectedTransaction && <TransactionDetailModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />}
-            </AnimatePresence>
+                <AnimatePresence>
+                    {selectedTransaction && (
+                        <TransactionDetailModal 
+                            transaction={selectedTransaction} 
+                            onClose={() => setSelectedTransaction(null)} 
+                            formatCurrency={formatCurrency}
+                            formatDate={formatDate}
+                        />
+                    )}
+                </AnimatePresence>
+            </div>
         </ZeusLayout>
     );
 }
 
-function TransactionDetailModal({ transaction, onClose }: { transaction: Transaction; onClose: () => void }) {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            minimumFractionDigits: 2,
-        }).format(amount / 100);
-    };
-
+function TransactionDetailModal({ 
+    transaction, 
+    onClose, 
+    formatCurrency, 
+    formatDate 
+}: { 
+    transaction: Transaction; 
+    onClose: () => void;
+    formatCurrency: (amount: number) => string;
+    formatDate: (date: string) => string;
+}) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
@@ -398,33 +470,32 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: Transac
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60"
             />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[40px] bg-white shadow-2xl"
+                className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[40px] bg-white shadow-2xl dark:bg-[#0f1423] dark:ring-1 dark:ring-white/10"
             >
-                <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/30 px-10 py-8">
+                <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/30 px-10 py-8 dark:border-slate-800/50 dark:bg-slate-800/20">
                     <div>
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Transaction Details</h2>
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Transaction Details</h2>
                         <p className="mt-1 flex items-center gap-2 font-mono text-xs tracking-tighter text-slate-400 uppercase">
                             {transaction.paystack_reference}
-                            <div className="h-1 w-1 rounded-full bg-slate-300" />
+                            <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                             ID #{transaction.id}
                         </p>
                     </div>
-                    <button onClick={onClose} className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90">
-                        <X className="h-5 w-5 text-slate-900" />
+                    <button onClick={onClose} className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90 dark:bg-slate-800 dark:hover:bg-slate-700">
+                        <X className="h-5 w-5 text-slate-900 dark:text-white" />
                     </button>
                 </div>
 
                 <div className="max-h-[70vh] overflow-y-auto px-10 py-10">
-                    {/* Hero Amount Section */}
-                    <div className="mb-10 flex flex-col items-center justify-center rounded-[32px] bg-slate-900 py-10 text-white shadow-xl shadow-slate-900/10">
-                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">Paid Amount</p>
-                        <p className="mt-2 text-5xl font-black">{formatCurrency(transaction.amount)}</p>
+                    <div className="mb-10 flex flex-col items-center justify-center rounded-[32px] bg-slate-900 py-10 text-white shadow-xl shadow-slate-900/10 dark:bg-indigo-500/10 dark:ring-1 dark:ring-indigo-500/20">
+                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-indigo-300/70">Paid Amount</p>
+                        <p className="mt-2 text-5xl font-black dark:text-indigo-100">{formatCurrency(transaction.amount)}</p>
                         <div className="mt-6">
                             {transaction.status === 'success' ? (
                                 <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-4 py-1.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
@@ -443,42 +514,41 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: Transac
                     <div className="grid grid-cols-2 gap-x-12 gap-y-10">
                         <div>
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Entity</p>
-                            <p className="mt-2 text-sm font-black text-slate-900">{transaction.estate?.name || 'Kontrol HQ'}</p>
+                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">{transaction.estate?.name || 'Kontrol HQ'}</p>
                             <p className="text-[11px] font-medium text-slate-500">ID: {transaction.estate?.id || 'SYSTEM'}</p>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident / Customer</p>
-                            <p className="mt-2 text-sm font-black text-slate-900">{transaction.invoice?.user?.name || 'Bulk Payment'}</p>
+                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Customer / Resident</p>
+                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">{transaction.invoice?.user?.name || 'Bulk / System Payment'}</p>
                             <p className="text-[11px] font-medium text-slate-500">{transaction.invoice?.user?.email || transaction.customer_email}</p>
                         </div>
                         <div>
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Payment Method</p>
-                            <div className="mt-2 flex items-center gap-2 text-sm font-black text-slate-900">
+                            <div className="mt-2 flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
                                 <CreditCard className="h-4 w-4 text-slate-400" />
                                 {transaction.payment_method || 'Paystack Gateway'}
                             </div>
                         </div>
                         <div>
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Verified At</p>
-                            <p className="mt-2 text-sm font-black text-slate-900">
-                                {transaction.verified_at ? new Date(transaction.verified_at).toLocaleString() : 'Not yet verified'}
+                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">
+                                {transaction.verified_at ? formatDate(transaction.verified_at) : 'Not yet verified'}
                             </p>
                         </div>
                     </div>
 
-                    {/* Metadata Section */}
                     <div className="mt-12">
                         <p className="mb-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Transaction Metadata (JSON)</p>
-                        <div className="rounded-[24px] border border-slate-100 bg-slate-50 p-6 font-mono text-[11px] leading-relaxed text-slate-600 shadow-inner">
+                        <div className="rounded-[24px] border border-slate-100 bg-slate-50 p-6 font-mono text-[11px] leading-relaxed text-slate-600 shadow-inner dark:border-slate-800/50 dark:bg-[#0a0e17] dark:text-slate-400">
                             <pre className="whitespace-pre-wrap">{JSON.stringify(transaction.metadata, null, 2)}</pre>
                         </div>
                     </div>
                 </div>
 
-                <div className="border-t border-slate-50 bg-slate-50/20 px-10 py-8">
+                <div className="border-t border-slate-50 bg-slate-50/20 px-10 py-6 dark:border-slate-800/50 dark:bg-slate-800/10">
                     <button
                         onClick={onClose}
-                        className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
+                        className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-95 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                     >
                         Dismiss Details
                     </button>

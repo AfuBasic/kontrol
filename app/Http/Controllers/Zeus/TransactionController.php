@@ -4,16 +4,15 @@ namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
 use App\Models\Estate;
-use App\Models\EstateSubscription;
 use App\Models\PaymentTransaction;
-use App\Models\ResidentSubscription;
+use App\Services\Zeus\TransactionIntelligenceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, TransactionIntelligenceService $intelligenceService): Response
     {
         $query = PaymentTransaction::query()
             ->with(['estate:id,name', 'invoice.user:id,name,email'])
@@ -50,37 +49,15 @@ class TransactionController extends Controller
         $transactions = $query->paginate(20)->withQueryString();
 
         // Platform Metrics
-        $stats = [
-            'total_volume' => PaymentTransaction::where('status', 'success')->sum('amount'),
-            'monthly_volume' => PaymentTransaction::where('status', 'success')
-                ->where('created_at', '>=', now()->startOfMonth())
-                ->sum('amount'),
-            'success_rate' => $this->calculateSuccessRate(),
-            'resident_trials' => ResidentSubscription::where('status', 'trial')
-                ->where('current_period_end', '>', now())
-                ->count(),
-            'estate_trials' => EstateSubscription::where('status', 'trial')
-                ->where('trial_ends_at', '>', now())
-                ->count(),
-        ];
+        $stats = $intelligenceService->getMetrics();
+        $volumeTrend = $intelligenceService->getVolumeTrend();
 
         return Inertia::render('Zeus/Transactions/Index', [
             'transactions' => $transactions,
             'estates' => Estate::select('id', 'name')->get(),
             'filters' => $request->only(['search', 'estate_id', 'status', 'date_from', 'date_to']),
             'stats' => $stats,
+            'volumeTrend' => $volumeTrend,
         ]);
-    }
-
-    private function calculateSuccessRate(): float
-    {
-        $total = PaymentTransaction::count();
-        if ($total === 0) {
-            return 100;
-        }
-
-        $success = PaymentTransaction::where('status', 'success')->count();
-
-        return round(($success / $total) * 100, 1);
     }
 }

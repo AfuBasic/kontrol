@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -75,13 +75,13 @@ class AppServiceProvider extends ServiceProvider
             // If the host is an Expose or Ngrok tunnel
             if (str_contains($host, 'sharedwithexpose.com') || str_contains($host, 'ngrok-free.app')) {
                 $protocol = request()->isSecure() ? 'https://' : 'http://';
-                $url = $protocol . $host;
+                $url = $protocol.$host;
 
                 // Dynamically update app URL and Sanctum/CORS stateful domains
                 config(['app.url' => $url]);
 
                 $stateful = config('sanctum.stateful', []);
-                if (!in_array($host, $stateful)) {
+                if (! in_array($host, $stateful)) {
                     $stateful[] = $host;
                     config(['sanctum.stateful' => $stateful]);
                 }
@@ -119,7 +119,7 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Password::defaults(
-            fn(): ?Password => app()->isProduction()
+            fn (): ?Password => app()->isProduction()
             ? Password::min(12)
                 ->mixedCase()
                 ->letters()

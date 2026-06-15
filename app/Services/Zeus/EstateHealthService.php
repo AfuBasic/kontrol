@@ -26,7 +26,7 @@ class EstateHealthService
                 ->whereNotNull('email_verified_at')
                 ->whereNull('suspended_at')
                 ->count();
-            
+
             $onboardingRatio = $activeResidents / $totalResidents;
             $score -= (40 - (40 * $onboardingRatio));
         } else {
@@ -38,7 +38,7 @@ class EstateHealthService
             $failedPayments = PaymentTransaction::where('estate_id', $estate->id)
                 ->where('status', 'failed')
                 ->count();
-            
+
             $failureRatio = $failedPayments / $totalPayments;
             $score -= (60 * $failureRatio);
         }
@@ -54,19 +54,19 @@ class EstateHealthService
         $query = Estate::query()
             ->with(['settings'])
             ->withCount([
-                'users as total_residents' => fn ($q) => $q->whereHas('roles', fn ($r) => $r->where('name', 'resident'))
+                'users as total_residents' => fn ($q) => $q->whereHas('roles', fn ($r) => $r->where('name', 'resident')),
             ]);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
@@ -75,7 +75,7 @@ class EstateHealthService
             ->map(function (Estate $estate) {
                 // Manually count properties if relation is missing or not eager loaded correctly
                 $totalProperties = Property::where('estate_id', $estate->id)->count();
-                
+
                 $mrr = 0;
                 // Basic MRR placeholder logic based on total residents
                 $mrr = $estate->total_residents * 5000; // Placeholder

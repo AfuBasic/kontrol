@@ -64,7 +64,7 @@ class LandingController extends Controller
             'address' => $validated['estateLocation'],
             'email' => $validated['contactEmail'],
             'phone' => $validated['contactPhone'] ?? '',
-            'notes' => 'Contact Name: ' . $validated['contactName'],
+            'notes' => 'Contact Name: '.$validated['contactName'],
             'status' => 'received',
         ]);
 
@@ -87,12 +87,18 @@ class LandingController extends Controller
         if (stripos($userAgent, 'android') !== false) {
             // Android redirect (Update with real Play Store URL when available)
             $url = 'https://play.google.com/store/apps/details?id=com.usekontrol.app';
-            if ($request->header('X-Inertia')) return Inertia::location($url);
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($url);
+            }
+
             return redirect($url);
         } elseif (stripos($userAgent, 'iphone') !== false || stripos($userAgent, 'ipad') !== false) {
             // iOS redirect
             $url = 'https://apps.apple.com/ng/app/access-kontrol/id6772562083';
-            if ($request->header('X-Inertia')) return Inertia::location($url);
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($url);
+            }
+
             return redirect($url);
         }
 
