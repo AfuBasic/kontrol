@@ -14,6 +14,7 @@ import {
     ChartBarIcon,
     ArrowPathRoundedSquareIcon,
     BuildingOfficeIcon,
+    ChartPieIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -40,7 +41,7 @@ const navItems: NavItem[] = [
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
-    { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
+    { name: 'Subscriptions', href: '/zeus/subscriptions', icon: ChartPieIcon },
     { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
 ];
 
