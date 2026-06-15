@@ -7,6 +7,7 @@ use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\ReferrerController;
+use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Controllers\Zeus\TransactionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
@@ -23,6 +24,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
     // Authenticated routes
     Route::middleware(EnsureZeusAuthenticated::class)->group(function (): void {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
+        Route::get('/revenue', RevenueController::class)->name('revenue');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         // Plans management
