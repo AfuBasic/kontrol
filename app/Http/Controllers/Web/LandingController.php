@@ -90,7 +90,8 @@ class LandingController extends Controller
             return redirect('https://apps.apple.com/ng/app/access-kontrol/id6772562083');
         }
 
-        // Fallback for desktop
-        return redirect('/#download');
+        // Fallback for desktop: Redirect to the public marketing site's download section
+        // Using an absolute route prevents infinite redirect loops on the app domain.
+        return redirect(route('landing.home') . '#download');
     }
 }
