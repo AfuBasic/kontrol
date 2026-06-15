@@ -24,6 +24,10 @@ class DashboardController extends Controller
             'briefing' => $this->platformAnalyticsService->getFounderBriefing(),
             'metrics' => $this->platformAnalyticsService->getExecutiveMetrics(),
             'growthChart' => $this->platformAnalyticsService->getPlatformGrowthChart($startDate, $endDate),
+            'liveActivityStream' => $this->platformAnalyticsService->getLiveActivityStream(),
+            'pendingApplications' => $this->platformAnalyticsService->getPendingApplications(),
+            'systemHealth' => $this->platformAnalyticsService->getSystemHealth(),
+            'topEstates' => $this->platformAnalyticsService->getTopEstates(),
             'startDate' => $startDate,
             'endDate' => $endDate,
         ]);

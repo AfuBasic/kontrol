@@ -2,9 +2,11 @@
 
 namespace App\Services\Zeus;
 
+use App\Models\Activity;
 use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\EstateSubscription;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -193,5 +195,55 @@ class PlatformAnalyticsService
         }
 
         return $data;
+    }
+
+    public function getLiveActivityStream(int $limit = 6): array
+    {
+        return Activity::with('subject')
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'event' => $activity->event,
+                    'description' => $activity->description,
+                    'type' => class_basename($activity->subject_type),
+                    'created_at' => clone $activity->created_at,
+                ];
+            })->toArray();
+    }
+
+    public function getPendingApplications(int $limit = 3): array
+    {
+        return EstateApplication::where('status', 'pending')
+            ->latest()
+            ->limit($limit)
+            ->get(['id', 'estate_name', 'contact_name', 'contact_email', 'contact_phone', 'created_at'])
+            ->toArray();
+    }
+
+    public function getSystemHealth(): array
+    {
+        $totalUsers = User::count();
+        $totalActiveUsers = User::where('updated_at', '>=', Carbon::now()->subDays(7))->count();
+
+        return [
+            'total_users' => $totalUsers,
+            'active_users_7d' => $totalActiveUsers,
+            'database_size' => '8.2 GB', // Placeholder for DB size telemetry
+            'system_status' => 'Operational',
+        ];
+    }
+
+    public function getTopEstates(int $limit = 5): array
+    {
+        return Estate::withCount(['users' => function ($query) {
+            $query->where('user_type', 'user');
+        }])
+            ->orderByDesc('users_count')
+            ->limit($limit)
+            ->get(['id', 'name', 'users_count'])
+            ->toArray();
     }
 }
