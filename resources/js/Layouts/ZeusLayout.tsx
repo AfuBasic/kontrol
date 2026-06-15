@@ -12,6 +12,7 @@ import {
     HandRaisedIcon,
     InboxStackIcon,
     ChartBarIcon,
+    ArrowPathRoundedSquareIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
+    { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
     { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
     { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
     { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
