@@ -80,7 +80,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         setModalConfig({
             isOpen: true,
             type: 'approve',
-            residentUlid: resident.ulid,
+            residentUlid: resident.ulid ?? String(resident.id),
             residentName: resident.name,
         });
     };
@@ -89,7 +89,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         setModalConfig({
             isOpen: true,
             type: 'reject',
-            residentUlid: resident.ulid,
+            residentUlid: resident.ulid ?? String(resident.id),
             residentName: resident.name,
         });
     };
@@ -200,7 +200,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                         <div className="mt-5 flex items-center gap-3">
                                             <button
                                                 onClick={() => handleReject(resident)}
-                                                disabled={processingId === resident.ulid}
+                                                disabled={processingId === (resident.ulid ?? String(resident.id))}
                                                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 py-3.5 text-sm font-bold text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 <X className="h-4 w-4" />
@@ -208,10 +208,10 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             </button>
                                             <button
                                                 onClick={() => handleApprove(resident)}
-                                                disabled={processingId === resident.ulid}
+                                                disabled={processingId === (resident.ulid ?? String(resident.id))}
                                                 className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-primary-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
-                                                {processingId === resident.ulid ? (
+                                                {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
                                                     <Check className="h-4 w-4" />
@@ -295,17 +295,17 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                     <div className="flex justify-end gap-2.5">
                                                         <button
                                                             onClick={() => handleReject(resident)}
-                                                            disabled={processingId === resident.ulid}
+                                                            disabled={processingId === (resident.ulid ?? String(resident.id))}
                                                             className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-600 shadow-sm transition-all hover:bg-rose-50 active:scale-95 disabled:opacity-50"
                                                         >
                                                             <X className="h-5 w-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleApprove(resident)}
-                                                            disabled={processingId === resident.ulid}
+                                                            disabled={processingId === (resident.ulid ?? String(resident.id))}
                                                             className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
                                                         >
-                                                            {processingId === resident.ulid ? (
+                                                            {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                             ) : (
                                                                 <Check className="h-4 w-4" />

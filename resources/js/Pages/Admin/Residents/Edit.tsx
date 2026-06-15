@@ -36,12 +36,12 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        put(update.url({ resident: resident.ulid }));
+        put(update.url({ resident: resident.ulid ?? String(resident.id) }));
     }
 
     function handleDelete() {
         if (confirm('Are you sure you want to remove this resident? This action cannot be undone.')) {
-            router.delete(destroy.url({ resident: resident.ulid }));
+            router.delete(destroy.url({ resident: resident.ulid ?? String(resident.id) }));
         }
     }
 

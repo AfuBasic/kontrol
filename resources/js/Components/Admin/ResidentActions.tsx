@@ -107,13 +107,13 @@ export default function ResidentActions({ resident }: Props) {
 
         switch (modalConfig.type) {
             case 'delete':
-                router.delete(destroy.url({ resident: resident.ulid }), options);
+                router.delete(destroy.url({ resident: resident.ulid ?? String(resident.id) }), options);
                 break;
             case 'suspend':
-                router.patch(suspend.url({ resident: resident.ulid }), {}, options);
+                router.patch(suspend.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
                 break;
             case 'reset':
-                router.post(resetPassword.url({ resident: resident.ulid }), {}, options);
+                router.post(resetPassword.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
                 break;
         }
     };
@@ -161,7 +161,7 @@ export default function ResidentActions({ resident }: Props) {
             {/* Edit */}
             {can('residents.edit') && (
                 <Link
-                    href={edit.url({ resident: resident.ulid })}
+                    href={edit.url({ resident: resident.ulid ?? String(resident.id) })}
                     className={`flex w-full items-center gap-3 transition-all ${
                         isMobile
                             ? 'rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95'
