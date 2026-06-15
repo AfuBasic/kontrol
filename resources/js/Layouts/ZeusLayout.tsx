@@ -13,6 +13,7 @@ import {
     InboxStackIcon,
     ChartBarIcon,
     ArrowPathRoundedSquareIcon,
+    BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -35,6 +36,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
+    { name: 'Estates', href: '/zeus/estates', icon: BuildingOfficeIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
@@ -43,7 +45,6 @@ const navItems: NavItem[] = [
     { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
     { name: 'Billing', href: '/zeus/billing', icon: Cog6ToothIcon },
     { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
-    { name: 'Estates', href: '/zeus/estates', icon: AdjustmentsHorizontalIcon },
 ];
 
 export default function ZeusLayout({ children, backUrl }: Props) {
