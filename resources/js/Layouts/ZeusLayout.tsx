@@ -41,9 +41,6 @@ const navItems: NavItem[] = [
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
     { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
-    { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
-    { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
-    { name: 'Billing', href: '/zeus/billing', icon: Cog6ToothIcon },
     { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
 ];
 
