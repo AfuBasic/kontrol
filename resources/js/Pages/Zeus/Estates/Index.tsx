@@ -16,6 +16,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { index, toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 type EstateExplorerData = {
     id: number;
@@ -44,6 +45,11 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [selectedEstate, setSelectedEstate] = useState<EstateExplorerData | null>(null);
 
+    const [estateToToggle, setEstateToToggle] = useState<{ id: number; status: string } | null>(null);
+    const [estateToDelete, setEstateToDelete] = useState<{ id: number; name: string } | null>(null);
+    const [estateToReset, setEstateToReset] = useState<number | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
@@ -53,28 +59,49 @@ export default function EstateExplorer({ estates, filters }: Props) {
         );
     };
 
-    const handleToggleStatus = (estateId: number, currentStatus: string) => {
-        if (confirm(`Are you sure you want to ${currentStatus === 'active' ? 'deactivate' : 'activate'} this estate?`)) {
-            router.post(toggleStatus.url({ estate: estateId }), {}, { preserveScroll: true });
-        }
+    const handleToggleStatus = () => {
+        if (!estateToToggle) return;
+        setIsProcessing(true);
+        router.post(toggleStatus.url({ estate: estateToToggle.id }), {}, { 
+            preserveScroll: true,
+            onFinish: () => {
+                setIsProcessing(false);
+                setEstateToToggle(null);
+                setSelectedEstate(null);
+            }
+        });
     };
 
-    const handleDelete = (estateId: number, name: string) => {
-        if (confirm(`Are you sure you want to completely delete "${name}"? This action cannot be undone.`)) {
-            router.delete(destroy.url({ estate: estateId }), { preserveScroll: true });
-        }
+    const handleDelete = () => {
+        if (!estateToDelete) return;
+        setIsProcessing(true);
+        router.delete(destroy.url({ estate: estateToDelete.id }), { 
+            preserveScroll: true,
+            onFinish: () => {
+                setIsProcessing(false);
+                setEstateToDelete(null);
+                setSelectedEstate(null);
+            }
+        });
     };
 
-    const handleResetPassword = (estateId: number) => {
-        if (confirm("Are you sure you want to reset the admin password for this estate?")) {
-            router.post(resetPassword.url({ estate: estateId }), {}, { preserveScroll: true });
-        }
+    const handleResetPassword = () => {
+        if (!estateToReset) return;
+        setIsProcessing(true);
+        router.post(resetPassword.url({ estate: estateToReset }), {}, { 
+            preserveScroll: true,
+            onFinish: () => {
+                setIsProcessing(false);
+                setEstateToReset(null);
+                setSelectedEstate(null);
+            }
+        });
     };
 
     const getHealthColor = (score: number) => {
-        if (score >= 90) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-        if (score >= 70) return 'text-amber-600 bg-amber-50 border-amber-200';
-        return 'text-rose-600 bg-rose-50 border-rose-200';
+        if (score >= 90) return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20';
+        if (score >= 70) return 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20';
+        return 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20';
     };
 
     const getHealthProgressColor = (score: number) => {
@@ -90,8 +117,8 @@ export default function EstateExplorer({ estates, filters }: Props) {
             {/* Header & Actions */}
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Estate Explorer</h1>
-                    <p className="mt-1 text-sm font-medium text-slate-500">
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Estate Explorer</h1>
+                    <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">
                         Deep behavioral profiling and health monitoring across all estates.
                     </p>
                 </div>
@@ -110,19 +137,19 @@ export default function EstateExplorer({ estates, filters }: Props) {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <form onSubmit={handleSearch} className="flex flex-1 items-center gap-3">
                     <div className="relative flex-1 sm:max-w-xs">
-                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                             type="text"
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="w-full rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="rounded-xl border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:ring-indigo-500"
+                        className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
                     >
                         <option value="">All Statuses</option>
                         <option value="active">Active</option>
@@ -130,7 +157,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                     </select>
                     <button
                         type="submit"
-                        className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800"
+                        className="rounded-xl bg-slate-900 dark:bg-white px-4 py-2.5 text-sm font-bold text-white dark:text-slate-900 transition-all hover:bg-slate-800 dark:hover:bg-slate-200"
                     >
                         Filter
                     </button>
@@ -141,9 +168,9 @@ export default function EstateExplorer({ estates, filters }: Props) {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {estates.length === 0 ? (
                     <div className="col-span-full py-12 text-center">
-                        <Building2 className="mx-auto h-12 w-12 text-slate-300" />
-                        <h3 className="mt-4 text-lg font-black text-slate-900">No estates found</h3>
-                        <p className="mt-1 text-sm text-slate-500">Adjust your search or add a new estate to get started.</p>
+                        <Building2 className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
+                        <h3 className="mt-4 text-lg font-black text-slate-900 dark:text-white">No estates found</h3>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Adjust your search or add a new estate to get started.</p>
                     </div>
                 ) : (
                     estates.map((estate) => (
@@ -151,18 +178,18 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             layoutId={`estate-${estate.id}`}
                             key={estate.id}
                             onClick={() => setSelectedEstate(estate)}
-                            className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
+                            className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
                         >
                             <div className="p-6">
                                 <div className="mb-4 flex items-start justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                                         <Building2 className="h-6 w-6" />
                                     </div>
                                     <span
                                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
                                             estate.status === 'active'
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-slate-100 text-slate-600'
+                                                ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 dark:text-slate-500'
                                         }`}
                                     >
                                         {estate.status === 'active' ? (
@@ -174,37 +201,37 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                     </span>
                                 </div>
 
-                                <h3 className="text-lg font-black text-slate-900 line-clamp-1">{estate.name}</h3>
-                                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500 line-clamp-1">
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white line-clamp-1">{estate.name}</h3>
+                                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500 line-clamp-1">
                                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                                     {estate.address}
                                 </p>
 
                                 <div className="mt-6 grid grid-cols-2 gap-4">
-                                    <div className="rounded-2xl bg-slate-50 p-3">
-                                        <div className="flex items-center gap-2 text-slate-500">
+                                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                                             <Users className="h-4 w-4" />
                                             <span className="text-xs font-bold uppercase tracking-wider">Residents</span>
                                         </div>
-                                        <p className="mt-1.5 text-lg font-black text-slate-900">{estate.total_residents}</p>
+                                        <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_residents}</p>
                                     </div>
-                                    <div className="rounded-2xl bg-slate-50 p-3">
-                                        <div className="flex items-center gap-2 text-slate-500">
+                                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                                             <Home className="h-4 w-4" />
                                             <span className="text-xs font-bold uppercase tracking-wider">Properties</span>
                                         </div>
-                                        <p className="mt-1.5 text-lg font-black text-slate-900">{estate.total_properties}</p>
+                                        <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_properties}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+                            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20 px-6 py-4">
                                 <div className="flex items-center gap-3">
                                     {/* Circular Progress for Health Score */}
                                     <div className="relative h-10 w-10">
                                         <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
                                             <path
-                                                className="stroke-slate-200"
+                                                className="stroke-slate-200 dark:stroke-slate-700"
                                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                                 fill="none"
                                                 strokeWidth="3"
@@ -219,12 +246,12 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <span className="text-xs font-black text-slate-700">{estate.health_score}</span>
+                                            <span className="text-xs font-black text-slate-700 dark:text-slate-300 dark:text-slate-600">{estate.health_score}</span>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-bold text-slate-600">Health Score</span>
+                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">Health Score</span>
                                 </div>
-                                <Activity className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-600" />
+                                <Activity className="h-5 w-5 text-slate-400 dark:text-slate-500 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
                             </div>
                         </motion.div>
                     ))
@@ -241,7 +268,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedEstate(null)}
-                            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+                            className="fixed inset-0 z-40 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm"
                         />
 
                         {/* Slide-over Panel */}
@@ -250,15 +277,15 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                            className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 bg-white shadow-2xl"
+                            className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-2xl"
                         >
                             <div className="flex flex-col h-full">
                                 {/* Panel Header */}
-                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/80 px-6 py-4 backdrop-blur-md">
-                                    <h2 className="text-lg font-black text-slate-900">Estate Insights</h2>
+                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 bg-white dark:bg-[#0f1423]/80 px-6 py-4 backdrop-blur-md">
+                                    <h2 className="text-lg font-black text-slate-900 dark:text-white">Estate Insights</h2>
                                     <button
                                         onClick={() => setSelectedEstate(null)}
-                                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+                                        className="rounded-full p-2 text-slate-400 dark:text-slate-500 transition-colors hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-600 dark:text-slate-400 dark:text-slate-500 active:scale-95"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
@@ -267,11 +294,11 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                 {/* Panel Content */}
                                 <div className="flex-1 p-6">
                                     <div className="mb-8">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 shadow-inner">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-inner">
                                             <Building2 className="h-8 w-8" />
                                         </div>
-                                        <h1 className="mt-4 text-2xl font-black text-slate-900">{selectedEstate.name}</h1>
-                                        <p className="mt-1 text-sm font-medium text-slate-500">{selectedEstate.address}</p>
+                                        <h1 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">{selectedEstate.name}</h1>
+                                        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">{selectedEstate.address}</p>
                                     </div>
 
                                     {/* Main Stats */}
@@ -283,7 +310,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                             </div>
                                             <p className="mt-2 text-xs font-bold uppercase tracking-wider opacity-75">Health Score</p>
                                         </div>
-                                        <div className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-600">
+                                        <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 p-5 text-indigo-600 dark:text-indigo-400">
                                             <div className="flex items-center justify-between">
                                                 <TrendingUp className="h-5 w-5 opacity-75" />
                                                 <span className="text-xl font-black">
@@ -297,21 +324,21 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                     {/* Additional Metrics (Placeholder for trendlines/charts) */}
                                     <div className="space-y-6">
                                         <div>
-                                            <h3 className="mb-3 text-sm font-black text-slate-900 uppercase tracking-widest">Demographics</h3>
-                                            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5">
-                                                <div className="flex justify-between border-b border-slate-200 pb-3">
-                                                    <span className="text-sm font-medium text-slate-600">Total Residents</span>
-                                                    <span className="text-sm font-black text-slate-900">{selectedEstate.total_residents}</span>
+                                            <h3 className="mb-3 text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Demographics</h3>
+                                            <div className="rounded-3xl border border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800/50 p-5">
+                                                <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">Total Residents</span>
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{selectedEstate.total_residents}</span>
                                                 </div>
                                                 <div className="flex justify-between pt-3">
-                                                    <span className="text-sm font-medium text-slate-600">Total Properties</span>
-                                                    <span className="text-sm font-black text-slate-900">{selectedEstate.total_properties}</span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">Total Properties</span>
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{selectedEstate.total_properties}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h3 className="mb-3 text-sm font-black text-slate-900 uppercase tracking-widest">Actions</h3>
+                                            <h3 className="mb-3 text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Actions</h3>
                                             <div className="flex flex-col gap-3">
                                                 <Link
                                                     href={`/zeus/estates/${selectedEstate.id}`}
@@ -321,36 +348,33 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 </Link>
                                                 <Link
                                                     href={`/zeus/estates/${selectedEstate.id}/edit`}
-                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
+                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3.5 text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-[0.98]"
                                                 >
                                                     Edit Settings
                                                 </Link>
                                                 <div className="mt-4 grid grid-cols-2 gap-3">
                                                     <button
                                                         onClick={() => {
-                                                            handleToggleStatus(selectedEstate.id, selectedEstate.status);
-                                                            setSelectedEstate(null);
+                                                            setEstateToToggle({ id: selectedEstate.id, status: selectedEstate.status });
                                                         }}
-                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95"
+                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500 transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-95"
                                                     >
                                                         Toggle Status
                                                     </button>
                                                     <button
                                                         onClick={() => {
-                                                            handleResetPassword(selectedEstate.id);
-                                                            setSelectedEstate(null);
+                                                            setEstateToReset(selectedEstate.id);
                                                         }}
-                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95"
+                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500 transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-95"
                                                     >
                                                         Reset Password
                                                     </button>
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        handleDelete(selectedEstate.id, selectedEstate.name);
-                                                        setSelectedEstate(null);
+                                                        setEstateToDelete({ id: selectedEstate.id, name: selectedEstate.name });
                                                     }}
-                                                    className="mt-2 w-full rounded-2xl bg-rose-50 py-3 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 active:scale-[0.98]"
+                                                    className="mt-2 w-full rounded-2xl bg-rose-50 dark:bg-rose-500/10 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-500/20 active:scale-[0.98]"
                                                 >
                                                     Delete Estate
                                                 </button>
@@ -363,6 +387,39 @@ export default function EstateExplorer({ estates, filters }: Props) {
                     </>
                 )}
             </AnimatePresence>
+
+            <ConfirmationModal
+                isOpen={estateToToggle !== null}
+                onClose={() => setEstateToToggle(null)}
+                onConfirm={handleToggleStatus}
+                title={`${estateToToggle?.status === 'active' ? 'Deactivate' : 'Activate'} Estate`}
+                message={`Are you sure you want to ${estateToToggle?.status === 'active' ? 'deactivate' : 'activate'} this estate?`}
+                confirmLabel={estateToToggle?.status === 'active' ? 'Deactivate' : 'Activate'}
+                type="warning"
+                isLoading={isProcessing}
+            />
+
+            <ConfirmationModal
+                isOpen={estateToDelete !== null}
+                onClose={() => setEstateToDelete(null)}
+                onConfirm={handleDelete}
+                title="Delete Estate"
+                message={`Are you sure you want to completely delete "${estateToDelete?.name}"? This action cannot be undone.`}
+                confirmLabel="Delete"
+                type="danger"
+                isLoading={isProcessing}
+            />
+
+            <ConfirmationModal
+                isOpen={estateToReset !== null}
+                onClose={() => setEstateToReset(null)}
+                onConfirm={handleResetPassword}
+                title="Reset Admin Password"
+                message="Are you sure you want to reset the admin password for this estate? A new password will be sent to the estate admin's email address."
+                confirmLabel="Reset Password"
+                type="warning"
+                isLoading={isProcessing}
+            />
         </ZeusLayout>
     );
 }
