@@ -47,7 +47,8 @@ class MoneyFlowService
      */
     public function getSettlementAnalytics(): array
     {
-        $totalInvoicedKobo = Invoice::sum('amount');
+        // Exclude cancelled invoices so the math adds up perfectly (Collected + Outstanding = Total)
+        $totalInvoicedKobo = Invoice::where('status', '!=', 'cancelled')->sum('amount');
         $collectedKobo = Invoice::where('status', 'paid')->sum('amount');
         $outstandingKobo = Invoice::whereIn('status', ['pending', 'overdue'])->sum('amount');
 

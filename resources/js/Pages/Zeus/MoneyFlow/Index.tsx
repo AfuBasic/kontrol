@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline';
 import { Clock, AlertTriangle, ArrowRightLeft } from 'lucide-react';
@@ -135,6 +135,12 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                                         formatter={(value: number) => [formatCurrency(value), 'Amount']}
                                     />
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                                        <LabelList 
+                                            dataKey="value" 
+                                            position="right" 
+                                            formatter={(value: number) => formatCurrency(value)} 
+                                            style={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} 
+                                        />
                                         {funnel.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
                                         ))}
