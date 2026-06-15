@@ -60,7 +60,7 @@ class LandingController extends Controller
             'address' => $validated['estateLocation'],
             'email' => $validated['contactEmail'],
             'phone' => $validated['contactPhone'] ?? '',
-            'notes' => 'Contact Name: '.$validated['contactName'],
+            'notes' => 'Contact Name: ' . $validated['contactName'],
             'status' => 'received',
         ]);
 
@@ -79,19 +79,23 @@ class LandingController extends Controller
     public function downloadApp(Request $request)
     {
         $userAgent = $request->header('User-Agent');
+        $url = route('landing.home') . '#download';
 
         if (stripos($userAgent, 'android') !== false) {
             // Android redirect (Update with real Play Store URL when available)
-            return redirect('https://play.google.com/store/apps/details?id=com.usekontrol.app');
-        }
-
-        if (stripos($userAgent, 'iphone') !== false || stripos($userAgent, 'ipad') !== false) {
+            $url = 'https://play.google.com/store/apps/details?id=com.usekontrol.app';
+        } elseif (stripos($userAgent, 'iphone') !== false || stripos($userAgent, 'ipad') !== false) {
             // iOS redirect
-            return redirect('https://apps.apple.com/ng/app/access-kontrol/id6772562083');
+            $url = 'https://apps.apple.com/ng/app/access-kontrol/id6772562083';
         }
 
-        // Fallback for desktop: Redirect to the public marketing site's download section
-        // Using an absolute route prevents infinite redirect loops on the app domain.
-        return redirect(route('landing.home') . '#download');
+        // If this was triggered via an Inertia XHR request (e.g. redirected from login),
+        // we MUST use Inertia::location() to perform a hard page visit. 
+        // Otherwise, Axios tries to follow the cross-origin redirect and fails with CORS (Network Error).
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($url);
+        }
+
+        return redirect($url);
     }
 }
