@@ -13,9 +13,12 @@ class SubscriptionController extends Controller
     public function index()
     {
         return Inertia::render('Zeus/Subscriptions/Index', [
+            'kpis' => $this->intelligenceService->getKpis(),
             'planAnalytics' => $this->intelligenceService->getPlanAnalytics(),
             'renewalCohorts' => $this->intelligenceService->getRenewalCohort(),
             'migrationMatrix' => $this->intelligenceService->getUpgradeDowngradeMatrix(),
+            'recentChanges' => $this->intelligenceService->getRecentPlanChanges(),
+            'pastDue' => $this->intelligenceService->getPastDueSubscriptions(),
         ]);
     }
 }

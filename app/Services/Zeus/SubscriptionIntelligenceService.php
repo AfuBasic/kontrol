@@ -3,37 +3,74 @@
 namespace App\Services\Zeus;
 
 use App\Models\Activity;
-use App\Models\EstateSubscription;
 use App\Models\Plan;
+use App\Models\ResidentSubscription;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class SubscriptionIntelligenceService
 {
     /**
-     * Get distribution of estates across different plans and their MRR.
+     * Get summary KPIs for subscriptions (Strictly Residents).
      */
-    public function getPlanAnalytics(): array
+    public function getKpis(): array
     {
-        $plans = Plan::withCount(['subscriptions' => function ($query) {
-            $query->whereIn('status', ['active', 'trial', 'past_due']);
-        }])->get();
+        $activeSubs = ResidentSubscription::whereIn('status', ['active', 'trial'])->count();
+        $pastDueSubs = ResidentSubscription::where('status', 'past_due')->count();
 
-        return $plans->map(function ($plan) {
-            // Calculate MRR per plan based on price and billing interval
+        $cancelledSubs = ResidentSubscription::where('status', 'cancelled')
+            ->where('updated_at', '>=', Carbon::now()->startOfMonth())
+            ->count();
+
+        // Calculate total MRR
+        $plans = Plan::withCount([
+            'residentSubscriptions' => function ($query) {
+                $query->whereIn('status', ['active', 'trial', 'past_due']);
+            },
+        ])->get();
+
+        $totalMrr = 0;
+        foreach ($plans as $plan) {
             $mrrMultiplier = match ($plan->billing_interval) {
                 'annually' => 1 / 12,
                 'semi-annually' => 1 / 6,
                 'quarterly' => 1 / 3,
-                default => 1, // Assume monthly if not specified, though Plan enum says quarterly, semi-annually, annually. Wait, we should check enum.
+                default => 1,
+            };
+            $totalMrr += ($plan->price * $mrrMultiplier) * $plan->resident_subscriptions_count;
+        }
+
+        return [
+            'active_subscriptions' => $activeSubs,
+            'past_due_subscriptions' => $pastDueSubs,
+            'churned_this_month' => $cancelledSubs,
+            'total_mrr' => round($totalMrr),
+        ];
+    }
+
+    /**
+     * Get distribution of residents across different plans and their MRR.
+     */
+    public function getPlanAnalytics(): array
+    {
+        $plans = Plan::withCount([
+            'residentSubscriptions' => function ($query) {
+                $query->whereIn('status', ['active', 'trial', 'past_due']);
+            },
+        ])->get();
+
+        return $plans->map(function ($plan) {
+            $mrrMultiplier = match ($plan->billing_interval) {
+                'annually' => 1 / 12,
+                'semi-annually' => 1 / 6,
+                'quarterly' => 1 / 3,
+                default => 1,
             };
 
-            // Calculate MRR based on active subscriptions
-            $mrr = ($plan->price * $mrrMultiplier) * $plan->subscriptions_count;
+            $mrr = ($plan->price * $mrrMultiplier) * $plan->resident_subscriptions_count;
 
             return [
                 'plan_name' => $plan->name,
-                'estates_count' => $plan->subscriptions_count,
+                'residents_count' => $plan->resident_subscriptions_count,
                 'mrr' => round($mrr),
                 'color' => $plan->color ?? '#818cf8',
             ];
@@ -46,11 +83,11 @@ class SubscriptionIntelligenceService
     public function getRenewalCohort(): array
     {
         $now = Carbon::now();
-        
-        $subscriptions = EstateSubscription::with('plan')
+
+        $residentSubscriptions = ResidentSubscription::with('plan')
             ->whereIn('status', ['active', 'trial'])
-            ->whereNotNull('next_billing_date')
-            ->whereBetween('next_billing_date', [$now, $now->copy()->addDays(90)])
+            ->whereNotNull('current_period_end')
+            ->whereBetween('current_period_end', [$now, $now->copy()->addDays(90)])
             ->get();
 
         $cohorts = [
@@ -59,11 +96,13 @@ class SubscriptionIntelligenceService
             '61-90 days' => ['count' => 0, 'mrr_at_risk' => 0],
         ];
 
-        foreach ($subscriptions as $sub) {
-            if (!$sub->plan) continue;
+        foreach ($residentSubscriptions as $sub) {
+            if (! $sub->plan || ! $sub->current_period_end) {
+                continue;
+            }
 
-            $daysUntilRenewal = $now->diffInDays($sub->next_billing_date);
-            
+            $daysUntilRenewal = $now->diffInDays($sub->current_period_end);
+
             $mrrMultiplier = match ($sub->plan->billing_interval) {
                 'annually' => 1 / 12,
                 'semi-annually' => 1 / 6,
@@ -97,8 +136,7 @@ class SubscriptionIntelligenceService
      */
     public function getUpgradeDowngradeMatrix(): array
     {
-        // Using Spatie Activitylog to track plan_id changes
-        $activities = Activity::where('subject_type', EstateSubscription::class)
+        $activities = Activity::where('subject_type', ResidentSubscription::class)
             ->where('event', 'updated')
             ->where('created_at', '>=', Carbon::now()->startOfMonth())
             ->get();
@@ -106,13 +144,11 @@ class SubscriptionIntelligenceService
         $upgrades = 0;
         $downgrades = 0;
 
-        // Load all plans for price comparison
         $plans = Plan::all()->keyBy('id');
 
         foreach ($activities as $activity) {
             $properties = $activity->properties;
-            
-            // Check if plan_id was changed
+
             if (isset($properties['old']['plan_id']) && isset($properties['attributes']['plan_id'])) {
                 $oldPlanId = $properties['old']['plan_id'];
                 $newPlanId = $properties['attributes']['plan_id'];
@@ -132,10 +168,86 @@ class SubscriptionIntelligenceService
             }
         }
 
-        // Return formatted data for Recharts
         return [
             ['name' => 'Upgrades', 'value' => $upgrades, 'fill' => '#34d399'], // Emerald
             ['name' => 'Downgrades', 'value' => $downgrades, 'fill' => '#fb7185'], // Rose
         ];
+    }
+
+    /**
+     * Get recent plan changes (upgrades/downgrades).
+     */
+    public function getRecentPlanChanges(): array
+    {
+        $activities = Activity::where('subject_type', ResidentSubscription::class)
+            ->where('event', 'updated')
+            ->where('created_at', '>=', Carbon::now()->subMonths(3))
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        $plans = Plan::all()->keyBy('id');
+        $changes = [];
+
+        foreach ($activities as $activity) {
+            $properties = $activity->properties;
+
+            if (isset($properties['old']['plan_id']) && isset($properties['attributes']['plan_id'])) {
+                $oldPlanId = $properties['old']['plan_id'];
+                $newPlanId = $properties['attributes']['plan_id'];
+
+                if ($oldPlanId != $newPlanId) {
+                    $oldPlan = $plans->get($oldPlanId);
+                    $newPlan = $plans->get($newPlanId);
+
+                    $subscription = ResidentSubscription::with('user:id,first_name,last_name')->find($activity->subject_id);
+                    $entityName = $subscription?->user ? trim($subscription->user->first_name.' '.$subscription->user->last_name) : null;
+                    $entityId = $subscription?->user?->id;
+
+                    if ($oldPlan && $newPlan && $entityName) {
+                        $type = $newPlan->price > $oldPlan->price ? 'upgrade' : 'downgrade';
+
+                        $changes[] = [
+                            'id' => $activity->id,
+                            'entity_name' => $entityName,
+                            'entity_id' => $entityId,
+                            'old_plan' => $oldPlan->name,
+                            'new_plan' => $newPlan->name,
+                            'type' => $type,
+                            'date' => $activity->created_at->toIso8601String(),
+                        ];
+
+                        if (count($changes) >= 10) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $changes;
+    }
+
+    /**
+     * Get past due subscriptions
+     */
+    public function getPastDueSubscriptions(): array
+    {
+        return ResidentSubscription::with(['user:id,first_name,last_name', 'plan:id,name,price'])
+            ->where('status', 'past_due')
+            ->latest('updated_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($sub) {
+                return [
+                    'id' => 'resident_'.$sub->id,
+                    'entity_name' => $sub->user ? trim($sub->user->first_name.' '.$sub->user->last_name) : 'Unknown Resident',
+                    'plan_name' => $sub->plan->name ?? 'Unknown',
+                    'amount_due' => $sub->plan->price ?? 0,
+                    'past_due_since' => clone $sub->updated_at,
+                    'days_past_due' => Carbon::now()->diffInDays($sub->updated_at),
+                ];
+            })
+            ->toArray();
     }
 }

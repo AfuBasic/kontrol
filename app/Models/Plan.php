@@ -109,6 +109,14 @@ class Plan extends Model
         return $this->hasMany(EstateSubscription::class);
     }
 
+    /**
+     * @return HasMany<ResidentSubscription, $this>
+     */
+    public function residentSubscriptions(): HasMany
+    {
+        return $this->hasMany(ResidentSubscription::class);
+    }
+
     public function getFormattedPriceAttribute(): string
     {
         return '₦'.number_format($this->price / 100, 2);
