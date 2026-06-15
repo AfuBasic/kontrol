@@ -74,28 +74,60 @@ class LandingController extends Controller
     }
 
     /**
-     * Handle the smart app download redirect based on User-Agent.
+     * Render the public app download page or redirect mobile devices to stores.
      */
     public function downloadApp(Request $request)
     {
         $userAgent = $request->header('User-Agent');
-        $url = route('landing.home') . '#download';
 
         if (stripos($userAgent, 'android') !== false) {
             // Android redirect (Update with real Play Store URL when available)
             $url = 'https://play.google.com/store/apps/details?id=com.usekontrol.app';
+            if ($request->header('X-Inertia')) return Inertia::location($url);
+            return redirect($url);
         } elseif (stripos($userAgent, 'iphone') !== false || stripos($userAgent, 'ipad') !== false) {
             // iOS redirect
             $url = 'https://apps.apple.com/ng/app/access-kontrol/id6772562083';
+            if ($request->header('X-Inertia')) return Inertia::location($url);
+            return redirect($url);
         }
 
-        // If this was triggered via an Inertia XHR request (e.g. redirected from login),
-        // we MUST use Inertia::location() to perform a hard page visit. 
-        // Otherwise, Axios tries to follow the cross-origin redirect and fails with CORS (Network Error).
-        if ($request->header('X-Inertia')) {
-            return Inertia::location($url);
+        $token = null;
+        if (auth()->check()) {
+            $token = \Illuminate\Support\Str::random(40);
+            \Illuminate\Support\Facades\Cache::put('autologin_'.$token, auth()->id(), now()->addMinutes(5));
         }
 
-        return redirect($url);
+        return Inertia::render('Public/DownloadApp', [
+            'autologinToken' => $token,
+        ]);
+    }
+
+    /**
+     * Autologin from mobile app deep links.
+     */
+    public function autologin(Request $request, \App\Actions\Auth\DetermineUserRedirect $determineRedirect)
+    {
+        $token = $request->query('token');
+        if (! $token) {
+            return redirect()->route('login');
+        }
+
+        $userId = \Illuminate\Support\Facades\Cache::pull('autologin_'.$token);
+        if (! $userId) {
+            return redirect()->route('login')->with('error', 'Authentication link expired.');
+        }
+
+        \Illuminate\Support\Facades\Auth::loginUsingId($userId);
+        $request->session()->regenerate();
+
+        $redirect = $request->query('redirect');
+        if ($redirect && (str_starts_with($redirect, '/') || parse_url($redirect, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST))) {
+            $redirectUrl = $redirect;
+        } else {
+            $redirectUrl = $determineRedirect->execute(\Illuminate\Support\Facades\Auth::user());
+        }
+
+        return redirect()->intended($redirectUrl);
     }
 }
