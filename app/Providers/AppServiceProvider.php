@@ -50,9 +50,12 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->registerEventListeners();
         $this->configureTunnelSupport();
-        
-        // Force HTTPS if we are behind a proxy that terminates SSL
-        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+
+        // Force HTTPS unconditionally in production/staging to prevent Mixed Content redirect errors
+        // in Capacitor WebViews, and conditionally for local proxies.
+        if (app()->environment('production', 'staging')) {
+            URL::forceScheme('https');
+        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
             URL::forceScheme('https');
         }
 
@@ -72,13 +75,13 @@ class AppServiceProvider extends ServiceProvider
             // If the host is an Expose or Ngrok tunnel
             if (str_contains($host, 'sharedwithexpose.com') || str_contains($host, 'ngrok-free.app')) {
                 $protocol = request()->isSecure() ? 'https://' : 'http://';
-                $url = $protocol.$host;
+                $url = $protocol . $host;
 
                 // Dynamically update app URL and Sanctum/CORS stateful domains
                 config(['app.url' => $url]);
 
                 $stateful = config('sanctum.stateful', []);
-                if (! in_array($host, $stateful)) {
+                if (!in_array($host, $stateful)) {
                     $stateful[] = $host;
                     config(['sanctum.stateful' => $stateful]);
                 }
@@ -115,7 +118,8 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
+        Password::defaults(
+            fn(): ?Password => app()->isProduction()
             ? Password::min(12)
                 ->mixedCase()
                 ->letters()
