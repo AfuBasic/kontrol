@@ -8,7 +8,7 @@ use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\ReferrerController;
 use App\Http\Controllers\Zeus\RevenueController;
-use App\Http\Controllers\Zeus\SubscriptionController;
+
 use App\Http\Controllers\Zeus\TransactionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
 use App\Http\Middleware\Zeus\RedirectIfZeusAuthenticated;
@@ -33,10 +33,6 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         // Features management
         Route::get('/features', [FeatureController::class, 'index'])->name('features.index');
         Route::patch('/plans/{plan}/features/{feature}', [FeatureController::class, 'toggle'])->name('features.toggle');
-
-        // Subscriptions management
-        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-        Route::patch('/subscriptions/{estate}', [SubscriptionController::class, 'override'])->name('subscriptions.override');
 
         // Global Transactions
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');

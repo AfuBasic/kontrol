@@ -11,6 +11,7 @@ import {
     XMarkIcon,
     HandRaisedIcon,
     InboxStackIcon,
+    ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -33,9 +34,9 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
+    { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Plans', href: '/zeus/plans', icon: CurrencyDollarIcon },
-    { name: 'Subscriptions', href: '/zeus/subscriptions', icon: UsersIcon },
     { name: 'Features', href: '/zeus/features', icon: SparklesIcon },
     { name: 'Referrers', href: '/zeus/referrers', icon: HandRaisedIcon },
     { name: 'Billing', href: '/zeus/billing', icon: Cog6ToothIcon },
