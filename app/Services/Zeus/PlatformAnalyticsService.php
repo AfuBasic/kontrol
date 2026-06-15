@@ -238,10 +238,23 @@ class PlatformAnalyticsService
         $totalUsers = User::count();
         $totalActiveUsers = User::where('updated_at', '>=', Carbon::now()->subDays(7))->count();
 
+        // Calculate actual DB size in MB
+        $dbName = config('database.connections.mysql.database');
+        $dbSize = DB::select('
+            SELECT SUM(data_length + index_length) / 1024 / 1024 AS size_mb 
+            FROM information_schema.TABLES 
+            WHERE table_schema = ?
+        ', [$dbName]);
+
+        $sizeMb = $dbSize[0]->size_mb ?? 0;
+        $formattedSize = $sizeMb > 1024
+            ? round($sizeMb / 1024, 2).' GB'
+            : round($sizeMb, 2).' MB';
+
         return [
             'total_users' => $totalUsers,
             'active_users_7d' => $totalActiveUsers,
-            'database_size' => '8.2 GB', // Placeholder for DB size telemetry
+            'database_size' => $formattedSize,
             'system_status' => 'Operational',
         ];
     }
