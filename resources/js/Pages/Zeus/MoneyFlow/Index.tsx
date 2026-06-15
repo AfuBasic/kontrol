@@ -1,33 +1,35 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline';
-import { Clock, AlertTriangle, ArrowRightLeft } from 'lucide-react';
+import { AlertTriangle, TrendingUp, CreditCard, Clock, ArrowUpRight } from 'lucide-react';
 
-interface Economics {
+interface Friction {
     failed_payment_rate: number;
-    avg_days_to_pay: number;
+    avg_transaction_size: number;
 }
 
-interface FunnelItem {
-    name: string;
-    value: number;
-    fill: string;
-}
-
-interface AgingBucket {
-    bucket: string;
+interface VelocityItem {
+    date: string;
     amount: number;
 }
 
-interface Props {
-    economics: Economics;
-    funnel: FunnelItem[];
-    aging: AgingBucket[];
+interface RecentFailure {
+    id: number;
+    estate_id: number;
+    estate_name: string;
+    amount: number;
+    date: string;
 }
 
-export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
+interface Props {
+    friction: Friction;
+    velocity: VelocityItem[];
+    recentFailures: RecentFailure[];
+}
+
+export default function MoneyFlowIndex({ friction, velocity, recentFailures }: Props) {
     const formatExactCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -70,8 +72,8 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                     </div>
                     <h1 className="text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">Money Flow</h1>
                     <p className="mt-4 text-lg leading-relaxed text-slate-500 dark:text-slate-400">
-                        Track the operational friction of moving money. Monitor collection speeds, payment failure rates, and visualize exactly where
-                        your outstanding balances are aging.
+                        Track prepaid cash velocity and checkout friction. Because we operate on a strict paywall model, we monitor how fast cash
+                        arrives, not how long it takes to collect.
                     </p>
                 </motion.div>
 
@@ -79,115 +81,60 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                 <motion.div variants={itemVariants} className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-2xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40">
                         <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-slate-400" />
-                            <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Average Time-to-Pay</h3>
+                            <CreditCard className="h-4 w-4 text-slate-400" />
+                            <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Average Transaction Size</h3>
                         </div>
                         <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{economics.avg_days_to_pay}</span>
-                            <span className="text-sm text-slate-500">days</span>
+                            <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                {formatCompactCurrency(friction.avg_transaction_size)}
+                            </span>
                         </div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40">
                         <div className="flex items-center gap-2">
-                            <AlertTriangle className={`h-4 w-4 ${economics.failed_payment_rate > 5 ? 'text-red-500' : 'text-emerald-500'}`} />
+                            <AlertTriangle className={`h-4 w-4 ${friction.failed_payment_rate > 5 ? 'text-red-500' : 'text-emerald-500'}`} />
                             <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Failed Transaction Rate</h3>
                         </div>
                         <div className="mt-4 flex items-baseline gap-2">
                             <span
-                                className={`text-3xl font-bold tracking-tight ${economics.failed_payment_rate > 5 ? 'text-red-500 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}
+                                className={`text-3xl font-bold tracking-tight ${friction.failed_payment_rate > 5 ? 'text-red-500 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}
                             >
-                                {economics.failed_payment_rate}%
+                                {friction.failed_payment_rate}%
                             </span>
                         </div>
                     </div>
                 </motion.div>
 
                 {/* Main Content Grid */}
-                <div className="grid gap-8 lg:grid-cols-2">
-                    {/* Collection Funnel */}
+                <div className="grid gap-8 lg:grid-cols-3">
+                    {/* Daily Cash Velocity Chart */}
                     <motion.div
                         variants={itemVariants}
-                        className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40"
+                        className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl lg:col-span-2 dark:border-white/[0.04] dark:bg-slate-900/40"
                     >
                         <div className="mb-10 flex items-center justify-between">
                             <div>
                                 <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                                    <ArrowRightLeft className="h-4 w-4 text-blue-500" />
-                                    Collection Funnel
+                                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                                    Daily Cash Velocity (30 Days)
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    Total invoiced volume versus what has been successfully collected.
+                                    Total raw volume of successful payments hitting the platform daily.
                                 </p>
                             </div>
                         </div>
 
                         <div className="w-full">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={funnel} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
-                                    <XAxis type="number" hide />
-                                    <YAxis
-                                        type="category"
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                                        width={120}
-                                    />
-                                    <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        contentStyle={{
-                                            borderRadius: '12px',
-                                            border: 'none',
-                                            boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
-                                            background: 'rgba(255, 255, 255, 0.9)',
-                                            backdropFilter: 'blur(8px)',
-                                        }}
-                                        formatter={(value: number) => [formatExactCurrency(value), 'Amount']}
-                                    />
-                                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
-                                        <LabelList
-                                            dataKey="value"
-                                            position="right"
-                                            formatter={(value: number) => formatCompactCurrency(value)}
-                                            style={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
-                                        />
-                                        {funnel.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </motion.div>
-
-                    {/* Aging Buckets */}
-                    <motion.div
-                        variants={itemVariants}
-                        className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40"
-                    >
-                        <div className="mb-10 flex items-center justify-between">
-                            <div>
-                                <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-                                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                    Outstanding Aging Buckets
-                                </h2>
-                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    Pending and overdue balances bucketed by days past due.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="w-full">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={aging} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
+                            <ResponsiveContainer width="100%" height={320}>
+                                <BarChart data={velocity} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                                     <XAxis
-                                        dataKey="bucket"
+                                        dataKey="date"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
+                                        tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
                                         dy={16}
+                                        minTickGap={20}
                                     />
                                     <YAxis hide={true} />
                                     <Tooltip
@@ -199,18 +146,60 @@ export default function MoneyFlowIndex({ economics, funnel, aging }: Props) {
                                             background: 'rgba(255, 255, 255, 0.9)',
                                             backdropFilter: 'blur(8px)',
                                         }}
-                                        formatter={(value: number) => [formatExactCurrency(value), 'Value at Risk']}
+                                        formatter={(value: number) => [formatExactCurrency(value), 'Gross Volume']}
+                                        labelStyle={{ color: '#64748b', fontWeight: 600, fontSize: '12px', marginBottom: '4px' }}
                                     />
-                                    {/* The longer it ages, the more intense the color gets (orange -> red) */}
-                                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} barSize={48}>
-                                        {aging.map((entry, index) => {
-                                            const colors = ['#fbbf24', '#f59e0b', '#ea580c', '#dc2626']; // Amber-400 to Red-600
-                                            return <Cell key={`cell-${index}`} fill={colors[index]} />;
-                                        })}
-                                    </Bar>
+                                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} fill="#10b981" maxBarSize={40} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
+                    </motion.div>
+
+                    {/* Recent Failures Log */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-slate-900/40"
+                    >
+                        <div className="mb-6 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900 dark:text-white">Checkout Friction Log</h2>
+                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Most recent failed payments.</p>
+                            </div>
+                        </div>
+
+                        {recentFailures.length === 0 ? (
+                            <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                <p className="text-sm text-slate-500">No failed payments recently.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {recentFailures.map((failure) => (
+                                    <Link
+                                        key={failure.id}
+                                        href={`/zeus/estates/${failure.estate_id}`}
+                                        className="group flex flex-col justify-between rounded-xl border border-transparent p-3 transition-all hover:border-slate-200/50 hover:bg-white dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                                    >
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <span className="text-sm font-bold text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                                                {failure.estate_name}
+                                            </span>
+                                            <span className="text-xs font-semibold text-red-500 dark:text-red-400">Failed</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                                {formatExactCurrency(failure.amount)}
+                                            </span>
+                                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                <Clock className="h-3 w-3" />
+                                                {failure.date}
+                                                <ArrowUpRight className="ml-1 h-3 w-3 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-600" />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             </motion.div>

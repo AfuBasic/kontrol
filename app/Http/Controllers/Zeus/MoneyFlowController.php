@@ -15,9 +15,9 @@ class MoneyFlowController extends Controller
     public function __invoke(Request $request): Response
     {
         return Inertia::render('Zeus/MoneyFlow/Index', [
-            'economics' => $this->moneyFlowService->getCollectionEconomics(),
-            'funnel' => $this->moneyFlowService->getSettlementAnalytics(),
-            'aging' => $this->moneyFlowService->getOutstandingAging(),
+            'friction' => $this->moneyFlowService->getCheckoutFriction(),
+            'velocity' => $this->moneyFlowService->getDailyCashVelocity(),
+            'recentFailures' => $this->moneyFlowService->getRecentFailures(),
         ]);
     }
 }
