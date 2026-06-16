@@ -44,6 +44,7 @@ class ProfileController extends Controller
                 'last_activity' => $user->notifications()->latest()->first()?->created_at?->diffForHumans() ?? 'No recent activity',
             ],
             'subscription' => [
+                'name' => $subscription?->plan?->name ?? 'Estate Subscription',
                 'expires_at' => $subscription?->current_period_end?->format('F j, Y'),
                 'status' => $subscription?->status,
             ],

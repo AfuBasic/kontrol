@@ -30,6 +30,7 @@ interface Props {
         relationship: string | null;
     }[];
     subscription?: {
+        name?: string;
         expires_at?: string;
         status?: string;
     };
@@ -129,19 +130,19 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
 
                 {/* 2.5. SUBSCRIPTION STATUS */}
                 {!isHouseholdMember && subscription?.expires_at && (
-                    <div className="group relative overflow-hidden rounded-3xl bg-[#0B101E] p-6 shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:ring-white/10 hover:shadow-2xl">
+                    <div className="group relative overflow-hidden rounded-3xl bg-[#0B101E] p-6 shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10">
                         {/* Subtle Top Edge Highlight */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-                        
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+
                         {/* Soft Deep Glow */}
                         <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/10 blur-[60px]" />
-                        
+
                         <div className="relative z-10 flex flex-col gap-8">
                             {/* Header */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5 text-slate-300">
                                     <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
-                                    <h2 className="text-[14px] font-medium tracking-wide">Estate Subscription</h2>
+                                    <h2 className="text-[14px] font-medium tracking-wide">{subscription.name || 'Estate Subscription'}</h2>
                                 </div>
                                 {subscription.status === 'active' || subscription.status === 'trial' ? (
                                     <div className="flex items-center gap-2">
@@ -160,9 +161,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
 
                             {/* Body */}
                             <div className="flex flex-col gap-1">
-                                <h3 className="text-[28px] font-medium tracking-tight text-white">
-                                    {subscription.expires_at}
-                                </h3>
+                                <h3 className="text-[28px] font-medium tracking-tight text-white">{subscription.expires_at}</h3>
                                 {subscription.expires_at &&
                                     !isNaN(new Date(subscription.expires_at).getTime()) &&
                                     (() => {
