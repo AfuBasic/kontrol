@@ -86,6 +86,7 @@ class PublishCollectionJob implements ShouldQueue
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
                 $userIds = User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                    ->active()
                     ->pluck('users.id')
                     ->toArray();
 
@@ -97,12 +98,14 @@ class PublishCollectionJob implements ShouldQueue
             }
 
             return User::withRole('resident', $estate->id)
+                ->active()
                 ->pluck('users.id')
                 ->toArray();
         }
 
         if ($collection->applies_to === 'property_owner') {
             return User::withRole('property_owner', $estate->id)
+                ->active()
                 ->pluck('users.id')
                 ->toArray();
         }
@@ -113,6 +116,7 @@ class PublishCollectionJob implements ShouldQueue
                 $userIds[] = $target->target_id;
             } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
                 $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                    ->active()
                     ->pluck('id')
                     ->toArray();
                 $userIds = array_merge($userIds, $propertyResidentIds);

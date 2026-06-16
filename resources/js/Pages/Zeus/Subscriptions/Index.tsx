@@ -88,7 +88,12 @@ export default function SubscriptionsIndex({
     pastDue 
 }: Props) {
     const formatCurrency = (amount: number) => {
-        return '₦' + (amount / 100).toLocaleString('en-US');
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount / 100);
     };
 
     const formatDate = (dateString: string) => {
