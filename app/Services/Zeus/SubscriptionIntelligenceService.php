@@ -245,7 +245,7 @@ class SubscriptionIntelligenceService
                     'plan_name' => $sub->plan->name ?? 'Unknown',
                     'amount_due' => $sub->plan->price ?? 0,
                     'past_due_since' => clone $sub->updated_at,
-                    'days_past_due' => Carbon::now()->diffInDays($sub->updated_at),
+                    'days_past_due' => (int) Carbon::now()->diffInDays($sub->updated_at),
                 ];
             })
             ->toArray();
