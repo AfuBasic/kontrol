@@ -252,4 +252,22 @@ class RevenueAnalyticsService
             })
             ->toArray();
     }
+
+    private function calculateMRR(): float
+    {
+        $residentMrrKobo = DB::table('resident_subscriptions')
+            ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
+            ->where('resident_subscriptions.status', 'active')
+            ->selectRaw('SUM(
+                CASE 
+                    WHEN plans.billing_interval = "annually" THEN plans.price / 12
+                    WHEN plans.billing_interval = "semi-annually" THEN plans.price / 6
+                    WHEN plans.billing_interval = "quarterly" THEN plans.price / 3
+                    ELSE plans.price
+                END
+            ) as total_mrr')
+            ->value('total_mrr') ?? 0;
+
+        return (float) $residentMrrKobo / 100;
+    }
 }
