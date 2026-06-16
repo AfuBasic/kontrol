@@ -31,7 +31,7 @@ class CollectionOversightController extends Controller
 
     public function show(Collection $collection): Response
     {
-        $collection->load(['estate:id,name', 'creator:id,name,email', 'targets.target']);
+        $collection->load(['estate:id,name', 'creator:id,name,email']);
         $collection->loadCount(['assignments', 'assignments as paid_assignments_count' => function ($query) {
             $query->whereColumn('amount_paid', '>=', 'amount_due');
         }]);
