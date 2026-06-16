@@ -230,11 +230,11 @@ export default function ResidentActions({ resident }: Props) {
                     className={`flex w-full items-center gap-3 transition-all ${
                         isMobile
                             ? 'rounded-2xl bg-indigo-50 p-4 font-black text-indigo-700 shadow-sm active:scale-95'
-                            : 'rounded-lg px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700'
+                            : 'rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600'
                     }`}
                 >
                     <CheckCircleIcon className={isMobile ? 'h-6 w-6 text-indigo-400' : 'h-4 w-4'} />
-                    Mark as Property Owner
+                    Make Property Owner
                 </button>
             )}
 
@@ -279,7 +279,7 @@ export default function ResidentActions({ resident }: Props) {
                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                                 transition={{ duration: 0.15 }}
                                 style={{ position: 'fixed', top: menuPosition.top, right: menuPosition.right }}
-                                className="z-[100] w-48 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                className="z-[100] w-56 origin-top-right rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none"
                             >
                                 <ActionItems />
                             </motion.div>
