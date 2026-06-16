@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { edit, destroy, suspend, resetPassword, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
@@ -14,6 +14,7 @@ type Resident = {
     name: string;
     suspended_at: string | null;
     status: 'pending' | 'accepted';
+    is_property_owner: boolean;
 };
 
 interface Props {
@@ -25,7 +26,7 @@ export default function ResidentActions({ resident }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
-        type: 'suspend' | 'reset' | 'delete' | null;
+        type: 'suspend' | 'reset' | 'delete' | 'markAsPropertyOwner' | null;
     }>({
         isOpen: false,
         type: null,
@@ -84,7 +85,7 @@ export default function ResidentActions({ resident }: Props) {
         setIsOpen((v) => !v);
     };
 
-    const openModal = (type: 'suspend' | 'reset' | 'delete') => {
+    const openModal = (type: 'suspend' | 'reset' | 'delete' | 'markAsPropertyOwner') => {
         setModalConfig({ isOpen: true, type });
         setIsOpen(false); // Close dropdown
     };
@@ -111,6 +112,9 @@ export default function ResidentActions({ resident }: Props) {
                 break;
             case 'suspend':
                 router.patch(suspend.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
+                break;
+            case 'markAsPropertyOwner':
+                router.patch(markAsPropertyOwner.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
                 break;
             case 'reset':
                 router.post(resetPassword.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
@@ -143,6 +147,13 @@ export default function ResidentActions({ resident }: Props) {
                     title: 'Reset Password',
                     message: `Are you sure you want to reset the password for ${resident.name}? This will invalidate their current password and send a new invitation email.`,
                     confirmLabel: 'Reset Password',
+                    type: 'warning' as const,
+                };
+            case 'markAsPropertyOwner':
+                return {
+                    title: 'Mark as Property Owner',
+                    message: `Are you sure you want to mark ${resident.name} as a property owner? This will grant them permissions to manage properties and their own residents.`,
+                    confirmLabel: 'Mark as Property Owner',
                     type: 'warning' as const,
                 };
             default:
@@ -209,6 +220,21 @@ export default function ResidentActions({ resident }: Props) {
                 >
                     <ArrowPathIcon className={isMobile ? 'h-6 w-6 text-slate-400' : 'h-4 w-4'} />
                     Reset Password
+                </button>
+            )}
+
+            {/* Mark as Property Owner */}
+            {can('property_owners.create') && !resident.is_property_owner && (
+                <button
+                    onClick={() => openModal('markAsPropertyOwner')}
+                    className={`flex w-full items-center gap-3 transition-all ${
+                        isMobile
+                            ? 'rounded-2xl bg-indigo-50 p-4 font-black text-indigo-700 shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700'
+                    }`}
+                >
+                    <CheckCircleIcon className={isMobile ? 'h-6 w-6 text-indigo-400' : 'h-4 w-4'} />
+                    Mark as Property Owner
                 </button>
             )}
 

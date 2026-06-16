@@ -6,6 +6,7 @@ use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\DeleteResidentAction;
+use App\Actions\Admin\MarkResidentAsPropertyOwnerAction;
 use App\Actions\Admin\ResetResidentPasswordAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
@@ -218,6 +219,19 @@ class ResidentController extends Controller
             : 'Resident activated successfully.';
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Mark the specified resident as a property owner.
+     */
+    public function markAsPropertyOwner(User $resident, MarkResidentAsPropertyOwnerAction $action): RedirectResponse
+    {
+        $this->authorize('property_owners.create'); // Or residents.edit depending on preference, property_owners.create makes sense
+        $estate = $this->estateContext->getEstate();
+
+        $action->execute($resident, $estate);
+
+        return back()->with('success', 'Resident successfully marked as a Property Owner.');
     }
 
     /**

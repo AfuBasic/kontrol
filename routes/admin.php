@@ -81,6 +81,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
         Route::delete('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
+        Route::patch('residents/{resident}/mark-as-property-owner', [ResidentController::class, 'markAsPropertyOwner'])->name('residents.mark-as-property-owner');
         Route::post('residents/{resident}/reset-password', [ResidentController::class, 'resetPassword'])->name('residents.reset-password');
 
         Route::prefix('residents/approvals')->name('residents.approvals.')->middleware('feature:approval-portal')->group(function (): void {
