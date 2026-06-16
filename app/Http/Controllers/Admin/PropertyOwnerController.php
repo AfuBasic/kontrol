@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\AssignResidentsToPropertyOwnerAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Http\Controllers\Controller;
@@ -263,6 +264,61 @@ class PropertyOwnerController extends Controller
             ],
             'residents' => $residents,
         ]);
+    }
+
+    /**
+     * Get JSON list of available residents to assign to the Property Owner.
+     */
+    public function availableResidents(Request $request, User $propertyOwner)
+    {
+        $this->authorize('property_owners.edit');
+        $estate = $this->estateContext->getEstate();
+        $search = $request->query('search');
+
+        $residents = User::query()
+            ->forEstate($estate->id)
+            ->withRole('resident', $estate->id)
+            ->where(function ($query) use ($propertyOwner) {
+                $query->whereHas('profile', fn ($q) => $q->where('property_owner_id', '!=', $propertyOwner->id)->orWhereNull('property_owner_id'))
+                    ->orWhereDoesntHave('profile');
+            })
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->with('profile.propertyOwner') // Include current property owner info if any
+            ->orderBy('name')
+            ->limit(20) // Limit results to ensure quick response in modal
+            ->get()
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'current_owner' => $user->profile?->propertyOwner?->name,
+            ]);
+
+        return response()->json($residents);
+    }
+
+    /**
+     * Assign selected residents to the Property Owner.
+     */
+    public function assignResidents(Request $request, User $propertyOwner, AssignResidentsToPropertyOwnerAction $action): RedirectResponse
+    {
+        $this->authorize('property_owners.edit');
+
+        $validated = $request->validate([
+            'resident_ids' => ['required', 'array', 'min:1'],
+            'resident_ids.*' => ['required', 'integer', Rule::exists('users', 'id')],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+
+        $action->execute($propertyOwner, $validated['resident_ids'], $estate);
+
+        return back()->with('success', count($validated['resident_ids']).' resident(s) successfully assigned.');
     }
 
     /**

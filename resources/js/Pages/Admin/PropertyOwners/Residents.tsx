@@ -1,8 +1,11 @@
-import { UsersIcon, MapPinIcon, EnvelopeIcon, PhoneIcon } from '@heroicons/react/24/outline';
-import { Head, Link } from '@inertiajs/react';
-import { index } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { useState, useEffect, useCallback } from 'react';
+import { UsersIcon, MapPinIcon, EnvelopeIcon, PhoneIcon, UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Head, Link, router } from '@inertiajs/react';
+import { index, availableResidents, assignResidents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { create as createResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Modal from '@/Components/Modal';
+import axios from 'axios';
 
 interface Resident {
     id: number;
@@ -15,6 +18,13 @@ interface Resident {
     suspended_at: string | null;
 }
 
+interface AvailableResident {
+    id: number;
+    name: string;
+    email: string;
+    current_owner: string | null;
+}
+
 interface Props {
     propertyOwner: {
         id: number;
@@ -24,6 +34,65 @@ interface Props {
 }
 
 export default function Residents({ propertyOwner, residents }: Props) {
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<AvailableResident[]>([]);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const fetchAvailableResidents = useCallback(
+        async (query: string) => {
+            setIsSearching(true);
+            try {
+                const response = await axios.get(availableResidents.url(propertyOwner.id), {
+                    params: { search: query },
+                });
+                setSearchResults(response.data);
+            } catch (error) {
+                console.error('Failed to fetch available residents', error);
+            } finally {
+                setIsSearching(false);
+            }
+        },
+        [propertyOwner.id],
+    );
+
+    useEffect(() => {
+        if (isAssignModalOpen) {
+            const timer = setTimeout(() => {
+                fetchAvailableResidents(searchQuery);
+            }, 300);
+            return () => clearTimeout(timer);
+        } else {
+            setSearchQuery('');
+            setSelectedIds([]);
+            setSearchResults([]);
+        }
+    }, [isAssignModalOpen, searchQuery, fetchAvailableResidents]);
+
+    const handleAssign = () => {
+        if (selectedIds.length === 0) return;
+
+        setIsSubmitting(true);
+        router.post(
+            assignResidents.url(propertyOwner.id),
+            {
+                resident_ids: selectedIds,
+            },
+            {
+                onSuccess: () => {
+                    setIsAssignModalOpen(false);
+                },
+                onFinish: () => setIsSubmitting(false),
+            },
+        );
+    };
+
+    const toggleSelection = (id: number) => {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    };
+
     return (
         <>
             <Head title={`Residents - ${propertyOwner.name}`} />
@@ -44,6 +113,16 @@ export default function Residents({ propertyOwner, residents }: Props) {
                         <p className="mt-1 text-sm text-slate-500">
                             Listing all occupants delegated to <span className="font-bold text-slate-800">{propertyOwner.name}</span>.
                         </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsAssignModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                        >
+                            <UserPlusIcon className="h-5 w-5" />
+                            <span>Assign Resident</span>
+                        </button>
                     </div>
                 </div>
 
@@ -123,10 +202,17 @@ export default function Residents({ propertyOwner, residents }: Props) {
                             <UsersIcon className="mx-auto h-12 w-12 text-slate-300" />
                             <h3 className="mt-4 text-lg font-black text-slate-900">No Residents Assigned</h3>
                             <p className="mt-1 text-sm text-slate-500">This Property Owner has no delegated occupants yet.</p>
-                            <div className="mt-6">
+                            <div className="mt-6 flex items-center justify-center gap-4">
+                                <button
+                                    onClick={() => setIsAssignModalOpen(true)}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
+                                >
+                                    <UserPlusIcon className="h-5 w-5" />
+                                    <span>Assign Resident</span>
+                                </button>
                                 <Link
                                     href={createResident.url()}
-                                    className="hover:bg-indigo-750 inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50"
                                 >
                                     Delegate a Resident
                                 </Link>
@@ -135,6 +221,94 @@ export default function Residents({ propertyOwner, residents }: Props) {
                     )}
                 </div>
             </div>
+
+            <Modal show={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} maxWidth="2xl">
+                <div className="p-6">
+                    <h2 className="text-lg font-bold text-slate-900">Assign Residents</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Search and select existing residents in the estate to assign them to {propertyOwner.name}.
+                    </p>
+
+                    <div className="mt-6">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
+                            </div>
+                            <input
+                                type="text"
+                                className="block w-full rounded-xl border-0 py-3 pr-3 pl-10 text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+                                placeholder="Search by name or email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-6">
+                        <div className="h-80 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50">
+                            {isSearching ? (
+                                <div className="flex h-full items-center justify-center">
+                                    <div className="text-sm font-semibold text-slate-400">Searching...</div>
+                                </div>
+                            ) : searchResults.length > 0 ? (
+                                <ul className="divide-y divide-slate-200">
+                                    {searchResults.map((res) => (
+                                        <li
+                                            key={res.id}
+                                            className={`flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-white ${
+                                                selectedIds.includes(res.id) ? 'bg-indigo-50 hover:bg-indigo-50' : ''
+                                            }`}
+                                            onClick={() => toggleSelection(res.id)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(res.id)}
+                                                    onChange={() => {}}
+                                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
+                                                />
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900">{res.name}</p>
+                                                    <p className="text-xs font-semibold text-slate-500">{res.email}</p>
+                                                    {res.current_owner && (
+                                                        <p className="mt-1 text-xs font-medium text-amber-600">
+                                                            Currently assigned to: {res.current_owner}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="flex h-full items-center justify-center">
+                                    <div className="text-sm font-semibold text-slate-400">
+                                        {searchQuery ? 'No available residents found' : 'Type to search available residents'}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsAssignModalOpen(false)}
+                            className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-300 ring-inset hover:bg-slate-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleAssign}
+                            disabled={selectedIds.length === 0 || isSubmitting}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                            {isSubmitting ? 'Assigning...' : `Assign Selected (${selectedIds.length})`}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </>
     );
 }
