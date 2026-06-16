@@ -72,9 +72,7 @@ export default function CollectionShow({ assignment }: Props) {
 
     // Build the absolute payment URL using the server-provided app_url.
     const rawPaymentUrl = CollectionPaymentController.show.url(assignment.ulid);
-    const paymentUrl = rawPaymentUrl.startsWith('//')
-        ? `${appUrl.startsWith('https') ? 'https:' : 'http:'}${rawPaymentUrl}`
-        : `${appUrl}${rawPaymentUrl}`;
+    const paymentUrl = rawPaymentUrl.startsWith('http') ? rawPaymentUrl : new URL(rawPaymentUrl, appUrl).href;
 
     const handleSettle = async (e: React.MouseEvent<HTMLButtonElement>) => {
         const isNative = Capacitor.isNativePlatform();
