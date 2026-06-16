@@ -2,6 +2,7 @@
 
 namespace App\Services\Zeus;
 
+use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -143,6 +144,110 @@ class RevenueAnalyticsService
                     'id' => $estate->id,
                     'name' => $estate->name,
                     'total_revenue' => (float) $estate->total_revenue / 100,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Compute Financial KPIs: ARR, ARPE, ARPU, Revenue At Risk, and Monthly Churn.
+     */
+    public function getFinancialKPIs(): array
+    {
+        // 1. Calculate Total MRR
+        $mrr = $this->calculateMRR();
+        $arr = $mrr * 12;
+
+        // 2. Active Estates count
+        $activeEstatesCount = Estate::count();
+        $arpe = $activeEstatesCount > 0 ? $mrr / $activeEstatesCount : 0;
+
+        // 3. Active Paying Residents count
+        $activeResidentsCount = DB::table('resident_subscriptions')->where('status', 'active')->count();
+        $arpu = $activeResidentsCount > 0 ? $mrr / $activeResidentsCount : 0;
+
+        // 4. Revenue at Risk (Failed transactions amount over last 30 days)
+        $failedTransactionsKobo = PaymentTransaction::where('status', 'failed')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->sum('amount');
+        $revenueAtRisk = (float) $failedTransactionsKobo / 100;
+
+        // 5. Monthly Churn Rate Calculation
+        // A simple churn definition: lost MRR / total MRR at start of month
+        // We'll estimate this by looking at subscriptions that were canceled or expired in the last 30 days
+        $lostMrrKobo = DB::table('resident_subscriptions')
+            ->join('plans', 'resident_subscriptions.plan_id', '=', 'plans.id')
+            ->whereIn('resident_subscriptions.status', ['canceled', 'past_due', 'unpaid'])
+            ->where('resident_subscriptions.updated_at', '>=', now()->subDays(30))
+            ->selectRaw('SUM(
+                CASE 
+                    WHEN plans.billing_interval = "annually" THEN plans.price / 12
+                    WHEN plans.billing_interval = "semi-annually" THEN plans.price / 6
+                    WHEN plans.billing_interval = "quarterly" THEN plans.price / 3
+                    ELSE plans.price
+                END
+            ) as total_lost')
+            ->value('total_lost') ?? 0;
+
+        $lostMrr = (float) $lostMrrKobo / 100;
+
+        $churnRate = 0;
+        if ($mrr + $lostMrr > 0) {
+            $churnRate = ($lostMrr / ($mrr + $lostMrr)) * 100;
+        }
+
+        return [
+            'arr' => $arr,
+            'arpe' => $arpe,
+            'arpu' => $arpu,
+            'revenue_at_risk' => $revenueAtRisk,
+            'churn_rate' => round($churnRate, 2),
+        ];
+    }
+
+    /**
+     * Get recent high-value successful transactions.
+     * Threshold: > N50,000 (5,000,000 kobo).
+     */
+    public function getRecentHighValueTransactions(int $limit = 5): array
+    {
+        return PaymentTransaction::with('estate:id,name')
+            ->where('status', 'success')
+            ->where('amount', '>=', 5000000) // 50,000 NGN
+            ->latest()
+            ->limit($limit)
+            ->get(['id', 'estate_id', 'amount', 'created_at', 'paystack_reference', 'payment_method'])
+            ->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'estate_name' => $transaction->estate->name ?? 'Unknown',
+                    'amount' => (float) $transaction->amount / 100,
+                    'reference' => $transaction->paystack_reference,
+                    'method' => $transaction->payment_method,
+                    'date' => $transaction->created_at->diffForHumans(),
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get recent failed payments across the platform.
+     */
+    public function getRecentFailedPayments(int $limit = 5): array
+    {
+        return PaymentTransaction::with('estate:id,name')
+            ->where('status', 'failed')
+            ->latest()
+            ->limit($limit)
+            ->get(['id', 'estate_id', 'amount', 'created_at', 'error_message', 'customer_email'])
+            ->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'estate_name' => $transaction->estate->name ?? 'Unknown',
+                    'customer_email' => $transaction->customer_email,
+                    'amount' => (float) $transaction->amount / 100,
+                    'error' => $transaction->error_message ?? 'Transaction Failed',
+                    'date' => $transaction->created_at->diffForHumans(),
                 ];
             })
             ->toArray();
