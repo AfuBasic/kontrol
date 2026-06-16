@@ -28,13 +28,7 @@ class CollectionPaymentController extends Controller
         $assignment->load(['collection', 'estate', 'user']);
 
         $baseAmount = max(0, $assignment->amount_due - $assignment->amount_paid);
-        $hasActiveSubscription = ResidentSubscription::where('user_id', $assignment->user_id)
-            ->whereIn('status', ['active', 'trial', 'past_due'])
-            ->where(function ($query) {
-                $query->whereNull('current_period_end')
-                    ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
+        $hasActiveSubscription = $this->hasActiveSubscription($assignment->user_id);
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
@@ -98,6 +92,8 @@ class CollectionPaymentController extends Controller
                             ]);
 
                             $lockedAssignment->increment('amount_paid', $lockedPayment->amount);
+                            $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $lockedPayment->amount * 0.005;
+                            $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
                             if ($lockedAssignment->amount_paid >= $lockedAssignment->amount_due) {
                                 $lockedAssignment->update([
                                     'status' => 'paid',
@@ -162,13 +158,7 @@ class CollectionPaymentController extends Controller
 
         // 5. Calculate Exact Fees for Exact Split
         $baseAmount = $payment->amount;
-        $hasActiveSubscription = ResidentSubscription::where('user_id', $user->id)
-            ->whereIn('status', ['active', 'trial', 'past_due'])
-            ->where(function ($query) {
-                $query->whereNull('current_period_end')
-                    ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
+        $hasActiveSubscription = $this->hasActiveSubscription($user->id);
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
@@ -218,6 +208,8 @@ class CollectionPaymentController extends Controller
                 $assignment = CollectionAssignment::where('id', $payment->collection_assignment_id)->lockForUpdate()->first();
                 if ($assignment) {
                     $assignment->increment('amount_paid', $payment->amount);
+                    $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $payment->amount * 0.005;
+                    $assignment->increment('kontrol_fee_paid', $feeToRecord);
                     if ($assignment->amount_paid >= $assignment->amount_due) {
                         $assignment->update([
                             'status' => 'paid',
@@ -262,6 +254,8 @@ class CollectionPaymentController extends Controller
                         ]);
 
                         $assignment->increment('amount_paid', $due);
+                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $due * 0.005;
+                        $assignment->increment('kontrol_fee_paid', $feeToRecord);
                         $assignment->update([
                             'status' => 'paid',
                             'paid_at' => now(),
@@ -343,13 +337,7 @@ class CollectionPaymentController extends Controller
         }
 
         $totalBaseAmount = $assignments->sum(fn ($a) => max(0, $a->amount_due - $a->amount_paid));
-        $hasActiveSubscription = ResidentSubscription::where('user_id', $first->user_id)
-            ->whereIn('status', ['active', 'trial', 'past_due'])
-            ->where(function ($query) {
-                $query->whereNull('current_period_end')
-                    ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
+        $hasActiveSubscription = $this->hasActiveSubscription($first->user_id);
 
         $fees = $this->calculateFees($totalBaseAmount, $hasActiveSubscription);
 
@@ -484,6 +472,8 @@ class CollectionPaymentController extends Controller
                                         ]);
 
                                         $lockedAssignment->increment('amount_paid', $due);
+                                        $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $due * 0.005;
+                                        $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
                                         $lockedAssignment->update([
                                             'status' => 'paid',
                                             'paid_at' => now(),
@@ -547,13 +537,7 @@ class CollectionPaymentController extends Controller
 
         // 3. Calculate Exact Fees for Exact Split
         $baseAmount = $payment->amount;
-        $hasActiveSubscription = ResidentSubscription::where('user_id', $user->id)
-            ->whereIn('status', ['active', 'trial', 'past_due'])
-            ->where(function ($query) {
-                $query->whereNull('current_period_end')
-                    ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
+        $hasActiveSubscription = $this->hasActiveSubscription($user->id);
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
@@ -569,6 +553,20 @@ class CollectionPaymentController extends Controller
             'bearer' => 'account', // Kontrol bears the Paystack charge
             'transaction_charge' => $fees['transaction_charge'], // Exact flat amount for Kontrol to keep
         ]);
+    }
+
+    /**
+     * Check if a user has an active, trial, or past_due subscription.
+     */
+    private function hasActiveSubscription(int $userId): bool
+    {
+        return ResidentSubscription::where('user_id', $userId)
+            ->whereIn('status', ['active', 'trial', 'past_due'])
+            ->where(function ($query) {
+                $query->whereNull('current_period_end')
+                    ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
     }
 
     /**

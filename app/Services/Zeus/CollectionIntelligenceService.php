@@ -37,13 +37,8 @@ class CollectionIntelligenceService
             ->selectRaw('SUM((amount_due - amount_paid) * 0.005) as expected_fee')
             ->value('expected_fee') ?? 0;
 
-        // Realized platform revenue: from Paystack payments made by non-subscribed users.
-        // (Approximation based on current subscription status)
-        $realizedPlatformRevenue = Payment::where('provider', 'paystack')
-            ->where('status', 'success')
-            ->whereNotNull('collection_assignment_id')
-            ->whereNotIn('user_id', $activeSubscribersIds)
-            ->sum('amount') * 0.005;
+        // Realized platform revenue: accurately calculated using recorded fees.
+        $realizedPlatformRevenue = CollectionAssignment::sum('kontrol_fee_paid') ?? 0;
 
         // Lost platform revenue from manual payments by non-subscribed users.
         $lostPlatformRevenue = Payment::where('provider', '!=', 'paystack')
@@ -95,17 +90,14 @@ class CollectionIntelligenceService
             ->unique()
             ->toArray();
 
-        $collections->getCollection()->transform(function ($collection) use ($activeSubscribersIds) {
+        $collections->getCollection()->transform(function ($collection) {
             $assignments = $collection->assignments();
             $expected = $assignments->sum('amount_due');
             $paid = $assignments->sum('amount_paid');
 
-            // Realized platform fee for this specific collection (excluding subscribers)
-            $paystackPaid = Payment::where('provider', 'paystack')
-                ->where('status', 'success')
-                ->whereIn('collection_assignment_id', $assignments->pluck('id'))
-                ->whereNotIn('user_id', $activeSubscribersIds)
-                ->sum('amount');
+            // Realized platform fee for this specific collection
+            $platformFeeEarned = clone $assignments;
+            $platformFeeEarned = $platformFeeEarned->sum('kontrol_fee_paid') ?? 0;
 
             return [
                 'id' => $collection->id,
@@ -115,7 +107,7 @@ class CollectionIntelligenceService
                 'targets_count' => $collection->assignments_count,
                 'amount_expected' => (int) $expected,
                 'amount_paid' => (int) $paid,
-                'platform_fee_earned' => (int) ($paystackPaid * 0.005),
+                'platform_fee_earned' => (int) $platformFeeEarned,
                 'completion_rate' => $expected > 0 ? round(($paid / $expected) * 100, 1) : 0,
             ];
         });
@@ -128,23 +120,14 @@ class CollectionIntelligenceService
      */
     public function getTopEstatesByRevenue(int $limit = 5): array
     {
-        // Fetch active subscriber IDs
-        $activeSubscribersIds = ResidentSubscription::whereIn('status', ['active', 'trial', 'past_due'])
-            ->where(function ($query) {
-                $query->whereNull('current_period_end')
-                    ->orWhere('current_period_end', '>=', now());
-            })
-            ->pluck('user_id')
-            ->unique()
-            ->toArray();
-
-        $topEstates = Payment::where('provider', 'paystack')
-            ->where('status', 'success')
-            ->whereNotNull('collection_assignment_id')
-            ->whereNotIn('user_id', $activeSubscribersIds)
-            ->select('estate_id', DB::raw('SUM(amount) as total_amount'))
+        $topEstates = CollectionAssignment::select(
+            'estate_id',
+            DB::raw('SUM(amount_paid) as volume_processed'),
+            DB::raw('SUM(kontrol_fee_paid) as platform_revenue')
+        )
+            ->where('kontrol_fee_paid', '>', 0)
             ->groupBy('estate_id')
-            ->orderByDesc('total_amount')
+            ->orderByDesc('platform_revenue')
             ->limit($limit)
             ->with('estate:id,name')
             ->get();
@@ -152,8 +135,8 @@ class CollectionIntelligenceService
         return $topEstates->map(function ($record) {
             return [
                 'estate_name' => $record->estate->name ?? 'Unknown',
-                'volume_processed' => (int) $record->total_amount,
-                'platform_revenue' => (int) ($record->total_amount * 0.005),
+                'volume_processed' => (int) $record->volume_processed,
+                'platform_revenue' => (int) $record->platform_revenue,
             ];
         })->toArray();
     }
