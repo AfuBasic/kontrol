@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -278,6 +279,15 @@ class PropertyOwnerController extends Controller
         $residents = User::query()
             ->forEstate($estate->id)
             ->withRole('resident', $estate->id)
+            ->whereNotExists(function ($q) use ($estate) {
+                $q->select(DB::raw(1))
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->where('roles.name', 'property_owner')
+                    ->where('model_has_roles.estate_id', $estate->id);
+            })
             ->where(function ($query) use ($propertyOwner) {
                 $query->whereHas('profile', fn ($q) => $q->where('property_owner_id', '!=', $propertyOwner->id)->orWhereNull('property_owner_id'))
                     ->orWhereDoesntHave('profile');

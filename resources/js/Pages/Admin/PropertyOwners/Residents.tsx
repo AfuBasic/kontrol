@@ -222,7 +222,7 @@ export default function Residents({ propertyOwner, residents }: Props) {
                 </div>
             </div>
 
-            <Modal show={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} maxWidth="2xl">
+            <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} maxWidth="2xl">
                 <div className="p-6">
                     <h2 className="text-lg font-bold text-slate-900">Assign Residents</h2>
                     <p className="mt-1 text-sm text-slate-500">
