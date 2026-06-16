@@ -29,10 +29,12 @@ class CollectionPaymentController extends Controller
 
         $baseAmount = max(0, $assignment->amount_due - $assignment->amount_paid);
         $hasActiveSubscription = ResidentSubscription::where('user_id', $assignment->user_id)
-            ->where('estate_id', $assignment->estate_id)
-            ->get()
-            ->first()
-            ?->isActive() ?? false;
+            ->whereIn('status', ['active', 'trial', 'past_due'])
+            ->where(function ($query) {
+                $query->whereNull('current_period_end')
+                    ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
@@ -161,10 +163,12 @@ class CollectionPaymentController extends Controller
         // 5. Calculate Exact Fees for Exact Split
         $baseAmount = $payment->amount;
         $hasActiveSubscription = ResidentSubscription::where('user_id', $user->id)
-            ->where('estate_id', $assignment->estate_id)
-            ->get()
-            ->first()
-            ?->isActive() ?? false;
+            ->whereIn('status', ['active', 'trial', 'past_due'])
+            ->where(function ($query) {
+                $query->whereNull('current_period_end')
+                    ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
@@ -340,10 +344,12 @@ class CollectionPaymentController extends Controller
 
         $totalBaseAmount = $assignments->sum(fn ($a) => max(0, $a->amount_due - $a->amount_paid));
         $hasActiveSubscription = ResidentSubscription::where('user_id', $first->user_id)
-            ->where('estate_id', $first->estate_id)
-            ->get()
-            ->first()
-            ?->isActive() ?? false;
+            ->whereIn('status', ['active', 'trial', 'past_due'])
+            ->where(function ($query) {
+                $query->whereNull('current_period_end')
+                    ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
 
         $fees = $this->calculateFees($totalBaseAmount, $hasActiveSubscription);
 
@@ -542,10 +548,12 @@ class CollectionPaymentController extends Controller
         // 3. Calculate Exact Fees for Exact Split
         $baseAmount = $payment->amount;
         $hasActiveSubscription = ResidentSubscription::where('user_id', $user->id)
-            ->where('estate_id', $estateId)
-            ->get()
-            ->first()
-            ?->isActive() ?? false;
+            ->whereIn('status', ['active', 'trial', 'past_due'])
+            ->where(function ($query) {
+                $query->whereNull('current_period_end')
+                    ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 

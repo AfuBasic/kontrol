@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Zeus\ApplicationController;
 use App\Http\Controllers\Zeus\AuthController;
+use App\Http\Controllers\Zeus\CollectionOversightController;
 use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
@@ -29,6 +30,8 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::get('/revenue', RevenueController::class)->name('revenue');
         Route::get('/money-flow', MoneyFlowController::class)->name('money-flow');
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::get('/collections', [CollectionOversightController::class, 'index'])->name('collections.index');
+        Route::get('/collections/{collection}', [CollectionOversightController::class, 'show'])->name('collections.show');
         Route::get('/risk-center', [RiskCenterController::class, 'index'])->name('risk-center');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
