@@ -50,7 +50,7 @@ class RiskAssessmentService
                 }
 
                 if ($subscription->status === 'trial' && $subscription->next_billing_date) {
-                    $daysToExpiry = Carbon::now()->diffInDays($subscription->next_billing_date, false);
+                    $daysToExpiry = (int) ceil(Carbon::now()->floatDiffInDays($subscription->next_billing_date, false));
                     if ($daysToExpiry > 0 && $daysToExpiry <= 7 && empty($subscription->paystack_authorization_code)) {
                         $riskFactors[] = "Trial expires in {$daysToExpiry} days (No card)";
                         $riskLevel = $riskLevel === 'critical' ? 'critical' : 'high';
@@ -98,7 +98,7 @@ class RiskAssessmentService
             }
 
             if ($sub->status === 'trial' && $sub->current_period_end) {
-                $daysToExpiry = Carbon::now()->diffInDays($sub->current_period_end, false);
+                $daysToExpiry = (int) ceil(Carbon::now()->floatDiffInDays($sub->current_period_end, false));
                 if ($daysToExpiry > 0 && $daysToExpiry <= 7 && empty($sub->paystack_authorization_code)) {
                     $riskFactors[] = "Trial expires in {$daysToExpiry} days (No card)";
                     $riskLevel = $riskLevel === 'critical' ? 'critical' : 'high';
