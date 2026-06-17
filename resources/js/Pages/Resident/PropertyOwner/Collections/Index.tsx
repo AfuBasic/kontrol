@@ -1,5 +1,5 @@
 import { WalletIcon, PlusIcon, CalendarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon, CreditCardIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, WhenVisible } from '@inertiajs/react';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
@@ -45,6 +45,7 @@ interface Props {
         total: number;
         per_page: number;
         current_page: number;
+        next_page_url?: string;
         links: any[];
     };
     totalUnfiltered: number;
@@ -86,7 +87,6 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
     const hasActiveFilters = Boolean(search || status);
     const hasCollections = collections && collections.data && collections.data.length > 0;
     const showFilters = totalUnfiltered > 1 || hasActiveFilters;
-    const showPagination = collections.total > collections.per_page;
 
     return (
         <div className="space-y-6 pb-24">
@@ -327,35 +327,22 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                 )}
             </div>
 
-            {/* Conditional Pagination: Only show if records > per page */}
-            {showPagination && (
-                <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                    <div className="flex w-full items-center justify-between border-t border-slate-100 pt-6">
-                        <div>
-                            <p className="text-xs font-semibold text-slate-500">
-                                Showing <span className="font-bold text-slate-900">{collections.data.length}</span> entries of{' '}
-                                <span className="font-bold text-slate-900">{collections.total}</span>
-                            </p>
+            {/* Infinite Loading Marker */}
+            {collections.next_page_url && (
+                <WhenVisible
+                    always
+                    data="collections"
+                    params={{
+                        page: collections.current_page + 1,
+                        search: search,
+                        status: status
+                    }}
+                    fallback={
+                        <div className="mt-8 flex justify-center pb-12">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            {collections.links.map((link: any, i: number) => {
-                                if (link.url === null) return null;
-                                return (
-                                    <Link
-                                        key={i}
-                                        href={link.url}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                                            link.active
-                                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/10'
-                                                : 'bg-white text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-slate-50'
-                                        }`}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
+                    }
+                />
             )}
         </div>
     );

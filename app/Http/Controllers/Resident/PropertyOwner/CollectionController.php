@@ -77,6 +77,7 @@ class CollectionController extends Controller
             'total' => $paginated->total(),
             'per_page' => $paginated->perPage(),
             'current_page' => $paginated->currentPage(),
+            'next_page_url' => $paginated->nextPageUrl(),
             'links' => $paginated->linkCollection()->toArray(),
         ];
 
