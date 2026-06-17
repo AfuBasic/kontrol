@@ -86,7 +86,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
 
     const hasActiveFilters = Boolean(search || status);
     const hasCollections = collections && collections.data && collections.data.length > 0;
-    const showFilters = totalUnfiltered > 1 || hasActiveFilters;
+    const showFilters = totalUnfiltered > 0 || hasActiveFilters;
 
     return (
         <div className="space-y-6 pb-24">
