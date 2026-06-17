@@ -86,6 +86,7 @@ class PublishCollectionJob implements ShouldQueue
         $creator = $collection->creator;
         setPermissionsTeamId($estate->id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $userIds = [];
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
@@ -94,40 +95,31 @@ class PublishCollectionJob implements ShouldQueue
                     ->acceptedInvitation()
                     ->pluck('users.id')
                     ->toArray();
-
-                if ($collection->include_creator) {
-                    $userIds[] = $creator->id;
-                }
-
-                return array_values(array_unique($userIds));
-            }
-
-            return User::withRole('resident', $estate->id)
-                ->active()
-                ->acceptedInvitation()
-                ->pluck('users.id')
-                ->toArray();
-        }
-
-        if ($collection->applies_to === 'property_owner') {
-            return User::withRole('property_owner', $estate->id)
-                ->active()
-                ->acceptedInvitation()
-                ->pluck('users.id')
-                ->toArray();
-        }
-
-        $userIds = [];
-        foreach ($collection->targets as $target) {
-            if ($target->target_type === User::class || $target->target_type === 'user') {
-                $userIds[] = $target->target_id;
-            } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
-                $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+            } else {
+                $userIds = User::withRole('resident', $estate->id)
                     ->active()
                     ->acceptedInvitation()
-                    ->pluck('id')
+                    ->pluck('users.id')
                     ->toArray();
-                $userIds = array_merge($userIds, $propertyResidentIds);
+            }
+        } elseif ($collection->applies_to === 'property_owner') {
+            $userIds = User::withRole('property_owner', $estate->id)
+                ->active()
+                ->acceptedInvitation()
+                ->pluck('users.id')
+                ->toArray();
+        } else {
+            foreach ($collection->targets as $target) {
+                if ($target->target_type === User::class || $target->target_type === 'user') {
+                    $userIds[] = $target->target_id;
+                } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
+                    $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                        ->active()
+                        ->acceptedInvitation()
+                        ->pluck('id')
+                        ->toArray();
+                    $userIds = array_merge($userIds, $propertyResidentIds);
+                }
             }
         }
 
@@ -137,6 +129,6 @@ class PublishCollectionJob implements ShouldQueue
             return array_values(array_unique($userIds));
         }
 
-        return array_values(array_filter(array_unique($userIds), fn ($id) => $id !== $collection->created_by));
+        return array_values(array_filter(array_unique($userIds), fn ($id) => (int) $id !== (int) $collection->created_by));
     }
 }
