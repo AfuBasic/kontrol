@@ -79,16 +79,18 @@ export default function Index({ properties }: Props) {
                     properties.map((property) => (
                         <div
                             key={property.id}
-                            className="group relative flex flex-col justify-between overflow-hidden rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-lg"
+                            onClick={() => router.visit(show.url(property.ulid))}
+                            className="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 transition-all hover:shadow-lg active:scale-[0.98]"
                         >
                             <div>
                                 <div className="flex items-start justify-between">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
                                         <BuildingOffice2Icon className="h-6 w-6" />
                                     </div>
-                                    <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <div className="flex items-center gap-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                                         <button
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setEditingProperty(property);
                                                 editForm.setData('name', property.name);
                                             }}
@@ -97,8 +99,11 @@ export default function Index({ properties }: Props) {
                                             <PencilSquareIcon className="h-4.5 w-4.5" />
                                         </button>
                                         <button
-                                            onClick={() => deleteProperty(property)}
-                                            className="text-slate-505 rounded-xl p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteProperty(property);
+                                            }}
+                                            className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
                                         >
                                             <TrashIcon className="h-4.5 w-4.5" />
                                         </button>
@@ -106,12 +111,9 @@ export default function Index({ properties }: Props) {
                                 </div>
 
                                 <div className="mt-4">
-                                    <Link
-                                        href={show.url(property.ulid)}
-                                        className="text-lg font-black text-slate-900 transition-colors hover:text-indigo-600"
-                                    >
+                                    <h2 className="text-lg font-black text-slate-900 transition-colors group-hover:text-indigo-600">
                                         {property.name}
-                                    </Link>
+                                    </h2>
                                     <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase">Created {property.created_at}</p>
                                 </div>
                             </div>
@@ -186,7 +188,7 @@ export default function Index({ properties }: Props) {
                                         id="create-name"
                                         value={createForm.data.name}
                                         onChange={(e) => createForm.setData('name', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="e.g. Block A, Villa 12"
                                     />
                                     {createForm.errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{createForm.errors.name}</p>}
@@ -251,7 +253,7 @@ export default function Index({ properties }: Props) {
                                         id="edit-name"
                                         value={editForm.data.name}
                                         onChange={(e) => editForm.setData('name', e.target.value)}
-                                        className="mt-2 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+                                        className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
                                         placeholder="e.g. Block A, Villa 12"
                                     />
                                     {editForm.errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{editForm.errors.name}</p>}

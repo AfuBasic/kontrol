@@ -9,8 +9,11 @@ import {
     TrashIcon,
     ArrowDownLeftIcon,
     UserPlusIcon,
+    MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import MobileSheet from '@/Components/MobileSheet';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
@@ -85,9 +88,17 @@ type Tab = 'overview' | 'residents' | 'collections' | 'announcements' | 'activit
 export default function Show({ property, residents, outstandingCollections, payments, announcements, activities, eligibleResidents }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [showAssignForm, setShowAssignForm] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredResidents =
+        searchQuery === ''
+            ? eligibleResidents
+            : eligibleResidents.filter((resident) =>
+                  resident.name.toLowerCase().includes(searchQuery.toLowerCase())
+              );
 
     const assignForm = useForm({
-        resident_id: '',
+        resident_ids: [] as string[],
     });
 
     const handleAssign = (e: React.FormEvent) => {
@@ -102,45 +113,58 @@ export default function Show({ property, residents, outstandingCollections, paym
 
     const handleRemoveResident = (residentId: number) => {
         if (confirm('Are you sure you want to remove this resident from the property?')) {
-            useForm({ resident_id: residentId }).post(removeResident.url(property.ulid));
+            router.post(removeResident.url(property.ulid), { resident_id: residentId });
         }
     };
 
     const outstandingBalance = outstandingCollections.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
 
     return (
-        <div className="space-y-6 pb-24">
+        <div className="space-y-8 pb-24">
             <Head title={`Property Details - ${property.name}`} />
 
-            {/* Header */}
-            <div className="flex items-center gap-3">
-                <Link
-                    href={index.url()}
-                    className="text-slate-655 hover:bg-slate-550 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all"
-                >
-                    <ArrowLeftIcon className="h-5 w-5" />
-                </Link>
-                <div>
-                    <h1 className="text-xl font-black text-slate-900">{property.name}</h1>
-                    <p className="text-xs text-slate-500">Property Overview & Management Dashboard</p>
+            {/* Premium Header */}
+            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-50/40 via-white to-rose-50/20 p-6 ring-1 ring-slate-200/50 sm:p-8">
+                <div className="relative flex items-center gap-4">
+                    <Link
+                        href={index.url()}
+                        className="group flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition-all hover:bg-indigo-50 hover:text-indigo-600"
+                    >
+                        <ArrowLeftIcon className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{property.name}</h1>
+                        <p className="mt-1 text-xs font-bold tracking-wider text-slate-400 uppercase sm:text-sm">
+                            Property Overview & Management Dashboard
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            {/* Custom Tab Navigation Bar */}
-            <div className="flex rounded-2xl border-b border-slate-100 bg-white px-2 pt-2 shadow-xs ring-1 ring-slate-100">
-                {(['overview', 'residents', 'collections', 'announcements', 'activity'] as Tab[]).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex-1 border-b-2 pt-2 pb-3 text-center text-xs font-bold tracking-wider uppercase transition-all ${
-                            activeTab === tab
-                                ? 'border-indigo-650 font-black text-indigo-600'
-                                : 'border-transparent text-slate-400 hover:text-slate-600'
-                        }`}
-                    >
-                        {tab}
-                    </button>
-                ))}
+            {/* Scrollable Tab Navigation Bar */}
+            <div className="relative mt-8 border-b border-slate-200/60">
+                <div className="hide-scrollbar -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                    <div className="flex w-max space-x-8 px-2">
+                        {(['overview', 'residents', 'collections', 'announcements', 'activity'] as Tab[]).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`relative pt-2 pb-4 text-[11px] font-black tracking-widest uppercase transition-all ${
+                                    activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-700'
+                                }`}
+                            >
+                                {activeTab === tab && (
+                                    <motion.div
+                                        layoutId="activePropertyTab"
+                                        className="absolute right-0 bottom-0 left-0 h-[3px] rounded-t-full bg-indigo-600"
+                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className="relative z-10">{tab === 'residents' ? 'occupants' : tab}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Tab Contents */}
@@ -149,45 +173,86 @@ export default function Show({ property, residents, outstandingCollections, paym
                     {/* OVERVIEW TAB */}
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Residents</h3>
-                                <p className="mt-2 text-3xl font-black text-slate-950">{residents.length}</p>
-                                <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
-                                    <span>Active: {residents.filter((r) => r.status === 'active').length}</span>
-                                    <span>Suspended: {residents.filter((r) => r.status === 'suspended').length}</span>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Outstanding Balance</h3>
-                                <p className="mt-2 text-3xl font-black text-slate-950">₦{outstandingBalance.toLocaleString()}</p>
-                                <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
-                                    <span>Pending: {outstandingCollections.length} bills</span>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Recent Payments</h3>
-                                <p className="mt-2 text-3xl font-black text-slate-950">
-                                    ₦{payments.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
-                                </p>
-                                <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4 text-xs font-semibold text-slate-500">
-                                    <span>Collected payments logs</span>
-                                </div>
-                            </div>
-
-                            <div className="col-span-full rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                <h3 className="text-sm font-black text-slate-950">Overview Details</h3>
-                                <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                                    <div className="rounded-2xl bg-slate-50 p-4">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase">ULID</p>
-                                        <p className="mt-1 font-mono font-semibold text-slate-900">{property.ulid}</p>
+                            {/* Total Residents Card */}
+                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-white to-indigo-50/30 p-6 ring-1 ring-slate-200/50">
+                                <div className="relative">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Total Occupants</h3>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                            <UsersIcon className="h-5 w-5" />
+                                        </div>
                                     </div>
-                                    <div className="rounded-2xl bg-slate-50 p-4">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Assigned Residents</p>
-                                        <p className="mt-1 font-semibold text-slate-900">
-                                            {residents.map((r) => r.name).join(', ') || 'No resident assigned'}
-                                        </p>
+                                    <p className="mt-4 text-4xl font-black tracking-tight text-slate-900">{residents.length}</p>
+                                    <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                                        <span className="flex items-center gap-1.5">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>Active:{' '}
+                                            {residents.filter((r) => r.status === 'active').length}
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-rose-400"></div>Suspended:{' '}
+                                            {residents.filter((r) => r.status === 'suspended').length}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Outstanding Balance Card */}
+                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-white to-amber-50/40 p-6 ring-1 ring-slate-200/50">
+                                <div className="relative">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Pending Dues</h3>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                                            <WalletIcon className="h-5 w-5" />
+                                        </div>
+                                    </div>
+                                    <p className="mt-4 text-4xl font-black tracking-tight text-slate-900">₦{outstandingBalance.toLocaleString()}</p>
+                                    <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                                        <span>Unpaid Bills: {outstandingCollections.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recent Payments Card */}
+                            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 ring-1 ring-indigo-500">
+                                <div className="relative">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-black tracking-widest text-indigo-200 uppercase">Total Collected</h3>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm">
+                                            <ArrowDownLeftIcon className="h-5 w-5" />
+                                        </div>
+                                    </div>
+                                    <p className="mt-4 text-4xl font-black tracking-tight text-white">
+                                        ₦{payments.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+                                    </p>
+                                    <div className="mt-6 flex items-center justify-between border-t border-indigo-500/50 pt-4 text-[10px] font-black tracking-wider text-indigo-200 uppercase">
+                                        <span>Recent Payment History</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Property Details */}
+                            <div className="relative col-span-full overflow-hidden rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200/50 sm:p-8">
+                                <h3 className="text-sm font-black tracking-wider text-slate-900 uppercase">Property Specifications</h3>
+                                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200/50">
+                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">System ID</p>
+                                        <div className="mt-2 flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-400 shadow-xs ring-1 ring-slate-200">
+                                                <BuildingOffice2Icon className="h-4 w-4" />
+                                            </div>
+                                            <p className="font-mono text-sm font-bold text-slate-900">{property.ulid}</p>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200/50">
+                                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Assigned Profiles</p>
+                                        <div className="mt-2 flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-xs ring-1 ring-slate-200">
+                                                <UserPlusIcon className="h-4 w-4" />
+                                            </div>
+                                            <p className="truncate text-sm font-bold text-slate-900">
+                                                {residents.map((r) => r.name).join(', ') || 'No resident assigned'}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -198,127 +263,158 @@ export default function Show({ property, residents, outstandingCollections, paym
                     {activeTab === 'residents' && (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-black text-slate-900">Assigned Residents</h2>
+                                <h2 className="text-lg font-black text-slate-900">Assigned Occupants</h2>
                                 {!showAssignForm && (
                                     <button
                                         onClick={() => setShowAssignForm(true)}
-                                        className="text-indigo-650 inline-flex items-center gap-1.5 rounded-2xl bg-indigo-50 px-4 py-2 text-xs font-black transition-colors hover:bg-indigo-100"
+                                        className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-50 px-4 py-2 text-xs font-black text-indigo-600 transition-colors hover:bg-indigo-100"
                                     >
                                         <PlusIcon className="h-4 w-4" />
-                                        Assign Resident
+                                        Assign Occupant
                                     </button>
                                 )}
                             </div>
 
-                            {showAssignForm && (
-                                <form onSubmit={handleAssign} className="rounded-[32px] bg-indigo-50/50 p-6 ring-1 ring-indigo-50">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                                        <div className="flex-1">
-                                            <label htmlFor="resident_id" className="block text-xs font-bold tracking-wider text-indigo-900 uppercase">
-                                                Select Resident
-                                            </label>
-                                            <select
-                                                id="resident_id"
-                                                value={assignForm.data.resident_id}
-                                                onChange={(e) => assignForm.setData('resident_id', e.target.value)}
-                                                className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-indigo-200 bg-white px-4 py-3 text-sm focus:border-indigo-500"
-                                            >
-                                                <option value="">Choose a resident...</option>
-                                                {eligibleResidents.map((r) => (
-                                                    <option key={r.id} value={r.id}>
-                                                        {r.name} (Current Property: {r.property})
-                                                    </option>
-                                                ))}
-                                            </select>
+                                <MobileSheet isOpen={showAssignForm} onClose={() => { setShowAssignForm(false); assignForm.reset(); setSearchQuery(''); }} title="Assign Occupant">
+                                    <div className="mt-2 flex flex-col h-full max-h-[70vh]">
+                                        {/* Sticky Search Bar */}
+                                        <div className="relative shrink-0">
+                                            <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search occupants by name..."
+                                                className="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="submit"
-                                                disabled={assignForm.processing}
-                                                className="rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 disabled:opacity-50"
-                                            >
-                                                Assign
-                                            </button>
+
+                                        {/* Scrollable Resident List */}
+                                        <div className="mt-4 flex-1 overflow-y-auto pr-2 pb-4 space-y-2">
+                                            {filteredResidents.length === 0 ? (
+                                                <div className="py-12 text-center">
+                                                    <UsersIcon className="mx-auto h-8 w-8 text-slate-300" />
+                                                    <h3 className="mt-4 text-sm font-bold text-slate-900">No occupants found</h3>
+                                                    <p className="mt-1 text-xs text-slate-500">
+                                                        {searchQuery ? "We couldn't find anyone matching that search." : "You have no eligible occupants to assign."}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                filteredResidents.map(resident => (
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.98 }}
+                                                        key={resident.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const ids = assignForm.data.resident_ids;
+                                                            if (ids.includes(resident.id.toString())) {
+                                                                assignForm.setData('resident_ids', ids.filter(id => id !== resident.id.toString()));
+                                                            } else {
+                                                                assignForm.setData('resident_ids', [...ids, resident.id.toString()]);
+                                                            }
+                                                        }}
+                                                        className={`flex w-full items-center gap-4 rounded-3xl p-4 text-left transition-all ${
+                                                            assignForm.data.resident_ids.includes(resident.id.toString())
+                                                                ? 'bg-slate-900 shadow-xl shadow-slate-900/20 ring-1 ring-slate-900'
+                                                                : 'bg-white ring-1 ring-slate-100 hover:bg-slate-50 hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black shadow-inner transition-colors ${
+                                                            assignForm.data.resident_ids.includes(resident.id.toString())
+                                                                ? 'bg-white/10 text-white'
+                                                                : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500'
+                                                        }`}>
+                                                            {resident.name.substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        
+                                                        <div className="flex-1">
+                                                            <p className={`text-base font-black tracking-tight ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-white' : 'text-slate-900'}`}>
+                                                                {resident.name}
+                                                            </p>
+                                                            <p className={`mt-0.5 text-xs font-semibold ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                                Current Property: {resident.property}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        {assignForm.data.resident_ids.includes(resident.id.toString()) && (
+                                                            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                                <CheckCircleIcon className="h-7 w-7 text-white" />
+                                                            </motion.div>
+                                                        )}
+                                                    </motion.button>
+                                                ))
+                                            )}
+                                        </div>
+
+                                        {/* Submit Button */}
+                                        <div className="shrink-0 border-t border-slate-100 pt-4 mt-2">
                                             <button
                                                 type="button"
-                                                onClick={() => setShowAssignForm(false)}
-                                                className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50"
+                                                onClick={handleAssign}
+                                                disabled={assignForm.processing || assignForm.data.resident_ids.length === 0}
+                                                className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
                                             >
-                                                Cancel
+                                                {assignForm.processing 
+                                                    ? 'Assigning...' 
+                                                    : assignForm.data.resident_ids.length > 0 
+                                                        ? `Assign ${assignForm.data.resident_ids.length} Selected Occupant${assignForm.data.resident_ids.length > 1 ? 's' : ''}` 
+                                                        : 'Select Occupants to Assign'}
                                             </button>
+                                            {assignForm.errors.resident_ids && (
+                                                <p className="mt-3 text-center text-xs font-bold text-rose-600">{assignForm.errors.resident_ids}</p>
+                                            )}
                                         </div>
                                     </div>
-                                    {assignForm.errors.resident_id && (
-                                        <p className="mt-2 text-xs font-bold text-rose-600">{assignForm.errors.resident_id}</p>
-                                    )}
-                                </form>
-                            )}
+                                </MobileSheet>
 
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
                                 {residents.length > 0 ? (
-                                    <table className="min-w-full divide-y divide-slate-100">
-                                        <thead className="bg-slate-50/50">
-                                            <tr>
-                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                                    Resident
-                                                </th>
-                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                                    Unit
-                                                </th>
-                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                                    Status
-                                                </th>
-                                                <th className="relative px-6 py-4"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 bg-white">
-                                            {residents.map((resident) => (
-                                                <tr key={resident.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-black text-slate-500">
-                                                                {resident.name.charAt(0).toUpperCase()}
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm font-bold text-slate-900">{resident.name}</p>
-                                                                {resident.phone && (
-                                                                    <p className="text-xs font-semibold text-slate-400">{resident.phone}</p>
-                                                                )}
-                                                            </div>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        {residents.map((resident) => (
+                                            <div key={resident.id} className="group relative flex flex-col justify-between rounded-3xl bg-white p-5 ring-1 ring-slate-100 transition-all hover:shadow-xl hover:shadow-slate-200/40">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 font-black text-indigo-600 shadow-inner">
+                                                            {resident.name.charAt(0).toUpperCase()}
                                                         </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="text-sm font-bold text-slate-600">{resident.unit_number || '—'}</span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span
-                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
-                                                                resident.status === 'active'
-                                                                    ? 'bg-emerald-100 text-emerald-700'
-                                                                    : 'bg-rose-100 text-rose-700'
-                                                            }`}
-                                                        >
-                                                            {resident.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                        <button
-                                                            onClick={() => handleRemoveResident(resident.id)}
-                                                            className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                                                            title="Deassociate occupant"
-                                                        >
-                                                            <TrashIcon className="h-4.5 w-4.5" />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                        <div>
+                                                            <p className="text-base font-black text-slate-900">{resident.name}</p>
+                                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">{resident.phone || 'No phone number'}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black tracking-wider uppercase ${
+                                                            resident.status === 'active'
+                                                                ? 'bg-emerald-100 text-emerald-700'
+                                                                : 'bg-rose-100 text-rose-700'
+                                                        }`}
+                                                    >
+                                                        {resident.status}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">Unit:</span>
+                                                        <span className="text-sm font-black text-slate-700">{resident.unit_number || 'Unassigned'}</span>
+                                                    </div>
+                                                    
+                                                    <button
+                                                        onClick={() => handleRemoveResident(resident.id)}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-500 transition-colors hover:bg-rose-500 hover:text-white"
+                                                        title="Remove occupant from property"
+                                                    >
+                                                        <TrashIcon className="h-4.5 w-4.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
                                     <div className="py-16 text-center">
                                         <UsersIcon className="mx-auto h-12 w-12 text-slate-300" />
                                         <h3 className="mt-4 text-lg font-black text-slate-900">No occupants</h3>
-                                        <p className="mt-1 text-sm text-slate-500">Assign residents to this property to begin tracking them.</p>
+                                        <p className="mt-1 text-sm text-slate-500">Assign occupants to this property to begin tracking them.</p>
                                     </div>
                                 )}
                             </div>
@@ -426,7 +522,7 @@ export default function Show({ property, residents, outstandingCollections, paym
                                     ))
                                 ) : (
                                     <div className="col-span-full rounded-[32px] bg-white py-12 text-center shadow-xs ring-1 ring-slate-100">
-                                        <MegaphoneIcon className="text-slate-350 mx-auto h-12 w-12" />
+                                        <MegaphoneIcon className="mx-auto h-12 w-12 text-slate-300" />
                                         <p className="mt-2 text-sm font-semibold text-slate-500">No announcements sent to this property.</p>
                                     </div>
                                 )}
@@ -439,7 +535,7 @@ export default function Show({ property, residents, outstandingCollections, paym
                         <div className="space-y-6">
                             <div>
                                 <h2 className="text-lg font-black text-slate-900">Activity Logs</h2>
-                                <p className="text-slate-550 text-xs">Property transaction timelines.</p>
+                                <p className="text-xs text-slate-500">Property transaction timelines.</p>
                             </div>
 
                             <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
@@ -463,7 +559,7 @@ export default function Show({ property, residents, outstandingCollections, paym
                                                             </div>
                                                             <div className="min-w-0 flex-1 py-1.5">
                                                                 <p className="text-sm font-bold text-slate-900">{act.description}</p>
-                                                                <p className="text-slate-450 mt-1 text-xs font-bold uppercase">{act.date}</p>
+                                                                <p className="mt-1 text-xs font-bold text-slate-400 uppercase">{act.date}</p>
                                                             </div>
                                                         </div>
                                                     </div>

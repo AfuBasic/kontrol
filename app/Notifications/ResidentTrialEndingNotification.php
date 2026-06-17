@@ -62,7 +62,7 @@ class ResidentTrialEndingNotification extends Notification implements ShouldQueu
      */
     public function toArray(object $notifiable): array
     {
-        $daysLeft = now()->diffInDays($this->subscription->trial_ends_at);
+        $daysLeft = (int) ceil(now()->diffInDays($this->subscription->trial_ends_at));
 
         return [
             'title' => 'Trial Ending Soon',

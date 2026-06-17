@@ -240,7 +240,9 @@ class PropertyController extends Controller
 
         // Eligible residents for assignment (managed residents not on this property)
         $eligibleResidents = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id)->where('property_id', '!=', $property->id)->orWhereNull('property_id'))
+            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id)
+                ->where(fn ($q2) => $q2->where('property_id', '!=', $property->id)->orWhereNull('property_id'))
+            )
             ->whereDoesntHave('profile', fn ($q) => $q->where('property_id', $property->id))
             ->forEstate($estate->id)
             ->get()
@@ -274,17 +276,24 @@ class PropertyController extends Controller
         abort_if($property->property_owner_id !== $user->id, 403);
 
         $validated = $request->validate([
-            'resident_id' => ['required', 'integer', 'exists:users,id'],
+            'resident_ids' => ['required', 'array', 'min:1'],
+            'resident_ids.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $resident = User::findOrFail($validated['resident_id']);
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        $residents = User::whereIn('id', $validated['resident_ids'])->get();
+        foreach ($residents as $resident) {
+            abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+            $resident->profile()->update([
+                'property_id' => $property->id,
+            ]);
+        }
 
-        $resident->profile()->update([
-            'property_id' => $property->id,
-        ]);
+        $count = count($residents);
+        $message = $count === 1 
+            ? "Resident assigned to {$property->name} successfully."
+            : "{$count} residents assigned to {$property->name} successfully.";
 
-        return back()->with('success', "Resident assigned to {$property->name} successfully.");
+        return back()->with('success', $message);
     }
 
     /**
