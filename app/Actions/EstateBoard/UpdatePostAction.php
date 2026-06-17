@@ -3,6 +3,8 @@
 namespace App\Actions\EstateBoard;
 
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostCategory;
+use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
@@ -19,7 +21,7 @@ class UpdatePostAction
     ) {}
 
     /**
-     * @param  array{title?: string|null, body: string, status: string, audience: string, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
+     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
      */
     public function execute(EstateBoardPost $post, array $data, Estate $estate): EstateBoardPost
     {
@@ -27,11 +29,15 @@ class UpdatePostAction
             $user = Auth::user();
             $status = EstateBoardPostStatus::from($data['status']);
             $audience = EstateBoardPostAudience::from($data['audience']);
+            $category = EstateBoardPostCategory::from($data['category']);
+            $priority = EstateBoardPostPriority::from($data['priority']);
             $wasPublished = $post->status === EstateBoardPostStatus::Published;
 
             $post->update([
                 'title' => $data['title'] ?? null,
                 'body' => $data['body'],
+                'category' => $category,
+                'priority' => $priority,
                 'status' => $status,
                 'audience' => $audience,
                 'published_at' => $status === EstateBoardPostStatus::Published && ! $wasPublished

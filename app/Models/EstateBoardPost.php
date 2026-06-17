@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostCategory;
+use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
 use App\Traits\HasHashid;
 use Carbon\CarbonImmutable;
@@ -23,6 +25,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string $body
  * @property EstateBoardPostStatus $status
  * @property EstateBoardPostAudience $audience
+ * @property EstateBoardPostCategory $category
+ * @property EstateBoardPostPriority $priority
  * @property CarbonImmutable|null $published_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -67,6 +71,8 @@ class EstateBoardPost extends Model
         'user_id',
         'title',
         'body',
+        'category',
+        'priority',
         'status',
         'audience',
         'published_at',
@@ -97,6 +103,8 @@ class EstateBoardPost extends Model
         return [
             'status' => EstateBoardPostStatus::class,
             'audience' => EstateBoardPostAudience::class,
+            'category' => EstateBoardPostCategory::class,
+            'priority' => EstateBoardPostPriority::class,
             'published_at' => 'datetime',
         ];
     }
@@ -147,6 +155,11 @@ class EstateBoardPost extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(EstateBoardComment::class);
+    }
+
+    public function reads(): HasMany
+    {
+        return $this->hasMany(EstateBoardPostRead::class);
     }
 
     /**

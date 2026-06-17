@@ -19,7 +19,7 @@ class EstateBoardService
      * @param  string|null  $search  Filter by search text
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null): CursorPaginator
     {
         $user = auth()->user();
         if ($user) {
@@ -73,6 +73,8 @@ class EstateBoardService
                         ->orWhere('body', 'like', $term);
                 });
             })
+            ->when($category, fn ($q) => $q->where('category', $category))
+            ->when($priority, fn ($q) => $q->where('priority', $priority))
             ->with([
                 'author:id,name,email',
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
@@ -80,6 +82,28 @@ class EstateBoardService
             ->withCount('comments')
             ->orderByDesc('published_at')
             ->cursorPaginate($perPage);
+    }
+
+    public function getFeedMetrics(int $estateId, ?string $filter = null): array
+    {
+        $baseQuery = EstateBoardPost::query()
+            ->forEstate($estateId)
+            ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
+            ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'));
+
+        $total = (clone $baseQuery)->count();
+
+        $thisMonth = (clone $baseQuery)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->count();
+
+        $lastBroadcast = (clone $baseQuery)->latest()->first();
+
+        return [
+            'total' => $total,
+            'this_month' => $thisMonth,
+            'last_broadcast' => $lastBroadcast ? $lastBroadcast->created_at->diffForHumans() : null,
+        ];
     }
 
     /**
@@ -134,8 +158,10 @@ class EstateBoardService
             ->with([
                 'author:id,name,email',
                 'media',
+                'reads',
+                'targets',
             ])
-            ->withCount('comments')
+            ->withCount(['comments', 'reads'])
             ->find($postId);
     }
 

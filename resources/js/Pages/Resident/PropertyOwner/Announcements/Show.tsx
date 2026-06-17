@@ -1,6 +1,17 @@
-import { MegaphoneIcon, ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { 
+    MegaphoneIcon, 
+    ArrowLeftIcon, 
+    TrashIcon, 
+    UserGroupIcon, 
+    CheckCircleIcon,
+    ChartBarIcon,
+    EllipsisHorizontalIcon,
+    ClockIcon,
+    EyeIcon
+} from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { index, destroy } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 
 interface Target {
@@ -15,93 +26,212 @@ interface Props {
         title: string;
         body: string;
         applies_to: string;
+        category?: string;
+        priority?: string;
         created_at: string;
+    };
+    metrics: {
+        targets_count: number;
+        reads_count: number;
+        read_rate: number;
     };
     targets: Target[];
 }
 
-export default function Show({ announcement, targets }: Props) {
+const CATEGORY_COLORS: Record<string, string> = {
+    general: 'bg-slate-100 text-slate-700 ring-slate-200',
+    meeting: 'bg-blue-100 text-blue-700 ring-blue-200',
+    maintenance: 'bg-orange-100 text-orange-700 ring-orange-200',
+    security: 'bg-rose-100 text-rose-700 ring-rose-200',
+    event: 'bg-purple-100 text-purple-700 ring-purple-200',
+};
+
+const PRIORITY_STYLES: Record<string, { badge: string, border: string, bg: string }> = {
+    normal: { badge: 'bg-slate-100 text-slate-600', border: 'border-slate-100', bg: 'bg-slate-50' },
+    important: { badge: 'bg-amber-100 text-amber-700 ring-1 ring-amber-300', border: 'border-amber-200', bg: 'bg-amber-50' },
+    critical: { badge: 'bg-rose-100 text-rose-700 ring-1 ring-rose-300 animate-pulse', border: 'border-rose-200', bg: 'bg-rose-50' },
+};
+
+export default function Show({ announcement, metrics, targets }: Props) {
+    const [showActions, setShowActions] = useState(false);
+
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this announcement? This will remove it from target feeds.')) {
+        if (confirm('Are you sure you want to delete this broadcast? This action cannot be undone.')) {
             router.delete(destroy.url(announcement.hashid as any));
         }
     };
 
+    const priorityStyle = PRIORITY_STYLES[announcement.priority || 'normal'];
+
     return (
-        <div className="mx-auto max-w-2xl pb-24">
-            <Head title={`Announcement - ${announcement.title}`} />
+        <div className="mx-auto max-w-4xl pb-32">
+            <Head title={`Broadcast - ${announcement.title}`} />
 
-            {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Link
-                        href={index.url()}
-                        className="text-slate-650 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-xs ring-1 ring-slate-100 transition-all hover:bg-slate-50"
-                    >
-                        <ArrowLeftIcon className="h-5 w-5" />
-                    </Link>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-900">Broadcast Details</h1>
-                        <p className="text-xs text-slate-500">Estate Announcement Bulletin</p>
-                    </div>
-                </div>
-
-                <button
-                    onClick={handleDelete}
-                    className="text-rose-650 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-rose-50 px-4 text-xs font-bold transition-all hover:bg-rose-100 hover:text-rose-700"
+            {/* Top Navigation */}
+            <div className="mb-8 flex items-center justify-between">
+                <Link
+                    href={index.url()}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:text-slate-900"
                 >
-                    <TrashIcon className="h-4.5 w-4.5" />
-                    Delete
-                </button>
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    Back to Feed
+                </Link>
+
+                <div className="relative">
+                    <button
+                        onClick={() => setShowActions(!showActions)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50"
+                    >
+                        <EllipsisHorizontalIcon className="h-5 w-5" />
+                    </button>
+                    
+                    <AnimatePresence>
+                        {showActions && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                className="absolute right-0 mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5 z-50"
+                            >
+                                <div className="p-1">
+                                    <button
+                                        onClick={handleDelete}
+                                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50"
+                                    >
+                                        <TrashIcon className="h-4 w-4" />
+                                        Delete Broadcast
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="space-y-6 rounded-3xl bg-white p-6 shadow-xs ring-1 ring-slate-100 sm:p-8"
-            >
-                <div>
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                                <MegaphoneIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <span className="text-xs font-bold text-slate-400 uppercase">Published Date</span>
-                                <p className="text-xs font-black text-slate-900">{announcement.created_at}</p>
-                            </div>
-                        </div>
-                        <span className="inline-flex rounded-full bg-slate-50 px-3 py-1 text-xs font-bold tracking-wider text-slate-500 uppercase ring-1 ring-slate-100">
-                            {announcement.applies_to === 'all' ? 'All Managed' : 'Targeted'}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Announcement Body */}
-                <div className="prose max-w-none">
-                    <h2 className="text-xl font-black text-slate-950">{announcement.title}</h2>
-                    <p className="mt-4 text-sm leading-relaxed font-semibold whitespace-pre-wrap text-slate-700">{announcement.body}</p>
-                </div>
-
-                {/* Target Audience List */}
-                {announcement.applies_to === 'target' && (
-                    <div className="space-y-3 border-t border-slate-100 pt-6">
-                        <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Target Recipients</h4>
-                        <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-2xl bg-slate-50 p-4">
-                            {targets.map((tgt, index) => (
-                                <span
-                                    key={index}
-                                    className="ring-slate-150 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-sm ring-1"
-                                >
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase">{tgt.type}:</span>
-                                    <span className="font-bold text-slate-900">{tgt.name}</span>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                {/* Main Content Column */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Hero Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                        className={`overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 ${priorityStyle?.border ? `border-t-4 ${priorityStyle.border}` : ''}`}
+                    >
+                        <div className="p-8 sm:p-10">
+                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                                {announcement.category && (
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ring-1 ring-inset ${CATEGORY_COLORS[announcement.category] || CATEGORY_COLORS.general}`}>
+                                        {announcement.category}
+                                    </span>
+                                )}
+                                {announcement.priority && announcement.priority !== 'normal' && (
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${priorityStyle.badge}`}>
+                                        {announcement.priority}
+                                    </span>
+                                )}
+                                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider ml-auto">
+                                    <ClockIcon className="h-4 w-4" />
+                                    Published {announcement.created_at}
                                 </span>
-                            ))}
+                            </div>
+
+                            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                                {announcement.title}
+                            </h1>
+
+                            <div className="mt-8 prose prose-slate prose-lg max-w-none">
+                                <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700">
+                                    {announcement.body}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </motion.div>
+                    </motion.div>
+                </div>
+
+                {/* Sidebar Column */}
+                <div className="space-y-6">
+                    {/* Delivery Insights */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                        className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl"
+                    >
+                        <div className="flex items-center gap-2 mb-6 text-indigo-200">
+                            <ChartBarIcon className="h-5 w-5 opacity-70" />
+                            <h3 className="text-xs font-black uppercase tracking-wider">Delivery Insights</h3>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <div className="flex items-end justify-between mb-2">
+                                    <span className="text-3xl font-black">{metrics.read_rate}%</span>
+                                    <span className="text-sm font-semibold text-indigo-200 pb-1">Read Rate</span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${metrics.read_rate}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                        className="h-full rounded-full bg-indigo-500" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Delivered</p>
+                                    <p className="flex items-center gap-2 text-lg font-bold">
+                                        <CheckCircleIcon className="h-4 w-4 text-indigo-400" />
+                                        {metrics.targets_count}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Read</p>
+                                    <p className="flex items-center gap-2 text-lg font-bold">
+                                        <EyeIcon className="h-4 w-4 text-emerald-400" />
+                                        {metrics.reads_count}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Audience Targets */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                        className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100"
+                    >
+                        <div className="flex items-center gap-2 mb-6 text-slate-400">
+                            <UserGroupIcon className="h-5 w-5" />
+                            <h3 className="text-xs font-black uppercase tracking-wider">Audience Targeting</h3>
+                        </div>
+
+                        {announcement.applies_to === 'all' ? (
+                            <div className="rounded-2xl bg-slate-50 p-4 text-center">
+                                <p className="text-sm font-bold text-slate-700">All Residents</p>
+                                <p className="mt-1 text-xs text-slate-500">This broadcast was sent to everyone in your managed properties.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="flex flex-col gap-2">
+                                    {targets.map((tgt, index) => (
+                                        <div key={index} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                                            <span className="text-sm font-bold text-slate-700">{tgt.name}</span>
+                                            <span className="rounded-md bg-white px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 shadow-sm ring-1 ring-slate-200">
+                                                {tgt.type}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </div>
         </div>
     );
 }

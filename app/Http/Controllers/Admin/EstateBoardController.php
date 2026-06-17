@@ -10,6 +10,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\EstateBoard\StorePostRequest;
 use App\Http\Requests\EstateBoard\UpdatePostRequest;
 use App\Models\EstateBoardPost;
+use App\Models\Property;
+use App\Models\User;
 use App\Services\Admin\EstateBoardService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
@@ -36,17 +38,23 @@ class EstateBoardController extends Controller
 
         $search = request('search');
         $audience = request('audience');
+        $category = request('category');
+        $priority = request('priority');
         $audiences = ($audience && $audience !== 'all')
             ? [EstateBoardPostAudience::from($audience)]
             : null;
 
-        $posts = $this->boardService->getFeed($estateId, 10, $audiences, null, $search);
+        $posts = $this->boardService->getFeed($estateId, 10, $audiences, null, $search, $category, $priority);
+        $metrics = $this->boardService->getFeedMetrics($estateId, null);
 
         return Inertia::render('Admin/EstateBoard/Index', [
             'posts' => $posts,
+            'metrics' => $metrics,
             'filters' => [
                 'search' => $search ?? '',
                 'audience' => $audience ?? 'all',
+                'category' => $category ?? '',
+                'priority' => $priority ?? '',
             ],
         ]);
     }
@@ -102,9 +110,60 @@ class EstateBoardController extends Controller
         $postData = $this->boardService->getPost($post->id, $estateId);
         $comments = $this->boardService->getComments($post->id, $estateId);
 
+        $targetsCount = 0;
+        if ($postData->applies_to === 'all') {
+            // Need to estimate total users for this post
+            if ($postData->property_owner_id) {
+                $targetsCount = User::query()
+                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $postData->property_owner_id))
+                    ->forEstate($estateId)
+                    ->active()
+                    ->count();
+            } else {
+                $query = User::forEstate($estateId)->active();
+                if ($postData->audience === EstateBoardPostAudience::Residents) {
+                    $query->role('resident');
+                } elseif ($postData->audience === EstateBoardPostAudience::Security) {
+                    $query->role('security');
+                }
+                $targetsCount = $query->count();
+            }
+        } else {
+            foreach ($postData->targets as $target) {
+                if ($target->target_type === 'user') {
+                    $targetsCount += 1;
+                } else {
+                    $propertyUsersCount = User::query()
+                        ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                        ->active()
+                        ->count();
+                    $targetsCount += $propertyUsersCount;
+                }
+            }
+        }
+
+        $readsCount = $postData->reads_count ?? 0;
+        $readRate = $targetsCount > 0 ? round(($readsCount / $targetsCount) * 100) : 0;
+
+        $formattedTargets = $postData->targets->map(function ($target) {
+            if ($target->target_type === 'user') {
+                $user = User::find($target->target_id);
+                return ['type' => 'Resident', 'name' => $user ? $user->name : 'Unknown'];
+            } else {
+                $property = Property::find($target->target_id);
+                return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
+            }
+        })->values()->all();
+
         return Inertia::render('Admin/EstateBoard/Show', [
             'post' => $postData,
             'comments' => $comments,
+            'metrics' => [
+                'targets_count' => $targetsCount,
+                'reads_count' => $readsCount,
+                'read_rate' => $readRate,
+            ],
+            'targets' => $formattedTargets,
         ]);
     }
 

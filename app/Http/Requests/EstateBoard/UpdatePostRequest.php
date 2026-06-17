@@ -3,6 +3,8 @@
 namespace App\Http\Requests\EstateBoard;
 
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostCategory;
+use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,6 +25,8 @@ class UpdatePostRequest extends FormRequest
         return [
             'title' => ['nullable', 'string', 'max:255'],
             'body' => ['required', 'string', 'min:10', 'max:10000'],
+            'category' => ['required', Rule::enum(EstateBoardPostCategory::class)],
+            'priority' => ['required', Rule::enum(EstateBoardPostPriority::class)],
             'status' => ['required', Rule::enum(EstateBoardPostStatus::class)],
             'audience' => ['required', Rule::enum(EstateBoardPostAudience::class)],
             'images' => ['nullable', 'array', 'max:10'],

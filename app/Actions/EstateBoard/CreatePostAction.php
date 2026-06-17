@@ -3,6 +3,8 @@
 namespace App\Actions\EstateBoard;
 
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostCategory;
+use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
 use App\Events\EstateBoard\NewPostBroadcast;
 use App\Models\Estate;
@@ -23,7 +25,7 @@ class CreatePostAction
     ) {}
 
     /**
-     * @param  array{title?: string|null, body: string, status: string, audience: string, images?: array<UploadedFile>}  $data
+     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, images?: array<UploadedFile>}  $data
      */
     public function execute(array $data, Estate $estate): EstateBoardPost
     {
@@ -31,12 +33,16 @@ class CreatePostAction
             $user = Auth::user();
             $status = EstateBoardPostStatus::from($data['status']);
             $audience = EstateBoardPostAudience::from($data['audience']);
+            $category = EstateBoardPostCategory::from($data['category']);
+            $priority = EstateBoardPostPriority::from($data['priority']);
 
             $post = EstateBoardPost::create([
                 'estate_id' => $estate->id,
                 'user_id' => $user->id,
                 'title' => $data['title'] ?? null,
                 'body' => $data['body'],
+                'category' => $category,
+                'priority' => $priority,
                 'status' => $status,
                 'audience' => $audience,
                 'published_at' => $status === EstateBoardPostStatus::Published ? now() : null,

@@ -32,15 +32,29 @@ class AnnouncementController extends Controller
         $estate = $this->estateContext->getEstate();
         $user = auth()->user();
 
-        $totalUnfiltered = EstateBoardPost::query()
+        $totalBroadcasts = EstateBoardPost::query()
             ->where('estate_id', $estate->id)
             ->where('property_owner_id', $user->id)
             ->count();
 
+        $thisMonthBroadcasts = EstateBoardPost::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_owner_id', $user->id)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->count();
+
+        $lastBroadcast = EstateBoardPost::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_owner_id', $user->id)
+            ->latest()
+            ->first();
+
+        $lastBroadcastDate = $lastBroadcast ? $lastBroadcast->created_at->diffForHumans() : null;
+
         $query = EstateBoardPost::query()
             ->where('estate_id', $estate->id)
             ->where('property_owner_id', $user->id)
-            ->withCount(['targets'])
+            ->withCount(['targets', 'reads'])
             ->latest();
 
         if ($request->filled('search')) {
@@ -48,6 +62,14 @@ class AnnouncementController extends Controller
                 $q->where('title', 'like', '%'.$request->search.'%')
                     ->orWhere('body', 'like', '%'.$request->search.'%');
             });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
         }
 
         $paginated = $query->paginate(10);
@@ -58,9 +80,12 @@ class AnnouncementController extends Controller
             'title' => $p->title,
             'body' => $p->body,
             'status' => $p->status->value,
+            'category' => $p->category?->value,
+            'priority' => $p->priority?->value,
             'applies_to' => $p->applies_to,
             'targets_count' => $p->targets_count,
-            'created_at' => $p->created_at->format('M d, Y'),
+            'reads_count' => $p->reads_count,
+            'created_at' => $p->created_at->diffForHumans(),
         ]);
 
         $announcements = [
@@ -73,9 +98,15 @@ class AnnouncementController extends Controller
 
         return Inertia::render('Resident/PropertyOwner/Announcements/Index', [
             'announcements' => $announcements,
-            'totalUnfiltered' => $totalUnfiltered,
+            'metrics' => [
+                'total' => $totalBroadcasts,
+                'this_month' => $thisMonthBroadcasts,
+                'last_broadcast' => $lastBroadcastDate,
+            ],
             'filters' => [
                 'search' => $request->search ?? '',
+                'category' => $request->category ?? '',
+                'priority' => $request->priority ?? '',
             ],
         ]);
     }
@@ -117,6 +148,8 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string', 'max:10000'],
+            'category' => ['required', 'string', 'in:general,meeting,maintenance,security,event'],
+            'priority' => ['required', 'string', 'in:normal,important,critical'],
             'applies_to' => ['required', 'string', 'in:all,target'],
             'targets' => ['required_if:applies_to,target', 'array'],
             'targets.*.type' => ['required', 'string', 'in:user,property'],
@@ -130,6 +163,8 @@ class AnnouncementController extends Controller
                 'property_owner_id' => $user->id,
                 'title' => $validated['title'],
                 'body' => $validated['body'],
+                'category' => $validated['category'],
+                'priority' => $validated['priority'],
                 'status' => EstateBoardPostStatus::Published,
                 'audience' => EstateBoardPostAudience::Residents,
                 'applies_to' => $validated['applies_to'],
@@ -206,23 +241,42 @@ class AnnouncementController extends Controller
         $user = auth()->user();
         abort_if($announcement->property_owner_id !== $user->id, 403);
 
-        $announcement->load(['targets']);
+        $announcement->load(['targets', 'reads']);
 
-        // Format targets for UI display
-        $formattedTargets = [];
-        foreach ($announcement->targets as $target) {
-            if ($target->target_type === 'user') {
-                $item = User::find($target->target_id);
-                if ($item) {
-                    $formattedTargets[] = ['type' => 'Resident', 'name' => $item->name];
-                }
-            } else {
-                $item = Property::find($target->target_id);
-                if ($item) {
-                    $formattedTargets[] = ['type' => 'Property', 'name' => $item->name];
+        // Calculate delivery insights
+        $targetsCount = 0;
+        if ($announcement->applies_to === 'all') {
+            $targetsCount = User::query()
+                ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+                ->forEstate($announcement->estate_id)
+                ->active()
+                ->count();
+        } else {
+            foreach ($announcement->targets as $target) {
+                if ($target->target_type === 'user') {
+                    $targetsCount += 1;
+                } else {
+                    $propertyUsersCount = User::query()
+                        ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id)->where('property_owner_id', $user->id))
+                        ->active()
+                        ->count();
+                    $targetsCount += $propertyUsersCount;
                 }
             }
         }
+
+        $readsCount = $announcement->reads_count ?? $announcement->reads->count();
+        $readRate = $targetsCount > 0 ? round(($readsCount / $targetsCount) * 100) : 0;
+
+        $formattedTargets = $announcement->targets->map(function ($target) {
+            if ($target->target_type === 'user') {
+                $user = User::find($target->target_id);
+                return ['type' => 'Resident', 'name' => $user ? $user->name : 'Unknown'];
+            } else {
+                $property = Property::find($target->target_id);
+                return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
+            }
+        })->values()->all();
 
         return Inertia::render('Resident/PropertyOwner/Announcements/Show', [
             'announcement' => [
@@ -230,8 +284,15 @@ class AnnouncementController extends Controller
                 'hashid' => $announcement->hashid,
                 'title' => $announcement->title,
                 'body' => $announcement->body,
+                'category' => $announcement->category?->value,
+                'priority' => $announcement->priority?->value,
                 'applies_to' => $announcement->applies_to,
                 'created_at' => $announcement->created_at->format('M d, Y'),
+            ],
+            'metrics' => [
+                'targets_count' => $targetsCount,
+                'reads_count' => $readsCount,
+                'read_rate' => $readRate,
             ],
             'targets' => $formattedTargets,
         ]);
