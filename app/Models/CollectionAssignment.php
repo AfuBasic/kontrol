@@ -59,6 +59,7 @@ class CollectionAssignment extends Model
         'collection_id',
         'estate_id',
         'user_id',
+        'property_id',
         'period',
         'amount_due',
         'amount_paid',
@@ -93,6 +94,11 @@ class CollectionAssignment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class);
     }
 
     public function payments(): HasMany

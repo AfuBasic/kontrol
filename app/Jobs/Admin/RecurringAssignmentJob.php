@@ -87,6 +87,9 @@ class RecurringAssignmentJob implements ShouldQueue
             : null;
 
         foreach ($userIds as $userId) {
+            $user = User::with('profile')->find($userId);
+            $propertyId = $user?->profile?->property_id;
+
             CollectionAssignment::query()->firstOrCreate(
                 [
                     'collection_id' => $collection->id,
@@ -95,6 +98,7 @@ class RecurringAssignmentJob implements ShouldQueue
                 ],
                 [
                     'estate_id' => $collection->estate_id,
+                    'property_id' => $propertyId,
                     'amount_due' => $collection->amount,
                     'amount_paid' => 0,
                     'status' => 'pending',

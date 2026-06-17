@@ -150,9 +150,9 @@ class PropertyController extends Controller
         // Outstanding Collections
         $outstandingCollections = CollectionAssignment::query()
             ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
-            ->whereHas('user.profile', fn ($q) => $q->where('property_id', $property->id))
             ->with(['collection', 'user'])
             ->get()
             ->map(fn ($assignment) => [
@@ -168,8 +168,8 @@ class PropertyController extends Controller
         // Recent Payments
         $payments = Payment::query()
             ->where('estate_id', $estate->id)
+            ->whereHas('assignment', fn ($q) => $q->where('property_id', $property->id))
             ->whereHas('assignment.collection', fn ($q) => $q->where('created_by', $user->id))
-            ->whereHas('assignment.user.profile', fn ($q) => $q->where('property_id', $property->id))
             ->with(['assignment.user', 'assignment.collection'])
             ->latest()
             ->get()

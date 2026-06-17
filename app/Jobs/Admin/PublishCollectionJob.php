@@ -55,6 +55,9 @@ class PublishCollectionJob implements ShouldQueue
         }
 
         foreach ($userIds as $userId) {
+            $user = User::with('profile')->find($userId);
+            $propertyId = $user?->profile?->property_id;
+
             $assignment = CollectionAssignment::firstOrCreate(
                 [
                     'collection_id' => $collection->id,
@@ -63,6 +66,7 @@ class PublishCollectionJob implements ShouldQueue
                 ],
                 [
                     'estate_id' => $estate->id,
+                    'property_id' => $propertyId,
                     'amount_due' => $collection->amount,
                     'amount_paid' => 0,
                     'status' => $status,
