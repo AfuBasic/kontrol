@@ -147,15 +147,33 @@ class PropertyController extends Controller
                 'status' => $r->suspended_at ? 'suspended' : 'active',
             ]);
 
-        // Outstanding Collections
-        $outstandingCollections = CollectionAssignment::query()
+        // Calculate outstanding balance globally
+        $outstandingBalance = CollectionAssignment::query()
             ->where('estate_id', $estate->id)
             ->where('property_id', $property->id)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
-            ->with(['collection', 'user'])
-            ->get()
-            ->map(fn ($assignment) => [
+            ->selectRaw('SUM(amount_due - amount_paid) as total')
+            ->value('total') ?? 0;
+
+        // Outstanding Collections (Paginated)
+        $outstandingQuery = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id));
+
+        if ($request->filled('search_collection')) {
+            $outstandingQuery->where(function ($q) use ($request) {
+                $q->whereHas('collection', fn ($q2) => $q2->where('name', 'like', '%'.$request->search_collection.'%'))
+                  ->orWhereHas('user', fn ($q2) => $q2->where('name', 'like', '%'.$request->search_collection.'%'));
+            });
+        }
+
+        $outstandingPaginated = $outstandingQuery->with(['collection', 'user'])->paginate(10, ['*'], 'collections_page');
+
+        $outstandingCollections = [
+            'data' => collect($outstandingPaginated->items())->map(fn ($assignment) => [
                 'id' => $assignment->id,
                 'resident_name' => $assignment->user->name,
                 'name' => $assignment->collection->name,
@@ -163,7 +181,19 @@ class PropertyController extends Controller
                 'amount_paid' => $assignment->amount_paid,
                 'status' => $assignment->status,
                 'due_date' => $assignment->due_date?->format('M d, Y'),
-            ]);
+            ]),
+            'total' => $outstandingPaginated->total(),
+            'per_page' => $outstandingPaginated->perPage(),
+            'current_page' => $outstandingPaginated->currentPage(),
+            'next_page_url' => $outstandingPaginated->nextPageUrl(),
+        ];
+
+        // Total Collected
+        $totalCollected = Payment::query()
+            ->where('estate_id', $estate->id)
+            ->whereHas('assignment', fn ($q) => $q->where('property_id', $property->id))
+            ->whereHas('assignment.collection', fn ($q) => $q->where('created_by', $user->id))
+            ->sum('amount');
 
         // Recent Payments
         $payments = Payment::query()
@@ -208,12 +238,12 @@ class PropertyController extends Controller
         $activities = [];
 
         // Residents additions / removals could be mapped, but let's gather collection creations, payments, announcements
-        foreach ($outstandingCollections as $c) {
+        foreach ($outstandingPaginated->items() as $c) {
             $activities[] = [
                 'type' => 'collection_created',
-                'description' => "Collection '{$c['name']}' of ".number_format($c['amount_due'])." was assigned to {$c['resident_name']}.",
-                'date' => $c['due_date'],
-                'timestamp' => strtotime($c['due_date']),
+                'description' => "Collection '{$c->collection->name}' of ".number_format($c->amount_due)." was assigned to {$c->user->name}.",
+                'date' => $c->due_date?->format('M d, Y'),
+                'timestamp' => strtotime($c->due_date?->format('Y-m-d H:i:s') ?? now()),
             ];
         }
 
@@ -260,10 +290,15 @@ class PropertyController extends Controller
             ],
             'residents' => $residents,
             'outstandingCollections' => $outstandingCollections,
+            'outstandingBalance' => (float) $outstandingBalance,
+            'totalCollected' => (float) $totalCollected,
             'payments' => $payments,
             'announcements' => $announcements,
-            'activities' => array_slice($activities, 0, 10),
+            'activities' => $activities,
             'eligibleResidents' => $eligibleResidents,
+            'filters' => [
+                'search_collection' => $request->search_collection ?? '',
+            ]
         ]);
     }
 

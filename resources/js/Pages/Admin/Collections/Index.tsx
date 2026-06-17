@@ -191,7 +191,7 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
     const realisedPct = expected > 0 ? Math.round((realised / expected) * 100) : 0;
 
     const hasActiveFilters = Boolean(search || status);
-    const showFilters = collections.total > 1 || hasActiveFilters;
+    const showFilters = collections.total > 0 || hasActiveFilters;
     const showPagination = collections.total > collections.per_page;
 
     const CustomTooltip = ({ active, payload, label }: any) => {

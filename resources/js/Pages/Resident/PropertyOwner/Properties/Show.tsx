@@ -15,9 +15,12 @@ import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import MobileSheet from '@/Components/MobileSheet';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { assignResident, removeResident, index } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
+import { assignResident, removeResident, index, show as showProperty } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
+import { WhenVisible } from '@inertiajs/react';
+import { useDebounce } from '@/Hooks/useDebounce';
+import { Loader2 } from 'lucide-react';
 
 interface Resident {
     id: number;
@@ -76,19 +79,40 @@ interface Props {
         name: string;
     };
     residents: Resident[];
-    outstandingCollections: OutstandingCollection[];
+    outstandingCollections: {
+        data: OutstandingCollection[];
+        next_page_url: string | null;
+        total: number;
+    };
+    outstandingBalance: number;
+    totalCollected: number;
     payments: Payment[];
     announcements: Announcement[];
     activities: Activity[];
     eligibleResidents: EligibleResident[];
+    filters: {
+        search_collection: string;
+    };
 }
 
 type Tab = 'overview' | 'residents' | 'collections' | 'announcements' | 'activity';
 
-export default function Show({ property, residents, outstandingCollections, payments, announcements, activities, eligibleResidents }: Props) {
+export default function Show({ property, residents, outstandingCollections, outstandingBalance, totalCollected, payments, announcements, activities, eligibleResidents, filters }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [showAssignForm, setShowAssignForm] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchCollection, setSearchCollection] = useState(filters.search_collection || '');
+    const debouncedSearchCollection = useDebounce(searchCollection, 300);
+
+    useEffect(() => {
+        if (debouncedSearchCollection !== (filters.search_collection || '')) {
+            router.get(
+                showProperty.url(property.ulid),
+                { search_collection: debouncedSearchCollection },
+                { preserveState: true, preserveScroll: true, replace: true }
+            );
+        }
+    }, [debouncedSearchCollection, filters.search_collection, property.ulid]);
 
     const filteredResidents =
         searchQuery === ''
@@ -116,8 +140,6 @@ export default function Show({ property, residents, outstandingCollections, paym
             router.post(removeResident.url(property.ulid), { resident_id: residentId });
         }
     };
-
-    const outstandingBalance = outstandingCollections.reduce((acc, curr) => acc + (curr.amount_due - curr.amount_paid), 0);
 
     return (
         <div className="space-y-8 pb-24">
@@ -207,7 +229,7 @@ export default function Show({ property, residents, outstandingCollections, paym
                                     </div>
                                     <p className="mt-4 text-4xl font-black tracking-tight text-slate-900">₦{outstandingBalance.toLocaleString()}</p>
                                     <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                                        <span>Unpaid Bills: {outstandingCollections.length}</span>
+                                        <span>Unpaid Bills: {outstandingCollections.total}</span>
                                     </div>
                                 </div>
                             </div>
@@ -222,7 +244,7 @@ export default function Show({ property, residents, outstandingCollections, paym
                                         </div>
                                     </div>
                                     <p className="mt-4 text-4xl font-black tracking-tight text-white">
-                                        ₦{payments.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+                                        ₦{totalCollected.toLocaleString()}
                                     </p>
                                     <div className="mt-6 flex items-center justify-between border-t border-indigo-500/50 pt-4 text-[10px] font-black tracking-wider text-indigo-200 uppercase">
                                         <span>Recent Payment History</span>
@@ -431,28 +453,59 @@ export default function Show({ property, residents, outstandingCollections, paym
 
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 {/* Outstanding Bills */}
-                                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                    <h3 className="font-black text-slate-950">Outstanding Bills</h3>
-                                    <div className="mt-4 divide-y divide-slate-100">
-                                        {outstandingCollections.length > 0 ? (
-                                            outstandingCollections.map((bill) => (
-                                                <div key={bill.id} className="flex items-center justify-between py-3.5">
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-950">{bill.name}</p>
-                                                        <p className="text-xs font-semibold text-slate-400">
-                                                            {bill.resident_name} &middot; Due {bill.due_date}
-                                                        </p>
+                                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 flex flex-col h-[500px]">
+                                    <div className="shrink-0 mb-4">
+                                        <h3 className="font-black text-slate-950">Outstanding Bills</h3>
+                                        <div className="mt-3 relative">
+                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                <MagnifyingGlassIcon className="h-4.5 w-4.5 text-slate-400" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={searchCollection}
+                                                onChange={(e) => setSearchCollection(e.target.value)}
+                                                className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
+                                                placeholder="Search bills by occupant or name..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto pr-2 divide-y divide-slate-100 custom-scrollbar">
+                                        {outstandingCollections.data.length > 0 ? (
+                                            <>
+                                                {outstandingCollections.data.map((bill) => (
+                                                    <div key={bill.id} className="flex items-center justify-between py-3.5">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-950">{bill.name}</p>
+                                                            <p className="text-xs font-semibold text-slate-400">
+                                                                {bill.resident_name} &middot; Due {bill.due_date}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-black text-slate-900">
+                                                                ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
+                                                            </p>
+                                                            <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
+                                                                {bill.status}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm font-black text-slate-900">
-                                                            ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
-                                                        </p>
-                                                        <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
-                                                            {bill.status}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))
+                                                ))}
+                                                {outstandingCollections.next_page_url && (
+                                                    <WhenVisible
+                                                        always
+                                                        fallback={<div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>}
+                                                        params={{
+                                                            data: {
+                                                                collections_page: outstandingCollections.current_page + 1,
+                                                            },
+                                                            only: ['outstandingCollections'],
+                                                            preserveUrl: true,
+                                                        }}
+                                                    >
+                                                        <div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>
+                                                    </WhenVisible>
+                                                )}
+                                            </>
                                         ) : (
                                             <div className="py-8 text-center text-sm font-semibold text-slate-400">No outstanding bills found.</div>
                                         )}
