@@ -163,10 +163,10 @@ class PropertyController extends Controller
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id));
 
-        if ($request->filled('search_collection')) {
-            $outstandingQuery->where(function ($q) use ($request) {
-                $q->whereHas('collection', fn ($q2) => $q2->where('name', 'like', '%'.$request->search_collection.'%'))
-                  ->orWhereHas('user', fn ($q2) => $q2->where('name', 'like', '%'.$request->search_collection.'%'));
+        if (request()->filled('search_collection')) {
+            $outstandingQuery->where(function ($q) {
+                $q->whereHas('collection', fn ($q2) => $q2->where('name', 'like', '%'.request()->search_collection.'%'))
+                  ->orWhereHas('user', fn ($q2) => $q2->where('name', 'like', '%'.request()->search_collection.'%'));
             });
         }
 
@@ -297,8 +297,8 @@ class PropertyController extends Controller
             'activities' => $activities,
             'eligibleResidents' => $eligibleResidents,
             'filters' => [
-                'search_collection' => $request->search_collection ?? '',
-            ]
+                'search_collection' => request()->search_collection ?? '',
+            ],
         ]);
     }
 
@@ -324,7 +324,7 @@ class PropertyController extends Controller
         }
 
         $count = count($residents);
-        $message = $count === 1 
+        $message = $count === 1
             ? "Resident assigned to {$property->name} successfully."
             : "{$count} residents assigned to {$property->name} successfully.";
 
