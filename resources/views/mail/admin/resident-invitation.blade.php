@@ -14,7 +14,7 @@
     @if($isPasswordReset ?? false)
         <p>A password reset was requested for your account at <span class="bold">{{ $estateName }}</span>. Click the button below to secure your account.</p>
     @else
-        <p>You've been invited to join <span class="bold">{{ $estateName }}</span> as a resident. To get started and access your community features, please set up your account password.</p>
+        <p>You've been invited to join <span class="bold">{{ $estateName }}</span> as a resident. To get started and access your community features, please accept your invitation.</p>
     @endif
     
     <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 32px 0; border: 1px solid #e2e8f0;">
@@ -31,12 +31,12 @@
     </div>
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow">{{ ($isPasswordReset ?? false) ? 'Reset Password' : 'Set Up Your Password' }}</a>
+        <a href="{{ $invitationUrl }}" class="button shadow">{{ ($isPasswordReset ?? false) ? 'Login to your account' : 'Accept Invitation' }}</a>
     </div>
     
     <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
         <strong>Link Validity</strong><br>
-        This link will expire in 72 hours. Please complete the setup within this timeframe.
+        This link will expire in 72 hours. Please accept the invitation within this timeframe.
     </div>
     
     @if(!($isPasswordReset ?? false))

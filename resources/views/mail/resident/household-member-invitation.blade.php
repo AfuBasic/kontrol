@@ -43,12 +43,12 @@
     @endif
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow">{{ ($passwordReset ?? false) ? 'Reset Password' : 'Set Up Your Password' }}</a>
+        <a href="{{ $invitationUrl }}" class="button shadow">{{ ($passwordReset ?? false) ? 'Login to your account' : 'Accept Invitation' }}</a>
     </div>
     
     <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
         <strong>Link Validity</strong><br>
-        This link will expire in 72 hours. Please complete your setup within this timeframe.
+        This link will expire in 72 hours. Please accept your invitation within this timeframe.
     </div>
     
     <div class="divider"></div>

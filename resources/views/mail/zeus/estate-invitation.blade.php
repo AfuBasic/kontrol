@@ -21,16 +21,16 @@
         </table>
     </div>
     
-    <p>To complete your setup and access your estate dashboard, please set up your account by clicking the button below.</p>
+    <p>To accept your invitation and access your estate dashboard, please click the button below.</p>
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #4f46e5; box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);">Set Up Your Password</a>
+        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #4f46e5; box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);">Accept Invitation</a>
     </div>
     
     <div style="margin-bottom: 32px; background-color: #ffffff; border-radius: 12px; padding: 24px; border: 1px solid #f1f5f9;">
         <p style="margin: 0 0 16px; font-weight: 600; color: #0f172a; font-size: 14px;">What happens next?</p>
         <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px;">
-            <li style="margin-bottom: 8px;">Set up your password to secure your account.</li>
+            <li style="margin-bottom: 8px;">Access your estate dashboard securely.</li>
             <li style="margin-bottom: 8px;">Access your estate dashboard and settings.</li>
             <li style="margin-bottom: 8px;">Invite your team and start managing residents.</li>
         </ul>

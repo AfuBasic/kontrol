@@ -31,8 +31,8 @@ interface Props {
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 function extractEmailsFromText(text: string): string[] {
-    // Split by common delimiters: comma, space, newline, semicolon, dash
-    const parts = text.split(/[,\s;\n-]+/);
+    // Split by common delimiters: comma, space, newline, semicolon
+    const parts = text.split(/[,\s;\n]+/);
     const emails: string[] = [];
 
     for (const part of parts) {

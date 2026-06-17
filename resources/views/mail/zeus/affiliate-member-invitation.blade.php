@@ -32,7 +32,7 @@
     </div>
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #9f1239; box-shadow: 0 4px 14px 0 rgba(159, 18, 57, 0.3);">Set Up Your Password</a>
+        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #9f1239; box-shadow: 0 4px 14px 0 rgba(159, 18, 57, 0.3);">Accept Invitation</a>
     </div>
     
     <div style="background-color: #fff1f2; border-radius: 12px; padding: 20px; font-size: 14px; color: #9f1239; border: 1px solid #fecaca;">

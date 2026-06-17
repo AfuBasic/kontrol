@@ -20,5 +20,5 @@
     
     <div class="divider"></div>
     
-    <p style="font-size: 14px; color: #64748b; font-style: italic;">If you did not request this code, your account might be under threat. Please change your password immediately.</p>
+    <p style="font-size: 14px; color: #64748b; font-style: italic;">If you did not request this code, please ignore this email.</p>
 @endsection
