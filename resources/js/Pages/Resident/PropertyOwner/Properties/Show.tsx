@@ -10,6 +10,8 @@ import {
     ArrowDownLeftIcon,
     UserPlusIcon,
     MagnifyingGlassIcon,
+    ChevronRightIcon,
+    DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm, router } from '@inertiajs/react';
@@ -39,6 +41,7 @@ interface OutstandingCollection {
     amount_paid: number;
     status: string;
     due_date: string;
+    due_status: string;
 }
 
 interface Payment {
@@ -62,6 +65,7 @@ interface Announcement {
 interface Activity {
     type: string;
     description: string;
+    amount?: number;
     date: string;
     timestamp: number;
 }
@@ -86,18 +90,28 @@ interface Props {
     };
     outstandingBalance: number;
     totalCollected: number;
+    metrics: {
+        bills_paid: number;
+        bills_outstanding: number;
+        bills_overdue: number;
+        pending_count: number;
+        collection_rate: number;
+        current_month_collected: number;
+        current_month_expected: number;
+    };
     payments: Payment[];
     announcements: Announcement[];
     activities: Activity[];
     eligibleResidents: EligibleResident[];
     filters: {
         search_collection: string;
+        status: string;
     };
 }
 
 type Tab = 'overview' | 'residents' | 'collections' | 'announcements' | 'activity';
 
-export default function Show({ property, residents, outstandingCollections, outstandingBalance, totalCollected, payments, announcements, activities, eligibleResidents, filters }: Props) {
+export default function Show({ property, residents, outstandingCollections, outstandingBalance, totalCollected, metrics, payments, announcements, activities, eligibleResidents, filters }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [showAssignForm, setShowAssignForm] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -108,11 +122,11 @@ export default function Show({ property, residents, outstandingCollections, outs
         if (debouncedSearchCollection !== (filters.search_collection || '')) {
             router.get(
                 showProperty.url(property.ulid),
-                { search_collection: debouncedSearchCollection },
+                { search_collection: debouncedSearchCollection, status: filters.status },
                 { preserveState: true, preserveScroll: true, replace: true }
             );
         }
-    }, [debouncedSearchCollection, filters.search_collection, property.ulid]);
+    }, [debouncedSearchCollection, filters.search_collection, filters.status, property.ulid]);
 
     const filteredResidents =
         searchQuery === ''
@@ -445,98 +459,216 @@ export default function Show({ property, residents, outstandingCollections, outs
 
                     {/* COLLECTIONS TAB */}
                     {activeTab === 'collections' && (
-                        <div className="space-y-6">
-                            <div>
-                                <h2 className="text-lg font-black text-slate-900">Property Collections</h2>
-                                <p className="text-xs text-slate-500">Bills and recent payments scoped to this property.</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                {/* Outstanding Bills */}
-                                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100 flex flex-col h-[500px]">
-                                    <div className="shrink-0 mb-4">
-                                        <h3 className="font-black text-slate-950">Outstanding Bills</h3>
-                                        <div className="mt-3 relative">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                <MagnifyingGlassIcon className="h-4.5 w-4.5 text-slate-400" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={searchCollection}
-                                                onChange={(e) => setSearchCollection(e.target.value)}
-                                                className="block w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
-                                                placeholder="Search bills by occupant or name..."
-                                            />
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            
+                            {/* FINANCIAL SUMMARY HERO */}
+                            <div className="relative overflow-hidden rounded-[24px] bg-slate-950 p-8 shadow-xl">
+                                {/* Background elements */}
+                                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
+                                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
+                                
+                                <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                    <div>
+                                        <p className="text-sm font-semibold tracking-wide text-slate-400 uppercase">Outstanding Balance</p>
+                                        <h2 className="mt-2 text-4xl font-black tracking-tight text-white md:text-5xl">
+                                            ₦{outstandingBalance.toLocaleString()}
+                                        </h2>
+                                    </div>
+                                    
+                                    <div className="flex gap-6">
+                                        <div className="flex flex-col">
+                                            <span className="text-3xl font-black text-white">{metrics.pending_count}</span>
+                                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pending Bills</span>
+                                        </div>
+                                        <div className="h-10 w-px bg-slate-800 self-center"></div>
+                                        <div className="flex flex-col">
+                                            <span className="text-3xl font-black text-white">{metrics.collection_rate}%</span>
+                                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Health</span>
                                         </div>
                                     </div>
-                                    <div className="flex-1 overflow-y-auto pr-2 divide-y divide-slate-100 custom-scrollbar">
-                                        {outstandingCollections.data.length > 0 ? (
-                                            <>
-                                                {outstandingCollections.data.map((bill) => (
-                                                    <div key={bill.id} className="flex items-center justify-between py-3.5">
-                                                        <div>
-                                                            <p className="text-sm font-bold text-slate-950">{bill.name}</p>
-                                                            <p className="text-xs font-semibold text-slate-400">
-                                                                {bill.resident_name} &middot; Due {bill.due_date}
-                                                            </p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-sm font-black text-slate-900">
-                                                                ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
-                                                            </p>
-                                                            <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase">
-                                                                {bill.status}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {outstandingCollections.next_page_url && (
-                                                    <WhenVisible
-                                                        always
-                                                        fallback={<div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>}
-                                                        params={{
-                                                            data: {
-                                                                collections_page: outstandingCollections.current_page + 1,
-                                                            },
-                                                            only: ['outstandingCollections'],
-                                                            preserveUrl: true,
-                                                        }}
-                                                    >
-                                                        <div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>
-                                                    </WhenVisible>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <div className="py-8 text-center text-sm font-semibold text-slate-400">No outstanding bills found.</div>
-                                        )}
+                                </div>
+                            </div>
+
+                            {/* METRICS & PROGRESS ROW */}
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                                {/* Progress Card */}
+                                <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
+                                    <h3 className="text-sm font-bold text-slate-900">Current Month Collections</h3>
+                                    <div className="mt-4 flex items-end justify-between">
+                                        <div>
+                                            <span className="text-2xl font-black text-slate-900">₦{metrics.current_month_collected.toLocaleString()}</span>
+                                            <span className="ml-2 text-sm font-semibold text-slate-500">/ ₦{metrics.current_month_expected.toLocaleString()}</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-emerald-600">
+                                            {metrics.current_month_expected > 0 ? Math.round((metrics.current_month_collected / metrics.current_month_expected) * 100) : 0}% Complete
+                                        </span>
+                                    </div>
+                                    <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                                        <div 
+                                            className="h-full rounded-full bg-emerald-500" 
+                                            style={{ width: `${metrics.current_month_expected > 0 ? Math.min(100, (metrics.current_month_collected / metrics.current_month_expected) * 100) : 0}%` }}
+                                        ></div>
                                     </div>
                                 </div>
 
-                                {/* Payment Logs */}
-                                <div className="rounded-[32px] bg-white p-6 shadow-xs ring-1 ring-slate-100">
-                                    <h3 className="font-black text-slate-900">Recent Receipts</h3>
-                                    <div className="mt-4 divide-y divide-slate-100">
-                                        {payments.length > 0 ? (
-                                            payments.map((p) => (
-                                                <div key={p.id} className="flex items-center justify-between py-3.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                                                            <ArrowDownLeftIcon className="h-4.5 w-4.5" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-bold text-slate-950">{p.resident_name}</p>
-                                                            <p className="text-xs font-bold text-slate-400">{p.collection_name}</p>
-                                                        </div>
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-900/5">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase">Paid</p>
+                                        <p className="mt-1 text-xl font-black text-slate-900">{metrics.bills_paid}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-rose-50 p-4 ring-1 ring-rose-900/5">
+                                        <p className="text-xs font-semibold text-rose-600 uppercase">Overdue</p>
+                                        <p className="mt-1 text-xl font-black text-rose-900">{metrics.bills_overdue}</p>
+                                    </div>
+                                    <div className="col-span-2 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-900/5">
+                                        <p className="text-xs font-semibold text-indigo-600 uppercase">Outstanding</p>
+                                        <p className="mt-1 text-xl font-black text-indigo-900">{metrics.bills_outstanding}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SEARCH & FILTERS */}
+                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar md:pb-0">
+                                    {[
+                                        { id: 'outstanding', label: 'Outstanding' },
+                                        { id: 'all', label: 'All Bills' },
+                                        { id: 'pending', label: 'Pending' },
+                                        { id: 'overdue', label: 'Overdue' },
+                                        { id: 'partial', label: 'Partially Paid' },
+                                        { id: 'paid', label: 'Paid' }
+                                    ].map(filter => (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => router.get(showProperty.url(property.ulid), { status: filter.id, search_collection: searchCollection }, { preserveState: true, replace: true, preserveScroll: true })}
+                                            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                                                (filters.status || 'outstanding') === filter.id 
+                                                    ? 'bg-slate-900 text-white shadow-md' 
+                                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="relative w-full md:w-72 shrink-0">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchCollection}
+                                        onChange={(e) => setSearchCollection(e.target.value)}
+                                        className="block w-full rounded-full border-0 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+                                        placeholder="Search bills..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                                {/* BILLS LIST (Main Column) */}
+                                <div className="lg:col-span-2 space-y-4">
+                                    {outstandingCollections.data.length > 0 ? (
+                                        outstandingCollections.data.map((bill) => (
+                                            <div key={bill.id} className="group flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-900/5 transition-all hover:shadow-md hover:ring-slate-900/10">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-black text-slate-600">
+                                                        {bill.resident_name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm font-black text-slate-900">₦{p.amount.toLocaleString()}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{p.date}</p>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{bill.name}</p>
+                                                        <p className="mt-1 text-sm font-semibold text-slate-500">{bill.resident_name}</p>
+                                                        <div className="mt-1.5 flex items-center gap-2">
+                                                            <ClockIcon className="h-3.5 w-3.5 text-slate-400" />
+                                                            <span className={`text-xs font-bold ${
+                                                                bill.due_status.includes('Overdue') ? 'text-rose-600' : 'text-slate-500'
+                                                            }`}>
+                                                                {bill.due_status || `Due ${bill.due_date}`}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <div className="py-8 text-center text-sm font-semibold text-slate-400">No payment history recorded.</div>
-                                        )}
+                                                
+                                                <div className="mt-4 flex items-center justify-between sm:mt-0 sm:flex-col sm:items-end sm:gap-2">
+                                                    <p className="text-lg font-black text-slate-900">
+                                                        ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
+                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide uppercase ring-1 ring-inset ${
+                                                            bill.status === 'paid' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' :
+                                                            bill.status === 'overdue' ? 'bg-rose-50 text-rose-700 ring-rose-600/20' :
+                                                            bill.status === 'partial' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                            'bg-amber-50 text-amber-700 ring-amber-600/20'
+                                                        }`}>
+                                                            {bill.status}
+                                                        </span>
+                                                        <ChevronRightIcon className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-slate-600 hidden sm:block" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="rounded-3xl border-2 border-dashed border-slate-200 py-16 text-center">
+                                            <DocumentTextIcon className="mx-auto h-12 w-12 text-slate-300" />
+                                            <h3 className="mt-4 text-sm font-bold text-slate-900">No bills found</h3>
+                                            <p className="mt-1 text-sm text-slate-500">Adjust your filters or search query.</p>
+                                        </div>
+                                    )}
+                                    
+                                    {outstandingCollections.next_page_url && (
+                                        <WhenVisible
+                                            always
+                                            fallback={<div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>}
+                                            params={{
+                                                data: {
+                                                    collections_page: outstandingCollections.current_page + 1,
+                                                },
+                                                only: ['outstandingCollections'],
+                                                preserveUrl: true,
+                                            }}
+                                        >
+                                            <div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>
+                                        </WhenVisible>
+                                    )}
+                                </div>
+
+                                {/* RECENT ACTIVITY SIDEBAR */}
+                                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 h-fit">
+                                    <h3 className="text-base font-bold text-slate-900">Recent Activity</h3>
+                                    <div className="mt-6 flow-root">
+                                        <ul className="-mb-8">
+                                            {activities.map((act, idx) => (
+                                                <li key={idx}>
+                                                    <div className="relative pb-8">
+                                                        {idx !== activities.length - 1 && (
+                                                            <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-100" />
+                                                        )}
+                                                        <div className="relative flex space-x-3">
+                                                            <div>
+                                                                <span className={`flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-white ${
+                                                                    act.type === 'payment_received' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'
+                                                                }`}>
+                                                                    {act.type === 'payment_received' ? <ArrowDownLeftIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                                                <div>
+                                                                    <p className="text-sm font-semibold text-slate-900">{act.description}</p>
+                                                                </div>
+                                                                <div className="whitespace-nowrap text-right text-xs font-medium text-slate-500">
+                                                                    {act.date}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                            {activities.length === 0 && (
+                                                <div className="text-center py-6 text-sm text-slate-400 font-medium">No recent activity</div>
+                                            )}
+                                        </ul>
                                     </div>
                                 </div>
                             </div>

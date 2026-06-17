@@ -11,6 +11,7 @@ use App\Models\Property;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Services\EstateContextService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -156,32 +157,105 @@ class PropertyController extends Controller
             ->selectRaw('SUM(amount_due - amount_paid) as total')
             ->value('total') ?? 0;
 
-        // Outstanding Collections (Paginated)
+        // Metrics for Collection Health
+        $billsPaid = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->where('status', 'paid')
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->count();
+
+        $billsOutstanding = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->whereIn('status', ['pending', 'grace', 'partial'])
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->count();
+
+        $billsOverdue = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->where('status', 'overdue')
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->count();
+
+        $pendingBillsCount = $billsOutstanding + $billsOverdue;
+
+        $totalBillsCount = $billsPaid + $pendingBillsCount;
+        $collectionRate = $totalBillsCount > 0 ? round(($billsPaid / $totalBillsCount) * 100) : 0;
+
+        // Current Month Progress
+        $currentMonthExpected = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->whereMonth('due_date', now()->month)
+            ->whereYear('due_date', now()->year)
+            ->sum('amount_due');
+
+        $currentMonthCollected = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->whereMonth('due_date', now()->month)
+            ->whereYear('due_date', now()->year)
+            ->sum('amount_paid');
+
+        // Outstanding Collections (Paginated with Filters)
         $outstandingQuery = CollectionAssignment::query()
             ->where('estate_id', $estate->id)
             ->where('property_id', $property->id)
-            ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id));
+
+        if (request()->filled('status') && request()->status !== 'all') {
+            if (request()->status === 'outstanding') {
+                $outstandingQuery->whereIn('status', ['pending', 'overdue', 'grace', 'partial']);
+            } else {
+                $outstandingQuery->where('status', request()->status);
+            }
+        } else {
+            // Default to not showing fully paid in the outstanding list unless filtering
+            $outstandingQuery->whereIn('status', ['pending', 'overdue', 'grace', 'partial']);
+        }
 
         if (request()->filled('search_collection')) {
             $outstandingQuery->where(function ($q) {
                 $q->whereHas('collection', fn ($q2) => $q2->where('name', 'like', '%'.request()->search_collection.'%'))
-                  ->orWhereHas('user', fn ($q2) => $q2->where('name', 'like', '%'.request()->search_collection.'%'));
+                    ->orWhereHas('user', fn ($q2) => $q2->where('name', 'like', '%'.request()->search_collection.'%'));
             });
         }
 
         $outstandingPaginated = $outstandingQuery->with(['collection', 'user'])->paginate(10, ['*'], 'collections_page');
 
         $outstandingCollections = [
-            'data' => collect($outstandingPaginated->items())->map(fn ($assignment) => [
-                'id' => $assignment->id,
-                'resident_name' => $assignment->user->name,
-                'name' => $assignment->collection->name,
-                'amount_due' => $assignment->amount_due,
-                'amount_paid' => $assignment->amount_paid,
-                'status' => $assignment->status,
-                'due_date' => $assignment->due_date?->format('M d, Y'),
-            ]),
+            'data' => collect($outstandingPaginated->items())->map(function ($assignment) {
+                $dueStatus = '';
+                if ($assignment->due_date) {
+                    $days = now()->startOfDay()->diffInDays($assignment->due_date->startOfDay(), false);
+                    if ($days == 0) {
+                        $dueStatus = 'Due today';
+                    } elseif ($days == 1) {
+                        $dueStatus = 'Due tomorrow';
+                    } elseif ($days == -1) {
+                        $dueStatus = 'Overdue by 1 day';
+                    } elseif ($days > 1) {
+                        $dueStatus = "Due in {$days} days";
+                    } elseif ($days < -1) {
+                        $dueStatus = 'Overdue by '.abs($days).' days';
+                    }
+                }
+
+                return [
+                    'id' => $assignment->id,
+                    'resident_name' => $assignment->user->name,
+                    'name' => $assignment->collection->name,
+                    'amount_due' => $assignment->amount_due,
+                    'amount_paid' => $assignment->amount_paid,
+                    'status' => $assignment->status,
+                    'due_date' => $assignment->due_date?->format('M d, Y'),
+                    'due_status' => $dueStatus,
+                ];
+            }),
             'total' => $outstandingPaginated->total(),
             'per_page' => $outstandingPaginated->perPage(),
             'current_page' => $outstandingPaginated->currentPage(),
@@ -237,36 +311,38 @@ class PropertyController extends Controller
         // Activity timeline items generated dynamically
         $activities = [];
 
-        // Residents additions / removals could be mapped, but let's gather collection creations, payments, announcements
-        foreach ($outstandingPaginated->items() as $c) {
+        // Fetch recent assignments for the timeline
+        $recentAssignments = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->where('property_id', $property->id)
+            ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
+            ->with(['collection', 'user'])
+            ->latest()
+            ->take(10)
+            ->get();
+
+        foreach ($recentAssignments as $c) {
             $activities[] = [
                 'type' => 'collection_created',
-                'description' => "Collection '{$c->collection->name}' of ".number_format($c->amount_due)." was assigned to {$c->user->name}.",
-                'date' => $c->due_date?->format('M d, Y'),
-                'timestamp' => strtotime($c->due_date?->format('Y-m-d H:i:s') ?? now()),
+                'description' => "{$c->collection->name} generated for {$c->user->name}",
+                'amount' => $c->amount_due,
+                'date' => $c->created_at->diffForHumans(),
+                'timestamp' => strtotime($c->created_at->format('Y-m-d H:i:s')),
             ];
         }
 
         foreach ($payments as $p) {
             $activities[] = [
-                'type' => 'collection_paid',
-                'description' => 'Payment of '.number_format($p['amount'])." received from {$p['resident_name']} for '{$p['collection_name']}'.",
-                'date' => $p['date'],
+                'type' => 'payment_received',
+                'description' => "{$p['resident_name']} paid ₦".number_format($p['amount']),
+                'amount' => $p['amount'],
+                'date' => Carbon::parse($p['date'])->diffForHumans(),
                 'timestamp' => strtotime($p['date']),
             ];
         }
 
-        foreach ($announcements as $a) {
-            $activities[] = [
-                'type' => 'announcement_sent',
-                'description' => "Announcement '{$a['title']}' was sent.",
-                'date' => $a['created_at'],
-                'timestamp' => strtotime($a['created_at']),
-            ];
-        }
-
-        // Sort activities desc
-        usort($activities, fn ($a, $b) => $b['timestamp'] - $a['timestamp']);
+        usort($activities, fn ($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+        $activities = array_slice($activities, 0, 10);
 
         // Eligible residents for assignment (managed residents not on this property)
         $eligibleResidents = User::query()
@@ -292,12 +368,22 @@ class PropertyController extends Controller
             'outstandingCollections' => $outstandingCollections,
             'outstandingBalance' => (float) $outstandingBalance,
             'totalCollected' => (float) $totalCollected,
+            'metrics' => [
+                'bills_paid' => $billsPaid,
+                'bills_outstanding' => $billsOutstanding,
+                'bills_overdue' => $billsOverdue,
+                'pending_count' => $pendingBillsCount,
+                'collection_rate' => $collectionRate,
+                'current_month_collected' => $currentMonthCollected,
+                'current_month_expected' => $currentMonthExpected,
+            ],
             'payments' => $payments,
             'announcements' => $announcements,
             'activities' => $activities,
             'eligibleResidents' => $eligibleResidents,
             'filters' => [
                 'search_collection' => request()->search_collection ?? '',
+                'status' => request()->status ?? 'outstanding',
             ],
         ]);
     }
