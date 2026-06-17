@@ -12,9 +12,7 @@ use App\Notifications\VerifyResidentEmail;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -66,14 +64,13 @@ class InviteRegistrationController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         return DB::transaction(function () use ($request, $inviteLink) {
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'password' => null,
                 'user_type' => 'user',
             ]);
 

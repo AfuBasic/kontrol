@@ -4,7 +4,6 @@ namespace App\Actions\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticateUser
@@ -14,13 +13,13 @@ class AuthenticateUser
      *
      * @throws ValidationException
      */
-    public function validate(string $email, string $password): User
+    public function validate(string $email): User
     {
         $user = User::where('email', $email)->first();
 
-        if (! $user || ! $user->password || ! Hash::check($password, $user->password)) {
+        if (! $user) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials do not match our records.'],
+                'email' => ['We could not find an account with that email address.'],
             ]);
         }
 
@@ -70,9 +69,9 @@ class AuthenticateUser
      *
      * @throws ValidationException
      */
-    public function execute(string $email, string $password, bool $remember = false): User
+    public function execute(string $email, bool $remember = false): User
     {
-        $user = $this->validate($email, $password);
+        $user = $this->validate($email);
 
         Auth::login($user, $remember);
 

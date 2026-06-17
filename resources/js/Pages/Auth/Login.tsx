@@ -38,11 +38,8 @@ export default function Login() {
     const { flash } = page.props;
     const { data, setData, post, processing, errors, clearErrors } = useForm({
         email: '',
-        password: '',
         remember: true, // Always remember the user by default
     });
-
-    const [showPassword, setShowPassword] = useState(false);
     const [googleError, setGoogleError] = useState('');
     const [showGoogleError, setShowGoogleError] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
@@ -414,16 +411,19 @@ export default function Login() {
             if (
                 errorStr.includes('cancelled') ||
                 errorStr.includes('cancelled_by_user') ||
-                errorStr.includes('DEVELOPER_ERROR') ||
-                errorStr.includes('user_cancelled')
+                errorStr.includes('user_cancelled') ||
+                errorStr.includes('12501') // Google Sign-in cancelled code
             ) {
                 setGoogleLoading(false);
                 return;
             }
 
-            if (errorStr.includes('network') || errorStr.includes('timeout')) {
+            if (errorStr.includes('10:') || errorStr.includes(': 10') || errorStr === '10' || errorStr.includes('DEVELOPER_ERROR')) {
+                errorMessage = 'Google Sign-In is not configured for this app version. Please use your email to sign in.';
+            } else if (errorStr.includes('network') || errorStr.includes('timeout') || errorStr.includes('7:')) {
                 errorMessage = 'Network error. Please check your connection and try again.';
             }
+
             setGoogleError(errorMessage);
             setShowGoogleError(true);
             setGoogleLoading(false);
@@ -690,41 +690,7 @@ export default function Login() {
                                     placeholder="you@example.com"
                                     autoComplete="email"
                                 />
-                            </div>
-
-                            <div>
-                                <div className="mb-1.5 flex items-center justify-between">
-                                    <label htmlFor="password" className="text-sm font-medium text-slate-700">
-                                        Password
-                                    </label>
-                                    <Link
-                                        href="/forgot-password"
-                                        university-logo-link="true"
-                                        className="text-xs font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        id="password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
-                                        placeholder="Enter your password"
-                                        autoComplete="current-password"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword((v) => !v)}
-                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 transition-colors hover:text-slate-600"
-                                    >
-                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                                {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
+                                {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
                             </div>
 
                             <button

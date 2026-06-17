@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\AuthenticateUser;
 use App\Actions\Auth\CheckTrustedDevice;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Events\ForceLogout;
@@ -31,6 +32,7 @@ class SocialLoginController
         Request $request,
         CheckTrustedDevice $checkTrustedDevice,
         GenerateLoginOtp $generateOtp,
+        AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         try {
             $googleUser = Socialite::driver('google')->user();
@@ -38,7 +40,7 @@ class SocialLoginController
             return redirect()->route('login')->with('error', 'Google authentication failed.');
         }
 
-        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp);
+        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp, $authenticateUser);
     }
 
     /**
@@ -48,6 +50,7 @@ class SocialLoginController
         Request $request,
         CheckTrustedDevice $checkTrustedDevice,
         GenerateLoginOtp $generateOtp,
+        AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         $request->validate(['token' => 'required|string']);
 
@@ -88,7 +91,7 @@ class SocialLoginController
             return redirect()->route('login')->with('error', 'Google token verification failed: '.$e->getMessage());
         }
 
-        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp);
+        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp, $authenticateUser);
     }
 
     /**
@@ -99,6 +102,7 @@ class SocialLoginController
         Request $request,
         CheckTrustedDevice $checkTrustedDevice,
         GenerateLoginOtp $generateOtp,
+        AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         $user = User::where('email', $googleUser->getEmail())->first();
 
@@ -111,6 +115,14 @@ class SocialLoginController
                 'google_id' => $user->google_id ?? $googleUser->getId(),
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
+        }
+
+        try {
+            $authenticateUser->validate($user->email);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first();
+
+            return redirect()->route('login')->with('error', $message);
         }
 
         if (! $checkTrustedDevice->execute($user, $request)) {

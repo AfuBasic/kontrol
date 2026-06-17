@@ -13,7 +13,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -72,21 +71,15 @@ class LoginOtpController extends Controller
 
         $remember = $request->session()->get('otp_remember', false);
         $viaSocial = $request->session()->get('otp_via_social', false);
-        $encryptedPassword = $request->session()->get('otp_password');
-        $password = $encryptedPassword ? Crypt::decryptString($encryptedPassword) : null;
 
-        $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social', 'otp_password']);
+        $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social']);
 
         Auth::login($user, $remember);
         $request->session()->regenerate();
 
         broadcast(new ForceLogout($user->id));
 
-        if ($password) {
-            Auth::logoutOtherDevices($password);
-        } else {
-            $this->storePasswordHashInSession($user);
-        }
+        $this->storePasswordHashInSession($user);
 
         $authenticateUser->logActivity($user);
 

@@ -18,10 +18,13 @@ export default function VerifyOtp({ email }: Props) {
     const digits = data.code.padEnd(6, ' ').split('');
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            inputRefs.current[0]?.focus();
-        }, 1000);
-        return () => clearTimeout(timer);
+        // Force body to match the container background to prevent black bars on mobile webviews
+        const originalBg = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = '#f9fafb';
+
+        return () => {
+            document.body.style.backgroundColor = originalBg;
+        };
     }, []);
 
     useEffect(() => {
@@ -102,7 +105,7 @@ export default function VerifyOtp({ email }: Props) {
         <>
             <Head title="Verify your identity" />
 
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 px-4 py-12">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
                     <div className="rounded-2xl bg-white px-8 py-10 shadow-xl shadow-gray-200/50">
                         {/* Icon */}

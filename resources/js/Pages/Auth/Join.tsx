@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Building2, Mail, User as UserIcon, Lock, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Building2, Mail, User as UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Props {
@@ -76,12 +76,7 @@ export default function Join({ token, estate }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
-        password: '',
-        password_confirmation: '',
     });
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -166,52 +161,6 @@ export default function Join({ token, estate }: Props) {
                                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                             </div>
 
-                            <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Password</label>
-                                <div className="relative mt-1">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <Lock className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-12 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
-                                        placeholder="••••••••"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
-                                    >
-                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                    </button>
-                                </div>
-                                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-                            </div>
-
-                            <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                                <div className="relative mt-1">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <CheckCircle2 className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type={showConfirmPassword ? 'text' : 'password'}
-                                        value={data.password_confirmation}
-                                        onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pr-12 pl-10 text-gray-900 transition-all outline-none focus:border-primary-500 focus:bg-white focus:ring-primary-500"
-                                        placeholder="••••••••"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
-                                    >
-                                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                    </button>
-                                </div>
-                            </div>
                         </div>
 
                         <button
@@ -219,7 +168,7 @@ export default function Join({ token, estate }: Props) {
                             disabled={processing}
                             className="w-full rounded-xl bg-primary-600 px-4 py-4 text-sm font-semibold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 hover:shadow-primary-500/40 disabled:opacity-50"
                         >
-                            {processing ? 'Processing...' : 'Sign up'}
+                            {processing ? 'Processing...' : 'Accept Invitation'}
                         </button>
 
                         <p className="text-center text-sm text-gray-500">
