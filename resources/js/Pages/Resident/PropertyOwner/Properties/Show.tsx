@@ -14,12 +14,17 @@ import {
     DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import MobileSheet from '@/Components/MobileSheet';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
-import { assignResident, removeResident, index, show as showProperty } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
+import {
+    assignResident,
+    removeResident,
+    index,
+    show as showProperty,
+} from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
 import { WhenVisible } from '@inertiajs/react';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { Loader2 } from 'lucide-react';
@@ -111,8 +116,53 @@ interface Props {
 
 type Tab = 'overview' | 'residents' | 'collections' | 'announcements' | 'activity';
 
-export default function Show({ property, residents, outstandingCollections, outstandingBalance, totalCollected, metrics, payments, announcements, activities, eligibleResidents, filters }: Props) {
-    const [activeTab, setActiveTab] = useState<Tab>('overview');
+export default function Show({
+    property,
+    residents,
+    outstandingCollections,
+    outstandingBalance,
+    totalCollected,
+    metrics,
+    payments,
+    announcements,
+    activities,
+    eligibleResidents,
+    filters,
+}: Props) {
+    const { url } = usePage();
+    const [activeTab, setActiveTab] = useState<Tab>(() => {
+        // Only force collections tab if query params are explicitly set in the URL
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('status') || params.has('search_collection')) return 'collections';
+        }
+        return 'overview';
+    });
+
+    // Manual infinite scroll state
+    const [allBills, setAllBills] = useState(outstandingCollections.data);
+
+    useEffect(() => {
+        if (outstandingCollections.current_page === 1) {
+            setAllBills(outstandingCollections.data);
+        } else {
+            // Prevent duplicate appending by checking IDs
+            setAllBills((prev) => {
+                const newItems = outstandingCollections.data.filter((newBill) => !prev.some((existingBill) => existingBill.id === newBill.id));
+                return [...prev, ...newItems];
+            });
+        }
+    }, [outstandingCollections]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('status') || params.has('search_collection')) {
+                setActiveTab('collections');
+            }
+        }
+    }, [filters.status, filters.search_collection]);
+
     const [showAssignForm, setShowAssignForm] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchCollection, setSearchCollection] = useState(filters.search_collection || '');
@@ -123,7 +173,7 @@ export default function Show({ property, residents, outstandingCollections, outs
             router.get(
                 showProperty.url(property.ulid),
                 { search_collection: debouncedSearchCollection, status: filters.status },
-                { preserveState: true, preserveScroll: true, replace: true }
+                { preserveState: true, preserveScroll: true, replace: true },
             );
         }
     }, [debouncedSearchCollection, filters.search_collection, filters.status, property.ulid]);
@@ -131,9 +181,7 @@ export default function Show({ property, residents, outstandingCollections, outs
     const filteredResidents =
         searchQuery === ''
             ? eligibleResidents
-            : eligibleResidents.filter((resident) =>
-                  resident.name.toLowerCase().includes(searchQuery.toLowerCase())
-              );
+            : eligibleResidents.filter((resident) => resident.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const assignForm = useForm({
         resident_ids: [] as string[],
@@ -257,9 +305,7 @@ export default function Show({ property, residents, outstandingCollections, outs
                                             <ArrowDownLeftIcon className="h-5 w-5" />
                                         </div>
                                     </div>
-                                    <p className="mt-4 text-4xl font-black tracking-tight text-white">
-                                        ₦{totalCollected.toLocaleString()}
-                                    </p>
+                                    <p className="mt-4 text-4xl font-black tracking-tight text-white">₦{totalCollected.toLocaleString()}</p>
                                     <div className="mt-6 flex items-center justify-between border-t border-indigo-500/50 pt-4 text-[10px] font-black tracking-wider text-indigo-200 uppercase">
                                         <span>Recent Payment History</span>
                                     </div>
@@ -311,103 +357,128 @@ export default function Show({ property, residents, outstandingCollections, outs
                                 )}
                             </div>
 
-                                <MobileSheet isOpen={showAssignForm} onClose={() => { setShowAssignForm(false); assignForm.reset(); setSearchQuery(''); }} title="Assign Occupant">
-                                    <div className="mt-2 flex flex-col h-full max-h-[70vh]">
-                                        {/* Sticky Search Bar */}
-                                        <div className="relative shrink-0">
-                                            <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search occupants by name..."
-                                                className="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                        </div>
+                            <MobileSheet
+                                isOpen={showAssignForm}
+                                onClose={() => {
+                                    setShowAssignForm(false);
+                                    assignForm.reset();
+                                    setSearchQuery('');
+                                }}
+                                title="Assign Occupant"
+                            >
+                                <div className="mt-2 flex h-full max-h-[70vh] flex-col">
+                                    {/* Sticky Search Bar */}
+                                    <div className="relative shrink-0">
+                                        <MagnifyingGlassIcon
+                                            className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400"
+                                            aria-hidden="true"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Search occupants by name..."
+                                            className="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 pr-4 pl-11 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
 
-                                        {/* Scrollable Resident List */}
-                                        <div className="mt-4 flex-1 overflow-y-auto pr-2 pb-4 space-y-2">
-                                            {filteredResidents.length === 0 ? (
-                                                <div className="py-12 text-center">
-                                                    <UsersIcon className="mx-auto h-8 w-8 text-slate-300" />
-                                                    <h3 className="mt-4 text-sm font-bold text-slate-900">No occupants found</h3>
-                                                    <p className="mt-1 text-xs text-slate-500">
-                                                        {searchQuery ? "We couldn't find anyone matching that search." : "You have no eligible occupants to assign."}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                filteredResidents.map(resident => (
-                                                    <motion.button
-                                                        whileTap={{ scale: 0.98 }}
-                                                        key={resident.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const ids = assignForm.data.resident_ids;
-                                                            if (ids.includes(resident.id.toString())) {
-                                                                assignForm.setData('resident_ids', ids.filter(id => id !== resident.id.toString()));
-                                                            } else {
-                                                                assignForm.setData('resident_ids', [...ids, resident.id.toString()]);
-                                                            }
-                                                        }}
-                                                        className={`flex w-full items-center gap-4 rounded-3xl p-4 text-left transition-all ${
-                                                            assignForm.data.resident_ids.includes(resident.id.toString())
-                                                                ? 'bg-slate-900 shadow-xl shadow-slate-900/20 ring-1 ring-slate-900'
-                                                                : 'bg-white ring-1 ring-slate-100 hover:bg-slate-50 hover:shadow-sm'
-                                                        }`}
-                                                    >
-                                                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black shadow-inner transition-colors ${
+                                    {/* Scrollable Resident List */}
+                                    <div className="mt-4 flex-1 space-y-2 overflow-y-auto pr-2 pb-4">
+                                        {filteredResidents.length === 0 ? (
+                                            <div className="py-12 text-center">
+                                                <UsersIcon className="mx-auto h-8 w-8 text-slate-300" />
+                                                <h3 className="mt-4 text-sm font-bold text-slate-900">No occupants found</h3>
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    {searchQuery
+                                                        ? "We couldn't find anyone matching that search."
+                                                        : 'You have no eligible occupants to assign.'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            filteredResidents.map((resident) => (
+                                                <motion.button
+                                                    whileTap={{ scale: 0.98 }}
+                                                    key={resident.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const ids = assignForm.data.resident_ids;
+                                                        if (ids.includes(resident.id.toString())) {
+                                                            assignForm.setData(
+                                                                'resident_ids',
+                                                                ids.filter((id) => id !== resident.id.toString()),
+                                                            );
+                                                        } else {
+                                                            assignForm.setData('resident_ids', [...ids, resident.id.toString()]);
+                                                        }
+                                                    }}
+                                                    className={`flex w-full items-center gap-4 rounded-3xl p-4 text-left transition-all ${
+                                                        assignForm.data.resident_ids.includes(resident.id.toString())
+                                                            ? 'bg-slate-900 shadow-xl ring-1 shadow-slate-900/20 ring-slate-900'
+                                                            : 'bg-white ring-1 ring-slate-100 hover:bg-slate-50 hover:shadow-sm'
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black shadow-inner transition-colors ${
                                                             assignForm.data.resident_ids.includes(resident.id.toString())
                                                                 ? 'bg-white/10 text-white'
                                                                 : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500'
-                                                        }`}>
-                                                            {resident.name.substring(0, 2).toUpperCase()}
-                                                        </div>
-                                                        
-                                                        <div className="flex-1">
-                                                            <p className={`text-base font-black tracking-tight ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-white' : 'text-slate-900'}`}>
-                                                                {resident.name}
-                                                            </p>
-                                                            <p className={`mt-0.5 text-xs font-semibold ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-slate-400' : 'text-slate-500'}`}>
-                                                                Current Property: {resident.property}
-                                                            </p>
-                                                        </div>
-                                                        
-                                                        {assignForm.data.resident_ids.includes(resident.id.toString()) && (
-                                                            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                                                <CheckCircleIcon className="h-7 w-7 text-white" />
-                                                            </motion.div>
-                                                        )}
-                                                    </motion.button>
-                                                ))
-                                            )}
-                                        </div>
+                                                        }`}
+                                                    >
+                                                        {resident.name.substring(0, 2).toUpperCase()}
+                                                    </div>
 
-                                        {/* Submit Button */}
-                                        <div className="shrink-0 border-t border-slate-100 pt-4 mt-2">
-                                            <button
-                                                type="button"
-                                                onClick={handleAssign}
-                                                disabled={assignForm.processing || assignForm.data.resident_ids.length === 0}
-                                                className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
-                                            >
-                                                {assignForm.processing 
-                                                    ? 'Assigning...' 
-                                                    : assignForm.data.resident_ids.length > 0 
-                                                        ? `Assign ${assignForm.data.resident_ids.length} Selected Occupant${assignForm.data.resident_ids.length > 1 ? 's' : ''}` 
-                                                        : 'Select Occupants to Assign'}
-                                            </button>
-                                            {assignForm.errors.resident_ids && (
-                                                <p className="mt-3 text-center text-xs font-bold text-rose-600">{assignForm.errors.resident_ids}</p>
-                                            )}
-                                        </div>
+                                                    <div className="flex-1">
+                                                        <p
+                                                            className={`text-base font-black tracking-tight ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-white' : 'text-slate-900'}`}
+                                                        >
+                                                            {resident.name}
+                                                        </p>
+                                                        <p
+                                                            className={`mt-0.5 text-xs font-semibold ${assignForm.data.resident_ids.includes(resident.id.toString()) ? 'text-slate-400' : 'text-slate-500'}`}
+                                                        >
+                                                            Current Property: {resident.property}
+                                                        </p>
+                                                    </div>
+
+                                                    {assignForm.data.resident_ids.includes(resident.id.toString()) && (
+                                                        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                            <CheckCircleIcon className="h-7 w-7 text-white" />
+                                                        </motion.div>
+                                                    )}
+                                                </motion.button>
+                                            ))
+                                        )}
                                     </div>
-                                </MobileSheet>
+
+                                    {/* Submit Button */}
+                                    <div className="mt-2 shrink-0 border-t border-slate-100 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={handleAssign}
+                                            disabled={assignForm.processing || assignForm.data.resident_ids.length === 0}
+                                            className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
+                                        >
+                                            {assignForm.processing
+                                                ? 'Assigning...'
+                                                : assignForm.data.resident_ids.length > 0
+                                                  ? `Assign ${assignForm.data.resident_ids.length} Selected Occupant${assignForm.data.resident_ids.length > 1 ? 's' : ''}`
+                                                  : 'Select Occupants to Assign'}
+                                        </button>
+                                        {assignForm.errors.resident_ids && (
+                                            <p className="mt-3 text-center text-xs font-bold text-rose-600">{assignForm.errors.resident_ids}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </MobileSheet>
 
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
                                 {residents.length > 0 ? (
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         {residents.map((resident) => (
-                                            <div key={resident.id} className="group relative flex flex-col justify-between rounded-3xl bg-white p-5 ring-1 ring-slate-100 transition-all hover:shadow-xl hover:shadow-slate-200/40">
+                                            <div
+                                                key={resident.id}
+                                                className="group relative flex flex-col justify-between rounded-3xl bg-white p-5 ring-1 ring-slate-100 transition-all hover:shadow-xl hover:shadow-slate-200/40"
+                                            >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 font-black text-indigo-600 shadow-inner">
@@ -415,7 +486,9 @@ export default function Show({ property, residents, outstandingCollections, outs
                                                         </div>
                                                         <div>
                                                             <p className="text-base font-black text-slate-900">{resident.name}</p>
-                                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">{resident.phone || 'No phone number'}</p>
+                                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                                                                {resident.phone || 'No phone number'}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <span
@@ -428,13 +501,15 @@ export default function Show({ property, residents, outstandingCollections, outs
                                                         {resident.status}
                                                     </span>
                                                 </div>
-                                                
+
                                                 <div className="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">Unit:</span>
-                                                        <span className="text-sm font-black text-slate-700">{resident.unit_number || 'Unassigned'}</span>
+                                                        <span className="text-sm font-black text-slate-700">
+                                                            {resident.unit_number || 'Unassigned'}
+                                                        </span>
                                                     </div>
-                                                    
+
                                                     <button
                                                         onClick={() => handleRemoveResident(resident.id)}
                                                         className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-500 transition-colors hover:bg-rose-500 hover:text-white"
@@ -459,31 +534,30 @@ export default function Show({ property, residents, outstandingCollections, outs
 
                     {/* COLLECTIONS TAB */}
                     {activeTab === 'collections' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            
+                        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
                             {/* FINANCIAL SUMMARY HERO */}
                             <div className="relative overflow-hidden rounded-[24px] bg-slate-950 p-8 shadow-xl">
                                 {/* Background elements */}
                                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
                                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
-                                
-                                <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+
+                                <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                                     <div>
                                         <p className="text-sm font-semibold tracking-wide text-slate-400 uppercase">Outstanding Balance</p>
                                         <h2 className="mt-2 text-4xl font-black tracking-tight text-white md:text-5xl">
                                             ₦{outstandingBalance.toLocaleString()}
                                         </h2>
                                     </div>
-                                    
+
                                     <div className="flex gap-6">
                                         <div className="flex flex-col">
                                             <span className="text-3xl font-black text-white">{metrics.pending_count}</span>
-                                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pending Bills</span>
+                                            <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Pending Bills</span>
                                         </div>
-                                        <div className="h-10 w-px bg-slate-800 self-center"></div>
+                                        <div className="h-10 w-px self-center bg-slate-800"></div>
                                         <div className="flex flex-col">
                                             <span className="text-3xl font-black text-white">{metrics.collection_rate}%</span>
-                                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Health</span>
+                                            <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Health</span>
                                         </div>
                                     </div>
                                 </div>
@@ -492,21 +566,30 @@ export default function Show({ property, residents, outstandingCollections, outs
                             {/* METRICS & PROGRESS ROW */}
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                                 {/* Progress Card */}
-                                <div className="col-span-1 lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
+                                <div className="col-span-1 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 lg:col-span-2">
                                     <h3 className="text-sm font-bold text-slate-900">Current Month Collections</h3>
                                     <div className="mt-4 flex items-end justify-between">
                                         <div>
-                                            <span className="text-2xl font-black text-slate-900">₦{metrics.current_month_collected.toLocaleString()}</span>
-                                            <span className="ml-2 text-sm font-semibold text-slate-500">/ ₦{metrics.current_month_expected.toLocaleString()}</span>
+                                            <span className="text-2xl font-black text-slate-900">
+                                                ₦{metrics.current_month_collected.toLocaleString()}
+                                            </span>
+                                            <span className="ml-2 text-sm font-semibold text-slate-500">
+                                                / ₦{metrics.current_month_expected.toLocaleString()}
+                                            </span>
                                         </div>
                                         <span className="text-sm font-bold text-emerald-600">
-                                            {metrics.current_month_expected > 0 ? Math.round((metrics.current_month_collected / metrics.current_month_expected) * 100) : 0}% Complete
+                                            {metrics.current_month_expected > 0
+                                                ? Math.round((metrics.current_month_collected / metrics.current_month_expected) * 100)
+                                                : 0}
+                                            % Complete
                                         </span>
                                     </div>
                                     <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                                        <div 
-                                            className="h-full rounded-full bg-emerald-500" 
-                                            style={{ width: `${metrics.current_month_expected > 0 ? Math.min(100, (metrics.current_month_collected / metrics.current_month_expected) * 100) : 0}%` }}
+                                        <div
+                                            className="h-full rounded-full bg-emerald-500"
+                                            style={{
+                                                width: `${metrics.current_month_expected > 0 ? Math.min(100, (metrics.current_month_collected / metrics.current_month_expected) * 100) : 0}%`,
+                                            }}
                                         ></div>
                                     </div>
                                 </div>
@@ -530,21 +613,27 @@ export default function Show({ property, residents, outstandingCollections, outs
 
                             {/* SEARCH & FILTERS */}
                             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar md:pb-0">
+                                <div className="custom-scrollbar flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
                                     {[
                                         { id: 'outstanding', label: 'Outstanding' },
                                         { id: 'all', label: 'All Bills' },
                                         { id: 'pending', label: 'Pending' },
                                         { id: 'overdue', label: 'Overdue' },
                                         { id: 'partial', label: 'Partially Paid' },
-                                        { id: 'paid', label: 'Paid' }
-                                    ].map(filter => (
+                                        { id: 'paid', label: 'Paid' },
+                                    ].map((filter) => (
                                         <button
                                             key={filter.id}
-                                            onClick={() => router.get(showProperty.url(property.ulid), { status: filter.id, search_collection: searchCollection }, { preserveState: true, replace: true, preserveScroll: true })}
-                                            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
-                                                (filters.status || 'outstanding') === filter.id 
-                                                    ? 'bg-slate-900 text-white shadow-md' 
+                                            onClick={() =>
+                                                router.get(
+                                                    showProperty.url(property.ulid),
+                                                    { status: filter.id, search_collection: searchCollection },
+                                                    { preserveState: true, replace: true, preserveScroll: true },
+                                                )
+                                            }
+                                            className={`rounded-full px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
+                                                (filters.status || 'outstanding') === filter.id
+                                                    ? 'bg-slate-900 text-white shadow-md'
                                                     : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                                             }`}
                                         >
@@ -553,7 +642,7 @@ export default function Show({ property, residents, outstandingCollections, outs
                                     ))}
                                 </div>
 
-                                <div className="relative w-full md:w-72 shrink-0">
+                                <div className="relative w-full shrink-0 md:w-72">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                         <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
                                     </div>
@@ -561,50 +650,62 @@ export default function Show({ property, residents, outstandingCollections, outs
                                         type="text"
                                         value={searchCollection}
                                         onChange={(e) => setSearchCollection(e.target.value)}
-                                        className="block w-full rounded-full border-0 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+                                        className="block w-full rounded-full border-0 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset"
                                         placeholder="Search bills..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                            <div className="flex flex-col gap-8">
                                 {/* BILLS LIST (Main Column) */}
-                                <div className="lg:col-span-2 space-y-4">
-                                    {outstandingCollections.data.length > 0 ? (
-                                        outstandingCollections.data.map((bill) => (
-                                            <div key={bill.id} className="group flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-900/5 transition-all hover:shadow-md hover:ring-slate-900/10">
+                                <div className="space-y-4">
+                                    {allBills.length > 0 ? (
+                                        allBills.map((bill) => (
+                                            <div
+                                                key={bill.id}
+                                                className="group flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-900/5 transition-all hover:shadow-md hover:ring-slate-900/10 sm:flex-row sm:items-center"
+                                            >
                                                 <div className="flex items-center gap-4">
                                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-black text-slate-600">
                                                         {bill.resident_name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{bill.name}</p>
+                                                        <p className="text-sm font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
+                                                            {bill.name}
+                                                        </p>
                                                         <p className="mt-1 text-sm font-semibold text-slate-500">{bill.resident_name}</p>
                                                         <div className="mt-1.5 flex items-center gap-2">
                                                             <ClockIcon className="h-3.5 w-3.5 text-slate-400" />
-                                                            <span className={`text-xs font-bold ${
-                                                                bill.due_status.includes('Overdue') ? 'text-rose-600' : 'text-slate-500'
-                                                            }`}>
+                                                            <span
+                                                                className={`text-xs font-bold ${
+                                                                    bill.due_status.includes('Overdue') ? 'text-rose-600' : 'text-slate-500'
+                                                                }`}
+                                                            >
                                                                 {bill.due_status || `Due ${bill.due_date}`}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="mt-4 flex items-center justify-between sm:mt-0 sm:flex-col sm:items-end sm:gap-2">
                                                     <p className="text-lg font-black text-slate-900">
                                                         ₦{(bill.amount_due - bill.amount_paid).toLocaleString()}
                                                     </p>
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide uppercase ring-1 ring-inset ${
-                                                            bill.status === 'paid' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' :
-                                                            bill.status === 'overdue' ? 'bg-rose-50 text-rose-700 ring-rose-600/20' :
-                                                            bill.status === 'partial' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                                            'bg-amber-50 text-amber-700 ring-amber-600/20'
-                                                        }`}>
+                                                        <span
+                                                            className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide uppercase ring-1 ring-inset ${
+                                                                bill.status === 'paid'
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                                                                    : bill.status === 'overdue'
+                                                                      ? 'bg-rose-50 text-rose-700 ring-rose-600/20'
+                                                                      : bill.status === 'partial'
+                                                                        ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                                                                        : 'bg-amber-50 text-amber-700 ring-amber-600/20'
+                                                            }`}
+                                                        >
                                                             {bill.status}
                                                         </span>
-                                                        <ChevronRightIcon className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-slate-600 hidden sm:block" />
+                                                        <ChevronRightIcon className="hidden h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-slate-600 sm:block" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -616,11 +717,15 @@ export default function Show({ property, residents, outstandingCollections, outs
                                             <p className="mt-1 text-sm text-slate-500">Adjust your filters or search query.</p>
                                         </div>
                                     )}
-                                    
+
                                     {outstandingCollections.next_page_url && (
                                         <WhenVisible
                                             always
-                                            fallback={<div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>}
+                                            fallback={
+                                                <div className="py-4 text-center">
+                                                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" />
+                                                </div>
+                                            }
                                             params={{
                                                 data: {
                                                     collections_page: outstandingCollections.current_page + 1,
@@ -629,47 +734,11 @@ export default function Show({ property, residents, outstandingCollections, outs
                                                 preserveUrl: true,
                                             }}
                                         >
-                                            <div className="py-4 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /></div>
+                                            <div className="py-4 text-center">
+                                                <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" />
+                                            </div>
                                         </WhenVisible>
                                     )}
-                                </div>
-
-                                {/* RECENT ACTIVITY SIDEBAR */}
-                                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 h-fit">
-                                    <h3 className="text-base font-bold text-slate-900">Recent Activity</h3>
-                                    <div className="mt-6 flow-root">
-                                        <ul className="-mb-8">
-                                            {activities.map((act, idx) => (
-                                                <li key={idx}>
-                                                    <div className="relative pb-8">
-                                                        {idx !== activities.length - 1 && (
-                                                            <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-100" />
-                                                        )}
-                                                        <div className="relative flex space-x-3">
-                                                            <div>
-                                                                <span className={`flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-white ${
-                                                                    act.type === 'payment_received' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'
-                                                                }`}>
-                                                                    {act.type === 'payment_received' ? <ArrowDownLeftIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                                                                <div>
-                                                                    <p className="text-sm font-semibold text-slate-900">{act.description}</p>
-                                                                </div>
-                                                                <div className="whitespace-nowrap text-right text-xs font-medium text-slate-500">
-                                                                    {act.date}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                            {activities.length === 0 && (
-                                                <div className="text-center py-6 text-sm text-slate-400 font-medium">No recent activity</div>
-                                            )}
-                                        </ul>
-                                    </div>
                                 </div>
                             </div>
                         </div>
