@@ -1,34 +1,77 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
+import React from 'react';
 
-export default function InvalidInvitation() {
+export default function Invalid() {
     return (
         <>
             <Head title="Invalid Invitation - Kontrol" />
 
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#0A3D91] to-[#041E4A] px-4 py-12">
+                {/* Ambient logic background */}
+                <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute top-0 left-0 h-96 w-96 bg-[#1F6FDB] opacity-10 blur-[100px]" />
+                    <div className="absolute right-0 bottom-0 h-96 w-96 bg-[#1F6FDB] opacity-5 blur-[100px]" />
+                </div>
+
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className="w-full max-w-md text-center"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="relative z-10 w-full max-w-md"
                 >
-                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                        <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                    {/* Branding */}
+                    <div className="mb-10 flex justify-center">
+                        <div className="h-10 w-auto">
+                            <img
+                                src="/assets/images/kontrol-white-logo-new.png"
+                                alt="Kontrol"
+                                className="h-full w-auto object-contain"
+                            />
+                        </div>
                     </div>
 
-                    <h1 className="text-2xl font-semibold text-gray-900">Invalid or Expired Invitation</h1>
-                    <p className="mt-3 text-gray-500">This invitation link is either invalid, has expired, or has already been used.</p>
-                    <p className="mt-2 text-gray-500">Please contact your platform administrator for a new invitation.</p>
+                    {/* Frosted Glass Panel */}
+                    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
+                        <div className="p-8 lg:p-10 text-center">
+                            <motion.div 
+                                initial={{ scale: 0 }} 
+                                animate={{ scale: 1 }} 
+                                transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+                                className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20 text-red-400"
+                            >
+                                <AlertCircle className="h-10 w-10" />
+                            </motion.div>
 
-                    <Link
-                        href="/"
-                        className="mt-8 inline-block rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-                    >
-                        Go to Homepage
-                    </Link>
+                            <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Invalid or Expired Link</h1>
+                            <p className="mb-8 text-sm leading-relaxed text-white/60">
+                                This invitation link is no longer valid. It may have expired, or you might have already used it to set up your account.
+                            </p>
+
+                            <div className="flex flex-col gap-4">
+                                <Link
+                                    href="/login"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-3.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-[#1F6FDB]/20 transition-all hover:bg-[#2579ed] hover:shadow-[#1F6FDB]/40 active:scale-95"
+                                >
+                                    Log in to your account
+                                </Link>
+                                <a
+                                    href="mailto:support@getkontrol.com"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold tracking-wide text-white transition-all hover:bg-white/10 active:scale-95"
+                                >
+                                    Contact Support
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 text-center">
+                        <Link href="/" className="inline-flex items-center gap-2 text-xs text-white/40 hover:text-white transition-colors">
+                            <ArrowLeft className="h-3 w-3" />
+                            Return to Homepage
+                        </Link>
+                    </div>
                 </motion.div>
             </div>
         </>

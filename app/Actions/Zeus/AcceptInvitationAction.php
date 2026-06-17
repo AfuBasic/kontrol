@@ -12,15 +12,11 @@ use Illuminate\Support\Facades\Hash;
 
 class AcceptInvitationAction
 {
-    /**
-     * @param  array{password: string, password_reset?: bool}  $data
-     */
-    public function execute(User $user, array $data): void
+    public function execute(User $user, array $data = []): void
     {
         DB::transaction(function () use ($user, $data) {
-            // Set the user's password and verify email
+            // Verify email
             $user->update([
-                'password' => Hash::make($data['password']),
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
 

@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,8 +19,13 @@ class InvitationController extends Controller
     {
         $isPasswordReset = $request->boolean('password_reset');
 
-        // Check if user already has a password (invitation already used) — skip for password resets
-        if (! $isPasswordReset && $user->password !== null) {
+        $hasPendingInvitations = DB::table('estate_users_membership')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        // Check if invitation was already used
+        if (! $isPasswordReset && ! $hasPendingInvitations && $user->email_verified_at !== null) {
             return redirect()->route('invitation.invalid');
         }
 
@@ -37,25 +43,25 @@ class InvitationController extends Controller
     {
         $isPasswordReset = $request->boolean('password_reset');
 
-        // Check if invitation was already used — skip for password resets
-        if (! $isPasswordReset && $user->password !== null) {
+        $hasPendingInvitations = DB::table('estate_users_membership')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        // Check if invitation was already used
+        if (! $isPasswordReset && ! $hasPendingInvitations && $user->email_verified_at !== null) {
             return redirect()->route('invitation.invalid');
         }
 
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        $action->execute($user, array_merge($validated, [
+        $action->execute($user, [
             'password_reset' => $request->boolean('password_reset'),
-        ]));
+        ]);
 
         // Log the user in
         Auth::login($user);
 
         $request->session()->regenerate();
         broadcast(new ForceLogout($user->id));
-        Auth::logoutOtherDevices($validated['password']);
 
         // Redirect based on role
         if ($user->hasRole('affiliate')) {
