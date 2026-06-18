@@ -16,7 +16,8 @@ class GenerateLoginOtp
      */
     public function execute(User $user, Request $request): void
     {
-        LoginOtp::where('user_id', $user->id)->delete();
+        // Delete expired OTPs to clean up, but keep valid ones so delayed emails still work
+        LoginOtp::where('user_id', $user->id)->where('expires_at', '<=', now())->delete();
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 

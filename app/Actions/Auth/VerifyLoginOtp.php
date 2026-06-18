@@ -15,16 +15,24 @@ class VerifyLoginOtp
      */
     public function execute(User $user, string $code, Request $request): bool
     {
-        $otp = LoginOtp::where('user_id', $user->id)
+        $otps = LoginOtp::where('user_id', $user->id)
             ->valid()
-            ->latest('created_at')
-            ->first();
+            ->get();
 
-        if (! $otp || ! Hash::check($code, $otp->code)) {
+        $matchedOtp = null;
+        foreach ($otps as $otp) {
+            if (Hash::check($code, $otp->code)) {
+                $matchedOtp = $otp;
+                break;
+            }
+        }
+
+        if (! $matchedOtp) {
             return false;
         }
 
-        $otp->delete();
+        // Delete all OTPs for this user upon successful verification
+        LoginOtp::where('user_id', $user->id)->delete();
 
         $userAgentHash = hash('sha256', $request->userAgent() ?? '');
 
