@@ -35,7 +35,7 @@ class PropertyOwnerController extends Controller
         $propertyOwners = User::query()
             ->forEstate($estate->id)
             ->withRole('property_owner', $estate->id)
-            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['profile', 'roles', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->withCount([
                 'properties' => fn ($q) => $q->where('estate_id', $estate->id),
                 'managedResidents',
@@ -71,6 +71,7 @@ class PropertyOwnerController extends Controller
                 'email_verified_at' => $user->email_verified_at,
                 'properties_count' => $user->properties_count,
                 'residents_count' => $user->managed_residents_count,
+                'is_resident' => $user->roles->contains('name', 'resident'),
                 'created_at' => $user->created_at->format('M d, Y'),
             ])
             ->withQueryString();
@@ -361,5 +362,29 @@ class PropertyOwnerController extends Controller
             ],
             'properties' => $properties,
         ]);
+    }
+
+    /**
+     * Grant the specified property owner resident privileges.
+     */
+    public function makeResident(User $propertyOwner): RedirectResponse
+    {
+        $this->authorize('property_owners.edit');
+        
+        $estate = $this->estateContext->getEstate();
+        
+        $residentRole = \Spatie\Permission\Models\Role::where('name', 'resident')
+            ->where('guard_name', 'web')
+            ->whereNull('estate_id')
+            ->firstOrFail();
+
+        setPermissionsTeamId($estate->id);
+        
+        if (!$propertyOwner->hasRole($residentRole)) {
+            $propertyOwner->assignRole($residentRole);
+            return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
+        }
+
+        return back()->with('info', 'Property Owner is already a Resident.');
     }
 }

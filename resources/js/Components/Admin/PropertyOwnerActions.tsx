@@ -6,12 +6,13 @@ import {
     CheckCircleIcon,
     BuildingOffice2Icon,
     UsersIcon,
+    UserPlusIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { edit, suspend, properties, residents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { edit, suspend, properties, residents, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
@@ -22,6 +23,7 @@ type PropertyOwner = {
     name: string;
     suspended_at: string | null;
     status: 'pending' | 'accepted';
+    is_resident: boolean;
 };
 
 interface Props {
@@ -33,7 +35,7 @@ export default function PropertyOwnerActions({ owner }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
-        type: 'suspend' | null;
+        type: 'suspend' | 'makeResident' | null;
     }>({
         isOpen: false,
         type: null,
@@ -92,7 +94,7 @@ export default function PropertyOwnerActions({ owner }: Props) {
         setIsOpen((v) => !v);
     };
 
-    const openModal = (type: 'suspend') => {
+    const openModal = (type: 'suspend' | 'makeResident') => {
         setModalConfig({ isOpen: true, type });
         setIsOpen(false); // Close dropdown
     };
@@ -115,6 +117,8 @@ export default function PropertyOwnerActions({ owner }: Props) {
 
         if (modalConfig.type === 'suspend') {
             router.patch(suspend.url(owner.ulid), {}, options);
+        } else if (modalConfig.type === 'makeResident') {
+            router.post(makeResident.url(owner.ulid), {}, options);
         }
     };
 
@@ -161,6 +165,21 @@ export default function PropertyOwnerActions({ owner }: Props) {
                     <PencilIcon className={isMobile ? 'h-6 w-6 text-slate-400' : 'h-4 w-4'} />
                     Edit Details
                 </Link>
+            )}
+
+            {/* Make Resident */}
+            {!owner.is_resident && can('property_owners.edit') && (
+                <button
+                    onClick={() => openModal('makeResident')}
+                    className={`flex w-full items-center gap-3 transition-all ${
+                        isMobile
+                            ? 'rounded-2xl bg-indigo-50 p-4 font-black text-indigo-700 shadow-sm active:scale-95'
+                            : 'rounded-lg px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50'
+                    }`}
+                >
+                    <UserPlusIcon className={isMobile ? 'h-6 w-6' : 'h-4 w-4'} />
+                    Make Resident
+                </button>
             )}
 
             {!isMobile && <hr className="my-1 border-gray-100" />}
@@ -233,14 +252,28 @@ export default function PropertyOwnerActions({ owner }: Props) {
                 isOpen={modalConfig.isOpen}
                 onClose={closeModal}
                 onConfirm={handleConfirm}
-                title={isSuspended ? 'Reactivate Property Owner' : 'Suspend Property Owner'}
-                message={
-                    isSuspended
-                        ? `Are you sure you want to reactivate ${owner.name}? They will be able to log in and manage their properties again.`
-                        : `Are you sure you want to suspend ${owner.name}? They will be logged out and lose access to the platform until reactivated.`
+                title={
+                    modalConfig.type === 'makeResident'
+                        ? 'Make Resident'
+                        : isSuspended ? 'Reactivate Property Owner' : 'Suspend Property Owner'
                 }
-                confirmLabel={isSuspended ? 'Reactivate' : 'Suspend'}
-                type={isSuspended ? 'info' : 'warning'}
+                message={
+                    modalConfig.type === 'makeResident'
+                        ? `Are you sure you want to give ${owner.name} resident privileges? They will be added to the residents directory and can generate visitor passes.`
+                        : isSuspended
+                            ? `Are you sure you want to reactivate ${owner.name}? They will be able to log in and manage their properties again.`
+                            : `Are you sure you want to suspend ${owner.name}? They will be logged out and lose access to the platform until reactivated.`
+                }
+                confirmLabel={
+                    modalConfig.type === 'makeResident'
+                        ? 'Make Resident'
+                        : isSuspended ? 'Reactivate' : 'Suspend'
+                }
+                type={
+                    modalConfig.type === 'makeResident'
+                        ? 'info'
+                        : isSuspended ? 'info' : 'warning'
+                }
                 isLoading={isLoading}
             />
         </div>

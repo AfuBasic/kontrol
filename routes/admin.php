@@ -107,6 +107,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
             Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
             Route::get('property-owners/{propertyOwner}/available-residents', [PropertyOwnerController::class, 'availableResidents'])->name('property-owners.available-residents');
             Route::post('property-owners/{propertyOwner}/assign-residents', [PropertyOwnerController::class, 'assignResidents'])->name('property-owners.assign-residents');
+            Route::post('property-owners/{propertyOwner}/make-resident', [PropertyOwnerController::class, 'makeResident'])->name('property-owners.make-resident');
             Route::get('property-owners/{propertyOwner}/properties', [PropertyOwnerController::class, 'properties'])->name('property-owners.properties');
             Route::resource('property-owners', PropertyOwnerController::class)->except(['show']);
         });

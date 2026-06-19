@@ -31,6 +31,7 @@ interface PropertyOwner {
     email_verified_at: string | null;
     properties_count: number;
     residents_count: number;
+    is_resident: boolean;
     created_at: string;
 }
 
