@@ -728,7 +728,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         >
                             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
                             <div className="mb-6 flex items-center justify-between">
-                                <h3 className="text-lg font-black text-slate-900">{isPropertyOwner ? 'Manage Estate' : 'More Options'}</h3>
+                                <h3 className="text-lg font-black text-slate-900">{isPropertyOwner ? (auth?.user?.name ? `Hello, ${auth.user.name.split(' ')[0]}` : 'Menu') : 'More Options'}</h3>
                                 <button
                                     onClick={() => setMoreMenuOpen(false)}
                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400"
