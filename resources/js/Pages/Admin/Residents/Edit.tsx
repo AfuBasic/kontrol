@@ -81,17 +81,11 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            disabled={isVerified}
-                            className={`mt-1 block w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:outline-none ${
-                                isVerified
-                                    ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
-                                    : 'border-gray-300 focus:border-primary-500 focus:ring-primary-50'
-                            }`}
+                            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
+                            required
                         />
-                        <p className="mt-2 text-xs text-gray-400">
-                            {isVerified
-                                ? 'Email is verified and cannot be changed for security.'
-                                : "You can edit the email address because the resident hasn't verified it yet."}
+                        <p className="mt-1 text-xs text-gray-500">
+                            If you change the email address, the resident will be required to verify their new email via an invitation link.
                         </p>
                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                     </div>

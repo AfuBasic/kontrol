@@ -15,10 +15,27 @@ class UpdateResidentAction
     public function execute(User $resident, array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($resident, $data, $estate) {
-            $resident->update([
+            $emailChanged = isset($data['email']) && $data['email'] !== $resident->email;
+
+            $updateData = [
                 'name' => $data['name'],
-                'email' => $data['email'] ?? $resident->email,
-            ]);
+            ];
+
+            if ($emailChanged) {
+                $updateData['email'] = $data['email'];
+                $updateData['email_verified_at'] = null;
+                $updateData['password'] = null;
+
+                $cacheKey = "email_changes_{$resident->id}";
+                $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+                \Illuminate\Support\Facades\Cache::put($cacheKey, $changesCount + 1, now()->addYear());
+            }
+
+            $resident->update($updateData);
+
+            if ($emailChanged) {
+                event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
+            }
 
             $resident->profile()->updateOrCreate(
                 ['user_id' => $resident->id],

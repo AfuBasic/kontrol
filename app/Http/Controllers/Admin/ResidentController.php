@@ -169,8 +169,12 @@ class ResidentController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($resident->id),
                 function ($attribute, $value, $fail) use ($resident) {
-                    if ($resident->email_verified_at && $value !== $resident->email) {
-                        $fail('The email address cannot be changed once the resident has verified their account.');
+                    if ($value !== $resident->email) {
+                        $cacheKey = "email_changes_{$resident->id}";
+                        $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+                        if ($changesCount >= 3) {
+                            $fail('The email address can only be changed 3 times within a year.');
+                        }
                     }
                 },
             ],

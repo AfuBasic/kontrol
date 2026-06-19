@@ -63,16 +63,18 @@ export default function Edit({ resident, properties }: Props) {
                 className="rounded-3xl bg-white p-6 shadow-xs ring-1 ring-slate-100 sm:p-8"
             >
                 <div className="space-y-6">
-                    {/* Readonly email */}
+                    {/* Email */}
                     <div>
                         <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase">Email Address</label>
                         <input
-                            type="text"
-                            value={resident.email}
-                            disabled
-                            className="mt-2 block w-full rounded-2xl border-slate-100 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-400 focus:outline-none"
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="mt-1 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
+                            required
                         />
-                        <p className="mt-1 text-[10px] font-bold text-slate-400">Email address is managed by the system and cannot be edited.</p>
+                        <p className="mt-1 text-[10px] font-bold text-slate-400">If you change the email address, the resident will be required to verify their new email via an invitation link.</p>
+                        {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email}</p>}
                     </div>
 
                     <div className="h-px bg-slate-100" />

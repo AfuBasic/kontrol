@@ -147,6 +147,21 @@ class ResidentController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($resident->id),
+                function ($attribute, $value, $fail) use ($resident) {
+                    if ($value !== $resident->email) {
+                        $cacheKey = "email_changes_{$resident->id}";
+                        $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+                        if ($changesCount >= 3) {
+                            $fail('The email address can only be changed 3 times within a year.');
+                        }
+                    }
+                },
+            ],
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -157,9 +172,28 @@ class ResidentController extends Controller
             ],
         ]);
 
-        $resident->update([
+        $emailChanged = isset($validated['email']) && $validated['email'] !== $resident->email;
+
+        $updateData = [
             'name' => $validated['name'],
-        ]);
+        ];
+
+        if ($emailChanged) {
+            $updateData['email'] = $validated['email'];
+            $updateData['email_verified_at'] = null;
+            $updateData['password'] = null;
+
+            $cacheKey = "email_changes_{$resident->id}";
+            $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $changesCount + 1, now()->addYear());
+        }
+
+        $resident->update($updateData);
+
+        if ($emailChanged) {
+            $estate = $this->estateContext->getEstate();
+            event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
+        }
 
         $resident->profile()->update([
             'phone' => $validated['phone'] ?? null,
