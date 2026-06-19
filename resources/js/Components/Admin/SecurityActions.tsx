@@ -185,7 +185,7 @@ export default function SecurityActions({ security }: Props) {
             )}
 
             {/* Resend Invitation */}
-            {can('security.reset-password') && (
+            {can('security.reset-password') && security.status !== 'accepted' && (
                 <div className={isMobile ? '' : 'contents'}>
                     {isMobile ? (
                         <button

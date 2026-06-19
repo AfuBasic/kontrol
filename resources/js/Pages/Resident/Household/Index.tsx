@@ -298,12 +298,14 @@ export default function HouseholdIndex({ members }: Props) {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setMemberToReset(member)}
-                                            className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
-                                        >
-                                            <KeyRound className="h-5 w-5" />
-                                        </button>
+                                        {member.status !== 'accepted' && (
+                                            <button
+                                                onClick={() => setMemberToReset(member)}
+                                                className="rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-90"
+                                            >
+                                                <KeyRound className="h-5 w-5" />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => setMemberToDelete(member)}
                                             className="rounded-xl p-3 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-90"
@@ -375,7 +377,7 @@ export default function HouseholdIndex({ members }: Props) {
                     onConfirm={handleResetPassword}
                     title="Resend invitation"
                     message={`Resend the invitation email to ${memberToReset?.name ?? 'this member'}?`}
-                    confirmLabel="Send Reset Email"
+                    confirmLabel="Resend Invitation"
                     type="warning"
                     isLoading={resettingId !== null}
                 />
