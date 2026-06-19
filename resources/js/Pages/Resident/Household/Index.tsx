@@ -372,8 +372,8 @@ export default function HouseholdIndex({ members }: Props) {
 
                 {/* Resend Invitation Confirmation Modal */}
                 <ConfirmationModal
-                    isOpen={showResetPasswordModal}
-                    onClose={() => setShowResetPasswordModal(false)}
+                    isOpen={memberToReset !== null}
+                    onClose={() => setMemberToReset(null)}
                     onConfirm={handleResetPassword}
                     title="Resend invitation"
                     message={`Resend the invitation email to ${memberToReset?.name ?? 'this member'}?`}
