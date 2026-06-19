@@ -101,9 +101,9 @@ export default function SecurityActions({ security }: Props) {
             }
             case 'reset':
                 return {
-                    title: 'Reset Password',
-                    message: `Are you sure you want to reset the password for ${security.name}? This will invalidate their current password and send a new invitation email.`,
-                    confirmLabel: 'Reset Password',
+                    title: 'Resend Invitation',
+                    message: `Are you sure you want to resend the invitation email to ${security.name}?`,
+                    confirmLabel: 'Resend Invitation',
                     type: 'warning' as const,
                 };
             default:
@@ -184,7 +184,7 @@ export default function SecurityActions({ security }: Props) {
                 </div>
             )}
 
-            {/* Reset Password */}
+            {/* Resend Invitation */}
             {can('security.reset-password') && (
                 <div className={isMobile ? '' : 'contents'}>
                     {isMobile ? (
@@ -193,7 +193,7 @@ export default function SecurityActions({ security }: Props) {
                             className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
                         >
                             <ArrowPathIcon className="h-6 w-6 text-slate-400" />
-                            Reset Password
+                            Resend Invitation
                         </button>
                     ) : (
                         <button
@@ -201,7 +201,7 @@ export default function SecurityActions({ security }: Props) {
                             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
                         >
                             <ArrowPathIcon className="h-4 w-4" />
-                            Reset Password
+                            Resend Invitation
                         </button>
                     )}
                 </div>

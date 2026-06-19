@@ -366,11 +366,12 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                     </div>
                                                     <button
                                                         onClick={() => {
-                                                            setEstateToReset(selectedEstate.id);
+                                                            setEstateToReset(selectedEstate);
+                                                            setIsResetModalOpen(true);
                                                         }}
                                                         className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
                                                     >
-                                                        Reset Password
+                                                        Resend Invitation
                                                     </button>
                                                 </div>
                                                 <button
@@ -414,12 +415,15 @@ export default function EstateExplorer({ estates, filters }: Props) {
             />
 
             <ConfirmationModal
-                isOpen={estateToReset !== null}
-                onClose={() => setEstateToReset(null)}
+                isOpen={isResetModalOpen}
+                onClose={() => {
+                    setIsResetModalOpen(false);
+                    setEstateToReset(null);
+                }}
                 onConfirm={handleResetPassword}
-                title="Reset Admin Password"
-                message="Are you sure you want to reset the admin password for this estate? A new password will be sent to the estate admin's email address."
-                confirmLabel="Reset Password"
+                title="Resend Invitation"
+                message={`Are you sure you want to resend the invitation email to the administrator of ${estateToReset?.name}?`}
+                confirmLabel="Resend Invitation"
                 type="warning"
                 isLoading={isProcessing}
             />

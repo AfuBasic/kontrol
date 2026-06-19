@@ -368,13 +368,13 @@ export default function HouseholdIndex({ members }: Props) {
                     isLoading={deletingId !== null}
                 />
 
-                {/* Reset Password Confirmation Modal */}
+                {/* Resend Invitation Confirmation Modal */}
                 <ConfirmationModal
-                    isOpen={memberToReset !== null}
-                    onClose={() => setMemberToReset(null)}
+                    isOpen={showResetPasswordModal}
+                    onClose={() => setShowResetPasswordModal(false)}
                     onConfirm={handleResetPassword}
-                    title="Reset password"
-                    message={`Send a password reset email to ${memberToReset?.name ?? 'this member'}? Their current password will be invalidated.`}
+                    title="Resend invitation"
+                    message={`Resend the invitation email to ${memberToReset?.name ?? 'this member'}?`}
                     confirmLabel="Send Reset Email"
                     type="warning"
                     isLoading={resettingId !== null}

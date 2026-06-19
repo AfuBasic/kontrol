@@ -189,7 +189,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                                 >
                                                     <Lock className="h-4 w-4" />
-                                                    Reset Password
+                                                    Resend Invitation
                                                 </button>
                                                 <div className="my-1 border-t border-slate-100 dark:border-slate-800/50"></div>
                                                 <button
@@ -444,7 +444,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                         ? `${estate.status === 'active' ? 'Deactivate' : 'Activate'} Estate`
                         : actionToConfirm === 'delete'
                           ? 'Delete Estate'
-                          : 'Reset Admin Password'
+                          : 'Resend Invitation'
                 }
                 message={
                     actionToConfirm === 'toggle'
@@ -453,7 +453,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                           }`
                         : actionToConfirm === 'delete'
                           ? `Are you absolutely sure you want to completely delete ${estate.name}? This action cannot be undone and will erase all associated data permanently.`
-                          : `Are you sure you want to send a password reset email to the primary admin of ${estate.name}?`
+                          : `Are you sure you want to resend the invitation email to the primary admin of ${estate.name}?`
                 }
                 confirmText={
                     actionToConfirm === 'toggle'
