@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { edit, destroy, suspend, resetPassword, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { edit, destroy, suspend, resendInvitation, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
@@ -117,7 +117,7 @@ export default function ResidentActions({ resident }: Props) {
                 router.patch(markAsPropertyOwner.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
                 break;
             case 'reset':
-                router.post(resetPassword.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
+                router.post(resendInvitation.url({ resident: resident.ulid ?? String(resident.id) }), {}, options);
                 break;
         }
     };
@@ -144,10 +144,10 @@ export default function ResidentActions({ resident }: Props) {
             }
             case 'reset':
                 return {
-                    title: 'Reset Password',
-                    message: `Are you sure you want to reset the password for ${resident.name}? This will invalidate their current password and send a new invitation email.`,
-                    confirmLabel: 'Reset Password',
-                    type: 'warning' as const,
+                    title: 'Resend Invitation',
+                    message: `Are you sure you want to resend the invitation email to ${resident.name}? This will send them a new link to join the estate.`,
+                    confirmLabel: 'Resend Invitation',
+                    type: 'info' as const,
                 };
             case 'markAsPropertyOwner':
                 return {
@@ -208,8 +208,8 @@ export default function ResidentActions({ resident }: Props) {
                 </button>
             )}
 
-            {/* Reset Password */}
-            {can('residents.reset-password') && (
+            {/* Resend Invitation */}
+            {can('residents.reset-password') && resident.status !== 'accepted' && (
                 <button
                     onClick={() => openModal('reset')}
                     className={`flex w-full items-center gap-3 transition-all ${
@@ -219,7 +219,7 @@ export default function ResidentActions({ resident }: Props) {
                     }`}
                 >
                     <ArrowPathIcon className={isMobile ? 'h-6 w-6 text-slate-400' : 'h-4 w-4'} />
-                    Reset Password
+                    Resend Invitation
                 </button>
             )}
 

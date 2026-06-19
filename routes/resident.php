@@ -157,6 +157,7 @@ Route::middleware('role:resident')->group(function (): void {
 
         // Managed Residents CRUD
         Route::patch('/residents/{resident}/suspend', [POResidentController::class, 'suspend'])->name('residents.suspend');
+        Route::post('/residents/{resident}/resend-invitation', [POResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
         Route::post('/residents/invite-link', [POResidentController::class, 'storeInviteLink'])->name('residents.invite-link.store');
         Route::post('/residents/invite-link/regenerate', [POResidentController::class, 'regenerateInviteLink'])->name('residents.invite-link.regenerate');
         Route::post('/residents/invite-link/toggle', [POResidentController::class, 'toggleInviteLink'])->name('residents.invite-link.toggle');

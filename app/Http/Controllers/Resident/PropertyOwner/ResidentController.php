@@ -195,6 +195,22 @@ class ResidentController extends Controller
     }
 
     /**
+     * Resend invitation for the managed resident.
+     */
+    public function resendInvitation(User $resident, \App\Actions\Admin\ResendResidentInvitationAction $action): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        // Ensure this resident is managed by the Property Owner
+        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+
+        $action->execute($resident, $estate);
+
+        return back()->with('success', 'Invitation resent successfully.');
+    }
+
+    /**
      * Remove resident delegation (stop managing).
      */
     public function destroy(User $resident): RedirectResponse

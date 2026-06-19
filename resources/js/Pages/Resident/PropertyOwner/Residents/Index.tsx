@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
-import { suspend, destroy, edit, create, index } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { suspend, destroy, edit, create, index, resendInvitation } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 interface Resident {
@@ -202,6 +202,20 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setActiveMenuId(null)} />
                                             <div className="absolute right-0 z-20 mt-1 w-48 origin-top-right rounded-2xl bg-white p-1.5 shadow-xl ring-1 ring-slate-100 focus:outline-none">
+                                                {resident.status !== 'accepted' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm(`Are you sure you want to resend the invitation email to ${resident.name}?`)) {
+                                                                router.post(resendInvitation.url(resident.ulid));
+                                                            }
+                                                            setActiveMenuId(null);
+                                                        }}
+                                                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                                                    >
+                                                        <EnvelopeIcon className="h-4.5 w-4.5 text-slate-400" />
+                                                        Resend Invitation
+                                                    </button>
+                                                )}
                                                 <Link
                                                     href={edit.url(resident.ulid)}
                                                     className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"

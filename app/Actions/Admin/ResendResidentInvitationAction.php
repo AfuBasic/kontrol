@@ -7,11 +7,11 @@ use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class ResetResidentPasswordAction
+class ResendResidentInvitationAction
 {
     public function execute(User $resident, Estate $estate): void
     {
-        // 1. Reset password and verification status
+        // 1. Reset verification status if they need a new invite
         $resident->update([
             'password' => null,
             'email_verified_at' => null,

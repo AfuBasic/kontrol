@@ -7,7 +7,7 @@ use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\DeleteResidentAction;
 use App\Actions\Admin\MarkResidentAsPropertyOwnerAction;
-use App\Actions\Admin\ResetResidentPasswordAction;
+use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
 use App\Http\Controllers\Controller;
@@ -235,16 +235,16 @@ class ResidentController extends Controller
     }
 
     /**
-     * Reset the password and resend invitation for the specified resident.
+     * Resend invitation for the specified resident.
      */
-    public function resetPassword(User $resident, ResetResidentPasswordAction $action): RedirectResponse
+    public function resendInvitation(User $resident, ResendResidentInvitationAction $action): RedirectResponse
     {
         $this->authorize('residents.reset-password');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
 
-        return back()->with('success', 'Resident password reset and invitation resent.');
+        return back()->with('success', 'Invitation resent successfully.');
     }
 
     /**
