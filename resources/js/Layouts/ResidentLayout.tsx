@@ -382,11 +382,11 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const showAnnouncementsInNav = !showDuesInNav && hasNoticeBoard;
 
     const residentMoreItems = [
-        { name: 'Profile', href: '/resident/profile', icon: User },
-        ...(hasHousehold && !isHouseholdMember ? [{ name: 'Household', href: '/resident/household', icon: UserCheck }] : []),
+        ...(hasHousehold && !isHouseholdMember ? [{ name: 'My Family', href: '/resident/household', icon: UserCheck }] : []),
         ...(!showDuesInNav && !isHouseholdMember && hasPaymentCollection ? [{ name: 'Dues', href: '/resident/dues', icon: Wallet }] : []),
         ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
         ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
+        { name: 'Profile', href: '/resident/profile', icon: User },
     ];
 
     const navItems = [
@@ -436,7 +436,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         },
         { name: 'CREATE_CODE', href: '#', icon: () => null },
         {
-            name: 'Manage Dues',
+            name: 'Collect Dues',
             href: '/resident/property-owner/collections',
             icon: (active: boolean) => <Wallet className="h-6 w-6" fill={active ? 'currentColor' : 'none'} fillOpacity={active ? 0.15 : 0} />,
         },
@@ -449,15 +449,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const poSidebarItems = [
         { name: 'Home', href: '/resident/home', icon: Home },
+        { name: 'My Tenants', href: '/resident/property-owner/residents', icon: Users },
+        { name: 'My Properties', href: '/resident/property-owner/properties', icon: Building },
+        { name: 'Collect Dues', href: '/resident/property-owner/collections', icon: Wallet },
+        { name: 'My Tenant Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
         { name: 'Incidents', href: '/resident/incidents', icon: ClipboardList },
-        { name: 'Residents', href: '/resident/property-owner/residents', icon: Users },
-        { name: 'Properties', href: '/resident/property-owner/properties', icon: Building },
-        { name: 'Manage Dues', href: '/resident/property-owner/collections', icon: Wallet },
-        { name: 'My Dues', href: '/resident/dues', icon: Wallet },
-        { name: 'Manage Announcements', href: '/resident/property-owner/announcements', icon: Megaphone },
-        { name: 'My Announcements', href: '/resident/estate-board', icon: Megaphone },
         { name: 'Visitor Passes', href: '/resident/visitors', icon: Users },
-        { name: 'Household Members', href: '/resident/household', icon: UserCheck },
+        { name: 'Pay Estate Dues', href: '/resident/dues', icon: Wallet },
+        { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
+        { name: 'My Family', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
 
@@ -737,7 +737,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 </button>
                             </div>
                             <div className="grid grid-cols-3 gap-4">
-                                {(isPropertyOwner ? poSidebarItems.filter((item) => item.name !== 'Manage Dues') : residentMoreItems).map((item) => {
+                                {(isPropertyOwner ? poSidebarItems.filter((item) => item.name !== 'Collect Dues') : residentMoreItems).map((item) => {
                                     if (item.name === 'SOS') {
                                         return (
                                             <div key={item.name} className="flex flex-col items-center gap-1.5">
