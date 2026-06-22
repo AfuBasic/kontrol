@@ -33,21 +33,26 @@ export default function PullToRefresh({ children, onRefresh, className }: Props)
             const currentY = moveEvent.touches[0].pageY;
             const diff = currentY - startY;
 
-            if (diff > 0) {
-                // Prevent browser rubber-banding/bounce
-                if (moveEvent.cancelable) moveEvent.preventDefault();
+            // If the user scrolls down natively or scroll position is not top, abort pull-to-refresh
+            if (diff <= 0 || (window.scrollY || document.documentElement.scrollTop) > 0) {
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleTouchEnd);
+                return;
+            }
 
-                // Apply resistance
-                const resistance = 0.4;
-                const cappedDiff = Math.min(diff * resistance, PULL_THRESHOLD + 20);
-                y.set(cappedDiff);
-                setPullProgress(Math.min(cappedDiff / PULL_THRESHOLD, 1));
+            // Prevent browser rubber-banding/bounce only when pulling down from the top
+            if (moveEvent.cancelable) moveEvent.preventDefault();
 
-                // Trigger haptic feedback when threshold is hit
-                if (cappedDiff >= PULL_THRESHOLD && pullProgress < 1) {
-                    if (Capacitor.isNativePlatform()) {
-                        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-                    }
+            // Apply resistance
+            const resistance = 0.4;
+            const cappedDiff = Math.min(diff * resistance, PULL_THRESHOLD + 20);
+            y.set(cappedDiff);
+            setPullProgress(Math.min(cappedDiff / PULL_THRESHOLD, 1));
+
+            // Trigger haptic feedback when threshold is hit
+            if (cappedDiff >= PULL_THRESHOLD && pullProgress < 1) {
+                if (Capacitor.isNativePlatform()) {
+                    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
                 }
             }
         };
