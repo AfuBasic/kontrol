@@ -1,7 +1,6 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
-    User, 
     Clock, 
     Calendar, 
     Tag, 
@@ -10,10 +9,9 @@ import {
     Search, 
     CheckCircle2, 
     XCircle, 
-    Trash2, 
     History as HistoryIcon,
-    ArrowRight,
-    Activity
+    Activity,
+    Plus
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -22,6 +20,7 @@ import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
 import CodeCard from './Components/CodeCard';
+import MobileSheet from '@/Components/MobileSheet';
 
 type Props = {
     activeCodes: AccessCode[];
@@ -46,14 +45,16 @@ type Props = {
     };
 };
 
-export default function Visitors({ activeCodes, historyCodes, filters, recentActivity }: Props) {
+export default function Visitors({ activeCodes, historyCodes, filters, recentActivity, visitorStats }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
 
     // Search State for History
     const [searchQuery, setSearchQuery] = useState(filters?.search_history || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [showCreateSheet, setShowCreateSheet] = useState(false);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+    const activitySectionRef = useRef<HTMLDivElement>(null);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -120,156 +121,170 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
     const getActivityIcon = (type: string) => {
         switch (type) {
             case 'created':
-                return <PlusCircle className="h-5 w-5 text-indigo-650" />;
+                return <PlusCircle className="h-4.5 w-4.5 text-indigo-600" />;
             case 'used':
-                return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+                return <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />;
             case 'expired':
-                return <Clock className="h-5 w-5 text-amber-500" />;
+                return <Clock className="h-4.5 w-4.5 text-amber-500" />;
             case 'revoked':
-                return <XCircle className="h-5 w-5 text-rose-500" />;
+                return <XCircle className="h-4.5 w-4.5 text-rose-500" />;
             default:
-                return <Activity className="h-5 w-5 text-slate-400" />;
+                return <Activity className="h-4.5 w-4.5 text-slate-400" />;
         }
     };
+
+    // Helper to format activity message for timeline
+    const formatActivityMessage = (msg: string) => {
+        let text = msg;
+        if (text.includes('arrived')) {
+            text = text.replace('arrived', 'entered the estate');
+        }
+        return text;
+    };
+
+    // Group history entries by month
+    const groupCodesByMonth = (codes: AccessCode[]) => {
+        const groups: Record<string, AccessCode[]> = {};
+        codes.forEach(code => {
+            const date = new Date(code.created_at);
+            const monthYear = date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            if (!groups[monthYear]) {
+                groups[monthYear] = [];
+            }
+            groups[monthYear].push(code);
+        });
+        return groups;
+    };
+
+    const groupedHistory = groupCodesByMonth(historyCodes);
+
+    // Animation presets
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } }
+    };
+
+    // Stats layout
+    const statsPills = [
+        { label: 'Active', value: visitorStats?.active_codes ?? 0, color: 'bg-emerald-50/60 border-emerald-100 text-emerald-700' },
+        { label: 'Expected Today', value: visitorStats?.expected_today ?? 0, color: 'bg-amber-50/60 border-amber-100 text-amber-700' },
+        { label: 'Arrived Today', value: visitorStats?.visitors_today ?? 0, color: 'bg-indigo-50/60 border-indigo-100 text-indigo-700' },
+        { label: 'Events Today', value: activeCodes.filter(c => c.type === 'event').length, color: 'bg-purple-50/60 border-purple-100 text-purple-700' }
+    ];
 
     return (
         <>
             <Head title="Visitor Access" />
 
-            <div className="space-y-10 pb-32">
+            <div className="space-y-8 pb-32">
                 {/* 1. HEADER */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col"
-                >
+                <div className="flex flex-col">
                     <h1 className="text-3xl font-black tracking-tight text-slate-900">Visitor Access</h1>
-                    <p className="mt-1.5 text-sm font-bold text-slate-400 leading-normal">
-                        Manage visitor access and track arrivals.
+                    <p className="mt-1 text-sm font-bold text-slate-450 leading-normal">
+                        Manage everyone entering your estate in real-time.
                     </p>
+                </div>
+
+                {/* 2. VISITOR HUB HERO */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                    className="relative overflow-hidden rounded-[36px] bg-linear-to-br from-slate-900 to-indigo-950 p-6 text-white shadow-xl shadow-indigo-950/15 sm:p-8"
+                >
+                    {/* Glowing aesthetic backdrops */}
+                    <div className="absolute -top-24 -right-24 h-52 w-52 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-24 h-52 w-52 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
+
+                    <div className="relative z-10 space-y-6">
+                        <div className="space-y-2 max-w-md">
+                            <span className="text-[10px] font-black tracking-widest text-indigo-300 uppercase">Visitor Command Center</span>
+                            <h2 className="text-2xl font-black tracking-tight leading-tight sm:text-3xl">Invite guests, workers, or events</h2>
+                            <p className="text-xs font-bold text-indigo-100/70 leading-relaxed">
+                                Generate secure digital access codes for one-time guests, long-term workers, or whole event lists instantly.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowCreateSheet(true)}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-white px-5 text-xs font-black text-indigo-950 shadow-lg shadow-indigo-950/10 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={3} />
+                                Create Pass
+                            </button>
+                            <button
+                                onClick={() => activitySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-white/10 border border-white/10 px-5 text-xs font-black text-white backdrop-blur-md hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            >
+                                <Activity className="h-4 w-4" />
+                                View Activity
+                            </button>
+                        </div>
+                    </div>
                 </motion.div>
 
-                {/* 2. QUICK ACTIONS */}
-                <div className="space-y-4">
-                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Generate Passes</h2>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        {/* One-Time */}
-                        <Link
-                            href="/resident/visitors/create?type=single_use"
-                            className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
-                        >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
-                                <Tag className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-900 text-sm tracking-tight">One-Time Pass</h3>
-                                <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">Perfect for a single visitor.</p>
-                            </div>
-                        </Link>
-
-                        {/* Long-Term */}
-                        {!isHouseholdMember && (
-                            <Link
-                                href="/resident/visitors/create?type=long_lived"
-                                className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
+                {/* 3. TODAY'S ACTIVITY PILLS */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Today's Activity</h3>
+                    </div>
+                    <div className="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 scrollbar-hide">
+                        {statsPills.map((stat, idx) => (
+                            <motion.div
+                                key={idx}
+                                whileTap={{ scale: 0.97 }}
+                                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-black shadow-[0_2px_12px_rgb(0,0,0,0.01)] ${stat.color}`}
                             >
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
-                                    <Calendar className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <h3 className="font-black text-slate-900 text-sm tracking-tight">Long-Term Pass</h3>
-                                    <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">For recurring visitors.</p>
-                                </div>
-                            </Link>
-                        )}
-
-                        {/* Event Pass */}
-                        <Link
-                            href="/resident/visitors/create?type=event"
-                            className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
-                        >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
-                                <Users className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-900 text-sm tracking-tight">Event Pass</h3>
-                                <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">One pass for many guests.</p>
-                            </div>
-                        </Link>
+                                <span>{stat.value}</span>
+                                <span className="opacity-75 font-bold">{stat.label}</span>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
 
-                {/* 3. ACTIVE PASSES */}
-                <div className="space-y-4">
-                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Currently Active</h2>
-                    {activePasses.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            {activePasses.map((code) => (
-                                <CodeCard
-                                    key={code.id}
-                                    code={code}
-                                    showActions={code.status === 'active'}
-                                    onRevoke={openRevokeModal}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[36px] bg-white border border-slate-200/80 px-8 py-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 border border-slate-100 mb-5">
-                                <Tag className="h-8 w-8" />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900">No Active Passes</h3>
-                            <p className="mt-2 max-w-xs text-xs font-bold text-slate-400 leading-relaxed">
-                                Create a pass to allow guests into your estate.
-                            </p>
-                            <Link
-                                href="/resident/visitors/create"
-                                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-xs font-black text-white shadow-xl shadow-indigo-500/10 hover:bg-indigo-700 active:scale-95 transition-all"
-                            >
-                                <PlusCircle className="h-4.5 w-4.5" />
-                                Create Pass
-                            </Link>
-                        </div>
-                    )}
+                {/* 4. QUICK ACTIONS BAR */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Quick Actions</h3>
+                    </div>
+                    <button
+                        onClick={() => setShowCreateSheet(true)}
+                        className="flex w-full items-center justify-center gap-2.5 rounded-[24px] bg-slate-900 py-4 text-sm font-black text-white shadow-xl shadow-slate-900/10 hover:bg-slate-800 active:scale-98 transition-all cursor-pointer"
+                    >
+                        <PlusCircle className="h-5 w-5" />
+                        Create Access Pass
+                    </button>
                 </div>
 
-                {/* 4. SCHEDULED PASSES */}
-                <div className="space-y-4">
-                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Scheduled Passes</h2>
-                    {scheduledPasses.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            {scheduledPasses.map((code) => (
-                                <CodeCard
-                                    key={code.id}
-                                    code={code}
-                                    showActions={false}
-                                    onRevoke={openRevokeModal}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="rounded-[28px] border-2 border-dashed border-slate-200 p-6 text-center bg-slate-50/10">
-                            <p className="text-xs font-bold text-slate-400">No upcoming visitor passes scheduled.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* 5. RECENT VISITOR ACTIVITY */}
+                {/* 5. RECENT VISITOR ACTIVITY (TIMELINE) */}
                 {recentActivity && recentActivity.length > 0 && (
-                    <div className="space-y-4">
-                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h2>
-                        <div className="rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-5">
-                            {recentActivity.slice(0, 5).map((activity, i) => (
+                    <div ref={activitySectionRef} className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h3>
+                        </div>
+                        <div className="rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
+                            {recentActivity.slice(0, 4).map((activity, i) => (
                                 <div key={i} className="flex gap-4 items-start relative">
-                                    {i < Math.min(recentActivity.length, 5) - 1 && (
-                                        <div className="absolute left-[18px] top-10 bottom-0 w-0.5 bg-slate-100" />
+                                    {/* Timeline thread line */}
+                                    {i < Math.min(recentActivity.length, 4) - 1 && (
+                                        <div className="absolute left-[18px] top-9 bottom-[-24px] w-0.5 bg-slate-100" />
                                     )}
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-400">
                                         {getActivityIcon(activity.type)}
                                     </div>
                                     <div className="flex-1 min-w-0 pt-1">
-                                        <p className="text-xs font-extrabold text-slate-800 leading-normal">{activity.message}</p>
+                                        <p className="text-xs font-extrabold text-slate-800 leading-normal">
+                                            {formatActivityMessage(activity.message)}
+                                        </p>
                                         <p className="text-[10px] font-bold text-slate-400 mt-1">{activity.time}</p>
                                     </div>
                                 </div>
@@ -278,10 +293,93 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                     </div>
                 )}
 
-                {/* 6. HISTORY */}
+                {/* 6. ACTIVE VISITORS */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Visitor History</h2>
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Active Visitors</h3>
+                        {activePasses.length > 0 && (
+                            <span className="flex h-5 items-center justify-center rounded-full bg-emerald-50 px-2.5 text-[10px] font-black text-emerald-600 uppercase border border-emerald-100">
+                                {activePasses.length} Authorized
+                            </span>
+                        )}
+                    </div>
+                    
+                    {activePasses.length > 0 ? (
+                        <motion.div 
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="show"
+                            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                        >
+                            {activePasses.map((code) => (
+                                <motion.div key={code.id} variants={itemVariants}>
+                                    <CodeCard
+                                        code={code}
+                                        showActions={code.status === 'active'}
+                                        onRevoke={openRevokeModal}
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center rounded-[36px] bg-white border border-slate-200/80 px-8 py-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-650 border border-indigo-100/50 mb-5">
+                                <Users className="h-8 w-8" />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900">Your estate is quiet today</h3>
+                            <p className="mt-2 max-w-xs text-xs font-bold text-slate-400 leading-relaxed">
+                                No guests currently have access. Create a pass when you're expecting visitors.
+                            </p>
+                            <button
+                                onClick={() => setShowCreateSheet(true)}
+                                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-xs font-black text-white shadow-xl shadow-indigo-500/10 hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
+                            >
+                                <PlusCircle className="h-4.5 w-4.5" />
+                                Create Pass
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* 7. UPCOMING VISITORS */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Upcoming Visitors</h3>
+                        {scheduledPasses.length > 0 && (
+                            <span className="flex h-5 items-center justify-center rounded-full bg-amber-50 px-2.5 text-[10px] font-black text-amber-600 uppercase border border-amber-100">
+                                {scheduledPasses.length} Scheduled
+                            </span>
+                        )}
+                    </div>
+
+                    {scheduledPasses.length > 0 ? (
+                        <motion.div 
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="show"
+                            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                        >
+                            {scheduledPasses.map((code) => (
+                                <motion.div key={code.id} variants={itemVariants}>
+                                    <CodeCard
+                                        code={code}
+                                        showActions={false}
+                                        onRevoke={openRevokeModal}
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <div className="rounded-[28px] border border-slate-200/60 p-6 text-center bg-white shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                            <p className="text-xs font-bold text-slate-400">No upcoming visitor passes scheduled.</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* 8. VISITOR HISTORY (LOW HIERARCHY CHRONOLOGICAL ARCHIVE) */}
+                <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Visitor History Archive</h2>
                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                             <HistoryIcon className="h-4 w-4" />
                             Archive
@@ -303,14 +401,27 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                                    className="space-y-8"
                                 >
-                                    {historyCodes.map((code) => (
-                                        <CodeCard
-                                            key={code.id}
-                                            code={code}
-                                            showActions={false}
-                                        />
+                                    {Object.keys(groupedHistory).map(month => (
+                                        <div key={month} className="space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-px flex-1 bg-slate-100" />
+                                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase bg-white px-2">
+                                                    {month}
+                                                </span>
+                                                <div className="h-px flex-1 bg-slate-100" />
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                {groupedHistory[month].map((code) => (
+                                                    <CodeCard
+                                                        key={code.id}
+                                                        code={code}
+                                                        showActions={false}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </motion.div>
                             ) : (
@@ -324,6 +435,68 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                     </div>
                 </div>
             </div>
+
+            {/* A. UNIFIED PASS CREATION DRAWER */}
+            <MobileSheet isOpen={showCreateSheet} onClose={() => setShowCreateSheet(false)} title="What kind of access do you need?">
+                <div className="space-y-3 pb-8">
+                    <p className="text-xs font-bold text-slate-400 mb-2 px-1">
+                        Select a pass type to continue with invitation code generation.
+                    </p>
+                    
+                    {/* One-Time Pass */}
+                    <Link
+                        href="/resident/visitors/create?type=single_use"
+                        onClick={() => setShowCreateSheet(false)}
+                        className="group flex items-start gap-4 rounded-3xl bg-slate-50 p-5 border border-slate-100 transition-all duration-300 hover:bg-slate-100 hover:border-indigo-200/60 active:scale-99"
+                    >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
+                            <Tag className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-black text-slate-900 text-sm tracking-tight">One-Time Pass</h4>
+                            <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">
+                                Perfect for a single visitor, delivery driver, or utility pickup. Valid for one entry.
+                            </p>
+                        </div>
+                    </Link>
+
+                    {/* Long-Term Pass */}
+                    {!isHouseholdMember && (
+                        <Link
+                            href="/resident/visitors/create?type=long_lived"
+                            onClick={() => setShowCreateSheet(false)}
+                            className="group flex items-start gap-4 rounded-3xl bg-slate-50 p-5 border border-slate-100 transition-all duration-300 hover:bg-slate-100 hover:border-indigo-200/60 active:scale-99"
+                        >
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
+                                <Calendar className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-slate-900 text-sm tracking-tight">Long-Term Pass</h4>
+                                <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">
+                                    For recurring visitors like family members, domestic staff, or contractors.
+                                </p>
+                            </div>
+                        </Link>
+                    )}
+
+                    {/* Event Pass */}
+                    <Link
+                        href="/resident/visitors/create?type=event"
+                        onClick={() => setShowCreateSheet(false)}
+                        className="group flex items-start gap-4 rounded-3xl bg-slate-50 p-5 border border-slate-100 transition-all duration-300 hover:bg-slate-100 hover:border-indigo-200/60 active:scale-99"
+                    >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
+                            <Users className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-black text-slate-900 text-sm tracking-tight">Event Pass</h4>
+                            <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">
+                                Generate one access pass that can be shared with multiple guests. Perfect for events.
+                            </p>
+                        </div>
+                    </Link>
+                </div>
+            </MobileSheet>
 
             <ConfirmationModal
                 isOpen={revokeModalOpen}

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Copy, Trash2, Clock, CheckCircle2, AlertCircle, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
+import { Copy, Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
 import { useState } from 'react';
 import MobileSheet from '@/Components/MobileSheet';
 import resident from '@/routes/resident';
@@ -11,30 +11,55 @@ import { shareAccessCode } from '@/Utils/share';
 function getStatusInfo(status: string) {
     switch (status) {
         case 'active':
-            return { label: 'Active', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20', accent: 'bg-emerald-500' };
+            return {
+                label: 'Active',
+                color: 'text-emerald-600 dark:text-emerald-400',
+                bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
+                accent: 'bg-emerald-500',
+            };
         case 'scheduled':
-            return { label: 'Not Active Yet', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20', accent: 'bg-amber-500' };
+            return {
+                label: 'Scheduled',
+                color: 'text-amber-600 dark:text-amber-400',
+                bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20',
+                accent: 'bg-amber-500',
+            };
         case 'used':
-            return { label: 'Completed', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20', accent: 'bg-blue-500' };
+            return {
+                label: 'Completed',
+                color: 'text-blue-600 dark:text-blue-400',
+                bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
+                accent: 'bg-blue-500',
+            };
         case 'expired':
-            return { label: 'Expired', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-500/10 border-slate-100 dark:border-slate-500/20', accent: 'bg-slate-400' };
+            return {
+                label: 'Expired',
+                color: 'text-slate-500',
+                bg: 'bg-slate-50 dark:bg-slate-500/10 border-slate-100 dark:border-slate-500/20',
+                accent: 'bg-slate-400',
+            };
         case 'revoked':
-            return { label: 'Cancelled', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20', accent: 'bg-rose-500' };
+            return {
+                label: 'Cancelled',
+                color: 'text-rose-600 dark:text-rose-400',
+                bg: 'bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20',
+                accent: 'bg-rose-500',
+            };
         default:
             return { label: status, color: 'text-slate-500', bg: 'bg-slate-50 border-slate-100', accent: 'bg-slate-400' };
     }
 }
 
-function getPassTypeLabel(type: string) {
+function getPassTypeDetails(type: string) {
     switch (type) {
         case 'single_use':
-            return 'One-Time Pass';
+            return { label: 'One-Time', icon: Tag, bg: 'bg-emerald-50 text-emerald-600' };
         case 'long_lived':
-            return 'Long-Term Pass';
+            return { label: 'Long-Term', icon: Calendar, bg: 'bg-blue-50 text-blue-600' };
         case 'event':
-            return 'Event Pass';
+            return { label: 'Event', icon: Users, bg: 'bg-purple-50 text-purple-600' };
         default:
-            return 'Access Pass';
+            return { label: 'Visitor', icon: Tag, bg: 'bg-slate-50 text-slate-600' };
     }
 }
 
@@ -55,6 +80,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     const isFuture = code.starts_at ? new Date(code.starts_at) > new Date() : false;
     const effectiveStatus = code.status === 'active' && isExpired ? 'expired' : (code.status === 'active' && isFuture ? 'scheduled' : code.status);
     const status = getStatusInfo(effectiveStatus);
+    const typeInfo = getPassTypeDetails(code.type);
 
     async function copyCode() {
         try {
@@ -114,6 +140,14 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         onRevoke?.(code);
     };
 
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
     // Format display date
     const formatFaintExpiry = () => {
         if (effectiveStatus === 'scheduled' && code.starts_at) {
@@ -156,138 +190,123 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     return (
         <motion.div
             layoutId={`visitor-card-${code.id}`}
-            className="group relative overflow-hidden rounded-[32px] bg-white border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 hover:shadow-xl hover:border-slate-300/80"
+            whileHover={{ y: -4, shadow: '0 12px 30px rgba(0, 0, 0, 0.04)' }}
+            className="group relative overflow-hidden rounded-[28px] bg-white p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
         >
-            {/* Top Ticket Section */}
-            <div className="p-6 pb-4">
-                {/* Header Row */}
-                <div className="flex items-center justify-between mb-4">
-                    <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        <Tag className="h-3.5 w-3.5 text-slate-400" />
-                        {getPassTypeLabel(code.type)}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-black tracking-wider uppercase ${status.bg} ${status.color}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${status.accent}`} />
-                        {status.label}
-                    </span>
+            {/* Card Body */}
+            <div className="flex gap-4 items-start">
+                {/* Avatar Bubble */}
+                <div className="relative shrink-0">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${typeInfo.bg} font-black text-sm relative transition-all group-hover:scale-105 select-none`}>
+                        {code.type === 'event' ? <typeInfo.icon className="h-5 w-5" /> : getInitials(code.visitor_name || 'Visitor')}
+                    </div>
+                    {/* Status Indicator Dot */}
+                    <span className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${status.accent}`} />
                 </div>
 
-                {/* Name / Event Details */}
-                <div className="mb-4">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
-                        {code.visitor_name || 'Visitor'}
-                    </h3>
-                    {code.purpose && (
-                        <p className="text-xs font-bold text-slate-400 mt-1">
-                            Purpose: {code.purpose}
-                        </p>
-                    )}
-                </div>
-
-                {/* Event Pass Specific UI */}
-                {code.type === 'event' && (
-                    <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-indigo-600 uppercase">
-                                <Users className="h-3.5 w-3.5" />
-                                Attendance
-                            </span>
-                            <span className="text-xs font-extrabold text-indigo-900">
-                                {code.uses_count ?? 0} {code.guest_limit ? `/ ${code.guest_limit}` : ''} Admitted
-                            </span>
+                {/* Main Info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                            <h3 className="text-base font-black text-slate-900 truncate tracking-tight leading-snug">
+                                {code.visitor_name || 'Visitor'}
+                            </h3>
+                            {code.purpose && (
+                                <p className="text-xs font-bold text-slate-400 truncate mt-0.5">
+                                    {code.purpose}
+                                </p>
+                            )}
                         </div>
-                        {code.guest_limit && (
-                            <div className="w-full h-2 bg-indigo-100 rounded-full overflow-hidden">
-                                <div 
-                                    className="h-full bg-indigo-600 rounded-full transition-all duration-500" 
-                                    style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
-                                />
-                            </div>
-                        )}
-                        {code.used_at && (
-                            <p className="mt-2 text-[10px] font-bold text-slate-400">
-                                Last entry: {new Date(code.used_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()}
-                            </p>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Separator line with left/right ticket punches */}
-            <div className="relative border-t-2 border-dashed border-slate-100 bg-slate-50/15">
-                {/* Ticket punches */}
-                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-50 border-r border-slate-200/80 z-10" />
-                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-50 border-l border-slate-200/80 z-10" />
-            </div>
-
-            {/* Bottom Stub Section */}
-            <div className="px-6 py-5 bg-slate-50/20">
-                <div className="flex items-center justify-between gap-4 mb-4">
-                    <div className="flex-1">
-                        <span className="block text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase mb-0.5">
-                            Access Code
-                        </span>
-                        <span className="font-mono text-3xl font-black tracking-[0.1em] text-slate-900">
-                            {code.code.split('').join(' ')}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                        {/* Copy button */}
+                        
+                        {/* Options button */}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                copyCode();
+                                setShowOptions(true);
                             }}
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-90 ${
-                                copying ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-400 shadow-xs hover:text-slate-600'
-                            }`}
-                            title="Copy code"
+                            className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
                         >
-                            <Copy className="h-4.5 w-4.5" />
-                        </button>
-
-                        {/* View details */}
-                        <Link
-                            href={resident.visitors.show.url(code.id)}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 shadow-xs hover:text-slate-600 active:scale-90"
-                            title="View details"
-                        >
-                            <ExternalLink className="h-4.5 w-4.5" />
-                        </Link>
-
-                        {/* Actions Sheet button */}
-                        <button
-                            onClick={() => setShowOptions(true)}
-                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 shadow-xs hover:text-slate-600 active:scale-90"
-                            title="More options"
-                        >
-                            <Clock className="h-4.5 w-4.5 rotate-90" />
+                            <Clock className="h-4 w-4 rotate-90" />
                         </button>
                     </div>
-                </div>
 
-                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-                    <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 text-slate-400" />
-                        {formatFaintExpiry()}
-                    </span>
+                    {/* Badges and Validity Row */}
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                            {typeInfo.label}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                            {formatFaintExpiry()}
+                        </span>
+                    </div>
+
+                    {/* Attendance Progress if Event */}
+                    {code.type === 'event' && (
+                        <div className="mt-3.5 space-y-1.5 rounded-2xl bg-slate-50/50 p-3 border border-slate-100/50">
+                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3 text-purple-500" />
+                                    Attendance
+                                </span>
+                                <span className="font-extrabold text-slate-700">
+                                    {code.uses_count ?? 0} {code.guest_limit ? `/ ${code.guest_limit}` : ''} Admitted
+                                </span>
+                            </div>
+                            {code.guest_limit && (
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-purple-650 rounded-full transition-all duration-500" 
+                                        style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Quick Share action button on Active passes */}
-            {showActions && effectiveStatus === 'active' && (
-                <div className="px-6 pb-6 pt-0">
-                    <button
-                        onClick={handleShare}
-                        disabled={sharing}
-                        className="flex w-full items-center justify-center gap-2 rounded-[20px] bg-slate-900 py-3.5 text-xs font-black text-white shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-98 disabled:opacity-50"
+            {/* Footer - Access Code & Actions */}
+            <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center justify-between gap-3">
+                {/* Copyable Access Code badge */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        copyCode();
+                    }}
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer ${
+                        copying ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/10' : 'bg-slate-50 border border-slate-100 text-slate-700 hover:bg-slate-100'
+                    }`}
+                >
+                    <span className="text-[10px] font-sans font-black tracking-widest text-slate-400 uppercase">Code:</span>
+                    <span className="font-black tracking-wider">{copying ? 'COPIED' : code.code}</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                    {/* Share button */}
+                    {showActions && effectiveStatus === 'active' && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare();
+                            }}
+                            disabled={sharing}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                            <Share2 className="h-3.5 w-3.5" />
+                            <span>Share</span>
+                        </button>
+                    )}
+                    
+                    {/* Details Link */}
+                    <Link
+                        href={resident.visitors.show.url(code.id)}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-400 hover:text-slate-650 transition-colors"
+                        title="View Details"
                     >
-                        <Share2 className="h-4 w-4" />
-                        {sharing ? 'Sharing...' : 'Share Access Pass'}
-                    </button>
+                        <ExternalLink className="h-4 w-4" />
+                    </Link>
                 </div>
-            )}
+            </div>
 
             {/* Options Sheet */}
             <MobileSheet isOpen={showOptions} onClose={() => setShowOptions(false)} title="Pass Options">
@@ -349,7 +368,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-rose-600">Cancel Pass</p>
-                                    <p className="text-xs font-bold text-rose-400">Revoke access immediately</p>
+                                    <p className="text-xs font-bold text-rose-450">Revoke access immediately</p>
                                 </div>
                             </button>
                         </>
