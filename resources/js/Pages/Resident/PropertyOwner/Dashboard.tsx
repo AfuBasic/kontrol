@@ -191,7 +191,7 @@ export default function Dashboard({
                             ))
                         ) : (
                             <div className="flex h-full flex-col items-center justify-center py-10 text-center">
-                                <WalletIcon className="text-slate-350 h-10 w-10" />
+                                <WalletIcon className="text-slate-400 h-10 w-10" />
                                 <p className="mt-2 text-sm font-semibold text-slate-500">No payments received yet</p>
                             </div>
                         )}
@@ -234,7 +234,7 @@ export default function Dashboard({
                             ))
                         ) : (
                             <div className="flex h-full flex-col items-center justify-center py-10 text-center">
-                                <UsersIcon className="text-slate-355 h-10 w-10" />
+                                <UsersIcon className="text-slate-400 h-10 w-10" />
                                 <p className="mt-2 text-sm font-semibold text-slate-500">No occupant guest logs recorded</p>
                             </div>
                         )}

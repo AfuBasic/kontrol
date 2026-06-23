@@ -269,7 +269,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
                     <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 text-slate-350" />
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
                         {formatFaintExpiry()}
                     </span>
                 </div>

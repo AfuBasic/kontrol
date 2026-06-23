@@ -41,8 +41,16 @@ interface Props {
 }
 
 export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
-    const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
+        const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
     const { auth, webpush_public_key } = props;
+
+    // Force light theme in Resident area as it is designed as a light-themed dashboard
+    useEffect(() => {
+        const html = document.documentElement;
+        html.classList.remove('dark');
+        html.classList.add('light');
+        html.style.colorScheme = 'light';
+    }, []);
 
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');

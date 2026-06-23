@@ -144,7 +144,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                     transition={{ duration: 0.4 }}
                     className="flex flex-col"
                 >
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Visitor Access</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Visitor Access</h1>
                     <p className="mt-1.5 text-sm font-bold text-slate-400 leading-normal">
                         Manage visitor access and track arrivals.
                     </p>
@@ -216,7 +216,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center rounded-[36px] bg-white border border-slate-200/80 px-8 py-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-350 border border-slate-100 mb-5">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 border border-slate-100 mb-5">
                                 <Tag className="h-8 w-8" />
                             </div>
                             <h3 className="text-xl font-black text-slate-900">No Active Passes</h3>
