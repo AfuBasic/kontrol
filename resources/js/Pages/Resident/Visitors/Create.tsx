@@ -332,7 +332,7 @@ const CreateAccessCode = () => {
                                         <label className="text-[15px] font-black text-slate-900">Starts At <span className="text-slate-400 font-medium">(Optional)</span></label>
                                         <p className="text-[13px] font-medium text-slate-500 leading-snug">Leave blank for immediate access.</p>
                                         <div className="relative">
-                                            <CalendarIcon className="absolute top-[18px] left-4 h-5 w-5 text-slate-400" />
+                                            <CalendarIcon className="absolute top-[18px] left-4 h-5 w-5 text-slate-400 z-10 pointer-events-none" />
                                             <input
                                                 type="datetime-local"
                                                 value={form.data.starts_at}
@@ -386,7 +386,7 @@ const CreateAccessCode = () => {
                                             <label className="text-[15px] font-black text-slate-900">Expires At <span className="text-slate-400 font-medium">(Optional)</span></label>
                                             <p className="text-[13px] font-medium text-slate-500 leading-snug">When should this long-term access permanently end?</p>
                                             <div className="relative">
-                                                <CalendarIcon className="absolute top-[18px] left-4 h-5 w-5 text-slate-400" />
+                                                <CalendarIcon className="absolute top-[18px] left-4 h-5 w-5 text-slate-400 z-10 pointer-events-none" />
                                                 <input
                                                     type="datetime-local"
                                                     value={form.data.expires_at}
@@ -440,7 +440,7 @@ const CreateAccessCode = () => {
 
                                 <div className="space-y-5 rounded-[32px] bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100">
                                     <div className="relative">
-                                        <User className="absolute top-[18px] left-5 h-5 w-5 text-slate-400" />
+                                        <User className="absolute top-[18px] left-5 h-5 w-5 text-slate-400 z-10 pointer-events-none" />
                                         <input
                                             type="text"
                                             placeholder={isEvent ? "Event Name (e.g. Birthday Party)" : "Visitor's Full Name"}
@@ -453,7 +453,7 @@ const CreateAccessCode = () => {
 
                                     {!isEvent && (
                                         <div className="relative">
-                                            <Phone className="absolute top-[18px] left-5 h-5 w-5 text-slate-400" />
+                                            <Phone className="absolute top-[18px] left-5 h-5 w-5 text-slate-400 z-10 pointer-events-none" />
                                             <input
                                                 type="tel"
                                                 inputMode="numeric"
@@ -468,7 +468,7 @@ const CreateAccessCode = () => {
 
                                     {isEvent && (
                                         <div className="relative">
-                                            <Users className="absolute top-[18px] left-5 h-5 w-5 text-slate-400" />
+                                            <Users className="absolute top-[18px] left-5 h-5 w-5 text-slate-400 z-10 pointer-events-none" />
                                             <input
                                                 type="number"
                                                 inputMode="numeric"

@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Copy, Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
 import { useState } from 'react';
 import MobileSheet from '@/Components/MobileSheet';
 import resident from '@/routes/resident';
@@ -78,7 +77,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     // Compute effective status based on timestamps
     const isExpired = code.expires_at ? new Date(code.expires_at) < new Date() : false;
     const isFuture = code.starts_at ? new Date(code.starts_at) > new Date() : false;
-    const effectiveStatus = code.status === 'active' && isExpired ? 'expired' : (code.status === 'active' && isFuture ? 'scheduled' : code.status);
+    const effectiveStatus = code.status === 'active' && isExpired ? 'expired' : code.status === 'active' && isFuture ? 'scheduled' : code.status;
     const status = getStatusInfo(effectiveStatus);
     const typeInfo = getPassTypeDetails(code.type);
 
@@ -115,12 +114,12 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         setDownloading(true);
         const passUrl = `kontrol://pass/${code.pass_uuid}?token=${code.qr_token}`;
         const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(passUrl)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`;
-        
+
         try {
             const response = await fetch(qrImageUrl);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
-            
+
             const link = document.createElement('a');
             link.href = blobUrl;
             link.download = `pass-qr-${code.code}.png`;
@@ -191,40 +190,40 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         <motion.div
             layoutId={`visitor-card-${code.id}`}
             whileHover={{ y: -4, shadow: '0 12px 30px rgba(0, 0, 0, 0.04)' }}
-            className="group relative overflow-hidden rounded-[28px] bg-white p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+            className="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
         >
             {/* Card Body */}
-            <div className="flex gap-4 items-start">
+            <div className="flex items-start gap-4">
                 {/* Avatar Bubble */}
                 <div className="relative shrink-0">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${typeInfo.bg} font-black text-sm relative transition-all group-hover:scale-105 select-none`}>
+                    <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${typeInfo.bg} relative text-sm font-black transition-all select-none group-hover:scale-105`}
+                    >
                         {code.type === 'event' ? <typeInfo.icon className="h-5 w-5" /> : getInitials(code.visitor_name || 'Visitor')}
                     </div>
                     {/* Status Indicator Dot */}
-                    <span className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${status.accent}`} />
+                    <span
+                        className={`absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${status.accent}`}
+                    />
                 </div>
 
                 {/* Main Info */}
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                            <h3 className="text-base font-black text-slate-900 truncate tracking-tight leading-snug">
+                            <h3 className="truncate text-base leading-snug font-black tracking-tight text-slate-900">
                                 {code.visitor_name || 'Visitor'}
                             </h3>
-                            {code.purpose && (
-                                <p className="text-xs font-bold text-slate-400 truncate mt-0.5">
-                                    {code.purpose}
-                                </p>
-                            )}
+                            {code.purpose && <p className="mt-0.5 truncate text-xs font-bold text-slate-400">{code.purpose}</p>}
                         </div>
-                        
+
                         {/* Options button */}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowOptions(true);
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                         >
                             <Clock className="h-4 w-4 rotate-90" />
                         </button>
@@ -232,17 +231,15 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
                     {/* Badges and Validity Row */}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
                             {typeInfo.label}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400">
-                            {formatFaintExpiry()}
-                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">{formatFaintExpiry()}</span>
                     </div>
 
                     {/* Attendance Progress if Event */}
                     {code.type === 'event' && (
-                        <div className="mt-3.5 space-y-1.5 rounded-2xl bg-slate-50/50 p-3 border border-slate-100/50">
+                        <div className="mt-3.5 space-y-1.5 rounded-2xl border border-slate-100/50 bg-slate-50/50 p-3">
                             <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                                 <span className="flex items-center gap-1">
                                     <Users className="h-3 w-3 text-purple-500" />
@@ -253,9 +250,9 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 </span>
                             </div>
                             {code.guest_limit && (
-                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-purple-650 rounded-full transition-all duration-500" 
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                                    <div
+                                        className="bg-purple-650 h-full rounded-full transition-all duration-500"
                                         style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
                                     />
                                 </div>
@@ -266,18 +263,20 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
             </div>
 
             {/* Footer - Access Code & Actions */}
-            <div className="mt-4 pt-3.5 border-t border-slate-50 flex items-center justify-between gap-3">
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-50 pt-3.5">
                 {/* Copyable Access Code badge */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         copyCode();
                     }}
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer ${
-                        copying ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/10' : 'bg-slate-50 border border-slate-100 text-slate-700 hover:bg-slate-100'
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 font-mono text-xs font-bold transition-all active:scale-95 ${
+                        copying
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/10'
+                            : 'border border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'
                     }`}
                 >
-                    <span className="text-[10px] font-sans font-black tracking-widest text-slate-400 uppercase">Code:</span>
+                    <span className="font-sans text-[10px] font-black tracking-widest text-slate-400 uppercase">Code:</span>
                     <span className="font-black tracking-wider">{copying ? 'COPIED' : code.code}</span>
                 </button>
 
@@ -290,17 +289,17 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 handleShare();
                             }}
                             disabled={sharing}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
+                            className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                         >
                             <Share2 className="h-3.5 w-3.5" />
                             <span>Share</span>
                         </button>
                     )}
-                    
+
                     {/* Details Link */}
                     <Link
                         href={resident.visitors.show.url(code.id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-400 hover:text-slate-650 transition-colors"
+                        className="hover:text-slate-650 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 transition-colors"
                         title="View Details"
                     >
                         <ExternalLink className="h-4 w-4" />
@@ -368,7 +367,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-rose-600">Cancel Pass</p>
-                                    <p className="text-xs font-bold text-rose-450">Revoke access immediately</p>
+                                    <p className="text-rose-450 text-xs font-bold">Revoke access immediately</p>
                                 </div>
                             </button>
                         </>
