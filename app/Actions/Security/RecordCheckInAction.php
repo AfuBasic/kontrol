@@ -63,8 +63,16 @@ class RecordCheckInAction
             $settings = EstateSettings::forEstate($estateId);
             $forceSingleUse = $settings->access_code_single_use;
 
-            // Mark as used only if estate setting enforces single-use AND it's a single-use code
-            if ($forceSingleUse && $accessCode->type === 'single_use') {
+            $isEventFull = false;
+            if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
+                $currentCount = $accessCode->accessLogs()->count();
+                if ($currentCount + 1 >= $accessCode->guest_limit) {
+                    $isEventFull = true;
+                }
+            }
+
+            // Mark as used if single-use (and estate enforces it) OR if it's an event pass that just reached its limit
+            if (($forceSingleUse && $accessCode->type === 'single_use') || $isEventFull) {
                 $accessCode->update([
                     'status' => AccessCodeStatus::Used,
                     'used_at' => $timestamp,

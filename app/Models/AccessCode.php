@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -97,6 +98,10 @@ class AccessCode extends Model
         'notes',
         'share_count',
         'last_shared_at',
+        'starts_at',
+        'schedule_type',
+        'schedule_data',
+        'guest_limit',
     ];
 
     /**
@@ -113,6 +118,9 @@ class AccessCode extends Model
             'revoked_at' => 'datetime',
             'has_vehicle' => 'boolean',
             'last_shared_at' => 'datetime',
+            'starts_at' => 'datetime',
+            'schedule_data' => 'array',
+            'guest_limit' => 'integer',
         ];
     }
 
@@ -228,7 +236,7 @@ class AccessCode extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', AccessCodeStatus::Active)
+        return $query->whereIn('status', [AccessCodeStatus::Active, AccessCodeStatus::Scheduled])
             ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()));
     }
 
@@ -245,12 +253,48 @@ class AccessCode extends Model
 
     public function isActive(): bool
     {
-        // If expired_at is null, means it never expires (long_lived)
-        if ($this->expires_at === null) {
-            return $this->status === AccessCodeStatus::Active;
+        if (! in_array($this->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled])) {
+            return false;
         }
 
-        return $this->status === AccessCodeStatus::Active && $this->expires_at->isFuture();
+        // If expired_at is null, means it never expires
+        if ($this->expires_at === null) {
+            return true;
+        }
+
+        return $this->expires_at->isFuture();
+    }
+
+    public function isScheduledForFuture(): bool
+    {
+        return $this->starts_at !== null && $this->starts_at->isFuture();
+    }
+
+    public function matchesRecurringSchedule(?CarbonInterface $time = null): bool
+    {
+        $time ??= now();
+
+        if ($this->schedule_type !== 'recurring' || ! is_array($this->schedule_data)) {
+            return true;
+        }
+
+        $data = $this->schedule_data;
+
+        if (isset($data['days']) && is_array($data['days'])) {
+            // Carbon dayOfWeek returns 0 (Sun) - 6 (Sat)
+            if (! in_array($time->dayOfWeek, $data['days'])) {
+                return false;
+            }
+        }
+
+        if (isset($data['start_time']) && isset($data['end_time'])) {
+            $currentTime = $time->format('H:i');
+            if ($currentTime < $data['start_time'] || $currentTime > $data['end_time']) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function isExpired(): bool

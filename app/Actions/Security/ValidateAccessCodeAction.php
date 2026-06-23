@@ -68,6 +68,10 @@ class ValidateAccessCodeAction
         }
 
         if ($accessCode->status === AccessCodeStatus::Used) {
+            if ($accessCode->type === 'event' && $accessCode->guest_limit !== null && $accessCode->accessLogs()->count() >= $accessCode->guest_limit) {
+                return $this->denied('Event pass guest limit reached', 'limit_reached', $accessCode);
+            }
+
             return $this->denied('Code already used', 'already_used', $accessCode);
         }
 
@@ -84,8 +88,22 @@ class ValidateAccessCodeAction
             return $this->denied('Code has expired', 'expired', $accessCode);
         }
 
-        if ($accessCode->status !== AccessCodeStatus::Active) {
+        if ($accessCode->status !== AccessCodeStatus::Active && $accessCode->status !== AccessCodeStatus::Scheduled) {
             return $this->denied('Code is not active', 'inactive', $accessCode);
+        }
+
+        if ($accessCode->isScheduledForFuture()) {
+            return $this->denied('Pass is scheduled for a future date/time', 'scheduled', $accessCode);
+        }
+
+        if (! $accessCode->matchesRecurringSchedule(now())) {
+            return $this->denied('Pass is not valid at this time based on its schedule', 'outside_schedule', $accessCode);
+        }
+
+        if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
+            if ($accessCode->accessLogs()->count() >= $accessCode->guest_limit) {
+                return $this->denied('Event pass guest limit reached', 'limit_reached', $accessCode);
+            }
         }
 
         return $this->granted($accessCode);
@@ -105,6 +123,9 @@ class ValidateAccessCodeAction
             'expires_at' => $accessCode->expires_at?->toIso8601String(),
             'code_type' => $accessCode->type,
             'has_vehicle' => (bool) $accessCode->has_vehicle,
+            'guest_limit' => $accessCode->guest_limit,
+            'uses_count' => $accessCode->accessLogs()->count(),
+            'starts_at' => $accessCode->starts_at?->toIso8601String(),
         ];
     }
 
@@ -122,6 +143,9 @@ class ValidateAccessCodeAction
             'expires_at' => $accessCode?->expires_at?->toIso8601String(),
             'code_type' => $accessCode?->type,
             'has_vehicle' => (bool) $accessCode?->has_vehicle,
+            'guest_limit' => $accessCode?->guest_limit,
+            'uses_count' => $accessCode ? $accessCode->accessLogs()->count() : 0,
+            'starts_at' => $accessCode?->starts_at?->toIso8601String(),
         ];
     }
 }

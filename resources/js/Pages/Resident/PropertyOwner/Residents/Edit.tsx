@@ -101,7 +101,7 @@ export default function Edit({ resident, properties }: Props) {
                             Phone Number
                         </label>
                         <input
-                            type="tel"
+                            type="tel" inputMode="numeric" pattern="[0-9]*"
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}

@@ -81,12 +81,17 @@ class AccessCodeController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'type' => ['required', 'string', 'in:single_use,long_lived'],
-            'visitor_name' => ['nullable', 'string', 'max:255', 'required_if:type,long_lived'],
+            'type' => ['required', 'string', 'in:single_use,long_lived,event'],
+            'visitor_name' => ['nullable', 'string', 'max:255', 'required_if:type,long_lived,event'],
             'visitor_phone' => ['nullable', 'string', 'max:20'],
             'purpose' => ['nullable', 'string', 'max:255'],
             'has_vehicle' => ['nullable', 'boolean'],
-            'duration_minutes' => ['nullable', 'integer', 'required_if:type,single_use'], // We can allow bypassing min/max here if we trust the service to clamp it, or replicate validation. Let's trust service for now or add min/max rules dynamically if needed, but simple integer check is safe enough for logic.
+            'duration_minutes' => ['nullable', 'integer', 'required_if:type,single_use,event'],
+            'starts_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'],
+            'schedule_type' => ['nullable', 'string', 'in:one_time,recurring'],
+            'schedule_data' => ['nullable', 'array'],
+            'guest_limit' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $accessCode = $this->accessCodeService->createCode($validated);
@@ -122,6 +127,8 @@ class AccessCodeController extends Controller
                 'status' => $userCode->status->value,
                 'source' => $userCode->source->value,
                 'expires_at' => $userCode->expires_at?->toISOString(),
+                'starts_at' => $userCode->starts_at?->toISOString(),
+                'guest_limit' => $userCode->guest_limit,
                 'time_remaining' => $userCode->time_remaining,
                 'created_at' => $userCode->created_at->toISOString(),
                 'estate_name' => $userCode->estate->name,
@@ -158,6 +165,8 @@ class AccessCodeController extends Controller
                 'status' => $userCode->status->value,
                 'source' => $userCode->source->value,
                 'expires_at' => $userCode->expires_at?->toISOString(),
+                'starts_at' => $userCode->starts_at?->toISOString(),
+                'guest_limit' => $userCode->guest_limit,
                 'time_remaining' => $userCode->time_remaining,
                 'created_at' => $userCode->created_at->toISOString(),
                 'used_at' => $userCode->used_at?->toISOString(),
@@ -165,6 +174,7 @@ class AccessCodeController extends Controller
                 'estate_name' => $userCode->estate->name,
                 'host_name' => $userCode->user->name,
                 'notes' => $userCode->notes,
+                'uses_count' => $userCode->accessLogs()->count(),
             ],
             'usageLogs' => [
                 'data' => collect($usageLogs->items())->map(fn ($log) => [

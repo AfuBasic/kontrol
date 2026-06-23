@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Megaphone, ChevronRight, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
+import { router } from '@inertiajs/react';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import DailyMetrics from '@/Components/Resident/Dashboard/DailyMetrics';
 import DashboardHeader from '@/Components/Resident/Dashboard/DashboardHeader';
@@ -47,7 +47,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
     const hasEstateBoard = estate_plan?.features?.includes('interactive-notice-board') ?? true;
     const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
 
     const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
     const lastActivityTime = recentActivity[0]?.time;
@@ -97,7 +97,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                 <CommandCenter
                     expectedToday={expectedToday}
                     lastActivity={lastActivityTime}
-                    onAction={() => setIsCreateModalOpen(true)}
+                    onAction={() => router.visit('/resident/visitors/create')}
                     canGenerate={auth?.user?.resident_subscription?.plan_name !== 'Standard' && hasAccessCodeGen}
                 />
 
@@ -177,7 +177,7 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                 )}
             </div>
 
-            <CreateCodeBottomSheet isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+
         </>
     );
 }

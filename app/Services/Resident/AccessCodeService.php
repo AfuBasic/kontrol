@@ -52,8 +52,22 @@ class AccessCodeService
 
         $type = $data['type'] ?? 'single_use';
         $expiresAt = null;
+        $startsAt = null;
+        $scheduleType = $data['schedule_type'] ?? 'one_time';
+        $scheduleData = $data['schedule_data'] ?? null;
+        $guestLimit = $data['guest_limit'] ?? null;
+        $status = AccessCodeStatus::Active;
 
-        if ($type === 'single_use') {
+        if (! empty($data['starts_at'])) {
+            $startsAt = Carbon::parse($data['starts_at']);
+            if ($startsAt->isFuture()) {
+                $status = AccessCodeStatus::Scheduled;
+            }
+        }
+
+        if (! empty($data['expires_at'])) {
+            $expiresAt = Carbon::parse($data['expires_at']);
+        } elseif ($type === 'single_use' || $type === 'event') {
             $minutes = $data['duration_minutes'] ?? 60; // Default fallback
 
             // Enforce Estate Settings Constraints
@@ -68,7 +82,7 @@ class AccessCodeService
                 $minutes = $max;
             }
 
-            $expiresAt = now()->addMinutes($minutes);
+            $expiresAt = ($startsAt ?? now())->copy()->addMinutes($minutes);
         }
 
         return AccessCode::create([
@@ -79,7 +93,11 @@ class AccessCodeService
             'visitor_name' => $data['visitor_name'] ?? null,
             'visitor_phone' => $data['visitor_phone'] ?? null,
             'purpose' => $data['purpose'] ?? null,
-            'status' => AccessCodeStatus::Active,
+            'status' => $status,
+            'starts_at' => $startsAt,
+            'schedule_type' => $scheduleType,
+            'schedule_data' => $scheduleData,
+            'guest_limit' => $guestLimit,
             'expires_at' => $expiresAt,
             'has_vehicle' => $data['has_vehicle'] ?? false,
             'notes' => $data['notes'] ?? null,

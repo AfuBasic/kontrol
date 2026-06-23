@@ -649,3 +649,44 @@ html.capacitor-native .min-h-screen {
 html.capacitor-native .h-screen {
     height: 100% !important;
 }
+
+/* Fix native iOS WebKit styling and overflow of datetime-local inputs */
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 1.5em;
+    position: relative;
+}
+
+input::-webkit-datetime-edit {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    width: 100%;
+}
+
+input::-webkit-date-and-time-value {
+    min-height: 1.5em;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    width: 100%;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+input::-webkit-calendar-picker-indicator {
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}

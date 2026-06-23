@@ -1,10 +1,10 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, User, Clock as ClockIcon, Search, History as HistoryIcon, Calendar, Activity } from 'lucide-react';
+import { User, Clock as ClockIcon, History as HistoryIcon, Calendar, Activity } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
 import CodeCard from './Components/CodeCard';
@@ -17,10 +17,7 @@ type Props = {
         search_active?: string;
         search_history?: string;
     };
-    dailyUsage: {
-        used: number;
-        limit: number | null;
-    };
+
     visitorStats: {
         active_codes: number;
         created_today: number;
@@ -31,7 +28,7 @@ type Props = {
 
 type Tab = 'active' | 'long_lived' | 'history';
 
-export default function Visitors({ activeCodes, historyCodes, filters, dailyUsage, visitorStats }: Props) {
+export default function Visitors({ activeCodes, historyCodes, filters, visitorStats }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const [activeTab, setActiveTab] = useState<Tab>('active');
@@ -137,7 +134,6 @@ export default function Visitors({ activeCodes, historyCodes, filters, dailyUsag
                 <SummaryDashboard
                     activeCount={visitorStats.visitors_today}
                     expectedToday={visitorStats.expected_today}
-                    totalToday={dailyUsage.used}
                 />
             </motion.div>
 

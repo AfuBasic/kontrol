@@ -690,7 +690,7 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                     <div>
                         <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Amount (NGN)</label>
                         <input
-                            type="number"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
                             value={recordData.amount}
                             onChange={(e) => setRecordData({ ...recordData, amount: e.target.value })}
                             className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"

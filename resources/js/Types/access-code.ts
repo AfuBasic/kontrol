@@ -6,13 +6,15 @@ export type AccessCode = {
     code: string;
     pass_uuid?: string;
     qr_token?: string;
-    type: 'single_use' | 'long_lived';
+    type: 'single_use' | 'long_lived' | 'event';
     visitor_name: string | null;
     visitor_phone: string | null;
     purpose: string | null;
     status: AccessCodeStatus;
     source: AccessCodeSource;
     expires_at: string;
+    starts_at: string | null;
+    guest_limit: number | null;
     used_at: string | null;
     revoked_at: string | null;
     created_at: string;
@@ -20,6 +22,7 @@ export type AccessCode = {
     estate_name?: string;
     host_name?: string;
     notes?: string | null;
+    uses_count?: number;
 };
 
 export type DurationOption = {

@@ -125,7 +125,7 @@ export default function EditAffiliate({ affiliate }: Props) {
                             <div>
                                 <label className="mb-2 block text-sm font-semibold text-gray-700">Commission Rate (%)</label>
                                 <input
-                                    type="number"
+                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                     value={data.commission_rate}
                                     onChange={(e) => setData('commission_rate', e.target.value)}
                                     min="0"

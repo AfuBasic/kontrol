@@ -215,7 +215,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Price (in kobo)</label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         value={data.price}
                                         onChange={(e) => setData('price', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
@@ -252,7 +252,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Residents</label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         value={data.max_residents}
                                         onChange={(e) => setData('max_residents', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
@@ -263,7 +263,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Security</label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         value={data.max_security}
                                         onChange={(e) => setData('max_security', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
@@ -274,7 +274,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Admins</label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         value={data.max_admins}
                                         onChange={(e) => setData('max_admins', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
@@ -285,7 +285,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Household Limit</label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         value={data.household_member_limit}
                                         onChange={(e) => setData('household_member_limit', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"

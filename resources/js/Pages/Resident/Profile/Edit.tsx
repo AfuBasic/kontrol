@@ -648,7 +648,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
                 <div className="group relative">
                     <label className="mb-2 block px-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Phone Number</label>
                     <input
-                        type="tel"
+                        type="tel" inputMode="numeric" pattern="[0-9]*"
                         placeholder="e.g. +234..."
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}

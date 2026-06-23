@@ -5,6 +5,10 @@ export interface CachedCode {
     expires_at: string;
     has_vehicle: boolean;
     purpose?: string;
+    code_type?: string;
+    guest_limit?: number | null;
+    uses_count?: number;
+    starts_at?: string | null;
 }
 
 export interface OfflineLog {

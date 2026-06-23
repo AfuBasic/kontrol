@@ -749,7 +749,7 @@ export default function Apply() {
                                                                 <Phone className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                                                             </div>
                                                             <input
-                                                                type="tel"
+                                                                type="tel" inputMode="numeric" pattern="[0-9]*"
                                                                 name="contactPhone"
                                                                 value={data.contactPhone}
                                                                 onChange={(e) => setData('contactPhone', e.target.value)}

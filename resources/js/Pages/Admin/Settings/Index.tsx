@@ -176,7 +176,7 @@ export default function Settings({ settings }: Props) {
                                     Minimum Lifespan (minutes)
                                 </label>
                                 <input
-                                    type="number"
+                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                     id="min_lifespan"
                                     min="1"
                                     max="10080"
@@ -201,7 +201,7 @@ export default function Settings({ settings }: Props) {
                                     Maximum Lifespan (minutes)
                                 </label>
                                 <input
-                                    type="number"
+                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                     id="max_lifespan"
                                     min="1"
                                     max="10080"
@@ -229,7 +229,7 @@ export default function Settings({ settings }: Props) {
                                 Grace Period (minutes)
                             </label>
                             <input
-                                type="number"
+                                type="number" inputMode="numeric" pattern="[0-9]*"
                                 id="grace_period"
                                 min="0"
                                 max="60"
@@ -254,7 +254,7 @@ export default function Settings({ settings }: Props) {
                                 Daily Limit per Resident
                             </label>
                             <input
-                                type="number"
+                                type="number" inputMode="numeric" pattern="[0-9]*"
                                 id="daily_limit"
                                 min="1"
                                 max="100"

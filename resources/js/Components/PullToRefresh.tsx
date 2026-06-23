@@ -1,9 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { router } from '@inertiajs/react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 
 interface Props {
     children: React.ReactNode;
@@ -35,13 +35,8 @@ export default function PullToRefresh({ children, onRefresh, className }: Props)
 
             // If the user scrolls down natively or scroll position is not top, abort pull-to-refresh
             if (diff <= 0 || (window.scrollY || document.documentElement.scrollTop) > 0) {
-                window.removeEventListener('touchmove', handleTouchMove);
-                window.removeEventListener('touchend', handleTouchEnd);
                 return;
             }
-
-            // Prevent browser rubber-banding/bounce only when pulling down from the top
-            if (moveEvent.cancelable) moveEvent.preventDefault();
 
             // Apply resistance
             const resistance = 0.4;
@@ -69,8 +64,8 @@ export default function PullToRefresh({ children, onRefresh, className }: Props)
             window.removeEventListener('touchend', handleTouchEnd);
         };
 
-        window.addEventListener('touchmove', handleTouchMove, { passive: false });
-        window.addEventListener('touchend', handleTouchEnd);
+        window.addEventListener('touchmove', handleTouchMove, { passive: true });
+        window.addEventListener('touchend', handleTouchEnd, { passive: true });
     };
 
     const triggerRefresh = () => {
@@ -130,7 +125,7 @@ export default function PullToRefresh({ children, onRefresh, className }: Props)
             </div>
 
             {/* Content Container */}
-            <motion.div style={{ y: springY }}>{children}</motion.div>
+            <motion.div style={pullProgress > 0 || isRefreshing ? { y: springY } : undefined}>{children}</motion.div>
         </div>
     );
 }

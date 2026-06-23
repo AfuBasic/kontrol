@@ -55,6 +55,7 @@ class VerifyController extends Controller
             );
 
             $result['access_log_id'] = $log->id;
+            $result['uses_count'] = AccessLog::where('access_code_id', $log->access_code_id)->count();
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -136,6 +137,7 @@ class VerifyController extends Controller
             ->forEstate($estate->id)
             ->active()
             ->with('user:id,name')
+            ->withCount('accessLogs')
             ->get();
 
         $cachedCodes = $activeCodes->map(function (AccessCode $code) {
@@ -146,6 +148,10 @@ class VerifyController extends Controller
                 'expires_at' => $code->expires_at?->toIso8601String(),
                 'has_vehicle' => (bool) $code->has_vehicle,
                 'purpose' => $code->purpose,
+                'code_type' => $code->type,
+                'guest_limit' => $code->guest_limit,
+                'uses_count' => $code->access_logs_count ?? 0,
+                'starts_at' => $code->starts_at?->toIso8601String(),
             ];
         });
 

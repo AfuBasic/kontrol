@@ -78,7 +78,7 @@ export default function CreateSecurity() {
                                 Phone Number <span className="text-gray-400">(optional)</span>
                             </label>
                             <input
-                                type="tel"
+                                type="tel" inputMode="numeric" pattern="[0-9]*"
                                 id="phone"
                                 value={data.phone}
                                 onChange={(e) => setData('phone', e.target.value)}

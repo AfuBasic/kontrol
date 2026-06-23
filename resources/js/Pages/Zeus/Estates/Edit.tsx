@@ -231,7 +231,7 @@ export default function EditEstate({ estate }: Props) {
                                                     <Clock className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number"
+                                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                                     id="free_trial_days"
                                                     min="1"
                                                     max="365"
@@ -252,7 +252,7 @@ export default function EditEstate({ estate }: Props) {
                                                     <CreditCard className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number"
+                                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                                     id="grace_period_days"
                                                     min="1"
                                                     max="30"
@@ -281,7 +281,7 @@ export default function EditEstate({ estate }: Props) {
                                                     <CreditCard className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number"
+                                                    type="number" inputMode="numeric" pattern="[0-9]*"
                                                     id="grace_period_days_no_trial"
                                                     min="1"
                                                     max="30"

@@ -140,7 +140,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                     </label>
                     <input
                         id="phone"
-                        type="tel"
+                        type="tel" inputMode="numeric" pattern="[0-9]*"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         onFocus={handleInputFocus}

@@ -230,7 +230,7 @@ export default function CreateEstate({ plans }: Props) {
                                             Trial Duration (Days)
                                         </label>
                                         <input
-                                            type="number"
+                                            type="number" inputMode="numeric" pattern="[0-9]*"
                                             id="free_trial_days"
                                             min="1"
                                             max="365"

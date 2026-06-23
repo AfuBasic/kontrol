@@ -313,7 +313,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         Amount Received (₦)
                                     </label>
                                     <input
-                                        type="number"
+                                        type="number" inputMode="numeric" pattern="[0-9]*"
                                         id="payment-amount"
                                         required
                                         min="1"

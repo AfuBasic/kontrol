@@ -1,8 +1,8 @@
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -21,6 +21,9 @@ type ValidationResult = {
     code_type: string | null;
     has_vehicle: boolean;
     access_log_id?: number | null;
+    guest_limit?: number | null;
+    uses_count?: number;
+    starts_at?: string | null;
 };
 
 interface PageProps {
@@ -49,6 +52,35 @@ function formatExpiry(iso: string | null) {
     return `${mins}m`;
 }
 
+function formatDateTime(iso: string | null) {
+    if (!iso) return null;
+    try {
+        const date = new Date(iso);
+        return date.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+    } catch {
+        return null;
+    }
+}
+
+function getPassTypeLabel(type: string | null) {
+    switch (type) {
+        case 'single_use':
+            return 'One-Time Pass';
+        case 'long_lived':
+            return 'Recurring Pass';
+        case 'event':
+            return 'Event Pass';
+        default:
+            return 'Visitor Pass';
+    }
+}
+
 async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
     if (!navigator.onLine) return false;
     try {
@@ -58,7 +90,7 @@ async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
             timeout: timeoutMs,
         });
         return response.status === 200 || response.status === 404 || response.status === 405;
-    } catch (e) {
+    } catch {
         return false;
     }
 }
@@ -202,8 +234,11 @@ export default function SecurityVerify() {
                         host_name: cached.host_name,
                         purpose: cached.purpose || null,
                         expires_at: cached.expires_at,
-                        code_type: null,
+                        code_type: cached.code_type || null,
                         has_vehicle: cached.has_vehicle,
+                        guest_limit: cached.guest_limit || null,
+                        uses_count: cached.uses_count || 0,
+                        starts_at: cached.starts_at || null,
                     });
                 } else {
                     setResult({
@@ -272,12 +307,12 @@ export default function SecurityVerify() {
                 }
 
                 const hasNative = 'BarcodeDetector' in window;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 let detector: any = null;
 
                 if (hasNative) {
                     try {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
                     } catch {
                         // ignore native BarcodeDetector initialization errors
@@ -318,7 +353,7 @@ export default function SecurityVerify() {
                                 if (barcodes.length > 0) {
                                     decodedValue = barcodes[0].rawValue;
                                 }
-                            } catch (e) {
+                            } catch {
                                 console.warn('Native barcode matching slipped, using jsQR fallback.');
                             }
                         }
@@ -798,11 +833,40 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                             {result.host_name && (
                                 <DetailRow icon={<HomeIcon className="h-5 w-5" strokeWidth={2} />} label="Host" value={result.host_name} />
                             )}
+                            <DetailRow icon={<Tag className="h-5 w-5" strokeWidth={2} />} label="Pass Type" value={getPassTypeLabel(result.code_type)} />
+                            {result.starts_at && (
+                                <DetailRow icon={<Calendar className="h-5 w-5" strokeWidth={2} />} label="Starts at" value={formatDateTime(result.starts_at) || ''} />
+                            )}
                             {expiry && result.code_type !== 'long_lived' && (
                                 <DetailRow icon={<Clock className="h-5 w-5" strokeWidth={2} />} label="Expires in" value={expiry} />
                             )}
                         </div>
                     </div>
+
+                    {result.code_type === 'event' && (
+                        <div className="px-8 py-5 bg-indigo-50/50 border-t border-slate-100">
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-indigo-600" />
+                                    <span className="text-[10px] font-black tracking-widest text-indigo-600 uppercase">Event Capacity</span>
+                                </div>
+                                <span className="text-sm font-extrabold text-indigo-900">
+                                    {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Checked-in
+                                </span>
+                            </div>
+                            {result.guest_limit && (
+                                <div className="w-full h-2.5 bg-indigo-100 rounded-full overflow-hidden shadow-inner">
+                                    <div 
+                                        className="h-full bg-indigo-600 transition-all duration-700 ease-out rounded-full" 
+                                        style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
+                                    />
+                                </div>
+                            )}
+                            <p className="mt-2 text-[10px] font-bold text-slate-500">
+                                This scan records check-in number {result.uses_count ?? 0} for this event pass.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="px-8 pt-8 pb-10">
                         <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />

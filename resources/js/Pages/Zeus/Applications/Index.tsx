@@ -2,7 +2,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ArrowTopRightOnSquareIcon, CalendarIcon, EnvelopeIcon, PhoneIcon } from '@heroicons/react/24/outline';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useState, useEffect } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 

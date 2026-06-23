@@ -112,7 +112,38 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
     }
 
     const isLongLived = accessCode.type === 'long_lived';
+    const isEvent = accessCode.type === 'event';
     const isExpired = accessCode.expires_at ? new Date(accessCode.expires_at) < new Date() : false;
+
+    const getPeakArrivalTime = () => {
+        if (!usageLogs.data || usageLogs.data.length === 0) return null;
+        
+        const hourCounts: Record<number, number> = {};
+        usageLogs.data.forEach((log) => {
+            const date = new Date(log.verified_at);
+            const hour = date.getHours();
+            hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        });
+
+        let peakHour = -1;
+        let maxCount = 0;
+        Object.entries(hourCounts).forEach(([hourStr, count]) => {
+            const countNum = count as number;
+            if (countNum > maxCount) {
+                maxCount = countNum;
+                peakHour = parseInt(hourStr, 10);
+            }
+        });
+
+        if (peakHour === -1) return null;
+
+        const startString = `${peakHour % 12 || 12} ${peakHour >= 12 ? 'PM' : 'AM'}`;
+        const endHour = (peakHour + 1) % 24;
+        const endString = `${endHour % 12 || 12} ${endHour >= 12 ? 'PM' : 'AM'}`;
+        return `${startString} - ${endString}`;
+    };
+    
+    const peakTime = getPeakArrivalTime();
 
     return (
         <>
@@ -221,6 +252,73 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                             </p>
                         </motion.div>
 
+                        {/* Event Pass Statistics Card */}
+                        {isEvent && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.3 }}
+                                className="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm md:max-w-none text-left"
+                            >
+                                <h3 className="text-base font-black text-slate-900 mb-4">Event Pass Statistics</h3>
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-xs font-bold text-slate-400">Total Check-Ins</p>
+                                        <p className="mt-1 text-3xl font-black text-slate-900">
+                                            {accessCode.uses_count ?? 0}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-xs font-bold text-slate-400">Guest Limit</p>
+                                        <p className="mt-1 text-3xl font-black text-slate-900">
+                                            {accessCode.guest_limit ?? '∞'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {accessCode.guest_limit && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-bold text-slate-500">
+                                            <span>Capacity Utilized</span>
+                                            <span>
+                                                {Math.min(
+                                                    Math.round(((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100),
+                                                    100
+                                                )}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                                style={{
+                                                    width: `${Math.min(
+                                                        ((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100,
+                                                        100
+                                                    )}%`,
+                                                }}
+                                            />
+                                        </div>
+                                        <p className="text-[11px] font-bold text-slate-400 text-right mt-1">
+                                            {Math.max(accessCode.guest_limit - (accessCode.uses_count ?? 0), 0)} slots remaining
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="border-t border-slate-100 pt-4 mt-4 space-y-3">
+                                    {peakTime && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="font-bold text-slate-400">Peak Check-in Hour</span>
+                                            <span className="font-black text-slate-900">{peakTime}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="font-bold text-slate-400">Pass Type</span>
+                                        <span className="font-black text-slate-900 capitalize">Event / Group</span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
                         {/* Static verified card for single use passes that are used */}
                         {!isLongLived && accessCode.status === 'used' && (
                             <div className="w-full max-w-sm rounded-[2rem] border border-emerald-100 bg-emerald-50/50 p-6 text-left shadow-sm md:max-w-none">
@@ -238,8 +336,8 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                             </div>
                         )}
 
-                        {/* Usage History for Long-Lived Codes */}
-                        {isLongLived && (
+                        {/* Usage History for Long-Lived & Event Codes */}
+                        {(isLongLived || isEvent) && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}

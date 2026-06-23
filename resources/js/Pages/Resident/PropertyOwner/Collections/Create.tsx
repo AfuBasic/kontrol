@@ -497,7 +497,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 Due Day (of month)
                                             </label>
                                             <input
-                                                type="number"
+                                                type="number" inputMode="numeric" pattern="[0-9]*"
                                                 id="due_day"
                                                 required
                                                 min="1"
@@ -516,7 +516,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                                 Grace Period (Days)
                                             </label>
                                             <input
-                                                type="number"
+                                                type="number" inputMode="numeric" pattern="[0-9]*"
                                                 id="grace_days"
                                                 min="0"
                                                 value={data.grace_days}

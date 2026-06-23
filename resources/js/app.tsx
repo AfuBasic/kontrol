@@ -46,7 +46,13 @@ createInertiaApp({
         const pageModule = page as any;
 
         // Automatically apply layouts if not explicitly set
-        if (pageModule.default.layout === undefined) {
+        if (name === 'Resident/Visitors/Create') {
+            pageModule.default.layout = (page: React.ReactNode) => (
+                <ResidentLayout hideHeader={true} hideNav={true} className="bg-[#f8fafc]">
+                    <AnimatedLayout>{page}</AnimatedLayout>
+                </ResidentLayout>
+            );
+        } else if (pageModule.default.layout === undefined) {
             if (name.startsWith('Resident/')) {
                 pageModule.default.layout = ResidentLayoutWrapper;
             } else if (name.startsWith('Admin/')) {

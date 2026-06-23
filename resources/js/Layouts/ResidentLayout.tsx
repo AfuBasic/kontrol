@@ -4,30 +4,12 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Bell,
-    Home,
-    Users,
-    User,
-    Plus,
-    Wallet,
-    Megaphone,
-    Building,
-    ClipboardList,
-    UserCheck,
-    Menu,
-    X,
-    Shield,
-    Landmark,
-    LogOut,
-    AlertCircle,
-} from 'lucide-react';
+import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, LogOut, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import PullToRefresh from '@/Components/PullToRefresh';
-import CreateCodeBottomSheet from '@/Components/Resident/CreateCodeBottomSheet';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 import type { Notification } from '@/Components/Resident/NotificationDetailSheet';
@@ -351,7 +333,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     }, [auth]);
 
     const hasAccessCodes = useFeature('access-code-generation');
-    const hasVisitFeed = useFeature('real-time-visit-feed');
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -418,7 +399,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'More',
             href: '#more',
-            icon: (active: boolean) => <Menu className="h-6 w-6" />,
+            icon: () => <Menu className="h-6 w-6" />,
             show: true,
         },
     ].filter((item) => item.show !== false);
@@ -443,7 +424,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         {
             name: 'More',
             href: '#more',
-            icon: (active: boolean) => <Menu className="h-6 w-6" />,
+            icon: () => <Menu className="h-6 w-6" />,
         },
     ];
 
@@ -570,9 +551,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 {/* Main Content */}
                 <main
                     className={`relative mx-auto w-full flex-1 ${
-                        !isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-32' : 'pb-8'
-                    } ${isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'} ${
-                        !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'
+                        hideHeader && hideNav
+                            ? 'p-0 max-w-none'
+                            : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-32' : 'pb-8'} ${
+                                  isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
+                              } ${
+                                  !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'
+                              }`
                     }`}
                 >
                     {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
@@ -580,7 +565,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
                     )}
-                    <PullToRefresh className="px-4 md:px-10">{children}</PullToRefresh>
+                    <PullToRefresh className={hideHeader && hideNav ? '' : 'px-4 md:px-10'}>{children}</PullToRefresh>
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}
@@ -599,7 +584,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => setCreateModalOpen(true)}
+                                                    onClick={() => router.visit('/resident/visitors/create')}
                                                     className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
                                                 >
                                                     <Plus className="h-7 w-7" strokeWidth={3} />
@@ -661,7 +646,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => setCreateModalOpen(true)}
+                                                    onClick={() => router.visit('/resident/visitors/create')}
                                                     className="absolute -top-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl ring-4 shadow-slate-900/20 ring-white"
                                                 >
                                                     <Plus className="h-7 w-7" strokeWidth={3} />
@@ -728,7 +713,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                         >
                             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
                             <div className="mb-6 flex items-center justify-between">
-                                <h3 className="text-lg font-black text-slate-900">{isPropertyOwner ? (auth?.user?.name ? `Hello, ${auth.user.name.split(' ')[0]}` : 'Menu') : 'More Options'}</h3>
+                                <h3 className="text-lg font-black text-slate-900">
+                                    {isPropertyOwner ? (auth?.user?.name ? `Hello, ${auth.user.name.split(' ')[0]}` : 'Menu') : 'More Options'}
+                                </h3>
                                 <button
                                     onClick={() => setMoreMenuOpen(false)}
                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400"
@@ -794,7 +781,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             </AnimatePresence>
 
             {/* Modals and Sheets */}
-            <CreateCodeBottomSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} />
             <NotificationDetailSheet notification={selectedNotification} onClose={() => setSelectedNotification(null)} />
             <ConfirmationSheet
                 isOpen={showLogoutConfirmation}

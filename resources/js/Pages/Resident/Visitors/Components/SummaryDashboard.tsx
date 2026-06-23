@@ -4,10 +4,9 @@ import { Users, Calendar, Activity } from 'lucide-react';
 interface Props {
     activeCount: number;
     expectedToday: number;
-    totalToday: number;
 }
 
-export default function SummaryDashboard({ activeCount, expectedToday, totalToday }: Props) {
+export default function SummaryDashboard({ activeCount, expectedToday }: Props) {
     const totalExpected = activeCount + expectedToday;
     const arrivalRate = totalExpected > 0 ? (activeCount / totalExpected) * 100 : 0;
 
