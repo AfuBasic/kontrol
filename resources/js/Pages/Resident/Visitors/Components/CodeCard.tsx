@@ -189,7 +189,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     return (
         <motion.div
             layoutId={`visitor-card-${code.id}`}
-            whileHover={{ y: -4, shadow: '0 12px 30px rgba(0, 0, 0, 0.04)' }}
+            whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0, 0, 0, 0.04)' }}
             className="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
         >
             {/* Card Body */}
