@@ -25,40 +25,54 @@ class AccessCodeController extends Controller
         $searchActive = $request->input('search_active');
         $searchHistory = $request->input('search_history');
 
+        $activeCodes = $this->accessCodeService->getActiveCodes($searchActive)->loadCount('accessLogs');
+        $historyCodes = $this->accessCodeService->getCodeHistory(20, $searchHistory)->loadCount('accessLogs');
+
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_active' => $searchActive,
                 'search_history' => $searchHistory,
             ],
-            'activeCodes' => $this->accessCodeService->getActiveCodes($searchActive)->map(fn ($code) => [
+            'activeCodes' => $activeCodes->map(fn ($code) => [
                 'id' => $code->id,
                 'type' => $code->type,
                 'code' => $code->code,
+                'pass_uuid' => $code->pass_uuid,
+                'qr_token' => $code->qr_token,
                 'visitor_name' => $code->visitor_name,
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
                 'status' => $code->status->value,
                 'source' => $code->source->value,
                 'expires_at' => $code->expires_at?->toISOString(),
+                'starts_at' => $code->starts_at?->toISOString(),
+                'guest_limit' => $code->guest_limit,
+                'uses_count' => $code->access_logs_count ?? 0,
                 'used_at' => $code->used_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),
-            'historyCodes' => $this->accessCodeService->getCodeHistory(20, $searchHistory)->map(fn ($code) => [
+            'historyCodes' => $historyCodes->map(fn ($code) => [
                 'id' => $code->id,
                 'type' => $code->type,
                 'code' => $code->code,
+                'pass_uuid' => $code->pass_uuid,
+                'qr_token' => $code->qr_token,
                 'visitor_name' => $code->visitor_name,
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
                 'status' => $code->status->value,
                 'source' => $code->source->value,
                 'expires_at' => $code->expires_at?->toISOString(),
+                'starts_at' => $code->starts_at?->toISOString(),
+                'guest_limit' => $code->guest_limit,
+                'uses_count' => $code->access_logs_count ?? 0,
                 'used_at' => $code->used_at?->toISOString(),
                 'revoked_at' => $code->revoked_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
             ]),
+            'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),
         ]);

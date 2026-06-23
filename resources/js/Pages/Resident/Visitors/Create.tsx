@@ -59,10 +59,32 @@ const CreateAccessCode = () => {
     const hasFlexibleCodes = features.includes('flexible-code-types');
     const hasEventCodes = true;
 
-    const [step, setStep] = useState<Step>('type');
+    // Read query parameter from window.location if available
+    const getInitialType = (): FormState['type'] => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const typeParam = params.get('type');
+            if (typeParam === 'event' || typeParam === 'long_lived' || typeParam === 'single_use') {
+                return typeParam;
+            }
+        }
+        return 'single_use';
+    };
+
+    const getInitialStep = (): Step => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('type')) {
+                return 'schedule';
+            }
+        }
+        return 'type';
+    };
+
+    const [step, setStep] = useState<Step>(getInitialStep());
 
     const form = useForm<FormState>({
-        type: 'single_use',
+        type: getInitialType(),
         visitor_name: '',
         visitor_phone: '',
         purpose: 'Guest',

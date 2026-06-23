@@ -1,14 +1,27 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { User, Clock as ClockIcon, History as HistoryIcon, Calendar, Activity } from 'lucide-react';
+import { 
+    User, 
+    Clock, 
+    Calendar, 
+    Tag, 
+    Users, 
+    PlusCircle, 
+    Search, 
+    CheckCircle2, 
+    XCircle, 
+    Trash2, 
+    History as HistoryIcon,
+    ArrowRight,
+    Activity
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
-
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
 import CodeCard from './Components/CodeCard';
-import SummaryDashboard from './Components/SummaryDashboard';
 
 type Props = {
     activeCodes: AccessCode[];
@@ -17,7 +30,14 @@ type Props = {
         search_active?: string;
         search_history?: string;
     };
-
+    recentActivity: {
+        type: 'created' | 'used' | 'expired' | 'revoked' | 'telegram_linked' | 'telegram_unlinked' | 'logged_in' | string;
+        message: string;
+        time: string;
+        time_full: string;
+        code?: string;
+        visitor?: string;
+    }[];
     visitorStats: {
         active_codes: number;
         created_today: number;
@@ -26,52 +46,29 @@ type Props = {
     };
 };
 
-type Tab = 'active' | 'long_lived' | 'history';
-
-export default function Visitors({ activeCodes, historyCodes, filters, visitorStats }: Props) {
+export default function Visitors({ activeCodes, historyCodes, filters, recentActivity }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
-    const [activeTab, setActiveTab] = useState<Tab>('active');
 
-    // Search State
-    const [queries, setQueries] = useState({
-        active: filters?.search_active || '',
-        long_lived: filters?.search_active || '',
-        history: filters?.search_history || '',
-    });
-
+    // Search State for History
+    const [searchQuery, setSearchQuery] = useState(filters?.search_history || '');
     const [isLoading, setIsLoading] = useState(false);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const handleSearch = (query: string) => {
-        setQueries((prev) => ({ ...prev, [activeTab]: query }));
+        setSearchQuery(query);
 
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
         setIsLoading(true);
         debounceTimeout.current = setTimeout(() => {
-            const params: any = {};
-
-            if (activeTab === 'active' || activeTab === 'long_lived') {
-                params.search_active = query;
-                if (filters?.search_history) params.search_history = filters.search_history;
-            } else {
-                params.search_history = query;
-                if (filters?.search_active) params.search_active = filters.search_active;
-            }
-
-            // Sync long_lived and active if they share the same backend filter
-            if (activeTab === 'active') {
-                setQueries((prev) => ({ ...prev, long_lived: query }));
-            } else if (activeTab === 'long_lived') {
-                setQueries((prev) => ({ ...prev, active: query }));
-            }
-
-            router.get(resident.visitors.index.url(), params, {
+            router.get(resident.visitors.index.url(), {
+                search_history: query,
+            }, {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: activeTab === 'history' ? ['historyCodes', 'filters'] : ['activeCodes', 'filters'],
+                only: ['historyCodes', 'filters'],
                 onFinish: () => setIsLoading(false),
             });
         }, 300);
@@ -79,22 +76,12 @@ export default function Visitors({ activeCodes, historyCodes, filters, visitorSt
 
     // Update local state if URL filters change externally
     useEffect(() => {
-        setQueries((prev) => ({
-            ...prev,
-            active: filters?.search_active || prev.active,
-            long_lived: filters?.search_active || prev.active, // Sync using active filter
-            history: filters?.search_history || prev.history,
-        }));
-    }, [filters]);
+        setSearchQuery(filters?.search_history || '');
+    }, [filters?.search_history]);
 
     const [revokeModalOpen, setRevokeModalOpen] = useState(false);
     const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
     const [revoking, setRevoking] = useState(false);
-
-    const oneTimeCodes = activeCodes.filter((code) => code.type === 'single_use');
-    const longLivedCodes = activeCodes.filter((code) => code.type === 'long_lived');
-
-    const currentCodes = activeTab === 'active' ? oneTimeCodes : activeTab === 'long_lived' ? longLivedCodes : historyCodes;
 
     const openRevokeModal = (code: AccessCode) => {
         setCodeToRevoke(code);
@@ -117,119 +104,225 @@ export default function Visitors({ activeCodes, historyCodes, filters, visitorSt
         });
     };
 
+    // Filter Active vs Scheduled Passes
+    const now = new Date();
+    const activePasses = activeCodes.filter(code => {
+        const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
+        return !isFuture;
+    });
+
+    const scheduledPasses = activeCodes.filter(code => {
+        const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
+        return isFuture;
+    });
+
+    // Helper to render activity icon
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'created':
+                return <PlusCircle className="h-5 w-5 text-indigo-650" />;
+            case 'used':
+                return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+            case 'expired':
+                return <Clock className="h-5 w-5 text-amber-500" />;
+            case 'revoked':
+                return <XCircle className="h-5 w-5 text-rose-500" />;
+            default:
+                return <Activity className="h-5 w-5 text-slate-400" />;
+        }
+    };
+
     return (
         <>
-            <Head title="Visitors" />
+            <Head title="Visitor Access" />
 
-            {/* 1. TOP SUMMARY */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
-                <div className="mb-6">
-                    <div className="mb-2 flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-indigo-600" />
-                        <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Live Operations</span>
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Access Control</h1>
-                    <p className="mt-1 text-sm font-bold text-slate-400">Manage community flow and visitor permissions</p>
-                </div>
-                <SummaryDashboard
-                    activeCount={visitorStats.visitors_today}
-                    expectedToday={visitorStats.expected_today}
-                />
-            </motion.div>
+            <div className="space-y-10 pb-32">
+                {/* 1. HEADER */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col"
+                >
+                    <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Visitor Access</h1>
+                    <p className="mt-1.5 text-sm font-bold text-slate-400 leading-normal">
+                        Manage visitor access and track arrivals.
+                    </p>
+                </motion.div>
 
-            {/* 2. TABS & SEARCH */}
-            <div className="sticky top-0 z-30 -mx-4 bg-slate-50/80 px-4 pb-4 backdrop-blur-md">
-                <div className="flex gap-2 rounded-[28px] bg-white p-1.5 shadow-sm ring-1 ring-slate-100">
-                    {[
-                        { id: 'active' as const, label: 'Active', icon: ClockIcon },
-                        ...(!isHouseholdMember ? [{ id: 'long_lived' as const, label: 'Long Term', icon: Calendar }] : []),
-                        { id: 'history' as const, label: 'History', icon: HistoryIcon },
-                    ].map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-[22px] py-3 text-[10px] font-black transition-all ${
-                                    isActive ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeVisitorTab"
-                                        className="absolute inset-[2px] rounded-[20px] bg-slate-50 shadow-sm ring-1 ring-slate-200/50"
-                                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                                <tab.icon className="relative z-10 h-3.5 w-3.5" strokeWidth={3} />
-                                <span className="relative z-10 tracking-widest whitespace-nowrap uppercase">{tab.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                <div className="mt-4">
-                    <SearchInput
-                        value={queries[activeTab]}
-                        onChange={handleSearch}
-                        placeholder={`Search ${activeTab.replace('_', ' ')} codes...`}
-                        isLoading={isLoading}
-                    />
-                </div>
-            </div>
-
-            {/* 3. CODE LIST */}
-            <div className="mt-4 pb-32">
-                <AnimatePresence mode="wait">
-                    {currentCodes.length > 0 ? (
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                {/* 2. QUICK ACTIONS */}
+                <div className="space-y-4">
+                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Generate Passes</h2>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {/* One-Time */}
+                        <Link
+                            href="/resident/visitors/create?type=single_use"
+                            className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
                         >
-                            {currentCodes.map((code, index) => (
-                                <motion.div
-                                    key={code.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                >
-                                    <CodeCard
-                                        code={code}
-                                        showActions={activeTab !== 'history' && code.status === 'active'}
-                                        onRevoke={openRevokeModal}
-                                    />
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex flex-col items-center justify-center rounded-[40px] bg-white px-8 py-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-slate-200"
-                        >
-                            <div className="relative mb-6">
-                                <div className="absolute inset-0 animate-pulse rounded-full bg-indigo-500/10 blur-3xl" />
-                                <div className="relative flex h-24 w-24 items-center justify-center rounded-[32px] bg-slate-50 text-slate-300 ring-1 ring-slate-100">
-                                    <User className="h-12 w-12" strokeWidth={1.5} />
-                                </div>
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
+                                <Tag className="h-5 w-5" />
                             </div>
-                            <h3 className="text-2xl font-black tracking-tight text-slate-900">
-                                {activeTab === 'active' ? "You're all clear" : 'No history yet'}
-                            </h3>
-                            <p className="mx-auto mt-3 max-w-xs text-base leading-relaxed font-bold text-slate-400">
-                                {activeTab === 'active'
-                                    ? 'No active visitors right now. Everything is quiet at the gate.'
-                                    : 'Your visitor activity and history will appear here once you start generating codes.'}
+                            <div>
+                                <h3 className="font-black text-slate-900 text-sm tracking-tight">One-Time Pass</h3>
+                                <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">Perfect for a single visitor.</p>
+                            </div>
+                        </Link>
+
+                        {/* Long-Term */}
+                        {!isHouseholdMember && (
+                            <Link
+                                href="/resident/visitors/create?type=long_lived"
+                                className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
+                            >
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
+                                    <Calendar className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-900 text-sm tracking-tight">Long-Term Pass</h3>
+                                    <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">For recurring visitors.</p>
+                                </div>
+                            </Link>
+                        )}
+
+                        {/* Event Pass */}
+                        <Link
+                            href="/resident/visitors/create?type=event"
+                            className="group flex items-start gap-4 rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_4px_20px_rgb(0,0,0,0.01)] transition-all duration-300 hover:shadow-lg hover:border-indigo-200/60"
+                        >
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
+                                <Users className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-slate-900 text-sm tracking-tight">Event Pass</h3>
+                                <p className="text-xs font-bold text-slate-400 mt-1 leading-normal">One pass for many guests.</p>
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+
+                {/* 3. ACTIVE PASSES */}
+                <div className="space-y-4">
+                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Currently Active</h2>
+                    {activePasses.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            {activePasses.map((code) => (
+                                <CodeCard
+                                    key={code.id}
+                                    code={code}
+                                    showActions={code.status === 'active'}
+                                    onRevoke={openRevokeModal}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center rounded-[36px] bg-white border border-slate-200/80 px-8 py-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-350 border border-slate-100 mb-5">
+                                <Tag className="h-8 w-8" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900">No Active Passes</h3>
+                            <p className="mt-2 max-w-xs text-xs font-bold text-slate-400 leading-relaxed">
+                                Create a pass to allow guests into your estate.
                             </p>
-                        </motion.div>
+                            <Link
+                                href="/resident/visitors/create"
+                                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-xs font-black text-white shadow-xl shadow-indigo-500/10 hover:bg-indigo-700 active:scale-95 transition-all"
+                            >
+                                <PlusCircle className="h-4.5 w-4.5" />
+                                Create Pass
+                            </Link>
+                        </div>
                     )}
-                </AnimatePresence>
+                </div>
+
+                {/* 4. SCHEDULED PASSES */}
+                <div className="space-y-4">
+                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Scheduled Passes</h2>
+                    {scheduledPasses.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            {scheduledPasses.map((code) => (
+                                <CodeCard
+                                    key={code.id}
+                                    code={code}
+                                    showActions={false}
+                                    onRevoke={openRevokeModal}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-[28px] border-2 border-dashed border-slate-200 p-6 text-center bg-slate-50/10">
+                            <p className="text-xs font-bold text-slate-400">No upcoming visitor passes scheduled.</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* 5. RECENT VISITOR ACTIVITY */}
+                {recentActivity && recentActivity.length > 0 && (
+                    <div className="space-y-4">
+                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h2>
+                        <div className="rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-5">
+                            {recentActivity.slice(0, 5).map((activity, i) => (
+                                <div key={i} className="flex gap-4 items-start relative">
+                                    {i < Math.min(recentActivity.length, 5) - 1 && (
+                                        <div className="absolute left-[18px] top-10 bottom-0 w-0.5 bg-slate-100" />
+                                    )}
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-400">
+                                        {getActivityIcon(activity.type)}
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-1">
+                                        <p className="text-xs font-extrabold text-slate-800 leading-normal">{activity.message}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 mt-1">{activity.time}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 6. HISTORY */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Visitor History</h2>
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                            <HistoryIcon className="h-4 w-4" />
+                            Archive
+                        </span>
+                    </div>
+
+                    <div className="rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
+                        <SearchInput
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            placeholder="Search history by visitor or code..."
+                            isLoading={isLoading}
+                        />
+
+                        <AnimatePresence mode="wait">
+                            {historyCodes.length > 0 ? (
+                                <motion.div
+                                    key="history-list"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                                >
+                                    {historyCodes.map((code) => (
+                                        <CodeCard
+                                            key={code.id}
+                                            code={code}
+                                            showActions={false}
+                                        />
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-xs font-bold text-slate-400">
+                                        {searchQuery ? 'No matching history found.' : 'No older passes in your history.'}
+                                    </p>
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
             </div>
 
             <ConfirmationModal
@@ -247,3 +340,5 @@ export default function Visitors({ activeCodes, historyCodes, filters, visitorSt
         </>
     );
 }
+
+Visitors.layout = (page: React.ReactNode) => <ResidentLayout>{page}</ResidentLayout>;
