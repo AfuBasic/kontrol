@@ -260,11 +260,11 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                 </div>
 
                 {/* 5. RECENT VISITOR ACTIVITY (TIMELINE) */}
-                {recentActivity && recentActivity.length > 0 && (
-                    <div ref={activitySectionRef} className="space-y-4">
-                        <div className="flex items-center justify-between px-1">
-                            <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h3>
-                        </div>
+                <div ref={activitySectionRef} className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h3>
+                    </div>
+                    {recentActivity && recentActivity.length > 0 ? (
                         <div className="space-y-6 rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
                             {recentActivity.slice(0, 4).map((activity, i) => (
                                 <div key={i} className="relative flex items-start gap-4">
@@ -284,8 +284,12 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <div className="rounded-[28px] border border-slate-200/60 bg-white p-6 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
+                            <p className="text-xs font-bold text-slate-400">No recent visitor activity recorded.</p>
+                        </div>
+                    )}
+                </div>
 
                 {/* 6. ACTIVE VISITORS */}
                 <div className="space-y-4">
