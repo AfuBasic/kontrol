@@ -2,9 +2,11 @@
 
 namespace App\Actions\Security;
 
+use App\Events\Resident\VisitorCheckedOutBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\User;
+use App\Notifications\VisitorCheckedOutNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -62,6 +64,13 @@ class RecordCheckOutAction
                 'checked_out_at' => $timestamp,
                 'checked_out_by' => $verifiedBy->id,
             ]);
+
+            // Broadcast and notify the host resident
+            $host = $accessCode->user;
+            if ($host) {
+                event(new VisitorCheckedOutBroadcast($host, $accessCode));
+                $host->notify(new VisitorCheckedOutNotification($accessCode));
+            }
 
             return $log;
         });

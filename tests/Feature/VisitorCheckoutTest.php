@@ -16,6 +16,9 @@ beforeEach(function () {
 });
 
 it('performs a visitor checkout when settings are enabled', function () {
+    \Illuminate\Support\Facades\Notification::fake();
+    \Illuminate\Support\Facades\Event::fake([\App\Events\Resident\VisitorCheckedOutBroadcast::class]);
+
     $estate = Estate::factory()->create();
     $securityUser = User::factory()->create();
 
@@ -92,6 +95,19 @@ it('performs a visitor checkout when settings are enabled', function () {
     $log->refresh();
     expect($log->checked_out_at)->not->toBeNull();
     expect($log->checked_out_by)->toBe($securityUser->id);
+
+    // Assert notification sent
+    \Illuminate\Support\Facades\Notification::assertSentTo(
+        $resident,
+        \App\Notifications\VisitorCheckedOutNotification::class,
+        fn ($notification) => $notification->accessCode->id === $accessCode->id
+    );
+
+    // Assert broadcast event dispatched
+    \Illuminate\Support\Facades\Event::assertDispatched(
+        \App\Events\Resident\VisitorCheckedOutBroadcast::class,
+        fn ($event) => $event->user->id === $resident->id && $event->accessCode->id === $accessCode->id
+    );
 
     // 4. Scan a third time (Should be denied as already used/checked out)
     $response3 = $this->actingAs($securityUser)
