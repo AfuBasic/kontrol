@@ -24,6 +24,8 @@ type ValidationResult = {
     guest_limit?: number | null;
     uses_count?: number;
     starts_at?: string | null;
+    action?: string | null;
+    checked_in_at?: string | null;
 };
 
 interface PageProps {
@@ -465,7 +467,7 @@ export default function SecurityVerify() {
     };
 
     const recordDecision = async (
-        decision: 'admit' | 'reject',
+        decision: 'admit' | 'reject' | 'checkout',
         extraData: {
             vehicle_make?: string;
             vehicle_model?: string;
@@ -606,6 +608,7 @@ export default function SecurityVerify() {
                             result={result}
                             onAdmit={(data) => recordDecision('admit', { ...data, access_log_id: result.access_log_id })}
                             onReject={(data) => recordDecision('reject', data)}
+                            onCheckout={() => recordDecision('checkout')}
                             onReset={reset}
                         />
                     ) : isScanning ? (
@@ -716,16 +719,17 @@ type ResultPanelProps = {
     result: ValidationResult;
     onAdmit: (data?: Record<string, unknown>) => void;
     onReject?: (data?: Record<string, unknown>) => void;
+    onCheckout: () => void;
     onReset: () => void;
 };
 
-function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
+function ResultPanel({ result, onAdmit, onReject, onCheckout, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
     const [countdown, setCountdown] = useState(10);
 
     useEffect(() => {
-        if (!valid || result.status === 'offline_not_found' || result.has_vehicle) {
+        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || result.action === 'checkout_pending') {
             return;
         }
 
@@ -810,18 +814,30 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
         );
     }
 
+    const isCheckoutPending = result.action === 'checkout_pending';
+
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-1 flex-col">
             <div className="flex flex-1 flex-col items-center justify-center p-4">
                 <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl">
                     <div className="flex flex-col items-center px-8 pt-12 pb-8">
-                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-500/5">
-                            <ShieldCheck className="h-12 w-12" strokeWidth={2} />
-                        </div>
+                        {isCheckoutPending ? (
+                            <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-4 ring-amber-500/5">
+                                <Clock className="h-12 w-12" strokeWidth={2} />
+                            </div>
+                        ) : (
+                            <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-500/5">
+                                <ShieldCheck className="h-12 w-12" strokeWidth={2} />
+                            </div>
+                        )}
 
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900">Access Granted</h2>
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900">
+                            {isCheckoutPending ? 'Visitor In Estate' : 'Access Granted'}
+                        </h2>
                         <div className="mt-2 text-center">
-                            <p className="text-base font-medium text-slate-500">{result.message || 'Visitor verification successful.'}</p>
+                            <p className="text-base font-medium text-slate-500">
+                                {isCheckoutPending ? 'Visitor has an active check-in session.' : (result.message || 'Visitor verification successful.')}
+                            </p>
                         </div>
                     </div>
 
@@ -834,10 +850,13 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                                 <DetailRow icon={<HomeIcon className="h-5 w-5" strokeWidth={2} />} label="Host" value={result.host_name} />
                             )}
                             <DetailRow icon={<Tag className="h-5 w-5" strokeWidth={2} />} label="Pass Type" value={getPassTypeLabel(result.code_type)} />
+                            {result.checked_in_at && (
+                                <DetailRow icon={<Clock className="h-5 w-5" strokeWidth={2} />} label="Checked In At" value={formatDateTime(result.checked_in_at) || ''} />
+                            )}
                             {result.starts_at && (
                                 <DetailRow icon={<Calendar className="h-5 w-5" strokeWidth={2} />} label="Starts at" value={formatDateTime(result.starts_at) || ''} />
                             )}
-                            {expiry && result.code_type !== 'long_lived' && (
+                            {expiry && result.code_type !== 'long_lived' && !isCheckoutPending && (
                                 <DetailRow icon={<Clock className="h-5 w-5" strokeWidth={2} />} label="Expires in" value={expiry} />
                             )}
                         </div>
@@ -869,16 +888,28 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                     )}
 
                     <div className="px-8 pt-8 pb-10">
-                        <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
-
-                        {!result.has_vehicle && (
+                        {isCheckoutPending ? (
                             <button
                                 type="button"
-                                onClick={onReset}
-                                className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98]"
+                                onClick={() => onCheckout()}
+                                className="w-full rounded-[1.25rem] bg-amber-600 py-5 text-lg font-black text-white shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98]"
                             >
-                                Okay ({countdown}s)
+                                Record Check-out
                             </button>
+                        ) : (
+                            <>
+                                <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
+
+                                {!result.has_vehicle && (
+                                    <button
+                                        type="button"
+                                        onClick={onReset}
+                                        className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98]"
+                                    >
+                                        Okay ({countdown}s)
+                                    </button>
+                                )}
+                            </>
                         )}
 
                         <button
@@ -887,7 +918,7 @@ function ResultPanel({ result, onAdmit, onReset }: ResultPanelProps) {
                             className="mt-6 flex w-full items-center justify-center gap-3 text-sm font-black text-slate-400 transition-all hover:text-slate-600 active:scale-[0.98]"
                         >
                             <ArrowLeft className="h-4 w-4" />
-                            Verify another code
+                            {isCheckoutPending ? 'Cancel' : 'Verify another code'}
                         </button>
                     </div>
                 </div>

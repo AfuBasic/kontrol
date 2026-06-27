@@ -57,6 +57,8 @@ class VerifyController extends Controller
                 $result['access_log_id'] = $log->id;
                 $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
                 $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+            } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
+                // Do not auto check-in when checkout is pending
             } else {
                 // Check in immediately upon successful validation
                 $log = $this->recordCheckInAction->execute(
@@ -70,7 +72,8 @@ class VerifyController extends Controller
                 $result['access_log_id'] = $log->id;
             }
 
-            $result['uses_count'] = AccessLog::where('access_code_id', $log->access_code_id)->count();
+            $accessCodeId = isset($log) ? $log->access_code_id : AccessLog::where('id', $result['access_log_id'])->value('access_code_id');
+            $result['uses_count'] = AccessLog::where('access_code_id', $accessCodeId)->count();
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -98,6 +101,7 @@ class VerifyController extends Controller
     public function decision(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
+            'decision' => 'required|in:admit,reject,checkout',
             'reason' => 'nullable|string|max:500',
             'access_log_id' => 'nullable|exists:access_logs,id',
             'vehicle_make' => 'nullable|string|max:255',
@@ -133,6 +137,14 @@ class VerifyController extends Controller
                     vehicleData: $request->only(['vehicle_make', 'vehicle_model', 'vehicle_plate_number'])
                 );
             }
+        }
+
+        if ($request->input('decision') === 'checkout') {
+            $this->recordCheckOutAction->execute(
+                code: $request->input('code'),
+                estateId: $estate->id,
+                verifiedBy: $user
+            );
         }
 
         if ($request->wantsJson()) {

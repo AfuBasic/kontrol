@@ -76,6 +76,8 @@ export type UsageLog = {
     id: number;
     verified_at: string;
     verifier_name: string;
+    checked_out_at?: string | null;
+    checkout_verifier_name?: string | null;
 };
 
 export type CursorPaginatedUsageLogs = {

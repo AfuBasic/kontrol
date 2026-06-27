@@ -195,6 +195,8 @@ class AccessCodeController extends Controller
                     'id' => $log->id,
                     'verified_at' => $log->verified_at->toISOString(),
                     'verifier_name' => $log->verifier?->name ?? 'Unknown',
+                    'checked_out_at' => $log->checked_out_at?->toISOString(),
+                    'checkout_verifier_name' => $log->checkoutVerifier?->name ?? 'Unknown',
                 ]),
                 'next_cursor' => $usageLogs->nextCursor()?->encode(),
                 'next_page_url' => $usageLogs->nextPageUrl(),

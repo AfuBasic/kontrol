@@ -25,7 +25,10 @@ it('performs a visitor checkout when settings are enabled', function () {
 
     // Enable visitor checkout on settings
     $settings = EstateSettings::forEstate($estate->id);
-    $settings->update(['visitor_checkout_enabled' => true]);
+    $settings->update([
+        'visitor_checkout_enabled' => true,
+        'access_code_single_use' => true,
+    ]);
 
     $resident = User::factory()->create();
     $resident->assignRole('resident');
@@ -58,7 +61,7 @@ it('performs a visitor checkout when settings are enabled', function () {
     expect($log)->not->toBeNull();
     expect($log->checked_out_at)->toBeNull();
 
-    // 2. Scan/Validate again to Check Out
+    // 2. Scan/Validate again to initiate Check Out (shows pending state, doesn't checkout yet)
     $response2 = $this->actingAs($securityUser)
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->postJson(route('security.verify.validate'), [
@@ -68,15 +71,29 @@ it('performs a visitor checkout when settings are enabled', function () {
 
     $response2->assertSuccessful();
     $response2->assertJsonPath('validation_result.valid', true);
-    $response2->assertJsonPath('validation_result.action', 'checkout');
-    $response2->assertJsonPath('validation_result.checked_out_at', fn ($val) => ! empty($val));
+    $response2->assertJsonPath('validation_result.action', 'checkout_pending');
+    $response2->assertJsonPath('validation_result.checked_in_at', fn ($val) => ! empty($val));
 
-    // Assert checkout recorded
+    // Assert checkout is NOT yet recorded
+    $log->refresh();
+    expect($log->checked_out_at)->toBeNull();
+
+    // 3. Post decision: 'checkout' to finalize checkout
+    $responseDecision = $this->actingAs($securityUser)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->postJson(route('security.verify.decision'), [
+            'code' => 'TEST1234',
+            'decision' => 'checkout',
+        ]);
+
+    $responseDecision->assertSuccessful();
+
+    // Assert checkout is now recorded
     $log->refresh();
     expect($log->checked_out_at)->not->toBeNull();
     expect($log->checked_out_by)->toBe($securityUser->id);
 
-    // 3. Scan a third time (Should be denied)
+    // 4. Scan a third time (Should be denied as already used/checked out)
     $response3 = $this->actingAs($securityUser)
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->postJson(route('security.verify.validate'), [

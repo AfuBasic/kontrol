@@ -379,33 +379,63 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     {usageLogs.data.length > 0 ? (
                                         <div className="space-y-3">
                                             {usageLogs.data.map((log) => (
-                                                <div key={log.id} className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
-                                                            <Shield className="h-4 w-4 text-indigo-600" />
+                                                <div key={log.id} className="flex flex-col gap-3 rounded-2xl bg-slate-50/50 p-4 border border-slate-100">
+                                                    {/* Check In Row */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100">
+                                                                <Shield className="h-4 w-4" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="text-sm font-black text-slate-800">Checked In</p>
+                                                                <p className="text-[11px] text-slate-400 font-bold">Verified by {log.verifier_name}</p>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-left">
-                                                            <p className="text-sm font-bold text-gray-900">Verified by {log.verifier_name}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {new Date(log.verified_at).toLocaleDateString(undefined, {
-                                                                    weekday: 'short',
-                                                                    month: 'short',
-                                                                    day: 'numeric',
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-black text-slate-700">
+                                                                {new Date(log.verified_at).toLocaleTimeString(undefined, {
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
                                                                 })}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400 font-bold">
+                                                                {formatDistanceToNow(new Date(log.verified_at), { addSuffix: true })}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm font-bold text-gray-700">
-                                                            {new Date(log.verified_at).toLocaleTimeString(undefined, {
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            })}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400">
-                                                            {formatDistanceToNow(new Date(log.verified_at), { addSuffix: true })}
-                                                        </p>
-                                                    </div>
+
+                                                    {/* Check Out Row / Still in Estate Status */}
+                                                    {log.checked_out_at ? (
+                                                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200/50">
+                                                                    <Clock className="h-4 w-4" />
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <p className="text-sm font-black text-slate-800">Checked Out</p>
+                                                                    <p className="text-[11px] text-slate-400 font-bold">Recorded by {log.checkout_verifier_name}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="text-sm font-black text-slate-700">
+                                                                    {new Date(log.checked_out_at).toLocaleTimeString(undefined, {
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit',
+                                                                    })}
+                                                                </p>
+                                                                <p className="text-[10px] text-slate-400 font-bold">
+                                                                    {formatDistanceToNow(new Date(log.checked_out_at), { addSuffix: true })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-amber-600">
+                                                            <span className="text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
+                                                                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                                                                Still in estate
+                                                             </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
 

@@ -71,11 +71,16 @@ class ValidateAccessCodeAction
 
         // If checkout tracking is enabled, check if they are checking out
         if ($settings->visitor_checkout_enabled) {
-            $hasActiveSession = AccessLog::where('access_code_id', $accessCode->id)
+            $activeSession = AccessLog::where('access_code_id', $accessCode->id)
                 ->whereNull('checked_out_at')
-                ->exists();
-            if ($hasActiveSession) {
-                return $this->granted($accessCode, 'checkout');
+                ->first();
+            if ($activeSession) {
+                $granted = $this->granted($accessCode, 'checkout_pending');
+                $granted['message'] = 'Visitor is currently in the estate';
+                $granted['checked_in_at'] = $activeSession->verified_at?->toIso8601String();
+                $granted['access_log_id'] = $activeSession->id;
+
+                return $granted;
             }
         }
 
