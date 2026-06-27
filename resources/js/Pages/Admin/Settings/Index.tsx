@@ -1,26 +1,19 @@
-import { Head, useForm, usePage, Link } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2 } from 'lucide-react';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import AdminLayout from '@/Layouts/AdminLayout';
-
-type Contact = {
-    name: string;
-    value: string;
-};
 
 type Settings = {
     access_codes_enabled: boolean;
     access_code_min_lifespan_minutes: number;
     access_code_max_lifespan_minutes: number;
     access_code_single_use: boolean;
+    visitor_checkout_enabled: boolean;
     access_code_grace_period_minutes: number;
     access_code_daily_limit_per_resident: number | null;
     access_code_require_confirmation: boolean;
     free_trial_enabled: boolean;
     free_trial_days: number;
     grace_period_days: number;
-    contacts: Contact[];
 };
 
 type Props = {
@@ -55,35 +48,18 @@ export default function Settings({ settings }: Props) {
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
         access_code_max_lifespan_minutes: settings.access_code_max_lifespan_minutes,
         access_code_single_use: settings.access_code_single_use,
+        visitor_checkout_enabled: settings.visitor_checkout_enabled,
         access_code_grace_period_minutes: settings.access_code_grace_period_minutes,
         access_code_daily_limit_per_resident: settings.access_code_daily_limit_per_resident,
         access_code_require_confirmation: settings.access_code_require_confirmation,
         free_trial_enabled: settings.free_trial_enabled,
         free_trial_days: settings.free_trial_days,
         grace_period_days: settings.grace_period_days,
-        contacts: settings.contacts || [],
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         put(update.url());
-    }
-
-    function addContact() {
-        setData('contacts', [...data.contacts, { name: '', value: '' }]);
-    }
-
-    function removeContact(index: number) {
-        setData(
-            'contacts',
-            data.contacts.filter((_, i) => i !== index),
-        );
-    }
-
-    function updateContact(index: number, field: keyof Contact, value: string) {
-        const updated = [...data.contacts];
-        updated[index] = { ...updated[index], [field]: value };
-        setData('contacts', updated);
     }
 
     return (
@@ -154,7 +130,9 @@ export default function Settings({ settings }: Props) {
                                     Minimum Lifespan (minutes)
                                 </label>
                                 <input
-                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                    type="number"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     id="min_lifespan"
                                     min="1"
                                     max="10080"
@@ -179,7 +157,9 @@ export default function Settings({ settings }: Props) {
                                     Maximum Lifespan (minutes)
                                 </label>
                                 <input
-                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                    type="number"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     id="max_lifespan"
                                     min="1"
                                     max="10080"
@@ -207,7 +187,9 @@ export default function Settings({ settings }: Props) {
                                 Grace Period (minutes)
                             </label>
                             <input
-                                type="number" inputMode="numeric" pattern="[0-9]*"
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 id="grace_period"
                                 min="0"
                                 max="60"
@@ -232,7 +214,9 @@ export default function Settings({ settings }: Props) {
                                 Daily Limit per Resident
                             </label>
                             <input
-                                type="number" inputMode="numeric" pattern="[0-9]*"
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 id="daily_limit"
                                 min="1"
                                 max="100"
@@ -274,86 +258,30 @@ export default function Settings({ settings }: Props) {
                                 </span>
                             </div>
                         </label>
-                    </div>
-                </motion.div>
-                {/* Estate Contacts */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
-                >
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-medium text-gray-900">Contacts</h2>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Add important contact numbers for the estate that residents and security can reference.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={addContact}
-                            disabled={data.contacts.length >= 20}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add Contact
-                        </button>
-                    </div>
 
-                    {data.contacts.length === 0 ? (
-                        <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center">
-                            <p className="text-sm text-gray-500">No contacts added yet. Click "Add Contact" to get started.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {data.contacts.map((contact, index) => (
-                                <div key={index} className="flex items-start gap-3">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={contact.name}
-                                            onChange={(e) => updateContact(index, 'name', e.target.value)}
-                                            placeholder="Contact name (e.g., Security, Manager)"
-                                            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                        />
-                                        {errors[`contacts.${index}.name` as keyof typeof errors] && (
-                                            <p className="mt-1 text-sm text-red-600">{errors[`contacts.${index}.name` as keyof typeof errors]}</p>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={contact.value}
-                                            onChange={(e) => updateContact(index, 'value', e.target.value)}
-                                            placeholder="Phone number"
-                                            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                        />
-                                        {errors[`contacts.${index}.value` as keyof typeof errors] && (
-                                            <p className="mt-1 text-sm text-red-600">{errors[`contacts.${index}.value` as keyof typeof errors]}</p>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeContact(index)}
-                                        className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                                        title="Remove contact"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {errors.contacts && <p className="mt-3 text-sm text-red-600">{errors.contacts}</p>}
+                        {/* Visitor Checkout */}
+                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+                            <input
+                                type="checkbox"
+                                checked={data.visitor_checkout_enabled}
+                                onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <div>
+                                <span className="block text-sm font-medium text-gray-900">Visitor checkout tracking</span>
+                                <span className="block text-sm text-gray-500">
+                                    When enabled, security guards can scan visitor codes upon exit to track and record the duration of their visit
+                                </span>
+                            </div>
+                        </label>
+                    </div>
                 </motion.div>
 
                 {/* Save Button */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
+                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                     className="flex justify-end"
                 >
                     <button

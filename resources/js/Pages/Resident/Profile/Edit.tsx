@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Lock, Shield, ChevronRight, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet, CheckCircle2 } from 'lucide-react';
+import { User, Lock, Shield, ChevronRight, Zap, Users, UserCircle, Eye, EyeOff, Crown, X, Loader2, Plus, Wallet, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
@@ -196,6 +196,13 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                 label="Security"
                                 description="Update your account password"
                                 onClick={() => setActiveSheet('password')}
+                            />
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <SettingsRow
+                                icon={<ShieldAlert className="h-5 w-5" />}
+                                label="SOS Contacts"
+                                description="Manage emergency alerts contacts"
+                                onClick={() => setActiveSheet('emergency_management')}
                             />
                             {hasHousehold && !isHouseholdMember && (
                                 <>

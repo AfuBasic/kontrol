@@ -405,7 +405,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                         <div className="mt-auto mb-8 w-full max-w-sm">
                                             {!sosSuccessData?.has_emergency_contacts && (
                                                 <Link
-                                                    href={ProfileController.edit.url({ query: { open: 'emergency_contacts' } })}
+                                                    href={ProfileController.edit.url({ query: { open: 'emergency_management' } })}
                                                     className="mb-6 flex w-full items-center justify-between rounded-2xl bg-[#F59E0B]/10 p-4 text-[#F59E0B] ring-1 ring-[#F59E0B]/20 active:scale-[0.98]"
                                                 >
                                                     <div className="flex items-center gap-3">

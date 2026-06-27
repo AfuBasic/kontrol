@@ -1,9 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ChevronRight, ScanLine, ShieldCheck } from 'lucide-react';
+import { ChevronRight, ScanLine, ShieldCheck, Siren } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
+import EmergencyServicesList from '@/Components/EmergencyServicesList';
 
 type ActivityItem = {
     id: number;
@@ -157,6 +158,17 @@ export default function SecurityCommandCenter() {
                         </ul>
                     )}
                 </section>
+
+                {/* National Emergency Services */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-rose-500 to-red-600 text-white shadow-md">
+                            <Siren className="h-4 w-4" />
+                        </div>
+                        <h2 className="text-sm font-semibold text-slate-900">Emergency Services (Nigeria)</h2>
+                    </div>
+                    <EmergencyServicesList />
+                </div>
             </div>
         </>
     );

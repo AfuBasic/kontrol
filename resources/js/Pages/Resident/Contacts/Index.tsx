@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+import { Mail, Phone, ArrowRight, Sparkles, Siren } from 'lucide-react';
+import EmergencyServicesList from '@/Components/EmergencyServicesList';
 
 type Contact = {
     name: string;
@@ -149,34 +149,32 @@ export default function Contacts({ contacts, estateName }: Props) {
                         <ArrowRight className="h-3 w-3 rotate-180" />
                         Back to Home
                     </Link>
-                    <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Estate Contacts</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Contacts</h1>
                     <p className="mt-2 text-lg text-indigo-100">
-                        Reach out to the right people at <span className="font-semibold text-white">{estateName}</span>.
+                        Quick access to emergency hotlines and estate contacts.
                     </p>
                 </div>
             </motion.div>
 
+            {/* National Emergency Services */}
+            <div className="mb-8">
+                <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-rose-500 to-red-600 text-white shadow-md">
+                        <Siren className="h-4 w-4" />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-800">Emergency Services (Nigeria)</h2>
+                </div>
+                <EmergencyServicesList />
+            </div>
+
             {/* Contacts Lists */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                {hasAnyContacts ? (
-                    <div className="pb-10">
-                        <ContactGroup title="Phone Numbers" items={grouped.phones} icon={Phone} delayStart={0.3} type="phone" />
+                {hasAnyContacts && (
+                    <div className="pb-10 border-t border-slate-100 pt-8 mt-8">
+                        <ContactGroup title="Estate Contacts" items={grouped.phones} icon={Phone} delayStart={0.3} type="phone" />
                         <ContactGroup title="Email Addresses" items={grouped.emails} icon={Mail} delayStart={0.5} type="email" />
                         <ContactGroup title="Other Information" items={grouped.others} icon={Sparkles} delayStart={0.7} type="other" />
                     </div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-gray-50/50 p-16 text-center"
-                    >
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
-                            <ExternalLink className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="mb-2 text-xl font-bold text-gray-900">No contacts yet</h3>
-                        <p className="max-w-xs text-gray-500">It looks like your estate administrator hasn't added any contact information yet.</p>
-                    </motion.div>
                 )}
             </motion.div>
         </>

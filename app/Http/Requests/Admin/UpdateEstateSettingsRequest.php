@@ -28,6 +28,7 @@ class UpdateEstateSettingsRequest extends FormRequest
                 'gte:access_code_min_lifespan_minutes',
             ],
             'access_code_single_use' => ['required', 'boolean'],
+            'visitor_checkout_enabled' => ['required', 'boolean'],
             'access_code_grace_period_minutes' => ['required', 'integer', 'min:0', 'max:60'],
             'access_code_daily_limit_per_resident' => ['nullable', 'integer', 'min:1', 'max:100'],
             'access_code_require_confirmation' => ['required', 'boolean'],
