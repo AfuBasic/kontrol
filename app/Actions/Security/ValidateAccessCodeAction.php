@@ -4,6 +4,7 @@ namespace App\Actions\Security;
 
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
+use App\Models\AccessLog;
 use App\Models\EstateSettings;
 
 class ValidateAccessCodeAction
@@ -20,7 +21,8 @@ class ValidateAccessCodeAction
      *     purpose: string|null,
      *     expires_at: string|null,
      *     code_type: string|null,
-     *     has_vehicle: bool
+     *     has_vehicle: bool,
+     *     action: string
      * }
      */
     public function execute(string $code, int $estateId): array
@@ -67,6 +69,16 @@ class ValidateAccessCodeAction
             return $this->denied('Code not found', 'not_found');
         }
 
+        // If checkout tracking is enabled, check if they are checking out
+        if ($settings->visitor_checkout_enabled) {
+            $hasActiveSession = AccessLog::where('access_code_id', $accessCode->id)
+                ->whereNull('checked_out_at')
+                ->exists();
+            if ($hasActiveSession) {
+                return $this->granted($accessCode, 'checkout');
+            }
+        }
+
         if ($accessCode->status === AccessCodeStatus::Used) {
             if ($accessCode->type === 'event' && $accessCode->guest_limit !== null && $accessCode->accessLogs()->count() >= $accessCode->guest_limit) {
                 return $this->denied('Event pass guest limit reached', 'limit_reached', $accessCode);
@@ -106,15 +118,16 @@ class ValidateAccessCodeAction
             }
         }
 
-        return $this->granted($accessCode);
+        return $this->granted($accessCode, 'checkin');
     }
 
-    private function granted(AccessCode $accessCode): array
+    private function granted(AccessCode $accessCode, string $action = 'checkin'): array
     {
         return [
             'valid' => true,
             'status' => 'granted',
-            'message' => 'Access code is valid',
+            'action' => $action,
+            'message' => $action === 'checkout' ? 'Check-out is valid' : 'Access code is valid',
             'code' => $accessCode->code,
             'pass_uuid' => $accessCode->pass_uuid,
             'visitor_name' => $accessCode->visitor_name,

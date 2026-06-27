@@ -43,11 +43,14 @@ class AccessLog extends Model
         'vehicle_make',
         'vehicle_model',
         'vehicle_plate_number',
+        'checked_out_at',
+        'checked_out_by',
         'meta',
     ];
 
     protected $casts = [
         'verified_at' => 'datetime',
+        'checked_out_at' => 'datetime',
         'meta' => 'array',
     ];
 
@@ -64,5 +67,10 @@ class AccessLog extends Model
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function checkoutVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checked_out_by');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Security;
 
 use App\Actions\Security\RecordCheckInAction;
+use App\Actions\Security\RecordCheckOutAction;
 use App\Actions\Security\ValidateAccessCodeAction;
 use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
@@ -21,6 +22,7 @@ class VerifyController extends Controller
     public function __construct(
         protected ValidateAccessCodeAction $validateAccessCodeAction,
         protected RecordCheckInAction $recordCheckInAction,
+        protected RecordCheckOutAction $recordCheckOutAction,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -45,16 +47,29 @@ class VerifyController extends Controller
         );
 
         if ($result['valid']) {
-            // Check in immediately upon successful validation
-            $log = $this->recordCheckInAction->execute(
-                code: $request->validated('code'),
-                estateId: $estate->id,
-                verifiedBy: $user,
-                vehicleData: [],
-                verificationMethod: $request->validated('source')
-            );
+            if (isset($result['action']) && $result['action'] === 'checkout') {
+                $log = $this->recordCheckOutAction->execute(
+                    code: $request->validated('code'),
+                    estateId: $estate->id,
+                    verifiedBy: $user
+                );
 
-            $result['access_log_id'] = $log->id;
+                $result['access_log_id'] = $log->id;
+                $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
+                $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+            } else {
+                // Check in immediately upon successful validation
+                $log = $this->recordCheckInAction->execute(
+                    code: $request->validated('code'),
+                    estateId: $estate->id,
+                    verifiedBy: $user,
+                    vehicleData: [],
+                    verificationMethod: $request->validated('source')
+                );
+
+                $result['access_log_id'] = $log->id;
+            }
+
             $result['uses_count'] = AccessLog::where('access_code_id', $log->access_code_id)->count();
 
             if ($request->wantsJson()) {
