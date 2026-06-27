@@ -718,12 +718,11 @@ SecurityVerify.layout = (page: React.ReactNode) => <SecurityLayout variant="ligh
 type ResultPanelProps = {
     result: ValidationResult;
     onAdmit: (data?: Record<string, unknown>) => void;
-    onReject?: (data?: Record<string, unknown>) => void;
     onCheckout: () => void;
     onReset: () => void;
 };
 
-function ResultPanel({ result, onAdmit, onReject, onCheckout, onReset }: ResultPanelProps) {
+function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
     const [countdown, setCountdown] = useState(10);

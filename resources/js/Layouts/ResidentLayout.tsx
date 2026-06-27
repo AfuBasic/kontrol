@@ -55,7 +55,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
-    const [createModalOpen, setCreateModalOpen] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
     const [unreadCount, setUnreadCount] = useState(auth?.user?.unread_notifications_count ?? 0);
 
