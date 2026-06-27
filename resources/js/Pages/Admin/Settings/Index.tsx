@@ -270,7 +270,7 @@ export default function Settings({ settings }: Props) {
                             <div>
                                 <span className="block text-sm font-medium text-gray-900">Visitor checkout tracking</span>
                                 <span className="block text-sm text-gray-500">
-                                    When enabled, security guards can scan visitor codes upon exit to track and record the duration of their visit
+                                    When enabled, security guards can scan visitor codes upon exit to track and record their exit time.
                                 </span>
                             </div>
                         </label>
