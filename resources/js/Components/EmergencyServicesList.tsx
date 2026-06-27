@@ -1,4 +1,4 @@
-import { Phone, ShieldAlert, Siren, Flame } from 'lucide-react';
+import { Phone, ShieldAlert, Siren } from 'lucide-react';
 
 const EMERGENCY_SERVICES = [
     {
@@ -51,8 +51,8 @@ export default function EmergencyServicesList() {
                                 <Icon className="h-6 w-6" strokeWidth={2.2} />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-black text-slate-800 leading-tight">{service.name}</p>
-                                <p className="mt-0.5 text-xs text-slate-400 font-bold leading-tight">{service.description}</p>
+                                <p className="text-sm leading-tight font-black text-slate-800">{service.name}</p>
+                                <p className="mt-0.5 text-xs leading-tight font-bold text-slate-400">{service.description}</p>
                                 <p className="mt-1 text-sm font-black text-slate-900">{service.phone}</p>
                             </div>
                         </div>
