@@ -447,6 +447,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Visitor Passes', href: '/resident/visitors', icon: Users },
         { name: 'Pay Estate Dues', href: '/resident/dues', icon: Wallet },
         { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
+        ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
         { name: 'My Family', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
