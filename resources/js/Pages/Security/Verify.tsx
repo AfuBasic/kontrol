@@ -851,13 +851,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                 </span>
             </div>
 
-            <div className="flex flex-1 flex-col items-center justify-center px-6 py-4">
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-3">
                 {/* Boarding Pass / Identity Verification Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 15, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ type: 'spring', damping: 26, stiffness: 210 }}
-                    className={`w-full max-w-md overflow-hidden rounded-[36px] border bg-white p-8 shadow-[0_24px_50px_rgba(0,0,0,0.03)] ring-8 ${ringColor}`}
+                    className={`w-full max-w-md overflow-hidden rounded-[30px] border bg-white px-5.5 py-6.5 shadow-[0_20px_45px_rgba(0,0,0,0.025)] ring-4 ${ringColor}`}
                 >
                     {/* Status badge and Type header */}
                     <div className="flex items-center justify-between gap-4">
