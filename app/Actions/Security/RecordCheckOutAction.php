@@ -65,6 +65,16 @@ class RecordCheckOutAction
                 'checked_out_by' => $verifiedBy->id,
             ]);
 
+            // Log to the activity feed so the resident sees the checkout
+            activity()
+                ->causedBy($verifiedBy)
+                ->performedOn($accessCode)
+                ->withProperties([
+                    'visitor_name' => $accessCode->visitor_name,
+                    'code' => $accessCode->code,
+                ])
+                ->log('Visitor checked out');
+
             // Broadcast and notify the host resident
             $host = $accessCode->user;
             if ($host) {

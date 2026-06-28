@@ -381,6 +381,7 @@ class AccessCodeService
             'Access code used' => 'used',
             'Access code expired' => 'expired',
             'Access code revoked' => 'revoked',
+            'Visitor checked out' => 'checked_out',
             default => 'info',
         };
 
@@ -389,6 +390,7 @@ class AccessCodeService
             'Access code used' => $visitorName ? "{$visitorName} arrived" : 'Visitor arrived',
             'Access code expired' => $visitorName ? "Code for {$visitorName} expired" : 'Access code expired',
             'Access code revoked' => $visitorName ? "Code for {$visitorName} revoked" : 'Access code revoked',
+            'Visitor checked out' => $visitorName ? "{$visitorName} checked out" : 'Visitor checked out',
             default => $activity->description,
         };
 
