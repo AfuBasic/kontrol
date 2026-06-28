@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag, Pause, Play, Check, LogOut, MapPin, AlertTriangle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -725,15 +725,17 @@ type ResultPanelProps = {
 function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
-    const [countdown, setCountdown] = useState(10);
+    const [countdown, setCountdown] = useState(5);
+    const [isPaused, setIsPaused] = useState(false);
 
-    // Stable ref so the interval closure always has the latest callback
-    // without the effect needing onReset as a dependency (which would restart the timer).
+    // Stable ref to avoid timer resetting on state changes
     const onResetRef = useRef(onReset);
-    useEffect(() => { onResetRef.current = onReset; });
+    useEffect(() => {
+        onResetRef.current = onReset;
+    });
 
     useEffect(() => {
-        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || result.action === 'checkout_pending') {
+        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || isPaused) {
             return;
         }
 
@@ -749,44 +751,47 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         }, 1000);
 
         return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [valid, result.has_vehicle, result.status, isPaused]);
 
+    // Offline state display
     if (result.status === 'offline_not_found') {
         return (
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
+                className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center"
             >
-                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-amber-50 text-amber-500 ring-4 ring-amber-500/5">
-                    <WifiOff className="h-12 w-12" />
+                <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 shadow-inner ring-1 ring-amber-500/20">
+                    <WifiOff className="h-10 w-10" />
+                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-amber-500"></span>
+                    </span>
                 </div>
-                <h2 className="text-3xl font-black tracking-tight text-slate-900">Code Not Recognized Offline</h2>
 
-                <div className="mt-4 max-w-sm space-y-4 px-4 text-center">
-                    <p className="text-sm leading-relaxed font-semibold text-slate-500">
-                        This code is not in our offline cache. If this code was created recently, connect this device to the internet to verify it
-                        online.
+                <p className="text-[11px] font-black tracking-[0.2em] text-amber-600 uppercase">System Status Warning</p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Pass Offline Warning</h2>
+                <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-slate-500">
+                    This pass isn't in the offline memory bank. Connect the reader to cellular or Wi-Fi to synchronize.
+                </p>
+
+                <div className="mt-6 w-full max-w-sm rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-left">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Override Protocol</p>
+                    <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
+                        If the visitor displays their live Kontrol app pass containing host villa credentials and today's dates, you can bypass validation.
                     </p>
-
-                    <div className="text-indigo-850 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-left text-xs leading-relaxed font-semibold dark:border-indigo-950/20 dark:bg-indigo-950/10 dark:text-indigo-400">
-                        <p className="mb-1 text-[10px] font-extrabold tracking-wider uppercase">Visual Verification Option</p>
-                        If the visitor displays their valid app pass visually on their phone showing the resident's name, host's villa, and timestamp,
-                        you can manually admit them.
-                    </div>
                 </div>
 
                 <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
                     <button
                         onClick={() => onAdmit({ override: true })}
-                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95"
+                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white transition-all active:scale-95 shadow-md"
                     >
-                        Manually Admit Visitor
+                        Admit via Security Bypass
                     </button>
                     <button
                         onClick={onReset}
-                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-100 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-95"
                     >
                         Try another code
                     </button>
@@ -795,108 +800,195 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         );
     }
 
+    // Invalid code display
     if (!valid) {
         return (
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center pt-10 text-center"
+                className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center"
             >
-                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-rose-50 text-rose-500 ring-4 ring-rose-500/5">
-                    <ShieldX className="h-12 w-12" />
+                <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 shadow-inner ring-1 ring-rose-500/20">
+                    <ShieldX className="h-10 w-10 animate-bounce" />
                 </div>
-                <h2 className="text-3xl font-black tracking-tight text-slate-900">Invalid Code</h2>
-                <p className="mt-3 max-w-xs text-lg font-medium text-slate-500">{result.message}</p>
+
+                <p className="text-[11px] font-black tracking-[0.2em] text-rose-600 uppercase">Verification Denied</p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Access Denied</h2>
+                <p className="mt-3 max-w-xs text-sm font-semibold leading-relaxed text-rose-600 bg-rose-50/50 rounded-xl px-4 py-2 border border-rose-100/50">
+                    {result.message || 'Invalid or unregistered credentials.'}
+                </p>
 
                 <button
                     onClick={onReset}
-                    className="mt-12 flex items-center gap-3 rounded-2xl bg-slate-100 px-8 py-4 text-sm font-black text-slate-900 transition-all active:scale-95"
+                    className="mt-8 flex items-center justify-center gap-2.5 rounded-2xl bg-slate-900 px-8 py-4.5 text-sm font-black text-white transition-all active:scale-95 shadow-md"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Try another code
+                    Verify another code
                 </button>
             </motion.div>
         );
     }
 
     const isCheckoutPending = result.action === 'checkout_pending';
-    const accentColor = isCheckoutPending ? 'amber' : 'emerald';
+    
+    // UI state determination
+    let themeColor = 'emerald';
+    let statusHeading = 'Access Approved';
+    let subMessage = result.message || 'Verification successful';
+    let statusIcon = <ShieldCheck className="h-14 w-14 text-emerald-500" strokeWidth={2.5} />;
+    
+    if (isCheckoutPending) {
+        themeColor = 'blue';
+        statusHeading = 'Exit Recorded';
+        subMessage = 'Visitor checked out successfully';
+        statusIcon = <LogOut className="h-14 w-14 text-blue-500" strokeWidth={2.5} />;
+    } else if (result.status === 'scheduled') {
+        themeColor = 'amber';
+        statusHeading = 'Scheduled Pass';
+        subMessage = 'Pass is not active yet';
+        statusIcon = <Clock className="h-14 w-14 text-amber-500" strokeWidth={2.5} />;
+    }
+
+    // Contextual Intelligence tags
+    const contextTags: string[] = [];
+    if (result.code_type === 'event') {
+        contextTags.push('Event Guest');
+    }
+    if (result.code_type === 'long_lived') {
+        contextTags.push('Long-Term Pass');
+    }
+    if (result.uses_count === 0 || result.uses_count === 1) {
+        contextTags.push('First Entry Today');
+    } else if (result.uses_count && result.uses_count > 1) {
+        contextTags.push(`Returning Visitor (${result.uses_count} entries)`);
+    }
+    if (result.has_vehicle) {
+        contextTags.push('Vehicle Entry');
+    }
+    if (expiry && expiry !== 'Expired' && expiry.includes('m') && parseInt(expiry) < 30) {
+        contextTags.push('Expires Soon');
+    }
+
+    // Circular Countdown calculations
+    const timerSize = 32;
+    const timerStroke = 3;
+    const timerRadius = (timerSize - timerStroke) / 2;
+    const timerCircumference = 2 * Math.PI * timerRadius;
+    const strokeDashoffset = timerCircumference - (countdown / 5) * timerCircumference;
 
     return (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-1 flex-col">
-            <div className="flex flex-1 flex-col items-center justify-center px-3 py-4">
-                <div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`flex flex-1 flex-col ${
+                themeColor === 'emerald'
+                    ? 'bg-linear-to-b from-emerald-50/40 via-white to-white'
+                    : themeColor === 'blue'
+                    ? 'bg-linear-to-b from-blue-50/40 via-white to-white'
+                    : 'bg-linear-to-b from-amber-50/40 via-white to-white'
+            }`}
+        >
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6">
+                <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl">
+                    
+                    {/* Hero animated status section */}
+                    <div className="flex flex-col items-center px-6 pt-10 pb-6 text-center">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
+                            transition={{ type: 'spring', duration: 0.5 }}
+                            className={`mb-4 flex h-24 w-24 items-center justify-center rounded-full ${
+                                themeColor === 'emerald'
+                                    ? 'bg-emerald-50 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5'
+                                    : themeColor === 'blue'
+                                    ? 'bg-blue-50 shadow-lg shadow-blue-500/10 ring-4 ring-blue-500/5'
+                                    : 'bg-amber-50 shadow-lg shadow-amber-500/10 ring-4 ring-amber-500/5'
+                            }`}
+                        >
+                            {statusIcon}
+                        </motion.div>
 
-                    {/* ── Header strip ── */}
-                    <div className={`flex items-center gap-4 px-5 py-4 ${
-                        isCheckoutPending
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
-                    }`}>
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20">
-                            {isCheckoutPending
-                                ? <Clock className="h-6 w-6 text-white" strokeWidth={2.5} />
-                                : <ShieldCheck className="h-6 w-6 text-white" strokeWidth={2.5} />}
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900">
+                            {statusHeading}
+                        </h2>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">{subMessage}</p>
+                    </div>
+
+                    {/* Contextual Intelligence Pills bar */}
+                    {contextTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 px-6 pb-5 justify-center">
+                            {contextTags.map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase border ${
+                                        tag === 'Expires Soon'
+                                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                            : themeColor === 'emerald'
+                                            ? 'bg-emerald-50/50 text-emerald-700 border-emerald-100'
+                                            : themeColor === 'blue'
+                                            ? 'bg-blue-50/50 text-blue-700 border-blue-100'
+                                            : 'bg-amber-50/50 text-amber-700 border-amber-100'
+                                    }`}
+                                >
+                                    {tag}
+                                </span>
+                            ))}
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-black tracking-widest text-white/70 uppercase">
-                                {isCheckoutPending ? 'Already Checked In' : 'Access Code Valid'}
-                            </p>
-                            <h2 className="text-xl font-black tracking-tight text-white leading-tight">
-                                {isCheckoutPending ? 'Visitor In Estate' : 'Access Granted'}
-                            </h2>
-                        </div>
-                        {!isCheckoutPending && !result.has_vehicle && (
-                            <div className="shrink-0 text-right">
-                                <p className="text-[10px] font-black text-white/60 uppercase tracking-wider">Auto-close</p>
-                                <p className="text-2xl font-black text-white leading-none">{countdown}s</p>
+                    )}
+
+                    {/* Security credentials board */}
+                    <div className="border-y border-slate-100 bg-slate-50/50 p-6 space-y-4">
+                        <div className="flex justify-between items-start gap-4">
+                            <div className="text-left flex-1 min-w-0">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Visitor Identity</span>
+                                <h3 className="text-2xl font-black text-slate-900 truncate leading-snug">
+                                    {result.visitor_name || 'Guest'}
+                                </h3>
                             </div>
-                        )}
+                            <div className="text-right">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Pass Type</span>
+                                <span className="inline-flex rounded-lg bg-white px-2.5 py-1 text-xs font-black text-slate-800 border border-slate-200/50 shadow-2xs">
+                                    {getPassTypeLabel(result.code_type)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-slate-100" />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="text-left">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Host Resident</span>
+                                <p className="text-sm font-black text-slate-900 truncate">{result.host_name || 'Resident'}</p>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Validity</span>
+                                <p className="text-sm font-black text-slate-900">
+                                    {isCheckoutPending
+                                        ? 'Checked Out'
+                                        : result.status === 'scheduled' && result.starts_at
+                                        ? `Valid from ${formatDateTime(result.starts_at)}`
+                                        : expiry
+                                        ? `Expires: ${expiry}`
+                                        : 'Never expires'}
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* ── Info pills grid ── */}
-                    <div className="grid grid-cols-2 gap-px bg-slate-100 border-b border-slate-100">
-                        {result.visitor_name && (
-                            <InfoPill icon={<User className="h-4 w-4" />} label="Visitor" value={result.visitor_name} />
-                        )}
-                        {result.host_name && (
-                            <InfoPill icon={<HomeIcon className="h-4 w-4" />} label="Host" value={result.host_name} />
-                        )}
-                        <InfoPill
-                            icon={<Tag className="h-4 w-4" />}
-                            label="Pass Type"
-                            value={getPassTypeLabel(result.code_type)}
-                        />
-                        {expiry && result.code_type !== 'long_lived' && !isCheckoutPending && (
-                            <InfoPill icon={<Clock className="h-4 w-4" />} label="Expires In" value={expiry} highlight />
-                        )}
-                        {result.purpose && (
-                            <InfoPill icon={<Tag className="h-4 w-4" />} label="Purpose" value={result.purpose} />
-                        )}
-                        {result.checked_in_at && (
-                            <InfoPill icon={<Clock className="h-4 w-4" />} label="Checked In" value={formatDateTime(result.checked_in_at) || ''} />
-                        )}
-                        {result.starts_at && (
-                            <InfoPill icon={<Calendar className="h-4 w-4" />} label="Valid From" value={formatDateTime(result.starts_at) || ''} />
-                        )}
-                    </div>
-
-                    {/* ── Event capacity bar ── */}
+                    {/* Event Capacity Widget */}
                     {result.code_type === 'event' && (
-                        <div className="px-5 py-3 bg-indigo-50/60 border-b border-slate-100">
+                        <div className="px-6 py-4 bg-indigo-50/40 border-b border-slate-100">
                             <div className="flex justify-between items-center mb-1.5">
-                                <div className="flex items-center gap-1.5 text-indigo-600">
-                                    <Users className="h-3.5 w-3.5" />
-                                    <span className="text-[10px] font-black tracking-widest uppercase">Event Capacity</span>
-                                </div>
-                                <span className="text-xs font-extrabold text-indigo-900">
-                                    {result.uses_count ?? 0} / {result.guest_limit ?? '∞'}
+                                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600">Event Capacity Tracker</span>
+                                <span className="text-xs font-black text-indigo-900">
+                                    {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Checked-in
                                 </span>
                             </div>
                             {result.guest_limit && (
-                                <div className="w-full h-2 bg-indigo-100 rounded-full overflow-hidden">
+                                <div className="w-full h-2 bg-indigo-100/50 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-indigo-600 transition-all duration-700 ease-out rounded-full"
+                                        className="h-full bg-indigo-600 transition-all duration-700 ease-out"
                                         style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
                                     />
                                 </div>
@@ -904,39 +996,87 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                         </div>
                     )}
 
-                    {/* ── Actions ── */}
-                    <div className="px-5 py-4 space-y-2.5">
+                    {/* Interactive workflow console */}
+                    <div className="p-6 space-y-4">
                         {isCheckoutPending ? (
                             <button
                                 type="button"
                                 onClick={() => onCheckout()}
-                                className="w-full rounded-2xl bg-amber-500 py-4 text-base font-black text-white shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]"
+                                className="w-full rounded-2xl bg-blue-600 py-4 text-base font-black text-white shadow-xl shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
                             >
-                                Record Check-out
+                                Confirm Check-out Complete
                             </button>
                         ) : (
                             <>
                                 <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
                                 {!result.has_vehicle && (
-                                    <button
-                                        type="button"
-                                        onClick={onReset}
-                                        className="w-full rounded-2xl bg-emerald-500 py-4 text-base font-black text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
-                                    >
-                                        Okay
-                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={onReset}
+                                            className="flex-1 rounded-2xl bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
+                                        >
+                                            Verify Another Pass
+                                        </button>
+
+                                        {/* Hold screen controls */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPaused(!isPaused)}
+                                            className="flex items-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200/80 px-4 py-3.5 transition-all text-left"
+                                        >
+                                            <div className="relative flex items-center justify-center" style={{ width: timerSize, height: timerSize }}>
+                                                <svg className="transform -rotate-90 absolute" width={timerSize} height={timerSize}>
+                                                    <circle
+                                                        className="text-slate-200"
+                                                        strokeWidth={timerStroke}
+                                                        stroke="currentColor"
+                                                        fill="transparent"
+                                                        r={timerRadius}
+                                                        cx={timerSize / 2}
+                                                        cy={timerSize / 2}
+                                                    />
+                                                    {!isPaused && (
+                                                        <circle
+                                                            className="text-slate-800 transition-all duration-1000 ease-linear"
+                                                            strokeWidth={timerStroke}
+                                                            strokeDasharray={timerCircumference}
+                                                            strokeDashoffset={strokeDashoffset}
+                                                            strokeLinecap="round"
+                                                            stroke="currentColor"
+                                                            fill="transparent"
+                                                            r={timerRadius}
+                                                            cx={timerSize / 2}
+                                                            cy={timerSize / 2}
+                                                        />
+                                                    )}
+                                                </svg>
+                                                {isPaused ? (
+                                                    <Play className="h-3.5 w-3.5 text-slate-800 fill-slate-800" />
+                                                ) : (
+                                                    <span className="text-[10px] font-black text-slate-900">{countdown}s</span>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Auto-Close</span>
+                                                <span className="text-[11px] font-bold text-slate-800">{isPaused ? 'Paused' : 'Hold Screen'}</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 )}
                             </>
                         )}
 
-                        <button
-                            type="button"
-                            onClick={onReset}
-                            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all active:scale-[0.98]"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            {isCheckoutPending ? 'Cancel' : 'Verify another code'}
-                        </button>
+                        {isCheckoutPending && (
+                            <button
+                                type="button"
+                                onClick={onReset}
+                                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all active:scale-[0.98]"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Cancel Check-out
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -954,51 +1094,45 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
     if (!show) return null;
 
     return (
-        <div className="space-y-6 pt-2">
-            <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 p-4">
-                <div className="flex items-center gap-3 text-indigo-600">
-                    <Car className="h-5 w-5" />
-                    <p className="text-xs font-black tracking-widest uppercase">Vehicle Details Required</p>
+        <div className="space-y-4 pt-1">
+            <div className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/30 p-3.5">
+                <div className="flex items-center gap-2.5 text-indigo-600">
+                    <Car className="h-4.5 w-4.5" />
+                    <p className="text-[10px] font-black tracking-wider uppercase">Log Entry Vehicle Details</p>
                 </div>
             </div>
 
-            <div className="space-y-4">
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Vehicle Make (e.g. Toyota)"
-                        value={data.vehicle_make}
-                        onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
-                    />
-                </div>
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Vehicle Model (e.g. Camry)"
-                        value={data.vehicle_model}
-                        onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
-                    />
-                </div>
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Plate Number"
-                        value={data.vehicle_plate_number}
-                        onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                        className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 text-sm font-bold text-slate-900 transition-all outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
-                    />
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+                <input
+                    type="text"
+                    placeholder="Make (e.g. Toyota)"
+                    value={data.vehicle_make}
+                    onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                />
+                <input
+                    type="text"
+                    placeholder="Model (e.g. Camry)"
+                    value={data.vehicle_model}
+                    onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                />
             </div>
+            <input
+                type="text"
+                placeholder="License Plate Number"
+                value={data.vehicle_plate_number}
+                onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+            />
 
             <button
                 type="button"
                 onClick={() => onSubmit(data)}
                 disabled={!data.vehicle_make || !data.vehicle_plate_number}
-                className="w-full rounded-[1.25rem] bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition-all active:scale-[0.98] disabled:opacity-50"
             >
-                Admit with Vehicle
+                Confirm Vehicle Entry
             </button>
         </div>
     );
@@ -1045,3 +1179,4 @@ function InfoPill({
         </div>
     );
 }
+
