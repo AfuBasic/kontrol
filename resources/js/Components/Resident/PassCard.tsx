@@ -13,6 +13,7 @@ export interface PassData {
     status: string;
     type: string;
     expires_at: string | null;
+    starts_at?: string | null;
     estate_name?: string;
     host_name?: string;
     notes?: string | null;
@@ -59,6 +60,36 @@ export default function PassCard({ pass, qrUrl }: Props) {
         statusIcon = <Clock className="h-5 w-5 text-indigo-600" />;
         statusBg = 'bg-indigo-50 text-indigo-600 border-indigo-100';
     }
+
+    const formatSmartStartsAt = (iso: string | null | undefined) => {
+        if (!iso) return '';
+        const date = new Date(iso);
+        const now = new Date();
+
+        const timeStr = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        }).toLowerCase();
+
+        const isToday = date.toDateString() === now.toDateString();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(now.getDate() + 1);
+        const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+        if (isToday) {
+            return `Valid from ${timeStr} today`;
+        }
+        if (isTomorrow) {
+            return `Valid from ${timeStr} tomorrow`;
+        }
+
+        const dateStr = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+        });
+        return `Valid from ${timeStr} on ${dateStr}`;
+    };
 
     const formatFaintExpiry = (iso: string | null, type: string) => {
         if (type === 'long_lived') {
@@ -170,7 +201,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     <div className="mt-2.5 rounded-xl bg-indigo-50/80 px-4 py-1.5 border border-indigo-100/50 text-center">
                         <p className="text-[10px] font-black text-indigo-700 tracking-wide uppercase">Pass Scheduled</p>
                         <p className="text-[9px] font-bold text-indigo-600/90 mt-0.5">
-                            Valid from {pass.starts_at ? new Date(pass.starts_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase() : ''}
+                            {formatSmartStartsAt(pass.starts_at)}
                         </p>
                     </div>
                 ) : (
