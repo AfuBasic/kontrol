@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag, Pause, Play, LogOut } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -309,12 +309,11 @@ export default function SecurityVerify() {
                 }
 
                 const hasNative = 'BarcodeDetector' in window;
-                 
+
                 let detector: any = null;
 
                 if (hasNative) {
                     try {
-                         
                         detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
                     } catch {
                         // ignore native BarcodeDetector initialization errors
@@ -770,21 +769,22 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                 <p className="text-[11px] font-black tracking-[0.2em] text-amber-600 uppercase">System Status Warning</p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Pass Offline Warning</h2>
-                <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-slate-500">
+                <p className="mt-3 max-w-sm text-sm leading-relaxed font-semibold text-slate-500">
                     This pass isn't in the offline memory bank. Connect the reader to cellular or Wi-Fi to synchronize.
                 </p>
 
                 <div className="mt-6 w-full max-w-sm rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Override Protocol</p>
-                    <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-                        If the visitor displays their live Kontrol app pass containing host villa credentials and today's dates, you can bypass validation.
+                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Security Override Protocol</p>
+                    <p className="mt-1 text-xs leading-relaxed font-semibold text-slate-600">
+                        If the visitor displays their live Kontrol app pass containing host villa credentials and today's dates, you can bypass
+                        validation.
                     </p>
                 </div>
 
                 <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
                     <button
                         onClick={() => onAdmit({ override: true })}
-                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white transition-all active:scale-95 shadow-md"
+                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white shadow-md transition-all active:scale-95"
                     >
                         Admit via Security Bypass
                     </button>
@@ -813,13 +813,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                 <p className="text-[11px] font-black tracking-[0.2em] text-rose-600 uppercase">Verification Denied</p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Access Denied</h2>
-                <p className="mt-3 max-w-xs text-sm font-semibold leading-relaxed text-rose-600 bg-rose-50/50 rounded-xl px-4 py-2 border border-rose-100/50">
+                <p className="mt-3 max-w-xs rounded-xl border border-rose-100/50 bg-rose-50/50 px-4 py-2 text-sm leading-relaxed font-semibold text-rose-600">
                     {result.message || 'Invalid or unregistered credentials.'}
                 </p>
 
                 <button
                     onClick={onReset}
-                    className="mt-8 flex items-center justify-center gap-2.5 rounded-2xl bg-slate-900 px-8 py-4.5 text-sm font-black text-white transition-all active:scale-95 shadow-md"
+                    className="mt-8 flex items-center justify-center gap-2.5 rounded-2xl bg-slate-900 px-8 py-4.5 text-sm font-black text-white shadow-md transition-all active:scale-95"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Verify another code
@@ -829,13 +829,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     }
 
     const isCheckoutPending = result.action === 'checkout_pending';
-    
+
     // UI state determination
     let themeColor = 'emerald';
     let statusHeading = 'Access Approved';
     let subMessage = result.message || 'Verification successful';
     let statusIcon = <ShieldCheck className="h-14 w-14 text-emerald-500" strokeWidth={2.5} />;
-    
+
     if (isCheckoutPending) {
         themeColor = 'blue';
         statusHeading = 'Exit Recorded';
@@ -884,13 +884,12 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                 themeColor === 'emerald'
                     ? 'bg-linear-to-b from-emerald-50/40 via-white to-white'
                     : themeColor === 'blue'
-                    ? 'bg-linear-to-b from-blue-50/40 via-white to-white'
-                    : 'bg-linear-to-b from-amber-50/40 via-white to-white'
+                      ? 'bg-linear-to-b from-blue-50/40 via-white to-white'
+                      : 'bg-linear-to-b from-amber-50/40 via-white to-white'
             }`}
         >
             <div className="flex flex-1 flex-col items-center justify-center px-4 py-6">
                 <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl">
-                    
                     {/* Hero animated status section */}
                     <div className="flex flex-col items-center px-6 pt-10 pb-6 text-center">
                         <motion.div
@@ -899,35 +898,33 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                             transition={{ type: 'spring', duration: 0.5 }}
                             className={`mb-4 flex h-24 w-24 items-center justify-center rounded-full ${
                                 themeColor === 'emerald'
-                                    ? 'bg-emerald-50 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5'
+                                    ? 'bg-emerald-50 shadow-lg ring-4 shadow-emerald-500/10 ring-emerald-500/5'
                                     : themeColor === 'blue'
-                                    ? 'bg-blue-50 shadow-lg shadow-blue-500/10 ring-4 ring-blue-500/5'
-                                    : 'bg-amber-50 shadow-lg shadow-amber-500/10 ring-4 ring-amber-500/5'
+                                      ? 'bg-blue-50 shadow-lg ring-4 shadow-blue-500/10 ring-blue-500/5'
+                                      : 'bg-amber-50 shadow-lg ring-4 shadow-amber-500/10 ring-amber-500/5'
                             }`}
                         >
                             {statusIcon}
                         </motion.div>
 
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900">
-                            {statusHeading}
-                        </h2>
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900">{statusHeading}</h2>
                         <p className="mt-1 text-sm font-semibold text-slate-500">{subMessage}</p>
                     </div>
 
                     {/* Contextual Intelligence Pills bar */}
                     {contextTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 px-6 pb-5 justify-center">
+                        <div className="flex flex-wrap justify-center gap-1.5 px-6 pb-5">
                             {contextTags.map((tag, index) => (
                                 <span
                                     key={index}
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase border ${
+                                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase ${
                                         tag === 'Expires Soon'
-                                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                            ? 'border-amber-200 bg-amber-50 text-amber-700'
                                             : themeColor === 'emerald'
-                                            ? 'bg-emerald-50/50 text-emerald-700 border-emerald-100'
-                                            : themeColor === 'blue'
-                                            ? 'bg-blue-50/50 text-blue-700 border-blue-100'
-                                            : 'bg-amber-50/50 text-amber-700 border-amber-100'
+                                              ? 'border-emerald-100 bg-emerald-50/50 text-emerald-700'
+                                              : themeColor === 'blue'
+                                                ? 'border-blue-100 bg-blue-50/50 text-blue-700'
+                                                : 'border-amber-100 bg-amber-50/50 text-amber-700'
                                     }`}
                                 >
                                     {tag}
@@ -937,17 +934,15 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     )}
 
                     {/* Security credentials board */}
-                    <div className="border-y border-slate-100 bg-slate-50/50 p-6 space-y-4">
-                        <div className="flex justify-between items-start gap-4">
-                            <div className="text-left flex-1 min-w-0">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Visitor Identity</span>
-                                <h3 className="text-2xl font-black text-slate-900 truncate leading-snug">
-                                    {result.visitor_name || 'Guest'}
-                                </h3>
+                    <div className="space-y-4 border-y border-slate-100 bg-slate-50/50 p-6">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1 text-left">
+                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Visitor Identity</span>
+                                <h3 className="truncate text-2xl leading-snug font-black text-slate-900">{result.visitor_name || 'Guest'}</h3>
                             </div>
                             <div className="text-right">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Pass Type</span>
-                                <span className="inline-flex rounded-lg bg-white px-2.5 py-1 text-xs font-black text-slate-800 border border-slate-200/50 shadow-2xs">
+                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Pass Type</span>
+                                <span className="inline-flex rounded-lg border border-slate-200/50 bg-white px-2.5 py-1 text-xs font-black text-slate-800 shadow-2xs">
                                     {getPassTypeLabel(result.code_type)}
                                 </span>
                             </div>
@@ -957,19 +952,19 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="text-left">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Host Resident</span>
-                                <p className="text-sm font-black text-slate-900 truncate">{result.host_name || 'Resident'}</p>
+                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Host Resident</span>
+                                <p className="truncate text-sm font-black text-slate-900">{result.host_name || 'Resident'}</p>
                             </div>
                             <div className="text-right">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Validity</span>
+                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Validity</span>
                                 <p className="text-sm font-black text-slate-900">
                                     {isCheckoutPending
                                         ? 'Checked Out'
                                         : result.status === 'scheduled' && result.starts_at
-                                        ? `Valid from ${formatDateTime(result.starts_at)}`
-                                        : expiry
-                                        ? `Expires: ${expiry}`
-                                        : 'Never expires'}
+                                          ? `Valid from ${formatDateTime(result.starts_at)}`
+                                          : expiry
+                                            ? `Expires: ${expiry}`
+                                            : 'Never expires'}
                                 </p>
                             </div>
                         </div>
@@ -977,15 +972,15 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                     {/* Event Capacity Widget */}
                     {result.code_type === 'event' && (
-                        <div className="px-6 py-4 bg-indigo-50/40 border-b border-slate-100">
-                            <div className="flex justify-between items-center mb-1.5">
-                                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600">Event Capacity Tracker</span>
+                        <div className="border-b border-slate-100 bg-indigo-50/40 px-6 py-4">
+                            <div className="mb-1.5 flex items-center justify-between">
+                                <span className="text-[10px] font-black tracking-widest text-indigo-600 uppercase">Event Capacity Tracker</span>
                                 <span className="text-xs font-black text-indigo-900">
                                     {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Checked-in
                                 </span>
                             </div>
                             {result.guest_limit && (
-                                <div className="w-full h-2 bg-indigo-100/50 rounded-full overflow-hidden">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-indigo-100/50">
                                     <div
                                         className="h-full bg-indigo-600 transition-all duration-700 ease-out"
                                         style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
@@ -996,7 +991,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     )}
 
                     {/* Interactive workflow console */}
-                    <div className="p-6 space-y-4">
+                    <div className="space-y-4 p-6">
                         {isCheckoutPending ? (
                             <button
                                 type="button"
@@ -1022,10 +1017,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                         <button
                                             type="button"
                                             onClick={() => setIsPaused(!isPaused)}
-                                            className="flex items-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200/80 px-4 py-3.5 transition-all text-left"
+                                            className="flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-3.5 text-left transition-all hover:bg-slate-200/80"
                                         >
-                                            <div className="relative flex items-center justify-center" style={{ width: timerSize, height: timerSize }}>
-                                                <svg className="transform -rotate-90 absolute" width={timerSize} height={timerSize}>
+                                            <div
+                                                className="relative flex items-center justify-center"
+                                                style={{ width: timerSize, height: timerSize }}
+                                            >
+                                                <svg className="absolute -rotate-90 transform" width={timerSize} height={timerSize}>
                                                     <circle
                                                         className="text-slate-200"
                                                         strokeWidth={timerStroke}
@@ -1051,7 +1049,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                                     )}
                                                 </svg>
                                                 {isPaused ? (
-                                                    <Play className="h-3.5 w-3.5 text-slate-800 fill-slate-800" />
+                                                    <Play className="h-3.5 w-3.5 fill-slate-800 text-slate-800" />
                                                 ) : (
                                                     <span className="text-[10px] font-black text-slate-900">{countdown}s</span>
                                                 )}
@@ -1107,14 +1105,14 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
                     placeholder="Make (e.g. Toyota)"
                     value={data.vehicle_make}
                     onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                 />
                 <input
                     type="text"
                     placeholder="Model (e.g. Camry)"
                     value={data.vehicle_model}
                     onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                 />
             </div>
             <input
@@ -1122,7 +1120,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
                 placeholder="License Plate Number"
                 value={data.vehicle_plate_number}
                 onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 transition-all outline-hidden focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
             />
 
             <button
@@ -1136,46 +1134,3 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
         </div>
     );
 }
-
-function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <div className="flex items-center gap-3 px-4 py-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-100">
-                {icon}
-            </div>
-            <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{label}</p>
-                <p className="truncate text-sm leading-tight font-bold text-slate-900">{value}</p>
-            </div>
-        </div>
-    );
-}
-
-function InfoPill({
-    icon,
-    label,
-    value,
-    highlight = false,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    highlight?: boolean;
-}) {
-    return (
-        <div className={`flex flex-col gap-0.5 bg-white px-4 py-3 ${
-            highlight ? 'bg-amber-50/60' : ''
-        }`}>
-            <div className={`flex items-center gap-1.5 ${
-                highlight ? 'text-amber-500' : 'text-slate-400'
-            }`}>
-                <span className="shrink-0">{icon}</span>
-                <span className="text-[9px] font-black tracking-widest uppercase">{label}</span>
-            </div>
-            <p className={`truncate text-sm font-black leading-snug ${
-                highlight ? 'text-amber-700' : 'text-slate-900'
-            }`}>{value}</p>
-        </div>
-    );
-}
-
