@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
 import { useState } from 'react';
@@ -189,8 +189,9 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     return (
         <motion.div
             layoutId={`visitor-card-${code.id}`}
-            whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0, 0, 0, 0.04)' }}
-            className="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+            whileHover={{ y: -2 }}
+            onClick={() => router.visit(resident.visitors.show.url(code.id))}
+            className="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 cursor-pointer active:bg-slate-50/50"
         >
             {/* Card Body */}
             <div className="flex items-start gap-4">
@@ -296,14 +297,6 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         </button>
                     )}
 
-                    {/* Details Link */}
-                    <Link
-                        href={resident.visitors.show.url(code.id)}
-                        className="hover:text-slate-650 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 transition-colors"
-                        title="View Details"
-                    >
-                        <ExternalLink className="h-4 w-4" />
-                    </Link>
                 </div>
             </div>
 
