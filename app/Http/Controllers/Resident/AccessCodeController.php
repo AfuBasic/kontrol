@@ -83,9 +83,14 @@ class AccessCodeController extends Controller
      */
     public function create(): Response
     {
+        $user = auth()->user();
+        $subscription = $user->residentSubscription;
+        $isSubscriptionActive = $subscription ? $subscription->isActive() : false;
+
         return Inertia::render('Resident/Visitors/Create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
+            'isSubscriptionActive' => $isSubscriptionActive,
         ]);
     }
 
@@ -94,6 +99,12 @@ class AccessCodeController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $user = auth()->user();
+        $subscription = $user->residentSubscription;
+        if (!$subscription || !$subscription->isActive()) {
+            return redirect()->back()->with('error', 'Active subscription required to generate access codes.');
+        }
+
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:single_use,long_lived,event'],
             'visitor_name' => ['nullable', 'string', 'max:255', 'required_if:type,long_lived,event'],

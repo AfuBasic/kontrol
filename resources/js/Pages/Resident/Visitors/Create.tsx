@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, Calendar as CalendarIcon, ChevronLeft, Clock, Phone, ShieldCheck, User, Users, X, Zap, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
@@ -36,10 +36,11 @@ const getLocalISOString = (date: Date) => {
 };
 
 const CreateAccessCode = () => {
-    const { durationOptions, durationConstraints, estate_plan } = usePage<
+    const { durationOptions, durationConstraints, estate_plan, isSubscriptionActive } = usePage<
         SharedData & {
             durationOptions: { minutes: number; label: string }[];
             durationConstraints: { min: number; max: number };
+            isSubscriptionActive: boolean;
         }
     >().props;
 
@@ -137,6 +138,52 @@ const CreateAccessCode = () => {
             router.visit('/resident/visitors');
         }
     };
+
+    if (isSubscriptionActive === false) {
+        return (
+            <>
+                <Head title="Access Restricted" />
+                <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-[#f8fafc]">
+                    <div className="sticky top-0 z-[60] bg-[#f8fafc]/80 px-6 pt-[calc(env(safe-area-inset-top,24px)+12px)] pb-4 backdrop-blur-xl">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                onClick={handleBack}
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-[0_2px_10px_rgba(0,0,0,0.04)] ring-1 ring-slate-100 transition-all hover:bg-slate-50 active:scale-95"
+                            >
+                                <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
+                            </button>
+                            <h1 className="text-[17px] font-bold tracking-tight text-slate-900">Access Restricted</h1>
+                            <div className="w-10" />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-50 text-rose-500 shadow-inner">
+                            <AlertCircle className="h-10 w-10" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Access Limited</h2>
+                        <p className="mt-3 text-sm font-medium text-slate-500 leading-relaxed max-w-xs">
+                            To generate visitor access codes, you must have an active resident subscription.
+                        </p>
+                        <div className="mt-8 w-full space-y-3">
+                            <Link
+                                href="/resident/billing"
+                                className="flex w-full items-center justify-center rounded-full bg-slate-900 py-4.5 text-[17px] font-black text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all hover:bg-slate-800 active:scale-[0.98]"
+                            >
+                                Settle Account
+                            </Link>
+                            <button
+                                onClick={handleBack}
+                                className="flex w-full items-center justify-center rounded-full border border-slate-200 bg-white py-4.5 text-[17px] font-bold text-slate-700 hover:bg-slate-50 active:scale-[0.98]"
+                            >
+                                Go Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
 
     const submit = () => {
         const payload = {
