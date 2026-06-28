@@ -128,10 +128,65 @@ export default function Activity({ activities, notifications = [], unreadCount =
     const groupedActivities = groupActivitiesByDate(activities?.data || []);
     const dateLabels = Object.keys(groupedActivities);
 
+    const renderActivityList = () => dateLabels.map((dateLabel) => (
+        <div key={dateLabel}>
+            <div className="mb-5 flex items-center gap-4">
+                <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">{dateLabel}</h3>
+                <div className="h-px flex-1 bg-linear-to-r from-slate-200 to-transparent" />
+            </div>
+            <div className="space-y-4">
+                {groupedActivities[dateLabel].map((activity, index) => (
+                    <motion.div
+                        key={`${dateLabel}-${index}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.02 }}
+                        className="group relative flex gap-5 rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md active:scale-[0.98]"
+                    >
+                        {getActivityIcon(activity.type)}
+                        <div className="flex-1 pt-1">
+                            <p className="leading-tight font-bold text-slate-900">{activity.message}</p>
+                            {activity.detail && (
+                                <p className="mt-1 text-sm font-medium text-slate-400">{activity.detail}</p>
+                            )}
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-black tracking-tighter text-slate-300 uppercase">
+                                    {activity.time}
+                                </span>
+                                {activity.code && (
+                                    <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black tracking-widest text-indigo-600 ring-1 ring-indigo-500/10">
+                                        {activity.code}
+                                    </span>
+                                )}
+                                {activity.ip_address && (
+                                    <span className="rounded-lg bg-slate-50 px-2.5 py-1 font-mono text-[10px] font-black text-slate-400 ring-1 ring-slate-200">
+                                        {activity.ip_address}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <ChevronRight className="h-5 w-5 text-slate-200 transition-colors group-hover:text-slate-400" />
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    ));
+
     const [search, setSearch] = useState(filters?.search || '');
     const debouncedSearch = useDebounce(search, 500);
 
     const { url } = usePage();
+    const [isNavigating, setIsNavigating] = useState(false);
+
+    useEffect(() => {
+        const removeStartListener = router.on('start', () => setIsNavigating(true));
+        return () => {
+            removeStartListener();
+        };
+    }, []);
+
     const [activeTab, setActiveTab] = useState<'feed' | 'notifications'>(() => {
         const params = new URLSearchParams(url.split('?')[1] || '');
         const tab = params.get('tab');

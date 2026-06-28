@@ -124,8 +124,8 @@ const CreateAccessCode = () => {
             expires_at: form.data.expires_at || null,
         };
 
-        // @ts-expect-error form helper typings issue
-        form.transform(() => payload).post(AccessCodeController.store.url());
+        form.transform(() => payload);
+        form.post(AccessCodeController.store.url());
     };
 
     const nextStep = () => {
@@ -637,7 +637,26 @@ const CreateAccessCode = () => {
 
                 {/* Fixed Bottom Action Area */}
                 <div className="fixed right-0 bottom-0 left-0 z-40 bg-gradient-to-t from-[#f8fafc] via-[#f8fafc] to-transparent p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-                    <div className="mx-auto max-w-lg">
+                    <div className="mx-auto max-w-lg space-y-4">
+                        {/* Validation Errors Alert */}
+                        {Object.keys(form.errors).length > 0 && (
+                            <div className="rounded-[2rem] bg-rose-50 border border-rose-200/60 p-5 shadow-sm">
+                                <div className="flex gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+                                        <AlertCircle className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-rose-800">Generation Failed</h4>
+                                        <ul className="mt-1.5 space-y-1 text-xs font-bold text-rose-600 list-disc list-inside">
+                                            {Object.entries(form.errors).map(([field, error]) => (
+                                                <li key={field}>{error}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {step === 'type' ? (
                             <button
                                 onClick={nextStep}

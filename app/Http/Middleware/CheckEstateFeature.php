@@ -34,7 +34,7 @@ class CheckEstateFeature
         }
 
         // Check resident's personal subscription if in resident billing mode
-        if ($user->user_type === 'resident' && $estate->settings->charge_type === 'residents') {
+        if ($user->user_type !== 'affiliate' && $estate->settings->charge_type === 'residents') {
             $subject = $user;
             if ($user->isHouseholdMember() && $user->householdOf) {
                 $subject = $user->householdOf->primaryResident;
@@ -45,14 +45,15 @@ class CheckEstateFeature
                 ->first();
 
             // If subscription exists and has a plan, check the plan's features
-            if ($residentSub && $residentSub->plan_id) {
-                if (! $residentSub->hasFeature($featureSlug)) {
+            if ($residentSub && $residentSub->plan_id && $residentSub->plan) {
+                if (! $residentSub->plan->hasFeature($featureSlug)) {
                     abort(403, 'Feature not available on your current plan tier.');
                 }
-            } elseif (! $estate->hasFeature($featureSlug)) {
-                // Fallback to estate features if no resident plan set yet
-                abort(403, 'Feature locked. Upgrade your plan to access this feature.');
+            } elseif ($residentSub && $residentSub->plan_id && ! $residentSub->plan) {
+                // Plan was deleted — treat as feature unavailable
+                abort(403, 'Feature not available on your current plan tier.');
             }
+            // No plan yet: let them through (grace period / newly subscribed user)
         } elseif (! $estate->hasFeature($featureSlug)) {
             // Estate admins/security/affiliates use estate-level features
             if ($request->wantsJson()) {

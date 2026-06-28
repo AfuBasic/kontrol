@@ -55,6 +55,14 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
     );
     const [searchPaid, setSearchPaid] = useState(filters?.search_paid || '');
     const [showChoiceModal, setShowChoiceModal] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
+
+    useEffect(() => {
+        const removeStartListener = router.on('start', () => setIsNavigating(true));
+        return () => {
+            removeStartListener();
+        };
+    }, []);
 
     const debouncedSearch = useDebounce(searchPaid, 300);
 
@@ -358,48 +366,85 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                 </div>
 
                 {paid.data.length > 0 ? (
-                    <InfiniteScroll
-                        data="paid"
-                        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-                        loading={
-                            <div className="col-span-full flex justify-center py-4">
-                                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-                            </div>
-                        }
-                    >
-                        {paid.data.map((assignment) => (
-                            <Link
-                                key={assignment.id}
-                                href={show.url(assignment.ulid)}
-                                className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200 transition-all hover:opacity-100 hover:shadow-md"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
-                                        <CheckCircle2 className="h-6 w-6" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
-                                        <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
-                                        <div className="mt-1 flex">
-                                            {assignment.billing_source === 'property_owner' ? (
-                                                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                                    Property Owner
-                                                </span>
-                                            ) : (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
-                                                    Estate
-                                                </span>
-                                            )}
+                    isNavigating ? (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {paid.data.map((assignment) => (
+                                <Link
+                                    key={assignment.id}
+                                    href={show.url(assignment.ulid)}
+                                    className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200 transition-all hover:opacity-100 hover:shadow-md"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
+                                            <CheckCircle2 className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                            <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
+                                            <div className="mt-1 flex">
+                                                {assignment.billing_source === 'property_owner' ? (
+                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                        Property Owner
+                                                    </span>
+                                                ) : (
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                                        Estate
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="text-right">
+                                        <div className="text-sm font-bold text-slate-900">{formatCurrency(assignment.amount_paid)}</div>
+                                        <p className="text-[10px] font-bold tracking-widest text-success-500 uppercase">Paid</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <InfiniteScroll
+                            data="paid"
+                            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                            loading={
+                                <div className="col-span-full flex justify-center py-4">
+                                    <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-sm font-bold text-slate-900">{formatCurrency(assignment.amount_paid)}</div>
-                                    <p className="text-[10px] font-bold tracking-widest text-success-500 uppercase">Paid</p>
-                                </div>
-                            </Link>
-                        ))}
-                    </InfiniteScroll>
+                            }
+                        >
+                            {paid.data.map((assignment) => (
+                                <Link
+                                    key={assignment.id}
+                                    href={show.url(assignment.ulid)}
+                                    className="flex items-center justify-between rounded-[2rem] bg-white p-5 opacity-70 shadow-sm ring-1 ring-slate-200 transition-all hover:opacity-100 hover:shadow-md"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-50 text-success-500">
+                                            <CheckCircle2 className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-900">{assignment.collection.name}</h4>
+                                            <p className="text-xs font-semibold text-slate-500 capitalize">{assignment.period || 'One-time'}</p>
+                                            <div className="mt-1 flex">
+                                                {assignment.billing_source === 'property_owner' ? (
+                                                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-purple-700 uppercase ring-1 ring-purple-100/50">
+                                                        Property Owner
+                                                    </span>
+                                                ) : (
+                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                                        Estate
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-sm font-bold text-slate-900">{formatCurrency(assignment.amount_paid)}</div>
+                                        <p className="text-[10px] font-bold tracking-widest text-success-500 uppercase">Paid</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </InfiniteScroll>
+                    )
                 ) : (
                     <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50/50 py-12 text-center ring-1 ring-slate-100 ring-inset">
                         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
