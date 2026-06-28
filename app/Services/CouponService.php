@@ -22,7 +22,7 @@ class CouponService
 
         $coupon = Coupon::where('code', $code)->first();
 
-        if (!$coupon) {
+        if (! $coupon) {
             return [
                 'status' => 'error',
                 'message' => 'Invalid coupon code.',
@@ -36,7 +36,7 @@ class CouponService
             ];
         }
 
-        if ($coupon->isLimitReached()) {
+        if ($coupon->isLimitReached($user)) {
             return [
                 'status' => 'error',
                 'message' => 'This coupon has reached its usage limit.',
@@ -73,7 +73,7 @@ class CouponService
         $user = $invoice->user;
         $estate = $invoice->estate;
 
-        if (!$user || !$estate) {
+        if (! $user || ! $estate) {
             return null;
         }
 

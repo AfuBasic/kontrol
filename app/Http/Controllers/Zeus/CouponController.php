@@ -247,14 +247,7 @@ class CouponController extends Controller
         }
 
         $usageLimit = $validated['usage_limit'] ?? null;
-        if ($validated['scope'] === 'estate' && is_null($usageLimit) && ! empty($validated['estate_id'])) {
-            $estate = Estate::find($validated['estate_id']);
-            if ($estate) {
-                $usageLimit = $estate->users()->whereHas('roles', function ($q) {
-                    $q->where('name', 'resident');
-                })->count();
-            }
-        } elseif ($validated['scope'] === 'resident' && is_null($usageLimit)) {
+        if (in_array($validated['scope'], ['estate', 'resident']) && is_null($usageLimit)) {
             $usageLimit = 1;
         }
 

@@ -101,9 +101,21 @@ class Coupon extends Model
     /**
      * Determine if the coupon has reached its usage limit.
      */
-    public function isLimitReached(): bool
+    public function isLimitReached(?User $user = null): bool
     {
-        return $this->usage_limit !== null && $this->used_count >= $this->usage_limit;
+        if ($this->usage_limit === null) {
+            return false;
+        }
+
+        // For estate and resident level coupons, the usage limit is per-resident.
+        if ($user !== null && ($this->estate_id !== null || $this->user_id !== null)) {
+            $userUsage = $this->logs()->where('user_id', $user->id)->count();
+
+            return $userUsage >= $this->usage_limit;
+        }
+
+        // Otherwise, it is a global cumulative cap.
+        return $this->used_count >= $this->usage_limit;
     }
 
     /**
@@ -123,7 +135,7 @@ class Coupon extends Model
             return false;
         }
 
-        if ($this->isLimitReached()) {
+        if ($this->isLimitReached($user)) {
             return false;
         }
 
