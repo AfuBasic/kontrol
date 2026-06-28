@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, LogOut } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -719,13 +719,13 @@ type ResultPanelProps = {
     onCheckout: () => void;
     onReset: () => void;
 };
-
 function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps) {
     const valid = result.valid;
     const expiry = formatExpiry(result.expires_at);
     const [countdown, setCountdown] = useState(5);
     const [isPaused, setIsPaused] = useState(false);
     const isCheckoutPending = result.action === 'checkout_pending';
+    const isAutoReturnActive = valid && !isCheckoutPending && result.status !== 'scheduled' && !result.has_vehicle;
 
     // Stable ref to avoid timer resetting on state changes
     const onResetRef = useRef(onReset);
@@ -734,7 +734,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     });
 
     useEffect(() => {
-        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || isCheckoutPending || isPaused) {
+        if (!isAutoReturnActive || isPaused) {
             return;
         }
 
@@ -750,7 +750,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [valid, result.has_vehicle, result.status, isCheckoutPending, isPaused]);
+    }, [isAutoReturnActive, isPaused]);
 
     // Offline state display
     if (result.status === 'offline_not_found') {
@@ -768,30 +768,22 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     </span>
                 </div>
 
-                <p className="text-[11px] font-black tracking-[0.2em] text-amber-600 uppercase">System Status Warning</p>
-                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Pass Offline Warning</h2>
-                <p className="mt-3 max-w-sm text-sm leading-relaxed font-semibold text-slate-500">
-                    This pass isn't in the offline memory bank. Connect the reader to cellular or Wi-Fi to synchronize.
+                <p className="text-[11px] font-black tracking-[0.2em] text-amber-600 uppercase">Offline Warning</p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Pass Code Not Found</h2>
+                <p className="mt-3 max-w-xs rounded-xl border border-amber-100/50 bg-amber-50/50 px-4 py-2.5 text-xs leading-relaxed font-semibold text-amber-700">
+                    This terminal is currently offline and this code was not found in the local cache. Please check internet connection or bypass.
                 </p>
 
-                <div className="mt-6 w-full max-w-sm rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-left">
-                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Security Override Protocol</p>
-                    <p className="mt-1 text-xs leading-relaxed font-semibold text-slate-600">
-                        If the visitor displays their live Kontrol app pass containing host villa credentials and today's dates, you can bypass
-                        validation.
-                    </p>
-                </div>
-
-                <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
+                <div className="mt-8 w-full max-w-xs space-y-3">
                     <button
-                        onClick={() => onAdmit({ override: true })}
-                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white shadow-md transition-all active:scale-95"
+                        onClick={() => onAdmit({ bypass: 'true' })}
+                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98]"
                     >
                         Admit via Security Bypass
                     </button>
                     <button
                         onClick={onReset}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-95"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
                     >
                         Try another code
                     </button>
@@ -800,54 +792,30 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         );
     }
 
-    // Invalid code display
+    // Status UI Configuration
+    let statusLabel = 'Access Approved';
+    let statusBg = 'bg-emerald-50 text-emerald-700 border-emerald-100/80';
+    let ringColor = 'ring-emerald-500/10 border-emerald-100/80';
+    let icon = <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2.5} />;
+
     if (!valid) {
-        return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center"
-            >
-                <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 shadow-inner ring-1 ring-rose-500/20">
-                    <ShieldX className="h-10 w-10 animate-bounce" />
-                </div>
-
-                <p className="text-[11px] font-black tracking-[0.2em] text-rose-600 uppercase">Verification Denied</p>
-                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Access Denied</h2>
-                <p className="mt-3 max-w-xs rounded-xl border border-rose-100/50 bg-rose-50/50 px-4 py-2 text-sm leading-relaxed font-semibold text-rose-600">
-                    {result.message || 'Invalid or unregistered credentials.'}
-                </p>
-
-                <button
-                    onClick={onReset}
-                    className="mt-8 flex items-center justify-center gap-2.5 rounded-2xl bg-slate-900 px-8 py-4.5 text-sm font-black text-white shadow-md transition-all active:scale-95"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Verify another code
-                </button>
-            </motion.div>
-        );
-    }
-
-    // UI state determination
-    let themeColor = 'emerald';
-    let statusHeading = 'Access Approved';
-    let subMessage = result.message || 'Verification successful';
-    let statusIcon = <ShieldCheck className="h-14 w-14 text-emerald-500" strokeWidth={2.5} />;
-
-    if (isCheckoutPending) {
-        themeColor = 'blue';
-        statusHeading = 'Exit Recorded';
-        subMessage = 'Visitor checked out successfully';
-        statusIcon = <LogOut className="h-14 w-14 text-blue-500" strokeWidth={2.5} />;
+        statusLabel = result.status === 'expired' ? 'Pass Expired' : result.status === 'revoked' ? 'Pass Revoked' : 'Access Denied';
+        statusBg = 'bg-rose-50 text-rose-700 border-rose-100/80';
+        ringColor = 'ring-rose-500/10 border-rose-100/80';
+        icon = <ShieldX className="h-4.5 w-4.5 text-rose-600" strokeWidth={2.5} />;
+    } else if (isCheckoutPending) {
+        statusLabel = 'Check-Out Pending';
+        statusBg = 'bg-blue-50 text-blue-700 border-blue-100/80';
+        ringColor = 'ring-blue-500/10 border-blue-100/80';
+        icon = <LogOut className="h-4.5 w-4.5 text-blue-600" strokeWidth={2.5} />;
     } else if (result.status === 'scheduled') {
-        themeColor = 'amber';
-        statusHeading = 'Scheduled Pass';
-        subMessage = 'Pass is not active yet';
-        statusIcon = <Clock className="h-14 w-14 text-amber-500" strokeWidth={2.5} />;
+        statusLabel = 'Scheduled Pass';
+        statusBg = 'bg-amber-50 text-amber-700 border-amber-100/80';
+        ringColor = 'ring-amber-500/10 border-amber-100/80';
+        icon = <Clock className="h-4.5 w-4.5 text-amber-600" strokeWidth={2.5} />;
     }
 
-    // Contextual Intelligence tags
+    // Context tags computation
     const contextTags: string[] = [];
     if (result.code_type === 'event') {
         contextTags.push('Event Guest');
@@ -855,10 +823,12 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     if (result.code_type === 'long_lived') {
         contextTags.push('Long-Term Pass');
     }
-    if (result.uses_count === 0 || result.uses_count === 1) {
-        contextTags.push('First Entry Today');
-    } else if (result.uses_count && result.uses_count > 1) {
-        contextTags.push(`Returning Visitor (${result.uses_count} entries)`);
+    if (valid && !isCheckoutPending) {
+        if (result.uses_count === 0 || result.uses_count === 1) {
+            contextTags.push('First Entry Today');
+        } else if (result.uses_count && result.uses_count > 1) {
+            contextTags.push(`Returning Visitor (${result.uses_count} entries)`);
+        }
     }
     if (result.has_vehicle) {
         contextTags.push('Vehicle Entry');
@@ -867,214 +837,229 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         contextTags.push('Expires Soon');
     }
 
-    // Circular Countdown calculations
-    const timerSize = 32;
-    const timerStroke = 3;
-    const timerRadius = (timerSize - timerStroke) / 2;
-    const timerCircumference = 2 * Math.PI * timerRadius;
-    const strokeDashoffset = timerCircumference - (countdown / 5) * timerCircumference;
-
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`flex flex-1 flex-col ${
-                themeColor === 'emerald'
-                    ? 'bg-linear-to-b from-emerald-50/40 via-white to-white'
-                    : themeColor === 'blue'
-                      ? 'bg-linear-to-b from-blue-50/40 via-white to-white'
-                      : 'bg-linear-to-b from-amber-50/40 via-white to-white'
-            }`}
+            className="flex flex-1 flex-col bg-[#f8fafc]"
         >
-            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6">
-                <div className="w-full max-w-md overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl">
-                    {/* Hero animated status section */}
-                    <div className="flex flex-col items-center px-6 pt-10 pb-6 text-center">
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
-                            transition={{ type: 'spring', duration: 0.5 }}
-                            className={`mb-4 flex h-24 w-24 items-center justify-center rounded-full ${
-                                themeColor === 'emerald'
-                                    ? 'bg-emerald-50 shadow-lg ring-4 shadow-emerald-500/10 ring-emerald-500/5'
-                                    : themeColor === 'blue'
-                                      ? 'bg-blue-50 shadow-lg ring-4 shadow-blue-500/10 ring-blue-500/5'
-                                      : 'bg-amber-50 shadow-lg ring-4 shadow-amber-500/10 ring-amber-500/5'
-                            }`}
-                        >
-                            {statusIcon}
-                        </motion.div>
+            {/* Terminal Header Info */}
+            <div className="px-6 pt-5 pb-1 text-center">
+                <span className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase">
+                    Kontrol Terminal • Access Verification
+                </span>
+            </div>
 
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900">{statusHeading}</h2>
-                        <p className="mt-1 text-sm font-semibold text-slate-500">{subMessage}</p>
+            <div className="flex flex-1 flex-col items-center justify-center px-6 py-4">
+                {/* Boarding Pass / Identity Verification Card */}
+                <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: 'spring', damping: 26, stiffness: 210 }}
+                    className={`w-full max-w-md overflow-hidden rounded-[36px] border bg-white p-8 shadow-[0_24px_50px_rgba(0,0,0,0.03)] ring-8 ${ringColor}`}
+                >
+                    {/* Status badge and Type header */}
+                    <div className="flex items-center justify-between gap-4">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black tracking-wide ${statusBg}`}>
+                            {icon}
+                            {statusLabel}
+                        </span>
+
+                        {result.code_type && (
+                            <span className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-500 uppercase">
+                                {getPassTypeLabel(result.code_type)}
+                            </span>
+                        )}
                     </div>
 
-                    {/* Contextual Intelligence Pills bar */}
-                    {contextTags.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-1.5 px-6 pb-5">
-                            {contextTags.map((tag, index) => (
-                                <span
-                                    key={index}
-                                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase ${
-                                        tag === 'Expires Soon'
-                                            ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                            : themeColor === 'emerald'
-                                              ? 'border-emerald-100 bg-emerald-50/50 text-emerald-700'
-                                              : themeColor === 'blue'
-                                                ? 'border-blue-100 bg-blue-50/50 text-blue-700'
-                                                : 'border-amber-100 bg-amber-50/50 text-amber-700'
-                                    }`}
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Security credentials board */}
-                    <div className="space-y-4 border-y border-slate-100 bg-slate-50/50 p-6">
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0 flex-1 text-left">
-                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Visitor Identity</span>
-                                <h3 className="truncate text-2xl leading-snug font-black text-slate-900">{result.visitor_name || 'Guest'}</h3>
-                            </div>
-                            <div className="text-right">
-                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Pass Type</span>
-                                <span className="inline-flex rounded-lg border border-slate-200/50 bg-white px-2.5 py-1 text-xs font-black text-slate-800 shadow-2xs">
-                                    {getPassTypeLabel(result.code_type)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="h-px bg-slate-100" />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="text-left">
-                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Host Resident</span>
-                                <p className="truncate text-sm font-black text-slate-900">{result.host_name || 'Resident'}</p>
-                            </div>
-                            <div className="text-right">
-                                <span className="mb-0.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Validity</span>
-                                <p className="text-sm font-black text-slate-900">
-                                    {isCheckoutPending
-                                        ? 'Checked Out'
-                                        : result.status === 'scheduled' && result.starts_at
-                                          ? `Valid from ${formatDateTime(result.starts_at)}`
-                                          : expiry
-                                            ? `Expires: ${expiry}`
-                                            : 'Never expires'}
-                                </p>
-                            </div>
-                        </div>
+                    {/* Visitor Hero Info */}
+                    <div className="mt-8 space-y-1">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            Visitor Full Name
+                        </span>
+                        <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-none break-words">
+                            {result.visitor_name || 'Guest Visitor'}
+                        </h2>
                     </div>
 
-                    {/* Event Capacity Widget */}
-                    {result.code_type === 'event' && (
-                        <div className="border-b border-slate-100 bg-indigo-50/40 px-6 py-4">
-                            <div className="mb-1.5 flex items-center justify-between">
-                                <span className="text-[10px] font-black tracking-widest text-indigo-600 uppercase">Event Capacity Tracker</span>
-                                <span className="text-xs font-black text-indigo-900">
-                                    {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Checked-in
-                                </span>
+                    {/* Ticket notch cut divider */}
+                    <div className="my-6 border-t border-dashed border-slate-200" />
+
+                    {/* Host Info */}
+                    <div className="space-y-1">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            Host Resident
+                        </span>
+                        <p className="text-2xl font-black text-slate-800 leading-snug break-words">
+                            {result.host_name || 'Not Specified'}
+                        </p>
+                    </div>
+
+                    {/* Section details */}
+                    <div className="my-6 border-t border-slate-100" />
+
+                    <div className="space-y-4">
+                        {/* Purpose */}
+                        {result.purpose && (
+                            <div className="flex justify-between items-center gap-4">
+                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Purpose</span>
+                                <span className="text-sm font-bold text-slate-800 text-right">{result.purpose}</span>
                             </div>
-                            {result.guest_limit && (
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-indigo-100/50">
-                                    <div
-                                        className="h-full bg-indigo-600 transition-all duration-700 ease-out"
-                                        style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Interactive workflow console */}
-                    <div className="space-y-4 p-6">
-                        {isCheckoutPending ? (
-                            <button
-                                type="button"
-                                onClick={() => onCheckout()}
-                                className="w-full rounded-2xl bg-blue-600 py-4 text-base font-black text-white shadow-xl shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
-                            >
-                                Confirm Check-out Complete
-                            </button>
-                        ) : (
-                            <>
-                                <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
-                                {!result.has_vehicle && (
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={onReset}
-                                            className="flex-1 rounded-2xl bg-slate-900 py-4 text-base font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
-                                        >
-                                            Verify Another Pass
-                                        </button>
-
-                                        {/* Hold screen controls */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsPaused(!isPaused)}
-                                            className="flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-3.5 text-left transition-all hover:bg-slate-200/80"
-                                        >
-                                            <div
-                                                className="relative flex items-center justify-center"
-                                                style={{ width: timerSize, height: timerSize }}
-                                            >
-                                                <svg className="absolute -rotate-90 transform" width={timerSize} height={timerSize}>
-                                                    <circle
-                                                        className="text-slate-200"
-                                                        strokeWidth={timerStroke}
-                                                        stroke="currentColor"
-                                                        fill="transparent"
-                                                        r={timerRadius}
-                                                        cx={timerSize / 2}
-                                                        cy={timerSize / 2}
-                                                    />
-                                                    {!isPaused && (
-                                                        <circle
-                                                            className="text-slate-800 transition-all duration-1000 ease-linear"
-                                                            strokeWidth={timerStroke}
-                                                            strokeDasharray={timerCircumference}
-                                                            strokeDashoffset={strokeDashoffset}
-                                                            strokeLinecap="round"
-                                                            stroke="currentColor"
-                                                            fill="transparent"
-                                                            r={timerRadius}
-                                                            cx={timerSize / 2}
-                                                            cy={timerSize / 2}
-                                                        />
-                                                    )}
-                                                </svg>
-                                                {isPaused ? (
-                                                    <Play className="h-3.5 w-3.5 fill-slate-800 text-slate-800" />
-                                                ) : (
-                                                    <span className="text-[10px] font-black text-slate-900">{countdown}s</span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Auto-Close</span>
-                                                <span className="text-[11px] font-bold text-slate-800">{isPaused ? 'Paused' : 'Hold Screen'}</span>
-                                            </div>
-                                        </button>
-                                    </div>
-                                )}
-                            </>
                         )}
 
-                        {isCheckoutPending && (
+                        {/* Validity period */}
+                        <div className="flex justify-between items-center gap-4">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Validity</span>
+                            <span className="text-sm font-bold text-slate-800 text-right">
+                                {isCheckoutPending
+                                    ? 'Exit Completed'
+                                    : !valid
+                                      ? (result.message || 'Access Denied')
+                                      : result.status === 'scheduled' && result.starts_at
+                                        ? `From ${formatDateTime(result.starts_at)}`
+                                        : expiry
+                                          ? `Expires: ${expiry}`
+                                          : 'Never Expires'}
+                            </span>
+                        </div>
+
+                        {/* Context intelligence tags inside the card */}
+                        {contextTags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-4 border-t border-slate-50">
+                                {contextTags.map((tag, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Event capacity meter */}
+                        {result.code_type === 'event' && (
+                            <div className="pt-4 border-t border-slate-100 mt-2 space-y-2">
+                                <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                    <span>Guest Attendance</span>
+                                    <span className="text-xs font-black text-slate-800">
+                                        {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Admitted
+                                    </span>
+                                </div>
+                                {result.guest_limit && (
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                                        <div
+                                            className="h-full bg-slate-900 transition-all duration-700 ease-out"
+                                            style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Sticky Action Footer */}
+            <div className="px-6 pb-[calc(env(safe-area-inset-bottom,24px)+24px)] pt-4 bg-[#f8fafc]">
+                {/* Vehicle Form details */}
+                {valid && !isCheckoutPending && result.has_vehicle && (
+                    <div className="mb-6 w-full max-w-md mx-auto">
+                        <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
+                    </div>
+                )}
+
+                {/* Confirm checkout buttons */}
+                {valid && isCheckoutPending && (
+                    <div className="w-full max-w-md mx-auto space-y-3">
+                        <button
+                            type="button"
+                            onClick={() => onCheckout()}
+                            className="w-full rounded-2xl bg-blue-600 py-4.5 text-base font-black text-white shadow-xl shadow-blue-500/10 transition-all hover:bg-blue-700 active:scale-[0.98]"
+                        >
+                            Confirm Check-out Complete
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onReset}
+                            className="w-full rounded-2xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all active:scale-[0.98]"
+                        >
+                            Cancel Check-out
+                        </button>
+                    </div>
+                )}
+
+                {/* Auto return progress indicator / Reset fallback */}
+                {!result.has_vehicle && (!valid || !isCheckoutPending) && (
+                    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center gap-4">
+                        {isAutoReturnActive ? (
+                            <div className="flex flex-col items-center gap-4 w-full">
+                                {/* Elegant pill timer */}
+                                <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-full border border-slate-150 shadow-xs">
+                                    <div className="relative flex items-center justify-center h-5 w-5">
+                                        <svg className="-rotate-90 transform" width="20" height="20">
+                                            <circle
+                                                className="text-slate-100"
+                                                strokeWidth="2.5"
+                                                stroke="currentColor"
+                                                fill="transparent"
+                                                r="8"
+                                                cx="10"
+                                                cy="10"
+                                            />
+                                            {!isPaused && (
+                                                <circle
+                                                    className="text-slate-800 transition-all duration-1000 ease-linear"
+                                                    strokeWidth="2.5"
+                                                    strokeDasharray="50.2"
+                                                    strokeDashoffset={50.2 - (countdown / 5) * 50.2}
+                                                    strokeLinecap="round"
+                                                    stroke="currentColor"
+                                                    fill="transparent"
+                                                    r="8"
+                                                    cx="10"
+                                                    cy="10"
+                                                />
+                                            )}
+                                        </svg>
+                                        <span className="absolute text-[8px] font-black text-slate-800">
+                                            {countdown}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-600">
+                                        {isPaused ? 'Auto-return paused' : 'Returning to scanner...'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPaused(!isPaused)}
+                                        className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                                    >
+                                        {isPaused ? <Play className="h-3 w-3 fill-slate-500" /> : <Pause className="h-3 w-3" />}
+                                    </button>
+                                </div>
+
+                                {/* Clean minimal fallback text trigger */}
+                                <button
+                                    type="button"
+                                    onClick={onReset}
+                                    className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors py-2"
+                                >
+                                    Verify Another Pass Immediately
+                                </button>
+                            </div>
+                        ) : (
+                            /* Primary return button when auto-return is not running */
                             <button
                                 type="button"
                                 onClick={onReset}
-                                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all active:scale-[0.98]"
+                                className="w-full rounded-2xl bg-slate-900 py-4.5 text-base font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
                             >
-                                <ArrowLeft className="h-4 w-4" />
-                                Cancel Check-out
+                                Verify Another Pass
                             </button>
                         )}
                     </div>
-                </div>
+                )}
             </div>
         </motion.div>
     );
