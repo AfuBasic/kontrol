@@ -120,7 +120,7 @@ export default function CouponShow({ coupon, logs, stats }: Props) {
 
     const statusStyle = getStatusStyle(coupon.status);
     const usagePercent = coupon.usage_limit 
-        ? Math.min(100, Math.round((coupon.used_count / coupon.usage_limit) * 100)) 
+        ? Math.min(100, Math.round((stats.total_redemptions / coupon.usage_limit) * 100)) 
         : 0;
 
     return (
@@ -179,7 +179,7 @@ export default function CouponShow({ coupon, logs, stats }: Props) {
                     <div className="rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-[#0f1423] p-6 shadow-xs relative overflow-hidden">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Coupon Redemptions</span>
                         <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-slate-900 dark:text-white">{coupon.used_count}</span>
+                            <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.total_redemptions}</span>
                             <span className="text-xs font-semibold text-slate-400">/ {coupon.usage_limit ? coupon.usage_limit : 'unlimited'} uses</span>
                         </div>
                         <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-500 font-bold">

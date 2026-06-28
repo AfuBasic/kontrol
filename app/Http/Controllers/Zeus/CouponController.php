@@ -82,8 +82,8 @@ class CouponController extends Controller
                 'formatted_value' => $coupon->type === 'percentage' ? "{$coupon->value}%" : '₦'.number_format($coupon->value / 100, 2),
                 'expires_at' => $coupon->expires_at?->toDateString(),
                 'starts_at' => $coupon->starts_at?->toDateString(),
-                'usage_limit' => $coupon->usage_limit,
-                'used_count' => $coupon->used_count,
+                'usage_limit' => $coupon->totalUsageLimit(),
+                'used_count' => $coupon->logs()->count(),
             ]);
 
         // Calculate aggregates/stats
@@ -171,7 +171,7 @@ class CouponController extends Controller
             ->paginate(10);
 
         // Specific metrics
-        $totalRedemptions = $coupon->used_count;
+        $totalRedemptions = CouponLog::where('coupon_id', $coupon->id)->count();
         $totalSavingsKobo = CouponLog::where('coupon_id', $coupon->id)->sum('discount_amount');
         $totalSavings = '₦'.number_format($totalSavingsKobo / 100, 2);
 
@@ -203,8 +203,8 @@ class CouponController extends Controller
                 'formatted_min_purchase' => $coupon->min_purchase ? '₦'.number_format($coupon->min_purchase / 100, 2) : null,
                 'expires_at' => $coupon->expires_at?->toDateString(),
                 'starts_at' => $coupon->starts_at?->toDateString(),
-                'usage_limit' => $coupon->usage_limit,
-                'used_count' => $coupon->used_count,
+                'usage_limit' => $coupon->totalUsageLimit(),
+                'used_count' => $totalRedemptions,
                 'created_at' => $coupon->created_at?->toDateString(),
             ],
             'logs' => $logs,

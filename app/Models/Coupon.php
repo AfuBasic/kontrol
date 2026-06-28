@@ -115,7 +115,31 @@ class Coupon extends Model
         }
 
         // Otherwise, it is a global cumulative cap.
-        return $this->used_count >= $this->usage_limit;
+        $actualUses = $this->logs()->count();
+
+        return $actualUses >= $this->totalUsageLimit();
+    }
+
+    /**
+     * Get the total possible redemptions for this coupon based on its scope and usage limit.
+     */
+    public function totalUsageLimit(): ?int
+    {
+        if ($this->usage_limit === null) {
+            return null;
+        }
+
+        if ($this->estate_id !== null) {
+            $residentsCount = User::whereHas('estates', function ($q) {
+                $q->where('estates.id', $this->estate_id);
+            })->whereHas('roles', function ($q) {
+                $q->where('name', 'resident');
+            })->count();
+
+            return $residentsCount * $this->usage_limit;
+        }
+
+        return $this->usage_limit;
     }
 
     /**
