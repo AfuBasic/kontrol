@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ArrowRight, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag, Pause, Play, Check, LogOut, MapPin, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldX, User, Home as HomeIcon, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Calendar, Users, Tag, Pause, Play, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import SecurityLayout from '@/Layouts/SecurityLayout';
@@ -607,7 +607,6 @@ export default function SecurityVerify() {
                             key="result"
                             result={result}
                             onAdmit={(data) => recordDecision('admit', { ...data, access_log_id: result.access_log_id })}
-                            onReject={(data) => recordDecision('reject', data)}
                             onCheckout={() => recordDecision('checkout')}
                             onReset={reset}
                         />
