@@ -10,6 +10,7 @@ use App\Actions\Zeus\UpdateEstateAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\StoreEstateRequest;
 use App\Http\Requests\Zeus\UpdateEstateRequest;
+use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\PaymentTransaction;
@@ -123,6 +124,14 @@ class EstateController extends Controller
             })
             ->first();
 
+        $activeCoupons = Coupon::where('estate_id', $estate->id)
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->latest()
+            ->get();
+
         return Inertia::render('Zeus/Estates/Show', [
             'estate' => $estate,
             'residentStats' => $residentStats,
@@ -135,6 +144,7 @@ class EstateController extends Controller
             'recentTransactions' => $recentTransactions,
             'residents' => $residents,
             'admin' => $admin,
+            'activeCoupons' => $activeCoupons,
         ]);
     }
 

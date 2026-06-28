@@ -15,6 +15,7 @@ import {
     Ghost,
     FileQuestion,
     Lock,
+    Ticket,
 } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -61,6 +62,17 @@ interface Resident {
     next_due: string | null;
 }
 
+interface Coupon {
+    id: number;
+    campaign_name: string;
+    code: string;
+    type: 'percentage' | 'fixed';
+    value: number;
+    usage_limit: number | null;
+    used_count: number;
+    expires_at: string | null;
+}
+
 interface Props {
     estate: Estate;
     residentStats: { total: number; active: number; trial: number; past_due: number; expired: number };
@@ -68,9 +80,10 @@ interface Props {
     recentTransactions: Transaction[];
     residents: Resident[];
     admin: { name: string; email: string } | null;
+    activeCoupons: Coupon[];
 }
 
-export default function EstateShow({ estate, residentStats, analytics, recentTransactions, residents, admin }: Props) {
+export default function EstateShow({ estate, residentStats, analytics, recentTransactions, residents, admin, activeCoupons }: Props) {
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
     const [actionToConfirm, setActionToConfirm] = useState<'toggle' | 'delete' | 'reset' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -274,6 +287,51 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                 </div>
                                 <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No Admin</p>
                                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Invitation is pending or revoked.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Active Coupons Section */}
+                    <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <h3 className="mb-6 flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400">
+                                <Ticket className="h-3 w-3" />
+                            </span>
+                            Active Coupons
+                        </h3>
+                        {activeCoupons && activeCoupons.length > 0 ? (
+                            <div className="space-y-4">
+                                {activeCoupons.map((coupon) => (
+                                    <div key={coupon.id} className="group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] p-4 transition hover:border-indigo-350 dark:hover:border-indigo-900/60">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="text-sm font-black text-slate-900 dark:text-white">{coupon.campaign_name}</h4>
+                                                <span className="mt-1.5 inline-block font-mono text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-900/20">{coupon.code}</span>
+                                            </div>
+                                            <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                                                {coupon.type === 'percentage' ? `${coupon.value}%` : `₦${(coupon.value / 100).toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                            <span>
+                                                Limit: {coupon.usage_limit ? `${coupon.usage_limit} use${coupon.usage_limit > 1 ? 's' : ''} per resident` : 'Unlimited'}
+                                            </span>
+                                            {coupon.expires_at && (
+                                                <span>
+                                                    Expires {coupon.expires_at}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-6 text-center">
+                                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800">
+                                    <Ticket className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                                </div>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No Active Coupons</p>
+                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">There are no active coupons for this estate.</p>
                             </div>
                         )}
                     </div>
