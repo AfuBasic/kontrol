@@ -165,7 +165,7 @@ export default function CouponShow({ coupon, logs, stats }: Props) {
                         <button
                             type="button"
                             onClick={() => setDeleteModalOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-200/60 dark:border-rose-955 bg-rose-50/50 dark:bg-rose-955/20 px-5 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-900 dark:hover:text-rose-100 transition active:scale-[0.98] cursor-pointer"
+                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-600 hover:bg-rose-600 hover:text-white hover:border-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white transition active:scale-[0.98] cursor-pointer"
                         >
                             <Trash2 className="h-4 w-4" />
                             Delete Coupon

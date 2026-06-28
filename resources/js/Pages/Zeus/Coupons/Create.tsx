@@ -259,7 +259,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                 >
                     <a 
                         href="/zeus/coupons" 
-                        className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-955 dark:text-slate-400 dark:hover:text-white transition-all group"
+                        className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all group"
                     >
                         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                         Back to Coupons
