@@ -29,6 +29,7 @@ type EstateExplorerData = {
     total_properties: number;
     health_score: number;
     mrr: number;
+    has_active_coupons: boolean;
     created_at: string;
 };
 
@@ -45,8 +46,8 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [selectedEstate, setSelectedEstate] = useState<EstateExplorerData | null>(null);
 
-    const [estateToToggle, setEstateToToggle] = useState<{ id: number; status: string } | null>(null);
-    const [estateToDelete, setEstateToDelete] = useState<{ id: number; name: string } | null>(null);
+    const [estateToToggle, setEstateToToggle] = useState<{ id: number; ulid: string; status: string } | null>(null);
+    const [estateToDelete, setEstateToDelete] = useState<{ id: number; ulid: string; name: string } | null>(null);
     const [estateToReset, setEstateToReset] = useState<EstateExplorerData | null>(null);
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -63,7 +64,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const handleToggleStatus = () => {
         if (!estateToToggle) return;
         setIsProcessing(true);
-        router.post(toggleStatus.url({ estate: estateToToggle.id }), {}, { 
+        router.post(toggleStatus.url({ estate: estateToToggle.ulid }), {}, { 
             preserveScroll: true,
             onFinish: () => {
                 setIsProcessing(false);
@@ -76,7 +77,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const handleDelete = () => {
         if (!estateToDelete) return;
         setIsProcessing(true);
-        router.delete(destroy.url({ estate: estateToDelete.id }), { 
+        router.delete(destroy.url({ estate: estateToDelete.ulid }), { 
             preserveScroll: true,
             onFinish: () => {
                 setIsProcessing(false);
@@ -89,7 +90,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const handleResetPassword = () => {
         if (!estateToReset) return;
         setIsProcessing(true);
-        router.post(resetPassword.url({ estate: estateToReset.id }), {}, { 
+        router.post(resetPassword.url({ estate: estateToReset.ulid }), {}, { 
             preserveScroll: true,
             onFinish: () => {
                 setIsProcessing(false);
@@ -186,20 +187,27 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                                         <Building2 className="h-6 w-6" />
                                     </div>
-                                    <span
-                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
-                                            estate.status === 'active'
-                                                ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 dark:text-slate-500'
-                                        }`}
-                                    >
-                                        {estate.status === 'active' ? (
-                                            <CheckCircle2 className="h-3 w-3" />
-                                        ) : (
-                                            <AlertCircle className="h-3 w-3" />
+                                    <div className="flex items-center gap-1.5">
+                                        {estate.has_active_coupons && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-750 dark:text-violet-400 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border border-violet-200 dark:border-violet-850">
+                                                Coupons Active
+                                            </span>
                                         )}
-                                        {estate.status}
-                                    </span>
+                                        <span
+                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                                estate.status === 'active'
+                                                    ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                            }`}
+                                        >
+                                            {estate.status === 'active' ? (
+                                                <CheckCircle2 className="h-3 w-3" />
+                                            ) : (
+                                                <AlertCircle className="h-3 w-3" />
+                                            )}
+                                            {estate.status}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white line-clamp-1">{estate.name}</h3>
@@ -298,8 +306,15 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                         <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-inner">
                                             <Building2 className="h-8 w-8" />
                                         </div>
-                                        <h1 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">{selectedEstate.name}</h1>
-                                        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">{selectedEstate.address}</p>
+                                        <div className="mt-4 flex items-center gap-2">
+                                            <h1 className="text-2xl font-black text-slate-900 dark:text-white">{selectedEstate.name}</h1>
+                                            {selectedEstate.has_active_coupons && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-750 dark:text-violet-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest border border-violet-200 dark:border-violet-850">
+                                                    Coupons Active
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">{selectedEstate.address}</p>
                                     </div>
 
                                     {/* Main Stats */}
@@ -355,7 +370,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 </Link>
                                                 <div className="mt-4 grid grid-cols-2 gap-3">
                                                     <div 
-                                                        onClick={() => setEstateToToggle({ id: selectedEstate.id, status: selectedEstate.status })}
+                                                        onClick={() => setEstateToToggle({ id: selectedEstate.id, ulid: selectedEstate.ulid, status: selectedEstate.status })}
                                                         className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-3 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
                                                     >
                                                         <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -377,7 +392,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        setEstateToDelete({ id: selectedEstate.id, name: selectedEstate.name });
+                                                        setEstateToDelete({ id: selectedEstate.id, ulid: selectedEstate.ulid, name: selectedEstate.name });
                                                     }}
                                                     className="mt-2 w-full rounded-2xl bg-rose-50 dark:bg-rose-500/10 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-500/20 active:scale-[0.98]"
                                                 >

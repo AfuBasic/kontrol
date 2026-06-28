@@ -25,6 +25,7 @@ test('zeus admin can create and delete coupons', function () {
 
     // Create global percentage coupon
     $response = $this->post(route('zeus.coupons.store'), [
+        'campaign_name' => 'Test Coupon 50',
         'code' => 'TEST50',
         'type' => 'percentage',
         'value' => 50,
@@ -42,6 +43,7 @@ test('zeus admin can create and delete coupons', function () {
 
     // Create estate fixed coupon
     $this->post(route('zeus.coupons.store'), [
+        'campaign_name' => 'Estate Coupon 200',
         'code' => 'ESTATE200',
         'type' => 'fixed',
         'value' => 200, // 200 Naira
@@ -59,6 +61,7 @@ test('zeus admin can create and delete coupons', function () {
 
     // Create resident coupon
     $this->post(route('zeus.coupons.store'), [
+        'campaign_name' => 'Resident Coupon 30',
         'code' => 'RESIDENT30',
         'type' => 'percentage',
         'value' => 30,

@@ -38,6 +38,8 @@ interface Props {
 
 export default function CreateCoupon({ estates, residents }: Props) {
     const { data, setData, post, processing, errors } = useForm({
+        campaign_name: '',
+        description: '',
         code: '',
         type: 'percentage',
         value: '',
@@ -70,6 +72,14 @@ export default function CreateCoupon({ estates, residents }: Props) {
 
     const validateField = (field: string, value: any) => {
         let errorMsg = '';
+
+        if (field === 'campaign_name') {
+            if (!value || !value.trim()) {
+                errorMsg = 'Coupon name is required.';
+            } else if (value.trim().length < 3) {
+                errorMsg = 'Coupon name must be at least 3 characters.';
+            }
+        }
 
         if (field === 'code') {
             if (!value || !value.trim()) {
@@ -195,6 +205,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
         e.preventDefault();
 
         // Validate all fields
+        const isNameValid = validateField('campaign_name', data.campaign_name);
         const isCodeValid = validateField('code', data.code);
         const isValueValid = validateField('value', data.value);
         const isEstateValid = data.scope === 'estate' ? validateField('estate_id', data.estate_id) : true;
@@ -202,7 +213,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
         const isExpiryValid = hasExpiry ? validateField('expires_at', data.expires_at) : true;
         const isLimitValid = hasLimit ? validateField('usage_limit', data.usage_limit) : true;
 
-        if (!isCodeValid || !isValueValid || !isEstateValid || !isResidentValid || !isExpiryValid || !isLimitValid) {
+        if (!isNameValid || !isCodeValid || !isValueValid || !isEstateValid || !isResidentValid || !isExpiryValid || !isLimitValid) {
             return;
         }
         
@@ -300,6 +311,38 @@ export default function CreateCoupon({ estates, residents }: Props) {
                         </h2>
 
                         <div className="grid gap-6 md:grid-cols-2">
+                            {/* Coupon Name */}
+                            <div className="md:col-span-2">
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Coupon Name</label>
+                                <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                    <input
+                                        type="text"
+                                        value={data.campaign_name}
+                                        onChange={e => {
+                                            setData('campaign_name', e.target.value);
+                                            validateField('campaign_name', e.target.value);
+                                        }}
+                                        placeholder="e.g. Year End Promotion"
+                                        className="w-full bg-transparent px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                                    />
+                                </div>
+                                {(localErrors.campaign_name || errors.campaign_name) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.campaign_name || errors.campaign_name}</p>}
+                            </div>
+
+                            {/* Coupon Description */}
+                            <div className="md:col-span-2">
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Description (Optional)</label>
+                                <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                    <textarea
+                                        value={data.description}
+                                        onChange={e => setData('description', e.target.value)}
+                                        placeholder="Briefly describe what this coupon does..."
+                                        rows={2}
+                                        className="w-full bg-transparent px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none resize-none"
+                                    />
+                                </div>
+                            </div>
+
                             {/* Code Input */}
                             <div>
                                 <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Coupon Code</label>

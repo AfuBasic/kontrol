@@ -22,6 +22,7 @@ import { toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Control
 
 interface Estate {
     id: number;
+    ulid: string;
     name: string;
     email: string;
     address: string | null;
@@ -101,11 +102,11 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
         };
 
         if (actionToConfirm === 'toggle') {
-            router.post(toggleStatus.url({ estate: estate.id }), {}, { preserveScroll: true, onFinish });
+            router.post(toggleStatus.url({ estate: estate.ulid }), {}, { preserveScroll: true, onFinish });
         } else if (actionToConfirm === 'delete') {
-            router.delete(destroy.url({ estate: estate.id }), { preserveScroll: true, onFinish });
+            router.delete(destroy.url({ estate: estate.ulid }), { preserveScroll: true, onFinish });
         } else if (actionToConfirm === 'reset') {
-            router.post(resetPassword.url({ estate: estate.id }), {}, { preserveScroll: true, onFinish });
+            router.post(resetPassword.url({ estate: estate.ulid }), {}, { preserveScroll: true, onFinish });
         }
     };
 
@@ -455,15 +456,15 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                           ? `Are you absolutely sure you want to completely delete ${estate.name}? This action cannot be undone and will erase all associated data permanently.`
                           : `Are you sure you want to resend the invitation email to the primary admin of ${estate.name}?`
                 }
-                confirmText={
+                confirmLabel={
                     actionToConfirm === 'toggle'
                         ? `Yes, ${estate.status === 'active' ? 'Deactivate' : 'Activate'}`
                         : actionToConfirm === 'delete'
                           ? 'Yes, Delete Estate'
                           : 'Yes, Send Email'
                 }
-                isDestructive={actionToConfirm === 'delete' || (actionToConfirm === 'toggle' && estate.status === 'active')}
-                isProcessing={isProcessing}
+                type={actionToConfirm === 'delete' || (actionToConfirm === 'toggle' && estate.status === 'active') ? 'danger' : 'info'}
+                isLoading={isProcessing}
             />
         </ZeusLayout>
     );

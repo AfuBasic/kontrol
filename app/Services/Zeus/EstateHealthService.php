@@ -2,6 +2,7 @@
 
 namespace App\Services\Zeus;
 
+use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use App\Models\Property;
@@ -80,6 +81,13 @@ class EstateHealthService
                 // Basic MRR placeholder logic based on total residents
                 $mrr = $estate->total_residents * 5000; // Placeholder
 
+                $hasActiveCoupons = Coupon::where('estate_id', $estate->id)
+                    ->where('status', 'active')
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                    })
+                    ->exists();
+
                 return [
                     'id' => $estate->id,
                     'ulid' => $estate->ulid,
@@ -91,6 +99,7 @@ class EstateHealthService
                     'total_properties' => $totalProperties,
                     'health_score' => $this->calculateHealthScore($estate),
                     'mrr' => $mrr,
+                    'has_active_coupons' => $hasActiveCoupons,
                     'created_at' => $estate->created_at->toISOString(),
                 ];
             });

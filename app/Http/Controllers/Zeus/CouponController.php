@@ -222,6 +222,8 @@ class CouponController extends Controller
         ]);
 
         $rules = [
+            'campaign_name' => ['required', 'string', 'min:3'],
+            'description' => ['nullable', 'string'],
             'code' => ['required', 'string', 'unique:coupons,code'],
             'type' => ['required', 'string', 'in:percentage,fixed'],
             'value' => ['required', 'numeric', 'min:1'],
@@ -244,14 +246,30 @@ class CouponController extends Controller
             $value = $value * 100;
         }
 
+        $usageLimit = $validated['usage_limit'] ?? null;
+        if ($validated['scope'] === 'estate' && is_null($usageLimit) && ! empty($validated['estate_id'])) {
+            $estate = Estate::find($validated['estate_id']);
+            if ($estate) {
+                $usageLimit = $estate->users()->whereHas('roles', function ($q) {
+                    $q->where('name', 'resident');
+                })->count();
+            }
+        } elseif ($validated['scope'] === 'resident' && is_null($usageLimit)) {
+            $usageLimit = 1;
+        }
+
         Coupon::create([
+            'campaign_name' => $validated['campaign_name'],
+            'description' => $validated['description'] ?? null,
             'code' => $validated['code'],
             'type' => $validated['type'],
             'value' => $value,
             'estate_id' => $validated['scope'] === 'estate' ? ($validated['estate_id'] ?? null) : null,
             'user_id' => $validated['scope'] === 'resident' ? ($validated['user_id'] ?? null) : null,
             'expires_at' => $validated['expires_at'] ?? null,
-            'usage_limit' => $validated['usage_limit'] ?? null,
+            'usage_limit' => $usageLimit,
+            'creator_id' => auth()->id(),
+            'status' => 'active',
         ]);
 
         return redirect()->route('zeus.coupons.index')->with('success', 'Coupon created successfully.');
