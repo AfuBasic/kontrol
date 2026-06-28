@@ -7,10 +7,12 @@ use App\Actions\Billing\InitializeCardSetupAction;
 use App\Actions\Billing\PaymentInitializationException;
 use App\Actions\Billing\ProcessResidentPaymentAction;
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\Billing\InvoiceGenerationService;
+use App\Services\CouponService;
 use App\Services\EstateContextService;
 use App\Services\ResidentSubscriptionService;
 use Exception;
@@ -87,6 +89,7 @@ class BillingController extends Controller
     {
         $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
+            'coupon_code' => ['nullable', 'string'],
         ]);
 
         $user = auth()->user();
@@ -105,6 +108,7 @@ class BillingController extends Controller
                 $plan,
                 route('resident.billing.payment.callback'),
                 route('resident.billing.index'),
+                $request->coupon_code,
             );
         } catch (PaymentInitializationException $e) {
             return back()->with('error', $e->getUserMessage());
@@ -121,6 +125,42 @@ class BillingController extends Controller
         }
 
         return $redirect;
+    }
+
+    public function validateCoupon(Request $request, CouponService $couponService): JsonResponse
+    {
+        $request->validate([
+            'code' => ['required', 'string'],
+            'plan_id' => ['required', 'exists:plans,id'],
+        ]);
+
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+        $plan = Plan::findOrFail($request->plan_id);
+
+        $result = $couponService->validate($request->code, $user, $estate);
+
+        if ($result['status'] !== 'success') {
+            return response()->json([
+                'status' => 'error',
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        /** @var Coupon $coupon */
+        $coupon = $result['coupon'];
+        $discount = $coupon->calculateDiscount($plan->price);
+
+        return response()->json([
+            'status' => 'success',
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => $coupon->value,
+            'discount' => $discount,
+            'formatted_discount' => '₦'.number_format($discount / 100, 2),
+            'final_amount' => max(0, $plan->price - $discount),
+            'formatted_final_amount' => '₦'.number_format(max(0, $plan->price - $discount) / 100, 2),
+        ]);
     }
 
     public function setupPaymentMethod(InitializeCardSetupAction $action): RedirectResponse|SymfonyResponse

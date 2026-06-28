@@ -129,6 +129,7 @@ Route::middleware('role:resident')->group(function (): void {
         Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
         Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
+        Route::post('/validate-coupon', [BillingController::class, 'validateCoupon'])->name('coupon.validate');
     });
 
     // Estate Collections (Dues)

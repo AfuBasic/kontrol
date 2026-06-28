@@ -3,6 +3,7 @@
 use App\Http\Controllers\Zeus\ApplicationController;
 use App\Http\Controllers\Zeus\AuthController;
 use App\Http\Controllers\Zeus\CollectionOversightController;
+use App\Http\Controllers\Zeus\CouponController;
 use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
@@ -37,6 +38,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
 
         // Plans management
         Route::resource('plans', PlanController::class)->except(['show']);
+
+        // Coupons management
+        Route::resource('coupons', CouponController::class)->only(['index', 'store', 'destroy']);
 
         // Features management
         Route::get('/features', [FeatureController::class, 'index'])->name('features.index');

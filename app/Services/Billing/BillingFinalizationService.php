@@ -7,6 +7,7 @@ use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Notifications\Resident\InvoicePaidNotification;
 use App\Services\BillingCycleService;
+use App\Services\CouponService;
 use Illuminate\Support\Facades\DB;
 
 class BillingFinalizationService
@@ -38,6 +39,11 @@ class BillingFinalizationService
                 $this->finalizeResidentSubscription($invoice);
             } else {
                 $this->finalizeEstateSubscription($invoice);
+            }
+
+            // 2.5 Log Coupon Usage if coupon_code was applied
+            if (! empty($metadata['coupon_code'])) {
+                app(CouponService::class)->logCouponUsage($invoice, $metadata['coupon_code']);
             }
 
             // 3. Record Transaction if it doesn't exist

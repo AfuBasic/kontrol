@@ -2,10 +2,12 @@
 
 namespace App\Actions\Billing;
 
+use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\BillingCycleService;
+use App\Services\CouponService;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,12 +28,14 @@ class ProcessResidentPaymentAction
         ResidentSubscription $subscription,
         Plan $plan,
         string $callbackUrl,
-        string $invoiceShowUrl
+        string $invoiceShowUrl,
+        ?string $couponCode = null
     ): InitializePaymentResult {
         Log::info('ProcessResidentPaymentAction::execute', [
             'user_id' => $subscription->user_id,
             'estate_id' => $subscription->estate_id,
             'plan_id' => $plan->id,
+            'coupon_code' => $couponCode,
         ]);
 
         $existingInvoice = Invoice::where('user_id', $subscription->user_id)
@@ -77,7 +81,7 @@ class ProcessResidentPaymentAction
             $existingInvoice->update(['status' => 'cancelled']);
         }
 
-        $invoice = DB::transaction(function () use ($subscription, $plan) {
+        $invoice = DB::transaction(function () use ($subscription, $plan, $couponCode) {
             $estate = $subscription->estate;
 
             // Period starts when the resident's current active/trial period ends, or today if past due
@@ -88,8 +92,28 @@ class ProcessResidentPaymentAction
             $periodEnd = $this->billingCycleService->calculatePeriodEnd($periodStart, $plan->billing_interval);
             $dueDate = $periodStart->copy()->addDays(7);
 
-            // Amount is the specific plan's price
-            $amount = $plan->price;
+            // Handle coupon validation and discount calculation
+            $discountAmount = 0;
+            $metadata = [];
+            if ($couponCode) {
+                $couponService = app(CouponService::class);
+                $validation = $couponService->validate($couponCode, $subscription->user, $estate);
+                if ($validation['status'] === 'success') {
+                    /** @var Coupon $coupon */
+                    $coupon = $validation['coupon'];
+                    $discountAmount = $coupon->calculateDiscount($plan->price);
+                    $metadata['coupon_code'] = $coupon->code;
+                    $metadata['discount_amount'] = $discountAmount;
+                } else {
+                    throw new PaymentInitializationException(
+                        $validation['message'] ?? 'Invalid coupon code.',
+                        'invalid_coupon'
+                    );
+                }
+            }
+
+            // Amount is the specific plan's price net of discount
+            $amount = max(0, $plan->price - $discountAmount);
 
             // Generate unique invoice number
             $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
@@ -107,6 +131,7 @@ class ProcessResidentPaymentAction
                 'billing_period_end' => $periodEnd,
                 'due_date' => $dueDate,
                 'status' => 'pending',
+                'metadata' => $metadata,
             ]);
         });
 
