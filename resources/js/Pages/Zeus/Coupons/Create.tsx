@@ -60,6 +60,63 @@ export default function CreateCoupon({ estates, residents }: Props) {
     // Code generate animation trigger
     const [codeTrigger, setCodeTrigger] = useState(false);
 
+    // Client-side validation state
+    const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+    const validateField = (field: string, value: any) => {
+        let errorMsg = '';
+
+        if (field === 'code') {
+            if (!value || !value.trim()) {
+                errorMsg = 'Coupon code is required.';
+            } else if (!/^[A-Z0-9-]+$/.test(value)) {
+                errorMsg = 'Coupon code must be uppercase alphanumeric (dashes allowed).';
+            } else if (value.length < 3) {
+                errorMsg = 'Coupon code must be at least 3 characters.';
+            }
+        }
+
+        if (field === 'value') {
+            const num = parseFloat(value);
+            if (!value || isNaN(num) || num <= 0) {
+                errorMsg = 'Discount value must be a positive number greater than 0.';
+            } else if (data.type === 'percentage' && num > 100) {
+                errorMsg = 'Percentage discount cannot be greater than 100%.';
+            }
+        }
+
+        if (field === 'estate_id' && data.scope === 'estate' && !value) {
+            errorMsg = 'Target Estate must be selected.';
+        }
+
+        if (field === 'user_id' && data.scope === 'resident' && !value) {
+            errorMsg = 'Target Resident must be selected.';
+        }
+
+        if (field === 'expires_at' && hasExpiry) {
+            if (!value) {
+                errorMsg = 'Expiration date is required.';
+            } else {
+                const date = new Date(value);
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                if (date <= now) {
+                    errorMsg = 'Expiration date must be a future date.';
+                }
+            }
+        }
+
+        if (field === 'usage_limit' && hasLimit) {
+            const num = parseInt(value, 10);
+            if (!value || isNaN(num) || num < 1) {
+                errorMsg = 'Usage limit must be a positive integer greater than 0.';
+            }
+        }
+
+        setLocalErrors(prev => ({ ...prev, [field]: errorMsg }));
+        return !errorMsg;
+    };
+
     // Filtered lists
     const filteredEstates = useMemo(() => {
         if (!estateQuery.trim()) return [];
@@ -84,6 +141,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
         }
         
         setData('code', code);
+        setLocalErrors(prev => ({ ...prev, code: '' }));
         setCodeTrigger(true);
         setTimeout(() => setCodeTrigger(false), 500);
     }
@@ -92,26 +150,42 @@ export default function CreateCoupon({ estates, residents }: Props) {
         setData('estate_id', estate.id.toString());
         setSelectedEstateName(estate.name);
         setEstateQuery('');
+        setLocalErrors(prev => ({ ...prev, estate_id: '' }));
     }
 
     function clearEstateSelection() {
         setData('estate_id', '');
         setSelectedEstateName('');
+        validateField('estate_id', '');
     }
 
     function selectResident(resident: Resident) {
         setData('user_id', resident.id.toString());
         setSelectedResidentName(`${resident.name} (${resident.email})`);
         setResidentQuery('');
+        setLocalErrors(prev => ({ ...prev, user_id: '' }));
     }
 
     function clearResidentSelection() {
         setData('user_id', '');
         setSelectedResidentName('');
+        validateField('user_id', '');
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+
+        // Validate all fields
+        const isCodeValid = validateField('code', data.code);
+        const isValueValid = validateField('value', data.value);
+        const isEstateValid = data.scope === 'estate' ? validateField('estate_id', data.estate_id) : true;
+        const isResidentValid = data.scope === 'resident' ? validateField('user_id', data.user_id) : true;
+        const isExpiryValid = hasExpiry ? validateField('expires_at', data.expires_at) : true;
+        const isLimitValid = hasLimit ? validateField('usage_limit', data.usage_limit) : true;
+
+        if (!isCodeValid || !isValueValid || !isEstateValid || !isResidentValid || !isExpiryValid || !isLimitValid) {
+            return;
+        }
         
         // Build payload based on options selected
         const payload = { ...data };
@@ -217,7 +291,11 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                     <input
                                         type="text"
                                         value={data.code}
-                                        onChange={e => setData('code', e.target.value.toUpperCase())}
+                                        onChange={e => {
+                                            const val = e.target.value.toUpperCase();
+                                            setData('code', val);
+                                            validateField('code', val);
+                                        }}
                                         placeholder="e.g. ZEU-SUMMER"
                                         className="w-full bg-transparent px-4 py-3.5 text-sm uppercase font-mono tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                                     />
@@ -229,7 +307,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         <Sparkles className="h-3.5 w-3.5 animate-spin-slow" /> Auto
                                     </button>
                                 </motion.div>
-                                {errors.code && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.code}</p>}
+                                {(localErrors.code || errors.code) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.code || errors.code}</p>}
                             </div>
 
                             {/* Discount Type */}
@@ -240,6 +318,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         type="button"
                                         onClick={() => {
                                             setData(d => ({ ...d, type: 'percentage', value: '' }));
+                                            setLocalErrors(prev => ({ ...prev, value: '' }));
                                         }}
                                         className={`rounded-lg py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                             data.type === 'percentage'
@@ -253,6 +332,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         type="button"
                                         onClick={() => {
                                             setData(d => ({ ...d, type: 'fixed', value: '' }));
+                                            setLocalErrors(prev => ({ ...prev, value: '' }));
                                         }}
                                         className={`rounded-lg py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                             data.type === 'fixed'
@@ -283,12 +363,15 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                 <input
                                     type="number"
                                     value={data.value}
-                                    onChange={e => setData('value', e.target.value)}
+                                    onChange={e => {
+                                        setData('value', e.target.value);
+                                        validateField('value', e.target.value);
+                                    }}
                                     placeholder={data.type === 'percentage' ? '15' : '1000'}
                                     className="w-full bg-transparent py-3.5 pr-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                                 />
                             </div>
-                            {errors.value && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.value}</p>}
+                            {(localErrors.value || errors.value) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.value || errors.value}</p>}
 
                             {/* Quick Select Buttons */}
                             <div className="mt-3 flex flex-wrap gap-2 items-center">
@@ -298,7 +381,10 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         <button
                                             key={val}
                                             type="button"
-                                            onClick={() => setData('value', val.toString())}
+                                            onClick={() => {
+                                                setData('value', val.toString());
+                                                validateField('value', val.toString());
+                                            }}
                                             className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-500 transition cursor-pointer"
                                         >
                                             {val}%
@@ -309,7 +395,10 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         <button
                                             key={val}
                                             type="button"
-                                            onClick={() => setData('value', val.toString())}
+                                            onClick={() => {
+                                                setData('value', val.toString());
+                                                validateField('value', val.toString());
+                                            }}
                                             className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-500 transition cursor-pointer"
                                         >
                                             ₦{val.toLocaleString()}
@@ -435,7 +524,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                             )}
                                         </div>
                                     )}
-                                    {errors.estate_id && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.estate_id}</p>}
+                                    {(localErrors.estate_id || errors.estate_id) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.estate_id || errors.estate_id}</p>}
                                 </motion.div>
                             )}
 
@@ -494,7 +583,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                             )}
                                         </div>
                                     )}
-                                    {errors.user_id && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.user_id}</p>}
+                                    {(localErrors.user_id || errors.user_id) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.user_id || errors.user_id}</p>}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -552,11 +641,14 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                                 <input
                                                     type="date"
                                                     value={data.expires_at}
-                                                    onChange={e => setData('expires_at', e.target.value)}
+                                                    onChange={e => {
+                                                        setData('expires_at', e.target.value);
+                                                        validateField('expires_at', e.target.value);
+                                                    }}
                                                     className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none"
                                                 />
                                             </div>
-                                            {errors.expires_at && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.expires_at}</p>}
+                                            {(localErrors.expires_at || errors.expires_at) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.expires_at || errors.expires_at}</p>}
                                         </motion.div>
                                     ) : (
                                         <motion.div
@@ -582,6 +674,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         onClick={() => {
                                             setHasLimit(!hasLimit);
                                             setData('usage_limit', '');
+                                            setLocalErrors(prev => ({ ...prev, usage_limit: '' }));
                                         }}
                                         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
                                             hasLimit ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
@@ -608,12 +701,15 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                                 <input
                                                     type="number"
                                                     value={data.usage_limit}
-                                                    onChange={e => setData('usage_limit', e.target.value)}
+                                                    onChange={e => {
+                                                        setData('usage_limit', e.target.value);
+                                                        validateField('usage_limit', e.target.value);
+                                                    }}
                                                     placeholder="e.g. 100"
                                                     className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none"
                                                 />
                                             </div>
-                                            {errors.usage_limit && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.usage_limit}</p>}
+                                            {(localErrors.usage_limit || errors.usage_limit) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.usage_limit || errors.usage_limit}</p>}
                                         </motion.div>
                                     ) : (
                                         <motion.div
