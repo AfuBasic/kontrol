@@ -114,7 +114,7 @@ export default function SubscriptionsIndex({
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
     };
 
     return (
@@ -230,8 +230,8 @@ export default function SubscriptionsIndex({
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={planAnalytics} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(148, 163, 184, 0.1)" />
-                                        <XAxis type="number" hide xAxisId="residents"  inputMode="numeric" pattern="[0-9]*" />
-                                        <XAxis type="number" hide xAxisId="mrr"  inputMode="numeric" pattern="[0-9]*" />
+                                        <XAxis type="number" hide xAxisId="residents" />
+                                        <XAxis type="number" hide xAxisId="mrr" />
                                         <YAxis dataKey="plan_name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                                         <RechartsTooltip
                                             cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
@@ -244,8 +244,8 @@ export default function SubscriptionsIndex({
                                                 padding: '12px 16px',
                                             }}
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
-                                            formatter={(value: number, name: string) => {
-                                                if (name === 'MRR') return [formatCurrency(value), 'MRR'];
+                                            formatter={(value: any, name: any) => {
+                                                if (name === 'MRR') return [formatCurrency(Number(value)), 'MRR'];
                                                 if (name === 'Residents') return [value, 'Residents'];
                                                 return [value, name];
                                             }}
@@ -294,7 +294,7 @@ export default function SubscriptionsIndex({
                                                 backdropFilter: 'blur(12px)',
                                                 color: '#fff',
                                             }}
-                                            formatter={(value: number) => [value, 'Subscriptions']}
+                                            formatter={(value: any) => [value, 'Subscriptions']}
                                         />
                                         <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={60}>
                                             {migrationMatrix.map((entry, index) => (

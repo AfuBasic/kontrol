@@ -434,10 +434,10 @@ export default function CouponShow({ coupon, logs, stats }: Props) {
             <ConfirmationModal
                 title="Delete Platform Coupon?"
                 message={`Are you sure you want to delete coupon code "${coupon.code}"? Once deleted, residents will no longer be able to apply this discount to billing invoices.`}
-                confirmText="Delete Coupon"
+                confirmLabel="Delete Coupon"
                 onConfirm={handleDeleteConfirm}
-                onCancel={() => setDeleteModalOpen(false)}
-                open={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                isOpen={deleteModalOpen}
             />
         </ZeusLayout>
     );
