@@ -34,8 +34,11 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const isExpired = expiryDate ? expiryDate < new Date() : false;
     const isUsed = pass.status === 'used';
     const isRevoked = pass.status === 'revoked';
-    const isScheduled = pass.status === 'scheduled';
-    const isActive = pass.status === 'active' && !isExpired;
+    
+    const startsAtDate = pass.starts_at ? new Date(pass.starts_at) : null;
+    const isFutureStart = startsAtDate ? startsAtDate > new Date() : false;
+    const isScheduled = pass.status === 'scheduled' && isFutureStart;
+    const isActive = (pass.status === 'active' || (pass.status === 'scheduled' && !isFutureStart)) && !isExpired;
     const isPassActiveOrScheduled = isActive || isScheduled;
 
     // Status styling
