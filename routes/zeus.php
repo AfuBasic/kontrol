@@ -40,7 +40,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::resource('plans', PlanController::class)->except(['show']);
 
         // Coupons management
-        Route::resource('coupons', CouponController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('coupons', CouponController::class)->only(['index', 'create', 'store', 'destroy']);
 
         // Features management
         Route::get('/features', [FeatureController::class, 'index'])->name('features.index');

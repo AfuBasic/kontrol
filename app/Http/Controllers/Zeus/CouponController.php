@@ -31,14 +31,20 @@ class CouponController extends Controller
                 'used_count' => $coupon->used_count,
             ]);
 
+        return Inertia::render('Zeus/Coupons/Index', [
+            'coupons' => $coupons,
+        ]);
+    }
+
+    public function create(): Response
+    {
         $estates = Estate::orderBy('name')->get(['id', 'name']);
 
         $residents = User::whereHas('roles', function ($query) {
             $query->where('name', 'resident');
         })->orderBy('name')->get(['id', 'name', 'email']);
 
-        return Inertia::render('Zeus/Coupons/Index', [
-            'coupons' => $coupons,
+        return Inertia::render('Zeus/Coupons/Create', [
             'estates' => $estates,
             'residents' => $residents,
         ]);

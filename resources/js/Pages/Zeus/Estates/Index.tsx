@@ -47,7 +47,8 @@ export default function EstateExplorer({ estates, filters }: Props) {
 
     const [estateToToggle, setEstateToToggle] = useState<{ id: number; status: string } | null>(null);
     const [estateToDelete, setEstateToDelete] = useState<{ id: number; name: string } | null>(null);
-    const [estateToReset, setEstateToReset] = useState<number | null>(null);
+    const [estateToReset, setEstateToReset] = useState<EstateExplorerData | null>(null);
+    const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -88,7 +89,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
     const handleResetPassword = () => {
         if (!estateToReset) return;
         setIsProcessing(true);
-        router.post(resetPassword.url({ estate: estateToReset }), {}, { 
+        router.post(resetPassword.url({ estate: estateToReset.id }), {}, { 
             preserveScroll: true,
             onFinish: () => {
                 setIsProcessing(false);
