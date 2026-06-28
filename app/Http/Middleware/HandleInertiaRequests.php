@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Services\Resident\AccessCodeService;
 use Illuminate\Http\Request;
@@ -70,6 +71,20 @@ class HandleInertiaRequests extends Middleware
                     'estate_name' => $estate?->name,
                     'property_owner_id' => $user->profile?->property_owner_id,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
+                    'has_active_coupons' => $estate ? (function () use ($user, $estate) {
+                        return Coupon::where('status', 'active')
+                            ->where(function ($q) {
+                                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                            })
+                            ->where(function ($q) use ($user, $estate) {
+                                $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
+                                  ->orWhere('estate_id', $estate->id)
+                                  ->orWhere('user_id', $user->id);
+                            })
+                            ->get()
+                            ->filter(fn ($coupon) => !$coupon->isLimitReached($user))
+                            ->isNotEmpty();
+                    })() : false,
                     'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
                         'id' => $n->id,
                         'data' => $n->data,

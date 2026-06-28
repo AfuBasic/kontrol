@@ -70,6 +70,20 @@ class BillingController extends Controller
                 ];
             });
 
+        $bestCoupon = Coupon::where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->where(function ($q) use ($user, $estate) {
+                $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
+                  ->orWhere('estate_id', $estate->id)
+                  ->orWhere('user_id', $user->id);
+            })
+            ->get()
+            ->filter(fn ($coupon) => !$coupon->isLimitReached($user))
+            ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)
+            ->first();
+
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => [
                 'status' => $subscription->status,
@@ -82,6 +96,14 @@ class BillingController extends Controller
             ],
             'plans' => $plans,
             'recentInvoices' => $invoices,
+            'autoAppliedCoupon' => $bestCoupon ? [
+                'id' => $bestCoupon->id,
+                'code' => $bestCoupon->code,
+                'campaign_name' => $bestCoupon->campaign_name,
+                'type' => $bestCoupon->type,
+                'value' => $bestCoupon->value,
+                'formatted_value' => $bestCoupon->type === 'percentage' ? "{$bestCoupon->value}%" : '₦'.number_format($bestCoupon->value / 100, 2),
+            ] : null,
         ]);
     }
 

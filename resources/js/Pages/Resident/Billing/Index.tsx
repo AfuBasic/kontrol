@@ -55,6 +55,14 @@ type Props = {
         next_page_url: string | null;
         total: number;
     };
+    autoAppliedCoupon?: {
+        id: number;
+        code: string;
+        campaign_name: string;
+        type: 'fixed' | 'percentage';
+        value: number;
+        formatted_value: string;
+    } | null;
 };
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
@@ -156,7 +164,7 @@ function StatusBanner({
     );
 }
 
-export default function ResidentBillingPage({ subscription, plans, recentInvoices }: Props) {
+export default function ResidentBillingPage({ subscription, plans, recentInvoices, autoAppliedCoupon }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [payingPlanId, setPayingPlanId] = useState<number | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -165,10 +173,56 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const [appliedCoupons, setAppliedCoupons] = useState<Record<number, { code: string; discount: number; formatted_discount: string; final_amount: number; formatted_final_amount: string }>>({});
     const [couponError, setCouponError] = useState('');
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+    const [isAutoApplied, setIsAutoApplied] = useState(false);
 
     useEffect(() => {
         setIsNative(Capacitor.isNativePlatform());
     }, []);
+
+    useEffect(() => {
+        if (autoAppliedCoupon) {
+            setCouponCode(autoAppliedCoupon.code);
+
+            const autoValidate = async () => {
+                setIsValidatingCoupon(true);
+                try {
+                    const newApplied: typeof appliedCoupons = {};
+                    for (const plan of plans) {
+                        const response = await fetch('/resident/billing/validate-coupon', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                            },
+                            body: JSON.stringify({ code: autoAppliedCoupon.code, plan_id: plan.id }),
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.valid) {
+                            newApplied[plan.id] = {
+                                code: autoAppliedCoupon.code,
+                                discount: data.discount_amount,
+                                formatted_discount: formatCurrency(data.discount_amount),
+                                final_amount: data.final_amount,
+                                formatted_final_amount: formatCurrency(data.final_amount),
+                            };
+                        }
+                    }
+                    if (Object.keys(newApplied).length > 0) {
+                        setAppliedCoupons(newApplied);
+                        setIsAutoApplied(true);
+                    }
+                } catch (e) {
+                    console.error("Auto coupon validation failed:", e);
+                } finally {
+                    setIsValidatingCoupon(false);
+                }
+            };
+
+            autoValidate();
+        }
+    }, [autoAppliedCoupon, plans]);
 
     const isTrialExpired = subscription.status === 'trial' && subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date();
     const isSubscriptionExpired =
@@ -250,6 +304,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         if (!couponCode.trim()) return;
         setIsValidatingCoupon(true);
         setCouponError('');
+        setIsAutoApplied(false);
         try {
             const newApplied: Record<number, any> = {};
             let lastError = '';
@@ -293,6 +348,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         setCouponCode('');
         setAppliedCoupons({});
         setCouponError('');
+        setIsAutoApplied(false);
     };
 
     const handleSubscribe = (planId: number) => {
@@ -458,7 +514,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                             <div className="rounded-2xl bg-emerald-50/50 border border-emerald-100 p-3 flex items-center gap-2">
                                 <TagIcon className="h-4 w-4 text-emerald-600" />
                                 <span className="text-xs font-semibold text-emerald-800">
-                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!
+                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!{isAutoApplied && ' (Auto-applied)'}
                                 </span>
                             </div>
                         )}

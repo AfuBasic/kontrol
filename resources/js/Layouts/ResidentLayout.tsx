@@ -4,7 +4,7 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, LogOut, AlertCircle, Phone } from 'lucide-react';
+import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, LogOut, AlertCircle, Phone, Ticket } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -375,6 +375,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
         ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
+        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/billing', icon: Ticket }] : []),
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
 
@@ -447,6 +448,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Pay Estate Dues', href: '/resident/dues', icon: Wallet },
         { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
+        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/billing', icon: Ticket }] : []),
         { name: 'My Family', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
@@ -484,12 +486,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     <Link
                                         key={item.name}
                                         href={item.href}
-                                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+                                        className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
                                             isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                         }`}
                                     >
-                                        <item.icon className="h-5 w-5" />
-                                        {item.name}
+                                        <div className="flex items-center gap-3">
+                                            <item.icon className="h-5 w-5" />
+                                            {item.name}
+                                        </div>
+                                        {item.name === 'Offers & Coupons' && (
+                                            <span className="relative flex h-2 w-2 shrink-0">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                            </span>
+                                        )}
                                     </Link>
                                 );
                             })}
@@ -609,7 +619,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 onClick={() => setMoreMenuOpen(true)}
                                                 className="group hover:text-slate-650 relative flex flex-1 cursor-pointer flex-col items-center gap-1 text-slate-400"
                                             >
-                                                <div className="rounded-xl p-2.5 transition-all">{item.icon(false)}</div>
+                                                <div className="rounded-xl p-2.5 transition-all relative">
+                                                    {(item.icon as any)(false)}
+                                                    {auth?.user?.has_active_coupons && (
+                                                        <span className="absolute top-1 right-1 flex h-2 w-2">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </button>
                                         );
                                     }
@@ -623,7 +641,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                             <div
                                                 className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                                             >
-                                                {item.icon(isActive)}
+                                                {(item.icon as any)(isActive)}
                                             </div>
                                             {isActive && (
                                                 <motion.div
@@ -671,7 +689,15 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 onClick={() => setMoreMenuOpen(true)}
                                                 className="group relative flex flex-1 flex-col items-center gap-1 text-slate-400 hover:text-slate-600"
                                             >
-                                                <div className="rounded-xl p-2.5 transition-all">{item.icon(false)}</div>
+                                                <div className="rounded-xl p-2.5 transition-all relative">
+                                                    {(item.icon as any)(false)}
+                                                    {auth?.user?.has_active_coupons && (
+                                                        <span className="absolute top-1 right-1 flex h-2 w-2">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </button>
                                         );
                                     }
@@ -685,7 +711,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                             <div
                                                 className={`rounded-xl p-2.5 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                                             >
-                                                {item.icon(isActive)}
+                                                {(item.icon as any)(isActive)}
                                             </div>
                                             {isActive && (
                                                 <motion.div
@@ -751,14 +777,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                             key={item.name}
                                             href={item.href}
                                             onClick={() => setMoreMenuOpen(false)}
-                                            className="flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all hover:bg-slate-50"
+                                            className="flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all hover:bg-slate-50 relative"
                                         >
                                             <div
-                                                className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                                                className={`flex h-12 w-12 items-center justify-center rounded-2xl relative ${
                                                     isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
                                                 }`}
                                             >
                                                 <item.icon className="h-6 w-6" />
+                                                {item.name === 'Offers & Coupons' && (
+                                                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet-500"></span>
+                                                    </span>
+                                                )}
                                             </div>
                                             <span className="text-[10px] leading-tight font-bold text-slate-600">{item.name}</span>
                                         </Link>

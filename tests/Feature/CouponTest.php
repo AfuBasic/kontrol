@@ -232,3 +232,46 @@ test('subscribing with a valid coupon generates a discounted invoice and logs us
     $coupon = Coupon::where('code', 'DISCOUNT50')->firstOrFail();
     expect($coupon->used_count)->toBe(1);
 });
+
+test('resident billing index page has autoAppliedCoupon and shares has_active_coupons', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => null,
+        'status' => 'past_due',
+    ]);
+
+    // Create estate coupon
+    Coupon::create([
+        'campaign_name' => 'Auto Coupon 30',
+        'code' => 'AUTO30',
+        'type' => 'percentage',
+        'value' => 30,
+        'scope' => 'estate',
+        'estate_id' => $estate->id,
+    ]);
+
+    // 1. Visit index page
+    $response = $this->actingAs($resident)
+        ->get(route('resident.billing.index'));
+
+    $response->assertOk();
+
+    // Check that autoAppliedCoupon is present
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/Billing/Index')
+        ->has('autoAppliedCoupon')
+        ->where('autoAppliedCoupon.code', 'AUTO30')
+    );
+
+    // 2. Verify shared Inertia property 'auth.user.has_active_coupons' is true
+    $response->assertInertia(fn ($page) => $page
+        ->where('auth.user.has_active_coupons', true)
+    );
+});
