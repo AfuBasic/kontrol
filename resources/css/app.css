@@ -650,8 +650,9 @@ html.capacitor-native .h-screen {
     height: 100% !important;
 }
 
-/* Fix native iOS WebKit styling and overflow of datetime-local inputs */
-input[type="datetime-local"] {
+/* Fix native iOS WebKit styling and overflow of datetime-local and date inputs */
+input[type="datetime-local"],
+input[type="date"] {
     -webkit-appearance: none;
     appearance: none;
     min-height: 1.5em;

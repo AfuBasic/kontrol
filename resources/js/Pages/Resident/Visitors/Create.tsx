@@ -390,7 +390,7 @@ const CreateAccessCode = () => {
                                                         setScheduleDate(d);
                                                         updateStartsAt(d, scheduleHour, scheduleMinute, scheduleAmpm);
                                                     }}
-                                                    className="w-full min-w-0 rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
+                                                    className="relative w-full min-w-0 rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
                                                 />
                                             </div>
                                         </div>
