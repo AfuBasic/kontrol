@@ -87,6 +87,28 @@ const CreateAccessCode = () => {
 
     const isSchedulingEnabled = true;
 
+    // Custom 12-hour schedule states
+    const [scheduleDate, setScheduleDate] = useState('');
+    const [scheduleHour, setScheduleHour] = useState('12');
+    const [scheduleMinute, setScheduleMinute] = useState('00');
+    const [scheduleAmpm, setScheduleAmpm] = useState('PM');
+
+    const updateStartsAt = (dateStr: string, hr: string, min: string, ampm: string) => {
+        if (!dateStr) {
+            form.setData('starts_at', '');
+            return;
+        }
+        let hVal = parseInt(hr, 10);
+        if (ampm === 'PM' && hVal < 12) {
+            hVal += 12;
+        } else if (ampm === 'AM' && hVal === 12) {
+            hVal = 0;
+        }
+        const hStr = String(hVal).padStart(2, '0');
+        const mStr = min.padStart(2, '0');
+        form.setData('starts_at', `${dateStr}T${hStr}:${mStr}`);
+    };
+
     const now = new Date();
     const minStartsAt = getLocalISOString(now);
     const minExpiresAt = form.data.starts_at || minStartsAt;
@@ -346,36 +368,123 @@ const CreateAccessCode = () => {
 
                                 <div className="space-y-6 rounded-[32px] bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100">
                                     {/* Future Scheduling */}
-                                    <div className="space-y-3">
-                                        <label className="text-[15px] font-black text-slate-900">
-                                            Starts At <span className="font-medium text-slate-400">(Optional)</span>
-                                        </label>
-                                        <p className="text-[13px] leading-snug font-medium text-slate-500">Leave blank for immediate access.</p>
-                                        <div className="relative">
-                                            <CalendarIcon className="pointer-events-none absolute top-[18px] left-4 z-10 h-5 w-5 text-slate-400" />
-                                            <input
-                                                type="datetime-local"
-                                                value={form.data.starts_at}
-                                                min={minStartsAt}
-                                                onChange={(e) => form.setData('starts_at', e.target.value)}
-                                                className={`w-full rounded-2xl bg-slate-50 py-4 pl-12 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900 ${
-                                                    form.data.starts_at ? 'pr-12' : 'pr-4'
-                                                }`}
-                                            />
-                                            {form.data.starts_at && (
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        form.setData('starts_at', '');
-                                                    }}
-                                                    className="absolute top-[18px] right-4 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-slate-500 transition-colors hover:bg-slate-300 hover:text-slate-700 active:scale-95"
-                                                >
-                                                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                                </button>
-                                            )}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[15px] font-black text-slate-900">
+                                                Starts At <span className="font-medium text-slate-400">(Optional)</span>
+                                            </label>
+                                            <p className="text-[13px] leading-snug font-medium text-slate-500">Leave blank for immediate access.</p>
                                         </div>
+
+                                        {/* Date Picker (Calendar) */}
+                                        <div className="space-y-2">
+                                            <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase">Select Date</span>
+                                            <div className="relative">
+                                                <CalendarIcon className="pointer-events-none absolute top-[18px] left-4 z-10 h-5 w-5 text-slate-400" />
+                                                <input
+                                                    type="date"
+                                                    value={scheduleDate}
+                                                    min={minStartsAt.split('T')[0]}
+                                                    onChange={(e) => {
+                                                        const d = e.target.value;
+                                                        setScheduleDate(d);
+                                                        updateStartsAt(d, scheduleHour, scheduleMinute, scheduleAmpm);
+                                                    }}
+                                                    className="w-full rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Time Picker Row (Shown if date is selected) */}
+                                        {scheduleDate && (
+                                            <div className="space-y-2 border-t border-slate-100 pt-4">
+                                                <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase block mb-1">Select Time</span>
+                                                <div className="grid grid-cols-3 gap-2.5">
+                                                    {/* Hour Selection */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hour</label>
+                                                        <div className="relative">
+                                                            <select
+                                                                value={scheduleHour}
+                                                                onChange={(e) => {
+                                                                    const h = e.target.value;
+                                                                    setScheduleHour(h);
+                                                                    updateStartsAt(scheduleDate, h, scheduleMinute, scheduleAmpm);
+                                                                }}
+                                                                className="w-full rounded-2xl bg-slate-50 py-4 px-4 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                            >
+                                                                {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
+                                                                    <option key={h} value={h}>{h}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Minute Selection */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Minute</label>
+                                                        <div className="relative">
+                                                            <select
+                                                                value={scheduleMinute}
+                                                                onChange={(e) => {
+                                                                    const m = e.target.value;
+                                                                    setScheduleMinute(m);
+                                                                    updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
+                                                                }}
+                                                                className="w-full rounded-2xl bg-slate-50 py-4 px-4 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                            >
+                                                                {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => (
+                                                                    <option key={m} value={m}>{m}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* AM / PM Toggle segments */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AM / PM</label>
+                                                        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200 h-[54px] items-center">
+                                                            {(['AM', 'PM'] as const).map((mode) => (
+                                                                <button
+                                                                    key={mode}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setScheduleAmpm(mode);
+                                                                        updateStartsAt(scheduleDate, scheduleHour, scheduleMinute, mode);
+                                                                    }}
+                                                                    className={`rounded-xl py-2 text-xs font-black transition-all ${
+                                                                        scheduleAmpm === mode
+                                                                            ? 'bg-slate-900 text-white shadow-sm'
+                                                                            : 'text-slate-500 hover:text-slate-800'
+                                                                    }`}
+                                                                >
+                                                                    {mode}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Reset/Clear Button */}
+                                        {form.data.starts_at && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setScheduleDate('');
+                                                    setScheduleHour('12');
+                                                    setScheduleMinute('00');
+                                                    setScheduleAmpm('PM');
+                                                    form.setData('starts_at', '');
+                                                }}
+                                                className="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-wider pt-2"
+                                            >
+                                                <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                                Clear Schedule
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Duration / Expires At based on Type */}
