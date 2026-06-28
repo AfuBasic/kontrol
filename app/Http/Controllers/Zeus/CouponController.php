@@ -42,12 +42,41 @@ class CouponController extends Controller
 
         $residents = User::whereHas('roles', function ($query) {
             $query->where('name', 'resident');
-        })->orderBy('name')->get(['id', 'name', 'email']);
+        })->orderBy('name')->limit(20)->get(['id', 'name', 'email']);
 
         return Inertia::render('Zeus/Coupons/Create', [
             'estates' => $estates,
             'residents' => $residents,
         ]);
+    }
+
+    /**
+     * Search residents dynamically for asynchronous select modals.
+     */
+    public function searchResidents(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $query = $request->input('q');
+
+        if (empty($query)) {
+            $residents = User::whereHas('roles', function ($q) {
+                $q->where('name', 'resident');
+            })->orderBy('name')->limit(20)->get(['id', 'name', 'email']);
+
+            return response()->json($residents);
+        }
+
+        $residents = User::whereHas('roles', function ($q) {
+            $q->where('name', 'resident');
+        })
+        ->where(function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+              ->orWhere('email', 'like', "%{$query}%");
+        })
+        ->orderBy('name')
+        ->limit(30)
+        ->get(['id', 'name', 'email']);
+
+        return response()->json($residents);
     }
 
     public function store(Request $request): RedirectResponse

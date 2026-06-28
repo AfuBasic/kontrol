@@ -40,6 +40,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::resource('plans', PlanController::class)->except(['show']);
 
         // Coupons management
+        Route::get('/coupons/search-residents', [CouponController::class, 'searchResidents'])->name('coupons.search-residents');
         Route::resource('coupons', CouponController::class)->only(['index', 'create', 'store', 'destroy']);
 
         // Features management

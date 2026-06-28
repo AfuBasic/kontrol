@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import axios from 'axios';
 import { 
     Globe, 
     Building2, 
@@ -127,12 +128,29 @@ export default function CreateCoupon({ estates, residents }: Props) {
         return estates.filter((e) => e.name.toLowerCase().includes(estateQuery.toLowerCase())).slice(0, 8);
     }, [estates, estateQuery]);
 
-    const filteredResidents = useMemo(() => {
-        if (!residentQuery.trim()) return residents.slice(0, 8);
-        return residents
-            .filter((r) => r.name.toLowerCase().includes(residentQuery.toLowerCase()) || r.email.toLowerCase().includes(residentQuery.toLowerCase()))
-            .slice(0, 8);
-    }, [residents, residentQuery]);
+    // Asynchronous state for residents (handles 5,000+ users gracefully)
+    const [modalResidents, setModalResidents] = useState<Resident[]>(residents);
+    const [isSearchingResidents, setIsSearchingResidents] = useState(false);
+
+    useEffect(() => {
+        if (!isResidentModalOpen) return;
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearchingResidents(true);
+            try {
+                const response = await axios.get('/zeus/coupons/search-residents', {
+                    params: { q: residentQuery }
+                });
+                setModalResidents(response.data);
+            } catch (err) {
+                console.error('Error fetching residents:', err);
+            } finally {
+                setIsSearchingResidents(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [residentQuery, isResidentModalOpen]);
 
     function generateRandomCode() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -847,14 +865,26 @@ export default function CreateCoupon({ estates, residents }: Props) {
                             </div>
 
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                                {filteredResidents.length === 0 ? (
+                                {isSearchingResidents ? (
+                                    <div className="space-y-2">
+                                        {[1, 2, 3].map((n) => (
+                                            <div key={n} className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse">
+                                                <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800" />
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
+                                                    <div className="h-3 w-36 bg-slate-100 dark:bg-slate-800 rounded" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : modalResidents.length === 0 ? (
                                     <div className="py-8 text-center text-slate-400">
                                         <User className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600 mb-2" />
                                         <p className="text-sm font-bold text-slate-800 dark:text-white">No residents found</p>
-                                        <p className="text-xs mt-0.5 text-slate-555">Try a different search term.</p>
+                                        <p className="text-xs mt-0.5 text-slate-500">Try a different search term.</p>
                                     </div>
                                 ) : (
-                                    filteredResidents.map((resident) => (
+                                    modalResidents.map((resident) => (
                                         <div
                                             key={resident.id}
                                             onClick={() => {
