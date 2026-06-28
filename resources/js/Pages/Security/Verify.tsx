@@ -725,6 +725,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     const expiry = formatExpiry(result.expires_at);
     const [countdown, setCountdown] = useState(5);
     const [isPaused, setIsPaused] = useState(false);
+    const isCheckoutPending = result.action === 'checkout_pending';
 
     // Stable ref to avoid timer resetting on state changes
     const onResetRef = useRef(onReset);
@@ -733,7 +734,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     });
 
     useEffect(() => {
-        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || isPaused) {
+        if (!valid || result.status === 'offline_not_found' || result.has_vehicle || isCheckoutPending || isPaused) {
             return;
         }
 
@@ -749,7 +750,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [valid, result.has_vehicle, result.status, isPaused]);
+    }, [valid, result.has_vehicle, result.status, isCheckoutPending, isPaused]);
 
     // Offline state display
     if (result.status === 'offline_not_found') {
@@ -827,8 +828,6 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
             </motion.div>
         );
     }
-
-    const isCheckoutPending = result.action === 'checkout_pending';
 
     // UI state determination
     let themeColor = 'emerald';
