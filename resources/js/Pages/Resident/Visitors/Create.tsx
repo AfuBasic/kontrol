@@ -120,8 +120,8 @@ const CreateAccessCode = () => {
         const payload = {
             ...form.data,
             guest_limit: form.data.guest_limit === '' ? null : Number(form.data.guest_limit),
-            starts_at: form.data.starts_at || null,
-            expires_at: form.data.expires_at || null,
+            starts_at: form.data.starts_at ? new Date(form.data.starts_at).toISOString() : null,
+            expires_at: form.data.expires_at ? new Date(form.data.expires_at).toISOString() : null,
         };
 
         form.transform(() => payload);

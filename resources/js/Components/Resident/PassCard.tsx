@@ -33,7 +33,9 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const isExpired = expiryDate ? expiryDate < new Date() : false;
     const isUsed = pass.status === 'used';
     const isRevoked = pass.status === 'revoked';
+    const isScheduled = pass.status === 'scheduled';
     const isActive = pass.status === 'active' && !isExpired;
+    const isPassActiveOrScheduled = isActive || isScheduled;
 
     // Status styling
     let statusLabel = 'Active Pass';
@@ -52,6 +54,10 @@ export default function PassCard({ pass, qrUrl }: Props) {
         statusLabel = 'Revoked';
         statusIcon = <XCircle className="h-5 w-5 text-slate-600" />;
         statusBg = 'bg-slate-50 text-slate-600 border-slate-200';
+    } else if (isScheduled) {
+        statusLabel = 'Scheduled';
+        statusIcon = <Clock className="h-5 w-5 text-indigo-600" />;
+        statusBg = 'bg-indigo-50 text-indigo-600 border-indigo-100';
     }
 
     const formatFaintExpiry = (iso: string | null, type: string) => {
@@ -134,7 +140,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             <div className="relative flex flex-col items-center justify-center bg-slate-50/50 px-5 py-4">
                 <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 transition-all hover:scale-102">
                     {/* Visual lock status */}
-                    {!isActive && (
+                    {!isPassActiveOrScheduled && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
                             {isUsed ? (
                                 <CheckCircle2 className="mb-1 h-8 w-8 text-emerald-500" strokeWidth={2.5} />
@@ -151,7 +157,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     <img src={qrImageUrl} alt="Access QR Code" className="block h-36 w-36" />
 
                     {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
-                    {isActive && (
+                    {isPassActiveOrScheduled && (
                         <div
                             className="absolute flex items-center justify-center rounded-lg bg-white p-1"
                             style={{ top: '68px', left: '68px', zIndex: 10 }}
@@ -160,7 +166,16 @@ export default function PassCard({ pass, qrUrl }: Props) {
                         </div>
                     )}
                 </div>
-                <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
+                {isScheduled ? (
+                    <div className="mt-2.5 rounded-xl bg-indigo-50/80 px-4 py-1.5 border border-indigo-100/50 text-center">
+                        <p className="text-[10px] font-black text-indigo-700 tracking-wide uppercase">Pass Scheduled</p>
+                        <p className="text-[9px] font-bold text-indigo-600/90 mt-0.5">
+                            Valid from {pass.starts_at ? new Date(pass.starts_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase() : ''}
+                        </p>
+                    </div>
+                ) : (
+                    <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
+                )}
             </div>
 
             {/* Fallback code segment - dotted ticket line separation */}
