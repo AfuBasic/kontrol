@@ -1,6 +1,22 @@
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Head, useForm } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { 
+    Globe, 
+    Building2, 
+    User, 
+    Sparkles, 
+    Percent, 
+    Coins, 
+    Calendar, 
+    Hash, 
+    ArrowLeft,
+    CheckCircle2,
+    Search,
+    X,
+    Clock,
+    Infinity as InfinityIcon
+} from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Estate {
@@ -8,7 +24,7 @@ interface Estate {
     name: string;
 }
 
-interface User {
+interface Resident {
     id: number;
     name: string;
     email: string;
@@ -16,7 +32,7 @@ interface User {
 
 interface Props {
     estates: Estate[];
-    residents: User[];
+    residents: Resident[];
 }
 
 export default function CreateCoupon({ estates, residents }: Props) {
@@ -31,197 +47,610 @@ export default function CreateCoupon({ estates, residents }: Props) {
         usage_limit: '',
     });
 
+    // Helper states for search
+    const [estateQuery, setEstateQuery] = useState('');
+    const [residentQuery, setResidentQuery] = useState('');
+    const [selectedEstateName, setSelectedEstateName] = useState('');
+    const [selectedResidentName, setSelectedResidentName] = useState('');
+
+    // Toggle states for optional fields
+    const [hasExpiry, setHasExpiry] = useState(false);
+    const [hasLimit, setHasLimit] = useState(false);
+
+    // Code generate animation trigger
+    const [codeTrigger, setCodeTrigger] = useState(false);
+
+    // Filtered lists
+    const filteredEstates = useMemo(() => {
+        if (!estateQuery.trim()) return [];
+        return estates.filter(e => e.name.toLowerCase().includes(estateQuery.toLowerCase())).slice(0, 5);
+    }, [estates, estateQuery]);
+
+    const filteredResidents = useMemo(() => {
+        if (!residentQuery.trim()) return [];
+        return residents.filter(r => 
+            r.name.toLowerCase().includes(residentQuery.toLowerCase()) || 
+            r.email.toLowerCase().includes(residentQuery.toLowerCase())
+        ).slice(0, 5);
+    }, [residents, residentQuery]);
+
     function generateRandomCode() {
+        const prefixes = ['ZEU', 'PROMO', 'VIP', 'SAVE', 'KONTROL'];
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = 'ZEU-';
-        for (let i = 0; i < 6; i++) {
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        let code = `${prefix}-`;
+        for (let i = 0; i < 5; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
+        
         setData('code', code);
+        setCodeTrigger(true);
+        setTimeout(() => setCodeTrigger(false), 500);
+    }
+
+    function selectEstate(estate: Estate) {
+        setData('estate_id', estate.id.toString());
+        setSelectedEstateName(estate.name);
+        setEstateQuery('');
+    }
+
+    function clearEstateSelection() {
+        setData('estate_id', '');
+        setSelectedEstateName('');
+    }
+
+    function selectResident(resident: Resident) {
+        setData('user_id', resident.id.toString());
+        setSelectedResidentName(`${resident.name} (${resident.email})`);
+        setResidentQuery('');
+    }
+
+    function clearResidentSelection() {
+        setData('user_id', '');
+        setSelectedResidentName('');
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        
+        // Build payload based on options selected
+        const payload = { ...data };
+        if (!hasExpiry) payload.expires_at = '';
+        if (!hasLimit) payload.usage_limit = '';
+        
         post('/zeus/coupons');
     }
+
+    // Quick Select value sets
+    const quickPercentages = [5, 10, 15, 20, 25, 50];
+    const quickFixedValues = [500, 1000, 2000, 5000];
+
+    const scopes = [
+        {
+            id: 'global',
+            title: 'Global',
+            description: 'Valid for all estates & residents on the platform',
+            icon: Globe,
+            gradient: 'from-indigo-500/10 to-purple-500/10 text-indigo-400 border-indigo-500/20'
+        },
+        {
+            id: 'estate',
+            title: 'Estate Level',
+            description: 'Apply discount to all residents of a selected estate',
+            icon: Building2,
+            gradient: 'from-emerald-500/10 to-teal-500/10 text-emerald-400 border-emerald-500/20'
+        },
+        {
+            id: 'resident',
+            title: 'Resident Level',
+            description: 'Grant exclusive discount to a specific resident account',
+            icon: User,
+            gradient: 'from-purple-500/10 to-pink-500/10 text-purple-400 border-purple-500/20'
+        }
+    ];
 
     return (
         <ZeusLayout>
             <Head title="Create Coupon" />
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 0.5 }} 
-                className="max-w-2xl"
-            >
-                <a href="/zeus/coupons" className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700">
-                    <ChevronLeftIcon className="h-4 w-4" /> Back to Coupons
-                </a>
+            {/* Premium Decorative Glow */}
+            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-[130px] pointer-events-none animate-pulse duration-[8000ms]" />
+            <div className="absolute bottom-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-full blur-[110px] pointer-events-none" />
 
-                <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
-                    <h1 className="mb-2 text-3xl font-black text-slate-900 dark:text-white">Create Coupon</h1>
-                    <p className="mb-8 text-sm font-medium text-slate-500 dark:text-slate-400">Add a new subscription coupon to your platform</p>
+            <div className="relative mx-auto max-w-4xl px-4 py-8">
+                {/* Back button */}
+                <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="mb-8"
+                >
+                    <a 
+                        href="/zeus/coupons" 
+                        className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-all group"
+                    >
+                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                        Back to Coupons
+                    </a>
+                </motion.div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid gap-6 sm:grid-cols-2">
+                {/* Header */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-10"
+                >
+                    <div className="mb-2 flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.6)]" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 dark:text-indigo-400">Campaigns Engine</span>
+                    </div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                        Create <span className="font-light text-slate-400">Coupon</span>
+                    </h1>
+                    <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+                        Design a targeted platform incentive. Distribute custom percentage or fixed-amount discounts mapped to estates, individual users, or global audiences.
+                    </p>
+                </motion.div>
+
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    
+                    {/* SECTION 1: BLUEPRINT */}
+                    <motion.section 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-3xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0f1423] p-8 shadow-xs dark:shadow-2xl"
+                    >
+                        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
+                                <Sparkles className="h-4 w-4" />
+                            </span>
+                            Coupon Blueprint
+                        </h2>
+
+                        <div className="grid gap-6 md:grid-cols-2">
                             {/* Code Input */}
                             <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Coupon Code</label>
-                                <div className="flex gap-2">
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Coupon Code</label>
+                                <motion.div 
+                                    animate={codeTrigger ? { scale: [1, 1.02, 1] } : {}}
+                                    className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all"
+                                >
                                     <input
                                         type="text"
                                         value={data.code}
                                         onChange={e => setData('code', e.target.value.toUpperCase())}
-                                        placeholder="ZEU-SUMMER"
-                                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm uppercase font-mono tracking-wider text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                        placeholder="e.g. ZEU-SUMMER"
+                                        className="w-full bg-transparent px-4 py-3.5 text-sm uppercase font-mono tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                                     />
                                     <button
                                         type="button"
                                         onClick={generateRandomCode}
-                                        className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                                        className="flex items-center gap-1.5 px-4 bg-slate-100 dark:bg-slate-800/40 text-xs font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 border-l border-slate-200 dark:border-slate-800 transition cursor-pointer"
                                     >
-                                        Auto
+                                        <Sparkles className="h-3.5 w-3.5 animate-spin-slow" /> Auto
                                     </button>
-                                </div>
-                                {errors.code && <p className="mt-1 text-sm text-red-600">{errors.code}</p>}
+                                </motion.div>
+                                {errors.code && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.code}</p>}
                             </div>
 
-                            {/* Type Selector */}
+                            {/* Discount Type */}
                             <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Discount Type</label>
-                                <select
-                                    value={data.type}
-                                    onChange={e => setData('type', e.target.value as 'percentage' | 'fixed')}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                >
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount (₦)</option>
-                                </select>
-                                {errors.type && <p className="mt-1 text-sm text-red-600">{errors.type}</p>}
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Discount Type</label>
+                                <div className="grid grid-cols-2 gap-2 bg-slate-100/80 dark:bg-[#080b13] p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setData(d => ({ ...d, type: 'percentage', value: '' }));
+                                        }}
+                                        className={`rounded-lg py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            data.type === 'percentage'
+                                                ? 'bg-indigo-600 text-white shadow-sm'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                                        }`}
+                                    >
+                                        <Percent className="h-3.5 w-3.5" /> Percentage
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setData(d => ({ ...d, type: 'fixed', value: '' }));
+                                        }}
+                                        className={`rounded-lg py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            data.type === 'fixed'
+                                                ? 'bg-indigo-600 text-white shadow-sm'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                                        }`}
+                                    >
+                                        <Coins className="h-3.5 w-3.5" /> Fixed (₦)
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            {/* Discount Value */}
-                            <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                        {/* Value Input */}
+                        <div className="mt-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     Discount Value {data.type === 'percentage' ? '(%)' : '(₦)'}
                                 </label>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">
+                                    {data.type === 'percentage' ? 'Max 100%' : 'Amount in Naira'}
+                                </span>
+                            </div>
+                            <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                <span className="flex items-center pl-4 pr-2 text-slate-400 font-black text-sm">
+                                    {data.type === 'percentage' ? '%' : '₦'}
+                                </span>
                                 <input
                                     type="number"
                                     value={data.value}
                                     onChange={e => setData('value', e.target.value)}
-                                    placeholder={data.type === 'percentage' ? '15' : '500'}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                    placeholder={data.type === 'percentage' ? '15' : '1000'}
+                                    className="w-full bg-transparent py-3.5 pr-4 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                                 />
-                                {errors.value && <p className="mt-1 text-sm text-red-600">{errors.value}</p>}
                             </div>
+                            {errors.value && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.value}</p>}
 
-                            {/* Target Scope */}
-                            <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Target Scope</label>
-                                <select
-                                    value={data.scope}
-                                    onChange={e => {
-                                        setData(d => ({
-                                            ...d,
-                                            scope: e.target.value,
-                                            estate_id: '',
-                                            user_id: ''
-                                        }));
-                                    }}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                >
-                                    <option value="global">Global (All Residents)</option>
-                                    <option value="estate">Estate Level (Specific Estate)</option>
-                                    <option value="resident">Resident Level (Specific Resident)</option>
-                                </select>
-                                {errors.scope && <p className="mt-1 text-sm text-red-600">{errors.scope}</p>}
+                            {/* Quick Select Buttons */}
+                            <div className="mt-3 flex flex-wrap gap-2 items-center">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Quick Select:</span>
+                                {data.type === 'percentage' ? (
+                                    quickPercentages.map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setData('value', val.toString())}
+                                            className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-500 transition cursor-pointer"
+                                        >
+                                            {val}%
+                                        </button>
+                                    ))
+                                ) : (
+                                    quickFixedValues.map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setData('value', val.toString())}
+                                            className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-500 transition cursor-pointer"
+                                        >
+                                            ₦{val.toLocaleString()}
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </div>
+                    </motion.section>
 
-                        {/* Estate Selector */}
-                        {data.scope === 'estate' && (
-                            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Target Estate</label>
-                                <select
-                                    value={data.estate_id}
-                                    onChange={e => setData('estate_id', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                >
-                                    <option value="">Select Target Estate...</option>
-                                    {estates.map(estate => (
-                                        <option key={estate.id} value={estate.id}>{estate.name}</option>
-                                    ))}
-                                </select>
-                                {errors.estate_id && <p className="mt-1 text-sm text-red-600">{errors.estate_id}</p>}
-                            </motion.div>
-                        )}
+                    {/* SECTION 2: TARGET AUDIENCE */}
+                    <motion.section 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-3xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0f1423] p-8 shadow-xs dark:shadow-2xl"
+                    >
+                        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
+                                <Globe className="h-4 w-4" />
+                            </span>
+                            Target Audience Scope
+                        </h2>
+                        <p className="text-xs text-slate-400 mb-6 font-medium">Map this incentive to a specific audience group or user category.</p>
 
-                        {/* Resident Selector */}
-                        {data.scope === 'resident' && (
-                            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Target Resident</label>
-                                <select
-                                    value={data.user_id}
-                                    onChange={e => setData('user_id', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                >
-                                    <option value="">Select Target Resident...</option>
-                                    {residents.map(resident => (
-                                        <option key={resident.id} value={resident.id}>{resident.name} ({resident.email})</option>
-                                    ))}
-                                </select>
-                                {errors.user_id && <p className="mt-1 text-sm text-red-600">{errors.user_id}</p>}
-                            </motion.div>
-                        )}
-
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            {/* Expiration Date */}
-                            <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Expires At (Optional)</label>
-                                <input
-                                    type="date"
-                                    value={data.expires_at}
-                                    onChange={e => setData('expires_at', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                />
-                                {errors.expires_at && <p className="mt-1 text-sm text-red-600">{errors.expires_at}</p>}
-                            </div>
-
-                            {/* Usage Limit */}
-                            <div>
-                                <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Usage Limit (Optional)</label>
-                                <input
-                                    type="number"
-                                    value={data.usage_limit}
-                                    onChange={e => setData('usage_limit', e.target.value)}
-                                    placeholder="100"
-                                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                />
-                                {errors.usage_limit && <p className="mt-1 text-sm text-red-600">{errors.usage_limit}</p>}
-                            </div>
+                        {/* Interactive Scope Selection Cards */}
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {scopes.map(scope => {
+                                const Icon = scope.icon;
+                                const isSelected = data.scope === scope.id;
+                                return (
+                                    <button
+                                        key={scope.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setData(d => ({
+                                                ...d,
+                                                scope: scope.id,
+                                                estate_id: '',
+                                                user_id: ''
+                                            }));
+                                            clearEstateSelection();
+                                            clearResidentSelection();
+                                        }}
+                                        className={`relative flex flex-col text-left p-5 rounded-2xl border-2 transition-all group cursor-pointer ${
+                                            isSelected 
+                                                ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-md shadow-indigo-500/5' 
+                                                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] hover:border-slate-300 dark:hover:border-slate-700'
+                                        }`}
+                                    >
+                                        <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${scope.gradient}`}>
+                                            <Icon className="h-5 w-5" />
+                                        </div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
+                                            {scope.title}
+                                        </h3>
+                                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                            {scope.description}
+                                        </p>
+                                        {isSelected && (
+                                            <span className="absolute top-4 right-4 text-indigo-500">
+                                                <CheckCircle2 className="h-5 w-5 text-indigo-500 dark:text-indigo-400 bg-white dark:bg-[#0f1423] rounded-full" />
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
 
-                        <div className="flex gap-3 border-t border-slate-100 dark:border-slate-800/50 pt-6">
-                            <a
-                                href="/zeus/coupons"
-                                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-6 py-3 text-center text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
-                            >
-                                Cancel
-                            </a>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60 cursor-pointer"
-                            >
-                                {processing ? 'Creating...' : 'Create Coupon'}
-                            </button>
+                        {/* Interactive Autocomplete search lists */}
+                        <AnimatePresence mode="wait">
+                            {data.scope === 'estate' && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0, marginTop: 0 }} 
+                                    animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Search & Select Estate</label>
+                                    
+                                    {selectedEstateName ? (
+                                        <div className="flex items-center justify-between rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 px-4 py-3.5">
+                                            <div className="flex items-center gap-2">
+                                                <Building2 className="h-4 w-4 text-indigo-500" />
+                                                <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">{selectedEstateName}</span>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={clearEstateSelection}
+                                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                                <span className="flex items-center pl-4 text-slate-400">
+                                                    <Search className="h-4 w-4" />
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={estateQuery}
+                                                    onChange={e => setEstateQuery(e.target.value)}
+                                                    placeholder="Type estate name to search..."
+                                                    className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                                                />
+                                            </div>
+
+                                            {/* Autocomplete Dropdown list */}
+                                            {filteredEstates.length > 0 && (
+                                                <div className="absolute z-20 left-0 right-0 mt-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-lg overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/60 max-h-60 overflow-y-auto">
+                                                    {filteredEstates.map(estate => (
+                                                        <div
+                                                            key={estate.id}
+                                                            onClick={() => selectEstate(estate)}
+                                                            className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition"
+                                                        >
+                                                            <Building2 className="h-4 w-4 text-slate-400" />
+                                                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{estate.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {errors.estate_id && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.estate_id}</p>}
+                                </motion.div>
+                            )}
+
+                            {data.scope === 'resident' && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0, marginTop: 0 }} 
+                                    animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Search & Select Resident</label>
+                                    
+                                    {selectedResidentName ? (
+                                        <div className="flex items-center justify-between rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 px-4 py-3.5">
+                                            <div className="flex items-center gap-2">
+                                                <User className="h-4 w-4 text-indigo-500" />
+                                                <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">{selectedResidentName}</span>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={clearResidentSelection}
+                                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                                <span className="flex items-center pl-4 text-slate-400">
+                                                    <Search className="h-4 w-4" />
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={residentQuery}
+                                                    onChange={e => setResidentQuery(e.target.value)}
+                                                    placeholder="Type resident name or email to search..."
+                                                    className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                                                />
+                                            </div>
+
+                                            {/* Autocomplete list */}
+                                            {filteredResidents.length > 0 && (
+                                                <div className="absolute z-20 left-0 right-0 mt-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-lg overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/60 max-h-60 overflow-y-auto">
+                                                    {filteredResidents.map(resident => (
+                                                        <div
+                                                            key={resident.id}
+                                                            onClick={() => selectResident(resident)}
+                                                            className="flex flex-col px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition text-left"
+                                                        >
+                                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{resident.name}</span>
+                                                            <span className="text-xs text-slate-500 dark:text-slate-555 mt-0.5">{resident.email}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {errors.user_id && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.user_id}</p>}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.section>
+
+                    {/* SECTION 3: LIFE & LIMITS */}
+                    <motion.section 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-3xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0f1423] p-8 shadow-xs dark:shadow-2xl"
+                    >
+                        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-500/10 text-purple-500 dark:text-purple-400">
+                                <Clock className="h-4 w-4" />
+                            </span>
+                            Constraints & Limits
+                        </h2>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {/* Toggleable Expiration */}
+                            <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/30 dark:bg-[#080b13] p-5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Expiration Date</h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Determine if coupon should auto-expire.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setHasExpiry(!hasExpiry);
+                                            setData('expires_at', '');
+                                        }}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
+                                            hasExpiry ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
+                                        }`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                            hasExpiry ? 'translate-x-6' : 'translate-x-1'
+                                        }`} />
+                                    </button>
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                    {hasExpiry ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                                <span className="flex items-center pl-4 text-slate-400">
+                                                    <Calendar className="h-4 w-4" />
+                                                </span>
+                                                <input
+                                                    type="date"
+                                                    value={data.expires_at}
+                                                    onChange={e => setData('expires_at', e.target.value)}
+                                                    className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none"
+                                                />
+                                            </div>
+                                            {errors.expires_at && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.expires_at}</p>}
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-2"
+                                        >
+                                            <InfinityIcon className="h-4 w-4" /> Coupon lifespan is permanent
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Toggleable Limit */}
+                            <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/30 dark:bg-[#080b13] p-5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Usage Limit</h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Limit total number of times used.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setHasLimit(!hasLimit);
+                                            setData('usage_limit', '');
+                                        }}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
+                                            hasLimit ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
+                                        }`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                            hasLimit ? 'translate-x-6' : 'translate-x-1'
+                                        }`} />
+                                    </button>
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                    {hasLimit ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="relative flex rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                                                <span className="flex items-center pl-4 text-slate-400">
+                                                    <Hash className="h-4 w-4" />
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    value={data.usage_limit}
+                                                    onChange={e => setData('usage_limit', e.target.value)}
+                                                    placeholder="e.g. 100"
+                                                    className="w-full bg-transparent px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none"
+                                                />
+                                            </div>
+                                            {errors.usage_limit && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.usage_limit}</p>}
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-2"
+                                        >
+                                            <InfinityIcon className="h-4 w-4" /> Unlimited redemption uses
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
-                    </form>
-                </div>
-            </motion.div>
+                    </motion.section>
+
+                    {/* Actions buttons */}
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex gap-4 border-t border-slate-100 dark:border-slate-800/80 pt-6"
+                    >
+                        <a
+                            href="/zeus/coupons"
+                            className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-4 text-center text-sm font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+                        >
+                            Cancel
+                        </a>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="flex-1 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/25 dark:shadow-indigo-500/10 transition hover:shadow-xl active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                        >
+                            {processing ? 'Launching campaign...' : 'Launch Coupon'}
+                        </button>
+                    </motion.div>
+                </form>
+            </div>
         </ZeusLayout>
     );
 }
