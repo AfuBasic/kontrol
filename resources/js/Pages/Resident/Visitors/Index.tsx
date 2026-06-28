@@ -294,7 +294,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                 {/* 6. ACTIVE VISITORS */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Active Visitors</h3>
+                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Active Passes</h3>
                         {activePasses.length > 0 && (
                             <span className="flex h-5 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 px-2.5 text-[10px] font-black text-emerald-600 uppercase">
                                 {activePasses.length} Authorized
