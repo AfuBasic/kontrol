@@ -274,7 +274,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                 >
                     <div className="mb-2 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.6)]" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 dark:text-indigo-400">Campaigns Engine</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 dark:text-indigo-400">Coupon Manager</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
                         Create <span className="font-light text-slate-400">Coupon</span>
@@ -717,7 +717,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
                             disabled={processing}
                             className="flex-1 rounded-2xl bg-linear-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/25 dark:shadow-indigo-500/10 transition hover:shadow-xl active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                         >
-                            {processing ? 'Launching campaign...' : 'Launch Coupon'}
+                            {processing ? 'Creating coupon...' : 'Create Coupon'}
                         </button>
                     </motion.div>
                 </form>

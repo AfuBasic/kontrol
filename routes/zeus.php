@@ -41,7 +41,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
 
         // Coupons management
         Route::get('/coupons/search-residents', [CouponController::class, 'searchResidents'])->name('coupons.search-residents');
-        Route::resource('coupons', CouponController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::resource('coupons', CouponController::class)->only(['index', 'show', 'create', 'store', 'destroy']);
 
         // Features management
         Route::get('/features', [FeatureController::class, 'index'])->name('features.index');
