@@ -379,7 +379,7 @@ const CreateAccessCode = () => {
                                         {/* Date Picker (Calendar) */}
                                         <div className="space-y-2">
                                             <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase">Select Date</span>
-                                            <div className="relative">
+                                            <div className="relative w-full">
                                                 <CalendarIcon className="pointer-events-none absolute top-[18px] left-4 z-10 h-5 w-5 text-slate-400" />
                                                 <input
                                                     type="date"
@@ -390,7 +390,7 @@ const CreateAccessCode = () => {
                                                         setScheduleDate(d);
                                                         updateStartsAt(d, scheduleHour, scheduleMinute, scheduleAmpm);
                                                     }}
-                                                    className="w-full rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
+                                                    className="w-full min-w-0 rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
                                                 />
                                             </div>
                                         </div>
@@ -399,11 +399,11 @@ const CreateAccessCode = () => {
                                         {scheduleDate && (
                                             <div className="space-y-2 border-t border-slate-100 pt-4">
                                                 <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase block mb-1">Select Time</span>
-                                                <div className="grid grid-cols-3 gap-2.5">
+                                                <div className="grid grid-cols-3 gap-2">
                                                     {/* Hour Selection */}
-                                                    <div className="flex flex-col gap-1">
+                                                    <div className="flex flex-col gap-1 min-w-0">
                                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hour</label>
-                                                        <div className="relative">
+                                                        <div className="relative w-full">
                                                             <select
                                                                 value={scheduleHour}
                                                                 onChange={(e) => {
@@ -411,7 +411,7 @@ const CreateAccessCode = () => {
                                                                     setScheduleHour(h);
                                                                     updateStartsAt(scheduleDate, h, scheduleMinute, scheduleAmpm);
                                                                 }}
-                                                                className="w-full rounded-2xl bg-slate-50 py-4 px-4 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                                className="w-full min-w-0 rounded-2xl bg-slate-50 py-3.5 px-3 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
                                                             >
                                                                 {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
                                                                     <option key={h} value={h}>{h}</option>
@@ -421,9 +421,9 @@ const CreateAccessCode = () => {
                                                     </div>
 
                                                     {/* Minute Selection */}
-                                                    <div className="flex flex-col gap-1">
+                                                    <div className="flex flex-col gap-1 min-w-0">
                                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Minute</label>
-                                                        <div className="relative">
+                                                        <div className="relative w-full">
                                                             <select
                                                                 value={scheduleMinute}
                                                                 onChange={(e) => {
@@ -431,7 +431,7 @@ const CreateAccessCode = () => {
                                                                     setScheduleMinute(m);
                                                                     updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
                                                                 }}
-                                                                className="w-full rounded-2xl bg-slate-50 py-4 px-4 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                                className="w-full min-w-0 rounded-2xl bg-slate-50 py-3.5 px-3 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
                                                             >
                                                                 {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => (
                                                                     <option key={m} value={m}>{m}</option>
@@ -441,9 +441,9 @@ const CreateAccessCode = () => {
                                                     </div>
 
                                                     {/* AM / PM Toggle segments */}
-                                                    <div className="flex flex-col gap-1">
+                                                    <div className="flex flex-col gap-1 min-w-0">
                                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AM / PM</label>
-                                                        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200 h-[54px] items-center">
+                                                        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200 h-[50px] items-center">
                                                             {(['AM', 'PM'] as const).map((mode) => (
                                                                 <button
                                                                     key={mode}
