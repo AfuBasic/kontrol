@@ -36,13 +36,26 @@ class Coupon extends Model
         'expires_at',
         'usage_limit',
         'used_count',
+        'description',
+        'internal_notes',
+        'campaign_name',
+        'marketing_tag',
+        'creator_id',
+        'status',
+        'eligible_plans',
+        'min_purchase',
+        'starts_at',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'starts_at' => 'datetime',
         'value' => 'integer',
+        'min_purchase' => 'integer',
         'usage_limit' => 'integer',
         'used_count' => 'integer',
+        'eligible_plans' => 'array',
+        'creator_id' => 'integer',
     ];
 
     /**
@@ -59,6 +72,14 @@ class Coupon extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the user who created this coupon.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     /**
@@ -83,6 +104,14 @@ class Coupon extends Model
     public function isLimitReached(): bool
     {
         return $this->usage_limit !== null && $this->used_count >= $this->usage_limit;
+    }
+
+    /**
+     * Determine if the coupon is scheduled to start in the future.
+     */
+    public function isScheduled(): bool
+    {
+        return $this->starts_at !== null && $this->starts_at->isFuture();
     }
 
     /**
