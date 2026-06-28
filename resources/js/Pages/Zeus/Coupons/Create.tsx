@@ -119,12 +119,12 @@ export default function CreateCoupon({ estates, residents }: Props) {
 
     // Filtered lists
     const filteredEstates = useMemo(() => {
-        if (!estateQuery.trim()) return [];
+        if (!estateQuery.trim()) return estates.slice(0, 5);
         return estates.filter((e) => e.name.toLowerCase().includes(estateQuery.toLowerCase())).slice(0, 5);
     }, [estates, estateQuery]);
 
     const filteredResidents = useMemo(() => {
-        if (!residentQuery.trim()) return [];
+        if (!residentQuery.trim()) return residents.slice(0, 5);
         return residents
             .filter((r) => r.name.toLowerCase().includes(residentQuery.toLowerCase()) || r.email.toLowerCase().includes(residentQuery.toLowerCase()))
             .slice(0, 5);
