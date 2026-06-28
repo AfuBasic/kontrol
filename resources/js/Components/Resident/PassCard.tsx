@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Clock, ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 
 export interface PassData {
@@ -34,7 +34,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const isExpired = expiryDate ? expiryDate < new Date() : false;
     const isUsed = pass.status === 'used';
     const isRevoked = pass.status === 'revoked';
-    
+
     const startsAtDate = pass.starts_at ? new Date(pass.starts_at) : null;
     const isFutureStart = startsAtDate ? startsAtDate > new Date() : false;
     const isScheduled = pass.status === 'scheduled' && isFutureStart;
@@ -69,11 +69,13 @@ export default function PassCard({ pass, qrUrl }: Props) {
         const date = new Date(iso);
         const now = new Date();
 
-        const timeStr = date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-        }).toLowerCase();
+        const timeStr = date
+            .toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+            })
+            .toLowerCase();
 
         const isToday = date.toDateString() === now.toDateString();
         const tomorrow = new Date(now);
@@ -201,11 +203,9 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     )}
                 </div>
                 {isScheduled ? (
-                    <div className="mt-2.5 rounded-xl bg-indigo-50/80 px-4 py-1.5 border border-indigo-100/50 text-center">
-                        <p className="text-[10px] font-black text-indigo-700 tracking-wide uppercase">Pass Scheduled</p>
-                        <p className="text-[9px] font-bold text-indigo-600/90 mt-0.5">
-                            {formatSmartStartsAt(pass.starts_at)}
-                        </p>
+                    <div className="mt-2.5 rounded-xl border border-indigo-100/50 bg-indigo-50/80 px-4 py-1.5 text-center">
+                        <p className="text-[10px] font-black tracking-wide text-indigo-700 uppercase">Pass Scheduled</p>
+                        <p className="mt-0.5 text-[9px] font-bold text-indigo-600/90">{formatSmartStartsAt(pass.starts_at)}</p>
                     </div>
                 ) : (
                     <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
