@@ -75,9 +75,18 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     const [showOptions, setShowOptions] = useState(false);
 
     // Compute effective status based on timestamps
-    const isExpired = code.expires_at ? new Date(code.expires_at) < new Date() : false;
-    const isFuture = code.starts_at ? new Date(code.starts_at) > new Date() : false;
-    const effectiveStatus = code.status === 'active' && isExpired ? 'expired' : code.status === 'active' && isFuture ? 'scheduled' : code.status;
+    const now = new Date();
+    const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
+    const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
+    
+    let tempStatus = code.status;
+    if (code.status === 'scheduled' && !isFuture) {
+        tempStatus = 'active';
+    } else if (code.status === 'active' && isFuture) {
+        tempStatus = 'scheduled';
+    }
+    
+    const effectiveStatus = tempStatus === 'active' && isExpired ? 'expired' : tempStatus;
     const status = getStatusInfo(effectiveStatus);
     const typeInfo = getPassTypeDetails(code.type);
 

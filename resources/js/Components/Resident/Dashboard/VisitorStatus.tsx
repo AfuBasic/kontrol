@@ -78,7 +78,13 @@ function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
                 <div className="flex-1 overflow-hidden">
                     <h4 className="truncate text-base font-bold text-slate-900">{code.visitor_name || 'Guest'}</h4>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                        <span className="rounded-md bg-slate-50 px-2 py-0.5 border border-slate-100 font-black uppercase text-[9px] tracking-wider text-slate-500">
+                        <span className={`rounded-md px-2 py-0.5 border font-black uppercase text-[9px] tracking-wider ${
+                            code.type === 'single_use'
+                                ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                : code.type === 'event'
+                                  ? 'bg-violet-50 text-violet-600 border-violet-100'
+                                  : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        }`}>
                             {code.type === 'single_use' ? 'One-Time' : code.type === 'event' ? 'Event' : 'Recurring'}
                         </span>
                         {code.status === 'used' && code.used_at && (

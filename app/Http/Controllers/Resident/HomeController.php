@@ -56,6 +56,7 @@ class HomeController extends Controller
             'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [
                 'id' => $code->id,
                 'code' => $code->code,
+                'type' => $code->type,
                 'visitor_name' => $code->visitor_name,
                 'visitor_phone' => $code->visitor_phone,
                 'purpose' => $code->purpose,
