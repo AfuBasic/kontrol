@@ -3,6 +3,7 @@
 use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
@@ -229,6 +230,9 @@ test('subscribing with a valid coupon generates a discounted invoice and logs us
         'discount_amount' => 7500,
     ]);
 
+    $transaction = PaymentTransaction::where('paystack_reference', 'test-ref-coupon')->firstOrFail();
+    expect($transaction->metadata['coupon_code'])->toBe('DISCOUNT50');
+
     $coupon = Coupon::where('code', 'DISCOUNT50')->firstOrFail();
     expect($coupon->used_count)->toBe(1);
 });
@@ -346,13 +350,13 @@ test('zeus admin can create coupons for multiple residents', function () {
     $response->assertRedirect(route('zeus.coupons.index'));
 
     $this->assertDatabaseHas('coupons', [
-        'code' => 'MULTI50-' . $resident1->id,
+        'code' => 'MULTI50-'.$resident1->id,
         'user_id' => $resident1->id,
         'value' => 50,
     ]);
 
     $this->assertDatabaseHas('coupons', [
-        'code' => 'MULTI50-' . $resident2->id,
+        'code' => 'MULTI50-'.$resident2->id,
         'user_id' => $resident2->id,
         'value' => 50,
     ]);
@@ -363,7 +367,7 @@ test('coupon validation fails if the coupon is not eligible for the plan', funct
     $resident = User::factory()->create();
     $plan1 = Plan::factory()->create(['price' => 5000]);
     $plan2 = Plan::factory()->create(['price' => 10000]);
-    
+
     setPermissionsTeamId($estate->id);
     $resident->assignRole('resident');
     $resident->estates()->attach($estate->id, ['status' => 'accepted']);

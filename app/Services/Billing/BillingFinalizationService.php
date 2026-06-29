@@ -104,6 +104,12 @@ class BillingFinalizationService
 
     private function ensureTransactionRecorded(Invoice $invoice, array $paymentData): void
     {
+        $invoiceMetadata = $invoice->metadata ?? [];
+        $transactionMetadata = array_merge(
+            $paymentData['metadata'] ?? [],
+            ! empty($invoiceMetadata['coupon_code']) ? ['coupon_code' => $invoiceMetadata['coupon_code']] : []
+        );
+
         PaymentTransaction::updateOrCreate(
             ['paystack_reference' => $paymentData['reference'] ?? $invoice->paystack_reference],
             [
@@ -117,6 +123,7 @@ class BillingFinalizationService
                 'idempotency_key' => 'payment_'.($paymentData['reference'] ?? $invoice->paystack_reference),
                 'verified_at' => now(),
                 'recorded_at' => now(),
+                'metadata' => $transactionMetadata,
             ]
         );
     }
