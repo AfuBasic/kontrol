@@ -770,7 +770,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                             </div>
 
                             {/* Plan Constraints */}
-                            <div className="mt-8 border-t border-slate-100 dark:border-slate-800/80 pt-6">
+                            <div className="mt-8 border-t border-slate-100 dark:border-slate-800/80 pt-6 md:col-span-2">
                                 <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Plan Constraints</h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Choose if this coupon works with a specific plan or all plans.</p>
                                 
@@ -812,20 +812,20 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                             className="overflow-hidden border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2"
                                         >
                                             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Select Eligible Plans</label>
-                                            <div className="space-y-3 max-w-xl">
+                                            <div className="grid gap-3 sm:grid-cols-3">
                                                 {plans.map(plan => {
                                                     const isChecked = data.eligible_plans.includes(plan.id.toString());
                                                     const intervalLabel = plan.billing_interval === 'quarterly' ? 'Quarterly' : plan.billing_interval === 'semi-annually' ? 'Semi-Annual' : 'Annual';
                                                     return (
                                                         <label
                                                             key={plan.id}
-                                                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer select-none ${
+                                                            className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${
                                                                 isChecked
                                                                     ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20'
-                                                                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] hover:bg-slate-50 dark:hover:bg-slate-850'
+                                                                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] hover:bg-slate-50 dark:hover:bg-slate-800'
                                                             }`}
                                                         >
-                                                            <div className="flex items-center gap-3">
+                                                            <div className="pt-0.5">
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={isChecked}
@@ -846,14 +846,11 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                                 }`}>
                                                                     {isChecked && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
                                                                 </div>
-                                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{plan.name}</span>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <span className="text-sm font-black text-slate-900 dark:text-white">
-                                                                    ₦{(plan.price / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })}
-                                                                </span>
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block mt-0.5">
-                                                                    {intervalLabel} billing
+                                                            <div>
+                                                                <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">{plan.name}</span>
+                                                                <span className="block text-[10px] text-slate-400 mt-1 font-medium">
+                                                                    ₦{(plan.price / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })} · {intervalLabel}
                                                                 </span>
                                                             </div>
                                                         </label>
