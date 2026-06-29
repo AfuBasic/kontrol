@@ -78,17 +78,17 @@ function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
                 <div className="flex-1 overflow-hidden">
                     <h4 className="truncate text-base font-bold text-slate-900">{code.visitor_name || 'Guest'}</h4>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                        <span className="rounded-md bg-slate-50 px-2 py-0.5 border border-slate-100 font-bold uppercase text-[9px] tracking-wider text-slate-500">
+                        <span className="rounded-md bg-slate-50 px-2 py-0.5 border border-slate-100 font-black uppercase text-[9px] tracking-wider text-slate-500">
                             {code.type === 'single_use' ? 'One-Time' : code.type === 'event' ? 'Event' : 'Recurring'}
                         </span>
-                        <span className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            <span className="truncate">
-                                {code.status === 'used' && code.used_at
-                                    ? `Arrived ${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
-                                    : code.time_remaining}
+                        {code.status === 'used' && code.used_at && (
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>
+                                    Arrived {new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                </span>
                             </span>
-                        </span>
+                        )}
                     </div>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
