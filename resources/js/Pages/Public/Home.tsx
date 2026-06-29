@@ -1,24 +1,21 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShieldCheck, Zap, MessageSquare, Fingerprint, Lock, CheckCircle2, Apple } from 'lucide-react';
+import { ShieldCheck, Zap, MessageSquare, CheckCircle2, Apple } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
-import DesktopFrame from '@/Components/Mockups/DesktopFrame';
-import IphoneFrame from '@/Components/Mockups/IphoneFrame';
 import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Player } from '@remotion/player';
 
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
 import InteractiveShowcase from '@/Components/Public/InteractiveShowcase';
-import LivingEstate from '@/Components/Public/LivingEstate';
+import { CinematicEstate } from '@/Remotion/CinematicEstate';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
     const containerRef = useRef<HTMLDivElement>(null);
-    const scrollJourneyRef = useRef<HTMLDivElement>(null);
-    const [scrollProgress, setScrollProgress] = useState(0);
     const [isReducedMotion, setIsReducedMotion] = useState(false);
 
     useEffect(() => {
@@ -27,24 +24,6 @@ export default function Home() {
         const handler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
         mediaQuery.addEventListener('change', handler);
         return () => mediaQuery.removeEventListener('change', handler);
-    }, []);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (!scrollJourneyRef.current) return;
-            const element = scrollJourneyRef.current;
-            const rect = element.getBoundingClientRect();
-            const scrollTop = -rect.top;
-            const scrollHeight = rect.height - window.innerHeight;
-            if (scrollHeight > 0) {
-                const progress = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
-                setScrollProgress(progress);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        handleScroll();
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     useGSAP(
@@ -161,110 +140,60 @@ export default function Home() {
             </Head>
 
             <div ref={containerRef} className="overflow-hidden">
-                {/* 3D LIVING ESTATE SCROLL JOURNEY SECTION */}
-                <div ref={scrollJourneyRef} className="relative bg-slate-950">
-                    {/* Sticky 3D Isometric Estate Background */}
-                    <div className="pointer-events-none sticky top-0 left-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden">
-                        <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-950/20 via-slate-950/70 to-slate-950" />
-                        <LivingEstate scrollProgress={scrollProgress} />
+                {/* HERO CINEMATIC EXPERIENCE */}
+                <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 pt-20">
+                    {/* Layer 1 (Background): Cinematic Remotion Experience */}
+                    <div className="absolute inset-0 z-0 h-full w-full [&_canvas]:object-cover [&_video]:object-cover">
+                        <Player
+                            component={CinematicEstate}
+                            durationInFrames={300}
+                            fps={30}
+                            compositionWidth={1280}
+                            compositionHeight={720}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                            }}
+                            loop
+                            autoPlay
+                            controls={false}
+                            clickToPlay={false}
+                        />
+                        {/* Semi-transparent dark overlay to secure readability */}
+                        <div className="absolute inset-0 bg-slate-950/50 mix-blend-multiply" />
+                        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
                     </div>
 
-                    {/* Scrollable Overlay Copy Cards */}
-                    <div className="-mt-screen relative z-10 w-full">
-                        {/* Section 1: Hero Cover */}
-                        <section className="flex h-screen flex-col items-center justify-center px-6 text-center">
-                            <div className="gsap-hero-content mx-auto max-w-4xl">
-                                <h1 className="text-6xl font-extrabold tracking-tight text-white uppercase drop-shadow-sm md:text-8xl">
-                                    <span className="gsap-hero-title-line inline-block py-1.5 leading-none">THE OPERATING SYSTEM</span>
-                                    <span className="gsap-hero-title-line inline-block bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text py-1.5 leading-none text-transparent">
-                                        For Modern Estates.
-                                    </span>
-                                </h1>
-                                <p className="gsap-hero-stagger-item mx-auto mt-8 max-w-2xl text-xl font-medium text-slate-300 md:text-2xl">
-                                    Ditch the spreadsheets and WhatsApp groups. Bring your estate to life with one cohesive digital intelligence.
-                                </p>
-                                <div className="gsap-hero-stagger-item mt-12 flex justify-center gap-4">
-                                    <MagneticButton>
-                                        <Link
-                                            href="/apply"
-                                            className="rounded-full bg-white px-8 py-4 text-base font-bold text-slate-900 shadow-xl transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]"
-                                        >
-                                            Book a Demo
-                                        </Link>
-                                    </MagneticButton>
-                                    <button
-                                        onClick={() => {
-                                            window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
-                                        }}
-                                        className="cursor-pointer rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10"
+                    {/* Layer 2 (Foreground): Standard React HTML */}
+                    <div className="relative z-10 mx-auto max-w-5xl px-6 text-center text-white">
+                        <div className="gsap-hero-content flex flex-col items-center will-change-transform">
+                            <h1 className="flex flex-col items-center text-5xl leading-none font-extrabold tracking-tight text-white drop-shadow-lg sm:text-7xl lg:text-8xl">
+                                <span className="inline-block overflow-hidden py-1.5 leading-none">
+                                    <span className="gsap-hero-title-line inline-block">The Operating System</span>
+                                </span>
+                                <span className="inline-block overflow-hidden bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text py-1.5 leading-none text-transparent">
+                                    <span className="gsap-hero-title-line inline-block">For Modern Estates</span>
+                                </span>
+                            </h1>
+
+                            <p className="gsap-hero-stagger-item mx-auto mt-8 max-w-3xl text-xl leading-relaxed font-semibold text-slate-300 drop-shadow-md sm:text-2xl">
+                                Modernise every part of your estate—from visitor access and collections to resident communication and security—all in
+                                one intelligent platform.
+                            </p>
+
+                            <div className="gsap-hero-stagger-item mt-12 flex justify-center">
+                                <MagneticButton>
+                                    <Link
+                                        href="/apply"
+                                        className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.7)] active:scale-95"
                                     >
-                                        Explore the Estate
-                                    </button>
-                                </div>
+                                        Get Started Free
+                                    </Link>
+                                </MagneticButton>
                             </div>
-                        </section>
-
-                        {/* Section 2: Main Gate Access Control */}
-                        <section className="mx-auto flex h-screen max-w-7xl flex-col items-start justify-center px-8 md:px-16">
-                            <div className="max-w-md rounded-3xl border border-white/5 bg-slate-950/80 p-8 shadow-2xl backdrop-blur-md">
-                                <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">01 / Access Control</span>
-                                <h2 className="mt-4 text-3xl font-extrabold text-white">Visitor Gate Management</h2>
-                                <p className="mt-4 leading-relaxed font-medium text-slate-300">
-                                    The gate terminal lights up as visitor pass codes are scanned. Gate barriers open seamlessly, checking guests in
-                                    without logbooks or security delays.
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Section 3: Patrol Guard Station */}
-                        <section className="mx-auto flex h-screen max-w-7xl flex-col items-end justify-center px-8 md:px-16">
-                            <div className="flex max-w-md flex-col items-end rounded-3xl border border-white/5 bg-slate-950/80 p-8 text-right shadow-2xl backdrop-blur-md">
-                                <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">02 / Patrol Security</span>
-                                <h2 className="mt-4 text-3xl font-extrabold text-white">Guard Terminal Scanning</h2>
-                                <p className="mt-4 leading-relaxed font-medium text-slate-300">
-                                    Every arrival triggers an automatic arrival notice card directly to the resident’s mobile device, logging security
-                                    timestamps in real-time.
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Section 4: Resident App */}
-                        <section className="mx-auto flex h-screen max-w-7xl flex-col items-start justify-center px-8 md:px-16">
-                            <div className="max-w-md rounded-3xl border border-white/5 bg-slate-950/80 p-8 shadow-2xl backdrop-blur-md">
-                                <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">03 / Residents</span>
-                                <h2 className="mt-4 text-3xl font-extrabold text-white">Integrated Household App</h2>
-                                <p className="mt-4 leading-relaxed font-medium text-slate-300">
-                                    Residents approve guests, pay utility/due collections, view real-time estate broadcasts, and track household
-                                    members effortlessly.
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Section 5: Estate Office Command Center */}
-                        <section className="mx-auto flex h-screen max-w-7xl flex-col items-end justify-center px-8 md:px-16">
-                            <div className="flex max-w-md flex-col items-end rounded-3xl border border-white/5 bg-slate-950/80 p-8 text-right shadow-2xl backdrop-blur-md">
-                                <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">04 / Administration</span>
-                                <h2 className="mt-4 text-3xl font-extrabold text-white">Estate Command Center</h2>
-                                <p className="mt-4 leading-relaxed font-medium text-slate-300">
-                                    The administration dashboard calculates ledgers, reviews pending invites, coordinates maintenance requests, and
-                                    monitors financials dynamically.
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Section 6: Community Hall Announcements */}
-                        <section className="mx-auto flex h-screen max-w-7xl flex-col items-start justify-center px-8 pb-20 md:px-16">
-                            <div className="max-w-md rounded-3xl border border-white/5 bg-slate-950/80 p-8 shadow-2xl backdrop-blur-md">
-                                <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">05 / Communication</span>
-                                <h2 className="mt-4 text-3xl font-extrabold text-white">Estate Announcements</h2>
-                                <p className="mt-4 leading-relaxed font-medium text-slate-300">
-                                    Move away from messy chat boards. Send broadcasts, document minutes, and issue alerts to the entire community
-                                    instantly.
-                                </p>
-                            </div>
-                        </section>
+                        </div>
                     </div>
-                </div>
+                </section>
 
                 {/* THE PROBLEM SECTION - HIGH CONTRAST */}
                 <section className="bg-white pt-24 pb-20 sm:pt-32 sm:pb-28 dark:bg-slate-950">
