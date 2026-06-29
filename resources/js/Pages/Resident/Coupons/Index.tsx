@@ -88,7 +88,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 
             <div className="mx-auto min-h-screen max-w-lg bg-[#fafbfd] pb-24 text-slate-900">
                 {/* Header Section */}
-                <div className="sticky top-0 z-[60] mb-6 border-b border-slate-100/60 bg-[#fafbfd]/80 px-6 pt-5 pb-5 backdrop-blur-xl">
+                <div className="mb-6 border-b border-slate-100/60 bg-[#fafbfd] px-6 pt-2 pb-5">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => window.history.back()}
@@ -410,7 +410,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 }
 
 CouponIndexPage.layout = (page: React.ReactNode) => (
-    <ResidentLayout hideHeader={true} hideNav={true} className="bg-[#fafbfd]">
+    <ResidentLayout className="bg-[#fafbfd]">
         <AnimatedLayout>{page}</AnimatedLayout>
     </ResidentLayout>
 );
