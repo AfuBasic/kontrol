@@ -5,7 +5,7 @@ import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Player } from '@remotion/player';
+import { Player, PlayerRef } from '@remotion/player';
 
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
@@ -16,6 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const playerRef = useRef<PlayerRef>(null);
     const [isReducedMotion, setIsReducedMotion] = useState(false);
 
     useEffect(() => {
@@ -24,6 +25,12 @@ export default function Home() {
         const handler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
         mediaQuery.addEventListener('change', handler);
         return () => mediaQuery.removeEventListener('change', handler);
+    }, []);
+
+    useEffect(() => {
+        if (playerRef.current) {
+            playerRef.current.play();
+        }
     }, []);
 
     useGSAP(
@@ -145,6 +152,7 @@ export default function Home() {
                     {/* Layer 1 (Background): Cinematic Remotion Experience */}
                     <div className="absolute inset-0 z-0 h-full w-full [&_canvas]:object-cover [&_video]:object-cover">
                         <Player
+                            ref={playerRef}
                             component={CinematicEstate}
                             durationInFrames={300}
                             fps={30}
@@ -156,6 +164,7 @@ export default function Home() {
                             }}
                             loop
                             autoPlay
+                            muted
                             controls={false}
                             clickToPlay={false}
                         />
