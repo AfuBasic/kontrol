@@ -11,6 +11,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import WebGLHeroBg from '@/Components/Public/WebGLHeroBg';
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
+import InteractiveShowcase from '@/Components/Public/InteractiveShowcase';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -353,137 +354,10 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* PREMIUM FEATURE SHOWCASE */}
-                <div id="features" className="bg-slate-50 dark:bg-slate-900/10">
-                    {/* Feature 1 */}
-                    <section className="overflow-hidden py-24 sm:py-32">
-                        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                            <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
-                                <div className="gsap-fade-up lg:w-1/2 lg:pr-16">
-                                    <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-6xl dark:text-white">
-                                        Frictionless Access Control.
-                                    </h2>
-                                    <p className="mb-12 text-xl leading-relaxed text-slate-600 dark:text-slate-400">
-                                        Empower your residents to invite guests with a single tap. Generate unique QR codes that security can
-                                        instantly scan at the gate.
-                                    </p>
-                                    <ul className="space-y-8">
-                                        {[
-                                            { title: 'Instant QR Passes', desc: 'Secure, time-bound access codes for visitors.' },
-                                            { title: 'Real-time Notifications', desc: 'Know exactly when your guest arrives at the gate.' },
-                                            { title: 'Digital Logs', desc: 'A complete, searchable history of everyone entering the estate.' },
-                                        ].map((benefit, idx) => (
-                                            <li key={idx} className="group flex gap-5">
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 transition-transform duration-300 group-hover:scale-110 dark:bg-blue-900/40">
-                                                    <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xl font-bold text-slate-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                                                        {benefit.title}
-                                                    </h4>
-                                                    <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="flex justify-center lg:w-1/2">
-                                    <div className="gsap-slide-left">
-                                        <InteractiveTilt maxRotation={8}>
-                                            <IphoneFrame src="/assets/images/screenshots/frictionless-access.png" alt="Access Control App" />
-                                        </InteractiveTilt>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Feature 2 */}
-                    <section className="overflow-hidden bg-slate-900 py-24 sm:py-32 dark:bg-slate-900/40">
-                        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                            <div className="flex flex-col gap-16 lg:flex-row-reverse lg:items-center">
-                                <div className="gsap-fade-up lg:w-1/2 lg:pl-16">
-                                    <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-white sm:text-6xl">
-                                        Automated Collections.
-                                    </h2>
-                                    <p className="mb-12 text-xl leading-relaxed text-slate-400">
-                                        End the hassle of chasing payments. Invoice residents automatically, track balances, and generate instant
-                                        financial reports.
-                                    </p>
-                                    <ul className="space-y-8">
-                                        {[
-                                            { title: 'Instant Billing', desc: 'Send dues to all residents with a single click.' },
-                                            { title: 'Defaulter Tracking', desc: 'Automatically restrict gate access for outstanding balances.' },
-                                            { title: 'Transparent Receipts', desc: 'Residents receive instant digital receipts upon payment.' },
-                                        ].map((benefit, idx) => (
-                                            <li key={idx} className="group flex gap-5">
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-900/40 transition-transform duration-300 group-hover:scale-110">
-                                                    <Lock className="h-5 w-5 text-green-400" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xl font-bold text-white transition-colors duration-300 group-hover:text-green-400">
-                                                        {benefit.title}
-                                                    </h4>
-                                                    <p className="mt-2 text-lg text-slate-400">{benefit.desc}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="flex justify-center lg:w-1/2">
-                                    <div className="gsap-slide-right">
-                                        <InteractiveTilt maxRotation={8}>
-                                            <IphoneFrame src="/assets/images/screenshots/collections.png" alt="Billing and Payments" />
-                                        </InteractiveTilt>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Feature 3 */}
-                    <section className="overflow-hidden py-24 sm:py-32">
-                        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                            <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
-                                <div className="gsap-fade-up lg:w-1/2 lg:pr-16">
-                                    <h2 className="mb-8 text-5xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-6xl dark:text-white">
-                                        Instant Communication.
-                                    </h2>
-                                    <p className="mb-12 text-xl leading-relaxed text-slate-600 dark:text-slate-400">
-                                        Replace messy chat groups with an organized system. Send estate-wide announcements and manage resident
-                                        complaints in real-time.
-                                    </p>
-                                    <ul className="space-y-8">
-                                        {[
-                                            { title: 'Push Announcements', desc: 'Ensure every resident gets important updates instantly.' },
-                                            { title: 'Complaint Tracking', desc: 'Residents can report issues and track resolution progress.' },
-                                            { title: 'Organized History', desc: 'A clean log of all past communications and resolved issues.' },
-                                        ].map((benefit, idx) => (
-                                            <li key={idx} className="group flex gap-5">
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 transition-transform duration-300 group-hover:scale-110 dark:bg-purple-900/40">
-                                                    <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xl font-bold text-slate-900 transition-colors duration-300 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
-                                                        {benefit.title}
-                                                    </h4>
-                                                    <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">{benefit.desc}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="flex justify-center lg:w-1/2">
-                                    <div className="gsap-slide-left">
-                                        <InteractiveTilt maxRotation={8}>
-                                            <IphoneFrame src="/assets/images/screenshots/incidents.png" alt="Announcements and Complaints" />
-                                        </InteractiveTilt>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+                {/* PREMIUM FEATURE SHOWCASE (INTERACTIVE PRODUCT EXPERIENCE) */}
+                <section id="features" className="border-t border-slate-100 bg-slate-50 dark:border-slate-900/60 dark:bg-slate-950">
+                    <InteractiveShowcase />
+                </section>
 
                 {/* PRICING - STRIPE INSPIRED */}
                 <section className="bg-white py-32 sm:py-48 dark:bg-slate-950" id="pricing">

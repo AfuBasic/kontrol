@@ -1,10 +1,13 @@
+import type { ReactNode } from 'react';
+
 interface Props {
-    src: string;
-    alt: string;
+    src?: string;
+    alt?: string;
     className?: string;
+    children?: ReactNode;
 }
 
-export default function IphoneFrame({ src, alt, className = '' }: Props) {
+export default function IphoneFrame({ src, alt = '', className = '', children }: Props) {
     return (
         <div className={`relative mx-auto w-[280px] shrink-0 sm:w-[320px] ${className}`}>
             {/* The iPhone frame body */}
@@ -54,9 +57,9 @@ export default function IphoneFrame({ src, alt, className = '' }: Props) {
                     </div>
                 </div>
 
-                {/* The Mobile Screenshot */}
-                <div className="h-full w-full bg-white pt-14 dark:bg-slate-900">
-                    <img src={src} alt={alt} className="h-full w-full object-cover" />
+                {/* The Mobile Content Container */}
+                <div className="h-full w-full bg-slate-50 pt-14 dark:bg-slate-950">
+                    {children ? children : src && <img src={src} alt={alt} className="h-full w-full object-cover" />}
                 </div>
             </div>
 
