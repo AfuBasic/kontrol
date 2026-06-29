@@ -5,7 +5,7 @@ import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Player, PlayerRef } from '@remotion/player';
+import { Player, type PlayerRef } from '@remotion/player';
 
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
