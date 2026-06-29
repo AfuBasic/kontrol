@@ -21,15 +21,12 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
     }, []);
 
     const toggleTheme = (triggerRef: React.RefObject<HTMLButtonElement | null>) => {
-        const nextTheme = theme === 'dark' ? 'light' : 'dark';
+        if (document.documentElement.classList.contains('theme-transforming')) return;
 
-        // Set ripple origin from the button's center position
-        const btn = triggerRef.current;
-        if (btn) {
-            const { left, top, width, height } = btn.getBoundingClientRect();
-            document.documentElement.style.setProperty('--theme-x', `${Math.round(left + width / 2)}px`);
-            document.documentElement.style.setProperty('--theme-y', `${Math.round(top + height / 2)}px`);
-        }
+        // Phase 1: Trigger active transitioning class triggers
+        document.documentElement.classList.add('theme-transforming');
+
+        const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
         const applyTheme = () => {
             setTheme(nextTheme);
@@ -45,13 +42,13 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
             }
         };
 
-        // Use View Transitions API if available, fall back to instant switch
-        if (!document.startViewTransition) {
-            applyTheme();
-            return;
-        }
+        // Phase 4: Delay swap theme variables to sweep midpoint (320ms)
+        setTimeout(applyTheme, 320);
 
-        document.startViewTransition(applyTheme);
+        // Phase 5: Settle transition classes
+        setTimeout(() => {
+            document.documentElement.classList.remove('theme-transforming');
+        }, 800);
     };
 
     const handleNavClick = (sectionId: string, e: React.MouseEvent) => {

@@ -380,27 +380,73 @@ textarea,
 }
 
 /* ============================================
-   THEME TRANSITION — Circular Ripple Reveal
+   THEME TRANSITION ENGINE
    ============================================ */
 
-/* Keep the old snapshot frozen — no animation on it */
-::view-transition-old(root) {
-    animation: none;
-    mix-blend-mode: normal;
+/* The main page wrapper that gets transformed */
+.theme-wrapper {
+    transition:
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, filter;
 }
 
-/* New snapshot: circle expands from button position */
-::view-transition-new(root) {
-    animation: theme-circle-reveal 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-    mix-blend-mode: normal;
+/* Transforming state: scale down and add blur/brightness shift */
+html.theme-transforming .theme-wrapper {
+    transform: scale(0.993);
+    filter: blur(0.5px) brightness(0.96) contrast(1.02);
 }
 
-@keyframes theme-circle-reveal {
-    from {
-        clip-path: circle(0% at var(--theme-x, 50%) var(--theme-y, 50%));
+/* Make sure all core elements transition in sync */
+html.theme-transforming .theme-wrapper,
+html.theme-transforming .theme-wrapper *,
+html.theme-transforming,
+html.theme-transforming body {
+    /* Smooth CSS variables transition for light/dark theme elements */
+    transition-property: background-color, border-color, text-decoration-color, fill, stroke, box-shadow, color;
+    transition-duration: 650ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Blue light sweep line container */
+.theme-light-sweep {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99999;
+    overflow: hidden;
+}
+
+.theme-light-sweep::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        rgba(59, 130, 246, 0) 40%,
+        rgba(59, 130, 246, 0.05) 47%,
+        rgba(59, 130, 246, 0.22) 50%,
+        rgba(59, 130, 246, 0.05) 53%,
+        rgba(59, 130, 246, 0) 60%
+    );
+    transform: translate3d(-100%, -100%, 0);
+    will-change: transform;
+}
+
+/* Sweep animation trigger */
+html.theme-transforming .theme-light-sweep::after {
+    animation: theme-light-sweep-anim 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes theme-light-sweep-anim {
+    0% {
+        transform: translate3d(-70%, -70%, 0);
     }
-    to {
-        clip-path: circle(150% at var(--theme-x, 50%) var(--theme-y, 50%));
+    100% {
+        transform: translate3d(70%, 70%, 0);
     }
 }
 

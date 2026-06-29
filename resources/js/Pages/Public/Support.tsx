@@ -395,7 +395,7 @@ export default function Support() {
                                                 initial={{ height: 0, opacity: 0 }}
                                                 animate={{ height: 'auto', opacity: 1 }}
                                                 exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                                             >
                                                 <div className="mx-6 mt-2 border-t border-slate-100 px-6 pt-4 pb-6 leading-relaxed text-slate-600 dark:border-slate-800 dark:text-slate-400">
                                                     {faq.answer}
