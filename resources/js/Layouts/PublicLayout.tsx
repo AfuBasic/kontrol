@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ReactNode } from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import ThemeToggleIcon from '@/Components/Public/ThemeToggleIcon';
 import BrandPreloader from '@/Components/Public/BrandPreloader';
@@ -16,14 +16,11 @@ export default function PublicLayout({ children }: Props) {
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
     const [scrolled, setScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState('home');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Only run preloader on first hit of the session on the public website
-        const hasPlayed = sessionStorage.getItem('kontrol-preloader-played');
-        if (!hasPlayed) {
-            setIsLoading(true);
-        }
+        // Run preloader on every fresh page load of the public website
+        setIsLoading(true);
     }, []);
 
     useEffect(() => {

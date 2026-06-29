@@ -11,11 +11,11 @@ export default function BrandPreloader({ onComplete }: Props) {
 
     useEffect(() => {
         // Step progression timers
-        const t1 = setTimeout(() => setStep(1), 1600); // 1.6s of Paper
-        const t2 = setTimeout(() => setStep(2), 3200); // 1.6s of Spreadsheet
-        const t3 = setTimeout(() => setStep(3), 4800); // 1.6s of WhatsApp
-        const t4 = setTimeout(() => setStep(4), 6800); // 2.0s of Kontrol/Final
-        const t5 = setTimeout(() => onComplete(), 7600); // Fade out to page
+        const t1 = setTimeout(() => setStep(1), 2200); // 2.2s of Paper
+        const t2 = setTimeout(() => setStep(2), 4400); // 2.2s of Spreadsheet
+        const t3 = setTimeout(() => setStep(3), 6600); // 2.2s of WhatsApp
+        const t4 = setTimeout(() => setStep(4), 8800); // 2.2s of Kontrol/Final
+        const t5 = setTimeout(() => onComplete(), 9800); // Fade out to page after 9.8s total
 
         return () => {
             clearTimeout(t1);
