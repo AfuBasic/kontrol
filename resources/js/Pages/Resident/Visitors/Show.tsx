@@ -405,36 +405,38 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                                     </div>
 
                                                     {/* Check Out Row / Still in Estate Status */}
-                                                    {log.checked_out_at ? (
-                                                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200/50">
-                                                                    <Clock className="h-4 w-4" />
+                                                    {(log.checked_out_at || !isEvent) && (
+                                                        log.checked_out_at ? (
+                                                            <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200/50">
+                                                                        <Clock className="h-4 w-4" />
+                                                                    </div>
+                                                                    <div className="text-left">
+                                                                        <p className="text-sm font-black text-slate-800">Checked Out</p>
+                                                                        <p className="text-[11px] text-slate-400 font-bold">Recorded by {log.checkout_verifier_name}</p>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="text-left">
-                                                                    <p className="text-sm font-black text-slate-800">Checked Out</p>
-                                                                    <p className="text-[11px] text-slate-400 font-bold">Recorded by {log.checkout_verifier_name}</p>
+                                                                <div className="text-right">
+                                                                    <p className="text-sm font-black text-slate-700">
+                                                                        {new Date(log.checked_out_at).toLocaleTimeString(undefined, {
+                                                                            hour: '2-digit',
+                                                                            minute: '2-digit',
+                                                                        })}
+                                                                    </p>
+                                                                    <p className="text-[10px] text-slate-400 font-bold">
+                                                                        {formatDistanceToNow(new Date(log.checked_out_at), { addSuffix: true })}
+                                                                    </p>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <p className="text-sm font-black text-slate-700">
-                                                                    {new Date(log.checked_out_at).toLocaleTimeString(undefined, {
-                                                                        hour: '2-digit',
-                                                                        minute: '2-digit',
-                                                                    })}
-                                                                </p>
-                                                                <p className="text-[10px] text-slate-400 font-bold">
-                                                                    {formatDistanceToNow(new Date(log.checked_out_at), { addSuffix: true })}
-                                                                </p>
+                                                        ) : (
+                                                            <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-amber-600">
+                                                                <span className="text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
+                                                                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                                                                    Still in estate
+                                                                 </span>
                                                             </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-amber-600">
-                                                            <span className="text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
-                                                                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                                                                Still in estate
-                                                             </span>
-                                                        </div>
+                                                        )
                                                     )}
                                                 </div>
                                             ))}

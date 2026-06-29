@@ -138,20 +138,25 @@ export default function PassCard({ pass, qrUrl }: Props) {
         return `Valid until ${timeStr.toLowerCase()} on ${dateStr}`;
     };
 
+    const isEvent = pass.type === 'event';
+    const qrColor = isEvent ? '6366f1' : '0a3d91';
+
     // Google Chart / QR Server API QR code link with high error correction (ecc=H) to allow logo overlay
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=0a3d91&bgcolor=ffffff&qzone=1&ecc=H`;
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=${qrColor}&bgcolor=ffffff&qzone=1&ecc=H`;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-slate-100 bg-white text-slate-800 shadow-2xl"
+            className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border bg-white text-slate-800 shadow-2xl ${
+                isEvent ? 'border-indigo-150 shadow-indigo-100/30' : 'border-slate-100'
+            }`}
         >
             {/* Estate & Status Header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-5 py-3">
                 <div className="min-w-0 flex-1 text-left">
-                    <p className="text-[9px] font-black tracking-widest text-primary-500 uppercase">ESTATE</p>
+                    <p className={`text-[9px] font-black tracking-widest uppercase ${isEvent ? 'text-indigo-600' : 'text-primary-500'}`}>ESTATE</p>
                     <h2 className="truncate text-base font-bold text-slate-800">{pass.estate_name || 'My Estate'}</h2>
                 </div>
                 <div className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusBg}`}>
@@ -163,7 +168,9 @@ export default function PassCard({ pass, qrUrl }: Props) {
             {/* Visitor & Host Info */}
             <div className="relative grid grid-cols-2 gap-4 border-b border-slate-100 bg-white px-5 py-3">
                 <div className="text-left">
-                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">GUEST</p>
+                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                        {isEvent ? 'EVENT' : 'GUEST'}
+                    </p>
                     <p className="text-sm leading-snug font-bold text-slate-800">{pass.visitor_name || 'Guest visitor'}</p>
                 </div>
                 <div className="text-right">
@@ -225,7 +232,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 />
 
                 <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
-                <div className="py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] text-primary-500">{pass.code}</div>
+                <div className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${isEvent ? 'text-indigo-600' : 'text-primary-500'}`}>{pass.code}</div>
             </div>
 
             {/* Validity Metadata (Faint Centered Footer) */}

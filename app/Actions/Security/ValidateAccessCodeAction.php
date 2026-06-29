@@ -70,7 +70,7 @@ class ValidateAccessCodeAction
         }
 
         // If checkout tracking is enabled, check if they are checking out
-        if ($settings->visitor_checkout_enabled) {
+        if ($settings->visitor_checkout_enabled && $accessCode->type !== 'event') {
             $activeSession = AccessLog::where('access_code_id', $accessCode->id)
                 ->whereNull('checked_out_at')
                 ->first();
