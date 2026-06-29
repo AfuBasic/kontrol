@@ -11,7 +11,7 @@ import {
     ChevronUp, 
     HelpCircle, 
     Info,
-    ArrowRight
+    X
 } from 'lucide-react';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
@@ -38,7 +38,7 @@ type Props = {
 
 export default function CouponIndexPage({ coupons }: Props) {
     const [copiedId, setCopiedId] = useState<number | null>(null);
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
     const handleCopy = (e: React.MouseEvent, coupon: Coupon) => {
@@ -75,7 +75,7 @@ export default function CouponIndexPage({ coupons }: Props) {
     const faqs = [
         {
             q: "How do I redeem my coupon?",
-            a: "When you click 'Apply to Renewal' on any coupon, you will be redirected to the billing page with the coupon code automatically pre-applied to your plans. You can also manually copy and paste the code during checkout."
+            a: "When you click 'Apply' on any coupon, you will be redirected to the billing page with the coupon code automatically pre-applied to your plans. You can also manually copy and paste the code during checkout."
         },
         {
             q: "Who is eligible for these coupons?",
@@ -115,7 +115,6 @@ export default function CouponIndexPage({ coupons }: Props) {
                         <div className="space-y-6">
                             {activeCoupons.map((coupon, idx) => {
                                 const isCopyActive = copiedId === coupon.id;
-                                const isExpanded = expandedId === coupon.id;
 
                                 return (
                                     <motion.div
@@ -127,8 +126,8 @@ export default function CouponIndexPage({ coupons }: Props) {
                                     >
                                         {/* Boarding Pass Style Digital Voucher */}
                                         <div
-                                            onClick={() => setExpandedId(isExpanded ? null : coupon.id)}
-                                            className={`relative flex overflow-hidden rounded-[24px] border ${isExpanded ? 'border-indigo-500 shadow-[0_8px_30px_rgba(99,102,241,0.08)]' : 'border-slate-100 shadow-[0_2px_12px_rgba(15,23,42,0.02)]'} bg-white transition-all duration-300 active:scale-[0.99]`}
+                                            onClick={() => setSelectedCoupon(coupon)}
+                                            className="relative flex overflow-hidden rounded-[24px] border border-slate-100 shadow-[0_2px_12px_rgba(15,23,42,0.02)] bg-white transition-all duration-300 active:scale-[0.99] hover:shadow-md cursor-pointer"
                                         >
                                             {/* Left side tear-off (Discount Badge) */}
                                             <div className="flex flex-col items-center justify-center p-5 text-white w-28 shrink-0 text-center relative bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700">
@@ -195,46 +194,6 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Expandable details */}
-                                        <AnimatePresence initial={false}>
-                                            {isExpanded && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                                                    className="overflow-hidden bg-[#fafbfd] border border-slate-100 border-t-0 rounded-b-[24px] -mt-3.5 mx-2.5 px-5 pb-5 pt-6 shadow-[0_4px_16px_rgba(15,23,42,0.02)]"
-                                                >
-                                                    <div className="space-y-3.5 text-xs">
-                                                        <div>
-                                                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Campaign details</span>
-                                                            <p className="mt-0.5 font-medium text-slate-650 leading-relaxed">
-                                                                {coupon.description || 'This discount is automatically applied to resident subscription invoices. Select a billing plan, apply, and complete payment.'}
-                                                            </p>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Coupon code</span>
-                                                                <p className="mt-0.5 font-mono font-bold text-slate-900 uppercase tracking-wide">{coupon.code}</p>
-                                                            </div>
-                                                            {coupon.formatted_min_purchase && (
-                                                                <div>
-                                                                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Min purchase</span>
-                                                                    <p className="mt-0.5 font-bold text-slate-900">{coupon.formatted_min_purchase}</p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="rounded-xl bg-slate-50 border border-slate-100 p-2.5 flex gap-2">
-                                                            <Info className="h-4 w-4 text-indigo-500 shrink-0" />
-                                                            <span className="text-[10px] font-semibold text-slate-500 leading-normal">
-                                                                Valid on all payment terms. Automatically computed at settlement.
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
                                     </motion.div>
                                 );
                             })}
@@ -320,6 +279,125 @@ export default function CouponIndexPage({ coupons }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* iOS style Bottom Sheet / Modal for coupon details */}
+            <AnimatePresence>
+                {selectedCoupon && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedCoupon(null)}
+                            className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+                        />
+
+                        {/* Sheet Container */}
+                        <motion.div
+                            initial={{ y: '100%', opacity: 0.5 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0.5 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                            className="relative w-full max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] shadow-[0_20px_50px_rgba(15,23,42,0.15)] border border-slate-100 overflow-hidden z-10 pb-8 pt-6 px-6"
+                        >
+                            {/* Drag handle for mobile */}
+                            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" />
+
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                                <div className="min-w-0">
+                                    <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-black border border-indigo-100 uppercase tracking-wider text-indigo-600">
+                                        {getScopeLabel(selectedCoupon.scope)}
+                                    </span>
+                                    <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug mt-1.5">
+                                        {selectedCoupon.campaign_name}
+                                    </h3>
+                                </div>
+                                <button 
+                                    onClick={() => setSelectedCoupon(null)}
+                                    className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            {/* Value Highlight */}
+                            <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 mb-6 flex items-center justify-between">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Discount Amount</span>
+                                    <p className="text-3xl font-black text-slate-900 tracking-tight">
+                                        {selectedCoupon.type === 'percentage' ? `${selectedCoupon.value}% OFF` : selectedCoupon.formatted_value}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Personal Uses</span>
+                                    <p className="text-sm font-bold text-slate-700 mt-1">
+                                        {selectedCoupon.personal_uses} / {selectedCoupon.personal_limit !== null ? selectedCoupon.personal_limit : 'unlimited'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Info grid */}
+                            <div className="space-y-4 text-xs">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Coupon code</span>
+                                    <div className="mt-1 flex items-center justify-between bg-slate-50 rounded-xl border border-slate-150 px-4 py-2.5 font-mono text-sm text-indigo-650 tracking-wider">
+                                        <span>{selectedCoupon.code}</span>
+                                        <button 
+                                            onClick={(e) => handleCopy(e, selectedCoupon)}
+                                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                                        >
+                                            {copiedId === selectedCoupon.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {selectedCoupon.formatted_min_purchase && (
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Minimum Purchase</span>
+                                        <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedCoupon.formatted_min_purchase}</p>
+                                    </div>
+                                )}
+
+                                {selectedCoupon.expires_at && (
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Expiration Date</span>
+                                        <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedCoupon.expires_at}</p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Terms & Conditions</span>
+                                    <p className="mt-1 text-xs text-slate-500 leading-relaxed font-medium">
+                                        {selectedCoupon.description || 'This discount is automatically applied during resident subscription invoice payment checkout. This coupon is not transferable.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="mt-8 flex gap-3">
+                                <button
+                                    onClick={(e) => handleCopy(e, selectedCoupon)}
+                                    className="flex-1 h-11 inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition"
+                                >
+                                    {copiedId === selectedCoupon.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                    {copiedId === selectedCoupon.id ? 'Copied' : 'Copy Code'}
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        handleRedeem(e, selectedCoupon);
+                                        setSelectedCoupon(null);
+                                    }}
+                                    className="flex-1 h-11 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 text-sm font-black text-white hover:bg-slate-800 active:scale-98 transition shadow-lg shadow-slate-900/10"
+                                >
+                                    Apply Offer
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </>
     );
 }
