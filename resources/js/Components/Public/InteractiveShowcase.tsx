@@ -59,8 +59,22 @@ export default function InteractiveShowcase() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [subStep, setSubStep] = useState(0);
+    const [timeString, setTimeString] = useState('09:41');
     const progressInterval = useRef<any>(null);
     const activeFeature = FEATURES[activeIndex];
+
+    // Track real time for status bar
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            setTimeString(`${hours}:${minutes}`);
+        };
+        updateTime();
+        const timer = setInterval(updateTime, 60000); // Update once every minute
+        return () => clearInterval(timer);
+    }, []);
 
     // Sub-step timer to animate details inside the mockup screen
     useEffect(() => {
@@ -186,7 +200,7 @@ export default function InteractiveShowcase() {
                             <div className="pointer-events-none absolute inset-x-0 top-4 z-30 h-auto w-full">
                                 <div className="absolute top-2 left-1/2 h-[20px] w-[84px] -translate-x-1/2 rounded-full bg-black"></div>
                                 <div className="flex h-[24px] w-full items-center justify-between px-7 pt-1">
-                                    <span className="text-[12px] font-semibold text-white/90">09:41</span>
+                                    <span className="text-[12px] font-semibold text-white/90">{timeString}</span>
                                     <div className="flex items-center gap-1.5 text-white/95">
                                         {/* Wi-Fi Icon */}
                                         <svg
