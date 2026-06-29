@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\CouponLog;
 use App\Models\Estate;
-use App\Models\User;
 use App\Models\Plan;
+use App\Models\User;
+use App\Notifications\Resident\CouponIssuedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,7 +69,7 @@ class CouponController extends Controller
         $coupons = $query->latest()
             ->paginate(12)
             ->withQueryString()
-            ->through(fn(Coupon $coupon) => [
+            ->through(fn (Coupon $coupon) => [
                 'id' => $coupon->id,
                 'code' => $coupon->code,
                 'campaign_name' => $coupon->campaign_name,
@@ -80,7 +81,7 @@ class CouponController extends Controller
                 'raw_status' => $coupon->status,
                 'type' => $coupon->type,
                 'value' => $coupon->value,
-                'formatted_value' => $coupon->type === 'percentage' ? "{$coupon->value}%" : '₦' . number_format($coupon->value / 100, 2),
+                'formatted_value' => $coupon->type === 'percentage' ? "{$coupon->value}%" : '₦'.number_format($coupon->value / 100, 2),
                 'expires_at' => $coupon->expires_at?->toDateString(),
                 'starts_at' => $coupon->starts_at?->toDateString(),
                 'usage_limit' => $coupon->totalUsageLimit(),
@@ -101,7 +102,7 @@ class CouponController extends Controller
 
         $totalRedemptions = (int) Coupon::sum('used_count');
         $totalSavingsKobo = (int) CouponLog::sum('discount_amount');
-        $totalSavings = '₦' . number_format($totalSavingsKobo / 100, 2);
+        $totalSavings = '₦'.number_format($totalSavingsKobo / 100, 2);
 
         return Inertia::render('Zeus/Coupons/Index', [
             'coupons' => $coupons,
@@ -177,7 +178,7 @@ class CouponController extends Controller
         // Specific metrics
         $totalRedemptions = CouponLog::where('coupon_id', $coupon->id)->count();
         $totalSavingsKobo = CouponLog::where('coupon_id', $coupon->id)->sum('discount_amount');
-        $totalSavings = '₦' . number_format($totalSavingsKobo / 100, 2);
+        $totalSavings = '₦'.number_format($totalSavingsKobo / 100, 2);
 
         // Determine actual status
         $status = $coupon->status;
@@ -202,9 +203,9 @@ class CouponController extends Controller
                 'raw_status' => $coupon->status,
                 'type' => $coupon->type,
                 'value' => $coupon->value,
-                'formatted_value' => $coupon->type === 'percentage' ? "{$coupon->value}%" : '₦' . number_format($coupon->value / 100),
+                'formatted_value' => $coupon->type === 'percentage' ? "{$coupon->value}%" : '₦'.number_format($coupon->value / 100),
                 'min_purchase' => $coupon->min_purchase,
-                'formatted_min_purchase' => $coupon->min_purchase ? '₦' . number_format($coupon->min_purchase / 100) : null,
+                'formatted_min_purchase' => $coupon->min_purchase ? '₦'.number_format($coupon->min_purchase / 100) : null,
                 'expires_at' => $coupon->expires_at?->toDateString(),
                 'starts_at' => $coupon->starts_at?->toDateString(),
                 'usage_limit' => $coupon->totalUsageLimit(),
@@ -221,7 +222,7 @@ class CouponController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if ($request->has('user_id') && !$request->has('user_ids')) {
+        if ($request->has('user_id') && ! $request->has('user_ids')) {
             $request->merge([
                 'user_ids' => [$request->user_id],
             ]);
@@ -266,23 +267,23 @@ class CouponController extends Controller
 
         $eligiblePlans = $validated['eligible_plans'] ?? null;
 
-        if ($validated['scope'] === 'resident' && !empty($validated['user_ids'])) {
+        if ($validated['scope'] === 'resident' && ! empty($validated['user_ids'])) {
             $userIds = $validated['user_ids'];
             $isMultiple = count($userIds) > 1;
 
             foreach ($userIds as $userId) {
-                $code = $isMultiple ? ($validated['code'] . '-' . $userId) : $validated['code'];
+                $code = $isMultiple ? ($validated['code'].'-'.$userId) : $validated['code'];
 
                 // If multiple user coupons, ensure absolute uniqueness
                 if ($isMultiple) {
                     $suffix = 1;
                     while (Coupon::where('code', $code)->exists()) {
-                        $code = $validated['code'] . '-' . $userId . '-' . $suffix;
+                        $code = $validated['code'].'-'.$userId.'-'.$suffix;
                         $suffix++;
                     }
                 }
 
-                Coupon::create([
+                $coupon = Coupon::create([
                     'campaign_name' => $validated['campaign_name'],
                     'description' => $validated['description'] ?? null,
                     'code' => $code,
@@ -296,9 +297,14 @@ class CouponController extends Controller
                     'creator_id' => auth()->id(),
                     'status' => 'active',
                 ]);
+
+                $residentUser = User::find($userId);
+                if ($residentUser) {
+                    $residentUser->notify(new CouponIssuedNotification($coupon));
+                }
             }
         } else {
-            Coupon::create([
+            $coupon = Coupon::create([
                 'campaign_name' => $validated['campaign_name'],
                 'description' => $validated['description'] ?? null,
                 'code' => $validated['code'],
@@ -312,6 +318,18 @@ class CouponController extends Controller
                 'creator_id' => auth()->id(),
                 'status' => 'active',
             ]);
+
+            if ($validated['scope'] === 'estate' && $coupon->estate_id) {
+                $estateResidents = User::whereHas('estates', function ($q) use ($coupon) {
+                    $q->where('estates.id', $coupon->estate_id);
+                })->whereHas('roles', function ($q) {
+                    $q->where('name', 'resident');
+                })->get();
+
+                foreach ($estateResidents as $residentUser) {
+                    $residentUser->notify(new CouponIssuedNotification($coupon));
+                }
+            }
         }
 
         return redirect()->route('zeus.coupons.index')->with('success', 'Coupon created successfully.');

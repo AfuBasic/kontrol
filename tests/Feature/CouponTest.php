@@ -7,9 +7,11 @@ use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Notifications\Resident\CouponIssuedNotification;
 use App\Services\Billing\BillingFinalizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -404,4 +406,75 @@ test('coupon validation fails if the coupon is not eligible for the plan', funct
         'status' => 'error',
         'message' => 'This coupon is not valid for the selected plan.',
     ]);
+});
+
+test('notifies residents when a coupon is created for them', function () {
+    Notification::fake();
+
+    $resident1 = User::factory()->create();
+    $resident2 = User::factory()->create();
+
+    $response = $this->withSession([config('zeus.session_key') => true])
+        ->post(route('zeus.coupons.store'), [
+            'campaign_name' => 'Single Resident Promo',
+            'code' => 'SINGLE50',
+            'type' => 'percentage',
+            'value' => 50,
+            'scope' => 'resident',
+            'user_ids' => [$resident1->id],
+        ]);
+
+    $response->assertRedirect(route('zeus.coupons.index'));
+
+    Notification::assertSentTo(
+        $resident1,
+        CouponIssuedNotification::class
+    );
+
+    Notification::assertNotSentTo(
+        $resident2,
+        CouponIssuedNotification::class
+    );
+});
+
+test('notifies all estate residents when an estate level coupon is created', function () {
+    Notification::fake();
+
+    $estate = Estate::factory()->create();
+    $resident1 = User::factory()->create();
+    $resident2 = User::factory()->create();
+    $nonResident = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $resident1->assignRole('resident');
+    $resident1->estates()->attach($estate->id, ['status' => 'accepted']);
+    $resident2->assignRole('resident');
+    $resident2->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $response = $this->withSession([config('zeus.session_key') => true])
+        ->post(route('zeus.coupons.store'), [
+            'campaign_name' => 'Estate Wide Promo',
+            'code' => 'ESTATE50',
+            'type' => 'percentage',
+            'value' => 50,
+            'scope' => 'estate',
+            'estate_id' => $estate->id,
+        ]);
+
+    $response->assertRedirect(route('zeus.coupons.index'));
+
+    Notification::assertSentTo(
+        $resident1,
+        CouponIssuedNotification::class
+    );
+
+    Notification::assertSentTo(
+        $resident2,
+        CouponIssuedNotification::class
+    );
+
+    Notification::assertNotSentTo(
+        $nonResident,
+        CouponIssuedNotification::class
+    );
 });

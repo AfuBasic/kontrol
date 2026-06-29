@@ -593,9 +593,9 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                     <button
                                         type="button"
                                         onClick={() => handleSubscribe(plan.id)}
-                                        disabled={payingPlanId !== null || isCurrent}
+                                        disabled={payingPlanId !== null || (isCurrent && !appliedCoupons[plan.id])}
                                         className={`mt-6 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                                            isCurrent
+                                            isCurrent && !appliedCoupons[plan.id]
                                                 ? 'bg-indigo-50 text-indigo-400 cursor-default'
                                                 : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]'
                                         } disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center`}
@@ -603,7 +603,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                         {isPaying ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : isCurrent ? (
-                                            'Active'
+                                            appliedCoupons[plan.id] ? 'Renew with Coupon' : 'Active'
                                         ) : (
                                             'Select'
                                         )}
