@@ -93,7 +93,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 
             <div className="mx-auto min-h-screen max-w-lg bg-[#fafbfd] pb-24 text-slate-900">
                 {/* Header Section */}
-                <div className="sticky top-0 z-[60] bg-[#fafbfd]/80 px-6 pt-[calc(env(safe-area-inset-top,24px)+12px)] pb-4 backdrop-blur-xl">
+                <div className="sticky top-0 z-[60] bg-[#fafbfd]/80 px-6 pt-5 pb-5 border-b border-slate-100/60 backdrop-blur-xl mb-6">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => window.history.back()}
@@ -103,13 +103,13 @@ export default function CouponIndexPage({ coupons }: Props) {
                         </button>
                         <div className="min-w-0">
                             <h1 className="text-[17px] font-black tracking-tight text-slate-900 leading-none">Offers</h1>
-                            <p className="text-[11px] font-semibold text-slate-500 mt-1">Available discounts for your estate</p>
+                            <p className="text-[11px] font-semibold text-slate-500 mt-1.5">Available discounts for your estate</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="px-6 mt-4">
+                <div className="px-6 mt-8">
                     {/* Active Coupons List */}
                     {activeCoupons.length > 0 ? (
                         <div className="space-y-6">
