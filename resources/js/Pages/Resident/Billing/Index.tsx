@@ -180,8 +180,16 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     }, []);
 
     useEffect(() => {
-        if (autoAppliedCoupon) {
-            setCouponCode(autoAppliedCoupon.code);
+        let queryCoupon = '';
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            queryCoupon = urlParams.get('coupon') || '';
+        }
+
+        const targetCouponCode = queryCoupon || (autoAppliedCoupon ? autoAppliedCoupon.code : '');
+
+        if (targetCouponCode) {
+            setCouponCode(targetCouponCode);
 
             const autoValidate = async () => {
                 setIsValidatingCoupon(true);
@@ -194,14 +202,14 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                             },
-                            body: JSON.stringify({ code: autoAppliedCoupon.code, plan_id: plan.id }),
+                            body: JSON.stringify({ code: targetCouponCode, plan_id: plan.id }),
                         });
 
                         const data = await response.json();
 
                         if (response.ok && data.valid) {
                             newApplied[plan.id] = {
-                                code: autoAppliedCoupon.code,
+                                code: targetCouponCode,
                                 discount: data.discount_amount,
                                 formatted_discount: formatCurrency(data.discount_amount),
                                 final_amount: data.final_amount,
