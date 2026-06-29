@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Clock, MapPin, User, ChevronRight } from 'lucide-react';
+import { Clock, User, ChevronRight } from 'lucide-react';
 import type { AccessCode } from '@/types/access-code';
 
 interface Props {
@@ -77,17 +77,17 @@ function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <h4 className="truncate text-base font-bold text-slate-900">{code.visitor_name || 'Guest'}</h4>
-                    <div className="mt-1 flex items-center gap-3 text-xs font-medium text-slate-500">
-                        <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                            {status}
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                        <span className="rounded-md bg-slate-50 px-2 py-0.5 border border-slate-100 font-bold uppercase text-[9px] tracking-wider text-slate-500">
+                            {code.type === 'single_use' ? 'One-Time' : code.type === 'event' ? 'Event' : 'Recurring'}
                         </span>
-                        <span className="h-1 w-1 rounded-full bg-slate-200" />
                         <span className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 text-slate-400" />
-                            {code.status === 'used' && code.used_at
-                                ? `Arrived ${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
-                                : code.time_remaining}
+                            <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate">
+                                {code.status === 'used' && code.used_at
+                                    ? `Arrived ${new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
+                                    : code.time_remaining}
+                            </span>
                         </span>
                     </div>
                 </div>
