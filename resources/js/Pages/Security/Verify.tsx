@@ -1088,14 +1088,14 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
             <div className="grid grid-cols-2 gap-3">
                 <input
                     type="text"
-                    placeholder="Make (e.g. Toyota)"
+                    placeholder="Make (e.g. Toyota) (Optional)"
                     value={data.vehicle_make}
                     onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
                     className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                 />
                 <input
                     type="text"
-                    placeholder="Model (e.g. Camry)"
+                    placeholder="Model (e.g. Camry) (Optional)"
                     value={data.vehicle_model}
                     onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
                     className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
@@ -1109,14 +1109,22 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
             />
 
-            <button
-                type="button"
-                onClick={() => onSubmit(data)}
-                disabled={!data.vehicle_make}
-                className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-                Confirm Vehicle Entry
-            </button>
+            <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={() => onSubmit({})}
+                    className="flex-1 rounded-xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
+                >
+                    Skip
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onSubmit(data)}
+                    className="flex-[2] rounded-xl bg-slate-900 py-3.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition-all active:scale-[0.98]"
+                >
+                    Confirm & Admit
+                </button>
+            </div>
         </div>
     );
 }
