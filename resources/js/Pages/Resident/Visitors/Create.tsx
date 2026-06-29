@@ -133,7 +133,7 @@ const CreateAccessCode = () => {
     const isScheduleStepInvalid = step === 'schedule' && !!scheduleError;
     const isDetailsStepInvalid =
         step === 'details' && (
-            !form.data.visitor_name.trim() ||
+            ((form.data.type === 'long_lived' || form.data.type === 'event') && !form.data.visitor_name.trim()) ||
             (form.data.type === 'long_lived' && isOthersSelected && !customPurpose.trim())
         );
     const isStepInvalid = isScheduleStepInvalid || isDetailsStepInvalid;
