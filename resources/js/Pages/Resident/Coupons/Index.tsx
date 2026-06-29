@@ -82,6 +82,12 @@ export default function CouponIndexPage({ coupons }: Props) {
         },
     ];
 
+    const getValueFontSize = (val: string) => {
+        if (val.length > 7) return 'text-[18px] sm:text-[20px]';
+        if (val.length > 5) return 'text-[22px] sm:text-[24px]';
+        return 'text-3xl';
+    };
+
     return (
         <>
             <Head title="Discounts & Offers" />
@@ -130,7 +136,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                 <div className="absolute top-[-10px] right-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
                                                 <div className="absolute right-[-10px] bottom-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
 
-                                                <span className="font-mono text-3xl leading-none font-black tracking-tighter">
+                                                <span className={`font-mono leading-none font-black tracking-tighter ${getValueFontSize(coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value)}`}>
                                                     {coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value}
                                                 </span>
                                                 <span className="mt-1 text-[9px] font-black tracking-wider text-indigo-200 uppercase">
