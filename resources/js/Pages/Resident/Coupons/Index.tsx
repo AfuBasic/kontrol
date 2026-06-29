@@ -1,18 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    ChevronLeft, 
-    Copy, 
-    Check, 
-    Calendar, 
-    Ticket, 
-    ChevronDown, 
-    ChevronUp, 
-    HelpCircle, 
-    Info,
-    X
-} from 'lucide-react';
+import { ChevronLeft, Copy, Check, Calendar, Ticket, ChevronDown, ChevronUp, HelpCircle, X } from 'lucide-react';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
@@ -54,37 +43,40 @@ export default function CouponIndexPage({ coupons }: Props) {
     };
 
     // Separate active versus fully used/expired coupons
-    const activeCoupons = coupons.filter(c => {
+    const activeCoupons = coupons.filter((c) => {
         const isUsedUp = c.personal_limit !== null && c.personal_uses >= c.personal_limit;
         return !isUsedUp;
     });
 
-    const usedCoupons = coupons.filter(c => {
+    const usedCoupons = coupons.filter((c) => {
         const isUsedUp = c.personal_limit !== null && c.personal_uses >= c.personal_limit;
         return isUsedUp;
     });
 
     const getScopeLabel = (scope: Coupon['scope']) => {
         switch (scope) {
-            case 'estate': return 'Estate Special';
-            case 'resident': return 'Exclusive Reward';
-            default: return 'Global Promo';
+            case 'estate':
+                return 'Estate Special';
+            case 'resident':
+                return 'Exclusive Reward';
+            default:
+                return 'Global Promo';
         }
     };
 
     const faqs = [
         {
-            q: "How do I redeem my coupon?",
-            a: "When you click 'Apply' on any coupon, you will be redirected to the billing page with the coupon code automatically pre-applied to your plans. You can also manually copy and paste the code during checkout."
+            q: 'How do I redeem my coupon?',
+            a: "When you click 'Apply' on any coupon, you will be redirected to the billing page with the coupon code automatically pre-applied to your plans. You can also manually copy and paste the code during checkout.",
         },
         {
-            q: "Who is eligible for these coupons?",
-            a: "Eligibility depends on the coupon type. Estate coupons are automatically available to all residents of your estate. Exclusive rewards are targeted to your specific resident profile."
+            q: 'Who is eligible for these coupons?',
+            a: 'Eligibility depends on the coupon type. Estate coupons are automatically available to all residents of your estate. Exclusive rewards are targeted to your specific resident profile.',
         },
         {
-            q: "Can I use multiple coupons at checkout?",
-            a: "Only one coupon can be applied per subscription payment. The system will automatically select the best discount for you, but you can choose to apply a different code manually."
-        }
+            q: 'Can I use multiple coupons at checkout?',
+            a: 'Only one coupon can be applied per subscription payment. The system will automatically select the best discount for you, but you can choose to apply a different code manually.',
+        },
     ];
 
     return (
@@ -93,7 +85,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 
             <div className="mx-auto min-h-screen max-w-lg bg-[#fafbfd] pb-24 text-slate-900">
                 {/* Header Section */}
-                <div className="sticky top-0 z-[60] bg-[#fafbfd]/80 px-6 pt-5 pb-5 border-b border-slate-100/60 backdrop-blur-xl mb-6">
+                <div className="sticky top-0 z-[60] mb-6 border-b border-slate-100/60 bg-[#fafbfd]/80 px-6 pt-5 pb-5 backdrop-blur-xl">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => window.history.back()}
@@ -102,14 +94,14 @@ export default function CouponIndexPage({ coupons }: Props) {
                             <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
                         </button>
                         <div className="min-w-0">
-                            <h1 className="text-[17px] font-black tracking-tight text-slate-900 leading-none">Offers</h1>
-                            <p className="text-[11px] font-semibold text-slate-500 mt-1.5">Available discounts for your estate</p>
+                            <h1 className="text-[17px] leading-none font-black tracking-tight text-slate-900">Offers</h1>
+                            <p className="mt-1.5 text-[11px] font-semibold text-slate-500">Available discounts for your estate</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="px-6 mt-8">
+                <div className="mt-8 px-6">
                     {/* Active Coupons List */}
                     {activeCoupons.length > 0 ? (
                         <div className="space-y-6">
@@ -127,30 +119,30 @@ export default function CouponIndexPage({ coupons }: Props) {
                                         {/* Boarding Pass Style Digital Voucher */}
                                         <div
                                             onClick={() => setSelectedCoupon(coupon)}
-                                            className="relative flex overflow-hidden rounded-[24px] border border-slate-100 shadow-[0_2px_12px_rgba(15,23,42,0.02)] bg-white transition-all duration-300 active:scale-[0.99] hover:shadow-md cursor-pointer"
+                                            className="relative flex cursor-pointer overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.02)] transition-all duration-300 hover:shadow-md active:scale-[0.99]"
                                         >
                                             {/* Left side tear-off (Discount Badge) */}
-                                            <div className="flex flex-col items-center justify-center p-5 text-white w-28 shrink-0 text-center relative bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700">
+                                            <div className="relative flex w-28 shrink-0 flex-col items-center justify-center bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 p-5 text-center text-white">
                                                 {/* Left notch ticket cutouts */}
-                                                <div className="absolute top-[-10px] right-[-10px] w-5 h-5 rounded-full bg-[#fafbfd] z-10" />
-                                                <div className="absolute bottom-[-10px] right-[-10px] w-5 h-5 rounded-full bg-[#fafbfd] z-10" />
+                                                <div className="absolute top-[-10px] right-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
+                                                <div className="absolute right-[-10px] bottom-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
 
-                                                <span className="text-3xl font-black tracking-tighter leading-none font-mono">
+                                                <span className="font-mono text-3xl leading-none font-black tracking-tighter">
                                                     {coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value}
                                                 </span>
-                                                <span className="mt-1 text-[9px] font-black uppercase tracking-wider text-indigo-200">
+                                                <span className="mt-1 text-[9px] font-black tracking-wider text-indigo-200 uppercase">
                                                     {coupon.type === 'percentage' ? 'OFF' : 'LESS'}
                                                 </span>
 
                                                 {/* Dashed vertical separator line */}
-                                                <div className="absolute right-0 top-3 bottom-3 border-r border-dashed border-white/20" />
+                                                <div className="absolute top-3 right-0 bottom-3 border-r border-dashed border-white/20" />
                                             </div>
 
                                             {/* Right side coupon description */}
-                                            <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                                            <div className="flex min-w-0 flex-1 flex-col justify-between p-5">
                                                 <div>
-                                                    <div className="flex items-center gap-1.5 mb-1">
-                                                        <span className="text-[9px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
+                                                    <div className="mb-1 flex items-center gap-1.5">
+                                                        <span className="rounded-sm bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-600 uppercase">
                                                             {getScopeLabel(coupon.scope)}
                                                         </span>
                                                         {coupon.expires_at && (
@@ -160,15 +152,15 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <h3 className="text-[15px] font-black text-slate-900 tracking-tight leading-snug truncate">
+                                                    <h3 className="truncate text-[15px] leading-snug font-black tracking-tight text-slate-900">
                                                         {coupon.campaign_name}
                                                     </h3>
-                                                    <p className="mt-0.5 text-[11px] text-slate-500 leading-normal line-clamp-1">
+                                                    <p className="mt-0.5 line-clamp-1 text-[11px] leading-normal text-slate-500">
                                                         {coupon.description || 'Save on your resident billing subscription fee.'}
                                                     </p>
                                                 </div>
 
-                                                <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                                                <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
                                                     <span className="text-[10px] font-bold text-slate-400">
                                                         Uses: {coupon.personal_uses} / {coupon.personal_limit !== null ? coupon.personal_limit : '∞'}
                                                     </span>
@@ -177,16 +169,20 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                         <button
                                                             onClick={(e) => handleCopy(e, coupon)}
                                                             className={`flex h-7 w-7 items-center justify-center rounded-full border transition-all ${
-                                                                isCopyActive 
-                                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
-                                                                    : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                                                isCopyActive
+                                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                                                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                                                             }`}
                                                         >
-                                                            {isCopyActive ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : <Copy className="h-3.5 w-3.5" />}
+                                                            {isCopyActive ? (
+                                                                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                                            ) : (
+                                                                <Copy className="h-3.5 w-3.5" />
+                                                            )}
                                                         </button>
                                                         <button
                                                             onClick={(e) => handleRedeem(e, coupon)}
-                                                            className="h-7 rounded-full bg-slate-900 px-3 text-[10px] font-black uppercase tracking-wider text-white shadow-sm transition hover:bg-slate-800 active:scale-95"
+                                                            className="h-7 rounded-full bg-slate-900 px-3 text-[10px] font-black tracking-wider text-white uppercase shadow-sm transition hover:bg-slate-800 active:scale-95"
                                                         >
                                                             Apply
                                                         </button>
@@ -204,11 +200,11 @@ export default function CouponIndexPage({ coupons }: Props) {
                             animate={{ opacity: 1, scale: 1 }}
                             className="flex flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white p-12 text-center"
                         >
-                            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500 mb-4">
+                            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
                                 <Ticket className="h-5 w-5" />
                             </span>
-                            <h2 className="text-base font-black text-slate-900 tracking-tight">No active offers today</h2>
-                            <p className="mt-2 text-xs text-slate-500 max-w-xs leading-relaxed">
+                            <h2 className="text-base font-black tracking-tight text-slate-900">No active offers today</h2>
+                            <p className="mt-2 max-w-xs text-xs leading-relaxed text-slate-500">
                                 We’ll automatically notify you whenever exclusive estate promotions become available.
                             </p>
                         </motion.div>
@@ -217,25 +213,23 @@ export default function CouponIndexPage({ coupons }: Props) {
                     {/* Previously Used Coupons Section */}
                     {usedCoupons.length > 0 && (
                         <div className="mt-12">
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 px-1 mb-4">Previously Used</h3>
+                            <h3 className="mb-4 px-1 text-xs font-black tracking-wider text-slate-400 uppercase">Previously Used</h3>
                             <div className="space-y-4">
                                 {usedCoupons.map((coupon) => (
-                                    <div 
-                                        key={coupon.id} 
-                                        className="flex items-center justify-between rounded-2xl bg-white border border-slate-100 p-4 opacity-50 grayscale"
+                                    <div
+                                        key={coupon.id}
+                                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 opacity-50 grayscale"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-mono font-black text-xs text-slate-500">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-mono text-xs font-black text-slate-500">
                                                 {coupon.type === 'percentage' ? `${coupon.value}%` : '₦'}
                                             </span>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-bold text-slate-700 truncate leading-none">{coupon.campaign_name}</p>
-                                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-mono tracking-wider">{coupon.code}</p>
+                                                <p className="truncate text-sm leading-none font-bold text-slate-700">{coupon.campaign_name}</p>
+                                                <p className="mt-1 font-mono text-[10px] tracking-wider text-slate-400 uppercase">{coupon.code}</p>
                                             </div>
                                         </div>
-                                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[9px] font-bold text-slate-500">
-                                            Redeemed
-                                        </span>
+                                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[9px] font-bold text-slate-500">Redeemed</span>
                                     </div>
                                 ))}
                             </div>
@@ -244,7 +238,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 
                     {/* Frequently Asked Questions */}
                     <div className="mt-12 border-t border-slate-100 pt-8">
-                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 px-1 mb-4 flex items-center gap-1.5">
+                        <h3 className="mb-4 flex items-center gap-1.5 px-1 text-xs font-black tracking-wider text-slate-400 uppercase">
                             <HelpCircle className="h-4 w-4 text-slate-400" />
                             Frequently Asked Questions
                         </h3>
@@ -255,10 +249,14 @@ export default function CouponIndexPage({ coupons }: Props) {
                                     <div key={idx} className="py-3">
                                         <button
                                             onClick={() => setOpenFaq(isOpen ? null : idx)}
-                                            className="flex w-full items-center justify-between text-left text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors"
+                                            className="flex w-full items-center justify-between text-left text-xs font-bold text-slate-700 transition-colors hover:text-slate-900"
                                         >
                                             <span>{faq.q}</span>
-                                            {isOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                                            {isOpen ? (
+                                                <ChevronUp className="h-4 w-4 text-slate-400" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4 text-slate-400" />
+                                            )}
                                         </button>
                                         <AnimatePresence initial={false}>
                                             {isOpen && (
@@ -266,7 +264,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden mt-2 text-[11px] text-slate-500 leading-relaxed font-medium pr-4"
+                                                    className="mt-2 overflow-hidden pr-4 text-[11px] leading-relaxed font-medium text-slate-500"
                                                 >
                                                     {faq.a}
                                                 </motion.div>
@@ -280,10 +278,10 @@ export default function CouponIndexPage({ coupons }: Props) {
                 </div>
             </div>
 
-            {/* iOS style Bottom Sheet / Modal for coupon details */}
+            {/* iOS style Bottom Sheet for coupon details */}
             <AnimatePresence>
                 {selectedCoupon && (
-                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100] flex items-end justify-center">
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -295,45 +293,46 @@ export default function CouponIndexPage({ coupons }: Props) {
 
                         {/* Sheet Container */}
                         <motion.div
-                            initial={{ y: '100%', opacity: 0.5 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: '100%', opacity: 0.5 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                            className="relative w-full max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] shadow-[0_20px_50px_rgba(15,23,42,0.15)] border border-slate-100 overflow-hidden z-10 pb-8 pt-6 px-6"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="relative z-10 w-full max-w-lg overflow-hidden rounded-t-[32px] border-t border-x border-slate-100 bg-white px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+32px)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)]"
                         >
                             {/* Drag handle for mobile */}
-                            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" />
+                            <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-slate-200" />
 
                             {/* Header */}
-                            <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="mb-4 flex items-start justify-between gap-4">
                                 <div className="min-w-0">
-                                    <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-black border border-indigo-100 uppercase tracking-wider text-indigo-600">
+                                    <span className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-black tracking-wider text-indigo-600 uppercase">
                                         {getScopeLabel(selectedCoupon.scope)}
                                     </span>
-                                    <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug mt-1.5">
+                                    <h3 className="mt-1.5 text-lg leading-snug font-black tracking-tight text-slate-900">
                                         {selectedCoupon.campaign_name}
                                     </h3>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setSelectedCoupon(null)}
-                                    className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+                                    className="rounded-full bg-slate-100 p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
 
                             {/* Value Highlight */}
-                            <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 mb-6 flex items-center justify-between">
+                            <div className="mb-6 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4">
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Discount Amount</span>
-                                    <p className="text-3xl font-black text-slate-900 tracking-tight">
+                                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Discount Amount</span>
+                                    <p className="text-3xl font-black tracking-tight text-slate-900">
                                         {selectedCoupon.type === 'percentage' ? `${selectedCoupon.value}% OFF` : selectedCoupon.formatted_value}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Personal Uses</span>
-                                    <p className="text-sm font-bold text-slate-700 mt-1">
-                                        {selectedCoupon.personal_uses} / {selectedCoupon.personal_limit !== null ? selectedCoupon.personal_limit : 'unlimited'}
+                                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Personal Uses</span>
+                                    <p className="mt-1 text-sm font-bold text-slate-700">
+                                        {selectedCoupon.personal_uses} /{' '}
+                                        {selectedCoupon.personal_limit !== null ? selectedCoupon.personal_limit : 'unlimited'}
                                     </p>
                                 </div>
                             </div>
@@ -341,36 +340,41 @@ export default function CouponIndexPage({ coupons }: Props) {
                             {/* Info grid */}
                             <div className="space-y-4 text-xs">
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Coupon code</span>
-                                    <div className="mt-1 flex items-center justify-between bg-slate-50 rounded-xl border border-slate-150 px-4 py-2.5 font-mono text-sm text-indigo-650 tracking-wider">
+                                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Coupon code</span>
+                                    <div className="border-slate-150 text-indigo-650 mt-1 flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-2.5 font-mono text-sm tracking-wider">
                                         <span>{selectedCoupon.code}</span>
-                                        <button 
+                                        <button
                                             onClick={(e) => handleCopy(e, selectedCoupon)}
-                                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                                            className="text-slate-400 transition-colors hover:text-indigo-600"
                                         >
-                                            {copiedId === selectedCoupon.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                            {copiedId === selectedCoupon.id ? (
+                                                <Check className="h-4 w-4 text-emerald-500" />
+                                            ) : (
+                                                <Copy className="h-4 w-4" />
+                                            )}
                                         </button>
                                     </div>
                                 </div>
 
                                 {selectedCoupon.formatted_min_purchase && (
                                     <div>
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Minimum Purchase</span>
+                                        <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Minimum Purchase</span>
                                         <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedCoupon.formatted_min_purchase}</p>
                                     </div>
                                 )}
 
                                 {selectedCoupon.expires_at && (
                                     <div>
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Expiration Date</span>
+                                        <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Expiration Date</span>
                                         <p className="mt-0.5 text-xs font-bold text-slate-800">{selectedCoupon.expires_at}</p>
                                     </div>
                                 )}
 
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Terms & Conditions</span>
-                                    <p className="mt-1 text-xs text-slate-500 leading-relaxed font-medium">
-                                        {selectedCoupon.description || 'This discount is automatically applied during resident subscription invoice payment checkout. This coupon is not transferable.'}
+                                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Terms & Conditions</span>
+                                    <p className="mt-1 text-xs leading-relaxed font-medium text-slate-500">
+                                        {selectedCoupon.description ||
+                                            'This discount is automatically applied during resident subscription invoice payment checkout. This coupon is not transferable.'}
                                     </p>
                                 </div>
                             </div>
@@ -379,7 +383,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                             <div className="mt-8 flex gap-3">
                                 <button
                                     onClick={(e) => handleCopy(e, selectedCoupon)}
-                                    className="flex-1 h-11 inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition"
+                                    className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50 active:scale-98"
                                 >
                                     {copiedId === selectedCoupon.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                                     {copiedId === selectedCoupon.id ? 'Copied' : 'Copy Code'}
@@ -389,7 +393,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                                         handleRedeem(e, selectedCoupon);
                                         setSelectedCoupon(null);
                                     }}
-                                    className="flex-1 h-11 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 text-sm font-black text-white hover:bg-slate-800 active:scale-98 transition shadow-lg shadow-slate-900/10"
+                                    className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-slate-900 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 active:scale-98"
                                 >
                                     Apply Offer
                                 </button>
