@@ -4,7 +4,7 @@ import { CinematicEstate } from './CinematicEstate';
 export default function RemotionRoot() {
     return (
         <>
-            <Composition id="CinematicEstate" component={CinematicEstate} durationInFrames={300} fps={30} width={1280} height={720} />
+            <Composition id="CinematicEstate" component={CinematicEstate} durationInFrames={360} fps={30} width={1280} height={720} />
         </>
     );
 }

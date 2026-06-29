@@ -1,76 +1,73 @@
 import React from 'react';
 import { interpolate, spring, useCurrentFrame, useVideoConfig, interpolateColors } from 'remotion';
-import { ShieldCheck } from 'lucide-react';
 
 export const CinematicEstate: React.FC = () => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
 
-    // 1. Lighting progression (morning -> golden afternoon -> morning)
-    // Morning: Cool, muted. Active: Warm, golden.
-    const skyColor1 = interpolateColors(frame, [0, 60, 200, 260, 300], ['#e2e8f0', '#e2e8f0', '#fef3c7', '#fef3c7', '#e2e8f0']);
-    const skyColor2 = interpolateColors(frame, [0, 60, 200, 260, 300], ['#94a3b8', '#94a3b8', '#fde68a', '#fde68a', '#94a3b8']);
+    // 1. Cinematic Lighting Progression (Cool morning twilight -> Warm golden sunrise -> Cool twilight for seamless loop)
+    // Twilight: #1e293b & #0f172a | Golden Day: #fef3c7 & #fcd34d
+    const skyColor1 = interpolateColors(frame, [0, 60, 180, 280, 340, 360], ['#0f172a', '#0f172a', '#e2e8f0', '#fef3c7', '#0f172a', '#0f172a']);
+    const skyColor2 = interpolateColors(frame, [0, 60, 180, 280, 340, 360], ['#1e293b', '#1e293b', '#cbd5e1', '#fde68a', '#1e293b', '#1e293b']);
     const skyBackground = `linear-gradient(135deg, ${skyColor1}, ${skyColor2})`;
 
-    const shadowColor = interpolateColors(frame, [0, 60, 200, 260, 300], ['#cbd5e1', '#cbd5e1', '#fbbf24', '#fbbf24', '#cbd5e1']);
-    const boardShadow = `${shadowColor}`;
+    // Board shadow warmth cycles with lighting
+    const shadowColor = interpolateColors(frame, [0, 180, 280, 360], ['rgba(0, 0, 0, 0.5)', 'rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.3)', 'rgba(0, 0, 0, 0.5)']);
 
-    const boardBg = interpolateColors(frame, [0, 60, 200, 260, 300], ['rgba(241, 245, 249, 0.8)', 'rgba(241, 245, 249, 0.8)', 'rgba(255, 251, 235, 0.9)', 'rgba(255, 251, 235, 0.9)', 'rgba(241, 245, 249, 0.8)']);
-    
-    // 2. Camera slow floating motion & drift
-    const cameraTranslateX = interpolate(frame, [0, 150, 300], [0, 3, 0]);
-    const cameraTranslateY = interpolate(frame, [0, 150, 300], [-5, 0, -5]);
-    const cameraRotateX = interpolate(frame, [0, 150, 300], [60, 58, 60]);
-    const cameraRotateZ = interpolate(frame, [0, 150, 300], [-45, -42, -45]);
-    const cameraScale = interpolate(frame, [0, 150, 300], [1.0, 1.05, 1.0]);
+    // Board background (Muted slate -> glowing warm stone -> Muted slate)
+    const boardBg = interpolateColors(frame, [0, 60, 180, 280, 340, 360], ['#0f172a', '#0f172a', '#f1f5f9', '#fffbeb', '#0f172a', '#0f172a']);
+    const boardBorder = interpolateColors(frame, [0, 180, 280, 360], ['rgba(255, 255, 255, 0.05)', 'rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.2)', 'rgba(255, 255, 255, 0.05)']);
 
-    // 3. Brand Pulse triggers
-    const logoOpacity = interpolate(frame, [20, 40, 70, 90], [0, 1, 1, 0]);
-    const logoScale = spring({
-        frame: frame - 20,
-        fps,
-        config: { damping: 12 },
+    // 2. Slow gliding camera movement (Apple/Pixar product showcase style)
+    const cameraTranslateX = interpolate(frame, [0, 180, 360], [-5, 0, -5]);
+    const cameraTranslateY = interpolate(frame, [0, 180, 360], [-15, -10, -15]);
+    const cameraRotateX = interpolate(frame, [0, 180, 360], [55, 50, 55]);
+    const cameraRotateZ = interpolate(frame, [0, 180, 360], [-35, -30, -35]);
+    const cameraScale = interpolate(frame, [0, 180, 360], [1.1, 1.15, 1.1]);
+
+    // 3. Organic energy flow (Subtle blue pulse running down the road entrance)
+    const pulseOffset = interpolate(frame, [110, 260], [120, -20], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
     });
-
-    // Pulse traveling along roads
-    const pulseOffset = interpolate(frame, [50, 120], [100, 0], {
+    const pulseOpacity = interpolate(frame, [110, 120, 240, 260], [0, 0.8, 0.8, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
     });
 
-    // 4. Activations & Waking Up states
-    const gateOpenProgress = interpolate(frame, [70, 90, 270, 290], [0, -90, -90, 0], {
+    // 4. Detailed transformation sequence
+    // A vehicle approaches the gate between frames 40 - 120
+    const carX = interpolate(frame, [40, 100, 140, 280, 340], [-10, 20, 20, 75, 110], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
     });
-    
-    // Security scanner light
-    const scannerX = interpolate(frame, [80, 100], [-10, 30], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const scannerOpacity = interpolate(frame, [75, 80, 100, 105], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const carY = interpolate(frame, [40, 100, 140, 280, 340], [50, 50, 50, 35, 30], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+    });
+    // Car rotation along the road bend
+    const carRotateZ = interpolate(frame, [40, 100, 140, 220, 280], [0, 0, 0, -15, -20], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+    });
 
-    // Streetlights glow
-    const streetlightOpacity = interpolate(frame, [100, 140, 260, 300], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    // Security Scanner Light Sweeping (Frames 100 - 125)
+    const scannerZ = interpolate(frame, [100, 120], [0, 15], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const scannerOpacity = interpolate(frame, [98, 102, 122, 125], [0, 0.7, 0.7, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-    // Houses illumination sequencing
-    const house1Glow = interpolate(frame, [110, 140, 260, 290], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const house2Glow = interpolate(frame, [120, 150, 260, 290], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const house3Glow = interpolate(frame, [130, 160, 260, 290], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const house4Glow = interpolate(frame, [140, 170, 260, 290], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    // Gate opens after scanning validation (Frames 125 - 150)
+    const gateOpenAngle = interpolate(frame, [125, 145, 300, 330], [0, -90, -90, 0], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+    });
 
-    // Cars moving (One enters, one parks, one exits)
-    const car1X = interpolate(frame, [80, 200], [5, 45], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const car2Y = interpolate(frame, [130, 250], [80, 20], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    // Sequential Warm House Lighting & Porch activations as the energy flows
+    const house1Active = interpolate(frame, [150, 180, 320, 340], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const house2Active = interpolate(frame, [170, 200, 320, 340], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const house3Active = interpolate(frame, [195, 225, 320, 340], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-    // Announcements ripple wave (Community Hall)
-    const waveScale = interpolate(frame, [160, 220], [0.1, 3.0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const waveOpacity = interpolate(frame, [160, 190, 220], [0, 0.3, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-
-    // Payments ledgers (Estate Office)
-    const ledgerPulseX = interpolate(frame, [170, 230], [35, 10], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    const ledgerOpacity = interpolate(frame, [170, 190, 210, 230], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    
-    // Incident Highlight (One building briefly highlights blue)
-    const incidentHighlight = interpolate(frame, [190, 200, 220, 230], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    // Gentle wind speed (for tree animations)
+    const windAngle = Math.sin(frame / 20) * 3;
 
     return (
         <div
@@ -86,12 +83,12 @@ export const CinematicEstate: React.FC = () => {
                 fontFamily: 'system-ui, sans-serif',
             }}
         >
-            {/* The 3D projected board */}
+            {/* The 3D viewport containing the close-up estate scene */}
             <div
                 style={{
-                    width: 900,
-                    height: 800,
-                    perspective: 1200,
+                    width: 1000,
+                    height: 900,
+                    perspective: 1400,
                     transformStyle: 'preserve-3d',
                     display: 'flex',
                     alignItems: 'center',
@@ -100,20 +97,46 @@ export const CinematicEstate: React.FC = () => {
             >
                 <div
                     style={{
-                        width: '100%',
-                        height: '100%',
+                        width: '90%',
+                        height: '90%',
                         background: boardBg,
-                        borderRadius: 40,
-                        border: '1px solid rgba(255, 255, 255, 0.5)',
-                        boxShadow: `0 30px 60px -15px ${boardShadow}`,
+                        borderRadius: 32,
+                        border: `1px solid ${boardBorder}`,
+                        boxShadow: `0 35px 70px -10px ${shadowColor}`,
                         transform: `rotateX(${cameraRotateX}deg) rotateZ(${cameraRotateZ}deg) translate3d(${cameraTranslateX}%, ${cameraTranslateY}%, 0px) scale(${cameraScale})`,
                         transformStyle: 'preserve-3d',
                         position: 'relative',
-                        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.03) 1px, transparent 0)',
-                        backgroundSize: '40px 40px',
                     }}
                 >
-                    {/* SVG Circuits / Roads ground overlay */}
+                    {/* Landscaping - Green lawns & organic shapes */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: '5%',
+                            top: '5%',
+                            width: '45%',
+                            height: '80%',
+                            background: interpolateColors(frame, [0, 180, 280, 360], ['rgba(16, 185, 129, 0.03)', 'rgba(16, 185, 129, 0.1)', 'rgba(16, 185, 129, 0.12)', 'rgba(16, 185, 129, 0.03)']),
+                            borderRadius: '40px 100px 80px 40px',
+                            border: `1px dashed ${interpolateColors(frame, [0, 180, 280, 360], ['rgba(16, 185, 129, 0.05)', 'rgba(16, 185, 129, 0.2)', 'rgba(16, 185, 129, 0.2)', 'rgba(16, 185, 129, 0.05)'])}`,
+                            transform: 'translateZ(1px)',
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            right: '5%',
+                            top: '10%',
+                            width: '35%',
+                            height: '50%',
+                            background: interpolateColors(frame, [0, 180, 280, 360], ['rgba(16, 185, 129, 0.02)', 'rgba(16, 185, 129, 0.08)', 'rgba(16, 185, 129, 0.1)', 'rgba(16, 185, 129, 0.02)']),
+                            borderRadius: '120px 40px 100px 60px',
+                            border: `1px dashed ${interpolateColors(frame, [0, 180, 280, 360], ['rgba(16, 185, 129, 0.04)', 'rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.04)'])}`,
+                            transform: 'translateZ(1px)',
+                        }}
+                    />
+
+                    {/* The Curved Entry Road */}
                     <svg
                         style={{
                             position: 'absolute',
@@ -121,375 +144,403 @@ export const CinematicEstate: React.FC = () => {
                             width: '100%',
                             height: '100%',
                             pointerEvents: 'none',
-                            transform: 'translateZ(1px)',
+                            transform: 'translateZ(2px)',
                         }}
                         viewBox="0 0 100 100"
                         preserveAspectRatio="none"
                     >
-                        {/* Main Road path */}
-                        <path d="M 15 55 L 75 55" fill="none" stroke="rgba(0, 0, 0, 0.05)" strokeWidth="3.5" />
-                        {/* Loop network */}
-                        <path d="M 45 30 L 45 70 L 65 70 L 65 30 Z" fill="none" stroke="rgba(0, 0, 0, 0.04)" strokeWidth="2.5" />
-
-                        {/* Animated Glowing Pulse */}
+                        {/* Elegant road path curving up into the neighborhood */}
                         <path
-                            d="M 15 55 L 75 55"
+                            d="M -10 50 Q 30 50 50 40 T 110 30"
+                            fill="none"
+                            stroke={interpolateColors(frame, [0, 180, 280, 360], ['#1e293b', '#e2e8f0', '#e2e8f0', '#1e293b'])}
+                            strokeWidth="9"
+                            strokeLinecap="round"
+                        />
+                        <path
+                            d="M -10 50 Q 30 50 50 40 T 110 30"
+                            fill="none"
+                            stroke={interpolateColors(frame, [0, 180, 280, 360], ['rgba(255,255,255,0.05)', '#94a3b8', '#94a3b8', 'rgba(255,255,255,0.05)'])}
+                            strokeWidth="0.5"
+                            strokeDasharray="2 3"
+                        />
+
+                        {/* Subtle blue energy pulse flowing along the road */}
+                        <path
+                            d="M -10 50 Q 30 50 50 40 T 110 30"
                             fill="none"
                             stroke="#3b82f6"
-                            strokeWidth="3.5"
-                            strokeDasharray="8 30"
+                            strokeWidth="9"
+                            strokeDasharray="15 80"
                             strokeDashoffset={pulseOffset}
-                            style={{ opacity: streetlightOpacity > 0 ? 1 : 0 }}
+                            style={{ opacity: pulseOpacity }}
                         />
                     </svg>
 
-                    {/* Trees (Gentle wind movement) */}
-                    <Tree x={20} y={25} frame={frame} />
-                    <Tree x={22} y={30} frame={frame} offset={10} />
-                    <Tree x={70} y={20} frame={frame} offset={30} />
-                    <Tree x={75} y={25} frame={frame} offset={45} />
-                    <Tree x={30} y={65} frame={frame} offset={60} />
-                    <Tree x={35} y={75} frame={frame} offset={80} />
+                    {/* Trees (Layered, minimalist luxury landscaping) */}
+                    <Tree x={8} y={32} wind={windAngle} height={40} leafColor="#15803d" barkColor="#78350f" />
+                    <Tree x={22} y={15} wind={windAngle * 0.9} height={50} leafColor="#166534" barkColor="#78350f" />
+                    <Tree x={12} y={18} wind={windAngle * 1.1} height={35} leafColor="#22c55e" barkColor="#78350f" />
+                    <Tree x={44} y={12} wind={windAngle} height={42} leafColor="#15803d" barkColor="#78350f" />
+                    <Tree x={76} y={15} wind={windAngle * 0.8} height={48} leafColor="#166534" barkColor="#78350f" />
+                    <Tree x={68} y={72} wind={windAngle * 1.2} height={38} leafColor="#22c55e" barkColor="#78350f" />
 
-                    {/* 3D BUILDINGS */}
-                    {/* Main Gate */}
-                    <IsometricHouse x={10} y={50} w={32} l={42} h={26} label="GATE" isActive={frame > 70 && frame < 290} />
+                    {/* Entrance Security Gatehouse */}
+                    <GateHouse x={32} y={38} isActive={frame > 100 && frame < 330} />
 
-                    {/* Gate barrier arm (physically rotates open) */}
+                    {/* Modern Sleek Gate Arm */}
                     <div
                         style={{
                             position: 'absolute',
-                            left: '17%',
-                            top: '55%',
-                            width: 25,
-                            height: 4,
-                            background: '#3b82f6',
-                            borderRadius: 2,
-                            transform: `translateZ(12px) rotateY(${gateOpenProgress}deg)`,
-                            transformOrigin: 'left center',
-                            boxShadow: gateOpenProgress < 0 ? '0 0 8px rgba(59, 130, 246, 0.6)' : 'none',
-                        }}
-                    />
-
-                    {/* Security Scanner Light */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: `17%`,
-                            top: '53%',
-                            width: 2,
-                            height: 10,
-                            background: '#60a5fa',
-                            boxShadow: '0 0 8px #60a5fa',
-                            transform: `translateZ(15px) translateX(${scannerX}px)`,
-                            opacity: scannerOpacity,
-                        }}
-                    />
-
-                    {/* Guard Cabin */}
-                    <IsometricHouse x={26} y={42} w={20} l={20} h={32} label="GUARD" isActive={frame > 80 && frame < 290} />
-
-                    {/* Estate Office */}
-                    <IsometricHouse x={32} y={26} w={38} l={42} h={46} label="OFFICE" isActive={frame > 110 && frame < 290} />
-
-                    {/* Residential Homes (glowing sequentially) */}
-                    <IsometricHouse x={42} y={18} w={26} l={26} h={30} label="" isActive={house1Glow > 0.5} />
-                    <IsometricHouse x={42} y={72} w={26} l={26} h={30} label="" isActive={house2Glow > 0.5} incidentGlow={incidentHighlight} />
-                    <IsometricHouse x={62} y={18} w={26} l={26} h={30} label="" isActive={house3Glow > 0.5} />
-                    <IsometricHouse x={62} y={72} w={26} l={26} h={30} label="" isActive={house4Glow > 0.5} />
-
-                    {/* Community Hall */}
-                    <IsometricHouse x={76} y={44} w={48} l={52} h={38} label="HALL" isActive={frame > 150 && frame < 290} />
-
-                    {/* Active Announcement ripple waves floating above Community Hall */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: '84%',
+                            left: '31%',
                             top: '52%',
-                            transform: `translateZ(45px) scale(${waveScale})`,
-                            width: 60,
-                            height: 60,
-                            borderRadius: '50%',
-                            border: '1px solid rgba(59, 130, 246, 0.6)',
-                            background: 'rgba(59, 130, 246, 0.05)',
-                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)',
-                            opacity: waveOpacity,
+                            width: 32,
+                            height: 3,
+                            background: interpolateColors(frame, [0, 110, 130, 360], ['#475569', '#475569', '#3b82f6', '#475569']),
+                            boxShadow: frame > 110 && frame < 320 ? '0 0 10px rgba(59, 130, 246, 0.8)' : 'none',
+                            transform: `translateZ(10px) rotateY(${gateOpenAngle}deg)`,
+                            transformOrigin: 'left center',
+                        }}
+                    />
+
+                    {/* Holographic scanning validation beam */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: '26%',
+                            top: '46%',
+                            width: 25,
+                            height: 35,
+                            background: 'linear-gradient(to right, rgba(59, 130, 246, 0.4), transparent)',
+                            transform: `translateZ(${scannerZ}px) rotateY(45deg)`,
+                            opacity: scannerOpacity,
                             pointerEvents: 'none',
-                            transformOrigin: 'center center',
                         }}
                     />
 
-                    {/* Cars Moving */}
-                    {/* Car 1: Enters */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: `${car1X}%`,
-                            top: `56%`,
-                            width: 14,
-                            height: 8,
-                            background: '#cbd5e1',
-                            borderRadius: 3,
-                            transform: 'translateZ(3px)',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        }}
-                    />
-                    {/* Car 2: Moves along side road */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: `46%`,
-                            top: `${car2Y}%`,
-                            width: 8,
-                            height: 14,
-                            background: '#94a3b8',
-                            borderRadius: 3,
-                            transform: 'translateZ(3px)',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        }}
-                    />
+                    {/* Luxury Modern Villas (Close-up, detailed architecture) */}
+                    <LuxuryVilla x={55} y={15} scale={0.9} isActive={house1Active} />
+                    <LuxuryVilla x={78} y={12} scale={0.8} isActive={house2Active} />
+                    <LuxuryVilla x={85} y={50} scale={0.95} isActive={house3Active} />
 
-                    {/* Active Financial ledger pulse */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: `${ledgerPulseX}%`,
-                            top: '35%',
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            background: '#10b981',
-                            boxShadow: '0 0 12px #10b981',
-                            transform: 'translateZ(10px)',
-                            opacity: ledgerOpacity,
-                        }}
-                    />
+                    {/* Vehicle (Approaching & driving down the curved road) */}
+                    <Vehicle x={carX} y={carY} rotZ={carRotateZ} />
 
-                    {/* Tiny People (Subtle Community Life) */}
-                    {frame > 150 && frame < 290 && (
-                        <>
-                            <Person x={50} y={40} frame={frame} offset={0} />
-                            <Person x={52} y={42} frame={frame} offset={20} />
-                            <Person x={80} y={65} frame={frame} offset={40} />
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {/* Cinematic Overlay: Soft Logo reveal during the Kontrol Moment */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: '40%',
-                    left: '50%',
-                    transform: `translate(-50%, -50%) scale(${logoScale})`,
-                    opacity: logoOpacity,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    pointerEvents: 'none',
-                }}
-            >
-                <div
-                    style={{
-                        padding: '24px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        border: '1px solid rgba(59, 130, 246, 0.4)',
-                        borderRadius: '28px',
-                        boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
-                        backdropFilter: 'blur(8px)',
-                    }}
-                >
-                    <ShieldCheck size={48} color="#3b82f6" />
+                    {/* Ambient Residents walking (Subtle organic community life) */}
+                    <Person x={70} y={28} frame={frame} active={frame > 180 && frame < 330} />
+                    <Person x={73} y={30} frame={frame} active={frame > 180 && frame < 330} isDog={true} />
                 </div>
             </div>
         </div>
     );
 };
 
-// 3D House helper element inside the Remotion composition
-const IsometricHouse: React.FC<{
-    x: number;
-    y: number;
-    w: number;
-    l: number;
-    h: number;
-    label: string;
-    isActive: boolean;
-    incidentGlow?: number;
-}> = ({ x, y, w, l, h, label, isActive, incidentGlow = 0 }) => {
-    
-    const wallColor = isActive ? '#f8fafc' : '#f1f5f9';
-    const roofColor = isActive ? '#e2e8f0' : '#cbd5e1';
-    const sideWallColor = isActive ? '#f1f5f9' : '#e2e8f0';
-    
+// 3D Tree Helper
+const Tree: React.FC<{ x: number; y: number; wind: number; height: number; leafColor: string; barkColor: string }> = ({
+    x,
+    y,
+    wind,
+    height,
+    leafColor,
+    barkColor,
+}) => {
     return (
         <div
             style={{
                 position: 'absolute',
                 left: `${x}%`,
                 top: `${y}%`,
-                width: w,
-                height: l,
-                transform: 'translateZ(0px)',
+                width: 30,
+                height: 30,
+                transform: `translateZ(0px)`,
                 transformStyle: 'preserve-3d',
             }}
         >
-            {/* Shadow face */}
+            {/* Trunk */}
             <div
                 style={{
                     position: 'absolute',
-                    inset: 0,
-                    background: 'rgba(0, 0, 0, 0.1)',
-                    filter: 'blur(4px)',
-                    borderRadius: 8,
+                    left: '13px',
+                    width: 4,
+                    height: height * 0.4,
+                    background: barkColor,
+                    transform: 'rotateX(-90deg) origin-bottom',
+                    bottom: 0,
+                }}
+            />
+            {/* Layered luxury canopy */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: 30,
+                    height: 30,
+                    background: leafColor,
+                    borderRadius: '50% 50% 40% 40%',
+                    transform: `translateZ(${height * 0.4}px) rotateY(${wind}deg) rotateX(${wind * 0.5}deg)`,
+                    transformStyle: 'preserve-3d',
+                    boxShadow: 'inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 15px rgba(0,0,0,0.1)',
+                }}
+            />
+        </div>
+    );
+};
+
+// Sleek Gatehouse
+const GateHouse: React.FC<{ x: number; y: number; isActive: boolean }> = ({ x, y, isActive }) => {
+    const wallColor = isActive ? '#f8fafc' : '#334155';
+    const glassColor = isActive ? 'rgba(96, 165, 250, 0.4)' : 'rgba(15, 23, 42, 0.6)';
+    const windowGlow = isActive ? 'rgba(251, 191, 36, 0.85)' : '#475569';
+
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                left: `${x}%`,
+                top: `${y}%`,
+                width: 25,
+                height: 25,
+                transformStyle: 'preserve-3d',
+            }}
+        >
+            {/* Shadow */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: -2,
+                    background: 'rgba(0,0,0,0.15)',
+                    filter: 'blur(3px)',
                     transform: 'translateZ(-1px)',
                 }}
             />
-
-            {/* Incident Highlight Glow */}
-            {incidentGlow > 0 && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        inset: -10,
-                        background: `rgba(59, 130, 246, ${incidentGlow * 0.4})`,
-                        filter: 'blur(12px)',
-                        borderRadius: 20,
-                        transform: 'translateZ(1px)',
-                    }}
-                />
-            )}
-
-            {/* Front Wall */}
+            {/* Main Structure */}
             <div
                 style={{
                     position: 'absolute',
                     bottom: 0,
                     left: 0,
-                    width: w,
-                    height: h,
+                    width: 25,
+                    height: 22,
                     transform: 'rotateX(-90deg) origin-bottom',
                     background: wallColor,
-                    border: '1px solid rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0,0,0,0.1)',
                     display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-around',
-                    padding: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
                 }}
             >
-                {/* Windows glow */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
-                    {[...Array(6)].map((_, i) => (
-                        <div
-                            key={i}
-                            style={{
-                                height: 5,
-                                borderRadius: 1,
-                                background: isActive ? '#fbbf24' : '#94a3b8',
-                                boxShadow: isActive ? '0 0 10px rgba(251, 191, 36, 0.8)' : 'none',
-                                transition: 'all 1.0s ease-in-out',
-                            }}
-                        />
-                    ))}
-                </div>
-                {/* Porch light for homes */}
-                {isActive && label === "" && (
-                    <div style={{ width: 4, height: 4, borderRadius: 2, background: '#fbbf24', boxShadow: '0 0 6px #fbbf24', alignSelf: 'center', marginTop: 2 }} />
-                )}
+                {/* Glowing window */}
+                <div
+                    style={{
+                        width: 14,
+                        height: 8,
+                        background: windowGlow,
+                        borderRadius: 1,
+                        boxShadow: isActive ? '0 0 10px rgba(251, 191, 36, 0.8)' : 'none',
+                    }}
+                />
             </div>
-
-            {/* Side Wall */}
+            {/* Roof Canopy (Cantilevered glass/steel) */}
             <div
                 style={{
                     position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: h,
-                    height: l,
-                    transform: 'rotateY(90deg) origin-top-right',
-                    background: sideWallColor,
-                    border: '1px solid rgba(0, 0, 0, 0.05)',
+                    inset: -4,
+                    transform: 'translateZ(22px)',
+                    background: glassColor,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
                 }}
             />
-
-            {/* Roof Top Face */}
-            <div
-                style={{
-                    position: 'absolute',
-                    inset: 0,
-                    transform: `translateZ(${h}px)`,
-                    background: roofColor,
-                    border: '1px solid rgba(0, 0, 0, 0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.4)',
-                    fontSize: 8,
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                }}
-            >
-                {label}
-            </div>
         </div>
     );
 };
 
-// Tree Component
-const Tree: React.FC<{ x: number; y: number; frame: number; offset?: number }> = ({ x, y, frame, offset = 0 }) => {
-    // Gentle wind movement using sine wave
-    const wind = Math.sin((frame + offset) / 15) * 5;
-    
+// Luxury Minimalist Villa (Two-tiered overlapping volumes)
+const LuxuryVilla: React.FC<{ x: number; y: number; scale: number; isActive: number }> = ({ x, y, scale, isActive }) => {
+    const wallColor = isActive > 0.5 ? '#ffffff' : '#475569';
+    const accentWallColor = isActive > 0.5 ? '#78350f' : '#334155'; // Wooden textures
+    const windowBg = isActive > 0.5 ? '#fbbf24' : '#1e293b';
+
     return (
         <div
             style={{
                 position: 'absolute',
                 left: `${x}%`,
                 top: `${y}%`,
-                width: 12,
-                height: 12,
-                background: '#4ade80',
-                borderRadius: '50%',
-                transform: `translateZ(10px) rotateY(${wind}deg) rotateX(${wind}deg)`,
+                width: 48 * scale,
+                height: 48 * scale,
                 transformStyle: 'preserve-3d',
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), inset 0 -2px 4px rgba(0,0,0,0.1)',
-                border: '1px solid #22c55e'
             }}
         >
-            <div style={{
-                position: 'absolute',
-                left: '40%',
-                top: '100%',
-                width: 4,
-                height: 10,
-                background: '#78350f',
-                transform: 'translateZ(-5px) rotateX(-90deg) origin-top',
-            }} />
+            {/* Shadow */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: -5,
+                    background: 'rgba(0,0,0,0.12)',
+                    filter: 'blur(6px)',
+                    transform: 'translateZ(-1px)',
+                }}
+            />
+
+            {/* Base Block (First Floor) */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    bottom: 0,
+                    width: 48 * scale,
+                    height: 25 * scale,
+                    transform: 'rotateX(-90deg) origin-bottom',
+                    background: wallColor,
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-around',
+                    padding: 2,
+                }}
+            >
+                {/* Large glass wall window grids */}
+                <div style={{ display: 'flex', gap: 2 * scale }}>
+                    {[1, 2, 3].map((i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: 8 * scale,
+                                height: 14 * scale,
+                                background: windowBg,
+                                borderRadius: 1,
+                                boxShadow: isActive > 0.5 ? '0 0 12px rgba(251, 191, 36, 0.7)' : 'none',
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Upper Block (Second Floor - cantilevered/shifted design) */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 5 * scale,
+                    bottom: 0,
+                    width: 38 * scale,
+                    height: 20 * scale,
+                    transform: `translateZ(${25 * scale}px) rotateX(-90deg) origin-bottom`,
+                    background: accentWallColor,
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <div
+                    style={{
+                        width: 25 * scale,
+                        height: 8 * scale,
+                        background: windowBg,
+                        borderRadius: 1,
+                        boxShadow: isActive > 0.5 ? '0 0 10px rgba(251, 191, 36, 0.7)' : 'none',
+                    }}
+                />
+            </div>
+
+            {/* Flat Roof */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 4 * scale,
+                    top: 4 * scale,
+                    width: 40 * scale,
+                    height: 40 * scale,
+                    transform: `translateZ(${45 * scale}px)`,
+                    background: '#1e293b',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                }}
+            />
         </div>
     );
-}
+};
 
-// Person Component
-const Person: React.FC<{ x: number; y: number; frame: number; offset?: number }> = ({ x, y, frame, offset = 0 }) => {
-    // Tiny walking movement
-    const walkX = Math.sin((frame + offset) / 20) * 2;
-    const walkY = Math.cos((frame + offset) / 20) * 2;
-    
+// Sleek Vehicle
+const Vehicle: React.FC<{ x: number; y: number; rotZ: number }> = ({ x, y, rotZ }) => {
     return (
         <div
             style={{
                 position: 'absolute',
-                left: `calc(${x}% + ${walkX}px)`,
-                top: `calc(${y}% + ${walkY}px)`,
-                width: 4,
-                height: 4,
-                background: '#64748b',
-                borderRadius: '50%',
-                transform: `translateZ(4px)`,
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                left: `${x}%`,
+                top: `${y}%`,
+                width: 20,
+                height: 10,
+                transform: `translateZ(3px) rotateZ(${rotZ}deg)`,
+                transformStyle: 'preserve-3d',
+            }}
+        >
+            {/* Wheels shadow */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: 1,
+                    background: 'rgba(0,0,0,0.25)',
+                    filter: 'blur(2px)',
+                    transform: 'translateZ(-2px)',
+                }}
+            />
+            {/* Chassis */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: '#e2e8f0', // Luxury silver-white car
+                    borderRadius: '4px 6px 6px 4px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                }}
+            >
+                {/* Windshield */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        right: 3,
+                        top: 2,
+                        width: 5,
+                        height: 6,
+                        background: '#1e293b',
+                        borderRadius: 1,
+                    }}
+                />
+            </div>
+        </div>
+    );
+};
+
+// Resident / Dog walking
+const Person: React.FC<{ x: number; y: number; frame: number; active: boolean; isDog?: boolean }> = ({
+    x,
+    y,
+    frame,
+    active,
+    isDog = false,
+}) => {
+    if (!active) return null;
+
+    // Gentle back-and-forth walking motion
+    const movement = Math.sin(frame / 20) * 8;
+
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                left: `calc(${x}% + ${movement}px)`,
+                top: `${y}%`,
+                width: isDog ? 4 : 3,
+                height: isDog ? 3 : 3,
+                background: isDog ? '#78350f' : '#0f172a',
+                borderRadius: isDog ? '1px' : '50%',
+                transform: 'translateZ(4px)',
+                boxShadow: '0 3px 4px rgba(0,0,0,0.2)',
             }}
         />
     );
-}
+};
