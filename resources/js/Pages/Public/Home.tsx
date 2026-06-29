@@ -5,18 +5,17 @@ import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Player, type PlayerRef } from '@remotion/player';
+import { apply } from '@/routes/public';
 
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
 import InteractiveShowcase from '@/Components/Public/InteractiveShowcase';
-import { CinematicEstate } from '@/Remotion/CinematicEstate';
+import CinematicHero from '@/Components/Public/CinematicHero';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
     const containerRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<PlayerRef>(null);
     const [isReducedMotion, setIsReducedMotion] = useState(false);
 
     useEffect(() => {
@@ -25,12 +24,6 @@ export default function Home() {
         const handler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
         mediaQuery.addEventListener('change', handler);
         return () => mediaQuery.removeEventListener('change', handler);
-    }, []);
-
-    useEffect(() => {
-        if (playerRef.current) {
-            playerRef.current.play();
-        }
     }, []);
 
     useGSAP(
@@ -46,8 +39,8 @@ export default function Home() {
                 return;
             }
 
-            // --- HERO TEXT ENTRANCE (Line by Line Mask Reveal) ---
-            const heroTimeline = gsap.timeline();
+            // --- HERO TEXT ENTRANCE (Line by Line Mask Reveal Delayed by 4s to match transition) ---
+            const heroTimeline = gsap.timeline({ delay: 4.0 });
 
             heroTimeline.from('.gsap-hero-title-line', {
                 y: '100%',
@@ -147,54 +140,33 @@ export default function Home() {
             </Head>
 
             <div ref={containerRef} className="overflow-hidden">
-                {/* HERO CINEMATIC EXPERIENCE */}
-                <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 pt-20">
-                    {/* Layer 1 (Background): Cinematic Remotion Experience */}
-                    <div className="absolute inset-0 z-0 h-full w-full [&_canvas]:object-cover [&_video]:object-cover">
-                        <Player
-                            ref={playerRef}
-                            component={CinematicEstate}
-                            durationInFrames={300}
-                            fps={30}
-                            compositionWidth={1280}
-                            compositionHeight={720}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                            }}
-                            loop
-                            autoPlay
-                            muted
-                            controls={false}
-                            clickToPlay={false}
-                        />
-                        {/* Semi-transparent dark overlay to secure readability */}
-                        <div className="absolute inset-0 bg-slate-950/50 mix-blend-multiply" />
-                        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
+                <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#07101d] pt-20">
+                    <div className="absolute inset-0 z-0 h-full w-full">
+                        <CinematicHero />
                     </div>
 
-                    {/* Layer 2 (Foreground): Standard React HTML */}
-                    <div className="relative z-10 mx-auto max-w-5xl px-6 text-center text-white">
-                        <div className="gsap-hero-content flex flex-col items-center will-change-transform">
-                            <h1 className="flex flex-col items-center text-5xl leading-none font-extrabold tracking-tight text-white drop-shadow-lg sm:text-7xl lg:text-8xl">
-                                <span className="inline-block overflow-hidden py-1.5 leading-none">
-                                    <span className="gsap-hero-title-line inline-block">The Operating System</span>
+                    <div className="relative z-10 mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-6xl items-center justify-center px-6 text-center text-white sm:px-8">
+                        <div className="flex max-w-5xl flex-col items-center">
+                            <h1 className="kontrol-hero-reveal kontrol-hero-reveal-headline flex flex-col items-center text-5xl leading-[0.96] font-semibold tracking-normal text-white drop-shadow-[0_16px_40px_rgba(0,0,0,0.42)] sm:text-7xl lg:text-8xl">
+                                <span className="block overflow-hidden py-1.5">
+                                    <span className="block gsap-hero-title-line">The Operating System</span>
                                 </span>
-                                <span className="inline-block overflow-hidden bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text py-1.5 leading-none text-transparent">
-                                    <span className="gsap-hero-title-line inline-block">For Modern Estates</span>
+                                <span className="block overflow-hidden py-1.5">
+                                    <span className="block text-white gsap-hero-title-line">For Modern Estates</span>
                                 </span>
                             </h1>
 
-                            <p className="gsap-hero-stagger-item mx-auto mt-8 max-w-3xl text-xl leading-relaxed font-semibold text-slate-300 drop-shadow-md sm:text-2xl">
+                            <p className="kontrol-hero-reveal kontrol-hero-reveal-copy gsap-hero-stagger-item mx-auto mt-8 max-w-3xl text-lg leading-8 font-medium text-white/86 drop-shadow-[0_10px_28px_rgba(0,0,0,0.45)] sm:text-2xl sm:leading-9">
                                 Modernise every part of your estate—from visitor access and collections to resident communication and security—all in
                                 one intelligent platform.
                             </p>
 
-                            <div className="gsap-hero-stagger-item mt-12 flex justify-center">
+                            <div className="kontrol-hero-reveal kontrol-hero-reveal-cta gsap-hero-stagger-item mt-11 flex justify-center">
                                 <MagneticButton>
                                     <Link
-                                        href="/apply"
-                                        className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] transition-all hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.7)] active:scale-95"
+                                        href={apply.url()}
+                                        prefetch
+                                        className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.28),0_0_34px_rgba(31,111,219,0.24)] transition duration-300 hover:bg-white/92 hover:shadow-[0_22px_64px_rgba(2,8,23,0.34),0_0_44px_rgba(31,111,219,0.34)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
                                     >
                                         Get Started Free
                                     </Link>
