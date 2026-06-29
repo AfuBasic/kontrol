@@ -49,14 +49,6 @@ const FEATURES: FeatureItem[] = [
         glowColor: 'rgba(16,185,129,0.15)',
     },
     {
-        id: 'incidents',
-        title: 'Incident Management',
-        description: 'Residents file complaints with photos. Managers assign security officers. Watch status resolve live.',
-        icon: AlertTriangle,
-        glowColor: 'rgba(245,158,11,0.15)',
-        color: 'from-amber-500 to-orange-500',
-    },
-    {
         id: 'household',
         title: 'Household Members',
         description: 'Manage family members, staff, and co-residents. Send invites and restrict gate access privileges.',
@@ -80,23 +72,13 @@ const FEATURES: FeatureItem[] = [
         glowColor: 'rgba(59,130,246,0.15)',
         color: 'from-blue-600 to-indigo-600',
     },
-    {
-        id: 'zeus',
-        title: 'Founder Intelligence (Zeus)',
-        description: 'Full analytics, financial ledger charts, member approval triggers, and billing insights.',
-        icon: Terminal,
-        glowColor: 'rgba(99,102,241,0.15)',
-        color: 'from-indigo-500 to-blue-500',
-    },
 ];
 
 export default function InteractiveShowcase() {
     const [activeIndex, setActiveIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(0);
     const [subStep, setSubStep] = useState(0);
     const progressInterval = useRef<any>(null);
-    const autoCycleTimeout = useRef<any>(null);
     const activeFeature = FEATURES[activeIndex];
 
     // Sub-step timer to animate details inside the mockup screen
@@ -112,35 +94,26 @@ export default function InteractiveShowcase() {
     useEffect(() => {
         if (progressInterval.current) clearInterval(progressInterval.current);
 
-        if (isPlaying) {
-            const stepTime = 90; // total duration ~9 seconds (90 * 100ms)
-            setProgress(0);
-            progressInterval.current = setInterval(() => {
-                setProgress((prev) => {
-                    if (prev >= 100) {
-                        setActiveIndex((current) => (current + 1) % FEATURES.length);
-                        return 0;
-                    }
-                    return prev + 100 / stepTime;
-                });
-            }, 100);
-        }
+        const stepTime = 90; // total duration ~9 seconds (90 * 100ms)
+        setProgress(0);
+        progressInterval.current = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 100) {
+                    setActiveIndex((current) => (current + 1) % FEATURES.length);
+                    return 0;
+                }
+                return prev + 100 / stepTime;
+            });
+        }, 100);
 
         return () => {
             if (progressInterval.current) clearInterval(progressInterval.current);
         };
-    }, [isPlaying, activeIndex]);
+    }, [activeIndex]);
 
     const handleFeatureClick = (index: number) => {
         setActiveIndex(index);
-        setIsPlaying(false); // Pause auto-play when clicked
         setProgress(0);
-
-        // Resume auto-play after 12 seconds of inactivity
-        if (autoCycleTimeout.current) clearTimeout(autoCycleTimeout.current);
-        autoCycleTimeout.current = setTimeout(() => {
-            setIsPlaying(true);
-        }, 12000);
     };
 
     return (
@@ -150,27 +123,33 @@ export default function InteractiveShowcase() {
                 <p className="mt-6 text-xl text-slate-600 dark:text-slate-400">
                     Interact with the capabilities below to see how Kontrol coordinates operations on the ground.
                 </p>
-                <div className="mt-6 flex justify-center gap-4">
-                    <button
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50"
-                    >
-                        {isPlaying ? (
-                            <>
-                                <Pause className="h-4 w-4" /> Pause Auto Play
-                            </>
-                        ) : (
-                            <>
-                                <Play className="h-4 w-4" /> Resume Auto Play
-                            </>
-                        )}
-                    </button>
-                </div>
+            </div>
+
+            {/* Mobile horizontal pill layout tabs */}
+            <div className="scrollbar-none mb-8 flex snap-x snap-mandatory justify-start gap-3 overflow-x-auto border-b border-slate-100 px-2 pb-4 lg:hidden dark:border-slate-800/40">
+                {FEATURES.map((feature, idx) => {
+                    const isActive = idx === activeIndex;
+                    const Icon = feature.icon;
+                    return (
+                        <button
+                            key={`mobile-tab-${feature.id}`}
+                            onClick={() => handleFeatureClick(idx)}
+                            className={`flex shrink-0 snap-center items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold transition-all duration-300 ${
+                                isActive
+                                    ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/10'
+                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
+                            }`}
+                        >
+                            <Icon className="h-3.5 w-3.5" />
+                            {feature.title}
+                        </button>
+                    );
+                })}
             </div>
 
             <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-16">
-                {/* Left Capability List */}
-                <div className="space-y-4 lg:col-span-5">
+                {/* Left Capability List (Desktop Only) */}
+                <div className="hidden space-y-4 lg:col-span-5 lg:block">
                     {FEATURES.map((feature, idx) => {
                         const isActive = idx === activeIndex;
                         const Icon = feature.icon;
@@ -185,7 +164,7 @@ export default function InteractiveShowcase() {
                                 }`}
                             >
                                 {/* Active progress bar indicator */}
-                                {isActive && isPlaying && (
+                                {isActive && (
                                     <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-slate-100 dark:bg-slate-800">
                                         <motion.div
                                             className={`w-full bg-gradient-to-b ${feature.color}`}
@@ -193,10 +172,6 @@ export default function InteractiveShowcase() {
                                             layoutId="activeProgress"
                                         />
                                     </div>
-                                )}
-
-                                {isActive && !isPlaying && (
-                                    <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-gradient-to-b from-blue-500 to-indigo-500" />
                                 )}
 
                                 <div
@@ -222,8 +197,8 @@ export default function InteractiveShowcase() {
                 </div>
 
                 {/* Right Interactive Phone Mockup */}
-                <div className="sticky top-24 flex justify-center lg:col-span-7">
-                    <InteractiveTilt maxRotation={6} className="w-full max-w-[340px]">
+                <div className="sticky top-24 flex w-full flex-col items-center justify-center lg:col-span-7">
+                    <InteractiveTilt maxRotation={6} className="w-full max-w-[320px]">
                         {/* iPhone Frame wrapper */}
                         <div className="relative z-10 aspect-[1170/2532] w-full overflow-hidden rounded-[3rem] border-[10px] border-slate-900 bg-slate-950 shadow-2xl ring-1 ring-slate-900/5">
                             {/* Dynamic Island Status Bar */}
@@ -231,17 +206,29 @@ export default function InteractiveShowcase() {
                                 <div className="absolute top-2 left-1/2 h-[20px] w-[84px] -translate-x-1/2 rounded-full bg-black"></div>
                                 <div className="flex h-[24px] w-full items-center justify-between px-7 pt-1">
                                     <span className="text-[12px] font-semibold text-white/90">09:41</span>
-                                    <div className="flex items-center gap-1.5 text-white/90">
-                                        <div className="flex gap-[2px]">
-                                            <div className="h-1.5 w-[3px] rounded-full bg-white"></div>
-                                            <div className="h-2 w-[3px] rounded-full bg-white"></div>
-                                            <div className="h-2.5 w-[3px] rounded-full bg-white"></div>
-                                            <div className="h-3 w-[3px] rounded-full bg-white"></div>
-                                        </div>
-                                        <span className="text-[10px] font-bold">5G</span>
-                                        <div className="flex h-3 w-6 rounded-sm border border-white/40 p-[1px]">
-                                            <div className="rounded-2xs h-full w-4 bg-white"></div>
-                                        </div>
+                                    <div className="flex items-center gap-1.5 text-white/95">
+                                        {/* Wi-Fi Icon */}
+                                        <svg
+                                            className="-mt-[1px] h-[13px] w-[13px]"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                                            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                                            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                                        </svg>
+
+                                        {/* Battery */}
+                                        <svg className="h-[10px] w-[20px]" viewBox="0 0 24 11" fill="none">
+                                            <rect x="0.5" y="0.5" width="20" height="10" rx="3.5" stroke="currentColor" strokeWidth="1" />
+                                            <rect x="2" y="2" width="17" height="7" rx="2" fill="currentColor" />
+                                            <path d="M22 4C22.5523 4 23 4.44772 23 5V6C23 6.55228 22.5523 7 22 7V4Z" fill="currentColor" />
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
@@ -263,6 +250,22 @@ export default function InteractiveShowcase() {
                             </div>
                         </div>
                     </InteractiveTilt>
+
+                    {/* Active feature text description for mobile view only */}
+                    <div className="mx-auto mt-8 block max-w-sm px-4 text-center lg:hidden">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={`mobile-desc-${activeFeature.id}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <h4 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">{activeFeature.title}</h4>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{activeFeature.description}</p>
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
         </div>
