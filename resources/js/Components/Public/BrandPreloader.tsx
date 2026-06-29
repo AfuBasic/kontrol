@@ -28,9 +28,9 @@ export default function BrandPreloader({ onComplete }: Props) {
 
     return (
         <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ y: 0 }}
+            exit={{ y: '-100%' }}
+            transition={{ duration: 1.1, ease: [0.76, 0, 0.24, 1] }}
             className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-slate-950 text-white select-none"
         >
             {/* Ambient Background Glow */}
@@ -58,6 +58,10 @@ export default function BrandPreloader({ onComplete }: Props) {
                             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                             className="flex flex-col items-center"
                         >
+                            <span className="mb-6 inline-block rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                1996
+                            </span>
+
                             {/* Handcrafted drawing of notebook */}
                             <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-white/15 bg-white/5 shadow-xl">
                                 <motion.div initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: 'easeInOut' }}>
@@ -86,6 +90,10 @@ export default function BrandPreloader({ onComplete }: Props) {
                             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                             className="flex w-full flex-col items-center"
                         >
+                            <span className="mb-6 inline-block rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                2005
+                            </span>
+
                             {/* Stylized Spreadsheet */}
                             <div className="flex h-20 w-32 flex-col justify-between overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-3 shadow-xl">
                                 <div className="grid grid-cols-3 gap-1">
@@ -127,6 +135,10 @@ export default function BrandPreloader({ onComplete }: Props) {
                             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                             className="flex w-full flex-col items-center"
                         >
+                            <span className="mb-6 inline-block animate-pulse rounded-full border border-emerald-900/50 bg-emerald-950/45 px-3 py-1 text-xs font-bold tracking-widest text-emerald-400 uppercase">
+                                2015
+                            </span>
+
                             {/* Overlapping Whatsapp bubbles */}
                             <div className="relative h-24 w-full max-w-[280px]">
                                 <motion.div
@@ -169,6 +181,10 @@ export default function BrandPreloader({ onComplete }: Props) {
                             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                             className="flex flex-col items-center"
                         >
+                            <span className="mb-6 inline-block rounded-full border border-blue-900 bg-blue-950/70 px-3 py-1 text-xs font-bold tracking-widest text-blue-400 uppercase shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                2026
+                            </span>
+
                             {/* Connected glow Kontrol Logo outline */}
                             <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-blue-500/35 bg-blue-600/10 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
                                 <motion.div
