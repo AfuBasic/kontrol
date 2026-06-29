@@ -7,6 +7,7 @@ use App\Models\CouponLog;
 use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Models\Plan;
 use Illuminate\Support\Facades\DB;
 
 class CouponService
@@ -16,7 +17,7 @@ class CouponService
      *
      * @return array{status: string, message?: string, coupon?: Coupon}
      */
-    public function validate(string $code, User $user, Estate $estate): array
+    public function validate(string $code, User $user, Estate $estate, ?Plan $plan = null): array
     {
         $code = strtoupper(trim($code));
 
@@ -57,6 +58,13 @@ class CouponService
             ];
         }
 
+        if ($plan && ! empty($coupon->eligible_plans) && ! in_array($plan->id, $coupon->eligible_plans)) {
+            return [
+                'status' => 'error',
+                'message' => 'This coupon is not valid for the selected plan.',
+            ];
+        }
+
         return [
             'status' => 'success',
             'coupon' => $coupon,
@@ -78,7 +86,7 @@ class CouponService
         }
 
         return DB::transaction(function () use ($invoice, $code, $user, $estate) {
-            $validation = $this->validate($code, $user, $estate);
+            $validation = $this->validate($code, $user, $estate, $invoice->plan);
 
             if ($validation['status'] !== 'success') {
                 return null;

@@ -13,6 +13,7 @@ import {
     Hash, 
     ArrowLeft,
     CheckCircle2,
+    Check,
     Search,
     X,
     Clock,
@@ -31,12 +32,20 @@ interface Resident {
     email: string;
 }
 
+interface Plan {
+    id: number;
+    name: string;
+    price: number;
+    billing_interval: string;
+}
+
 interface Props {
     estates: Estate[];
     residents: Resident[];
+    plans: Plan[];
 }
 
-export default function CreateCoupon({ estates, residents }: Props) {
+export default function CreateCoupon({ estates, residents, plans }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         campaign_name: '',
         description: '',
@@ -45,7 +54,8 @@ export default function CreateCoupon({ estates, residents }: Props) {
         value: '',
         scope: 'global',
         estate_id: '',
-        user_id: '',
+        user_ids: [] as string[],
+        eligible_plans: [] as string[],
         expires_at: '',
         usage_limit: '',
     });
@@ -54,7 +64,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
     const [estateQuery, setEstateQuery] = useState('');
     const [residentQuery, setResidentQuery] = useState('');
     const [selectedEstateName, setSelectedEstateName] = useState('');
-    const [selectedResidentName, setSelectedResidentName] = useState('');
+    const [selectedResidents, setSelectedResidents] = useState<Resident[]>([]);
 
     // Modal open states
     const [isEstateModalOpen, setIsEstateModalOpen] = useState(false);
@@ -104,8 +114,8 @@ export default function CreateCoupon({ estates, residents }: Props) {
             errorMsg = 'Target Estate must be selected.';
         }
 
-        if (field === 'user_id' && data.scope === 'resident' && !value) {
-            errorMsg = 'Target Resident must be selected.';
+        if (field === 'user_ids' && data.scope === 'resident' && (!value || value.length === 0)) {
+            errorMsg = 'At least one Target Resident must be selected.';
         }
 
         if (field === 'expires_at' && hasExpiry) {
@@ -188,17 +198,22 @@ export default function CreateCoupon({ estates, residents }: Props) {
         validateField('estate_id', '');
     }
 
-    function selectResident(resident: Resident) {
-        setData('user_id', resident.id.toString());
-        setSelectedResidentName(`${resident.name} (${resident.email})`);
-        setResidentQuery('');
-        setLocalErrors(prev => ({ ...prev, user_id: '' }));
+    function toggleResident(resident: Resident) {
+        setSelectedResidents(prev => {
+            const exists = prev.some(r => r.id === resident.id);
+            const next = exists ? prev.filter(r => r.id !== resident.id) : [...prev, resident];
+            setData('user_ids', next.map(r => r.id.toString()));
+            setLocalErrors(p => ({ ...p, user_ids: '' }));
+            return next;
+        });
     }
 
-    function clearResidentSelection() {
-        setData('user_id', '');
-        setSelectedResidentName('');
-        validateField('user_id', '');
+    function removeResident(id: number) {
+        setSelectedResidents(prev => {
+            const next = prev.filter(r => r.id !== id);
+            setData('user_ids', next.map(r => r.id.toString()));
+            return next;
+        });
     }
 
     function handleSubmit(e: React.FormEvent) {
@@ -209,7 +224,7 @@ export default function CreateCoupon({ estates, residents }: Props) {
         const isCodeValid = validateField('code', data.code);
         const isValueValid = validateField('value', data.value);
         const isEstateValid = data.scope === 'estate' ? validateField('estate_id', data.estate_id) : true;
-        const isResidentValid = data.scope === 'resident' ? validateField('user_id', data.user_id) : true;
+        const isResidentValid = data.scope === 'resident' ? validateField('user_ids', data.user_ids) : true;
         const isExpiryValid = hasExpiry ? validateField('expires_at', data.expires_at) : true;
         const isLimitValid = hasLimit ? validateField('usage_limit', data.usage_limit) : true;
 
@@ -499,10 +514,10 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                                 ...d,
                                                 scope: scope.id,
                                                 estate_id: '',
-                                                user_id: ''
+                                                user_ids: []
                                             }));
                                             clearEstateSelection();
-                                            clearResidentSelection();
+                                            setSelectedResidents([]);
                                         }}
                                         className={`relative flex flex-col text-left p-5 rounded-2xl border-2 transition-all group cursor-pointer ${
                                             isSelected 
@@ -575,20 +590,33 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Target Resident</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Target Residents</label>
                                     
-                                    {selectedResidentName ? (
-                                        <div className="flex items-center justify-between rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 px-4 py-3.5">
-                                            <div className="flex items-center gap-2">
-                                                <User className="h-4 w-4 text-indigo-500" />
-                                                <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">{selectedResidentName}</span>
+                                    {selectedResidents.length > 0 ? (
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                {selectedResidents.map(r => (
+                                                    <span 
+                                                        key={r.id}
+                                                        className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 pl-3 pr-1.5 py-1 text-xs font-bold text-indigo-800 dark:text-indigo-300"
+                                                    >
+                                                        {r.name}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeResident(r.id)}
+                                                            className="rounded-full p-0.5 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 cursor-pointer"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </span>
+                                                ))}
                                             </div>
-                                            <button 
-                                                type="button" 
-                                                onClick={clearResidentSelection}
-                                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsResidentModalOpen(true)}
+                                                className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 cursor-pointer"
                                             >
-                                                <X className="h-4 w-4" />
+                                                + Add more residents
                                             </button>
                                         </div>
                                     ) : (
@@ -598,10 +626,10 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                             className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 py-6 text-sm font-bold text-slate-500 hover:text-indigo-500 hover:border-indigo-500 transition-all bg-slate-50/20 dark:bg-[#080b13] cursor-pointer"
                                         >
                                             <User className="h-4 w-4" />
-                                            Click to Search & Choose Resident
+                                            Click to Search & Choose Residents
                                         </button>
                                     )}
-                                    {(localErrors.user_id || errors.user_id) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.user_id || errors.user_id}</p>}
+                                    {(localErrors.user_ids || errors.user_ids) && <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.user_ids || errors.user_ids}</p>}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -736,6 +764,98 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                             className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-2"
                                         >
                                             <InfinityIcon className="h-4 w-4" /> Unlimited redemption uses
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Plan Constraints */}
+                            <div className="mt-8 border-t border-slate-100 dark:border-slate-800/80 pt-6">
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Plan Constraints</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Choose if this coupon works with a specific plan or all plans.</p>
+                                
+                                <div className="flex flex-wrap gap-3 mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('eligible_plans', [])}
+                                        className={`rounded-full px-4 py-2 text-xs font-bold transition-all border cursor-pointer ${
+                                            data.eligible_plans.length === 0
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                                                : 'bg-white dark:bg-[#0f1423] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        }`}
+                                    >
+                                        All Plans
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (data.eligible_plans.length === 0 && plans.length > 0) {
+                                                setData('eligible_plans', [plans[0].id.toString()]);
+                                            }
+                                        }}
+                                        className={`rounded-full px-4 py-2 text-xs font-bold transition-all border cursor-pointer ${
+                                            data.eligible_plans.length > 0
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                                                : 'bg-white dark:bg-[#0f1423] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        }`}
+                                    >
+                                        Specific Plans
+                                    </button>
+                                </div>
+
+                                <AnimatePresence>
+                                    {data.eligible_plans.length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2"
+                                        >
+                                            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Select Eligible Plans</label>
+                                            <div className="grid gap-3 sm:grid-cols-3">
+                                                {plans.map(plan => {
+                                                    const isChecked = data.eligible_plans.includes(plan.id.toString());
+                                                    return (
+                                                        <label
+                                                            key={plan.id}
+                                                            className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${
+                                                                isChecked
+                                                                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20'
+                                                                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] hover:bg-slate-50 dark:hover:bg-slate-800'
+                                                            }`}
+                                                        >
+                                                            <div className="pt-0.5">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isChecked}
+                                                                    onChange={() => {
+                                                                        const strId = plan.id.toString();
+                                                                        setData('eligible_plans', 
+                                                                            isChecked
+                                                                                ? data.eligible_plans.filter(id => id !== strId)
+                                                                                : [...data.eligible_plans, strId]
+                                                                        );
+                                                                    }}
+                                                                    className="sr-only"
+                                                                />
+                                                                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${
+                                                                    isChecked
+                                                                        ? 'border-indigo-600 bg-indigo-600 text-white'
+                                                                        : 'border-slate-300 dark:border-slate-700 bg-transparent'
+                                                                }`}>
+                                                                    {isChecked && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">{plan.name}</span>
+                                                                <span className="block text-[10px] text-slate-400 mt-1 font-medium">
+                                                                    ₦{(plan.price / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })} · {plan.billing_interval === 'quarterly' ? 'Quarterly' : plan.billing_interval === 'semi-annually' ? 'Semi-Annual' : 'Annual'}
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -927,30 +1047,52 @@ export default function CreateCoupon({ estates, residents }: Props) {
                                         <p className="text-xs mt-0.5 text-slate-500">Try a different search term.</p>
                                     </div>
                                 ) : (
-                                    modalResidents.map((resident) => (
-                                        <div
-                                            key={resident.id}
-                                            onClick={() => {
-                                                selectResident(resident);
-                                                setIsResidentModalOpen(false);
-                                            }}
-                                            className="flex cursor-pointer items-center justify-between p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-500/5 transition group text-left"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
-                                                    <User className="h-5 w-5" />
+                                    modalResidents.map((resident) => {
+                                        const isSelected = selectedResidents.some(r => r.id === resident.id);
+                                        return (
+                                            <div
+                                                key={resident.id}
+                                                onClick={() => toggleResident(resident)}
+                                                className={`flex cursor-pointer items-center justify-between p-3.5 rounded-xl border transition group text-left ${
+                                                    isSelected
+                                                        ? 'border-indigo-500 bg-indigo-500/5 dark:border-indigo-500/50'
+                                                        : 'border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-500/5'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+                                                        isSelected ? 'bg-indigo-600 text-white' : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400'
+                                                    }`}>
+                                                        <User className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-500 transition-colors">
+                                                            {resident.name}
+                                                        </span>
+                                                        <span className="block text-xs text-slate-400 mt-0.5">{resident.email}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="block text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-500 transition-colors">
-                                                        {resident.name}
-                                                    </span>
-                                                    <span className="block text-xs text-slate-400 mt-0.5">{resident.email}</span>
-                                                </div>
+                                                <span className={`text-xs font-bold transition-colors ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500'}`}>
+                                                    {isSelected ? 'Selected' : 'Select'}
+                                                </span>
                                             </div>
-                                            <span className="text-xs font-semibold text-indigo-500 group-hover:text-indigo-400 transition-colors">Select</span>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800/80 pt-4">
+                                <span className="text-xs text-slate-500">{selectedResidents.length} resident(s) selected</span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsResidentModalOpen(false);
+                                        setResidentQuery('');
+                                    }}
+                                    className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-500 cursor-pointer"
+                                >
+                                    Done
+                                </button>
                             </div>
                         </motion.div>
                     </div>

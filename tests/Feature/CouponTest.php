@@ -327,3 +327,77 @@ test('resident coupon validation returns 422 error for a deleted or non-existent
         'message' => 'Invalid coupon code.',
     ]);
 });
+
+test('zeus admin can create coupons for multiple residents', function () {
+    $estate = Estate::factory()->create();
+    $resident1 = User::factory()->create();
+    $resident2 = User::factory()->create();
+
+    $response = $this->withSession([config('zeus.session_key') => true])
+        ->post(route('zeus.coupons.store'), [
+            'campaign_name' => 'Multi Resident Promo',
+            'code' => 'MULTI50',
+            'type' => 'percentage',
+            'value' => 50,
+            'scope' => 'resident',
+            'user_ids' => [$resident1->id, $resident2->id],
+        ]);
+
+    $response->assertRedirect(route('zeus.coupons.index'));
+
+    $this->assertDatabaseHas('coupons', [
+        'code' => 'MULTI50-' . $resident1->id,
+        'user_id' => $resident1->id,
+        'value' => 50,
+    ]);
+
+    $this->assertDatabaseHas('coupons', [
+        'code' => 'MULTI50-' . $resident2->id,
+        'user_id' => $resident2->id,
+        'value' => 50,
+    ]);
+});
+
+test('coupon validation fails if the coupon is not eligible for the plan', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    $plan1 = Plan::factory()->create(['price' => 5000]);
+    $plan2 = Plan::factory()->create(['price' => 10000]);
+    
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    // Create a coupon restricted to plan1
+    $coupon = Coupon::create([
+        'campaign_name' => 'Plan 1 Only',
+        'code' => 'PLAN1ONLY',
+        'type' => 'percentage',
+        'value' => 20,
+        'scope' => 'global',
+        'eligible_plans' => [$plan1->id],
+        'status' => 'active',
+        'creator_id' => $resident->id,
+    ]);
+
+    // Validation should succeed for plan1
+    $response1 = $this->actingAs($resident)
+        ->postJson(route('resident.billing.coupon.validate'), [
+            'code' => 'PLAN1ONLY',
+            'plan_id' => $plan1->id,
+        ]);
+    $response1->assertOk();
+    $response1->assertJson(['status' => 'success']);
+
+    // Validation should fail for plan2
+    $response2 = $this->actingAs($resident)
+        ->postJson(route('resident.billing.coupon.validate'), [
+            'code' => 'PLAN1ONLY',
+            'plan_id' => $plan2->id,
+        ]);
+    $response2->assertStatus(422);
+    $response2->assertJson([
+        'status' => 'error',
+        'message' => 'This coupon is not valid for the selected plan.',
+    ]);
+});

@@ -160,7 +160,7 @@ class BillingController extends Controller
         $estate = $this->estateContext->getEstate();
         $plan = Plan::findOrFail($request->plan_id);
 
-        $result = $couponService->validate($request->code, $user, $estate);
+        $result = $couponService->validate($request->code, $user, $estate, $plan);
 
         if ($result['status'] !== 'success') {
             return response()->json([
