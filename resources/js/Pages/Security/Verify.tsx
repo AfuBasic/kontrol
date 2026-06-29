@@ -1103,7 +1103,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
             </div>
             <input
                 type="text"
-                placeholder="License Plate Number"
+                placeholder="License Plate Number (Optional)"
                 value={data.vehicle_plate_number}
                 onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
@@ -1112,7 +1112,7 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
             <button
                 type="button"
                 onClick={() => onSubmit(data)}
-                disabled={!data.vehicle_make || !data.vehicle_plate_number}
+                disabled={!data.vehicle_make}
                 className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition-all active:scale-[0.98] disabled:opacity-50"
             >
                 Confirm Vehicle Entry
