@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
+import ThemeToggleIcon from '@/Components/Public/ThemeToggleIcon';
 
 interface HeaderProps {
     hideCta?: boolean;
@@ -21,12 +22,14 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
     }, []);
 
     const toggleTheme = (triggerRef: React.RefObject<HTMLButtonElement | null>) => {
-        if (document.documentElement.classList.contains('theme-transforming')) return;
-
-        // Phase 1: Trigger active transitioning class triggers
-        document.documentElement.classList.add('theme-transforming');
-
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
+        const btn = triggerRef.current;
+        if (btn) {
+            const { left, top, width, height } = btn.getBoundingClientRect();
+            document.documentElement.style.setProperty('--theme-x', `${Math.round(left + width / 2)}px`);
+            document.documentElement.style.setProperty('--theme-y', `${Math.round(top + height / 2)}px`);
+        }
 
         const applyTheme = () => {
             setTheme(nextTheme);
@@ -42,13 +45,12 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
             }
         };
 
-        // Phase 4: Delay swap theme variables to sweep midpoint (320ms)
-        setTimeout(applyTheme, 320);
+        if (!document.startViewTransition) {
+            applyTheme();
+            return;
+        }
 
-        // Phase 5: Settle transition classes
-        setTimeout(() => {
-            document.documentElement.classList.remove('theme-transforming');
-        }, 800);
+        document.startViewTransition(applyTheme);
     };
 
     const handleNavClick = (sectionId: string, e: React.MouseEvent) => {
@@ -134,18 +136,7 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.span
-                                    key={theme}
-                                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
-                                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
-                                    transition={{ duration: 0.18, ease: 'easeInOut' }}
-                                    style={{ display: 'flex' }}
-                                >
-                                    {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                                </motion.span>
-                            </AnimatePresence>
+                            <ThemeToggleIcon theme={theme} className="h-5 w-5" />
                         </button>
                     </div>
 
@@ -164,18 +155,7 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.span
-                                    key={theme}
-                                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
-                                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
-                                    transition={{ duration: 0.18, ease: 'easeInOut' }}
-                                    style={{ display: 'flex' }}
-                                >
-                                    {theme === 'dark' ? <Sun className="h-5.5 w-5.5" /> : <Moon className="h-5.5 w-5.5" />}
-                                </motion.span>
-                            </AnimatePresence>
+                            <ThemeToggleIcon theme={theme} className="h-5.5 w-5.5" />
                         </button>
                     </div>
                 </div>
