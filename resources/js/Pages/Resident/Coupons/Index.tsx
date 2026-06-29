@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Copy, Check, Calendar, Ticket, ChevronDown, ChevronUp, HelpCircle, X } from 'lucide-react';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 type Coupon = {
     id: number;
@@ -30,6 +31,8 @@ export default function CouponIndexPage({ coupons }: Props) {
     const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+    const { openExternalBilling } = useExternalBilling();
+
     const handleCopy = (e: React.MouseEvent, coupon: Coupon) => {
         e.stopPropagation();
         navigator.clipboard.writeText(coupon.code);
@@ -39,7 +42,7 @@ export default function CouponIndexPage({ coupons }: Props) {
 
     const handleRedeem = (e: React.MouseEvent, coupon: Coupon) => {
         e.stopPropagation();
-        router.visit(`/resident/billing?coupon=${coupon.code}`);
+        openExternalBilling(coupon.code);
     };
 
     // Separate active versus fully used/expired coupons

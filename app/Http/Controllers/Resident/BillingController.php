@@ -76,11 +76,11 @@ class BillingController extends Controller
             })
             ->where(function ($q) use ($user, $estate) {
                 $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
-                  ->orWhere('estate_id', $estate->id)
-                  ->orWhere('user_id', $user->id);
+                    ->orWhere('estate_id', $estate->id)
+                    ->orWhere('user_id', $user->id);
             })
             ->get()
-            ->filter(fn ($coupon) => !$coupon->isLimitReached($user))
+            ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
             ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)
             ->first();
 
@@ -201,10 +201,14 @@ class BillingController extends Controller
         }
     }
 
-    public function generateMagicUrl(GenerateMagicLoginUrlAction $action): JsonResponse
+    public function generateMagicUrl(Request $request, GenerateMagicLoginUrlAction $action): JsonResponse
     {
         $user = auth()->user();
-        $url = $action->execute($user, route('resident.billing.index', [], false));
+        $params = [];
+        if ($request->has('coupon')) {
+            $params['coupon'] = $request->coupon;
+        }
+        $url = $action->execute($user, route('resident.billing.index', $params, false));
 
         return response()->json([
             'status' => 'success',
