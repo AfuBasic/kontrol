@@ -8,7 +8,6 @@ import {
     ExclamationTriangleIcon,
     ArrowLeftIcon,
     ChevronDownIcon,
-    TicketIcon,
     TagIcon,
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
@@ -446,80 +445,24 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                     </div>
                 </motion.section>
 
-                {/* Coupon Code Input */}
-                <motion.section
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.02 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6"
-                >
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                                <TicketIcon className="h-4 w-4" strokeWidth={2.2} />
-                            </span>
-                            <div>
-                                <h3 className="text-sm font-semibold text-slate-900">Have a subscription coupon?</h3>
-                                <p className="text-xs text-slate-500">Apply it below to get discount on subscription payment.</p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                            <div className="relative flex-1">
-                                <input
-                                    type="text"
-                                    value={couponCode}
-                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    placeholder="Enter coupon code..."
-                                    disabled={Object.keys(appliedCoupons).length > 0 || isValidatingCoupon}
-                                    className="w-full rounded-2xl border border-slate-200 bg-white pl-4 pr-10 py-2.5 text-sm uppercase font-mono tracking-wider focus:border-indigo-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
-                                />
-                                {Object.keys(appliedCoupons).length > 0 && (
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-emerald-600">
-                                        <CheckCircleIcon className="h-5 w-5" strokeWidth={2.4} />
-                                    </span>
-                                )}
-                            </div>
-                            {Object.keys(appliedCoupons).length > 0 ? (
-                                <button
-                                    type="button"
-                                    onClick={handleRemoveCoupon}
-                                    className="rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-                                >
-                                    Remove
-                                </button>
-                            ) : (
-                                <button
-                                    type="submit"
-                                    disabled={!couponCode.trim() || isValidatingCoupon}
-                                    className="rounded-2xl bg-slate-900 px-6 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                    {isValidatingCoupon ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                        'Apply'
-                                    )}
-                                </button>
-                            )}
-                        </form>
-
-                        {couponError && (
-                            <p className="text-xs font-medium text-rose-600 flex items-center gap-1">
-                                <ExclamationTriangleIcon className="h-3.5 w-3.5" />
-                                {couponError}
+                {/* Auto Coupon Alert */}
+                {Object.keys(appliedCoupons).length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-3xl border border-emerald-100 bg-emerald-50/30 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 flex items-center gap-3"
+                    >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shrink-0">
+                            <TagIcon className="h-4 w-4" strokeWidth={2.4} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <h3 className="text-xs font-bold text-emerald-950">Active Promo Applied</h3>
+                            <p className="text-[11px] font-medium text-emerald-700 leading-normal">
+                                Coupon <span className="font-mono font-bold uppercase">{Object.values(appliedCoupons)[0]?.code}</span> has been auto-applied to this checkout.
                             </p>
-                        )}
-
-                        {Object.keys(appliedCoupons).length > 0 && (
-                            <div className="rounded-2xl bg-emerald-50/50 border border-emerald-100 p-3 flex items-center gap-2">
-                                <TagIcon className="h-4 w-4 text-emerald-600" />
-                                <span className="text-xs font-semibold text-emerald-800">
-                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!{isAutoApplied && ' (Auto-applied)'}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </motion.section>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Plan Selection */}
                 <motion.section
