@@ -2,19 +2,7 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Search, 
-    Plus, 
-    Building2, 
-    Users, 
-    Home, 
-    Activity, 
-    X, 
-    TrendingUp, 
-    MapPin,
-    AlertCircle,
-    CheckCircle2
-} from 'lucide-react';
+import { Search, Plus, Building2, Users, Home, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { index, toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
@@ -54,54 +42,59 @@ export default function EstateExplorer({ estates, filters }: Props) {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(
-            index.url(),
-            { search: searchQuery, status: statusFilter },
-            { preserveState: true, preserveScroll: true }
-        );
+        router.get(index.url(), { search: searchQuery, status: statusFilter }, { preserveState: true, preserveScroll: true });
     };
 
     const handleToggleStatus = () => {
         if (!estateToToggle) return;
         setIsProcessing(true);
-        router.post(toggleStatus.url({ estate: estateToToggle.ulid }), {}, { 
-            preserveScroll: true,
-            onFinish: () => {
-                setIsProcessing(false);
-                setEstateToToggle(null);
-                setSelectedEstate(null);
-            }
-        });
+        router.post(
+            toggleStatus.url({ estate: estateToToggle.ulid }),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setEstateToToggle(null);
+                    setSelectedEstate(null);
+                },
+            },
+        );
     };
 
     const handleDelete = () => {
         if (!estateToDelete) return;
         setIsProcessing(true);
-        router.delete(destroy.url({ estate: estateToDelete.ulid }), { 
+        router.delete(destroy.url({ estate: estateToDelete.ulid }), {
             preserveScroll: true,
             onFinish: () => {
                 setIsProcessing(false);
                 setEstateToDelete(null);
                 setSelectedEstate(null);
-            }
+            },
         });
     };
 
     const handleResetPassword = () => {
         if (!estateToReset) return;
         setIsProcessing(true);
-        router.post(resetPassword.url({ estate: estateToReset.ulid }), {}, { 
-            preserveScroll: true,
-            onFinish: () => {
-                setIsProcessing(false);
-                setEstateToReset(null);
-                setSelectedEstate(null);
-            }
-        });
+        router.post(
+            resetPassword.url({ estate: estateToReset.ulid }),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setEstateToReset(null);
+                    setSelectedEstate(null);
+                },
+            },
+        );
     };
 
     const getHealthColor = (score: number) => {
-        if (score >= 90) return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20';
+        if (score >= 90)
+            return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20';
         if (score >= 70) return 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20';
         return 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20';
     };
@@ -139,19 +132,19 @@ export default function EstateExplorer({ estates, filters }: Props) {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <form onSubmit={handleSearch} className="flex flex-1 items-center gap-3">
                     <div className="relative flex-1 sm:max-w-xs">
-                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                        <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                             type="text"
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="w-full rounded-xl border-slate-200 bg-white py-2.5 pr-4 pl-10 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-800 dark:bg-[#0f1423] dark:text-slate-500 dark:text-white"
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
+                        className="rounded-xl border-slate-200 bg-white py-2.5 pr-10 pl-4 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-800 dark:bg-[#0f1423] dark:text-slate-300 dark:text-slate-600"
                     >
                         <option value="">All Statuses</option>
                         <option value="active">Active</option>
@@ -159,7 +152,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                     </select>
                     <button
                         type="submit"
-                        className="rounded-xl bg-slate-900 dark:bg-white px-4 py-2.5 text-sm font-bold text-white dark:text-slate-900 transition-all hover:bg-slate-800 dark:hover:bg-slate-200"
+                        className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                     >
                         Filter
                     </button>
@@ -172,7 +165,9 @@ export default function EstateExplorer({ estates, filters }: Props) {
                     <div className="col-span-full py-12 text-center">
                         <Building2 className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
                         <h3 className="mt-4 text-lg font-black text-slate-900 dark:text-white">No estates found</h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Adjust your search or add a new estate to get started.</p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                            Adjust your search or add a new estate to get started.
+                        </p>
                     </div>
                 ) : (
                     estates.map((estate) => (
@@ -180,61 +175,57 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             layoutId={`estate-${estate.id}`}
                             key={estate.id}
                             onClick={() => setSelectedEstate(estate)}
-                            className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
+                            className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5 dark:border-slate-800 dark:bg-[#0f1423]"
                         >
                             <div className="p-6">
                                 <div className="mb-4 flex items-start justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                                         <Building2 className="h-6 w-6" />
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         {estate.has_active_coupons && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-750 dark:text-violet-400 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border border-violet-200 dark:border-violet-850">
+                                            <span className="text-violet-750 dark:border-violet-850 inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-100 px-2.5 py-1 text-[9px] font-black tracking-widest uppercase dark:bg-violet-500/10 dark:text-violet-400">
                                                 Coupons Active
                                             </span>
                                         )}
                                         <span
-                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black tracking-widest uppercase ${
                                                 estate.status === 'active'
-                                                    ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                                             }`}
                                         >
-                                            {estate.status === 'active' ? (
-                                                <CheckCircle2 className="h-3 w-3" />
-                                            ) : (
-                                                <AlertCircle className="h-3 w-3" />
-                                            )}
+                                            {estate.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                                             {estate.status}
                                         </span>
                                     </div>
                                 </div>
 
-                                <h3 className="text-lg font-black text-slate-900 dark:text-white line-clamp-1">{estate.name}</h3>
-                                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500 line-clamp-1">
+                                <h3 className="line-clamp-1 text-lg font-black text-slate-900 dark:text-white">{estate.name}</h3>
+                                <p className="mt-1 line-clamp-1 flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">
                                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                                     {estate.address}
                                 </p>
 
                                 <div className="mt-6 grid grid-cols-2 gap-4">
-                                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-3">
+                                    <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
                                         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                                             <Users className="h-4 w-4" />
-                                            <span className="text-xs font-bold uppercase tracking-wider">Residents</span>
+                                            <span className="text-xs font-bold tracking-wider uppercase">Residents</span>
                                         </div>
                                         <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_residents}</p>
                                     </div>
-                                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-3">
+                                    <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
                                         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                                             <Home className="h-4 w-4" />
-                                            <span className="text-xs font-bold uppercase tracking-wider">Properties</span>
+                                            <span className="text-xs font-bold tracking-wider uppercase">Properties</span>
                                         </div>
                                         <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_properties}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20 px-6 py-4">
+                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-800/50 dark:bg-slate-800/20">
                                 <div className="flex items-center gap-3">
                                     {/* Circular Progress for Health Score */}
                                     <div className="relative h-10 w-10">
@@ -255,12 +246,14 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <span className="text-xs font-black text-slate-700 dark:text-slate-300 dark:text-slate-600">{estate.health_score}</span>
+                                            <span className="text-xs font-black text-slate-700 dark:text-slate-300 dark:text-slate-600">
+                                                {estate.health_score}
+                                            </span>
                                         </div>
                                     </div>
                                     <span className="text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">Health Score</span>
                                 </div>
-                                <Activity className="h-5 w-5 text-slate-400 dark:text-slate-500 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+                                <Activity className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-600 dark:text-slate-500 dark:group-hover:text-indigo-400" />
                             </div>
                         </motion.div>
                     ))
@@ -277,7 +270,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedEstate(null)}
-                            className="fixed inset-0 z-40 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm"
+                            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm dark:bg-slate-950/60"
                         />
 
                         {/* Slide-over Panel */}
@@ -286,15 +279,15 @@ export default function EstateExplorer({ estates, filters }: Props) {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-                            className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] shadow-2xl"
+                            className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-[#0f1423]"
                         >
-                            <div className="flex flex-col h-full">
+                            <div className="flex h-full flex-col">
                                 {/* Panel Header */}
-                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 bg-white dark:bg-[#0f1423]/80 px-6 py-4 backdrop-blur-md">
+                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4 backdrop-blur-md dark:border-slate-800/50 dark:bg-[#0f1423]/80">
                                     <h2 className="text-lg font-black text-slate-900 dark:text-white">Estate Insights</h2>
                                     <button
                                         onClick={() => setSelectedEstate(null)}
-                                        className="rounded-full p-2 text-slate-400 dark:text-slate-500 transition-colors hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-600 dark:text-slate-400 dark:text-slate-500 active:scale-95"
+                                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:scale-95 dark:bg-slate-800 dark:text-slate-400 dark:text-slate-500"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
@@ -303,13 +296,13 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                 {/* Panel Content */}
                                 <div className="flex-1 p-6">
                                     <div className="mb-8">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-inner">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-500/10 dark:text-indigo-400">
                                             <Building2 className="h-8 w-8" />
                                         </div>
                                         <div className="mt-4 flex items-center gap-2">
                                             <h1 className="text-2xl font-black text-slate-900 dark:text-white">{selectedEstate.name}</h1>
                                             {selectedEstate.has_active_coupons && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-750 dark:text-violet-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest border border-violet-200 dark:border-violet-850">
+                                                <span className="text-violet-750 dark:border-violet-850 inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-100 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase dark:bg-violet-500/10 dark:text-violet-400">
                                                     Coupons Active
                                                 </span>
                                             )}
@@ -324,37 +317,47 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 <Activity className="h-5 w-5 opacity-75" />
                                                 <span className="text-2xl font-black">{selectedEstate.health_score}</span>
                                             </div>
-                                            <p className="mt-2 text-xs font-bold uppercase tracking-wider opacity-75">Health Score</p>
+                                            <p className="mt-2 text-xs font-bold tracking-wider uppercase opacity-75">Health Score</p>
                                         </div>
-                                        <div className="rounded-3xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 p-5 text-indigo-600 dark:text-indigo-400">
+                                        <div className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-400">
                                             <div className="flex items-center justify-between">
                                                 <TrendingUp className="h-5 w-5 opacity-75" />
-                                                <span className="text-xl font-black">
-                                                    ₦{(selectedEstate.mrr).toLocaleString('en-NG')}
-                                                </span>
+                                                <span className="text-xl font-black">₦{selectedEstate.mrr.toLocaleString('en-NG')}</span>
                                             </div>
-                                            <p className="mt-2 text-xs font-bold uppercase tracking-wider opacity-75">Est. MRR</p>
+                                            <p className="mt-2 text-xs font-bold tracking-wider uppercase opacity-75">Est. MRR</p>
                                         </div>
                                     </div>
 
                                     {/* Additional Metrics (Placeholder for trendlines/charts) */}
                                     <div className="space-y-6">
                                         <div>
-                                            <h3 className="mb-3 text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Demographics</h3>
-                                            <div className="rounded-3xl border border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800/50 p-5">
-                                                <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">Total Residents</span>
-                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{selectedEstate.total_residents}</span>
+                                            <h3 className="mb-3 text-sm font-black tracking-widest text-slate-900 uppercase dark:text-white">
+                                                Demographics
+                                            </h3>
+                                            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-800/50 dark:bg-slate-800/50">
+                                                <div className="flex justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">
+                                                        Total Residents
+                                                    </span>
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                                                        {selectedEstate.total_residents}
+                                                    </span>
                                                 </div>
                                                 <div className="flex justify-between pt-3">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">Total Properties</span>
-                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{selectedEstate.total_properties}</span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">
+                                                        Total Properties
+                                                    </span>
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                                                        {selectedEstate.total_properties}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h3 className="mb-3 text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Actions</h3>
+                                            <h3 className="mb-3 text-sm font-black tracking-widest text-slate-900 uppercase dark:text-white">
+                                                Actions
+                                            </h3>
                                             <div className="flex flex-col gap-3">
                                                 <Link
                                                     href={`/zeus/estates/${selectedEstate.id}`}
@@ -364,20 +367,30 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 </Link>
                                                 <Link
                                                     href={`/zeus/estates/${selectedEstate.id}/edit`}
-                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3.5 text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800/50 active:scale-[0.98]"
+                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98] dark:border-slate-800 dark:bg-[#0f1423] dark:bg-slate-800/50 dark:text-slate-300 dark:text-slate-600"
                                                 >
                                                     Edit Settings
                                                 </Link>
                                                 <div className="mt-4 grid grid-cols-2 gap-3">
-                                                    <div 
-                                                        onClick={() => setEstateToToggle({ id: selectedEstate.id, ulid: selectedEstate.ulid, status: selectedEstate.status })}
-                                                        className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] px-4 py-3 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
+                                                    <div
+                                                        onClick={() =>
+                                                            setEstateToToggle({
+                                                                id: selectedEstate.id,
+                                                                ulid: selectedEstate.ulid,
+                                                                status: selectedEstate.status,
+                                                            })
+                                                        }
+                                                        className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-[#0f1423] dark:hover:bg-slate-800/50"
                                                     >
                                                         <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
                                                             {selectedEstate.status === 'active' ? 'Active' : 'Inactive'}
                                                         </span>
-                                                        <div className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${selectedEstate.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${selectedEstate.status === 'active' ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                        <div
+                                                            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${selectedEstate.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                                        >
+                                                            <span
+                                                                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${selectedEstate.status === 'active' ? 'translate-x-5' : 'translate-x-1'}`}
+                                                            />
                                                         </div>
                                                     </div>
                                                     <button
@@ -385,16 +398,20 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                             setEstateToReset(selectedEstate);
                                                             setIsResetModalOpen(true);
                                                         }}
-                                                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1423] py-3 text-xs font-bold text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 active:scale-95"
+                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-[#0f1423] dark:text-slate-400 dark:hover:bg-slate-800/50"
                                                     >
                                                         Resend Invitation
                                                     </button>
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        setEstateToDelete({ id: selectedEstate.id, ulid: selectedEstate.ulid, name: selectedEstate.name });
+                                                        setEstateToDelete({
+                                                            id: selectedEstate.id,
+                                                            ulid: selectedEstate.ulid,
+                                                            name: selectedEstate.name,
+                                                        });
                                                     }}
-                                                    className="mt-2 w-full rounded-2xl bg-rose-50 dark:bg-rose-500/10 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-500/20 active:scale-[0.98]"
+                                                    className="mt-2 w-full rounded-2xl bg-rose-50 py-3 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 active:scale-[0.98] dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20"
                                                 >
                                                     Delete Estate
                                                 </button>

@@ -24,20 +24,16 @@ export default function Success() {
                     {/* Branding */}
                     <div className="mb-10 flex justify-center">
                         <div className="h-10 w-auto">
-                            <img
-                                src="/assets/images/kontrol-white-logo-new.png"
-                                alt="Kontrol"
-                                className="h-full w-auto object-contain"
-                            />
+                            <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-full w-auto object-contain" />
                         </div>
                     </div>
 
                     {/* Frosted Glass Panel */}
                     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
-                        <div className="p-8 lg:p-10 text-center">
-                            <motion.div 
-                                initial={{ scale: 0 }} 
-                                animate={{ scale: 1 }} 
+                        <div className="p-8 text-center lg:p-10">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
                                 transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
                                 className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"
                             >
@@ -49,7 +45,7 @@ export default function Success() {
                                 Welcome to the community! Your account is now active and ready to use.
                             </p>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-8">
+                            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="rounded-2xl border border-white/5 bg-white/5 p-5 text-left transition-colors hover:bg-white/10">
                                     <ShieldCheck className="mb-3 h-6 w-6 text-[#1F6FDB]" />
                                     <h3 className="mb-1 font-medium text-white">Smart Security</h3>
@@ -60,7 +56,7 @@ export default function Success() {
                                     <h3 className="mb-1 font-medium text-white">Visitor Management</h3>
                                     <p className="text-xs text-white/50">Generate invites and track guests in real-time.</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/5 bg-white/5 p-5 text-left sm:col-span-2 transition-colors hover:bg-white/10">
+                                <div className="rounded-2xl border border-white/5 bg-white/5 p-5 text-left transition-colors hover:bg-white/10 sm:col-span-2">
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1F6FDB]/20 text-[#1F6FDB]">
                                             <Zap className="h-6 w-6" />
@@ -73,16 +69,14 @@ export default function Success() {
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-white/10 p-6 relative overflow-hidden">
-                                <div className="absolute -right-4 -top-4 opacity-10">
+                            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/10 p-6">
+                                <div className="absolute -top-4 -right-4 opacity-10">
                                     <Smartphone className="h-32 w-32" />
                                 </div>
                                 <div className="relative z-10">
                                     <h2 className="mb-2 text-lg font-medium text-white">Kontrol Mobile App</h2>
-                                    <p className="mb-6 text-sm text-white/60">
-                                        Download the Kontrol mobile app to start managing your access.
-                                    </p>
-                                    
+                                    <p className="mb-6 text-sm text-white/60">Download the Kontrol mobile app to start managing your access.</p>
+
                                     <a
                                         href="/#download"
                                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-3.5 text-sm font-semibold tracking-wide text-white shadow-lg shadow-[#1F6FDB]/20 transition-all hover:bg-[#2579ed] hover:shadow-[#1F6FDB]/40 active:scale-95"

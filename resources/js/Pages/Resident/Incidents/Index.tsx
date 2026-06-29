@@ -460,7 +460,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                                         incident.is_upvoted
                                                             ? 'bg-indigo-50 font-black text-indigo-600'
                                                             : isMyReport
-                                                              ? 'text-slate-300 cursor-not-allowed'
+                                                              ? 'cursor-not-allowed text-slate-300'
                                                               : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
                                                     }`}
                                                 >

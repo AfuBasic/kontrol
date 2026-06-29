@@ -114,7 +114,9 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             Phone Number <span className="font-normal text-gray-400">(optional)</span>
                         </label>
                         <input
-                            type="tel" inputMode="numeric" pattern="[0-9]*"
+                            type="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}

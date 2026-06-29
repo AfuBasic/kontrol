@@ -174,7 +174,9 @@ export default function EditPlan({ plan, features }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Price (in kobo)</label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.price}
                                         onChange={(e) => setData('price', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
@@ -210,7 +212,9 @@ export default function EditPlan({ plan, features }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Residents</label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.max_residents}
                                         onChange={(e) => setData('max_residents', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
@@ -220,7 +224,9 @@ export default function EditPlan({ plan, features }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Security</label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.max_security}
                                         onChange={(e) => setData('max_security', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
@@ -230,7 +236,9 @@ export default function EditPlan({ plan, features }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Max Admins</label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.max_admins}
                                         onChange={(e) => setData('max_admins', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
@@ -241,7 +249,9 @@ export default function EditPlan({ plan, features }: Props) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Household Limit</label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.household_member_limit}
                                         onChange={(e) => setData('household_member_limit', e.target.value)}
                                         className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"

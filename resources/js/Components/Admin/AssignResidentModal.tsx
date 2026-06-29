@@ -25,19 +25,22 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const fetchResidents = useCallback(async (searchQuery: string) => {
-        setIsLoading(true);
-        try {
-            const response = await axios.get(availableResidents.url({ propertyOwner: String(propertyOwnerId) }), {
-                params: { search: searchQuery },
-            });
-            setResidents(response.data);
-        } catch (error) {
-            console.error('Failed to fetch residents', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [propertyOwnerId]);
+    const fetchResidents = useCallback(
+        async (searchQuery: string) => {
+            setIsLoading(true);
+            try {
+                const response = await axios.get(availableResidents.url({ propertyOwner: String(propertyOwnerId) }), {
+                    params: { search: searchQuery },
+                });
+                setResidents(response.data);
+            } catch (error) {
+                console.error('Failed to fetch residents', error);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [propertyOwnerId],
+    );
 
     // Debounce search
     useEffect(() => {
@@ -60,9 +63,7 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
     }, [isOpen]);
 
     const toggleSelection = (id: number) => {
-        setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-        );
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
     };
 
     const handleAssign = () => {
@@ -77,7 +78,7 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
                     onClose();
                 },
                 onFinish: () => setIsSubmitting(false),
-            }
+            },
         );
     };
 
@@ -90,7 +91,7 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
                     </div>
                     <input
                         type="text"
-                        className="block w-full rounded-xl border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        className="block w-full rounded-xl border-0 py-2.5 pr-3 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
                         placeholder="Search residents by name or email..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -99,9 +100,7 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
 
                 <div className="mt-4 h-72 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/50 p-2">
                     {isLoading && residents.length === 0 ? (
-                        <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                            Loading residents...
-                        </div>
+                        <div className="flex h-full items-center justify-center text-sm text-gray-500">Loading residents...</div>
                     ) : residents.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center text-center">
                             <UserPlusIcon className="mx-auto h-8 w-8 text-gray-300" />
@@ -113,9 +112,7 @@ export default function AssignResidentModal({ isOpen, onClose, propertyOwnerId }
                                 <li key={resident.id}>
                                     <label
                                         className={`flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors ${
-                                            selectedIds.includes(resident.id)
-                                                ? 'bg-indigo-50 ring-1 ring-indigo-200'
-                                                : 'hover:bg-white'
+                                            selectedIds.includes(resident.id) ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-white'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">

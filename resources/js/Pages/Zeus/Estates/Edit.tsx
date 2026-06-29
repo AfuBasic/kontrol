@@ -70,7 +70,7 @@ export default function EditEstate({ estate }: Props) {
                     {/* Basic Information Card */}
                     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
                         <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6 dark:border-slate-800/50 dark:bg-slate-800/20">
-                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                            <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                 Basic Information
                             </h2>
@@ -89,7 +89,7 @@ export default function EditEstate({ estate }: Props) {
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                         placeholder="Enter estate name"
                                     />
                                 </div>
@@ -109,8 +109,10 @@ export default function EditEstate({ estate }: Props) {
                                         id="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className={`block w-full rounded-2xl border border-slate-200 py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-white ${
-                                            estate.admin_accepted ? 'cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'
+                                        className={`block w-full rounded-2xl border border-slate-200 py-3 pr-4 pl-11 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:text-white ${
+                                            estate.admin_accepted
+                                                ? 'cursor-not-allowed bg-slate-50 dark:bg-slate-800/50'
+                                                : 'bg-white dark:bg-slate-900'
                                         }`}
                                         placeholder="admin@estate.com"
                                         disabled={estate.admin_accepted}
@@ -138,7 +140,7 @@ export default function EditEstate({ estate }: Props) {
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         rows={3}
-                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                        className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                         placeholder="Enter estate address"
                                     />
                                 </div>
@@ -150,7 +152,7 @@ export default function EditEstate({ estate }: Props) {
                     {/* Settings & Billing Card */}
                     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
                         <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6 dark:border-slate-800/50 dark:bg-slate-800/20">
-                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                            <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <Settings className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                 Settings & Billing
                             </h2>
@@ -165,7 +167,7 @@ export default function EditEstate({ estate }: Props) {
                                     id="status"
                                     value={data.status}
                                     onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
-                                    className={`block w-full rounded-2xl border border-slate-200 py-3 px-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-white ${
+                                    className={`block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:text-white ${
                                         !estate.admin_accepted ? 'cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'
                                     }`}
                                     disabled={!estate.admin_accepted}
@@ -190,12 +192,14 @@ export default function EditEstate({ estate }: Props) {
                                     id="charge_type"
                                     value={data.charge_type}
                                     onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
-                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 px-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                    className="block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                 >
                                     <option value="estate">Charge Estate (Bulk)</option>
                                     <option value="residents">Charge Residents (Individual)</option>
                                 </select>
-                                {errors.charge_type && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.charge_type}</p>}
+                                {errors.charge_type && (
+                                    <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.charge_type}</p>
+                                )}
                             </div>
 
                             {/* Free Trial Toggle */}
@@ -207,23 +211,28 @@ export default function EditEstate({ estate }: Props) {
                                             Allow this estate to start with a trial period before billing begins.
                                         </p>
                                     </div>
-                                    <div 
+                                    <div
                                         onClick={() => setData('free_trial_enabled', !data.free_trial_enabled)}
                                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${data.free_trial_enabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                                     >
-                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${data.free_trial_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${data.free_trial_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                                        />
                                     </div>
                                 </div>
 
                                 {/* Free Trial Days & Grace Period - Animated Reveal */}
                                 {data.free_trial_enabled && (
-                                    <motion.div 
+                                    <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
-                                        className="mt-6 grid gap-6 border-t border-slate-200 pt-6 dark:border-slate-700 md:grid-cols-2"
+                                        className="mt-6 grid gap-6 border-t border-slate-200 pt-6 md:grid-cols-2 dark:border-slate-700"
                                     >
                                         <div>
-                                            <label htmlFor="free_trial_days" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                            <label
+                                                htmlFor="free_trial_days"
+                                                className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300"
+                                            >
                                                 Trial Duration (Days)
                                             </label>
                                             <div className="relative">
@@ -231,20 +240,27 @@ export default function EditEstate({ estate }: Props) {
                                                     <Clock className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     id="free_trial_days"
                                                     min="1"
                                                     max="365"
                                                     value={data.free_trial_days}
                                                     onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
-                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                                 />
                                             </div>
-                                            {errors.free_trial_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.free_trial_days}</p>}
+                                            {errors.free_trial_days && (
+                                                <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.free_trial_days}</p>
+                                            )}
                                         </div>
 
                                         <div>
-                                            <label htmlFor="grace_period_days" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                            <label
+                                                htmlFor="grace_period_days"
+                                                className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300"
+                                            >
                                                 Grace Period (Days)
                                             </label>
                                             <div className="relative">
@@ -252,28 +268,37 @@ export default function EditEstate({ estate }: Props) {
                                                     <CreditCard className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     id="grace_period_days"
                                                     min="1"
                                                     max="30"
                                                     value={data.grace_period_days}
                                                     onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
-                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                                 />
                                             </div>
-                                            {errors.grace_period_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.grace_period_days}</p>}
+                                            {errors.grace_period_days && (
+                                                <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">
+                                                    {errors.grace_period_days}
+                                                </p>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}
-                                
+
                                 {!data.free_trial_enabled && (
-                                    <motion.div 
+                                    <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         className="mt-6 border-t border-slate-200 pt-6 dark:border-slate-700"
                                     >
                                         <div className="md:w-1/2">
-                                            <label htmlFor="grace_period_days_no_trial" className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">
+                                            <label
+                                                htmlFor="grace_period_days_no_trial"
+                                                className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300"
+                                            >
                                                 Grace Period (Days)
                                             </label>
                                             <div className="relative">
@@ -281,19 +306,25 @@ export default function EditEstate({ estate }: Props) {
                                                     <CreditCard className="h-5 w-5 text-slate-400" />
                                                 </div>
                                                 <input
-                                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
                                                     id="grace_period_days_no_trial"
                                                     min="1"
                                                     max="30"
                                                     value={data.grace_period_days}
                                                     onChange={(e) => setData('grace_period_days', parseInt(e.target.value) || 2)}
-                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm font-medium text-slate-900 transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                                                 />
                                             </div>
                                             <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                                                 Days allowed for payment before service suspension.
                                             </p>
-                                            {errors.grace_period_days && <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{errors.grace_period_days}</p>}
+                                            {errors.grace_period_days && (
+                                                <p className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">
+                                                    {errors.grace_period_days}
+                                                </p>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}

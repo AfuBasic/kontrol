@@ -24,20 +24,16 @@ export default function Invalid() {
                     {/* Branding */}
                     <div className="mb-10 flex justify-center">
                         <div className="h-10 w-auto">
-                            <img
-                                src="/assets/images/kontrol-white-logo-new.png"
-                                alt="Kontrol"
-                                className="h-full w-auto object-contain"
-                            />
+                            <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-full w-auto object-contain" />
                         </div>
                     </div>
 
                     {/* Frosted Glass Panel */}
                     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
-                        <div className="p-8 lg:p-10 text-center">
-                            <motion.div 
-                                initial={{ scale: 0 }} 
-                                animate={{ scale: 1 }} 
+                        <div className="p-8 text-center lg:p-10">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
                                 transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
                                 className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20 text-red-400"
                             >
@@ -46,7 +42,8 @@ export default function Invalid() {
 
                             <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Invalid or Expired Link</h1>
                             <p className="mb-8 text-sm leading-relaxed text-white/60">
-                                This invitation link is no longer valid. It may have expired, or you might have already used it to set up your account.
+                                This invitation link is no longer valid. It may have expired, or you might have already used it to set up your
+                                account.
                             </p>
 
                             <div className="flex flex-col gap-4">
@@ -67,7 +64,7 @@ export default function Invalid() {
                     </div>
 
                     <div className="mt-8 text-center">
-                        <Link href="/" className="inline-flex items-center gap-2 text-xs text-white/40 hover:text-white transition-colors">
+                        <Link href="/" className="inline-flex items-center gap-2 text-xs text-white/40 transition-colors hover:text-white">
                             <ArrowLeft className="h-3 w-3" />
                             Return to Homepage
                         </Link>

@@ -78,14 +78,14 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     const now = new Date();
     const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
     const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
-    
+
     let tempStatus = code.status;
     if (code.status === 'scheduled' && !isFuture) {
         tempStatus = 'active';
     } else if (code.status === 'active' && isFuture) {
         tempStatus = 'scheduled';
     }
-    
+
     const effectiveStatus = tempStatus === 'active' && isExpired ? 'expired' : tempStatus;
     const status = getStatusInfo(effectiveStatus);
     const typeInfo = getPassTypeDetails(code.type);
@@ -200,7 +200,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
             layoutId={`visitor-card-${code.id}`}
             whileHover={{ y: -2 }}
             onClick={() => router.visit(resident.visitors.show.url(code.id))}
-            className="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 cursor-pointer active:bg-slate-50/50"
+            className="group relative cursor-pointer overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 active:bg-slate-50/50"
         >
             {/* Card Body */}
             <div className="flex items-start gap-4">
@@ -305,7 +305,6 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                             <span>Share</span>
                         </button>
                     )}
-
                 </div>
             </div>
 

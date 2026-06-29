@@ -150,9 +150,7 @@ export default function Contacts({ contacts, estateName }: Props) {
                         Back to Home
                     </Link>
                     <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Contacts</h1>
-                    <p className="mt-2 text-lg text-indigo-100">
-                        Quick access to emergency hotlines and estate contacts.
-                    </p>
+                    <p className="mt-2 text-lg text-indigo-100">Quick access to emergency hotlines and estate contacts.</p>
                 </div>
             </motion.div>
 
@@ -170,7 +168,7 @@ export default function Contacts({ contacts, estateName }: Props) {
             {/* Contacts Lists */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
                 {hasAnyContacts && (
-                    <div className="pb-10 border-t border-slate-100 pt-8 mt-8">
+                    <div className="mt-8 border-t border-slate-100 pt-8 pb-10">
                         <ContactGroup title="Estate Contacts" items={grouped.phones} icon={Phone} delayStart={0.3} type="phone" />
                         <ContactGroup title="Email Addresses" items={grouped.emails} icon={Mail} delayStart={0.5} type="email" />
                         <ContactGroup title="Other Information" items={grouped.others} icon={Sparkles} delayStart={0.7} type="other" />

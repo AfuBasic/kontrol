@@ -625,7 +625,6 @@ textarea,
     }
 }
 
-
 /* Fix Capacitor Android keyboard resizing the body (resize: 'body')
    This ensures that Tailwind's h-screen/min-h-screen responds to the physically
    resized body instead of staying at the original 100vh, preventing the UI from
@@ -651,8 +650,8 @@ html.capacitor-native .h-screen {
 }
 
 /* Fix native iOS WebKit styling and overflow of datetime-local and date inputs */
-input[type="datetime-local"],
-input[type="date"] {
+input[type='datetime-local'],
+input[type='date'] {
     -webkit-appearance: none;
     appearance: none;
     min-height: 1.5em;

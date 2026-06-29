@@ -838,17 +838,10 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-1 flex-col bg-[#f8fafc]"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col bg-[#f8fafc]">
             {/* Terminal Header Info */}
             <div className="px-6 pt-5 pb-1 text-center">
-                <span className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase">
-                    Kontrol Terminal • Access Verification
-                </span>
+                <span className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase">Kontrol Terminal • Access Verification</span>
             </div>
 
             <div className="flex flex-1 flex-col items-center justify-center px-4 py-3">
@@ -861,7 +854,9 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                 >
                     {/* Status badge and Type header */}
                     <div className="flex items-center justify-between gap-4">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black tracking-wide ${statusBg}`}>
+                        <span
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black tracking-wide ${statusBg}`}
+                        >
                             {icon}
                             {statusLabel}
                         </span>
@@ -878,7 +873,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
                             {result.code_type === 'event' ? 'Event Name' : 'Visitor Full Name'}
                         </span>
-                        <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-none break-words">
+                        <h2 className="text-4xl leading-none font-black tracking-tight break-words text-slate-900 md:text-5xl">
                             {result.visitor_name || (result.code_type === 'event' ? 'Unnamed Event' : 'Guest Visitor')}
                         </h2>
                     </div>
@@ -888,12 +883,8 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                     {/* Host Info */}
                     <div className="space-y-1">
-                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                            Host Resident
-                        </span>
-                        <p className="text-2xl font-black text-slate-800 leading-snug break-words">
-                            {result.host_name || 'Not Specified'}
-                        </p>
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Host Resident</span>
+                        <p className="text-2xl leading-snug font-black break-words text-slate-800">{result.host_name || 'Not Specified'}</p>
                     </div>
 
                     {/* Section details */}
@@ -902,22 +893,22 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     <div className="space-y-4">
                         {/* Purpose */}
                         {result.purpose && (
-                            <div className="flex justify-between items-center gap-4">
+                            <div className="flex items-center justify-between gap-4">
                                 <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                     {result.code_type === 'long_lived' ? 'Role' : 'Purpose'}
                                 </span>
-                                <span className="text-sm font-bold text-slate-800 text-right">{result.purpose}</span>
+                                <span className="text-right text-sm font-bold text-slate-800">{result.purpose}</span>
                             </div>
                         )}
 
                         {/* Validity period */}
-                        <div className="flex justify-between items-center gap-4">
+                        <div className="flex items-center justify-between gap-4">
                             <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Validity</span>
-                            <span className="text-sm font-bold text-slate-800 text-right">
+                            <span className="text-right text-sm font-bold text-slate-800">
                                 {isCheckoutPending
                                     ? 'Exit Completed'
                                     : !valid
-                                      ? (result.message || 'Access Denied')
+                                      ? result.message || 'Access Denied'
                                       : result.status === 'scheduled' && result.starts_at
                                         ? `From ${formatDateTime(result.starts_at)}`
                                         : expiry
@@ -928,7 +919,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                         {/* Context intelligence tags inside the card */}
                         {contextTags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-4 border-t border-slate-50">
+                            <div className="flex flex-wrap gap-1.5 border-t border-slate-50 pt-4">
                                 {contextTags.map((tag, idx) => (
                                     <span
                                         key={idx}
@@ -942,8 +933,8 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                         {/* Event capacity meter */}
                         {result.code_type === 'event' && (
-                            <div className="pt-4 border-t border-slate-100 mt-2 space-y-2">
-                                <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            <div className="mt-2 space-y-2 border-t border-slate-100 pt-4">
+                                <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                     <span>Guest Attendance</span>
                                     <span className="text-xs font-black text-slate-800">
                                         {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Admitted
@@ -964,17 +955,17 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
             </div>
 
             {/* Sticky Action Footer */}
-            <div className="px-6 pb-[calc(env(safe-area-inset-bottom,24px)+24px)] pt-4 bg-[#f8fafc]">
+            <div className="bg-[#f8fafc] px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,24px)+24px)]">
                 {/* Vehicle Form details */}
                 {valid && !isCheckoutPending && result.has_vehicle && (
-                    <div className="mb-6 w-full max-w-md mx-auto">
+                    <div className="mx-auto mb-6 w-full max-w-md">
                         <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
                     </div>
                 )}
 
                 {/* Confirm checkout buttons */}
                 {valid && isCheckoutPending && (
-                    <div className="w-full max-w-md mx-auto space-y-3">
+                    <div className="mx-auto w-full max-w-md space-y-3">
                         <button
                             type="button"
                             onClick={() => onCheckout()}
@@ -994,12 +985,12 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
 
                 {/* Auto return progress indicator / Reset fallback */}
                 {!result.has_vehicle && (!valid || !isCheckoutPending) && (
-                    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center gap-4">
+                    <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-4">
                         {isAutoReturnActive ? (
-                            <div className="flex flex-col items-center gap-4 w-full">
+                            <div className="flex w-full flex-col items-center gap-4">
                                 {/* Elegant pill timer */}
-                                <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-full border border-slate-150 shadow-xs">
-                                    <div className="relative flex items-center justify-center h-5 w-5">
+                                <div className="border-slate-150 flex items-center gap-3 rounded-full border bg-white px-5 py-3 shadow-xs">
+                                    <div className="relative flex h-5 w-5 items-center justify-center">
                                         <svg className="-rotate-90 transform" width="20" height="20">
                                             <circle
                                                 className="text-slate-100"
@@ -1025,9 +1016,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                                 />
                                             )}
                                         </svg>
-                                        <span className="absolute text-[8px] font-black text-slate-800">
-                                            {countdown}
-                                        </span>
+                                        <span className="absolute text-[8px] font-black text-slate-800">{countdown}</span>
                                     </div>
                                     <span className="text-xs font-bold text-slate-600">
                                         {isPaused ? 'Auto-return paused' : 'Returning to scanner...'}
@@ -1035,7 +1024,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                     <button
                                         type="button"
                                         onClick={() => setIsPaused(!isPaused)}
-                                        className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                                        className="rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100"
                                     >
                                         {isPaused ? <Play className="h-3 w-3 fill-slate-500" /> : <Pause className="h-3 w-3" />}
                                     </button>
@@ -1045,7 +1034,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                 <button
                                     type="button"
                                     onClick={onReset}
-                                    className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors py-2"
+                                    className="py-2 text-[11px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-600"
                                 >
                                     Verify Another Pass Immediately
                                 </button>

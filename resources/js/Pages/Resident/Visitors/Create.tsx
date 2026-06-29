@@ -132,10 +132,9 @@ const CreateAccessCode = () => {
 
     const isScheduleStepInvalid = step === 'schedule' && !!scheduleError;
     const isDetailsStepInvalid =
-        step === 'details' && (
-            ((form.data.type === 'long_lived' || form.data.type === 'event') && !form.data.visitor_name.trim()) ||
-            (form.data.type === 'long_lived' && isOthersSelected && !customPurpose.trim())
-        );
+        step === 'details' &&
+        (((form.data.type === 'long_lived' || form.data.type === 'event') && !form.data.visitor_name.trim()) ||
+            (form.data.type === 'long_lived' && isOthersSelected && !customPurpose.trim()));
     const isStepInvalid = isScheduleStepInvalid || isDetailsStepInvalid;
 
     const handleBack = () => {
@@ -168,8 +167,8 @@ const CreateAccessCode = () => {
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-50 text-rose-500 shadow-inner">
                             <AlertCircle className="h-10 w-10" />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Access Limited</h2>
-                        <p className="mt-3 text-sm font-medium text-slate-500 leading-relaxed max-w-xs">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Access Limited</h2>
+                        <p className="mt-3 max-w-xs text-sm leading-relaxed font-medium text-slate-500">
                             To generate visitor access codes, you must have an active resident subscription.
                         </p>
                         <div className="mt-8 w-full space-y-3">
@@ -320,10 +319,7 @@ const CreateAccessCode = () => {
                                         </div>
                                         {isSingleUse && (
                                             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-5 right-5 text-white">
-                                                <CheckCircle2
-                                                    className="h-5 w-5 rounded-full bg-slate-900 text-white"
-                                                    fill="currentColor"
-                                                />
+                                                <CheckCircle2 className="h-5 w-5 rounded-full bg-slate-900 text-white" fill="currentColor" />
                                             </motion.div>
                                         )}
                                     </button>
@@ -367,10 +363,7 @@ const CreateAccessCode = () => {
                                                     animate={{ scale: 1 }}
                                                     className="absolute top-5 right-5 text-white"
                                                 >
-                                                    <CheckCircle2
-                                                        className="h-5 w-5 rounded-full bg-slate-900 text-white"
-                                                        fill="currentColor"
-                                                    />
+                                                    <CheckCircle2 className="h-5 w-5 rounded-full bg-slate-900 text-white" fill="currentColor" />
                                                 </motion.div>
                                             )}
                                         </button>
@@ -413,10 +406,7 @@ const CreateAccessCode = () => {
                                                     animate={{ scale: 1 }}
                                                     className="absolute top-5 right-5 text-white"
                                                 >
-                                                    <CheckCircle2
-                                                        className="h-5 w-5 rounded-full bg-slate-900 text-white"
-                                                        fill="currentColor"
-                                                    />
+                                                    <CheckCircle2 className="h-5 w-5 rounded-full bg-slate-900 text-white" fill="currentColor" />
                                                 </motion.div>
                                             )}
                                         </button>
@@ -464,7 +454,7 @@ const CreateAccessCode = () => {
                                                         setScheduleDate(d);
                                                         updateStartsAt(d, scheduleHour, scheduleMinute, scheduleAmpm);
                                                     }}
-                                                    className="relative w-full min-w-0 rounded-2xl bg-slate-50 py-4 pl-12 pr-4 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
+                                                    className="relative w-full min-w-0 rounded-2xl bg-slate-50 py-4 pr-4 pl-12 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none focus:ring-2 focus:ring-slate-900"
                                                 />
                                             </div>
                                         </div>
@@ -472,11 +462,13 @@ const CreateAccessCode = () => {
                                         {/* Time Picker Row (Shown if date is selected) */}
                                         {scheduleDate && (
                                             <div className="space-y-2 border-t border-slate-100 pt-4">
-                                                <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase block mb-1">Select Time</span>
+                                                <span className="mb-1 block text-[11px] font-black tracking-wider text-slate-400 uppercase">
+                                                    Select Time
+                                                </span>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     {/* Hour Selection */}
-                                                    <div className="flex flex-col gap-1 min-w-0">
-                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hour</label>
+                                                    <div className="flex min-w-0 flex-col gap-1">
+                                                        <label className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Hour</label>
                                                         <div className="relative w-full">
                                                             <select
                                                                 value={scheduleHour}
@@ -485,18 +477,22 @@ const CreateAccessCode = () => {
                                                                     setScheduleHour(h);
                                                                     updateStartsAt(scheduleDate, h, scheduleMinute, scheduleAmpm);
                                                                 }}
-                                                                className="w-full min-w-0 rounded-2xl bg-slate-50 py-3.5 px-3 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                                className="w-full min-w-0 appearance-none rounded-2xl bg-slate-50 px-3 py-3.5 font-bold text-slate-900 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-slate-900"
                                                             >
                                                                 {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
-                                                                    <option key={h} value={h}>{h}</option>
+                                                                    <option key={h} value={h}>
+                                                                        {h}
+                                                                    </option>
                                                                 ))}
                                                             </select>
                                                         </div>
                                                     </div>
 
                                                     {/* Minute Selection */}
-                                                    <div className="flex flex-col gap-1 min-w-0">
-                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Minute</label>
+                                                    <div className="flex min-w-0 flex-col gap-1">
+                                                        <label className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                                            Minute
+                                                        </label>
                                                         <div className="relative w-full">
                                                             <select
                                                                 value={scheduleMinute}
@@ -505,19 +501,23 @@ const CreateAccessCode = () => {
                                                                     setScheduleMinute(m);
                                                                     updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
                                                                 }}
-                                                                className="w-full min-w-0 rounded-2xl bg-slate-50 py-3.5 px-3 font-bold text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 outline-none appearance-none"
+                                                                className="w-full min-w-0 appearance-none rounded-2xl bg-slate-50 px-3 py-3.5 font-bold text-slate-900 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-slate-900"
                                                             >
                                                                 {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => (
-                                                                    <option key={m} value={m}>{m}</option>
+                                                                    <option key={m} value={m}>
+                                                                        {m}
+                                                                    </option>
                                                                 ))}
                                                             </select>
                                                         </div>
                                                     </div>
 
                                                     {/* AM / PM Toggle segments */}
-                                                    <div className="flex flex-col gap-1 min-w-0">
-                                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AM / PM</label>
-                                                        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200 h-[50px] items-center">
+                                                    <div className="flex min-w-0 flex-col gap-1">
+                                                        <label className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                                            AM / PM
+                                                        </label>
+                                                        <div className="grid h-[50px] grid-cols-2 items-center gap-1 rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200">
                                                             {(['AM', 'PM'] as const).map((mode) => (
                                                                 <button
                                                                     key={mode}
@@ -553,7 +553,7 @@ const CreateAccessCode = () => {
                                                     setScheduleAmpm('PM');
                                                     form.setData('starts_at', '');
                                                 }}
-                                                className="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-wider pt-2"
+                                                className="inline-flex items-center gap-1.5 pt-2 text-[11px] font-black tracking-wider text-rose-500 uppercase transition-colors hover:text-rose-600"
                                             >
                                                 <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                                                 Clear Schedule
@@ -693,7 +693,7 @@ const CreateAccessCode = () => {
                                     {!isEvent && (
                                         <div className="pt-3">
                                             <p className="mb-3 text-[11px] font-black tracking-widest text-slate-400 uppercase">Purpose of Visit</p>
-                                            
+
                                             {isLongLived ? (
                                                 <div className="space-y-3">
                                                     <div className="flex flex-wrap gap-2.5">
@@ -703,7 +703,10 @@ const CreateAccessCode = () => {
                                                             { id: 'Driver', icon: User },
                                                             { id: 'Others', icon: AlertCircle },
                                                         ].map((p) => {
-                                                            const isSelected = p.id === 'Others' ? isOthersSelected : (!isOthersSelected && form.data.purpose === p.id);
+                                                            const isSelected =
+                                                                p.id === 'Others'
+                                                                    ? isOthersSelected
+                                                                    : !isOthersSelected && form.data.purpose === p.id;
                                                             return (
                                                                 <button
                                                                     type="button"
@@ -744,7 +747,7 @@ const CreateAccessCode = () => {
                                                                     setCustomPurpose(e.target.value);
                                                                     form.setData('purpose', e.target.value);
                                                                 }}
-                                                                className="w-full rounded-2xl bg-slate-50 py-4.5 px-6 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900"
+                                                                className="w-full rounded-2xl bg-slate-50 px-6 py-4.5 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900"
                                                             />
                                                         </motion.div>
                                                     )}
@@ -882,14 +885,14 @@ const CreateAccessCode = () => {
                     <div className="mx-auto max-w-lg space-y-4">
                         {/* Validation Errors Alert */}
                         {Object.keys(form.errors).length > 0 && (
-                            <div className="rounded-[2rem] bg-rose-50 border border-rose-200/60 p-5 shadow-sm">
+                            <div className="rounded-[2rem] border border-rose-200/60 bg-rose-50 p-5 shadow-sm">
                                 <div className="flex gap-3">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
                                         <AlertCircle className="h-5 w-5" />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-black text-rose-800">Generation Failed</h4>
-                                        <ul className="mt-1.5 space-y-1 text-xs font-bold text-rose-600 list-disc list-inside">
+                                        <ul className="mt-1.5 list-inside list-disc space-y-1 text-xs font-bold text-rose-600">
                                             {Object.entries(form.errors).map(([field, error]) => (
                                                 <li key={field}>{error}</li>
                                             ))}

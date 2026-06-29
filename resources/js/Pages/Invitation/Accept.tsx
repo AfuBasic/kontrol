@@ -50,12 +50,10 @@ export default function AcceptInvitation({ user, isPasswordReset }: Props) {
 
                     {/* Frosted Glass Panel */}
                     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
-                        <div className="p-8 lg:p-10 text-center">
+                        <div className="p-8 text-center lg:p-10">
                             <div className="mb-8">
                                 <h1 className="text-2xl font-semibold tracking-tight text-white">Hello, {user.name}</h1>
-                                <p className="mt-2 text-sm text-white/60">
-                                    You have been invited to join an estate on Kontrol.
-                                </p>
+                                <p className="mt-2 text-sm text-white/60">You have been invited to join an estate on Kontrol.</p>
                             </div>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
@@ -86,27 +84,27 @@ export default function AcceptInvitation({ user, isPasswordReset }: Props) {
                                     </span>
                                 </button>
                             </form>
-                            
+
                             <div className="mt-8 border-t border-white/10 pt-8">
-                                <h3 className="mb-6 text-xs font-semibold uppercase tracking-widest text-white/40">Powered by Kontrol</h3>
+                                <h3 className="mb-6 text-xs font-semibold tracking-widest text-white/40 uppercase">Powered by Kontrol</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="flex flex-col items-center text-center">
                                         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-[#1F6FDB]">
                                             <ShieldCheck className="h-5 w-5" />
                                         </div>
-                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Secure Access</span>
+                                        <span className="text-[10px] font-medium tracking-wider text-white/50 uppercase">Secure Access</span>
                                     </div>
                                     <div className="flex flex-col items-center text-center">
                                         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-[#1F6FDB]">
                                             <Home className="h-5 w-5" />
                                         </div>
-                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Estate Management</span>
+                                        <span className="text-[10px] font-medium tracking-wider text-white/50 uppercase">Estate Management</span>
                                     </div>
                                     <div className="flex flex-col items-center text-center">
                                         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-[#1F6FDB]">
                                             <Bell className="h-5 w-5" />
                                         </div>
-                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Instant Alerts</span>
+                                        <span className="text-[10px] font-medium tracking-wider text-white/50 uppercase">Instant Alerts</span>
                                     </div>
                                 </div>
                             </div>

@@ -531,7 +531,9 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                                         <label className="text-xs font-bold text-slate-700">Maximum Usage Limit</label>
                                         <div className="relative">
                                             <input
-                                                type="number" inputMode="numeric" pattern="[0-9]*"
+                                                type="number"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 value={inviteSettings.max_usages}
                                                 onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
                                                 placeholder="Unlimited"

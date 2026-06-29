@@ -705,7 +705,9 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         <label className="text-sm font-medium text-gray-700">Maximum Usage Limit</label>
                                         <div className="relative">
                                             <input
-                                                type="number" inputMode="numeric" pattern="[0-9]*"
+                                                type="number"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 value={inviteSettings.max_usages}
                                                 onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
                                                 placeholder="Unlimited"

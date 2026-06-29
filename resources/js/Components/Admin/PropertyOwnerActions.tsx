@@ -252,28 +252,16 @@ export default function PropertyOwnerActions({ owner }: Props) {
                 isOpen={modalConfig.isOpen}
                 onClose={closeModal}
                 onConfirm={handleConfirm}
-                title={
-                    modalConfig.type === 'makeResident'
-                        ? 'Make Resident'
-                        : isSuspended ? 'Reactivate Property Owner' : 'Suspend Property Owner'
-                }
+                title={modalConfig.type === 'makeResident' ? 'Make Resident' : isSuspended ? 'Reactivate Property Owner' : 'Suspend Property Owner'}
                 message={
                     modalConfig.type === 'makeResident'
                         ? `Are you sure you want to give ${owner.name} resident privileges? They will be added to the residents directory and can generate visitor passes.`
                         : isSuspended
-                            ? `Are you sure you want to reactivate ${owner.name}? They will be able to log in and manage their properties again.`
-                            : `Are you sure you want to suspend ${owner.name}? They will be logged out and lose access to the platform until reactivated.`
+                          ? `Are you sure you want to reactivate ${owner.name}? They will be able to log in and manage their properties again.`
+                          : `Are you sure you want to suspend ${owner.name}? They will be logged out and lose access to the platform until reactivated.`
                 }
-                confirmLabel={
-                    modalConfig.type === 'makeResident'
-                        ? 'Make Resident'
-                        : isSuspended ? 'Reactivate' : 'Suspend'
-                }
-                type={
-                    modalConfig.type === 'makeResident'
-                        ? 'info'
-                        : isSuspended ? 'info' : 'warning'
-                }
+                confirmLabel={modalConfig.type === 'makeResident' ? 'Make Resident' : isSuspended ? 'Reactivate' : 'Suspend'}
+                type={modalConfig.type === 'makeResident' ? 'info' : isSuspended ? 'info' : 'warning'}
                 isLoading={isLoading}
             />
         </div>

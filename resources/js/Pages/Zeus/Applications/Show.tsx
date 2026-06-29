@@ -95,18 +95,26 @@ export default function ApplicationShow({ application }: Props) {
     function confirmUpdateStatus() {
         const newStatus = confirmModal.status;
         setConfirmModal({ isOpen: false, status: '' });
-        
+
         setIsUpdatingStatus(true);
         if (newStatus === 'approved') {
-            router.post(`/zeus/applications/${application.id}/approve`, {}, {
-                preserveScroll: true,
-                onFinish: () => setIsUpdatingStatus(false),
-            });
+            router.post(
+                `/zeus/applications/${application.id}/approve`,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: () => setIsUpdatingStatus(false),
+                },
+            );
         } else {
-            router.patch(`/zeus/applications/${application.id}/status`, { status: newStatus }, {
-                preserveScroll: true,
-                onFinish: () => setIsUpdatingStatus(false),
-            });
+            router.patch(
+                `/zeus/applications/${application.id}/status`,
+                { status: newStatus },
+                {
+                    preserveScroll: true,
+                    onFinish: () => setIsUpdatingStatus(false),
+                },
+            );
         }
     }
 
@@ -114,12 +122,16 @@ export default function ApplicationShow({ application }: Props) {
         if (!rejectModal.reason.trim()) return;
         const reason = rejectModal.reason;
         setRejectModal({ isOpen: false, reason: '' });
-        
+
         setIsUpdatingStatus(true);
-        router.post(`/zeus/applications/${application.id}/reject`, { reason }, {
-            preserveScroll: true,
-            onFinish: () => setIsUpdatingStatus(false),
-        });
+        router.post(
+            `/zeus/applications/${application.id}/reject`,
+            { reason },
+            {
+                preserveScroll: true,
+                onFinish: () => setIsUpdatingStatus(false),
+            },
+        );
     }
 
     function formatDate(dateString: string): string {
@@ -132,12 +144,7 @@ export default function ApplicationShow({ application }: Props) {
         });
     }
 
-    const availableStatuses = [
-        'received',
-        'under_review',
-        'approved',
-        'rejected',
-    ];
+    const availableStatuses = ['received', 'under_review', 'approved', 'rejected'];
 
     return (
         <ZeusLayout>
@@ -182,16 +189,21 @@ export default function ApplicationShow({ application }: Props) {
                                 <button
                                     disabled={isUpdatingStatus || processingStatus}
                                     onClick={() => !isUpdatingStatus && setDropdownOpen(!dropdownOpen)}
-                                    className="flex w-48 items-center justify-between rounded-xl bg-slate-100 py-2.5 pl-4 pr-3 text-sm font-bold text-slate-700 shadow-inner ring-1 ring-inset ring-slate-200/60 transition-all hover:bg-slate-200/50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:hover:bg-slate-700/50"
+                                    className="flex w-48 items-center justify-between rounded-xl bg-slate-100 py-2.5 pr-3 pl-4 text-sm font-bold text-slate-700 shadow-inner ring-1 ring-slate-200/60 transition-all ring-inset hover:bg-slate-200/50 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:hover:bg-slate-700/50"
                                 >
                                     <span>{application.status ? application.status.replace('_', ' ').toUpperCase() : 'CHANGE STATUS'}</span>
-                                    <svg className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg
+                                        className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
 
                                 {dropdownOpen && (
-                                    <div className="absolute left-0 top-full z-50 mt-2 w-48 origin-top-left rounded-xl bg-white p-1 shadow-xl ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                                    <div className="absolute top-full left-0 z-50 mt-2 w-48 origin-top-left rounded-xl bg-white p-1 shadow-xl ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
                                         <div className="flex flex-col">
                                             {availableStatuses.map((s) => (
                                                 <button
@@ -294,7 +306,7 @@ export default function ApplicationShow({ application }: Props) {
                             className="rounded-2xl bg-slate-50/50 p-6 shadow-sm ring-1 ring-slate-200/60 dark:bg-slate-800/30 dark:ring-slate-700/50"
                         >
                             <h3 className="mb-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">Applicant's Notes</h3>
-                            <p className="text-sm italic text-slate-600 dark:text-slate-400">"{application.notes}"</p>
+                            <p className="text-sm text-slate-600 italic dark:text-slate-400">"{application.notes}"</p>
                         </motion.div>
                     )}
                 </div>
@@ -313,12 +325,12 @@ export default function ApplicationShow({ application }: Props) {
                         </h3>
 
                         <form onSubmit={handleAddNote} className="mb-8">
-                            <div className="relative overflow-hidden rounded-xl bg-slate-50 ring-1 ring-inset ring-slate-200/60 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 dark:bg-slate-800/40 dark:ring-slate-700/50 dark:focus-within:ring-primary-500">
+                            <div className="relative overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200/60 ring-inset focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-inset dark:bg-slate-800/40 dark:ring-slate-700/50 dark:focus-within:ring-primary-500">
                                 <textarea
                                     value={noteData.body}
-                                    onChange={e => setNoteData('body', e.target.value)}
+                                    onChange={(e) => setNoteData('body', e.target.value)}
                                     placeholder="Add a private note about this application..."
-                                    className="block w-full resize-none border-0 bg-transparent py-4 pl-4 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-0 dark:text-white dark:placeholder:text-slate-500"
+                                    className="block w-full resize-none border-0 bg-transparent py-4 pr-4 pl-4 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-0 dark:text-white dark:placeholder:text-slate-500"
                                     rows={3}
                                     required
                                 />
@@ -339,7 +351,10 @@ export default function ApplicationShow({ application }: Props) {
                         <div className="flex flex-col gap-4">
                             {(application.notes_list || []).length > 0 ? (
                                 (application.notes_list || []).map((note) => (
-                                    <div key={note.id} className="rounded-xl bg-slate-50 p-4 ring-1 ring-inset ring-slate-200/50 dark:bg-slate-800/40 dark:ring-slate-700/50">
+                                    <div
+                                        key={note.id}
+                                        className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200/50 ring-inset dark:bg-slate-800/40 dark:ring-slate-700/50"
+                                    >
                                         <div className="mb-2 flex items-center justify-between">
                                             <span className="text-xs font-bold text-slate-900 dark:text-white">{note.creator_name}</span>
                                             <span className="text-[10px] font-medium text-slate-400">{formatDate(note.created_at)}</span>
@@ -367,7 +382,10 @@ export default function ApplicationShow({ application }: Props) {
                         <div className="relative border-l-2 border-slate-100 pl-4 dark:border-slate-800">
                             {(application.timeline_events || []).length > 0 ? (
                                 (application.timeline_events || []).map((event, index) => (
-                                    <div key={event.id} className={`relative ${index !== (application.timeline_events || []).length - 1 ? 'mb-8' : ''}`}>
+                                    <div
+                                        key={event.id}
+                                        className={`relative ${index !== (application.timeline_events || []).length - 1 ? 'mb-8' : ''}`}
+                                    >
                                         <span className="absolute top-1 -left-[23px] flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 ring-4 ring-white dark:bg-slate-700 dark:ring-slate-900">
                                             <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-400" />
                                         </span>
@@ -379,9 +397,7 @@ export default function ApplicationShow({ application }: Props) {
                                                 {event.event_type.replace('_', ' ')}
                                             </h4>
                                             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{event.description}</p>
-                                            {event.creator_name && (
-                                                <span className="mt-1 text-xs text-slate-500">by {event.creator_name}</span>
-                                            )}
+                                            {event.creator_name && <span className="mt-1 text-xs text-slate-500">by {event.creator_name}</span>}
                                         </div>
                                     </div>
                                 ))
@@ -410,7 +426,11 @@ export default function ApplicationShow({ application }: Props) {
                     >
                         <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">Confirm Action</h3>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Are you sure you want to change the status to <span className="font-bold text-primary-600 dark:text-primary-400">{confirmModal.status.replace('_', ' ').toUpperCase()}</span>?
+                            Are you sure you want to change the status to{' '}
+                            <span className="font-bold text-primary-600 dark:text-primary-400">
+                                {confirmModal.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                            ?
                         </p>
                         <div className="mt-6 flex justify-end gap-3">
                             <button
@@ -449,12 +469,12 @@ export default function ApplicationShow({ application }: Props) {
                         <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
                             Please provide a reason for rejecting this application. This will be sent to the applicant.
                         </p>
-                        
+
                         <textarea
                             value={rejectModal.reason}
                             onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
                             placeholder="e.g. The application does not meet our current requirements..."
-                            className="w-full rounded-xl border-none bg-slate-100 p-4 text-sm shadow-inner ring-1 ring-inset ring-slate-200/60 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-800"
+                            className="w-full rounded-xl border-none bg-slate-100 p-4 text-sm shadow-inner ring-1 ring-slate-200/60 ring-inset focus:bg-white focus:ring-2 focus:ring-primary-500 focus:ring-inset dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-800"
                             rows={4}
                         />
 

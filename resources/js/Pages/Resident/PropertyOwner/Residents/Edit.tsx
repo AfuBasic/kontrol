@@ -73,7 +73,9 @@ export default function Edit({ resident, properties }: Props) {
                             className="mt-1 block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
                             required
                         />
-                        <p className="mt-1 text-[10px] font-bold text-slate-400">If you change the email address, the resident will be required to verify their new email via an invitation link.</p>
+                        <p className="mt-1 text-[10px] font-bold text-slate-400">
+                            If you change the email address, the resident will be required to verify their new email via an invitation link.
+                        </p>
                         {errors.email && <p className="mt-1 text-xs text-rose-600">{errors.email}</p>}
                     </div>
 
@@ -101,7 +103,9 @@ export default function Edit({ resident, properties }: Props) {
                             Phone Number
                         </label>
                         <input
-                            type="tel" inputMode="numeric" pattern="[0-9]*"
+                            type="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}

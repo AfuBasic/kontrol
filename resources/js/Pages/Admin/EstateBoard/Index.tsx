@@ -1,7 +1,22 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Megaphone, Plus, Search, Filter, X, BarChart3, CalendarDays, Clock, MessageSquare, Image as ImageIcon, Trash2, Shield, Users, Globe } from 'lucide-react';
+import {
+    Megaphone,
+    Plus,
+    Search,
+    Filter,
+    X,
+    BarChart3,
+    CalendarDays,
+    Clock,
+    MessageSquare,
+    Image as ImageIcon,
+    Trash2,
+    Shield,
+    Users,
+    Globe,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { create, show, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
@@ -32,7 +47,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     event: 'bg-purple-100 text-purple-700 ring-purple-200',
 };
 
-const PRIORITY_STYLES: Record<string, { badge: string, border: string }> = {
+const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
     normal: { badge: 'bg-slate-100 text-slate-600', border: 'ring-slate-100' },
     important: { badge: 'bg-amber-100 text-amber-700', border: 'ring-amber-200' },
     critical: { badge: 'bg-rose-100 text-rose-700 animate-pulse', border: 'ring-rose-300 shadow-rose-100' },
@@ -61,7 +76,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
             router.get(
                 boardIndex.url(),
                 { search: debouncedSearch, audience: filters.audience, category: filters.category, priority: filters.priority },
-                { preserveState: true, preserveScroll: true, replace: true }
+                { preserveState: true, preserveScroll: true, replace: true },
             );
         }
     }, [debouncedSearch, filters.audience, filters.category, filters.priority]);
@@ -114,7 +129,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
     const hasActiveFilters = Boolean(search || filters.audience !== 'all' || filters.category || filters.priority);
 
     return (
-        <div className="space-y-8 pb-32 max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl space-y-8 pb-32">
             <Head title="Estate Board" />
 
             {/* Header */}
@@ -125,7 +140,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                 </div>
                 <Link
                     href={create.url()}
-                    className="shadow-primary-600/20 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-primary-600/30 active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-700 hover:shadow-primary-600/30 active:scale-95"
                 >
                     <Plus className="h-5 w-5" />
                     New Broadcast
@@ -133,32 +148,32 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
             </div>
 
             {/* Communication Summary Hero */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 sm:p-10 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 shadow-2xl sm:p-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-primary-500/10 to-transparent"></div>
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl"></div>
                 <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-slate-500/20 blur-3xl"></div>
-                
-                <div className="relative grid grid-cols-1 gap-8 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+
+                <div className="relative grid grid-cols-1 gap-8 divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 text-primary-200">
                             <BarChart3 className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Total Broadcasts</span>
+                            <span className="text-xs font-bold tracking-wider uppercase">Total Broadcasts</span>
                         </div>
                         <span className="text-4xl font-black text-white">{metrics.total}</span>
                     </div>
-                    <div className="flex flex-col gap-2 sm:pl-8 pt-6 sm:pt-0">
+                    <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
                         <div className="flex items-center gap-2 text-primary-200">
                             <CalendarDays className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold uppercase tracking-wider">This Month</span>
+                            <span className="text-xs font-bold tracking-wider uppercase">This Month</span>
                         </div>
                         <span className="text-4xl font-black text-white">{metrics.this_month}</span>
                     </div>
-                    <div className="flex flex-col gap-2 sm:pl-8 pt-6 sm:pt-0">
+                    <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
                         <div className="flex items-center gap-2 text-primary-200">
                             <Clock className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Latest Update</span>
+                            <span className="text-xs font-bold tracking-wider uppercase">Latest Update</span>
                         </div>
-                        <span className="text-xl mt-2 font-black text-white">{metrics.last_broadcast || 'Never'}</span>
+                        <span className="mt-2 text-xl font-black text-white">{metrics.last_broadcast || 'Never'}</span>
                     </div>
                 </div>
             </div>
@@ -166,7 +181,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
             {/* Filters Section */}
             <div className="space-y-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1 max-w-md relative">
+                    <div className="relative max-w-md flex-1">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <Search className="h-5 w-5 text-slate-400" />
                         </div>
@@ -174,18 +189,18 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border-0 bg-white py-3.5 pl-11 pr-4 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:leading-6 transition-all"
+                            className="block w-full rounded-2xl border-0 bg-white py-3.5 pr-4 pl-11 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-primary-600 focus:ring-inset sm:leading-6"
                             placeholder="Search broadcasts..."
                         />
                     </div>
-                    
-                    <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar items-center">
-                        <div className="flex items-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary-600">
-                            <Filter className="h-4 w-4 text-slate-400 mr-2" />
+
+                    <div className="hide-scrollbar flex flex-wrap items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+                        <div className="flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-primary-600">
+                            <Filter className="mr-2 h-4 w-4 text-slate-400" />
                             <select
                                 value={filters.audience}
                                 onChange={(e) => setFilter('audience', e.target.value)}
-                                className="border-none bg-transparent py-1 pl-0 pr-6 text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer"
+                                className="cursor-pointer border-none bg-transparent py-1 pr-6 pl-0 text-sm font-bold text-slate-700 focus:ring-0"
                             >
                                 <option value="all">All Audiences</option>
                                 <option value="residents">Residents Only</option>
@@ -194,30 +209,30 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                         </div>
                         <button
                             onClick={() => setFilter('priority', 'important')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
-                                filters.priority === 'important' 
-                                ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300' 
-                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
+                                filters.priority === 'important'
+                                    ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
+                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                             }`}
                         >
                             Important
                         </button>
                         <button
                             onClick={() => setFilter('category', 'meeting')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
-                                filters.category === 'meeting' 
-                                ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300' 
-                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
+                                filters.category === 'meeting'
+                                    ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                             }`}
                         >
                             Meetings
                         </button>
                         <button
                             onClick={() => setFilter('category', 'security')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
-                                filters.category === 'security' 
-                                ? 'bg-rose-100 text-rose-700 ring-1 ring-rose-300' 
-                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
+                                filters.category === 'security'
+                                    ? 'bg-rose-100 text-rose-700 ring-1 ring-rose-300'
+                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                             }`}
                         >
                             Security
@@ -249,18 +264,22 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
                                     key={post.id}
-                                    className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 transition-all hover:shadow-xl hover:-translate-y-1 ${PRIORITY_STYLES[post.priority || 'normal']?.border || 'ring-slate-200'}`}
+                                    className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 transition-all hover:-translate-y-1 hover:shadow-xl ${PRIORITY_STYLES[post.priority || 'normal']?.border || 'ring-slate-200'}`}
                                 >
                                     <div>
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 {post.category && (
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}>
+                                                    <span
+                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ring-1 ring-inset ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}
+                                                    >
                                                         {post.category}
                                                     </span>
                                                 )}
                                                 {post.priority && post.priority !== 'normal' && (
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${PRIORITY_STYLES[post.priority].badge}`}>
+                                                    <span
+                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${PRIORITY_STYLES[post.priority].badge}`}
+                                                    >
                                                         {post.priority}
                                                     </span>
                                                 )}
@@ -270,29 +289,29 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                                         <div className="mt-5">
                                             <Link href={show.url({ post: post.hashid })} className="absolute inset-0 z-0" />
                                             {post.title ? (
-                                                <h3 className="text-lg font-black text-slate-900 leading-tight group-hover:text-primary-600 transition-colors">
+                                                <h3 className="text-lg leading-tight font-black text-slate-900 transition-colors group-hover:text-primary-600">
                                                     {post.title}
                                                 </h3>
                                             ) : (
                                                 <p className="text-lg font-medium text-slate-900 italic">No Title</p>
                                             )}
-                                            <div 
-                                                className="mt-3 line-clamp-3 text-sm font-medium text-slate-500 leading-relaxed prose prose-sm prose-slate max-w-none"
+                                            <div
+                                                className="prose prose-sm prose-slate mt-3 line-clamp-3 max-w-none text-sm leading-relaxed font-medium text-slate-500"
                                                 dangerouslySetInnerHTML={{ __html: post.body }}
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5 relative z-10">
-                                        <div className="flex flex-col gap-1 pointer-events-none">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Audience</span>
+                                    <div className="relative z-10 mt-8 flex items-center justify-between border-t border-slate-100 pt-5">
+                                        <div className="pointer-events-none flex flex-col gap-1">
+                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Audience</span>
                                             <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
                                                 {audienceConfig.icon}
                                                 {audienceConfig.label}
                                             </span>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1 pointer-events-none">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <div className="pointer-events-none flex flex-col items-end gap-1">
+                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                                                 {post.published_at
                                                     ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
                                                     : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
@@ -315,33 +334,33 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                             );
                         })
                     ) : (
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            className="col-span-full flex flex-col items-center justify-center rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 py-24 px-6 text-center"
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="col-span-full flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-24 text-center"
                         >
                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
                                 <Megaphone className="h-10 w-10 text-primary-500" />
                             </div>
                             <h3 className="mt-6 text-xl font-black text-slate-900">
-                                {hasActiveFilters ? "No matching broadcasts found" : "No broadcasts yet"}
+                                {hasActiveFilters ? 'No matching broadcasts found' : 'No broadcasts yet'}
                             </h3>
-                            <p className="mt-2 max-w-md text-sm font-medium text-slate-500 leading-relaxed">
-                                {hasActiveFilters 
+                            <p className="mt-2 max-w-md text-sm leading-relaxed font-medium text-slate-500">
+                                {hasActiveFilters
                                     ? "Try adjusting your search query or filters to find what you're looking for."
-                                    : "Start engaging with your community by creating your first announcement. Share updates, news, and important information."}
+                                    : 'Start engaging with your community by creating your first announcement. Share updates, news, and important information.'}
                             </p>
                             {hasActiveFilters ? (
                                 <button
                                     onClick={clearFilters}
-                                    className="mt-8 shadow-slate-200 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:-translate-y-0.5 active:translate-y-0"
+                                    className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 shadow-slate-200 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-slate-50 active:translate-y-0"
                                 >
                                     Clear filters
                                 </button>
                             ) : (
                                 <Link
                                     href={create.url()}
-                                    className="mt-8 shadow-primary-600/20 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-primary-700 hover:-translate-y-0.5 active:translate-y-0"
+                                    className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:-translate-y-0.5 hover:bg-primary-700 active:translate-y-0"
                                 >
                                     <Plus className="h-5 w-5" />
                                     Create First Broadcast

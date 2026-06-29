@@ -205,7 +205,9 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                                 {resident.status !== 'accepted' && (
                                                     <button
                                                         onClick={() => {
-                                                            if (confirm(`Are you sure you want to resend the invitation email to ${resident.name}?`)) {
+                                                            if (
+                                                                confirm(`Are you sure you want to resend the invitation email to ${resident.name}?`)
+                                                            ) {
                                                                 router.post(resendInvitation.url(resident.ulid));
                                                             }
                                                             setActiveMenuId(null);

@@ -243,7 +243,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                                     <span className="font-bold text-slate-500">Base Due ({assignments.length} bills)</span>
                                     <span className="font-black text-slate-900">{formatCurrency(totalAmount)}</span>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="font-bold text-slate-500">Processing Fee (0.5%)</span>
                                     {hasSubscription ? (
@@ -276,7 +276,12 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                             <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 p-4 text-amber-700 ring-1 ring-amber-200/50">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
                                     </svg>
                                 </div>
                                 <p className="text-xs leading-relaxed font-bold">

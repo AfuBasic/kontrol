@@ -12,11 +12,36 @@ export default function PublicLayout({ children }: Props) {
     const currentYear = new Date().getFullYear();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+    const [scrolled, setScrolled] = useState(false);
+    const [activeSection, setActiveSection] = useState('home');
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
         setTheme(storedTheme as 'light' | 'dark');
         applyTheme(storedTheme);
+    }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+
+            // Determine active section based on scroll offset
+            const sections = ['features', 'pricing', 'download'];
+            let current = 'home';
+            for (const section of sections) {
+                const el = document.getElementById(section);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    // If section top is above middle of the viewport
+                    if (rect.top <= 160) {
+                        current = section;
+                    }
+                }
+            }
+            setActiveSection(current);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const applyTheme = (newTheme: string) => {
@@ -46,24 +71,39 @@ export default function PublicLayout({ children }: Props) {
         <div className="min-h-screen bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-50">
             {/* Navigation */}
             <motion.header
-                initial={{ y: -20, opacity: 0 }}
+                initial={{ y: -80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="fixed top-0 right-0 left-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/80"
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className={`fixed top-0 right-0 left-0 z-50 border-b transition-all duration-500 ${
+                    scrolled
+                        ? 'h-14 border-slate-100 bg-white/70 shadow-lg shadow-slate-950/5 backdrop-blur-xl dark:border-slate-800/40 dark:bg-slate-950/70'
+                        : 'h-16 border-transparent bg-transparent'
+                }`}
             >
-                <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+                <nav className="mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-8">
                     <Link href="/" className="flex shrink-0 items-center gap-2">
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9" />
                         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Kontrol</span>
                     </Link>
 
                     {/* Center Navigation - Desktop */}
-                    <div className="hidden items-center gap-8 md:flex">
+                    <div className="relative hidden items-center gap-8 md:flex">
                         <Link
                             href="/"
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                activeSection === 'home'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
                         >
                             Home
+                            {activeSection === 'home' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
                         </Link>
                         <a
                             href="/#features"
@@ -73,9 +113,20 @@ export default function PublicLayout({ children }: Props) {
                                     document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' });
                                 }
                             }}
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                activeSection === 'features'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
                         >
                             Features
+                            {activeSection === 'features' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
                         </a>
                         <a
                             href="/#pricing"
@@ -85,9 +136,20 @@ export default function PublicLayout({ children }: Props) {
                                     document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' });
                                 }
                             }}
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                activeSection === 'pricing'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
                         >
                             Pricing
+                            {activeSection === 'pricing' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
                         </a>
                         <a
                             href="/#download"
@@ -97,15 +159,37 @@ export default function PublicLayout({ children }: Props) {
                                     document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
                                 }
                             }}
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                activeSection === 'download'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
                         >
                             Download App
+                            {activeSection === 'download' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
                         </a>
                         <Link
                             href="/support"
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                window.location.pathname === '/support'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
                         >
                             Support
+                            {window.location.pathname === '/support' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
                         </Link>
                     </div>
 

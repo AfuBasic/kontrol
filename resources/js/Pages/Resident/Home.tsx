@@ -47,8 +47,6 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
     const hasEstateBoard = estate_plan?.features?.includes('interactive-notice-board') ?? true;
     const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
-
-
     const expectedToday = activeCodes.filter((c) => c.status === 'active').length;
     const lastActivityTime = recentActivity[0]?.time;
     const showDuesAlert = hasPaymentCollection && unpaidDues && unpaidDues.length > 0;
@@ -176,8 +174,6 @@ export default function Home({ auth, stats, activeCodes, recentActivity, latestA
                     </section>
                 )}
             </div>
-
-
         </>
     );
 }

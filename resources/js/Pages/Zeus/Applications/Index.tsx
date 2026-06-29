@@ -41,7 +41,14 @@ interface Props {
 
 export default function ApplicationIndex({ metrics, funnel, groupedApplications }: Props) {
     const [boardData, setBoardData] = useState<GroupedApplications>(groupedApplications);
-    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; action: 'approve' | 'reject' | null; draggableId: string; sourceCol: string; destCol: string; item: Application | null }>({ isOpen: false, action: null, draggableId: '', sourceCol: '', destCol: '', item: null });
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        action: 'approve' | 'reject' | null;
+        draggableId: string;
+        sourceCol: string;
+        destCol: string;
+        item: Application | null;
+    }>({ isOpen: false, action: null, draggableId: '', sourceCol: '', destCol: '', item: null });
     const [rejectReason, setRejectReason] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -65,8 +72,8 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
 
         const sourceCol = source.droppableId;
         const destCol = destination.droppableId;
-        
-        const movedItem = boardData[sourceCol].find(item => item.id.toString() === draggableId);
+
+        const movedItem = boardData[sourceCol].find((item) => item.id.toString() === draggableId);
         if (!movedItem) return;
 
         if (destCol === 'Approved') {
@@ -83,16 +90,20 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
         commitDrag(sourceCol, destCol, destination.index, movedItem, draggableId);
 
         const newStatus = destCol.toLowerCase().replace(' ', '_');
-        router.patch(`/zeus/applications/${draggableId}/status`, { status: newStatus }, {
-            preserveScroll: true,
-            preserveState: true,
-            onError: () => setBoardData(groupedApplications)
-        });
+        router.patch(
+            `/zeus/applications/${draggableId}/status`,
+            { status: newStatus },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => setBoardData(groupedApplications),
+            },
+        );
     }
 
     function commitDrag(sourceCol: string, destCol: string, destIndex: number, movedItem: Application, draggableId: string) {
         const newBoard = { ...boardData };
-        newBoard[sourceCol] = newBoard[sourceCol].filter(item => item.id.toString() !== draggableId);
+        newBoard[sourceCol] = newBoard[sourceCol].filter((item) => item.id.toString() !== draggableId);
         newBoard[destCol] = [...newBoard[destCol]];
         newBoard[destCol].splice(destIndex, 0, movedItem);
         setBoardData(newBoard);
@@ -106,26 +117,34 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
         setIsUpdating(true);
 
         if (confirmModal.action === 'approve') {
-            router.post(`/zeus/applications/${confirmModal.draggableId}/approve`, {}, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => {
-                    setIsUpdating(false);
-                    setConfirmModal({ ...confirmModal, isOpen: false });
+            router.post(
+                `/zeus/applications/${confirmModal.draggableId}/approve`,
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onFinish: () => {
+                        setIsUpdating(false);
+                        setConfirmModal({ ...confirmModal, isOpen: false });
+                    },
+                    onError: () => setBoardData(groupedApplications),
                 },
-                onError: () => setBoardData(groupedApplications)
-            });
+            );
         } else if (confirmModal.action === 'reject') {
-            router.post(`/zeus/applications/${confirmModal.draggableId}/reject`, { reason: rejectReason }, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => {
-                    setIsUpdating(false);
-                    setRejectReason('');
-                    setConfirmModal({ ...confirmModal, isOpen: false });
+            router.post(
+                `/zeus/applications/${confirmModal.draggableId}/reject`,
+                { reason: rejectReason },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onFinish: () => {
+                        setIsUpdating(false);
+                        setRejectReason('');
+                        setConfirmModal({ ...confirmModal, isOpen: false });
+                    },
+                    onError: () => setBoardData(groupedApplications),
                 },
-                onError: () => setBoardData(groupedApplications)
-            });
+            );
         }
     }
 
@@ -172,7 +191,7 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                             </span>
                         </div>
                     </motion.div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.98 }}
@@ -200,7 +219,7 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.35, delay: 0.2 }}
-                    className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2"
+                    className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900"
                 >
                     <h3 className="mb-6 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Application Funnel Drop-off</h3>
                     <div className="h-48 w-full flex-1">
@@ -212,30 +231,20 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                         <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis 
-                                    dataKey="stage" 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }} 
-                                />
-                                <YAxis 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{ fontSize: 12, fill: '#94a3b8' }} 
-                                />
-                                <Tooltip 
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', backgroundColor: '#1e293b', color: '#fff' }}
+                                <XAxis dataKey="stage" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                        backgroundColor: '#1e293b',
+                                        color: '#fff',
+                                    }}
                                     itemStyle={{ color: '#fff' }}
                                     cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                                 />
-                                <Area 
-                                    type="monotone" 
-                                    dataKey="count" 
-                                    stroke="#4f46e5" 
-                                    strokeWidth={3} 
-                                    fillOpacity={1} 
-                                    fill="url(#funnelColor)" 
-                                />
+                                <Area type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#funnelColor)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -243,26 +252,22 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
             </div>
 
             {/* Kanban / Pipeline View */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: 0.3 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.3 }}>
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">Active Pipeline</h2>
                 </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
-                    <div className="flex w-full gap-5 overflow-x-auto pb-6 scrollbar-hide">
+                    <div className="scrollbar-hide flex w-full gap-5 overflow-x-auto pb-6">
                         {Object.entries(boardData).map(([groupName, groupApps]) => (
                             <Droppable droppableId={groupName} key={groupName}>
                                 {(provided, snapshot) => (
-                                    <div 
+                                    <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
                                         className={`flex w-[340px] shrink-0 flex-col rounded-2xl p-4 ring-1 transition-colors ${
-                                            snapshot.isDraggingOver 
-                                                ? 'bg-slate-200/50 ring-slate-300 dark:bg-slate-800/60 dark:ring-slate-600' 
+                                            snapshot.isDraggingOver
+                                                ? 'bg-slate-200/50 ring-slate-300 dark:bg-slate-800/60 dark:ring-slate-600'
                                                 : 'bg-slate-100/60 ring-slate-200/60 dark:bg-slate-800/30 dark:ring-slate-700/50'
                                         }`}
                                     >
@@ -275,11 +280,11 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                         </div>
 
                                         {/* Cards */}
-                                        <div className="flex h-[calc(100vh-28rem)] min-h-[400px] flex-col gap-3 overflow-y-auto overflow-x-hidden pb-4 pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+                                        <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 flex h-[calc(100vh-28rem)] min-h-[400px] flex-col gap-3 overflow-x-hidden overflow-y-auto pr-1 pb-4">
                                             {groupApps.map((app, index) => (
-                                                <Draggable 
-                                                    draggableId={app.id.toString()} 
-                                                    index={index} 
+                                                <Draggable
+                                                    draggableId={app.id.toString()}
+                                                    index={index}
                                                     key={app.id}
                                                     isDragDisabled={groupName === 'Approved' || groupName === 'Rejected'}
                                                 >
@@ -289,8 +294,8 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
                                                             className={`group relative flex flex-col overflow-hidden rounded-xl p-5 shadow-sm ring-1 transition-all ${
-                                                                snapshot.isDragging 
-                                                                    ? 'z-50 scale-[1.02] bg-white shadow-xl ring-primary-500 dark:bg-slate-900 dark:ring-primary-500' 
+                                                                snapshot.isDragging
+                                                                    ? 'z-50 scale-[1.02] bg-white shadow-xl ring-primary-500 dark:bg-slate-900 dark:ring-primary-500'
                                                                     : 'bg-white ring-slate-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-primary-300 dark:bg-slate-900 dark:ring-slate-700 dark:hover:ring-primary-500/50'
                                                             }`}
                                                             style={{
@@ -298,7 +303,10 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                                             }}
                                                         >
                                                             <div className="relative mb-3 flex items-start justify-between">
-                                                                <Link href={`/zeus/applications/${app.id}`} className="font-bold text-slate-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400">
+                                                                <Link
+                                                                    href={`/zeus/applications/${app.id}`}
+                                                                    className="font-bold text-slate-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
+                                                                >
                                                                     {app.estate_name}
                                                                 </Link>
                                                                 {app.plan && (
@@ -371,10 +379,11 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                         <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
                             {confirmModal.action === 'approve' ? 'Approve Application' : 'Reject Application'}
                         </h3>
-                        
+
                         {confirmModal.action === 'approve' ? (
                             <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-                                Are you sure you want to approve this application? This will create an estate and send an invitation email to the applicant.
+                                Are you sure you want to approve this application? This will create an estate and send an invitation email to the
+                                applicant.
                             </p>
                         ) : (
                             <>
@@ -385,7 +394,7 @@ export default function ApplicationIndex({ metrics, funnel, groupedApplications 
                                     value={rejectReason}
                                     onChange={(e) => setRejectReason(e.target.value)}
                                     placeholder="e.g. The application does not meet our current requirements..."
-                                    className="mb-6 w-full rounded-xl border-none bg-slate-100 p-4 text-sm shadow-inner ring-1 ring-inset ring-slate-200/60 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-800"
+                                    className="mb-6 w-full rounded-xl border-none bg-slate-100 p-4 text-sm shadow-inner ring-1 ring-slate-200/60 ring-inset focus:bg-white focus:ring-2 focus:ring-primary-500 focus:ring-inset dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-800"
                                     rows={4}
                                 />
                             </>

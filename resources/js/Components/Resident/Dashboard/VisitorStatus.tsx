@@ -78,21 +78,21 @@ function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
                 <div className="flex-1 overflow-hidden">
                     <h4 className="truncate text-base font-bold text-slate-900">{code.visitor_name || 'Guest'}</h4>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                        <span className={`rounded-md px-2 py-0.5 border font-black uppercase text-[9px] tracking-wider ${
-                            code.type === 'single_use'
-                                ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                : code.type === 'event'
-                                  ? 'bg-violet-50 text-violet-600 border-violet-100'
-                                  : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        }`}>
+                        <span
+                            className={`rounded-md border px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                code.type === 'single_use'
+                                    ? 'border-blue-100 bg-blue-50 text-blue-600'
+                                    : code.type === 'event'
+                                      ? 'border-violet-100 bg-violet-50 text-violet-600'
+                                      : 'border-emerald-100 bg-emerald-50 text-emerald-600'
+                            }`}
+                        >
                             {code.type === 'single_use' ? 'One-Time' : code.type === 'event' ? 'Event' : 'Recurring'}
                         </span>
                         {code.status === 'used' && code.used_at && (
                             <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
                                 <Clock className="h-3.5 w-3.5" />
-                                <span>
-                                    Arrived {new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                <span>Arrived {new Date(code.used_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
                             </span>
                         )}
                     </div>

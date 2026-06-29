@@ -1,28 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip as RechartsTooltip,
-    ResponsiveContainer,
-    Cell,
-    CartesianGrid,
-    Legend
-} from 'recharts';
-import { 
-    AlertCircle, 
-    ArrowUpRight, 
-    ArrowDownRight, 
-    ShieldCheck, 
-    Activity,
-    CreditCard,
-    TrendingUp,
-    TrendingDown,
-    Users,
-    Clock
-} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid, Legend } from 'recharts';
+import { AlertCircle, ArrowUpRight, ArrowDownRight, ShieldCheck, Activity, CreditCard, TrendingUp, TrendingDown, Users, Clock } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Kpis {
@@ -79,14 +58,7 @@ interface Props {
     pastDue: PastDue[];
 }
 
-export default function SubscriptionsIndex({ 
-    kpis, 
-    planAnalytics, 
-    renewalCohorts, 
-    migrationMatrix, 
-    recentChanges, 
-    pastDue 
-}: Props) {
+export default function SubscriptionsIndex({ kpis, planAnalytics, renewalCohorts, migrationMatrix, recentChanges, pastDue }: Props) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -100,7 +72,7 @@ export default function SubscriptionsIndex({
         return new Date(dateString).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            year: 'numeric'
+            year: 'numeric',
         });
     };
 
@@ -137,7 +109,10 @@ export default function SubscriptionsIndex({
                             <Activity className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Active Subscriptions</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.active_subscriptions.toLocaleString('en-US')}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={kpis.active_subscriptions.toLocaleString('en-US')}
+                        >
                             {kpis.active_subscriptions.toLocaleString('en-US')}
                         </p>
                     </div>
@@ -146,7 +121,7 @@ export default function SubscriptionsIndex({
                             <TrendingUp className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Total MRR</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(kpis.total_mrr)}>
+                        <p className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white" title={formatCurrency(kpis.total_mrr)}>
                             {formatCurrency(kpis.total_mrr)}
                         </p>
                     </div>
@@ -155,7 +130,10 @@ export default function SubscriptionsIndex({
                             <TrendingDown className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Churned (MTD)</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.churned_this_month.toLocaleString('en-US')}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={kpis.churned_this_month.toLocaleString('en-US')}
+                        >
                             {kpis.churned_this_month.toLocaleString('en-US')}
                         </p>
                     </div>
@@ -164,7 +142,10 @@ export default function SubscriptionsIndex({
                             <AlertCircle className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Past Due</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={kpis.past_due_subscriptions.toLocaleString('en-US')}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={kpis.past_due_subscriptions.toLocaleString('en-US')}
+                        >
                             {kpis.past_due_subscriptions.toLocaleString('en-US')}
                         </p>
                     </div>
@@ -172,34 +153,24 @@ export default function SubscriptionsIndex({
 
                 {/* Upcoming Renewals Alert */}
                 <motion.div variants={itemVariants} className="mb-10">
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="mb-4 flex items-center gap-2">
                         <Clock className="h-5 w-5 text-indigo-500" />
-                        <h2 className="text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                            Upcoming Renewals (90 Days)
-                        </h2>
+                        <h2 className="text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">Upcoming Renewals (90 Days)</h2>
                     </div>
-                    
+
                     <div className="grid gap-4 sm:grid-cols-3">
                         {renewalCohorts.map((cohort, idx) => (
                             <div
                                 key={cohort.cohort}
-                                className={`rounded-2xl border bg-white p-6 shadow-sm dark:bg-[#0f1423] transition-all hover:scale-[1.01] ${
-                                    idx === 0 
-                                        ? 'border-indigo-200 dark:border-indigo-500/30' 
-                                        : 'border-slate-100 dark:border-slate-800/50'
+                                className={`rounded-2xl border bg-white p-6 shadow-sm transition-all hover:scale-[1.01] dark:bg-[#0f1423] ${
+                                    idx === 0 ? 'border-indigo-200 dark:border-indigo-500/30' : 'border-slate-100 dark:border-slate-800/50'
                                 }`}
                             >
-                                <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
-                                    {cohort.cohort}
-                                </p>
+                                <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">{cohort.cohort}</p>
                                 <div className="mt-4 flex items-end justify-between">
                                     <div>
-                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                                            {formatCurrency(cohort.mrr)}
-                                        </p>
-                                        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            from {cohort.count} residents
-                                        </p>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(cohort.mrr)}</p>
+                                        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">from {cohort.count} residents</p>
                                     </div>
                                     {idx === 0 && (
                                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
@@ -215,15 +186,16 @@ export default function SubscriptionsIndex({
                 {/* Charts Grid */}
                 <div className="mb-10 grid gap-8 lg:grid-cols-2">
                     {/* Plan Popularity */}
-                    <motion.div variants={itemVariants} className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <motion.div
+                        variants={itemVariants}
+                        className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                    >
                         <div className="border-b border-slate-50 px-8 py-6 dark:border-slate-800/30">
                             <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <ShieldCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                 Plan Distribution
                             </h3>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                Breakdown of residents per plan tier.
-                            </p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Breakdown of residents per plan tier.</p>
                         </div>
                         <div className="p-8">
                             <div className="h-[300px] w-full">
@@ -232,7 +204,13 @@ export default function SubscriptionsIndex({
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(148, 163, 184, 0.1)" />
                                         <XAxis type="number" hide xAxisId="residents" />
                                         <XAxis type="number" hide xAxisId="mrr" />
-                                        <YAxis dataKey="plan_name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                                        <YAxis
+                                            dataKey="plan_name"
+                                            type="category"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
+                                        />
                                         <RechartsTooltip
                                             cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
                                             contentStyle={{
@@ -251,7 +229,14 @@ export default function SubscriptionsIndex({
                                             }}
                                         />
                                         <Legend wrapperStyle={{ fontSize: '12px', color: '#64748b' }} />
-                                        <Bar xAxisId="residents" dataKey="residents_count" name="Residents" fill="#38bdf8" radius={[0, 4, 4, 0]} barSize={16} />
+                                        <Bar
+                                            xAxisId="residents"
+                                            dataKey="residents_count"
+                                            name="Residents"
+                                            fill="#38bdf8"
+                                            radius={[0, 4, 4, 0]}
+                                            barSize={16}
+                                        />
                                         <Bar xAxisId="mrr" dataKey="mrr" name="MRR" fill="#34d399" radius={[0, 4, 4, 0]} barSize={16} />
                                     </BarChart>
                                 </ResponsiveContainer>
@@ -260,30 +245,37 @@ export default function SubscriptionsIndex({
                     </motion.div>
 
                     {/* Migration Flow */}
-                    <motion.div variants={itemVariants} className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <motion.div
+                        variants={itemVariants}
+                        className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                    >
                         <div className="border-b border-slate-50 px-8 py-6 dark:border-slate-800/30">
                             <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                 Migration Flow (MTD)
                             </h3>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                Upgrades vs Downgrades for the current month.
-                            </p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Upgrades vs Downgrades for the current month.</p>
                         </div>
                         <div className="flex h-[300px] items-center justify-center p-8">
-                            {migrationMatrix.every(m => m.value === 0) ? (
-                                <div className="text-center flex flex-col items-center">
-                                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/50 ring-1 ring-slate-100 dark:ring-slate-800">
+                            {migrationMatrix.every((m) => m.value === 0) ? (
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-100 dark:bg-slate-800/50 dark:ring-slate-800">
                                         <Activity className="h-5 w-5 text-slate-300 dark:text-slate-600" />
                                     </div>
                                     <p className="text-sm font-bold text-slate-900 dark:text-white">No migrations yet</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">No plan changes this month.</p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">No plan changes this month.</p>
                                 </div>
                             ) : (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={migrationMatrix} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} dy={10} />
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
+                                            dy={10}
+                                        />
                                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                                         <RechartsTooltip
                                             cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
@@ -311,7 +303,10 @@ export default function SubscriptionsIndex({
                 {/* Detailed Data Tables */}
                 <div className="grid gap-8 lg:grid-cols-2">
                     {/* Recent Plan Changes */}
-                    <motion.div variants={itemVariants} className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <motion.div
+                        variants={itemVariants}
+                        className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                    >
                         <div className="border-b border-slate-50 px-8 py-6 dark:border-slate-800/30">
                             <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <ArrowUpRight className="h-4 w-4 text-emerald-500" />
@@ -323,9 +318,15 @@ export default function SubscriptionsIndex({
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50/50 dark:bg-slate-800/20">
                                         <tr>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Subscriber</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Migration</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Date</th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Subscriber
+                                            </th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Migration
+                                            </th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Date
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
@@ -345,14 +346,18 @@ export default function SubscriptionsIndex({
                                                         ) : (
                                                             <ArrowDownRight className="h-3 w-3 text-rose-500" />
                                                         )}
-                                                        <span className={change.type === 'upgrade' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
+                                                        <span
+                                                            className={
+                                                                change.type === 'upgrade'
+                                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                                    : 'text-rose-600 dark:text-rose-400'
+                                                            }
+                                                        >
                                                             {change.new_plan}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
-                                                    {formatDate(change.date)}
-                                                </td>
+                                                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">{formatDate(change.date)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -360,15 +365,18 @@ export default function SubscriptionsIndex({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center p-12 text-center">
-                                <Users className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-3" />
+                                <Users className="mb-3 h-8 w-8 text-slate-300 dark:text-slate-600" />
                                 <p className="text-sm font-bold text-slate-900 dark:text-white">No historical changes</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Plan migrations will appear here.</p>
+                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Plan migrations will appear here.</p>
                             </div>
                         )}
                     </motion.div>
 
                     {/* Past Due / At Risk */}
-                    <motion.div variants={itemVariants} className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                    <motion.div
+                        variants={itemVariants}
+                        className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                    >
                         <div className="border-b border-slate-50 px-8 py-6 dark:border-slate-800/30">
                             <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                 <CreditCard className="h-4 w-4 text-rose-500" />
@@ -380,9 +388,15 @@ export default function SubscriptionsIndex({
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50/50 dark:bg-slate-800/20">
                                         <tr>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Subscriber</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Amount Due</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Status</th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Subscriber
+                                            </th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Amount Due
+                                            </th>
+                                            <th className="px-6 py-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                                Status
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/30">
@@ -392,7 +406,9 @@ export default function SubscriptionsIndex({
                                                     <div className="flex items-center gap-2">
                                                         <Users className="h-3.5 w-3.5 text-sky-500" />
                                                         <div>
-                                                            <div className="text-sm font-semibold text-slate-900 dark:text-white">{item.entity_name}</div>
+                                                            <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                                {item.entity_name}
+                                                            </div>
                                                             <div className="text-[10px] text-slate-500 dark:text-slate-400">{item.plan_name}</div>
                                                         </div>
                                                     </div>
@@ -412,9 +428,9 @@ export default function SubscriptionsIndex({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center p-12 text-center">
-                                <ShieldCheck className="h-8 w-8 text-emerald-400 dark:text-emerald-500/50 mb-3" />
+                                <ShieldCheck className="mb-3 h-8 w-8 text-emerald-400 dark:text-emerald-500/50" />
                                 <p className="text-sm font-bold text-slate-900 dark:text-white">All Clear</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">No past due subscriptions at the moment.</p>
+                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">No past due subscriptions at the moment.</p>
                             </div>
                         )}
                     </motion.div>

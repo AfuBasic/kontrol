@@ -4,7 +4,24 @@ import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Home, Users, User, Plus, Wallet, Megaphone, Building, ClipboardList, UserCheck, Menu, X, LogOut, AlertCircle, Phone, Ticket } from 'lucide-react';
+import {
+    Bell,
+    Home,
+    Users,
+    User,
+    Plus,
+    Wallet,
+    Megaphone,
+    Building,
+    ClipboardList,
+    UserCheck,
+    Menu,
+    X,
+    LogOut,
+    AlertCircle,
+    Phone,
+    Ticket,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
@@ -41,7 +58,7 @@ interface Props {
 }
 
 export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
-        const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
+    const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
     const { auth, webpush_public_key } = props;
 
     // Force light theme in Resident area as it is designed as a light-themed dashboard
@@ -496,8 +513,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         </div>
                                         {item.name === 'Offers & Coupons' && (
                                             <span className="relative flex h-2 w-2 shrink-0">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
                                             </span>
                                         )}
                                     </Link>
@@ -571,11 +588,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 <main
                     className={`relative mx-auto w-full flex-1 ${
                         hideHeader && hideNav
-                            ? 'p-0 max-w-none'
+                            ? 'max-w-none p-0'
                             : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-32' : 'pb-8'} ${
                                   isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
                               } ${
-                                  !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]' : 'py-8'
+                                  !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform())
+                                      ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]'
+                                      : 'py-8'
                               }`
                     }`}
                 >
@@ -619,12 +638,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 onClick={() => setMoreMenuOpen(true)}
                                                 className="group hover:text-slate-650 relative flex flex-1 cursor-pointer flex-col items-center gap-1 text-slate-400"
                                             >
-                                                <div className="rounded-xl p-2.5 transition-all relative">
+                                                <div className="relative rounded-xl p-2.5 transition-all">
                                                     {(item.icon as any)(false)}
                                                     {auth?.user?.has_active_coupons && (
                                                         <span className="absolute top-1 right-1 flex h-2 w-2">
-                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -689,12 +708,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                                 onClick={() => setMoreMenuOpen(true)}
                                                 className="group relative flex flex-1 flex-col items-center gap-1 text-slate-400 hover:text-slate-600"
                                             >
-                                                <div className="rounded-xl p-2.5 transition-all relative">
+                                                <div className="relative rounded-xl p-2.5 transition-all">
                                                     {(item.icon as any)(false)}
                                                     {auth?.user?.has_active_coupons && (
                                                         <span className="absolute top-1 right-1 flex h-2 w-2">
-                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -777,18 +796,18 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                             key={item.name}
                                             href={item.href}
                                             onClick={() => setMoreMenuOpen(false)}
-                                            className="flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all hover:bg-slate-50 relative"
+                                            className="relative flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all hover:bg-slate-50"
                                         >
                                             <div
-                                                className={`flex h-12 w-12 items-center justify-center rounded-2xl relative ${
+                                                className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
                                                     isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500'
                                                 }`}
                                             >
                                                 <item.icon className="h-6 w-6" />
                                                 {item.name === 'Offers & Coupons' && (
                                                     <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet-500"></span>
+                                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-violet-500"></span>
                                                     </span>
                                                 )}
                                             </div>

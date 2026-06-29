@@ -194,7 +194,9 @@ export default function CreateCollection({ residents }: Props) {
                                         Due Day (of Month)
                                     </label>
                                     <input
-                                        type="number" inputMode="numeric" pattern="[0-9]*"
+                                        type="number"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.due_day}
                                         onChange={(e) => setData('due_day', parseInt(e.target.value))}
                                         className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
@@ -211,7 +213,9 @@ export default function CreateCollection({ residents }: Props) {
                                     Grace Period (Days)
                                 </label>
                                 <input
-                                    type="number" inputMode="numeric" pattern="[0-9]*"
+                                    type="number"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={data.grace_days}
                                     onChange={(e) => setData('grace_days', parseInt(e.target.value))}
                                     className="block w-full rounded-2xl border-0 bg-slate-50 px-8 py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"

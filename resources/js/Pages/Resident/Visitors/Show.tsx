@@ -117,7 +117,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
 
     const getPeakArrivalTime = () => {
         if (!usageLogs.data || usageLogs.data.length === 0) return null;
-        
+
         const hourCounts: Record<number, number> = {};
         usageLogs.data.forEach((log) => {
             const date = new Date(log.verified_at);
@@ -142,7 +142,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         const endString = `${endHour % 12 || 12} ${endHour >= 12 ? 'PM' : 'AM'}`;
         return `${startString} - ${endString}`;
     };
-    
+
     const peakTime = getPeakArrivalTime();
 
     return (
@@ -165,7 +165,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                         </div>
 
                         {/* Action Buttons */}
-                        {((accessCode.status === 'active' || accessCode.status === 'scheduled') && !isExpired) && (
+                        {(accessCode.status === 'active' || accessCode.status === 'scheduled') && !isExpired && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -265,21 +265,17 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: 0.3 }}
-                                className="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm md:max-w-none text-left"
+                                className="w-full max-w-sm rounded-[2rem] border border-slate-100 bg-white p-6 text-left shadow-sm md:max-w-none"
                             >
-                                <h3 className="text-base font-black text-slate-900 mb-4">Event Pass Statistics</h3>
-                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                <h3 className="mb-4 text-base font-black text-slate-900">Event Pass Statistics</h3>
+                                <div className="mb-6 grid grid-cols-2 gap-4">
                                     <div className="rounded-2xl bg-slate-50 p-4">
                                         <p className="text-xs font-bold text-slate-400">Total Check-Ins</p>
-                                        <p className="mt-1 text-3xl font-black text-slate-900">
-                                            {accessCode.uses_count ?? 0}
-                                        </p>
+                                        <p className="mt-1 text-3xl font-black text-slate-900">{accessCode.uses_count ?? 0}</p>
                                     </div>
                                     <div className="rounded-2xl bg-slate-50 p-4">
                                         <p className="text-xs font-bold text-slate-400">Guest Limit</p>
-                                        <p className="mt-1 text-3xl font-black text-slate-900">
-                                            {accessCode.guest_limit ?? '∞'}
-                                        </p>
+                                        <p className="mt-1 text-3xl font-black text-slate-900">{accessCode.guest_limit ?? '∞'}</p>
                                     </div>
                                 </div>
 
@@ -287,38 +283,30 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-xs font-bold text-slate-500">
                                             <span>Capacity Utilized</span>
-                                            <span>
-                                                {Math.min(
-                                                    Math.round(((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100),
-                                                    100
-                                                )}%
-                                            </span>
+                                            <span>{Math.min(Math.round(((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100), 100)}%</span>
                                         </div>
-                                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                                             <div
-                                                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                                className="h-full rounded-full bg-indigo-600 transition-all duration-500"
                                                 style={{
-                                                    width: `${Math.min(
-                                                        ((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100,
-                                                        100
-                                                    )}%`,
+                                                    width: `${Math.min(((accessCode.uses_count ?? 0) / accessCode.guest_limit) * 100, 100)}%`,
                                                 }}
                                             />
                                         </div>
-                                        <p className="text-[11px] font-bold text-slate-400 text-right mt-1">
+                                        <p className="mt-1 text-right text-[11px] font-bold text-slate-400">
                                             {Math.max(accessCode.guest_limit - (accessCode.uses_count ?? 0), 0)} slots remaining
                                         </p>
                                     </div>
                                 )}
 
-                                <div className="border-t border-slate-100 pt-4 mt-4 space-y-3">
+                                <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                                     {peakTime && (
-                                        <div className="flex justify-between items-center text-sm">
+                                        <div className="flex items-center justify-between text-sm">
                                             <span className="font-bold text-slate-400">Peak Check-in Hour</span>
                                             <span className="font-black text-slate-900">{peakTime}</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center justify-between text-sm">
                                         <span className="font-bold text-slate-400">Pass Type</span>
                                         <span className="font-black text-slate-900 capitalize">Event / Group</span>
                                     </div>
@@ -386,16 +374,21 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                     {usageLogs.data.length > 0 ? (
                                         <div className="space-y-3">
                                             {usageLogs.data.map((log) => (
-                                                <div key={log.id} className="flex flex-col gap-3 rounded-2xl bg-slate-50/50 p-4 border border-slate-100">
+                                                <div
+                                                    key={log.id}
+                                                    className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4"
+                                                >
                                                     {/* Check In Row */}
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100">
+                                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 shadow-sm">
                                                                 <Shield className="h-4 w-4" />
                                                             </div>
                                                             <div className="text-left">
                                                                 <p className="text-sm font-black text-slate-800">Checked In</p>
-                                                                <p className="text-[11px] text-slate-400 font-bold">Verified by {log.verifier_name}</p>
+                                                                <p className="text-[11px] font-bold text-slate-400">
+                                                                    Verified by {log.verifier_name}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
@@ -405,23 +398,25 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                                                     minute: '2-digit',
                                                                 })}
                                                             </p>
-                                                            <p className="text-[10px] text-slate-400 font-bold">
+                                                            <p className="text-[10px] font-bold text-slate-400">
                                                                 {formatDistanceToNow(new Date(log.verified_at), { addSuffix: true })}
                                                             </p>
                                                         </div>
                                                     </div>
 
                                                     {/* Check Out Row / Still in Estate Status */}
-                                                    {(log.checked_out_at || !isEvent) && (
-                                                        log.checked_out_at ? (
-                                                            <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
+                                                    {(log.checked_out_at || !isEvent) &&
+                                                        (log.checked_out_at ? (
+                                                            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200/50">
+                                                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/50 bg-slate-100 text-slate-500">
                                                                         <Clock className="h-4 w-4" />
                                                                     </div>
                                                                     <div className="text-left">
                                                                         <p className="text-sm font-black text-slate-800">Checked Out</p>
-                                                                        <p className="text-[11px] text-slate-400 font-bold">Recorded by {log.checkout_verifier_name}</p>
+                                                                        <p className="text-[11px] font-bold text-slate-400">
+                                                                            Recorded by {log.checkout_verifier_name}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-right">
@@ -431,20 +426,19 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                                                             minute: '2-digit',
                                                                         })}
                                                                     </p>
-                                                                    <p className="text-[10px] text-slate-400 font-bold">
+                                                                    <p className="text-[10px] font-bold text-slate-400">
                                                                         {formatDistanceToNow(new Date(log.checked_out_at), { addSuffix: true })}
                                                                     </p>
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-amber-600">
-                                                                <span className="text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
-                                                                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                                                            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-amber-600">
+                                                                <span className="flex items-center gap-1.5 text-xs font-black tracking-wider uppercase">
+                                                                    <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
                                                                     Still in estate
-                                                                 </span>
+                                                                </span>
                                                             </div>
-                                                        )
-                                                    )}
+                                                        ))}
                                                 </div>
                                             ))}
 

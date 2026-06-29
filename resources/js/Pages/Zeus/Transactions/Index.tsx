@@ -17,7 +17,7 @@ import {
     Activity,
     ChevronDown,
     RotateCcw,
-    AlertTriangle
+    AlertTriangle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -93,7 +93,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
         router.get(
             '/zeus/transactions',
             { search, status, estate_id: estateId, date_from: dateFrom, date_to: dateTo },
-            { preserveState: true, replace: true }
+            { preserveState: true, replace: true },
         );
     };
 
@@ -116,7 +116,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         });
     };
 
@@ -151,9 +151,7 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
             return (
                 <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-lg dark:border-slate-800 dark:bg-[#0a0e17]">
                     <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{label}</p>
-                    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">
-                        {formatCurrency(payload[0].value)}
-                    </p>
+                    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{formatCurrency(payload[0].value)}</p>
                 </div>
             );
         }
@@ -168,13 +166,11 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                 {/* Header */}
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                        <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                             <Activity className="h-8 w-8 text-indigo-500" />
                             Financial Activity
                         </h1>
-                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                            Real-time transaction monitoring and volume trends.
-                        </p>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Real-time transaction monitoring and volume trends.</p>
                     </div>
                 </div>
 
@@ -185,17 +181,23 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <DollarSign className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Total Volume</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.total_volume || 0)}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={formatCurrency(stats?.total_volume || 0)}
+                        >
                             {formatCurrency(stats?.total_volume || 0)}
                         </p>
                     </div>
-                    
+
                     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                             <TrendingUp className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">30-Day Volume</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.monthly_volume || 0)}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={formatCurrency(stats?.monthly_volume || 0)}
+                        >
                             {formatCurrency(stats?.monthly_volume || 0)}
                         </p>
                     </div>
@@ -205,7 +207,10 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <CreditCard className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Average Transaction</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white truncate" title={formatCurrency(stats?.average_value || 0)}>
+                        <p
+                            className="mt-2 truncate text-3xl font-bold text-slate-900 dark:text-white"
+                            title={formatCurrency(stats?.average_value || 0)}
+                        >
                             {formatCurrency(stats?.average_value || 0)}
                         </p>
                     </div>
@@ -215,14 +220,16 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                             <CheckCircle2 className="h-5 w-5" />
                         </div>
                         <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Success Rate</p>
-                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-                            {stats?.success_rate || 0}%
-                        </p>
+                        <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{stats?.success_rate || 0}%</p>
                     </div>
                 </div>
 
                 {/* Chart Section */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                >
                     <div className="mb-6 flex items-center justify-between">
                         <div>
                             <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">30-Day Volume Trend</h3>
@@ -239,26 +246,10 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                <XAxis 
-                                    dataKey="date" 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{ fontSize: 10, fill: '#64748b' }} 
-                                    dy={10}
-                                />
-                                <YAxis 
-                                    hide={true} 
-                                    domain={['dataMin', 'dataMax + 10000']} 
-                                />
+                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dy={10} />
+                                <YAxis hide={true} domain={['dataMin', 'dataMax + 10000']} />
                                 <Tooltip content={<CustomTooltip />} />
-                                <Area 
-                                    type="monotone" 
-                                    dataKey="volume" 
-                                    stroke="#6366f1" 
-                                    strokeWidth={3} 
-                                    fillOpacity={1} 
-                                    fill="url(#colorVolume)" 
-                                />
+                                <Area type="monotone" dataKey="volume" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorVolume)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -289,7 +280,9 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                                 >
                                     <option value="">All Estates</option>
                                     {estates.map((e) => (
-                                        <option key={e.id} value={e.id}>{e.name}</option>
+                                        <option key={e.id} value={e.id}>
+                                            {e.name}
+                                        </option>
                                     ))}
                                 </select>
                                 <ChevronDown className="absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2 text-slate-400" />
@@ -351,11 +344,21 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                         <table className="w-full text-left">
                             <thead className="bg-slate-50/50 dark:bg-slate-800/20">
                                 <tr>
-                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Date & Ref</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Customer / Estate</th>
-                                    <th className="px-8 py-5 text-right text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Amount</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Status</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Method</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                        Date & Ref
+                                    </th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                        Customer / Estate
+                                    </th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                        Amount
+                                    </th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                        Status
+                                    </th>
+                                    <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                        Method
+                                    </th>
                                     <th className="px-8 py-5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500"></th>
                                 </tr>
                             </thead>
@@ -379,7 +382,9 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
                                             className="group cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
                                         >
                                             <td className="px-8 py-5">
-                                                <div className="text-sm font-semibold text-slate-900 dark:text-white">{formatDate(tx.created_at)}</div>
+                                                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                    {formatDate(tx.created_at)}
+                                                </div>
                                                 <div className="mt-1 flex items-center gap-1.5 font-mono text-[10px] tracking-tighter text-slate-400 uppercase">
                                                     {tx.paystack_reference}
                                                 </div>
@@ -439,9 +444,9 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
 
                 <AnimatePresence>
                     {selectedTransaction && (
-                        <TransactionDetailModal 
-                            transaction={selectedTransaction} 
-                            onClose={() => setSelectedTransaction(null)} 
+                        <TransactionDetailModal
+                            transaction={selectedTransaction}
+                            onClose={() => setSelectedTransaction(null)}
                             formatCurrency={formatCurrency}
                             formatDate={formatDate}
                         />
@@ -452,13 +457,13 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
     );
 }
 
-function TransactionDetailModal({ 
-    transaction, 
-    onClose, 
-    formatCurrency, 
-    formatDate 
-}: { 
-    transaction: Transaction; 
+function TransactionDetailModal({
+    transaction,
+    onClose,
+    formatCurrency,
+    formatDate,
+}: {
+    transaction: Transaction;
     onClose: () => void;
     formatCurrency: (amount: number) => string;
     formatDate: (date: string) => string;
@@ -487,7 +492,10 @@ function TransactionDetailModal({
                             ID #{transaction.id}
                         </p>
                     </div>
-                    <button onClick={onClose} className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90 dark:bg-slate-800 dark:hover:bg-slate-700">
+                    <button
+                        onClick={onClose}
+                        className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90 dark:bg-slate-800 dark:hover:bg-slate-700"
+                    >
                         <X className="h-5 w-5 text-slate-900 dark:text-white" />
                     </button>
                 </div>
@@ -519,7 +527,9 @@ function TransactionDetailModal({
                         </div>
                         <div>
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Customer / Resident</p>
-                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">{transaction.invoice?.user?.name || 'Bulk / System Payment'}</p>
+                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">
+                                {transaction.invoice?.user?.name || 'Bulk / System Payment'}
+                            </p>
                             <p className="text-[11px] font-medium text-slate-500">{transaction.invoice?.user?.email || transaction.customer_email}</p>
                         </div>
                         <div>

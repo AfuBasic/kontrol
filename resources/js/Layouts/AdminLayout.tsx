@@ -183,7 +183,6 @@ export default function AdminLayout({ children, title }: Props) {
                 console.error('Echo connection error:', error);
             });
 
-             
             channel.listen('.resident.created', (e: any) => {
                 const message = typeof e.message === 'string' ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
 
@@ -225,7 +224,6 @@ export default function AdminLayout({ children, title }: Props) {
         if (auth.user?.id) {
             const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
-             
             userChannel.notification((notification: any) => {
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
 

@@ -136,7 +136,9 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                 <div className="absolute top-[-10px] right-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
                                                 <div className="absolute right-[-10px] bottom-[-10px] z-10 h-5 w-5 rounded-full bg-[#fafbfd]" />
 
-                                                <span className={`font-mono leading-none font-black tracking-tighter ${getValueFontSize(coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value)}`}>
+                                                <span
+                                                    className={`font-mono leading-none font-black tracking-tighter ${getValueFontSize(coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value)}`}
+                                                >
                                                     {coupon.type === 'percentage' ? `${coupon.value}%` : coupon.formatted_value}
                                                 </span>
                                                 <span className="mt-1 text-[9px] font-black tracking-wider text-indigo-200 uppercase">
@@ -306,7 +308,7 @@ export default function CouponIndexPage({ coupons }: Props) {
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            className="relative z-10 w-full max-w-lg overflow-hidden rounded-t-[32px] border-t border-x border-slate-100 bg-white px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+32px)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)]"
+                            className="relative z-10 w-full max-w-lg overflow-hidden rounded-t-[32px] border-x border-t border-slate-100 bg-white px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+32px)] shadow-[0_-8px_30px_rgba(15,23,42,0.08)]"
                         >
                             {/* Drag handle for mobile */}
                             <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-slate-200" />

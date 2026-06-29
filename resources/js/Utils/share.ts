@@ -34,7 +34,9 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
               month: 'long',
               day: 'numeric',
               year: 'numeric',
-          }) + ' at ' + new Date(accessCode.starts_at).toLocaleTimeString('en-US', {
+          }) +
+          ' at ' +
+          new Date(accessCode.starts_at).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
           })

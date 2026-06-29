@@ -294,7 +294,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                     {/* Active Coupons Section */}
                     <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                         <h3 className="mb-6 flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                            <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400">
+                            <span className="text-indigo-650 flex h-5 w-5 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400">
                                 <Ticket className="h-3 w-3" />
                             </span>
                             Active Coupons
@@ -302,25 +302,29 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                         {activeCoupons && activeCoupons.length > 0 ? (
                             <div className="space-y-4">
                                 {activeCoupons.map((coupon) => (
-                                    <div key={coupon.id} className="group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#080b13] p-4 transition hover:border-indigo-350 dark:hover:border-indigo-900/60">
-                                        <div className="flex justify-between items-start mb-2">
+                                    <div
+                                        key={coupon.id}
+                                        className="group hover:border-indigo-350 relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-4 transition dark:border-slate-800 dark:bg-[#080b13] dark:hover:border-indigo-900/60"
+                                    >
+                                        <div className="mb-2 flex items-start justify-between">
                                             <div>
                                                 <h4 className="text-sm font-black text-slate-900 dark:text-white">{coupon.campaign_name}</h4>
-                                                <span className="mt-1.5 inline-block font-mono text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-900/20">{coupon.code}</span>
+                                                <span className="mt-1.5 inline-block rounded-lg border border-indigo-100/50 bg-indigo-50 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-indigo-600 uppercase dark:border-indigo-900/20 dark:bg-indigo-950/40 dark:text-indigo-400">
+                                                    {coupon.code}
+                                                </span>
                                             </div>
                                             <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
                                                 {coupon.type === 'percentage' ? `${coupon.value}%` : `₦${(coupon.value / 100).toLocaleString()}`}
                                             </span>
                                         </div>
-                                        <div className="mt-3 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                        <div className="mt-3 flex items-center justify-between text-[10px] font-bold tracking-wide text-slate-500 uppercase dark:text-slate-400">
                                             <span>
-                                                Limit: {coupon.usage_limit ? `${coupon.usage_limit} use${coupon.usage_limit > 1 ? 's' : ''} per resident` : 'Unlimited'}
+                                                Limit:{' '}
+                                                {coupon.usage_limit
+                                                    ? `${coupon.usage_limit} use${coupon.usage_limit > 1 ? 's' : ''} per resident`
+                                                    : 'Unlimited'}
                                             </span>
-                                            {coupon.expires_at && (
-                                                <span>
-                                                    Expires {coupon.expires_at}
-                                                </span>
-                                            )}
+                                            {coupon.expires_at && <span>Expires {coupon.expires_at}</span>}
                                         </div>
                                     </div>
                                 ))}

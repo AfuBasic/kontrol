@@ -335,7 +335,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                     params={{
                         page: collections.current_page + 1,
                         search: search,
-                        status: status
+                        status: status,
                     }}
                     fallback={
                         <div className="mt-8 flex justify-center pb-12">

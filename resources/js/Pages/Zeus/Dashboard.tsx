@@ -1,17 +1,17 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
-import { 
-    ArrowTrendingUpIcon, 
-    ArrowTrendingDownIcon, 
-    ClockIcon, 
+import {
+    ArrowTrendingUpIcon,
+    ArrowTrendingDownIcon,
+    ClockIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
     ServerStackIcon,
     UsersIcon,
     BuildingOfficeIcon,
     BellAlertIcon,
-    ArrowRightIcon
+    ArrowRightIcon,
 } from '@heroicons/react/24/outline';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import DateRangePicker from '@/Components/UI/DateRangePicker';
@@ -87,16 +87,16 @@ interface Props {
     endDate: string;
 }
 
-export default function Dashboard({ 
-    briefing, 
-    metrics, 
-    growthChart, 
+export default function Dashboard({
+    briefing,
+    metrics,
+    growthChart,
     liveActivityStream,
     pendingApplications,
     systemHealth,
     topEstates,
-    startDate, 
-    endDate 
+    startDate,
+    endDate,
 }: Props) {
     const formatExactCurrency = (value: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -161,7 +161,11 @@ export default function Dashboard({
                 </div>
             </div>
             <div className="absolute -right-6 -bottom-6 h-32 w-40 opacity-[0.03] transition-opacity duration-500 group-hover:opacity-5 dark:opacity-[0.02] dark:group-hover:opacity-[0.04]">
-                <svg viewBox="0 0 100 100" className={`h-full w-full ${data.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`} fill="currentColor">
+                <svg
+                    viewBox="0 0 100 100"
+                    className={`h-full w-full ${data.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}
+                    fill="currentColor"
+                >
                     {data.trend === 'up' ? (
                         <path d="M0 100 V 80 Q 25 70 50 40 T 100 20 V 100 Z" />
                     ) : (
@@ -175,16 +179,16 @@ export default function Dashboard({
     const timeAgo = (dateString: string) => {
         const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
         let interval = seconds / 31536000;
-        if (interval > 1) return Math.floor(interval) + "y ago";
+        if (interval > 1) return Math.floor(interval) + 'y ago';
         interval = seconds / 2592000;
-        if (interval > 1) return Math.floor(interval) + "mo ago";
+        if (interval > 1) return Math.floor(interval) + 'mo ago';
         interval = seconds / 86400;
-        if (interval > 1) return Math.floor(interval) + "d ago";
+        if (interval > 1) return Math.floor(interval) + 'd ago';
         interval = seconds / 3600;
-        if (interval > 1) return Math.floor(interval) + "h ago";
+        if (interval > 1) return Math.floor(interval) + 'h ago';
         interval = seconds / 60;
-        if (interval > 1) return Math.floor(interval) + "m ago";
-        return Math.floor(seconds) + "s ago";
+        if (interval > 1) return Math.floor(interval) + 'm ago';
+        return Math.floor(seconds) + 's ago';
     };
 
     return (
@@ -199,8 +203,13 @@ export default function Dashboard({
                     </h1>
                     <p className="mt-4 text-lg leading-relaxed text-slate-500 dark:text-slate-400">
                         {briefing.headline} You acquired{' '}
-                        <span className="font-semibold text-slate-900 dark:text-white">{briefing.highlights.estates_added} new estates</span> this week, pushing MRR to <span className="font-semibold text-slate-900 dark:text-white">₦{briefing.highlights.mrr}</span>. You have{' '}
-                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">{briefing.highlights.pending_apps} pending applications</span> awaiting review.
+                        <span className="font-semibold text-slate-900 dark:text-white">{briefing.highlights.estates_added} new estates</span> this
+                        week, pushing MRR to <span className="font-semibold text-slate-900 dark:text-white">₦{briefing.highlights.mrr}</span>. You
+                        have{' '}
+                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            {briefing.highlights.pending_apps} pending applications
+                        </span>{' '}
+                        awaiting review.
                     </p>
                 </motion.div>
 
@@ -215,13 +224,16 @@ export default function Dashboard({
                 {/* Main Command Center Grid */}
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column (2/3 width) - Charts & Activity */}
-                    <div className="lg:col-span-2 space-y-8">
+                    <div className="space-y-8 lg:col-span-2">
                         {/* Platform Trajectory Chart */}
-                        <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white/50 p-8 shadow-sm backdrop-blur-xl dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
                             <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                                 <div>
                                     <h2 className="text-base font-bold text-slate-900 dark:text-white">Platform Trajectory</h2>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Revenue vs acquisition over time.</p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Revenue vs acquisition over time.</p>
                                 </div>
                                 <DateRangePicker startDate={startDate} endDate={endDate} onChange={handleRangeChange} />
                             </div>
@@ -239,40 +251,106 @@ export default function Dashboard({
                                                 <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 500 }} dy={10} />
-                                        <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} dx={-10} />
-                                        <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dx={10} />
+                                        <XAxis
+                                            dataKey="period"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fill: '#64748b', fontWeight: 500 }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            yAxisId="left"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                            tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`}
+                                            dx={-10}
+                                        />
+                                        <YAxis
+                                            yAxisId="right"
+                                            orientation="right"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                            dx={10}
+                                        />
                                         <Tooltip
-                                            contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(12px)', color: '#fff', padding: '12px 16px' }}
+                                            contentStyle={{
+                                                borderRadius: '16px',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                                backdropFilter: 'blur(12px)',
+                                                color: '#fff',
+                                                padding: '12px 16px',
+                                            }}
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
                                             cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                            formatter={(value: number, name: string) => [name === 'mrr' ? formatExactCurrency(value) : value, name === 'mrr' ? 'Revenue' : 'Estates']}
+                                            formatter={(value: number, name: string) => [
+                                                name === 'mrr' ? formatExactCurrency(value) : value,
+                                                name === 'mrr' ? 'Revenue' : 'Estates',
+                                            ]}
                                         />
-                                        <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }} />
-                                        <Area yAxisId="left" type="monotone" dataKey="mrr" name="Revenue" stroke="#818cf8" strokeWidth={2} fillOpacity={1} fill="url(#colorMrr)" activeDot={{ r: 4, strokeWidth: 0, fill: '#818cf8' }} />
-                                        <Area yAxisId="right" type="monotone" dataKey="estates" name="Estates" stroke="#34d399" strokeWidth={2} fillOpacity={1} fill="url(#colorEstates)" activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }} />
+                                        <Legend
+                                            verticalAlign="top"
+                                            height={36}
+                                            iconType="circle"
+                                            wrapperStyle={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}
+                                        />
+                                        <Area
+                                            yAxisId="left"
+                                            type="monotone"
+                                            dataKey="mrr"
+                                            name="Revenue"
+                                            stroke="#818cf8"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorMrr)"
+                                            activeDot={{ r: 4, strokeWidth: 0, fill: '#818cf8' }}
+                                        />
+                                        <Area
+                                            yAxisId="right"
+                                            type="monotone"
+                                            dataKey="estates"
+                                            name="Estates"
+                                            stroke="#34d399"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorEstates)"
+                                            activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }}
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         </motion.div>
 
                         {/* Live Activity Stream */}
-                        <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
                             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
                                 <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                     <ClockIcon className="h-4 w-4 text-indigo-500" />
                                     Live Platform Feed
                                 </h2>
-                                <Link href="/zeus/risk-center" className="text-[11px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400">
+                                <Link
+                                    href="/zeus/risk-center"
+                                    className="text-[11px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
+                                >
                                     View All Activity
                                 </Link>
                             </div>
                             <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
                                 {liveActivityStream.length === 0 ? (
-                                    <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">No recent activity on the platform.</div>
+                                    <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                                        No recent activity on the platform.
+                                    </div>
                                 ) : (
                                     liveActivityStream.map((activity) => (
-                                        <div key={activity.id} className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20">
+                                        <div
+                                            key={activity.id}
+                                            className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                        >
                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
                                                 {activity.event === 'created' ? (
                                                     <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
@@ -283,9 +361,7 @@ export default function Dashboard({
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                                    {activity.description}
-                                                </p>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.description}</p>
                                                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                                                     {activity.type} • {timeAgo(activity.created_at)}
                                                 </p>
@@ -300,7 +376,10 @@ export default function Dashboard({
                     {/* Right Column (1/3 width) - Tasks, Health, Leaderboard */}
                     <div className="space-y-8">
                         {/* Pending Applications Widget */}
-                        <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
                             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
                                 <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                     <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />
@@ -315,11 +394,14 @@ export default function Dashboard({
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {pendingApplications.map(app => (
-                                            <div key={app.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-[#0a0e17]">
+                                        {pendingApplications.map((app) => (
+                                            <div
+                                                key={app.id}
+                                                className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-[#0a0e17]"
+                                            >
                                                 <p className="text-sm font-bold text-slate-900 dark:text-white">{app.estate_name}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{app.contact_name}</p>
-                                                <Link 
+                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{app.contact_name}</p>
+                                                <Link
                                                     href={`/zeus/applications/${app.id}`}
                                                     className="mt-3 flex items-center gap-1 text-[10px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
                                                 >
@@ -333,8 +415,11 @@ export default function Dashboard({
                         </motion.div>
 
                         {/* System Health Widget */}
-                        <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200/50 bg-gradient-to-br from-slate-900 to-[#0f1423] p-6 text-white shadow-xl dark:border-slate-800/50">
-                            <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider uppercase text-slate-300">
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-gradient-to-br from-slate-900 to-[#0f1423] p-6 text-white shadow-xl dark:border-slate-800/50"
+                        >
+                            <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-300 uppercase">
                                 <ServerStackIcon className="h-4 w-4 text-sky-400" />
                                 Platform Health
                             </h2>
@@ -362,16 +447,22 @@ export default function Dashboard({
                         </motion.div>
 
                         {/* Top Estates Leaderboard */}
-                        <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
                             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
                                 <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                     <UsersIcon className="h-4 w-4 text-emerald-500" />
                                     Top Estates
                                 </h2>
                             </div>
-                            <div className="p-5 space-y-3">
+                            <div className="space-y-3 p-5">
                                 {topEstates.map((estate, idx) => (
-                                    <div key={estate.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/30">
+                                    <div
+                                        key={estate.id}
+                                        className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/30"
+                                    >
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] font-black text-slate-400">0{idx + 1}</span>
                                             <span className="text-sm font-semibold text-slate-900 dark:text-white">{estate.name}</span>

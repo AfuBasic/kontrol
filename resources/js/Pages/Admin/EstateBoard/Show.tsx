@@ -1,7 +1,22 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Trash2, Users, Shield, Globe, Clock, CheckCircle2, Eye, MessageCircle, Send, MoreHorizontal, Image as ImageIcon, Edit, BarChart3 } from 'lucide-react';
+import {
+    ArrowLeft,
+    Trash2,
+    Users,
+    Shield,
+    Globe,
+    Clock,
+    CheckCircle2,
+    Eye,
+    MessageCircle,
+    Send,
+    MoreHorizontal,
+    Image as ImageIcon,
+    Edit,
+    BarChart3,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Admin/EstateBoardCommentController';
@@ -32,7 +47,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     event: 'bg-purple-100 text-purple-700 ring-purple-200',
 };
 
-const PRIORITY_STYLES: Record<string, { badge: string, border: string }> = {
+const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
     normal: { badge: 'bg-slate-100 text-slate-600', border: 'border-slate-100' },
     important: { badge: 'bg-amber-100 text-amber-700 ring-1 ring-amber-300', border: 'border-amber-200' },
     critical: { badge: 'bg-rose-100 text-rose-700 ring-1 ring-rose-300 animate-pulse', border: 'border-rose-200' },
@@ -78,9 +93,11 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
                 <div className="rounded-2xl bg-slate-50 px-5 py-4">
                     <div className="mb-2 flex items-center justify-between">
                         <span className="text-sm font-bold text-slate-900">{comment.author.name}</span>
-                        <span className="text-xs font-semibold text-slate-500">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                        <span className="text-xs font-semibold text-slate-500">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </span>
                     </div>
-                    <p className="text-sm font-medium text-slate-700 leading-relaxed">{comment.body}</p>
+                    <p className="text-sm leading-relaxed font-medium text-slate-700">{comment.body}</p>
                 </div>
                 <div className="mt-2 flex items-center gap-4 px-2">
                     {showDeleteConfirm ? (
@@ -135,14 +152,24 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
         router.get(
             comments.next_page_url,
             {},
-            { preserveState: true, preserveScroll: true, only: ['comments'], onFinish: () => { isLoadingMore.current = false; } }
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['comments'],
+                onFinish: () => {
+                    isLoadingMore.current = false;
+                },
+            },
         );
     }, [comments.next_page_url]);
 
     useEffect(() => {
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) loadMore();
-        }, { threshold: 0.1 });
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) loadMore();
+            },
+            { threshold: 0.1 },
+        );
         if (loadMoreRef.current) observer.observe(loadMoreRef.current);
         return () => observer.disconnect();
     }, [loadMore]);
@@ -186,14 +213,14 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                     >
                         <MoreHorizontal className="h-5 w-5" />
                     </button>
-                    
+
                     <AnimatePresence>
                         {showActions && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5 z-50"
+                                className="absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5"
                             >
                                 <div className="p-1">
                                     <button
@@ -212,7 +239,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {/* Main Content Column */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="space-y-8 lg:col-span-2">
                     {/* Hero Header */}
                     <motion.div
                         initial={{ opacity: 0, y: 16 }}
@@ -239,40 +266,53 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                            <div className="mb-6 flex flex-wrap items-center gap-3">
                                 {post.category && (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ring-1 ring-inset ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}>
+                                    <span
+                                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black tracking-wider uppercase ring-1 ring-inset ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}
+                                    >
                                         {post.category}
                                     </span>
                                 )}
                                 {post.priority && post.priority !== 'normal' && (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${priorityStyle.badge}`}>
+                                    <span
+                                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black tracking-wider uppercase ${priorityStyle.badge}`}
+                                    >
                                         {post.priority}
                                     </span>
                                 )}
                             </div>
 
-                            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                            <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900 sm:text-4xl">
                                 {post.title || 'Untitled Broadcast'}
                             </h1>
 
-                            <div className="mt-8 prose prose-slate prose-lg max-w-none">
+                            <div className="prose prose-slate prose-lg mt-8 max-w-none">
                                 <div className="leading-relaxed font-medium text-slate-700" dangerouslySetInnerHTML={{ __html: post.body }} />
                             </div>
 
                             {/* Media */}
                             {post.media && post.media.length > 0 && (
-                                <div className="mt-8 pt-8 border-t border-slate-100">
-                                    <div className="flex items-center gap-2 mb-4 text-slate-400">
+                                <div className="mt-8 border-t border-slate-100 pt-8">
+                                    <div className="mb-4 flex items-center gap-2 text-slate-400">
                                         <ImageIcon className="h-5 w-5" />
-                                        <h3 className="text-xs font-black uppercase tracking-wider">Attachments</h3>
+                                        <h3 className="text-xs font-black tracking-wider uppercase">Attachments</h3>
                                     </div>
                                     {post.media.length === 1 ? (
-                                        <img src={post.media[0].url} alt="" className="max-h-[500px] w-full rounded-2xl object-cover ring-1 ring-slate-200 shadow-sm" />
+                                        <img
+                                            src={post.media[0].url}
+                                            alt=""
+                                            className="max-h-[500px] w-full rounded-2xl object-cover shadow-sm ring-1 ring-slate-200"
+                                        />
                                     ) : (
                                         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                                             {post.media.map((media) => (
-                                                <img key={media.id} src={media.url} alt="" className="aspect-square w-full rounded-2xl object-cover ring-1 ring-slate-200 shadow-sm hover:shadow-md transition-shadow" />
+                                                <img
+                                                    key={media.id}
+                                                    src={media.url}
+                                                    alt=""
+                                                    className="aspect-square w-full rounded-2xl object-cover shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md"
+                                                />
                                             ))}
                                         </div>
                                     )}
@@ -300,14 +340,14 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Write your comment..."
                                     rows={3}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-4 px-5 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 transition-all resize-none"
+                                    className="block w-full resize-none rounded-2xl border-0 bg-slate-50 px-5 py-4 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-primary-600 focus:ring-inset"
                                 />
                                 {errors.body && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.body}</p>}
                                 <div className="mt-4 flex justify-end">
                                     <button
                                         type="submit"
                                         disabled={processing || !data.body.trim()}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-slate-800 disabled:opacity-50 active:scale-95"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                                     >
                                         <Send className="h-4 w-4" />
                                         {processing ? 'Posting...' : 'Post Comment'}
@@ -316,13 +356,9 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                             </form>
                         </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.15 }}
-                        >
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
                             {comments.data.length > 0 ? (
-                                <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                                <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                                     <div className="space-y-6">
                                         {comments.data.map((comment) => (
                                             <CommentItem key={comment.id} comment={comment} postHashid={post.hashid} />
@@ -340,7 +376,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                                 </div>
                             ) : (
                                 <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-100 mb-4">
+                                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-100">
                                         <MessageCircle className="h-8 w-8 text-slate-300" />
                                     </div>
                                     <h3 className="text-lg font-bold text-slate-900">No comments yet</h3>
@@ -360,37 +396,37 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                         transition={{ duration: 0.4, delay: 0.1 }}
                         className="rounded-3xl bg-slate-900 p-6 text-white shadow-xl"
                     >
-                        <div className="flex items-center gap-2 mb-6 text-primary-200">
+                        <div className="mb-6 flex items-center gap-2 text-primary-200">
                             <BarChart3 className="h-5 w-5 opacity-70" />
-                            <h3 className="text-xs font-black uppercase tracking-wider">Delivery Insights</h3>
+                            <h3 className="text-xs font-black tracking-wider uppercase">Delivery Insights</h3>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <div className="flex items-end justify-between mb-2">
+                                <div className="mb-2 flex items-end justify-between">
                                     <span className="text-3xl font-black">{metrics.read_rate}%</span>
-                                    <span className="text-sm font-semibold text-primary-200 pb-1">Read Rate</span>
+                                    <span className="pb-1 text-sm font-semibold text-primary-200">Read Rate</span>
                                 </div>
                                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                                    <motion.div 
+                                    <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${metrics.read_rate}%` }}
-                                        transition={{ duration: 1, ease: "easeOut" }}
-                                        className="h-full rounded-full bg-primary-500" 
+                                        transition={{ duration: 1, ease: 'easeOut' }}
+                                        className="h-full rounded-full bg-primary-500"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                            <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Delivered</p>
+                                    <p className="mb-1 text-xs font-bold tracking-wider text-slate-400 uppercase">Delivered</p>
                                     <p className="flex items-center gap-2 text-lg font-bold">
                                         <CheckCircle2 className="h-4 w-4 text-primary-400" />
                                         {metrics.targets_count}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Read</p>
+                                    <p className="mb-1 text-xs font-bold tracking-wider text-slate-400 uppercase">Read</p>
                                     <p className="flex items-center gap-2 text-lg font-bold">
                                         <Eye className="h-4 w-4 text-emerald-400" />
                                         {metrics.reads_count}
@@ -407,26 +443,31 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                         transition={{ duration: 0.4, delay: 0.2 }}
                         className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100"
                     >
-                        <div className="flex items-center gap-2 mb-6 text-slate-400">
+                        <div className="mb-6 flex items-center gap-2 text-slate-400">
                             <Globe className="h-5 w-5" />
-                            <h3 className="text-xs font-black uppercase tracking-wider">Audience Targeting</h3>
+                            <h3 className="text-xs font-black tracking-wider uppercase">Audience Targeting</h3>
                         </div>
 
                         {post.applies_to === 'all' || !targets ? (
                             <div className="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-100">
-                                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 mb-3">
+                                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm ring-1 ring-slate-200">
                                     {getAudienceIcon(post.audience)}
                                 </div>
                                 <p className="text-sm font-bold text-slate-900">{getAudienceLabel(post.audience)}</p>
-                                <p className="mt-1 text-xs font-medium text-slate-500">This broadcast was visible to {getAudienceLabel(post.audience).toLowerCase()}.</p>
+                                <p className="mt-1 text-xs font-medium text-slate-500">
+                                    This broadcast was visible to {getAudienceLabel(post.audience).toLowerCase()}.
+                                </p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 <div className="flex flex-col gap-2">
                                     {targets.map((tgt, index) => (
-                                        <div key={index} className="flex items-center justify-between rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100"
+                                        >
                                             <span className="text-sm font-bold text-slate-700">{tgt.name}</span>
-                                            <span className="rounded-md bg-white px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 shadow-sm ring-1 ring-slate-200">
+                                            <span className="rounded-md bg-white px-2 py-1 text-[10px] font-black tracking-wider text-slate-400 uppercase shadow-sm ring-1 ring-slate-200">
                                                 {tgt.type}
                                             </span>
                                         </div>

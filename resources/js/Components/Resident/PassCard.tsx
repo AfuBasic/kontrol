@@ -156,30 +156,36 @@ export default function PassCard({ pass, qrUrl }: Props) {
             }`}
         >
             {/* Estate & Status Header */}
-            <div className={`flex items-center justify-between border-b px-5 py-3 ${
-                isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
-            }`}>
+            <div
+                className={`flex items-center justify-between border-b px-5 py-3 ${
+                    isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
+                }`}
+            >
                 <div className="min-w-0 flex-1 text-left">
                     <p className={`text-[9px] font-black tracking-widest uppercase ${isEvent ? 'text-violet-400' : 'text-primary-500'}`}>ESTATE</p>
                     <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.estate_name || 'My Estate'}</h2>
                 </div>
-                <div className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
-                    isEvent ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : statusBg
-                }`}>
+                <div
+                    className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                        isEvent ? 'border-violet-500/30 bg-violet-500/20 text-violet-300' : statusBg
+                    }`}
+                >
                     {statusIcon}
                     {statusLabel}
                 </div>
             </div>
 
             {/* Visitor & Host Info */}
-            <div className={`relative grid grid-cols-2 gap-4 border-b px-5 py-3 ${
-                isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
-            }`}>
+            <div
+                className={`relative grid grid-cols-2 gap-4 border-b px-5 py-3 ${
+                    isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
+                }`}
+            >
                 <div className="text-left">
-                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">
-                        {isEvent ? 'EVENT' : 'GUEST'}
+                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">{isEvent ? 'EVENT' : 'GUEST'}</p>
+                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>
+                        {pass.visitor_name || 'Guest visitor'}
                     </p>
-                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.visitor_name || 'Guest visitor'}</p>
                 </div>
                 <div className="text-right">
                     <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">HOST</p>
@@ -188,12 +194,12 @@ export default function PassCard({ pass, qrUrl }: Props) {
             </div>
 
             {/* QR Code Segment */}
-            <div className={`relative flex flex-col items-center justify-center px-5 py-4 ${
-                isEvent ? 'bg-white/5' : 'bg-slate-50/50'
-            }`}>
-                <div className={`relative overflow-hidden rounded-2xl border p-3 transition-all hover:scale-102 ${
-                    isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-100 bg-white'
-                }`}>
+            <div className={`relative flex flex-col items-center justify-center px-5 py-4 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
+                <div
+                    className={`relative overflow-hidden rounded-2xl border p-3 transition-all hover:scale-102 ${
+                        isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-100 bg-white'
+                    }`}
+                >
                     {/* Visual lock status */}
                     {!isPassActiveOrScheduled && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
@@ -222,51 +228,53 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     )}
                 </div>
                 {isScheduled ? (
-                    <div className={`mt-2.5 rounded-xl border px-4 py-1.5 text-center ${
-                        isEvent ? 'border-violet-500/20 bg-violet-500/10 text-violet-300' : 'border-indigo-100/50 bg-indigo-50/80 text-indigo-700'
-                    }`}>
+                    <div
+                        className={`mt-2.5 rounded-xl border px-4 py-1.5 text-center ${
+                            isEvent ? 'border-violet-500/20 bg-violet-500/10 text-violet-300' : 'border-indigo-100/50 bg-indigo-50/80 text-indigo-700'
+                        }`}
+                    >
                         <p className="text-[10px] font-black tracking-wide uppercase">Pass Scheduled</p>
                         <p className="mt-0.5 text-[9px] font-bold opacity-90">{formatSmartStartsAt(pass.starts_at)}</p>
                     </div>
                 ) : (
-                    <p className={`mt-2 text-[10px] font-medium ${isEvent ? 'text-slate-400' : 'text-slate-500'}`}>Present at gate terminal for fast verification</p>
+                    <p className={`mt-2 text-[10px] font-medium ${isEvent ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Present at gate terminal for fast verification
+                    </p>
                 )}
             </div>
 
             {/* Fallback code segment - dotted ticket line separation */}
-            <div className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${
-                isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
-            }`}>
+            <div
+                className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${
+                    isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
+                }`}
+            >
                 {/* Ticket notches */}
-                <div
-                    className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full"
-                    style={{ backgroundColor: '#f8fafc' }}
-                />
-                <div
-                    className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full"
-                    style={{ backgroundColor: '#f8fafc' }}
-                />
+                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full" style={{ backgroundColor: '#f8fafc' }} />
+                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full" style={{ backgroundColor: '#f8fafc' }} />
 
                 <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
-                <div className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${
-                    isEvent
-                        ? 'text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 drop-shadow-[0_2px_8px_rgba(167,139,250,0.3)]'
-                        : 'text-primary-500'
-                }`}>{pass.code}</div>
+                <div
+                    className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${
+                        isEvent
+                            ? 'bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(167,139,250,0.3)]'
+                            : 'text-primary-500'
+                    }`}
+                >
+                    {pass.code}
+                </div>
             </div>
 
             {/* Validity Metadata (Faint Centered Footer) */}
-            <div className={`border-t px-5 py-2.5 text-center ${
-                isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
-            }`}>
-                <p className={`text-[10px] font-bold tracking-wide ${isEvent ? 'text-slate-400' : 'text-slate-400'}`}>{formatFaintExpiry(pass.expires_at, pass.type)}</p>
+            <div className={`border-t px-5 py-2.5 text-center ${isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
+                <p className={`text-[10px] font-bold tracking-wide ${isEvent ? 'text-slate-400' : 'text-slate-400'}`}>
+                    {formatFaintExpiry(pass.expires_at, pass.type)}
+                </p>
             </div>
 
             {/* Optional Notes */}
             {pass.notes && (
-                <div className={`border-t px-6 py-4 ${
-                    isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
-                }`}>
+                <div className={`border-t px-6 py-4 ${isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
                     <button
                         onClick={() => setViewNotes(!viewNotes)}
                         className={`flex w-full items-center justify-between text-xs font-bold transition-colors ${
@@ -280,9 +288,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                         <motion.p
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
-                            className={`mt-3 text-left text-xs leading-relaxed font-medium ${
-                                isEvent ? 'text-slate-350' : 'text-slate-600'
-                            }`}
+                            className={`mt-3 text-left text-xs leading-relaxed font-medium ${isEvent ? 'text-slate-350' : 'text-slate-600'}`}
                         >
                             {pass.notes}
                         </motion.p>

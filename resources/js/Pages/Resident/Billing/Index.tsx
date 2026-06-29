@@ -117,14 +117,7 @@ type StatusBannerProps = {
     onOpenWeb: () => void;
 };
 
-function StatusBanner({
-    needsAttention,
-    statusKey,
-    statusLabel,
-    statusDescription,
-    isNative,
-    onOpenWeb,
-}: StatusBannerProps) {
+function StatusBanner({ needsAttention, statusKey, statusLabel, statusDescription, isNative, onOpenWeb }: StatusBannerProps) {
     if (!needsAttention) {
         return null;
     }
@@ -170,7 +163,9 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
     const [couponCode, setCouponCode] = useState('');
-    const [appliedCoupons, setAppliedCoupons] = useState<Record<number, { code: string; discount: number; formatted_discount: string; final_amount: number; formatted_final_amount: string }>>({});
+    const [appliedCoupons, setAppliedCoupons] = useState<
+        Record<number, { code: string; discount: number; formatted_discount: string; final_amount: number; formatted_final_amount: string }>
+    >({});
     const [couponError, setCouponError] = useState('');
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [isAutoApplied, setIsAutoApplied] = useState(false);
@@ -204,7 +199,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Accept': 'application/json',
+                                Accept: 'application/json',
                                 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                             },
                             body: JSON.stringify({ code: targetCouponCode, plan_id: plan.id }),
@@ -234,7 +229,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                         setAppliedCoupons({});
                     }
                 } catch (e) {
-                    console.error("Auto coupon validation failed:", e);
+                    console.error('Auto coupon validation failed:', e);
                     setCouponError('An error occurred during coupon validation.');
                 } finally {
                     setIsValidatingCoupon(false);
@@ -302,7 +297,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         displayDescription = status.description(formatDate(subscription.current_period_end || subscription.trial_ends_at));
     }
 
-    const needsAttention = isExpiringSoon || (statusKey === 'past_due' || statusKey === 'expired');
+    const needsAttention = isExpiringSoon || statusKey === 'past_due' || statusKey === 'expired';
 
     const openWebApp = async () => {
         try {
@@ -336,7 +331,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                     },
                     body: JSON.stringify({ code: couponCode, plan_id: plan.id }),
@@ -377,21 +372,17 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         setPayingPlanId(planId);
 
         const payload: { plan_id: number; coupon_code?: string } = { plan_id: planId };
-        
+
         // Find if coupon code is applied for this plan
         const couponForPlan = appliedCoupons[planId];
         if (couponForPlan) {
             payload.coupon_code = couponForPlan.code;
         }
 
-        router.post(
-            ResidentBillingController.subscribe.url(),
-            payload,
-            {
-                preserveScroll: true,
-                onFinish: () => setPayingPlanId(null),
-            }
-        );
+        router.post(ResidentBillingController.subscribe.url(), payload, {
+            preserveScroll: true,
+            onFinish: () => setPayingPlanId(null),
+        });
     };
 
     const loadMore = () => {
@@ -446,7 +437,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] mb-6"
+                    className="mb-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]"
                 >
                     <div className="px-6 py-6 sm:px-8">
                         <div className="flex items-center gap-2">
@@ -457,10 +448,16 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                 {displayLabel}
                             </span>
                         </div>
-                        
+
                         <div className="mt-4">
                             <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-                                {isTrialExpired ? 'Trial expired on' : isSubscriptionExpired || statusKey === 'expired' ? 'Subscription expired on' : statusKey === 'trial' ? 'Trial ends' : 'Valid through'}
+                                {isTrialExpired
+                                    ? 'Trial expired on'
+                                    : isSubscriptionExpired || statusKey === 'expired'
+                                      ? 'Subscription expired on'
+                                      : statusKey === 'trial'
+                                        ? 'Trial ends'
+                                        : 'Valid through'}
                             </h2>
                             <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</p>
                         </div>
@@ -472,7 +469,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.02 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6"
+                    className="mb-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                 >
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-2">
@@ -493,7 +490,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                                     placeholder="Enter coupon code..."
                                     disabled={Object.keys(appliedCoupons).length > 0 || isValidatingCoupon}
-                                    className="w-full rounded-2xl border border-slate-200 bg-white pl-4 pr-10 py-2.5 text-sm uppercase font-mono tracking-wider focus:border-indigo-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pr-10 pl-4 font-mono text-sm tracking-wider uppercase focus:border-indigo-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
                                 />
                                 {Object.keys(appliedCoupons).length > 0 && (
                                     <span className="absolute inset-y-0 right-3 flex items-center text-emerald-600">
@@ -505,7 +502,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                 <button
                                     type="button"
                                     onClick={handleRemoveCoupon}
-                                    className="rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                                    className="cursor-pointer rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                                 >
                                     Remove
                                 </button>
@@ -513,29 +510,26 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                 <button
                                     type="submit"
                                     disabled={!couponCode.trim() || isValidatingCoupon}
-                                    className="rounded-2xl bg-slate-900 px-6 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-slate-900 px-6 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
                                 >
-                                    {isValidatingCoupon ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                        'Apply'
-                                    )}
+                                    {isValidatingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
                                 </button>
                             )}
                         </form>
 
                         {couponError && (
-                            <p className="text-xs font-medium text-rose-600 flex items-center gap-1">
+                            <p className="flex items-center gap-1 text-xs font-medium text-rose-600">
                                 <ExclamationTriangleIcon className="h-3.5 w-3.5" />
                                 {couponError}
                             </p>
                         )}
 
                         {Object.keys(appliedCoupons).length > 0 && (
-                            <div className="rounded-2xl bg-emerald-50/50 border border-emerald-100 p-3 flex items-center gap-2">
+                            <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
                                 <TagIcon className="h-4 w-4 text-emerald-600" />
                                 <span className="text-xs font-semibold text-emerald-800">
-                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!{isAutoApplied && ' (Auto-applied)'}
+                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!
+                                    {isAutoApplied && ' (Auto-applied)'}
                                 </span>
                             </div>
                         )}
@@ -543,43 +537,38 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                 </motion.section>
 
                 {/* Plan Selection */}
-                <motion.section
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="mb-6"
-                >
-                    <h3 className="mb-4 text-sm font-semibold text-slate-900 px-1">Select a billing term</h3>
+                <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6">
+                    <h3 className="mb-4 px-1 text-sm font-semibold text-slate-900">Select a billing term</h3>
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {plans.map((plan) => {
                             const isCurrent = subscription.plan_id === plan.id && (statusKey === 'active' || statusKey === 'trial');
                             const isPaying = payingPlanId === plan.id;
-                            
+
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all ${
-                                        isCurrent 
-                                            ? 'border-indigo-200 bg-indigo-50/30 shadow-sm' 
+                                    className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all sm:p-6 ${
+                                        isCurrent
+                                            ? 'border-indigo-200 bg-indigo-50/30 shadow-sm'
                                             : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
                                     }`}
                                 >
                                     {isCurrent && (
-                                        <span className="absolute top-0 right-0 rounded-bl-xl rounded-tr-xl bg-indigo-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                                        <span className="absolute top-0 right-0 rounded-tr-xl rounded-bl-xl bg-indigo-100 px-3 py-1 text-[10px] font-bold tracking-wider text-indigo-700 uppercase">
                                             Current
                                         </span>
                                     )}
-                                    
+
                                     <div>
                                         <h4 className="text-base font-semibold text-slate-900">{plan.name}</h4>
                                         <p className="mt-2 flex flex-col items-start gap-0.5">
                                             {appliedCoupons[plan.id] ? (
                                                 <>
-                                                    <span className="text-xs text-slate-400 line-through font-medium">{plan.formatted_price}</span>
+                                                    <span className="text-xs font-medium text-slate-400 line-through">{plan.formatted_price}</span>
                                                     <span className="text-2xl font-bold tracking-tight text-indigo-600">
                                                         {appliedCoupons[plan.id].formatted_final_amount}
                                                     </span>
-                                                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 mt-1 ring-1 ring-emerald-600/10">
+                                                    <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-600/10">
                                                         Save {appliedCoupons[plan.id].formatted_discount}
                                                     </span>
                                                 </>
@@ -587,23 +576,27 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                                 <span className="text-2xl font-bold tracking-tight text-slate-900">{plan.formatted_price}</span>
                                             )}
                                         </p>
-                                        <p className="text-sm text-slate-500 mt-1 capitalize">{plan.billing_interval}</p>
+                                        <p className="mt-1 text-sm text-slate-500 capitalize">{plan.billing_interval}</p>
                                     </div>
-                                    
+
                                     <button
                                         type="button"
                                         onClick={() => handleSubscribe(plan.id)}
                                         disabled={payingPlanId !== null || (isCurrent && !appliedCoupons[plan.id])}
                                         className={`mt-6 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                                             isCurrent && !appliedCoupons[plan.id]
-                                                ? 'bg-indigo-50 text-indigo-400 cursor-default'
+                                                ? 'cursor-default bg-indigo-50 text-indigo-400'
                                                 : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]'
-                                        } disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center`}
+                                        } flex items-center justify-center disabled:opacity-70 disabled:active:scale-100`}
                                     >
                                         {isPaying ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : isCurrent ? (
-                                            appliedCoupons[plan.id] ? 'Renew with Coupon' : 'Active'
+                                            appliedCoupons[plan.id] ? (
+                                                'Renew with Coupon'
+                                            ) : (
+                                                'Active'
+                                            )
                                         ) : (
                                             'Select'
                                         )}
