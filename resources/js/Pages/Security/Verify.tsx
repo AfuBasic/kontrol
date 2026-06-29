@@ -903,7 +903,9 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                         {/* Purpose */}
                         {result.purpose && (
                             <div className="flex justify-between items-center gap-4">
-                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Purpose</span>
+                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                    {result.code_type === 'long_lived' ? 'Role' : 'Purpose'}
+                                </span>
                                 <span className="text-sm font-bold text-slate-800 text-right">{result.purpose}</span>
                             </div>
                         )}
