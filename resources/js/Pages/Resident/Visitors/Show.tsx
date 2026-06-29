@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Shield, User } from 'lucide-react';
+import { Calendar, Clock, Shield, User, Copy, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PassCard from '@/Components/Resident/PassCard';
 import resident from '@/routes/resident';
@@ -181,6 +181,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                                 : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
+                                        <Copy className="h-4 w-4" />
                                         {copied ? 'Copied!' : 'Copy'}
                                     </button>
                                     <button
@@ -210,9 +211,15 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                                                 Preparing...
                                             </>
                                         ) : shareCopied ? (
-                                            'Copied!'
+                                            <>
+                                                <Copy className="h-4 w-4" />
+                                                Copied!
+                                            </>
                                         ) : (
-                                            'Share'
+                                            <>
+                                                <Share2 className="h-4 w-4" />
+                                                Share
+                                            </>
                                         )}
                                     </button>
                                 </div>
