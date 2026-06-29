@@ -55,7 +55,7 @@ class EnsureUserHasRole
                     }
 
                     $bypassRestrict = $request->has('bypass_mobile_restrict') || ($request->header('X-Bypass-Mobile-Restrict') === 'true');
-                    $isBillingRoute = $request->is('resident/billing*') || $request->is('billing*');
+                    $isBillingRoute = $request->is('resident/billing*') || $request->is('billing*') || $request->is('resident/coupons*');
 
                     if (! $isNativeApp && ! $bypassRestrict && ! $isBillingRoute) {
                         return redirect('/download-app');

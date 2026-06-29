@@ -375,7 +375,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         ...(!showAnnouncementsInNav && hasNoticeBoard ? [{ name: 'Announcements', href: '/resident/estate-board', icon: Megaphone }] : []),
         ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
-        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/billing', icon: Ticket }] : []),
+        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];
 
@@ -448,7 +448,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         { name: 'Pay Estate Dues', href: '/resident/dues', icon: Wallet },
         { name: 'Estate Announcements', href: '/resident/estate-board', icon: Megaphone },
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
-        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/billing', icon: Ticket }] : []),
+        ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
         { name: 'My Family', href: '/resident/household', icon: UserCheck },
         { name: 'Profile', href: '/resident/profile', icon: User },
     ];

@@ -275,3 +275,34 @@ test('resident billing index page has autoAppliedCoupon and shares has_active_co
         ->where('auth.user.has_active_coupons', true)
     );
 });
+
+test('resident can access coupons index page and see their active coupons', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    // Create estate coupon
+    Coupon::create([
+        'campaign_name' => 'Resident Promo 20',
+        'code' => 'PROMO20',
+        'type' => 'percentage',
+        'value' => 20,
+        'scope' => 'estate',
+        'estate_id' => $estate->id,
+        'usage_limit' => 2,
+    ]);
+
+    $response = $this->actingAs($resident)
+        ->get(route('resident.coupons.index'));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/Coupons/Index')
+        ->has('coupons')
+        ->where('coupons.0.code', 'PROMO20')
+        ->where('coupons.0.personal_limit', 2)
+        ->where('coupons.0.personal_uses', 0)
+    );
+});

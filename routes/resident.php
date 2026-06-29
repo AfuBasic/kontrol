@@ -4,6 +4,7 @@ use App\Http\Controllers\Resident\AccessCodeController;
 use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\BillingController;
 use App\Http\Controllers\Resident\CollectionController;
+use App\Http\Controllers\Resident\CouponController;
 use App\Http\Controllers\Resident\EmergencyContactController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
 use App\Http\Controllers\Resident\EstateBoardController;
@@ -121,6 +122,9 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 // Primary resident only: billing & household management
 // ──────────────────────────────────────────────────────────────
 Route::middleware('role:resident')->group(function (): void {
+    // Coupons
+    Route::get('/coupons', [CouponController::class, 'index'])->name('resident.coupons.index');
+
     // Billing
     Route::prefix('billing')->name('resident.billing.')->group(function (): void {
         Route::get('/', [BillingController::class, 'index'])->name('index');
