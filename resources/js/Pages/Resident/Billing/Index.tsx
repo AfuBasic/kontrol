@@ -193,13 +193,18 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
 
             const autoValidate = async () => {
                 setIsValidatingCoupon(true);
+                setCouponError('');
                 try {
                     const newApplied: typeof appliedCoupons = {};
+                    let lastError = '';
+                    let successCount = 0;
+
                     for (const plan of plans) {
                         const response = await fetch('/resident/billing/validate-coupon', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                             },
                             body: JSON.stringify({ code: targetCouponCode, plan_id: plan.id }),
@@ -207,22 +212,30 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
 
                         const data = await response.json();
 
-                        if (response.ok && data.valid) {
+                        if (response.ok && data.status === 'success') {
                             newApplied[plan.id] = {
                                 code: targetCouponCode,
-                                discount: data.discount_amount,
-                                formatted_discount: formatCurrency(data.discount_amount),
+                                discount: data.discount,
+                                formatted_discount: data.formatted_discount,
                                 final_amount: data.final_amount,
-                                formatted_final_amount: formatCurrency(data.final_amount),
+                                formatted_final_amount: data.formatted_final_amount,
                             };
+                            successCount++;
+                        } else {
+                            lastError = data.message || 'Coupon code is invalid or has been deleted.';
                         }
                     }
-                    if (Object.keys(newApplied).length > 0) {
+                    if (successCount > 0) {
                         setAppliedCoupons(newApplied);
                         setIsAutoApplied(true);
+                        setCouponError('');
+                    } else {
+                        setCouponError(lastError || 'This coupon code is invalid or no longer exists.');
+                        setAppliedCoupons({});
                     }
                 } catch (e) {
                     console.error("Auto coupon validation failed:", e);
+                    setCouponError('An error occurred during coupon validation.');
                 } finally {
                     setIsValidatingCoupon(false);
                 }

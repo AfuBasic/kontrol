@@ -306,3 +306,24 @@ test('resident can access coupons index page and see their active coupons', func
         ->where('coupons.0.personal_uses', 0)
     );
 });
+
+test('resident coupon validation returns 422 error for a deleted or non-existent coupon', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    $plan = Plan::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $response = $this->actingAs($resident)
+        ->postJson(route('resident.billing.coupon.validate'), [
+            'code' => 'DELETED_CODE',
+            'plan_id' => $plan->id,
+        ]);
+
+    $response->assertStatus(422);
+    $response->assertJson([
+        'status' => 'error',
+        'message' => 'Invalid coupon code.',
+    ]);
+});
