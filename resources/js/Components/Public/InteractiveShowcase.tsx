@@ -1,25 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Fingerprint,
-    Lock,
-    MessageSquare,
-    Users,
-    Bell,
-    Shield,
-    Terminal,
-    ArrowRight,
-    QrCode,
-    CheckCircle,
-    Send,
-    Smartphone,
-    CreditCard,
-    AlertTriangle,
-    Eye,
-    TrendingUp,
-    Play,
-    Pause,
-} from 'lucide-react';
+import { Fingerprint, Lock, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard } from 'lucide-react';
 import InteractiveTilt from './InteractiveTilt';
 
 interface FeatureItem {
@@ -67,7 +48,7 @@ const FEATURES: FeatureItem[] = [
     {
         id: 'security',
         title: 'Security Operations',
-        description: 'Equip guards with digital logs, SOS dispatch alert systems, and instant patrol logs.',
+        description: 'Equip guards with digital logs, check-in tracking tools, and instant patrol logs.',
         icon: Shield,
         glowColor: 'rgba(59,130,246,0.15)',
         color: 'from-blue-600 to-indigo-600',
@@ -328,7 +309,7 @@ function PhoneDemoContent({ featureId, subStep }: { featureId: string; subStep: 
                             </motion.div>
                         )}
 
-                        {/* Step 3: SMS Preview notification */}
+                        {/* Step 3: Invitation Shared notification */}
                         {subStep === 2 && (
                             <motion.div
                                 initial={{ opacity: 0, y: -20 }}
@@ -340,14 +321,14 @@ function PhoneDemoContent({ featureId, subStep }: { featureId: string; subStep: 
                                         <Send className="h-4 w-4" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-bold text-white">SMS Sent</p>
-                                        <p className="truncate text-[10px] text-slate-400">Pass link sent to +234 812...</p>
+                                        <p className="text-xs font-bold text-white">Invitation Shared</p>
+                                        <p className="truncate text-[10px] text-slate-400">Access link shared successfully</p>
                                     </div>
                                 </div>
                                 <div className="flex h-20 w-20 items-center justify-center rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400">
                                     <Smartphone className="h-8 w-8" />
                                 </div>
-                                <p className="text-xs text-slate-400">Visitor receives link instantly</p>
+                                <p className="text-xs text-slate-400">Visitor can view code instantly</p>
                             </motion.div>
                         )}
 
