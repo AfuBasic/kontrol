@@ -174,15 +174,6 @@ export default function CouponIndexPage({ coupons }: Props) {
                             );
                         })}
 
-                        <div className="mt-8 flex justify-center">
-                            <Link
-                                href="/resident/billing"
-                                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99]"
-                            >
-                                <TicketIcon className="h-4 w-4" />
-                                Apply Coupon on Payment Screen
-                            </Link>
-                        </div>
                     </div>
                 ) : (
                     <motion.div
