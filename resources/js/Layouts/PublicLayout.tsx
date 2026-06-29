@@ -15,7 +15,6 @@ export default function PublicLayout({ children }: Props) {
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
     const [scrolled, setScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState('home');
-    const themeToggleRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -58,36 +57,19 @@ export default function PublicLayout({ children }: Props) {
         }
     };
 
-    const toggleTheme = (triggerRef: React.RefObject<HTMLButtonElement | null>) => {
+    const toggleTheme = () => {
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
-
-        const btn = triggerRef.current;
-        if (btn) {
-            const { left, top, width, height } = btn.getBoundingClientRect();
-            document.documentElement.style.setProperty('--theme-x', `${Math.round(left + width / 2)}px`);
-            document.documentElement.style.setProperty('--theme-y', `${Math.round(top + height / 2)}px`);
+        setTheme(nextTheme);
+        localStorage.setItem('theme', nextTheme);
+        if (nextTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            document.documentElement.style.colorScheme = 'dark';
+        } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
         }
-
-        const applyTheme = () => {
-            setTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-            if (nextTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-                document.documentElement.style.colorScheme = 'dark';
-            } else {
-                document.documentElement.classList.add('light');
-                document.documentElement.classList.remove('dark');
-                document.documentElement.style.colorScheme = 'light';
-            }
-        };
-
-        if (!document.startViewTransition) {
-            applyTheme();
-            return;
-        }
-
-        document.startViewTransition(applyTheme);
     };
 
     const handleNavClick = () => {
@@ -223,8 +205,7 @@ export default function PublicLayout({ children }: Props) {
                     {/* Right Actions */}
                     <div className="flex items-center gap-4">
                         <button
-                            ref={themeToggleRef}
-                            onClick={() => toggleTheme(themeToggleRef)}
+                            onClick={toggleTheme}
                             className="rounded-full p-2 text-slate-500 transition-transform duration-200 hover:bg-slate-100 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800"
                             aria-label="Toggle theme"
                         >

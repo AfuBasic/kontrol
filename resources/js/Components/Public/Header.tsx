@@ -13,44 +13,25 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
     const { app_subdomain_url } = usePage().props as unknown as { app_subdomain_url?: string };
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-    const desktopToggleRef = useRef<HTMLButtonElement>(null);
-    const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const currentTheme = (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
         setTheme(currentTheme);
     }, []);
 
-    const toggleTheme = (triggerRef: React.RefObject<HTMLButtonElement | null>) => {
+    const toggleTheme = () => {
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
-
-        const btn = triggerRef.current;
-        if (btn) {
-            const { left, top, width, height } = btn.getBoundingClientRect();
-            document.documentElement.style.setProperty('--theme-x', `${Math.round(left + width / 2)}px`);
-            document.documentElement.style.setProperty('--theme-y', `${Math.round(top + height / 2)}px`);
+        setTheme(nextTheme);
+        localStorage.setItem('theme', nextTheme);
+        if (nextTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            document.documentElement.style.colorScheme = 'dark';
+        } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
         }
-
-        const applyTheme = () => {
-            setTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-            if (nextTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-                document.documentElement.style.colorScheme = 'dark';
-            } else {
-                document.documentElement.classList.add('light');
-                document.documentElement.classList.remove('dark');
-                document.documentElement.style.colorScheme = 'light';
-            }
-        };
-
-        if (!document.startViewTransition) {
-            applyTheme();
-            return;
-        }
-
-        document.startViewTransition(applyTheme);
     };
 
     const handleNavClick = (sectionId: string, e: React.MouseEvent) => {
@@ -131,8 +112,7 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             </Link>
                         )}
                         <button
-                            ref={desktopToggleRef}
-                            onClick={() => toggleTheme(desktopToggleRef)}
+                            onClick={toggleTheme}
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
@@ -150,8 +130,7 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
                             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                         </button>
                         <button
-                            ref={mobileToggleRef}
-                            onClick={() => toggleTheme(mobileToggleRef)}
+                            onClick={toggleTheme}
                             className="cursor-pointer rounded-lg p-2 text-slate-600 transition-all hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
                             aria-label="Toggle Theme"
                         >
