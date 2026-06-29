@@ -149,39 +149,51 @@ export default function PassCard({ pass, qrUrl }: Props) {
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border bg-white text-slate-800 shadow-2xl ${
-                isEvent ? 'border-violet-150 shadow-violet-100/30' : 'border-slate-100'
+            className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border shadow-2xl transition-all duration-300 ${
+                isEvent
+                    ? 'border-violet-500/30 bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#1e112f] text-slate-100 shadow-[0_20px_50px_rgba(124,58,237,0.25)]'
+                    : 'border-slate-100 bg-white text-slate-800'
             }`}
         >
             {/* Estate & Status Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-5 py-3">
+            <div className={`flex items-center justify-between border-b px-5 py-3 ${
+                isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
+            }`}>
                 <div className="min-w-0 flex-1 text-left">
-                    <p className={`text-[9px] font-black tracking-widest uppercase ${isEvent ? 'text-violet-600' : 'text-primary-500'}`}>ESTATE</p>
-                    <h2 className="truncate text-base font-bold text-slate-800">{pass.estate_name || 'My Estate'}</h2>
+                    <p className={`text-[9px] font-black tracking-widest uppercase ${isEvent ? 'text-violet-400' : 'text-primary-500'}`}>ESTATE</p>
+                    <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.estate_name || 'My Estate'}</h2>
                 </div>
-                <div className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusBg}`}>
+                <div className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                    isEvent ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' : statusBg
+                }`}>
                     {statusIcon}
                     {statusLabel}
                 </div>
             </div>
 
             {/* Visitor & Host Info */}
-            <div className="relative grid grid-cols-2 gap-4 border-b border-slate-100 bg-white px-5 py-3">
+            <div className={`relative grid grid-cols-2 gap-4 border-b px-5 py-3 ${
+                isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
+            }`}>
                 <div className="text-left">
                     <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">
                         {isEvent ? 'EVENT' : 'GUEST'}
                     </p>
-                    <p className="text-sm leading-snug font-bold text-slate-800">{pass.visitor_name || 'Guest visitor'}</p>
+                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.visitor_name || 'Guest visitor'}</p>
                 </div>
                 <div className="text-right">
                     <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">HOST</p>
-                    <p className="text-sm leading-snug font-bold text-slate-800">{pass.host_name || 'Resident'}</p>
+                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.host_name || 'Resident'}</p>
                 </div>
             </div>
 
             {/* QR Code Segment */}
-            <div className="relative flex flex-col items-center justify-center bg-slate-50/50 px-5 py-4">
-                <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 transition-all hover:scale-102">
+            <div className={`relative flex flex-col items-center justify-center px-5 py-4 ${
+                isEvent ? 'bg-white/5' : 'bg-slate-50/50'
+            }`}>
+                <div className={`relative overflow-hidden rounded-2xl border p-3 transition-all hover:scale-102 ${
+                    isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-100 bg-white'
+                }`}>
                     {/* Visual lock status */}
                     {!isPassActiveOrScheduled && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
@@ -210,42 +222,56 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     )}
                 </div>
                 {isScheduled ? (
-                    <div className="mt-2.5 rounded-xl border border-indigo-100/50 bg-indigo-50/80 px-4 py-1.5 text-center">
-                        <p className="text-[10px] font-black tracking-wide text-indigo-700 uppercase">Pass Scheduled</p>
-                        <p className="mt-0.5 text-[9px] font-bold text-indigo-600/90">{formatSmartStartsAt(pass.starts_at)}</p>
+                    <div className={`mt-2.5 rounded-xl border px-4 py-1.5 text-center ${
+                        isEvent ? 'border-violet-500/20 bg-violet-500/10 text-violet-300' : 'border-indigo-100/50 bg-indigo-50/80 text-indigo-700'
+                    }`}>
+                        <p className="text-[10px] font-black tracking-wide uppercase">Pass Scheduled</p>
+                        <p className="mt-0.5 text-[9px] font-bold opacity-90">{formatSmartStartsAt(pass.starts_at)}</p>
                     </div>
                 ) : (
-                    <p className="mt-2 text-[10px] font-medium text-slate-500">Present at gate terminal for fast verification</p>
+                    <p className={`mt-2 text-[10px] font-medium ${isEvent ? 'text-slate-400' : 'text-slate-500'}`}>Present at gate terminal for fast verification</p>
                 )}
             </div>
 
             {/* Fallback code segment - dotted ticket line separation */}
-            <div className="relative flex flex-col items-center justify-center border-t-2 border-dashed border-slate-100 bg-white px-5 py-4">
+            <div className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${
+                isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
+            }`}>
                 {/* Ticket notches */}
                 <div
-                    className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full bg-[#070a0e] group-first:bg-slate-50 dark:bg-[#070a0e]"
-                    style={{ backgroundColor: 'inherit' }}
+                    className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full"
+                    style={{ backgroundColor: '#f8fafc' }}
                 />
                 <div
-                    className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full bg-[#070a0e] dark:bg-[#070a0e]"
-                    style={{ backgroundColor: 'inherit' }}
+                    className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full"
+                    style={{ backgroundColor: '#f8fafc' }}
                 />
 
                 <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
-                <div className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${isEvent ? 'text-violet-600' : 'text-primary-500'}`}>{pass.code}</div>
+                <div className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${
+                    isEvent
+                        ? 'text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 drop-shadow-[0_2px_8px_rgba(167,139,250,0.3)]'
+                        : 'text-primary-500'
+                }`}>{pass.code}</div>
             </div>
 
             {/* Validity Metadata (Faint Centered Footer) */}
-            <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-2.5 text-center">
-                <p className="text-[10px] font-bold tracking-wide text-slate-400">{formatFaintExpiry(pass.expires_at, pass.type)}</p>
+            <div className={`border-t px-5 py-2.5 text-center ${
+                isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
+            }`}>
+                <p className={`text-[10px] font-bold tracking-wide ${isEvent ? 'text-slate-400' : 'text-slate-400'}`}>{formatFaintExpiry(pass.expires_at, pass.type)}</p>
             </div>
 
             {/* Optional Notes */}
             {pass.notes && (
-                <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+                <div className={`border-t px-6 py-4 ${
+                    isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
+                }`}>
                     <button
                         onClick={() => setViewNotes(!viewNotes)}
-                        className="flex w-full items-center justify-between text-xs font-bold text-slate-400 transition-colors hover:text-slate-700"
+                        className={`flex w-full items-center justify-between text-xs font-bold transition-colors ${
+                            isEvent ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-700'
+                        }`}
                     >
                         <span>Entry Notes / Instructions</span>
                         <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${viewNotes ? 'rotate-180' : ''}`} />
@@ -254,7 +280,9 @@ export default function PassCard({ pass, qrUrl }: Props) {
                         <motion.p
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
-                            className="mt-3 text-left text-xs leading-relaxed font-medium text-slate-600"
+                            className={`mt-3 text-left text-xs leading-relaxed font-medium ${
+                                isEvent ? 'text-slate-350' : 'text-slate-600'
+                            }`}
                         >
                             {pass.notes}
                         </motion.p>
