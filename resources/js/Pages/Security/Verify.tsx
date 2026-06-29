@@ -876,10 +876,10 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     {/* Visitor Hero Info */}
                     <div className="mt-8 space-y-1">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                            Visitor Full Name
+                            {result.code_type === 'event' ? 'Event Name' : 'Visitor Full Name'}
                         </span>
                         <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-none break-words">
-                            {result.visitor_name || 'Guest Visitor'}
+                            {result.visitor_name || (result.code_type === 'event' ? 'Unnamed Event' : 'Guest Visitor')}
                         </h2>
                     </div>
 
