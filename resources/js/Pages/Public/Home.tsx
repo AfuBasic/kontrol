@@ -12,6 +12,7 @@ import WebGLHeroBg from '@/Components/Public/WebGLHeroBg';
 import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
 import InteractiveShowcase from '@/Components/Public/InteractiveShowcase';
+import CinematicHero from '@/Components/Public/CinematicHero';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -32,15 +33,12 @@ export default function Home() {
         () => {
             if (isReducedMotion) {
                 // Instant visibility for accessibility
-                gsap.set(
-                    '.gsap-hero-title-line, .gsap-hero-stagger-item, .gsap-hero-desktop, .gsap-hero-mobile, .gsap-float-card, .gsap-fade-up, .gsap-stagger-section > *',
-                    {
-                        opacity: 1,
-                        y: 0,
-                        x: 0,
-                        scale: 1,
-                    },
-                );
+                gsap.set('.gsap-hero-title-line, .gsap-hero-stagger-item, .gsap-fade-up, .gsap-stagger-section > *', {
+                    opacity: 1,
+                    y: 0,
+                    x: 0,
+                    scale: 1,
+                });
                 return;
             }
 
@@ -54,11 +52,7 @@ export default function Home() {
                 },
             });
 
-            tlParallax
-                .to('.gsap-hero-bg', { y: 200, ease: 'none' }, 0)
-                .to('.gsap-hero-desktop', { y: -60, ease: 'none' }, 0)
-                .to('.gsap-hero-mobile', { y: -150, ease: 'none' }, 0)
-                .to('.gsap-hero-content', { opacity: 0.1, y: 50, ease: 'none' }, 0);
+            tlParallax.to('.gsap-hero-bg', { y: 150, ease: 'none' }, 0).to('.gsap-hero-content', { opacity: 0.1, y: 30, ease: 'none' }, 0);
 
             // --- HERO TEXT ENTRANCE (Line by Line Mask Reveal) ---
             const heroTimeline = gsap.timeline();
@@ -82,61 +76,6 @@ export default function Home() {
                 },
                 '-=0.8',
             );
-
-            // --- MOCKUPS ASSEMBLY (Desktop, Mobile & Floating Card) ---
-            heroTimeline.from(
-                '.gsap-hero-desktop',
-                {
-                    scale: 0.96,
-                    y: 80,
-                    opacity: 0,
-                    duration: 1.4,
-                    ease: 'power4.out',
-                },
-                '-=1.0',
-            );
-
-            heroTimeline.from(
-                '.gsap-hero-mobile',
-                {
-                    x: 60,
-                    y: 100,
-                    opacity: 0,
-                    duration: 1.4,
-                    ease: 'power4.out',
-                },
-                '-=1.2',
-            );
-
-            heroTimeline.from(
-                '.gsap-float-card',
-                {
-                    x: -40,
-                    y: 30,
-                    opacity: 0,
-                    duration: 1.2,
-                    ease: 'elastic.out(1, 0.75)',
-                },
-                '-=0.8',
-            );
-
-            // --- SUBTLE BREATHING & FLOATING ANIMATIONS ---
-            gsap.to('.gsap-float-mobile-target', {
-                y: -12,
-                duration: 4,
-                repeat: -1,
-                yoyo: true,
-                ease: 'sine.inOut',
-            });
-
-            gsap.to('.gsap-float-card-target', {
-                y: 10,
-                duration: 3.5,
-                repeat: -1,
-                yoyo: true,
-                ease: 'sine.inOut',
-                delay: 0.5,
-            });
 
             // --- SCROLL CHOREOGRAPHY (FADE UP ELEMENTS) ---
             const fadeUpElements = gsap.utils.toArray<HTMLElement>('.gsap-fade-up');
@@ -231,7 +170,7 @@ export default function Home() {
                         <div className="pointer-events-none absolute top-1/2 left-1/2 h-[600px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[120px]" />
                     </div>
 
-                    <div className="relative z-10 mx-auto max-w-7xl px-6 pb-64 sm:pb-80 lg:px-8 lg:pb-[400px]">
+                    <div className="relative z-10 mx-auto max-w-7xl px-6 pb-20 sm:pb-28 lg:px-8">
                         <div className="gsap-hero-content will-change-transform">
                             <div className="mx-auto max-w-5xl text-center">
                                 {/* Line reveal title header */}
@@ -263,56 +202,16 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* OVERLAPPING HERO MOCKUPS */}
-                    <div className="absolute bottom-0 left-1/2 z-20 w-full max-w-[1200px] -translate-x-1/2 translate-y-[40%] px-4 sm:translate-y-1/2 sm:px-6">
-                        <div className="relative">
-                            {/* Desktop Dashboard wrapped in Interactive Tilt */}
-                            <div className="gsap-hero-desktop group relative z-10 w-full will-change-transform">
-                                <InteractiveTilt maxRotation={6}>
-                                    <DesktopFrame src="/assets/images/screenshots/large-desktop.png" alt="Kontrol Desktop Dashboard" />
-                                </InteractiveTilt>
-                            </div>
-
-                            {/* Floating Mobile App */}
-                            <div className="gsap-hero-mobile absolute -right-4 bottom-12 z-20 hidden will-change-transform md:-right-12 md:bottom-24 md:block">
-                                <div className="gsap-float-mobile-target will-change-transform" style={{ backfaceVisibility: 'hidden' }}>
-                                    <InteractiveTilt maxRotation={10}>
-                                        <IphoneFrame
-                                            src="/assets/images/screenshots/frictionless-access.png"
-                                            alt="Kontrol Mobile App"
-                                            className="origin-bottom-right scale-90 drop-shadow-2xl md:scale-100"
-                                        />
-                                    </InteractiveTilt>
-                                </div>
-                            </div>
-
-                            {/* Floating Activity Card */}
-                            <div
-                                className="gsap-float-card absolute top-1/3 -left-4 z-20 hidden will-change-transform md:-left-12 lg:block"
-                                style={{ backfaceVisibility: 'hidden' }}
-                            >
-                                <div className="gsap-float-card-target will-change-transform">
-                                    <InteractiveTilt maxRotation={12}>
-                                        <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/85 p-5 shadow-2xl backdrop-blur-xl">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20">
-                                                <ShieldCheck className="h-6 w-6 text-blue-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-white">Visitor Approved</p>
-                                                <p className="text-xs text-slate-400">David Smith • Just now</p>
-                                            </div>
-                                        </div>
-                                    </InteractiveTilt>
-                                </div>
-                            </div>
+                        {/* CINEMATIC TRANSFORMATION EXPERIENCE */}
+                        <div className="gsap-hero-stagger-item mt-16 sm:mt-24">
+                            <CinematicHero />
                         </div>
                     </div>
                 </section>
 
                 {/* THE PROBLEM SECTION - HIGH CONTRAST */}
-                <section className="bg-white pt-48 pb-32 sm:pt-64 sm:pb-40 lg:pt-[450px] dark:bg-slate-950">
+                <section className="bg-white pt-24 pb-20 sm:pt-32 sm:pb-28 dark:bg-slate-950">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-4xl text-center">
                             <h2 className="gsap-fade-up text-4xl leading-tight font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">

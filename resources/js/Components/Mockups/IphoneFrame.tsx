@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-
+import { type ReactNode, useState, useEffect } from 'react';
 interface Props {
     src?: string;
     alt?: string;
@@ -8,6 +7,20 @@ interface Props {
 }
 
 export default function IphoneFrame({ src, alt = '', className = '', children }: Props) {
+    const [currentTime, setCurrentTime] = useState('18:23');
+
+    useEffect(() => {
+        const updateClock = () => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            setCurrentTime(`${hours}:${minutes}`);
+        };
+        updateClock();
+        const interval = setInterval(updateClock, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className={`relative mx-auto w-[280px] shrink-0 sm:w-[320px] ${className}`}>
             {/* The iPhone frame body */}
@@ -19,7 +32,7 @@ export default function IphoneFrame({ src, alt = '', className = '', children }:
 
                     <div className="flex h-[24px] w-full items-center justify-between px-7 pt-1">
                         {/* Time */}
-                        <span className="flex h-full items-end text-[13px] font-semibold tracking-wide text-white drop-shadow-sm">18:23</span>
+                        <span className="flex h-full items-end text-[13px] font-semibold tracking-wide text-white drop-shadow-sm">{currentTime}</span>
 
                         {/* Right Icons */}
                         <div className="flex h-full items-end gap-1.5 text-white">
