@@ -28,6 +28,18 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
     // Record sharing event in background
     axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
 
+    const formattedStartsAt = accessCode.starts_at
+        ? new Date(accessCode.starts_at).toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+          }) + ' at ' + new Date(accessCode.starts_at).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+          })
+        : null;
+
     const formattedExpiry = accessCode.expires_at
         ? new Date(accessCode.expires_at).toLocaleTimeString('en-US', {
               hour: '2-digit',
@@ -35,10 +47,20 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
           })
         : 'Never Expires';
 
-    const text = `You've been granted visitor access to ${accessCode.estate_name || 'the Estate'}.
+    let text = '';
+    if (accessCode.type === 'event') {
+        text = `✨ You have been invited to: ${accessCode.visitor_name || 'an Event'}! ✨
+📍 Venue: ${accessCode.estate_name || 'the Estate'}
+
+Please use this pass for entry.
+🎫 Access Code: ${accessCode.code}
+📅 Valid From: ${formattedStartsAt || 'Start of event'}`;
+    } else {
+        text = `You've been granted visitor access to ${accessCode.estate_name || 'the Estate'}.
 
 Access Code: ${accessCode.code}
 Valid Until: ${formattedExpiry}`;
+    }
 
     const title = 'Visitor Access Pass';
     const fileName = `kontrol_pass_${accessCode.pass_uuid || accessCode.id}.png`;

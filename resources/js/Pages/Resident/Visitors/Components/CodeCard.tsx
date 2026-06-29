@@ -292,7 +292,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
                 <div className="flex items-center gap-2">
                     {/* Share button */}
-                    {showActions && effectiveStatus === 'active' && (
+                    {showActions && (effectiveStatus === 'active' || effectiveStatus === 'scheduled') && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -357,7 +357,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         </button>
                     )}
 
-                    {effectiveStatus === 'active' && (
+                    {(effectiveStatus === 'active' || effectiveStatus === 'scheduled') && (
                         <>
                             <div className="my-2 h-px bg-slate-100" />
                             <button

@@ -165,7 +165,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
                         </div>
 
                         {/* Action Buttons */}
-                        {accessCode.status === 'active' && !isExpired && (
+                        {((accessCode.status === 'active' || accessCode.status === 'scheduled') && !isExpired) && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
