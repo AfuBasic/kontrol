@@ -56,9 +56,29 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $visitorName = $this->accessCode->visitor_name;
         $code = $this->accessCode->code;
 
-        $message = $visitorName
-            ? "{$visitorName} has arrived at the security post."
-            : "Your visitor with code {$code} has arrived at the security post.";
+        if ($this->accessCode->type === 'event') {
+            $eventName = $this->accessCode->visitor_name;
+            $guestLimit = $this->accessCode->guest_limit;
+            $arrivedCount = $this->accessCode->accessLogs()->count();
+
+            if ($eventName) {
+                if ($guestLimit) {
+                    $message = "A guest has arrived for the event {$eventName}. {$arrivedCount} out of {$guestLimit} expected guests have arrived.";
+                } else {
+                    $message = "A guest has arrived for the event {$eventName}. Guest number {$arrivedCount} has arrived.";
+                }
+            } else {
+                if ($guestLimit) {
+                    $message = "A guest has arrived for your event. {$arrivedCount} out of {$guestLimit} expected guests have arrived.";
+                } else {
+                    $message = "A guest has arrived for your event. Guest number {$arrivedCount} has arrived.";
+                }
+            }
+        } else {
+            $message = $visitorName
+                ? "{$visitorName} has arrived at the security post."
+                : "Your visitor with code {$code} has arrived at the security post.";
+        }
 
         return [
             'title' => 'Visitor Arrived',
@@ -140,9 +160,29 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         $code = $this->accessCode->code;
         $address = $this->accessCode->estate?->address;
 
-        $description = $visitorName
-            ? "<b>{$visitorName}</b> has arrived at the security post."
-            : "Your visitor with code <code>{$code}</code> has arrived at the security post.";
+        if ($this->accessCode->type === 'event') {
+            $eventName = $this->accessCode->visitor_name;
+            $guestLimit = $this->accessCode->guest_limit;
+            $arrivedCount = $this->accessCode->accessLogs()->count();
+
+            if ($eventName) {
+                if ($guestLimit) {
+                    $description = "A guest has arrived for the event <b>{$eventName}</b>. <b>{$arrivedCount}</b> out of <b>{$guestLimit}</b> expected guests have arrived.";
+                } else {
+                    $description = "A guest has arrived for the event <b>{$eventName}</b>. Guest number <b>{$arrivedCount}</b> has arrived.";
+                }
+            } else {
+                if ($guestLimit) {
+                    $description = "A guest has arrived for your event. <b>{$arrivedCount}</b> out of <b>{$guestLimit}</b> expected guests have arrived.";
+                } else {
+                    $description = "A guest has arrived for your event. Guest number <b>{$arrivedCount}</b> has arrived.";
+                }
+            }
+        } else {
+            $description = $visitorName
+                ? "<b>{$visitorName}</b> has arrived at the security post."
+                : "Your visitor with code <code>{$code}</code> has arrived at the security post.";
+        }
 
         $text = "🔔 <b>Visitor Arrived</b>\n\n"
             ."Hi <b>{$notifiable->name}</b>,\n"
