@@ -94,6 +94,10 @@ const CreateAccessCode = () => {
     const [scheduleMinute, setScheduleMinute] = useState('00');
     const [scheduleAmpm, setScheduleAmpm] = useState('PM');
 
+    // Custom purpose selection states for long_lived access
+    const [isOthersSelected, setIsOthersSelected] = useState(false);
+    const [customPurpose, setCustomPurpose] = useState('');
+
     const updateStartsAt = (dateStr: string, hr: string, min: string, ampm: string) => {
         if (!dateStr) {
             form.setData('starts_at', '');
@@ -128,7 +132,10 @@ const CreateAccessCode = () => {
 
     const isScheduleStepInvalid = step === 'schedule' && !!scheduleError;
     const isDetailsStepInvalid =
-        step === 'details' && (form.data.type === 'long_lived' || form.data.type === 'event') && !form.data.visitor_name.trim();
+        step === 'details' && (
+            !form.data.visitor_name.trim() ||
+            (form.data.type === 'long_lived' && isOthersSelected && !customPurpose.trim())
+        );
     const isStepInvalid = isScheduleStepInvalid || isDetailsStepInvalid;
 
     const handleBack = () => {
@@ -283,7 +290,13 @@ const CreateAccessCode = () => {
                                 <div className="grid gap-4">
                                     {/* One-Time Card */}
                                     <button
-                                        onClick={() => form.setData('type', 'single_use')}
+                                        onClick={() => {
+                                            form.setData((prev) => ({
+                                                ...prev,
+                                                type: 'single_use',
+                                                purpose: 'Guest',
+                                            }));
+                                        }}
                                         className={`group relative flex items-center gap-5 rounded-[28px] p-5 transition-all duration-300 active:scale-[0.98] ${
                                             isSingleUse
                                                 ? 'bg-slate-900 text-white shadow-[0_16px_32px_rgba(0,0,0,0.12)] ring-1 ring-slate-800'
@@ -318,7 +331,15 @@ const CreateAccessCode = () => {
                                     {/* Long-Term Card */}
                                     {hasFlexibleCodes && (
                                         <button
-                                            onClick={() => form.setData('type', 'long_lived')}
+                                            onClick={() => {
+                                                form.setData((prev) => ({
+                                                    ...prev,
+                                                    type: 'long_lived',
+                                                    purpose: 'Nanny',
+                                                }));
+                                                setIsOthersSelected(false);
+                                                setCustomPurpose('');
+                                            }}
                                             className={`group relative flex items-center gap-5 rounded-[28px] p-5 transition-all duration-300 active:scale-[0.98] ${
                                                 isLongLived
                                                     ? 'bg-slate-900 text-white shadow-[0_16px_32px_rgba(0,0,0,0.12)] ring-1 ring-slate-800'
@@ -358,7 +379,13 @@ const CreateAccessCode = () => {
                                     {/* Event Card */}
                                     {hasEventCodes && (
                                         <button
-                                            onClick={() => form.setData('type', 'event')}
+                                            onClick={() => {
+                                                form.setData((prev) => ({
+                                                    ...prev,
+                                                    type: 'event',
+                                                    purpose: 'Event',
+                                                }));
+                                            }}
                                             className={`group relative flex items-center gap-5 rounded-[28px] p-5 transition-all duration-300 active:scale-[0.98] ${
                                                 isEvent
                                                     ? 'bg-slate-900 text-white shadow-[0_16px_32px_rgba(0,0,0,0.12)] ring-1 ring-slate-800'
@@ -666,24 +693,83 @@ const CreateAccessCode = () => {
                                     {!isEvent && (
                                         <div className="pt-3">
                                             <p className="mb-3 text-[11px] font-black tracking-widest text-slate-400 uppercase">Purpose of Visit</p>
-                                            <div className="flex flex-wrap gap-2.5">
-                                                {purposes
-                                                    .filter((p) => p.id !== 'Event')
-                                                    .map((p) => (
-                                                        <button
-                                                            key={p.id}
-                                                            onClick={() => form.setData('purpose', p.id)}
-                                                            className={`flex items-center gap-2 rounded-[14px] px-5 py-3 text-[14px] font-bold transition-all duration-200 ${
-                                                                form.data.purpose === p.id
-                                                                    ? 'bg-slate-900 text-white shadow-md'
-                                                                    : 'bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-900'
-                                                            }`}
+                                            
+                                            {isLongLived ? (
+                                                <div className="space-y-3">
+                                                    <div className="flex flex-wrap gap-2.5">
+                                                        {[
+                                                            { id: 'Nanny', icon: User },
+                                                            { id: 'Househelp', icon: ShieldCheck },
+                                                            { id: 'Driver', icon: User },
+                                                            { id: 'Others', icon: AlertCircle },
+                                                        ].map((p) => {
+                                                            const isSelected = p.id === 'Others' ? isOthersSelected : (!isOthersSelected && form.data.purpose === p.id);
+                                                            return (
+                                                                <button
+                                                                    type="button"
+                                                                    key={p.id}
+                                                                    onClick={() => {
+                                                                        if (p.id === 'Others') {
+                                                                            setIsOthersSelected(true);
+                                                                            form.setData('purpose', customPurpose);
+                                                                        } else {
+                                                                            setIsOthersSelected(false);
+                                                                            form.setData('purpose', p.id);
+                                                                        }
+                                                                    }}
+                                                                    className={`flex items-center gap-2 rounded-[14px] px-5 py-3 text-[14px] font-bold transition-all duration-200 ${
+                                                                        isSelected
+                                                                            ? 'bg-slate-900 text-white shadow-md'
+                                                                            : 'bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                                                                    }`}
+                                                                >
+                                                                    <p.icon className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                                                                    {p.id}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {isOthersSelected && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -5 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="relative"
                                                         >
-                                                            <p.icon className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                                                            {p.id}
-                                                        </button>
-                                                    ))}
-                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Specify Role (e.g. Chef, Gardener)"
+                                                                value={customPurpose}
+                                                                onChange={(e) => {
+                                                                    setCustomPurpose(e.target.value);
+                                                                    form.setData('purpose', e.target.value);
+                                                                }}
+                                                                className="w-full rounded-2xl bg-slate-50 py-4.5 px-6 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900"
+                                                            />
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-wrap gap-2.5">
+                                                    {purposes
+                                                        .filter((p) => p.id !== 'Event')
+                                                        .map((p) => (
+                                                            <button
+                                                                type="button"
+                                                                key={p.id}
+                                                                onClick={() => form.setData('purpose', p.id)}
+                                                                className={`flex items-center gap-2 rounded-[14px] px-5 py-3 text-[14px] font-bold transition-all duration-200 ${
+                                                                    form.data.purpose === p.id
+                                                                        ? 'bg-slate-900 text-white shadow-md'
+                                                                        : 'bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                                                                }`}
+                                                            >
+                                                                <p.icon className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                                                                {p.id}
+                                                            </button>
+                                                        ))}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
