@@ -125,7 +125,12 @@ textarea,
 .kontrol-hero-reveal {
     opacity: 0;
     animation: kontrol-hero-reveal 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-play-state: paused;
     will-change: opacity, transform, filter;
+}
+
+.kontrol-hero-sequence-started .kontrol-hero-reveal {
+    animation-play-state: running;
 }
 
 .kontrol-hero-reveal-headline {

@@ -22,6 +22,7 @@ export default function PublicLayout({ children }: Props) {
 
     useEffect(() => {
         // Run preloader on every fresh page load of the public website
+        delete document.documentElement.dataset.kontrolPublicReady;
         setIsLoading(true);
     }, []);
 
@@ -92,6 +93,8 @@ export default function PublicLayout({ children }: Props) {
                     <BrandPreloader
                         key="preloader"
                         onComplete={() => {
+                            document.documentElement.dataset.kontrolPublicReady = 'true';
+                            window.dispatchEvent(new Event('kontrol:public-ready'));
                             setIsLoading(false);
                             sessionStorage.setItem('kontrol-preloader-played', 'true');
                         }}

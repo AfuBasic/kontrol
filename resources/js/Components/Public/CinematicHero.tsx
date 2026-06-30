@@ -37,7 +37,7 @@ export default function CinematicHero() {
             gsap.set(enteringLogo, { autoAlpha: 0, xPercent: -50, yPercent: -50, x: '-18vw', y: '18vh', scale: 0.58, rotate: -3 });
             gsap.set([logo, pulse, wakeWash], { autoAlpha: 0, scale: 0.72 });
 
-            const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
+            const timeline = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
 
             timeline
                 .to(enteringLogo, {
@@ -128,6 +128,19 @@ export default function CinematicHero() {
                     },
                     '-=0.62',
                 );
+
+            const playHeroSequence = () => timeline.restart();
+
+            if (document.documentElement.dataset.kontrolPublicReady === 'true') {
+                playHeroSequence();
+            } else {
+                window.addEventListener('kontrol:public-ready', playHeroSequence, { once: true });
+            }
+
+            return () => {
+                window.removeEventListener('kontrol:public-ready', playHeroSequence);
+                timeline.kill();
+            };
         }, containerRef);
 
         return () => ctx.revert();

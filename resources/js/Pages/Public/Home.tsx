@@ -17,6 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Home() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isReducedMotion, setIsReducedMotion] = useState(false);
+    const [isHeroSequenceStarted, setIsHeroSequenceStarted] = useState(false);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -24,6 +25,19 @@ export default function Home() {
         const handler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
         mediaQuery.addEventListener('change', handler);
         return () => mediaQuery.removeEventListener('change', handler);
+    }, []);
+
+    useEffect(() => {
+        const startHeroSequence = () => setIsHeroSequenceStarted(true);
+
+        if (document.documentElement.dataset.kontrolPublicReady === 'true') {
+            startHeroSequence();
+            return;
+        }
+
+        window.addEventListener('kontrol:public-ready', startHeroSequence, { once: true });
+
+        return () => window.removeEventListener('kontrol:public-ready', startHeroSequence);
     }, []);
 
     useGSAP(
@@ -39,28 +53,30 @@ export default function Home() {
                 return;
             }
 
-            // --- HERO TEXT ENTRANCE (Line by Line Mask Reveal Delayed by 4s to match transition) ---
-            const heroTimeline = gsap.timeline({ delay: 4.0 });
+            if (isHeroSequenceStarted) {
+                // --- HERO TEXT ENTRANCE (Line by Line Mask Reveal Delayed by 4s to match transition) ---
+                const heroTimeline = gsap.timeline({ delay: 4.0 });
 
-            heroTimeline.from('.gsap-hero-title-line', {
-                y: '100%',
-                opacity: 0,
-                duration: 1.2,
-                stagger: 0.2,
-                ease: 'power4.out',
-            });
-
-            heroTimeline.from(
-                '.gsap-hero-stagger-item',
-                {
-                    y: 30,
+                heroTimeline.from('.gsap-hero-title-line', {
+                    y: '100%',
                     opacity: 0,
-                    duration: 0.8,
-                    stagger: 0.15,
-                    ease: 'power3.out',
-                },
-                '-=0.8',
-            );
+                    duration: 1.2,
+                    stagger: 0.2,
+                    ease: 'power4.out',
+                });
+
+                heroTimeline.from(
+                    '.gsap-hero-stagger-item',
+                    {
+                        y: 30,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.15,
+                        ease: 'power3.out',
+                    },
+                    '-=0.8',
+                );
+            }
 
             // --- SCROLL CHOREOGRAPHY (FADE UP ELEMENTS) ---
             const fadeUpElements = gsap.utils.toArray<HTMLElement>('.gsap-fade-up');
@@ -126,7 +142,7 @@ export default function Home() {
                 });
             });
         },
-        { scope: containerRef, dependencies: [isReducedMotion] },
+        { scope: containerRef, dependencies: [isReducedMotion, isHeroSequenceStarted] },
     );
 
     return (
@@ -140,7 +156,11 @@ export default function Home() {
             </Head>
 
             <div ref={containerRef} className="overflow-hidden">
-                <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#07101d] pt-20">
+                <section
+                    className={`relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#07101d] pt-20 ${
+                        isHeroSequenceStarted ? 'kontrol-hero-sequence-started' : ''
+                    }`}
+                >
                     <div className="absolute inset-0 z-0 h-full w-full">
                         <CinematicHero />
                     </div>

@@ -11,19 +11,31 @@ it('renders the public home page', function () {
 it('ships the cinematic hero copy in the public home bundle', function () {
     $source = file_get_contents(resource_path('js/Pages/Public/Home.tsx'));
     $heroSource = file_get_contents(resource_path('js/Components/Public/CinematicHero.tsx'));
+    $layoutSource = file_get_contents(resource_path('js/Layouts/PublicLayout.tsx'));
+    $css = file_get_contents(resource_path('css/app.css'));
 
     expect($source)
         ->toContain('The Operating System')
         ->toContain('For Modern Estates')
         ->toContain('Get Started Free')
         ->toContain('<CinematicHero />')
-        ->toContain('href={apply.url()}');
+        ->toContain('href={apply.url()}')
+        ->toContain('kontrol-hero-sequence-started');
 
     expect($heroSource)
         ->toContain('/assets/images/hero/estate-kontrol-master.png')
         ->toContain('kontrol-hero-asleep')
         ->toContain('enteringLogoRef')
-        ->toContain('--awake-radius');
+        ->toContain('--awake-radius')
+        ->toContain('kontrol:public-ready');
+
+    expect($layoutSource)
+        ->toContain('kontrol:public-ready')
+        ->toContain('kontrolPublicReady');
+
+    expect($css)
+        ->toContain('animation-play-state: paused')
+        ->toContain('.kontrol-hero-sequence-started .kontrol-hero-reveal');
 });
 
 it('ships the rich cinematic hero master image asset', function () {
