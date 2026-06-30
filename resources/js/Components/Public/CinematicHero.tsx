@@ -46,9 +46,9 @@ export default function CinematicHero() {
                     y: 0,
                     scale: 1,
                     rotate: 0,
-                    duration: 1.35,
+                    duration: 0.9,
                     ease: 'power3.inOut',
-                    delay: 2,
+                    delay: 0.3,
                 })
                 .to(
                     logo,
