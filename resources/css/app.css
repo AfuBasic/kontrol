@@ -172,11 +172,19 @@ textarea,
     will-change: transform;
 }
 
+.kontrol-hero-asleep {
+    filter: grayscale(1) saturate(0) contrast(1.1) brightness(0.82);
+}
+
 .kontrol-hero-awake {
     --awake-radius: 0%;
     clip-path: circle(var(--awake-radius) at 50% 72%);
     mix-blend-mode: normal;
     will-change: clip-path;
+}
+
+.kontrol-hero-awake img {
+    filter: saturate(1.08) contrast(1.02) brightness(1.02);
 }
 
 .kontrol-hero-awake::after {

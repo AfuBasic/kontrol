@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 const HERO_ASSETS = {
-    asleep: '/assets/images/hero/estate-before-kontrol.png',
-    awake: '/assets/images/hero/estate-powered-by-kontrol.webp',
+    master: '/assets/images/hero/estate-kontrol-master.png',
     logo: '/assets/images/kontrol-icon-white.png',
 };
 
@@ -33,8 +32,8 @@ export default function CinematicHero() {
 
         const ctx = gsap.context(() => {
             gsap.set(reveal, { '--awake-radius': '0%' });
-            gsap.set(awake, { autoAlpha: 0.01, scale: 1.012, filter: 'saturate(0.65) brightness(0.92)' });
-            gsap.set(asleep, { autoAlpha: 1, filter: 'brightness(0.96) contrast(1.04)' });
+            gsap.set(awake, { autoAlpha: 0.01, scale: 1.012 });
+            gsap.set(asleep, { autoAlpha: 1 });
             gsap.set(enteringLogo, { autoAlpha: 0, xPercent: -50, yPercent: -50, x: '-18vw', y: '18vh', scale: 0.58, rotate: -3 });
             gsap.set([logo, pulse, wakeWash], { autoAlpha: 0, scale: 0.72 });
 
@@ -75,7 +74,6 @@ export default function CinematicHero() {
                     awake,
                     {
                         autoAlpha: 0.56,
-                        filter: 'saturate(0.9) brightness(0.98)',
                         duration: 1.2,
                         ease: 'sine.inOut',
                     },
@@ -104,7 +102,6 @@ export default function CinematicHero() {
                     awake,
                     {
                         autoAlpha: 1,
-                        filter: 'saturate(1) brightness(1)',
                         duration: 0.9,
                         ease: 'sine.inOut',
                     },
@@ -139,10 +136,16 @@ export default function CinematicHero() {
     return (
         <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-[#040a15]" aria-hidden="true">
             <div className="kontrol-hero-image-plane absolute inset-0 z-0 h-full w-full">
-                <img ref={asleepRef} src={HERO_ASSETS.asleep} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+                <img
+                    ref={asleepRef}
+                    src={HERO_ASSETS.master}
+                    alt=""
+                    className="kontrol-hero-asleep absolute inset-0 h-full w-full object-cover"
+                    draggable={false}
+                />
 
                 <div ref={revealRef} className="kontrol-hero-awake absolute inset-0">
-                    <img ref={awakeRef} src={HERO_ASSETS.awake} alt="" className="h-full w-full object-cover" draggable={false} />
+                    <img ref={awakeRef} src={HERO_ASSETS.master} alt="" className="h-full w-full object-cover" draggable={false} />
                 </div>
             </div>
 

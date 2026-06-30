@@ -15,7 +15,9 @@ export default function PublicLayout({ children }: Props) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
     const [scrolled, setScrolled] = useState(false);
-    const [activeSection, setActiveSection] = useState('home');
+    const [activeSection, setActiveSection] = useState(() => {
+        return typeof window !== 'undefined' && window.location.pathname === '/' ? 'home' : '';
+    });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -35,7 +37,7 @@ export default function PublicLayout({ children }: Props) {
 
             // Determine active section based on scroll offset
             const sections = ['features', 'pricing', 'download'];
-            let current = 'home';
+            let current = window.location.pathname === '/' ? 'home' : '';
             for (const section of sections) {
                 const el = document.getElementById(section);
                 if (el) {

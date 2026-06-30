@@ -156,11 +156,6 @@ export default function Home() {
                                 </span>
                             </h1>
 
-                            <p className="kontrol-hero-reveal kontrol-hero-reveal-copy gsap-hero-stagger-item mx-auto mt-8 max-w-3xl text-lg leading-8 font-medium text-white/86 drop-shadow-[0_10px_28px_rgba(0,0,0,0.45)] sm:text-2xl sm:leading-9">
-                                Modernise every part of your estate—from visitor access and collections to resident communication and security—all in
-                                one intelligent platform.
-                            </p>
-
                             <div className="kontrol-hero-reveal kontrol-hero-reveal-cta gsap-hero-stagger-item mt-11 flex justify-center">
                                 <MagneticButton>
                                     <Link

@@ -11,7 +11,6 @@ it('renders the public home page', function () {
 it('ships the cinematic hero copy in the public home bundle', function () {
     $source = file_get_contents(resource_path('js/Pages/Public/Home.tsx'));
     $heroSource = file_get_contents(resource_path('js/Components/Public/CinematicHero.tsx'));
-    $normalisedSource = preg_replace('/\s+/', ' ', $source);
 
     expect($source)
         ->toContain('The Operating System')
@@ -20,27 +19,24 @@ it('ships the cinematic hero copy in the public home bundle', function () {
         ->toContain('<CinematicHero />')
         ->toContain('href={apply.url()}');
 
-    expect($normalisedSource)
-        ->toContain('Modernise every part of your estate—from visitor access and collections to resident communication and security—all in one intelligent platform.');
-
     expect($heroSource)
-        ->toContain('/assets/images/hero/estate-before-kontrol.png')
-        ->toContain('/assets/images/hero/estate-powered-by-kontrol.webp')
+        ->toContain('/assets/images/hero/estate-kontrol-master.png')
+        ->toContain('kontrol-hero-asleep')
         ->toContain('enteringLogoRef')
         ->toContain('--awake-radius');
 });
 
-it('ships aligned cinematic hero image assets', function () {
-    $asleep = public_path('assets/images/hero/estate-before-kontrol.png');
-    $awake = public_path('assets/images/hero/estate-powered-by-kontrol.webp');
+it('ships the rich cinematic hero master image asset', function () {
+    $master = public_path('assets/images/hero/estate-kontrol-master.png');
+    $css = file_get_contents(resource_path('css/app.css'));
 
-    expect($asleep)->toBeFile()
-        ->and($awake)->toBeFile();
+    expect($master)->toBeFile()
+        ->and($css)->toContain('grayscale(1)');
 
-    [$asleepWidth, $asleepHeight] = getimagesize($asleep);
-    [$awakeWidth, $awakeHeight] = getimagesize($awake);
+    [$width, $height] = getimagesize($master);
 
-    expect([$awakeWidth, $awakeHeight])->toBe([$asleepWidth, $asleepHeight]);
+    expect($width)->toBeGreaterThanOrEqual(1200)
+        ->and($height)->toBeGreaterThanOrEqual(675);
 });
 
 it('renders the public support page', function () {
