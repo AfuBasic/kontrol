@@ -27,8 +27,8 @@ class CreatePropertyOwnerAction
                 'password' => null,
             ]);
 
-            // 2. Attach user to estate with accepted status
-            $estate->users()->attach($user->id, ['status' => 'accepted']);
+            // 2. Attach user to estate with pending status (invitation pending acceptance)
+            $estate->users()->attach($user->id, ['status' => 'pending']);
 
             // 3. Assign global resident and property_owner roles scoped to this estate
             $residentRole = Role::where('name', 'resident')

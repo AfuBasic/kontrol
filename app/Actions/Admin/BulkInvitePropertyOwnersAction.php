@@ -73,10 +73,10 @@ class BulkInvitePropertyOwnersAction
             $newUsers = User::whereIn('email', $newEmails)->get(['id', 'email']);
             $invitedUserIds = $newUsers->pluck('id')->toArray();
 
-            // Bulk attach users to estate with accepted status
+            // Bulk attach users to estate with pending status
             $estateUserData = [];
             foreach ($invitedUserIds as $userId) {
-                $estateUserData[$userId] = ['status' => 'accepted'];
+                $estateUserData[$userId] = ['status' => 'pending'];
             }
             $estate->users()->attach($estateUserData);
 
