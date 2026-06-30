@@ -18,6 +18,7 @@ use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,6 +63,7 @@ class ResidentController extends Controller
         $pendingCount = Inertia::defer(fn () => User::query()
             ->forEstate($estate->id)
             ->withRole('resident', $estate->id)
+            ->whereNotNull('email_verified_at')
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
             ->count());
 
@@ -173,7 +175,7 @@ class ResidentController extends Controller
                 function ($attribute, $value, $fail) use ($resident) {
                     if ($value !== $resident->email) {
                         $cacheKey = "email_changes_{$resident->id}";
-                        $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+                        $changesCount = Cache::get($cacheKey, 0);
                         if ($changesCount >= 3) {
                             $fail('The email address can only be changed 3 times within a year.');
                         }
