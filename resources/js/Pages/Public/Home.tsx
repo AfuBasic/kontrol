@@ -76,71 +76,76 @@ export default function Home() {
                     },
                     '-=0.8',
                 );
+
+                // --- SCROLL CHOREOGRAPHY (FADE UP ELEMENTS) ---
+                const fadeUpElements = gsap.utils.toArray<HTMLElement>('.gsap-fade-up');
+                fadeUpElements.forEach((el) => {
+                    gsap.from(el, {
+                        y: 60,
+                        opacity: 0,
+                        duration: 1.0,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: el,
+                            start: 'top 85%',
+                            toggleActions: 'play none none none',
+                        },
+                    });
+                });
+
+                // --- SCROLL CHOREOGRAPHY (STAGGER SECTIONS) ---
+                const staggerSections = gsap.utils.toArray<HTMLElement>('.gsap-stagger-section');
+                staggerSections.forEach((section) => {
+                    gsap.from(section.children, {
+                        y: 50,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.18,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: section,
+                            start: 'top 80%',
+                            toggleActions: 'play none none none',
+                        },
+                    });
+                });
+
+                // --- SLIDE IN FROM SIDE (FEATURES) ---
+                const slideLeftElements = gsap.utils.toArray<HTMLElement>('.gsap-slide-left');
+                slideLeftElements.forEach((el) => {
+                    gsap.from(el, {
+                        x: 80,
+                        opacity: 0,
+                        duration: 1.2,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: el,
+                            start: 'top 85%',
+                            toggleActions: 'play none none none',
+                        },
+                    });
+                });
+
+                const slideRightElements = gsap.utils.toArray<HTMLElement>('.gsap-slide-right');
+                slideRightElements.forEach((el) => {
+                    gsap.from(el, {
+                        x: -80,
+                        opacity: 0,
+                        duration: 1.2,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: el,
+                            start: 'top 85%',
+                            toggleActions: 'play none none none',
+                        },
+                    });
+                });
+
+                // Refresh trigger metrics now that loading wrapper is gone
+                setTimeout(() => {
+                    ScrollTrigger.refresh();
+                }, 200);
             }
-
-            // --- SCROLL CHOREOGRAPHY (FADE UP ELEMENTS) ---
-            const fadeUpElements = gsap.utils.toArray<HTMLElement>('.gsap-fade-up');
-            fadeUpElements.forEach((el) => {
-                gsap.from(el, {
-                    y: 60,
-                    opacity: 0,
-                    duration: 1.0,
-                    ease: 'power3.out',
-                    scrollTrigger: {
-                        trigger: el,
-                        start: 'top 85%',
-                        toggleActions: 'play none none none',
-                    },
-                });
-            });
-
-            // --- SCROLL CHOREOGRAPHY (STAGGER SECTIONS) ---
-            const staggerSections = gsap.utils.toArray<HTMLElement>('.gsap-stagger-section');
-            staggerSections.forEach((section) => {
-                gsap.from(section.children, {
-                    y: 50,
-                    opacity: 0,
-                    duration: 0.8,
-                    stagger: 0.18,
-                    ease: 'power3.out',
-                    scrollTrigger: {
-                        trigger: section,
-                        start: 'top 80%',
-                        toggleActions: 'play none none none',
-                    },
-                });
-            });
-
-            // --- SLIDE IN FROM SIDE (FEATURES) ---
-            const slideLeftElements = gsap.utils.toArray<HTMLElement>('.gsap-slide-left');
-            slideLeftElements.forEach((el) => {
-                gsap.from(el, {
-                    x: 80,
-                    opacity: 0,
-                    duration: 1.2,
-                    ease: 'power3.out',
-                    scrollTrigger: {
-                        trigger: el,
-                        start: 'top 85%',
-                        toggleActions: 'play none none none',
-                    },
-                });
-            });
-
-            const slideRightElements = gsap.utils.toArray<HTMLElement>('.gsap-slide-right');
-            slideRightElements.forEach((el) => {
-                gsap.from(el, {
-                    x: -80,
-                    opacity: 0,
-                    duration: 1.2,
-                    ease: 'power3.out',
-                    scrollTrigger: {
-                        trigger: el,
-                        start: 'top 85%',
-                        toggleActions: 'play none none none',
-                    },
-                });
-            });
         },
         { scope: containerRef, dependencies: [isReducedMotion, isHeroSequenceStarted] },
     );

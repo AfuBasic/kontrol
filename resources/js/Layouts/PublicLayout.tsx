@@ -88,13 +88,16 @@ export default function PublicLayout({ children }: Props) {
 
     return (
         <div className="min-h-screen bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-50">
-            <AnimatePresence>
+            <AnimatePresence
+                onExitComplete={() => {
+                    document.documentElement.dataset.kontrolPublicReady = 'true';
+                    window.dispatchEvent(new Event('kontrol:public-ready'));
+                }}
+            >
                 {isLoading && (
                     <BrandPreloader
                         key="preloader"
                         onComplete={() => {
-                            document.documentElement.dataset.kontrolPublicReady = 'true';
-                            window.dispatchEvent(new Event('kontrol:public-ready'));
                             setIsLoading(false);
                             sessionStorage.setItem('kontrol-preloader-played', 'true');
                         }}
