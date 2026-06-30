@@ -19,13 +19,13 @@ export default function PublicLayout({ children }: Props) {
         return typeof window !== 'undefined' && window.location.pathname === '/' ? 'home' : '';
     });
     const [isLoading, setIsLoading] = useState(true);
-    const [skipPreloader, setSkipPreloader] = useState(false);
+    const [skipPreloader] = useState(() => {
+        return typeof window !== 'undefined' && sessionStorage.getItem('kontrol-preloader-played') === 'true';
+    });
 
     useEffect(() => {
         // Run preloader on every fresh page load of the public website
         delete document.documentElement.dataset.kontrolPublicReady;
-        const played = typeof window !== 'undefined' && sessionStorage.getItem('kontrol-preloader-played') === 'true';
-        setSkipPreloader(played);
         setIsLoading(true);
     }, []);
 
