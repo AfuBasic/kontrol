@@ -60,6 +60,8 @@ class ResidentController extends Controller
             ]));
 
         $pendingCount = Inertia::defer(fn () => User::query()
+            ->forEstate($estate->id)
+            ->withRole('resident', $estate->id)
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
             ->count());
 
