@@ -4,12 +4,19 @@ import { FileText, Table, MessageSquare, ShieldCheck, Bell, CreditCard } from 'l
 
 interface Props {
     onComplete: () => void;
+    skipToKontrol?: boolean;
 }
 
-export default function BrandPreloader({ onComplete }: Props) {
-    const [step, setStep] = useState<number>(0);
+export default function BrandPreloader({ onComplete, skipToKontrol = false }: Props) {
+    const [step, setStep] = useState<number>(skipToKontrol ? 3 : 0);
 
     useEffect(() => {
+        if (skipToKontrol) {
+            // Immediately start on Kontrol/final scene and exit after 2s
+            const t = setTimeout(() => onComplete(), 2000);
+            return () => clearTimeout(t);
+        }
+
         // Step progression timers
         const t1 = setTimeout(() => setStep(1), 2000); // 2.0s of Paper
         const t2 = setTimeout(() => setStep(2), 4000); // 2.0s of Spreadsheet
@@ -24,7 +31,7 @@ export default function BrandPreloader({ onComplete }: Props) {
             clearTimeout(t4);
             clearTimeout(t5);
         };
-    }, [onComplete]);
+    }, [onComplete, skipToKontrol]);
 
     return (
         <motion.div
