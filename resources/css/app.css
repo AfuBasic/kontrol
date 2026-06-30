@@ -129,15 +129,81 @@ textarea,
 }
 
 .kontrol-hero-reveal-headline {
-    animation-delay: 3s;
-}
-
-.kontrol-hero-reveal-copy {
     animation-delay: 4s;
 }
 
+.kontrol-hero-reveal-copy {
+    animation-delay: 4.25s;
+}
+
 .kontrol-hero-reveal-cta {
-    animation-delay: 5s;
+    animation-delay: 4.5s;
+}
+
+@keyframes kontrol-hero-drift {
+    from {
+        transform: scale(1.015) translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: scale(1.055) translate3d(-0.8%, -0.55%, 0);
+    }
+}
+
+@keyframes kontrol-pulse-breathe {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 0 rgba(31, 111, 219, 0.28),
+            0 0 44px rgba(31, 111, 219, 0.22);
+        transform: translate(-50%, -50%) scale(0.94);
+    }
+
+    58% {
+        box-shadow:
+            0 0 0 46vmax rgba(31, 111, 219, 0),
+            0 0 72px rgba(31, 111, 219, 0.34);
+        transform: translate(-50%, -50%) scale(1.02);
+    }
+}
+
+.kontrol-hero-image-plane {
+    animation: kontrol-hero-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.kontrol-hero-awake {
+    --awake-radius: 0%;
+    clip-path: circle(var(--awake-radius) at 50% 72%);
+    mix-blend-mode: normal;
+    will-change: clip-path;
+}
+
+.kontrol-hero-awake::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 72%, rgba(31, 111, 219, 0.3), rgba(31, 111, 219, 0.08) 28%, transparent 54%);
+    opacity: 0.68;
+    pointer-events: none;
+}
+
+.kontrol-hero-wake-wash {
+    width: 88vmax;
+    height: 88vmax;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(31, 111, 219, 0.2) 0%, rgba(31, 111, 219, 0.09) 22%, transparent 62%);
+    filter: blur(10px);
+}
+
+.kontrol-hero-pulse {
+    width: 15rem;
+    height: 15rem;
+    border: 1px solid rgba(147, 197, 253, 0.38);
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(31, 111, 219, 0.18), rgba(31, 111, 219, 0.05) 36%, transparent 64%);
+    animation: kontrol-pulse-breathe 2.45s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    filter: blur(0.2px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -146,6 +212,15 @@ textarea,
         transform: none;
         filter: none;
         animation: none;
+    }
+
+    .kontrol-hero-image-plane,
+    .kontrol-hero-pulse {
+        animation: none;
+    }
+
+    .kontrol-hero-awake {
+        clip-path: none;
     }
 }
 

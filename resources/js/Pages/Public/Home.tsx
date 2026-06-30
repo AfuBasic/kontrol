@@ -149,10 +149,10 @@ export default function Home() {
                         <div className="flex max-w-5xl flex-col items-center">
                             <h1 className="kontrol-hero-reveal kontrol-hero-reveal-headline flex flex-col items-center text-5xl leading-[0.96] font-semibold tracking-normal text-white drop-shadow-[0_16px_40px_rgba(0,0,0,0.42)] sm:text-7xl lg:text-8xl">
                                 <span className="block overflow-hidden py-1.5">
-                                    <span className="block gsap-hero-title-line">The Operating System</span>
+                                    <span className="gsap-hero-title-line block">The Operating System</span>
                                 </span>
                                 <span className="block overflow-hidden py-1.5">
-                                    <span className="block text-white gsap-hero-title-line">For Modern Estates</span>
+                                    <span className="gsap-hero-title-line block text-white">For Modern Estates</span>
                                 </span>
                             </h1>
 

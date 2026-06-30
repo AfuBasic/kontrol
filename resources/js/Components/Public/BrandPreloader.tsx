@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Table, MessageSquare, ShieldCheck, Bell, CreditCard, ChevronRight } from 'lucide-react';
+import { FileText, Table, MessageSquare, ShieldCheck, Bell, CreditCard } from 'lucide-react';
 
 interface Props {
     onComplete: () => void;
@@ -215,17 +215,7 @@ export default function BrandPreloader({ onComplete }: Props) {
                             <h2 className="mt-8 text-3xl font-extrabold tracking-widest text-white uppercase">Kontrol</h2>
                             <p className="mt-2 text-sm font-bold tracking-wider text-blue-400">The Operating System for Modern Estates.</p>
 
-                            {/* Final Moment Faded sentence */}
-                            {step === 4 && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.8 }}
-                                    className="mt-12 flex items-center justify-center gap-2 text-xs font-bold tracking-widest text-slate-400 uppercase"
-                                >
-                                    Modern estate management starts here <ChevronRight className="h-4 w-4 text-blue-500" />
-                                </motion.div>
-                            )}
+
                         </motion.div>
                     )}
                 </AnimatePresence>
