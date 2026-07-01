@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
@@ -13,6 +14,7 @@ use App\Services\PaystackService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -211,7 +213,7 @@ class CollectionController extends Controller
         return Inertia::render('Admin/Collections/Show', [
             'collection' => $collection,
             'stats' => $stats,
-            'assignments' => $query->paginate(10)->withQueryString(),
+            'assignments' => $query->paginate(15)->withQueryString(),
             'totalResidents' => User::forEstate($estate->id)->withRole('resident', $estate->id)->count(),
             'filters' => $request->only(['search', 'status']),
             'settlement' => [
@@ -221,6 +223,36 @@ class CollectionController extends Controller
             'hasBanking' => ! empty($settings->paystack_subaccount_code),
             'canDelete' => $collection->status === 'draft'
                 || ($collection->status === 'active' && ! $collection->assignments()->where('amount_paid', '>', 0)->exists()),
+
+            // Deferred props — loaded after initial render to keep TTFB fast
+            'recentPayments' => Inertia::defer(fn () => Payment::query()
+                ->whereHas('assignment', fn ($q) => $q->where('collection_id', $collection->id))
+                ->with('user')
+                ->where('status', 'success')
+                ->latest('paid_at')
+                ->take(10)
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'user_name' => $p->user?->name ?? 'Unknown',
+                    'amount' => $p->amount,
+                    'provider' => $p->provider,
+                    'paid_at' => $p->paid_at?->toIso8601String(),
+                    'paid_at_human' => $p->paid_at?->diffForHumans(),
+                ])),
+
+            'dailyTrend' => Inertia::defer(fn () => Payment::query()
+                ->whereHas('assignment', fn ($q) => $q->where('collection_id', $collection->id))
+                ->where('status', 'success')
+                ->where('paid_at', '>=', now()->subDays(13)->startOfDay())
+                ->select(DB::raw('DATE(paid_at) as date'), DB::raw('SUM(amount) as total'))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->map(fn ($row) => [
+                    'date' => $row->date,
+                    'total' => (int) $row->total,
+                ])),
         ]);
     }
 

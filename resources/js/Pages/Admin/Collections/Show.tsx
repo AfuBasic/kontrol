@@ -6,9 +6,7 @@ import {
     Users,
     CheckCircle,
     AlertCircle,
-    DollarSign,
     Search,
-    MoreHorizontal,
     Bell,
     ChevronRight,
     Download,
@@ -17,13 +15,29 @@ import {
     CreditCard,
     ShieldCheck,
     Trash2,
+    TrendingUp,
+    Zap,
+    ArrowRight,
+    BarChart3,
+    Edit2,
+    X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import {
+    index,
+    publish,
+    edit,
+    remind,
+    exportMethod,
+    recordPayment,
+    destroy,
+} from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 type Collection = {
     ulid: string;
@@ -55,14 +69,10 @@ type Stats = {
 type Assignment = {
     ulid: string;
     id: number;
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    };
+    user: { id: number; name: string; email: string };
     amount_due: number;
     amount_paid: number;
-    status: 'pending' | 'paid' | 'overdue' | 'partial';
+    status: 'pending' | 'paid' | 'overdue' | 'partial' | 'grace';
     due_date: string;
     paid_at: string | null;
     created_at: string;
@@ -76,28 +86,255 @@ type PaginatedAssignments = {
     total: number;
 };
 
+type RecentPayment = {
+    id: number;
+    user_name: string;
+    amount: number;
+    provider: string;
+    paid_at: string | null;
+    paid_at_human: string | null;
+};
+
+type TrendPoint = { date: string; total: number };
+
 type Props = {
     collection: Collection;
     stats: Stats;
     assignments: PaginatedAssignments;
     totalResidents: number;
-    filters: {
-        search?: string;
-        status?: string;
-    };
-    settlement: {
-        bank_name: string | null;
-        paystack_subaccount_code: string | null;
-    };
+    filters: { search?: string; status?: string };
+    settlement: { bank_name: string | null; paystack_subaccount_code: string | null };
     hasBanking: boolean;
     canDelete: boolean;
+    recentPayments?: RecentPayment[];
+    dailyTrend?: TrendPoint[];
 };
 
-export default function ShowCollection({ collection, stats, assignments, totalResidents, filters, settlement, hasBanking, canDelete }: Props) {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const fmt = (n: number) =>
+    new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        maximumFractionDigits: 0,
+    }).format(n || 0);
+
+const fmtCompact = (n: number) => {
+    if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `₦${(n / 1_000).toFixed(0)}K`;
+    return `₦${n}`;
+};
+
+function daysUntil(dateStr: string | null): number | null {
+    if (!dateStr) return null;
+    const diff = new Date(dateStr).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+// ─── Animated Counter ─────────────────────────────────────────────────────────
+
+function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
+    const [display, setDisplay] = useState(0);
+    useEffect(() => {
+        let start = 0;
+        const duration = 900;
+        const step = (timestamp: number) => {
+            if (!start) start = timestamp;
+            const progress = Math.min((timestamp - start) / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            setDisplay(Math.floor(ease * value));
+            if (progress < 1) requestAnimationFrame(step);
+            else setDisplay(value);
+        };
+        requestAnimationFrame(step);
+    }, [value]);
+    return <>{`${prefix}${display.toLocaleString()}${suffix}`}</>;
+}
+
+// ─── Radial Progress Ring ────────────────────────────────────────────────────
+
+function ProgressRing({ pct, size = 140 }: { pct: number; size?: number }) {
+    const r = (size - 16) / 2;
+    const circ = 2 * Math.PI * r;
+    const dash = (pct / 100) * circ;
+    return (
+        <svg width={size} height={size} className="rotate-[-90deg]">
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={10} />
+            <motion.circle
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                fill="none"
+                stroke="url(#ringGrad)"
+                strokeWidth={10}
+                strokeLinecap="round"
+                strokeDasharray={circ}
+                initial={{ strokeDashoffset: circ }}
+                animate={{ strokeDashoffset: circ - dash }}
+                transition={{ duration: 1.4, ease: 'easeOut' }}
+            />
+            <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#34d399" />
+                    <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+            </defs>
+        </svg>
+    );
+}
+
+// ─── Sparkline Chart ──────────────────────────────────────────────────────────
+
+function SparklineChart({ data }: { data: TrendPoint[] }) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="flex h-32 items-center justify-center text-slate-300">
+                <BarChart3 className="h-8 w-8" />
+            </div>
+        );
+    }
+
+    const max = Math.max(...data.map((d) => d.total), 1);
+    const width = 280;
+    const height = 80;
+    const barW = Math.max(2, Math.floor((width - data.length * 2) / data.length));
+    const gap = Math.floor((width - data.length * barW) / (data.length + 1));
+
+    return (
+        <div className="mt-3">
+            <svg width="100%" viewBox={`0 0 ${width} ${height + 24}`} className="overflow-visible">
+                {data.map((d, i) => {
+                    const barH = Math.max(4, (d.total / max) * height);
+                    const x = gap + i * (barW + gap);
+                    const y = height - barH;
+                    const isToday = i === data.length - 1;
+                    return (
+                        <g key={d.date}>
+                            <motion.rect
+                                x={x}
+                                y={y}
+                                width={barW}
+                                height={barH}
+                                rx={2}
+                                fill={isToday ? '#10b981' : '#e2e8f0'}
+                                initial={{ scaleY: 0, originY: 1 }}
+                                animate={{ scaleY: 1 }}
+                                transition={{ delay: i * 0.04, duration: 0.4 }}
+                                style={{ transformOrigin: `${x}px ${height}px` }}
+                            />
+                        </g>
+                    );
+                })}
+            </svg>
+            <div className="mt-1 flex justify-between text-[9px] font-medium text-slate-400">
+                <span>{data[0]?.date ? new Date(data[0].date).toLocaleDateString('en', { month: 'short', day: 'numeric' }) : ''}</span>
+                <span>Today</span>
+            </div>
+        </div>
+    );
+}
+
+// ─── Config Drawer ────────────────────────────────────────────────────────────
+
+function ConfigDrawer({ collection, open, onClose }: { collection: Collection; open: boolean; onClose: () => void }) {
+    return (
+        <AnimatePresence>
+            {open && (
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                    <motion.aside
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+                        className="fixed inset-y-0 right-0 z-50 flex w-80 flex-col bg-white shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                            <h3 className="font-bold text-slate-900">Collection Details</h3>
+                            <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="flex-1 space-y-5 overflow-y-auto p-6">
+                            {[
+                                { label: 'Amount per Resident', value: fmt(collection.amount) },
+                                { label: 'Schedule', value: collection.billing_type.replace('_', ' ') },
+                                ...(collection.billing_type === 'recurring'
+                                    ? [{ label: 'Interval', value: collection.recurring_interval || 'N/A' }]
+                                    : []),
+                                {
+                                    label: collection.billing_type === 'recurring' ? 'Due Day' : 'Due Date',
+                                    value:
+                                        collection.billing_type === 'recurring'
+                                            ? `Day ${collection.due_day} of each month`
+                                            : collection.due_at
+                                              ? new Date(collection.due_at).toLocaleDateString('en-NG', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })
+                                              : 'N/A',
+                                },
+                                { label: 'Grace Period', value: `${collection.grace_days} days after due date` },
+                                {
+                                    label: 'Applies To',
+                                    value: collection.applies_to === 'all' ? 'All residents' : `${collection.targets_count} specific residents`,
+                                },
+                                {
+                                    label: 'Created',
+                                    value: new Date(collection.created_at).toLocaleDateString('en-NG', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                    }),
+                                },
+                            ].map((item) => (
+                                <div key={item.label} className="rounded-xl bg-slate-50 px-4 py-3">
+                                    <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{item.label}</p>
+                                    <p className="text-sm font-semibold text-slate-900 capitalize">{item.value}</p>
+                                </div>
+                            ))}
+                        </div>
+                        {collection.status === 'draft' && (
+                            <div className="border-t border-slate-100 p-4">
+                                <Link
+                                    href={edit.url(collection.ulid)}
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-slate-800"
+                                >
+                                    <Edit2 className="h-4 w-4" /> Edit Collection
+                                </Link>
+                            </div>
+                        )}
+                    </motion.aside>
+                </>
+            )}
+        </AnimatePresence>
+    );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function ShowCollection({
+    collection,
+    stats,
+    assignments,
+    totalResidents,
+    filters,
+    settlement,
+    hasBanking,
+    canDelete,
+    recentPayments,
+    dailyTrend,
+}: Props) {
     const { post, processing } = useForm();
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
-    const [showConfig, setShowConfig] = useState(false);
     const [isRemindModalOpen, setIsRemindModalOpen] = useState(false);
     const [isReminding, setIsReminding] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
@@ -106,391 +343,640 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
     const [isRecording, setIsRecording] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            maximumFractionDigits: 0,
-        }).format(amount || 0);
-    };
+    const [configOpen, setConfigOpen] = useState(false);
 
     const collectionRate = useMemo(() => {
         if (stats.total_expected === 0) return 0;
-        const rate = (stats.total_collected / stats.total_expected) * 100;
-        return rate > 0 && rate < 1 ? rate.toFixed(1) : Math.round(rate);
+        return Math.round((stats.total_collected / stats.total_expected) * 100);
     }, [stats.total_collected, stats.total_expected]);
+
+    const daysLeft = daysUntil(collection.due_at);
+    const outstanding = stats.total_expected - stats.total_collected;
+
+    // ── Intelligence Banner logic
+    const banner = useMemo(() => {
+        if (collection.status === 'draft') {
+            return { icon: '📋', text: 'This collection is in draft mode. Publish to start collecting payments.', color: 'indigo' };
+        }
+        if (collection.status === 'archived') {
+            return { icon: '📦', text: 'This collection is archived.', color: 'slate' };
+        }
+        if (stats.total_assignments === 0) {
+            return { icon: '⏳', text: 'Waiting for assignments to be generated…', color: 'amber' };
+        }
+        if (collectionRate === 100) {
+            return { icon: '🎉', text: 'Outstanding — all residents have paid. Collection is complete!', color: 'emerald' };
+        }
+        if (stats.overdue_count > 0 && collectionRate < 50) {
+            return {
+                icon: '⚠️',
+                text: `Collections are behind target — ${collectionRate}% collected with ${stats.overdue_count} overdue ${stats.overdue_count === 1 ? 'resident' : 'residents'}.`,
+                color: 'rose',
+            };
+        }
+        if (daysLeft !== null && daysLeft <= 3 && collectionRate < 80) {
+            return {
+                icon: '⏰',
+                text: `Closing soon — only ${collectionRate}% collected with ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining. Consider sending reminders.`,
+                color: 'amber',
+            };
+        }
+        return {
+            icon: '✅',
+            text: `Collections are on track — ${collectionRate}% collected${daysLeft !== null ? ` with ${daysLeft} days remaining` : ''}.`,
+            color: 'emerald',
+        };
+    }, [collection.status, stats, collectionRate, daysLeft]);
 
     const handleRemind = () => {
         setIsReminding(true);
-        router.post(
-            remind.url(collection.ulid),
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setIsReminding(false);
-                    setIsRemindModalOpen(false);
-                },
-            },
-        );
+        router.post(remind.url(collection.ulid), {}, {
+            preserveScroll: true,
+            onFinish: () => { setIsReminding(false); setIsRemindModalOpen(false); },
+        });
     };
 
-    const handleExport = () => {
-        window.location.href = exportMethod.url(collection.ulid);
-    };
+    const handleExport = () => { window.location.href = exportMethod.url(collection.ulid); };
 
     const handleDelete = () => {
         setIsDeleting(true);
         router.delete(destroy.url(collection.ulid), {
-            onFinish: () => {
-                setIsDeleting(false);
-                setIsDeleteModalOpen(false);
-            },
+            onFinish: () => { setIsDeleting(false); setIsDeleteModalOpen(false); },
         });
     };
 
     const handleRecordPayment = () => {
         if (!selectedAssignment || !recordData.amount) return;
-
         setIsRecording(true);
-        router.post(
-            recordPayment.url(selectedAssignment.ulid),
-            {
-                amount: recordData.amount,
-                method: recordData.method,
+        router.post(recordPayment.url(selectedAssignment.ulid), { amount: recordData.amount, method: recordData.method }, {
+            preserveScroll: true,
+            onFinish: () => {
+                setIsRecording(false);
+                setIsRecordModalOpen(false);
+                setSelectedAssignment(null);
+                setRecordData({ amount: '', method: 'bank_transfer' });
             },
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setIsRecording(false);
-                    setIsRecordModalOpen(false);
-                    setSelectedAssignment(null);
-                    setRecordData({ amount: '', method: 'bank_transfer' });
-                },
-            },
-        );
+        });
     };
 
     const handleFilterChange = (newStatus: string) => {
         setStatusFilter(newStatus);
-        router.get(
-            window.location.pathname,
-            { search: searchQuery, status: newStatus },
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        router.get(window.location.pathname, { search: searchQuery, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const handleSearchChange = (newSearch: string) => {
         setSearchQuery(newSearch);
-        router.get(
-            window.location.pathname,
-            { search: newSearch, status: statusFilter },
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        router.get(window.location.pathname, { search: newSearch, status: statusFilter }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const filteredAssignments = assignments.data;
-
     const handlePublish = () => {
-        if (confirm('Are you sure you want to publish this collection? This will generate assignments for residents.')) {
+        if (confirm('Publish this collection? This will notify residents and generate payment assignments.')) {
             post(publish.url(collection.ulid));
         }
     };
 
+    const paidPct = stats.total_assignments > 0 ? (stats.paid_count / stats.total_assignments) * 100 : 0;
+    const pendingPct = stats.total_assignments > 0 ? (stats.pending_count / stats.total_assignments) * 100 : 0;
+    const overduePct = stats.total_assignments > 0 ? (stats.overdue_count / stats.total_assignments) * 100 : 0;
+
+    const bannerColors: Record<string, string> = {
+        indigo: 'bg-indigo-50 text-indigo-800 border-indigo-100',
+        emerald: 'bg-emerald-50 text-emerald-800 border-emerald-100',
+        amber: 'bg-amber-50 text-amber-800 border-amber-100',
+        rose: 'bg-rose-50 text-rose-800 border-rose-100',
+        slate: 'bg-slate-50 text-slate-600 border-slate-200',
+    };
+
     return (
         <>
-            <Head title={`${collection.name} - Collections`} />
+            <Head title={`${collection.name} — Collection`} />
+            <ConfigDrawer collection={collection} open={configOpen} onClose={() => setConfigOpen(false)} />
 
-            <div className="space-y-8">
-                {/* Settlement Alert */}
+            <div className="space-y-6">
+                {/* ── Banking Alert ── */}
                 {!settlement.paystack_subaccount_code && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
-                        <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
+                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden">
+                        <div className="flex items-center justify-between rounded-2xl bg-amber-50 px-5 py-4 ring-1 ring-amber-100">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                                    <ShieldCheck className="h-5 w-5" />
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                                    <ShieldCheck className="h-4 w-4" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-bold text-slate-900">Settlement not configured</h4>
-                                    <p className="text-xs font-medium text-slate-500">
-                                        Setup your estate's bank account to receive payments directly.
-                                    </p>
+                                    <p className="text-sm font-bold text-slate-900">Settlement account not configured</p>
+                                    <p className="text-xs text-slate-500">Set up a bank account to receive payments.</p>
                                 </div>
                             </div>
                             <Link
                                 href={ProfileController.edit.url()}
-                                className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                                className="shrink-0 rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
                             >
-                                Configure Banking
+                                Configure
                             </Link>
                         </div>
                     </motion.div>
                 )}
 
-                {/* 🥇 1. HEADER (SMART SUMMARY) */}
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-col gap-2">
-                        <nav className="flex items-center gap-2">
-                            <Link
-                                href={index.url()}
-                                className="text-xs font-bold tracking-widest text-slate-400 uppercase transition-colors hover:text-[#0A3D91]"
-                            >
-                                Collections
-                            </Link>
-                            <ChevronRight className="h-3 w-3 text-slate-300" />
-                            <span className="text-xs font-bold tracking-widest text-slate-900 uppercase">Details</span>
-                        </nav>
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 1 — CINEMATIC HERO
+                ══════════════════════════════════════════════════════════ */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A3D91] via-[#0f4fb5] to-[#041E4A] p-8 shadow-2xl shadow-[#0A3D91]/20 lg:p-10"
+                >
+                    {/* Background decoration */}
+                    <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/5" />
+                    <div className="pointer-events-none absolute -bottom-8 -left-8 h-48 w-48 rounded-full bg-white/3" />
 
-                        <div className="mt-2 flex flex-wrap items-center gap-4">
-                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{collection.name}</h1>
-                            <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm ring-1 ${
-                                    collection.status === 'active'
-                                        ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-                                        : 'bg-amber-50 text-amber-700 ring-amber-100'
-                                }`}
-                            >
+                    {/* Breadcrumb */}
+                    <nav className="relative mb-8 flex items-center gap-2">
+                        <Link href={index.url()} className="text-xs font-bold tracking-widest text-white/50 uppercase transition-colors hover:text-white">
+                            Collections
+                        </Link>
+                        <ChevronRight className="h-3 w-3 text-white/30" />
+                        <span className="text-xs font-bold tracking-widest text-white/80 uppercase">Details</span>
+                    </nav>
+
+                    <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+                        {/* Left — Title + Revenue */}
+                        <div className="flex-1">
+                            <div className="mb-3 flex flex-wrap items-center gap-3">
                                 <span
-                                    className={`h-2 w-2 rounded-full ${collection.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]`}
-                                />
-                                {collection.status}
-                            </span>
+                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${
+                                        collection.status === 'active'
+                                            ? 'bg-emerald-500/20 text-emerald-300'
+                                            : collection.status === 'draft'
+                                              ? 'bg-amber-500/20 text-amber-300'
+                                              : 'bg-white/10 text-white/50'
+                                    }`}
+                                >
+                                    <span
+                                        className={`h-1.5 w-1.5 rounded-full ${
+                                            collection.status === 'active'
+                                                ? 'animate-pulse bg-emerald-400'
+                                                : collection.status === 'draft'
+                                                  ? 'bg-amber-400'
+                                                  : 'bg-white/30'
+                                        }`}
+                                    />
+                                    {collection.status}
+                                </span>
+                                {collection.billing_type === 'recurring' && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold tracking-widest text-white/60 uppercase">
+                                        <TrendingUp className="h-3 w-3" /> Recurring
+                                    </span>
+                                )}
+                            </div>
+
+                            <h1 className="mb-2 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">{collection.name}</h1>
+
+                            {daysLeft !== null && collection.status === 'active' && (
+                                <p className="mb-6 text-sm font-medium text-white/60">
+                                    {daysLeft > 0 ? `Collection closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` : `Collection closed ${Math.abs(daysLeft)} day${Math.abs(daysLeft) === 1 ? '' : 's'} ago`}
+                                </p>
+                            )}
+
+                            {/* Revenue pillars */}
+                            <div className="grid grid-cols-3 gap-4 sm:gap-6">
+                                <div>
+                                    <p className="mb-0.5 text-[10px] font-bold tracking-widest text-emerald-300/60 uppercase">Collected</p>
+                                    <p className="text-xl font-black tracking-tight text-white sm:text-2xl">{fmtCompact(stats.total_collected)}</p>
+                                </div>
+                                <div>
+                                    <p className="mb-0.5 text-[10px] font-bold tracking-widest text-white/40 uppercase">Target</p>
+                                    <p className="text-xl font-black tracking-tight text-white/70 sm:text-2xl">{fmtCompact(stats.total_expected)}</p>
+                                </div>
+                                <div>
+                                    <p className="mb-0.5 text-[10px] font-bold tracking-widest text-rose-400/60 uppercase">Outstanding</p>
+                                    <p className="text-xl font-black tracking-tight text-rose-300 sm:text-2xl">{fmtCompact(outstanding)}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                            <Calendar className="h-4 w-4 text-slate-300" />
-                            Established on{' '}
-                            {new Date(collection.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
+                        {/* Right — Progress ring + actions */}
+                        <div className="flex flex-row items-center gap-6 lg:flex-col lg:items-end">
+                            {/* Radial progress */}
+                            <div className="relative flex-shrink-0">
+                                <ProgressRing pct={collectionRate} size={130} />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-2xl font-black text-white">{collectionRate}%</span>
+                                    <span className="text-[9px] font-bold tracking-widest text-white/50 uppercase">Collected</span>
+                                </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setConfigOpen(true)}
+                                    className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/20"
+                                >
+                                    <Info className="h-3.5 w-3.5" /> Details
+                                </button>
+                                {collection.status === 'active' && (
+                                    <button
+                                        onClick={() => setIsRemindModalOpen(true)}
+                                        className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/20"
+                                    >
+                                        <Bell className="h-3.5 w-3.5" /> Remind
+                                    </button>
+                                )}
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/20"
+                                >
+                                    <Download className="h-3.5 w-3.5" /> Export
+                                </button>
+                                {canDelete && (
+                                    <button
+                                        onClick={() => setIsDeleteModalOpen(true)}
+                                        className="flex items-center gap-1.5 rounded-xl bg-rose-500/20 px-4 py-2.5 text-xs font-bold text-rose-300 transition-all hover:bg-rose-500/30"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {canDelete && (
-                            <button
-                                onClick={() => setIsDeleteModalOpen(true)}
-                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500 ring-1 ring-rose-100 transition-colors hover:bg-rose-100 hover:text-rose-600"
-                                title="Delete Collection"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </button>
-                        )}
-                        <div className="flex w-full items-center gap-2 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-slate-200 lg:w-auto">
-                            <div className="flex min-w-max flex-col items-center border-r border-slate-100 px-4 py-1 sm:px-6">
-                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Rate</span>
-                                <span className="text-lg font-bold tracking-tight text-emerald-600 sm:text-xl">{collectionRate}%</span>
+                    {/* Draft publish CTA */}
+                    {collection.status === 'draft' && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="relative mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl bg-white/10 p-5 backdrop-blur-sm sm:flex-row sm:items-center"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                                    <Zap className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-white">Ready to launch?</p>
+                                    <p className="text-sm text-white/60">Publishing will notify residents and start collections.</p>
+                                </div>
                             </div>
-                            <div className="flex min-w-max flex-col items-center px-4 py-1 sm:px-6">
-                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Collected</span>
-                                <span className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                                    {formatCurrency(stats.total_collected)}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={processing}
+                                    className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#0A3D91] transition-all hover:bg-blue-50 active:scale-95 disabled:opacity-50"
+                                >
+                                    Publish Now <ArrowRight className="h-4 w-4" />
+                                </button>
+                                <Link
+                                    href={edit.url(collection.ulid)}
+                                    className="flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-white/20"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
+                        </motion.div>
+                    )}
+                </motion.div>
+
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 2 — INTELLIGENCE BANNER
+                ══════════════════════════════════════════════════════════ */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                    className={`flex items-center gap-3 rounded-2xl border px-5 py-4 text-sm font-medium ${bannerColors[banner.color]}`}
+                >
+                    <span className="text-lg">{banner.icon}</span>
+                    <span>{banner.text}</span>
+                </motion.div>
+
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 3 — KPI CARDS
+                ══════════════════════════════════════════════════════════ */}
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {/* Paid */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="group relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-50 hover:-translate-y-0.5"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="relative">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                                <CheckCircle className="h-5 w-5" />
+                            </div>
+                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Residents Paid</p>
+                            <p className="text-3xl font-black tracking-tight text-slate-900">
+                                <AnimatedNumber value={stats.paid_count} />
+                            </p>
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className="rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                                    {stats.total_assignments > 0 ? Math.round(paidPct) : 0}%
+                                </span>
+                                <span className="text-[10px] font-medium text-slate-400">of total</span>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Awaiting */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="group relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-amber-50 hover:-translate-y-0.5"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="relative">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                                <Clock className="h-5 w-5" />
+                            </div>
+                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Awaiting Payment</p>
+                            <p className="text-3xl font-black tracking-tight text-slate-900">
+                                <AnimatedNumber value={stats.pending_count} />
+                            </p>
+                            <div className="mt-2">
+                                <span className="text-[10px] font-medium text-slate-400">
+                                    {daysLeft !== null && daysLeft > 0 ? `Due in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` : 'Payment due'}
                                 </span>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
 
-                {/* Actions Bar (Draft State) */}
-                {collection.status === 'draft' && (
+                    {/* Overdue */}
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 flex flex-col items-start justify-between gap-6 rounded-3xl bg-indigo-600 p-6 text-white shadow-lg shadow-indigo-500/10 sm:flex-row sm:items-center sm:p-8"
+                        transition={{ delay: 0.2 }}
+                        className="group relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-rose-50 hover:-translate-y-0.5"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
-                                <Info className="h-6 w-6" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-50/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="relative">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                                <AlertCircle className={`h-5 w-5 ${stats.overdue_count > 0 ? 'animate-pulse' : ''}`} />
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold tracking-tight">Ready to launch?</h3>
-                                <p className="text-sm font-medium text-blue-100">
-                                    Publish this collection to start receiving payments from residents.
-                                </p>
+                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Overdue</p>
+                            <p className={`text-3xl font-black tracking-tight ${stats.overdue_count > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                                <AnimatedNumber value={stats.overdue_count} />
+                            </p>
+                            <div className="mt-2">
+                                <span className={`text-[10px] font-medium ${stats.overdue_count > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                    {stats.overdue_count > 0 ? 'Needs attention' : 'None overdue'}
+                                </span>
                             </div>
-                        </div>
-                        <div className="flex w-full gap-3 sm:w-auto">
-                            <button
-                                onClick={handlePublish}
-                                disabled={processing}
-                                className="flex-1 rounded-xl bg-white px-6 py-3 text-sm font-bold text-indigo-600 transition-all hover:bg-indigo-50 active:scale-95 disabled:opacity-50 sm:flex-none"
-                            >
-                                Publish Now
-                            </button>
-                            <Link
-                                href={edit.url(collection.ulid)}
-                                className="flex flex-1 items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-700 active:scale-95 sm:flex-none"
-                            >
-                                Edit
-                            </Link>
                         </div>
                     </motion.div>
-                )}
 
-                <div className="grid gap-8 lg:grid-cols-4">
-                    {/* 🥇 2. PRIMARY METRICS (UPGRADED) */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:col-span-4 lg:grid-cols-4">
-                        <MetricCard
-                            title="Assignments"
-                            value={stats.total_assignments}
-                            icon={<Users className="h-4 w-4" />}
-                            color="indigo"
-                            context={`${totalResidents} Residents`}
-                        />
-                        <MetricCard
-                            title="Paid"
-                            value={stats.paid_count}
-                            icon={<CheckCircle className="h-4 w-4" />}
-                            color="emerald"
-                            percentage={stats.total_assignments > 0 ? (stats.paid_count / stats.total_assignments) * 100 : 0}
-                        />
-                        <MetricCard
-                            title="Pending"
-                            value={stats.pending_count}
-                            icon={<Clock className="h-4 w-4" />}
-                            color="amber"
-                            percentage={stats.total_assignments > 0 ? (stats.pending_count / stats.total_assignments) * 100 : 0}
-                        />
-                        <MetricCard
-                            title="Overdue"
-                            value={stats.overdue_count}
-                            icon={<AlertCircle className="h-4 w-4" />}
-                            color="rose"
-                            percentage={stats.total_assignments > 0 ? (stats.overdue_count / stats.total_assignments) * 100 : 0}
-                        />
-                    </div>
-
-                    {/* 🥇 3. FINANCIAL PERFORMANCE PANEL */}
-                    <div className="order-1 space-y-8 lg:col-span-3">
-                        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-10">
-                            <div className="mb-8 flex items-center justify-between sm:mb-10">
-                                <div>
-                                    <h3 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">Revenue Performance</h3>
-                                    <p className="text-sm font-medium text-slate-400">Total volume and collection progress</p>
-                                </div>
-                                <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-slate-100">
-                                    <Download className="h-4 w-4" />
-                                </button>
+                    {/* Revenue */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="group relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-blue-50 hover:-translate-y-0.5"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="relative">
+                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                <TrendingUp className="h-5 w-5" />
                             </div>
-
-                            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12">
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Target Revenue</span>
-                                    <div className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                                        {formatCurrency(stats.total_expected)}
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-bold tracking-widest text-emerald-500/60 uppercase">Collected</span>
-                                    <div className="text-2xl font-bold tracking-tight text-emerald-600 sm:text-3xl">
-                                        {formatCurrency(stats.total_collected)}
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-bold tracking-widest text-rose-500/60 uppercase">Outstanding</span>
-                                    <div className="text-2xl font-bold tracking-tight text-rose-600 sm:text-3xl">
-                                        {formatCurrency(stats.total_expected - stats.total_collected)}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-12">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <span className="text-xs font-bold text-slate-900 sm:text-sm">Overall Progress</span>
-                                    <span className="text-xs font-bold text-emerald-600 sm:text-sm">
-                                        {stats.paid_count} of {stats.total_assignments} paid ({collectionRate}%)
-                                    </span>
-                                </div>
-                                <div className="relative h-4 w-full overflow-hidden rounded-2xl bg-slate-100 ring-4 ring-slate-50 sm:h-6">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${collectionRate}%` }}
-                                        transition={{ duration: 1.5, ease: 'easeOut' }}
-                                        className="absolute inset-y-0 left-0 bg-emerald-500"
-                                    />
-                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
-                                </div>
-                            </div>
-
-                            {/* 🥇 4. PAYMENT DISTRIBUTION */}
-                            <div className="mt-12 flex flex-col gap-4">
-                                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Distribution Breakdown</span>
-                                <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                                    <div style={{ width: `${(stats.paid_count / stats.total_assignments) * 100}%` }} className="bg-emerald-500" />
-                                    <div style={{ width: `${(stats.pending_count / stats.total_assignments) * 100}%` }} className="bg-amber-400" />
-                                    <div style={{ width: `${(stats.overdue_count / stats.total_assignments) * 100}%` }} className="bg-rose-500" />
-                                </div>
-                                <div className="flex flex-wrap gap-4 text-[10px] font-bold tracking-widest uppercase sm:gap-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-emerald-500" /> Paid
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-amber-400" /> Pending
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-rose-500" /> Overdue
-                                    </div>
-                                </div>
+                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Revenue</p>
+                            <p className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                                {fmtCompact(stats.total_collected)}
+                            </p>
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">{collectionRate}%</span>
+                                <span className="text-[10px] font-medium text-slate-400">of target</span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* 🥇 6. COLLECTION DETAILS */}
-                    <div className="order-2 space-y-8 lg:col-span-1">
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-2xl ring-1 shadow-slate-200/50 ring-slate-100 sm:p-8">
-                            <div className="mb-8 flex items-center justify-between">
-                                <h3 className="text-lg font-bold tracking-tight text-slate-900 uppercase">Configuration</h3>
-                                <button onClick={() => setShowConfig(!showConfig)} className="text-slate-400 transition-colors hover:text-slate-900">
-                                    <MoreHorizontal className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-6 sm:space-y-8">
-                                <DetailItem label="Amount" value={formatCurrency(collection.amount)} icon={<DollarSign className="h-4 w-4" />} />
-                                <DetailItem
-                                    label="Schedule"
-                                    value={collection.billing_type.replace('_', ' ')}
-                                    icon={<Calendar className="h-4 w-4" />}
-                                />
-                                {collection.billing_type === 'recurring' && (
-                                    <DetailItem
-                                        label="Interval"
-                                        value={collection.recurring_interval || 'N/A'}
-                                        icon={<Clock className="h-4 w-4" />}
-                                    />
-                                )}
-                                <DetailItem
-                                    label={collection.billing_type === 'recurring' ? 'Due Day' : 'Due Date'}
-                                    value={
-                                        collection.billing_type === 'recurring'
-                                            ? `Day ${collection.due_day}`
-                                            : collection.due_at
-                                              ? new Date(collection.due_at).toLocaleDateString()
-                                              : 'N/A'
-                                    }
-                                    icon={<Clock className="h-4 w-4" />}
-                                />
-                                <DetailItem label="Grace" value={`${collection.grace_days} Days`} icon={<AlertCircle className="h-4 w-4" />} />
-                                <DetailItem
-                                    label="Visibility"
-                                    value={collection.applies_to === 'all' ? 'All' : `${collection.targets_count} Specific`}
-                                    icon={<Users className="h-4 w-4" />}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    </motion.div>
                 </div>
 
-                {/* 🥇 5. INTELLIGENT RESIDENT LIST (FULL WIDTH) */}
-                <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-                    <div className="border-b border-slate-50 bg-slate-50/30 p-6 sm:p-8">
-                        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                            <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Resident Activity</h3>
-                            <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200 sm:gap-2">
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 4 — PROGRESS PANEL + TREND CHART
+                ══════════════════════════════════════════════════════════ */}
+                <div className="grid gap-4 lg:grid-cols-3">
+                    {/* Progress Panel (2/3) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8 lg:col-span-2"
+                    >
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-slate-900">Revenue Performance</h3>
+                                <p className="text-xs text-slate-400">Total volume and collection health</p>
+                            </div>
+                        </div>
+
+                        {/* Three revenue pillars */}
+                        <div className="mb-8 grid grid-cols-3 gap-4">
+                            <div className="rounded-xl bg-slate-50 px-4 py-3">
+                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Target</p>
+                                <p className="text-lg font-black text-slate-900">{fmtCompact(stats.total_expected)}</p>
+                                <p className="text-[10px] text-slate-400">{fmt(stats.total_expected)}</p>
+                            </div>
+                            <div className="rounded-xl bg-emerald-50 px-4 py-3">
+                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-emerald-500/70 uppercase">Collected</p>
+                                <p className="text-lg font-black text-emerald-700">{fmtCompact(stats.total_collected)}</p>
+                                <p className="text-[10px] text-emerald-500/70">{fmt(stats.total_collected)}</p>
+                            </div>
+                            <div className="rounded-xl bg-rose-50 px-4 py-3">
+                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-rose-400/70 uppercase">Outstanding</p>
+                                <p className="text-lg font-black text-rose-700">{fmtCompact(outstanding)}</p>
+                                <p className="text-[10px] text-rose-400/70">{fmt(outstanding)}</p>
+                            </div>
+                        </div>
+
+                        {/* Animated progress bar */}
+                        <div className="mb-3 flex items-center justify-between text-xs font-bold">
+                            <span className="text-slate-700">Overall Progress</span>
+                            <span className="text-emerald-600">
+                                {stats.paid_count} of {stats.total_assignments} paid ({collectionRate}%)
+                            </span>
+                        </div>
+                        <div className="relative h-5 overflow-hidden rounded-full bg-slate-100 ring-4 ring-slate-50">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${collectionRate}%` }}
+                                transition={{ duration: 1.2, ease: 'easeOut' }}
+                                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+                            />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
+                        </div>
+
+                        {/* Segmented distribution bar */}
+                        {stats.total_assignments > 0 && (
+                            <div className="mt-6">
+                                <p className="mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident Distribution</p>
+                                <div className="flex h-2.5 overflow-hidden rounded-full">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${paidPct}%` }}
+                                        transition={{ duration: 1, ease: 'easeOut' }}
+                                        className="bg-emerald-500"
+                                    />
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${pendingPct}%` }}
+                                        transition={{ duration: 1, delay: 0.1, ease: 'easeOut' }}
+                                        className="bg-amber-400"
+                                    />
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${overduePct}%` }}
+                                        transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                                        className="bg-rose-500"
+                                    />
+                                </div>
+                                <div className="mt-2 flex gap-4 text-[10px] font-bold tracking-widest uppercase">
+                                    <span className="flex items-center gap-1.5 text-slate-500">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> Paid ({stats.paid_count})
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-slate-500">
+                                        <span className="h-2 w-2 rounded-full bg-amber-400" /> Pending ({stats.pending_count})
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-slate-500">
+                                        <span className="h-2 w-2 rounded-full bg-rose-500" /> Overdue ({stats.overdue_count})
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+
+                    {/* Trend Chart (1/3) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8"
+                    >
+                        <div className="mb-1 flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4 text-slate-400" />
+                            <h3 className="font-bold text-slate-900">Payment Activity</h3>
+                        </div>
+                        <p className="mb-4 text-xs text-slate-400">Last 14 days</p>
+                        {dailyTrend === undefined ? (
+                            <div className="space-y-2">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="h-4 animate-pulse rounded bg-slate-100" style={{ width: `${60 + i * 8}%` }} />
+                                ))}
+                            </div>
+                        ) : (
+                            <SparklineChart data={dailyTrend} />
+                        )}
+                    </motion.div>
+                </div>
+
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 5 — RECENT PAYMENTS TIMELINE
+                ══════════════════════════════════════════════════════════ */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8"
+                >
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h3 className="font-bold text-slate-900">Recent Payments</h3>
+                            <p className="text-xs text-slate-400">Live payment activity</p>
+                        </div>
+                    </div>
+
+                    {recentPayments === undefined ? (
+                        <div className="space-y-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className="h-9 w-9 animate-pulse rounded-full bg-slate-100" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <div className="h-3 w-32 animate-pulse rounded bg-slate-100" />
+                                        <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100" />
+                                    </div>
+                                    <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : recentPayments.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                            <TrendingUp className="mb-2 h-8 w-8 opacity-20" />
+                            <p className="text-sm font-medium">No payments recorded yet</p>
+                        </div>
+                    ) : (
+                        <div className="relative">
+                            <div className="absolute top-0 left-4 h-full w-px bg-slate-100" />
+                            <div className="space-y-5">
+                                {recentPayments.map((p, i) => (
+                                    <motion.div
+                                        key={p.id}
+                                        initial={{ opacity: 0, x: -8 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.06 }}
+                                        className="relative flex items-start gap-4 pl-10"
+                                    >
+                                        <div className="absolute left-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 ring-4 ring-white">
+                                            {p.user_name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="truncate text-sm font-bold text-slate-900">{p.user_name}</p>
+                                                <span className="shrink-0 text-sm font-bold text-emerald-600">{fmt(p.amount)}</span>
+                                            </div>
+                                            <div className="mt-0.5 flex items-center gap-2">
+                                                <span className="text-[10px] font-medium text-slate-400">{p.paid_at_human || '—'}</span>
+                                                <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                                                    {p.provider === 'manual' ? 'manual' : p.provider}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+
+                {/* ══════════════════════════════════════════════════════════
+                    ZONE 6 — RESIDENT WORK AREA
+                ══════════════════════════════════════════════════════════ */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                    className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100"
+                >
+                    {/* Table toolbar */}
+                    <div className="border-b border-slate-50 bg-slate-50/50 p-5 sm:p-6">
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 className="font-bold text-slate-900">Resident Status</h3>
+                                <p className="text-xs text-slate-400">{assignments.total} total assignments</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setIsRemindModalOpen(true)}
+                                    className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95"
+                                >
+                                    <Bell className="h-3.5 w-3.5" /> Send Reminders
+                                </button>
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                                >
+                                    <Download className="h-3.5 w-3.5" /> Export
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="flex-1">
+                                <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents by name or email…" />
+                            </div>
+                            <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
                                 {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
                                     <button
                                         key={f}
                                         onClick={() => handleFilterChange(f)}
-                                        className={`rounded-xl px-3 py-2 text-[9px] font-bold tracking-widest whitespace-nowrap uppercase transition-all sm:px-4 sm:text-[10px] ${
-                                            statusFilter === f ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
+                                        className={`rounded-lg px-4 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all ${
+                                            statusFilter === f ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
                                         }`}
                                     >
                                         {f}
@@ -498,135 +984,126 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                                 ))}
                             </div>
                         </div>
-                        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                            <div className="flex-1">
-                                <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents..." />
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setIsRemindModalOpen(true)}
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95"
-                                >
-                                    <Bell className="h-4 w-4" />
-                                    Send Reminders
-                                </button>
-                                <button
-                                    onClick={handleExport}
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                                >
-                                    <Download className="h-4 w-4" />
-                                    Export
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
+                    {/* Table */}
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[600px] text-left lg:min-w-0">
+                        <table className="w-full min-w-[640px] text-left">
                             <thead>
-                                <tr className="border-b border-slate-50 bg-slate-50/20 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                    <th className="px-6 py-5 sm:px-8">Resident</th>
-                                    <th className="px-6 py-5 text-right sm:px-8">Amount</th>
-                                    <th className="px-6 py-5 sm:px-8">Status</th>
-                                    <th className="hidden px-6 py-5 sm:table-cell sm:px-8">Due Date</th>
-                                    <th className="px-6 py-5 text-right sm:px-8">Actions</th>
+                                <tr className="border-b border-slate-50 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                    <th className="px-6 py-4">Resident</th>
+                                    <th className="px-6 py-4 text-right">Amount Due</th>
+                                    <th className="px-6 py-4 text-right">Paid</th>
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="hidden px-6 py-4 sm:table-cell">Due Date</th>
+                                    <th className="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 <AnimatePresence mode="popLayout">
-                                    {filteredAssignments.map((a) => (
+                                    {assignments.data.map((a) => (
                                         <motion.tr
+                                            key={a.id}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            key={a.id}
-                                            className="group transition-colors hover:bg-slate-50/50"
+                                            transition={{ duration: 0.15 }}
+                                            className={`group transition-colors hover:bg-slate-50/60 ${
+                                                a.status === 'paid'
+                                                    ? 'border-l-2 border-l-emerald-300/50'
+                                                    : a.status === 'overdue'
+                                                      ? 'border-l-2 border-l-rose-300/50'
+                                                      : ''
+                                            }`}
                                         >
-                                            <td className="px-6 py-5 sm:px-8 sm:py-6">
-                                                <div className="flex items-center gap-3 sm:gap-4">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-                                                        <User className="h-5 w-5" />
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                                                            a.status === 'paid'
+                                                                ? 'bg-emerald-50 text-emerald-600'
+                                                                : a.status === 'overdue'
+                                                                  ? 'bg-rose-50 text-rose-600'
+                                                                  : 'bg-slate-100 text-slate-500'
+                                                        }`}
+                                                    >
+                                                        {a.user.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="truncate text-sm font-bold text-slate-900">{a.user.name}</p>
-                                                        <p className="truncate text-xs font-medium text-slate-400 sm:hidden">
-                                                            {a.status} • {new Date(a.due_date).toLocaleDateString()}
-                                                        </p>
-                                                        <p className="hidden truncate text-xs font-medium text-slate-400 sm:block">{a.user.email}</p>
+                                                        <p className="truncate text-xs text-slate-400">{a.user.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5 text-right sm:px-8 sm:py-6">
-                                                <div className="text-sm font-bold text-slate-900">{formatCurrency(a.amount_due)}</div>
-                                                {a.amount_paid > 0 && (
-                                                    <div className="flex flex-col items-end">
-                                                        <div className="text-[9px] font-bold text-emerald-500 sm:text-[10px]">
-                                                            Paid: {formatCurrency(a.amount_paid)}
-                                                        </div>
-                                                        {a.paid_at && (
-                                                            <div className="text-[8px] font-medium tracking-tight text-slate-400 uppercase">
-                                                                {new Date(a.paid_at).toLocaleDateString('en-US', {
-                                                                    month: 'short',
-                                                                    day: 'numeric',
-                                                                    year: 'numeric',
-                                                                })}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                            <td className="px-6 py-4 text-right">
+                                                <span className="text-sm font-bold text-slate-900">{fmt(a.amount_due)}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {a.amount_paid > 0 ? (
+                                                    <span className="text-sm font-bold text-emerald-600">{fmt(a.amount_paid)}</span>
+                                                ) : (
+                                                    <span className="text-sm text-slate-300">—</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-5 sm:px-8 sm:py-6">
+                                            <td className="px-6 py-4">
                                                 <span
-                                                    className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[9px] font-bold tracking-widest uppercase sm:text-[10px] ${
+                                                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase ${
                                                         a.status === 'paid'
                                                             ? 'bg-emerald-50 text-emerald-600'
                                                             : a.status === 'overdue'
                                                               ? 'bg-rose-50 text-rose-600'
-                                                              : 'bg-amber-50 text-amber-600'
+                                                              : a.status === 'partial'
+                                                                ? 'bg-blue-50 text-blue-600'
+                                                                : 'bg-amber-50 text-amber-600'
                                                     }`}
                                                 >
+                                                    {a.status === 'paid' && <CheckCircle className="h-2.5 w-2.5" />}
+                                                    {a.status === 'overdue' && <AlertCircle className="h-2.5 w-2.5" />}
                                                     {a.status}
                                                 </span>
                                             </td>
-                                            <td className="hidden px-6 py-5 sm:table-cell sm:px-8 sm:py-6">
-                                                <p className="text-sm font-bold text-slate-600">{new Date(a.due_date).toLocaleDateString()}</p>
-                                                {a.status === 'overdue' && <p className="text-[10px] font-bold text-rose-500 uppercase">Overdue</p>}
+                                            <td className="hidden px-6 py-4 sm:table-cell">
+                                                <p className="text-sm text-slate-600">
+                                                    {new Date(a.due_date).toLocaleDateString('en-NG', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric',
+                                                    })}
+                                                </p>
+                                                {a.paid_at && (
+                                                    <p className="text-[10px] font-medium text-emerald-500">
+                                                        Paid {new Date(a.paid_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                                                    </p>
+                                                )}
                                             </td>
-                                            <td className="px-6 py-5 text-right sm:px-8 sm:py-6">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    {a.status !== 'paid' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedAssignment(a);
-                                                                setRecordData({
-                                                                    ...recordData,
-                                                                    amount: (a.amount_due - a.amount_paid).toString(),
-                                                                });
-                                                                setIsRecordModalOpen(true);
-                                                            }}
-                                                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-emerald-500 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
-                                                            title="Record Payment"
-                                                        >
-                                                            <CreditCard className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                    <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-slate-900">
-                                                        <MoreHorizontal className="h-4 w-4" />
+                                            <td className="px-6 py-4 text-right">
+                                                {a.status !== 'paid' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedAssignment(a);
+                                                            setRecordData({ ...recordData, amount: (a.amount_due - a.amount_paid).toString() });
+                                                            setIsRecordModalOpen(true);
+                                                        }}
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-emerald-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:ring-emerald-200 active:scale-95"
+                                                        title="Record Payment"
+                                                    >
+                                                        <CreditCard className="h-3.5 w-3.5" />
+                                                        <span className="hidden sm:inline">Record</span>
                                                     </button>
-                                                </div>
+                                                )}
                                             </td>
                                         </motion.tr>
                                     ))}
                                 </AnimatePresence>
-                                {filteredAssignments.length === 0 && (
+
+                                {assignments.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-20 text-center">
-                                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-slate-50 text-slate-400">
-                                                <Search className="h-8 w-8" />
+                                        <td colSpan={6} className="px-8 py-16 text-center">
+                                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                                                <Search className="h-7 w-7" />
                                             </div>
-                                            <p className="mt-4 font-bold text-slate-900">No results found</p>
-                                            <p className="text-sm font-medium text-slate-400">Try adjusting your filters.</p>
+                                            <p className="font-bold text-slate-900">No results found</p>
+                                            <p className="text-sm text-slate-400">Try adjusting your search or filter.</p>
                                         </td>
                                     </tr>
                                 )}
@@ -634,26 +1111,26 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                         </table>
                     </div>
 
-                    {/* Pagination Controls */}
+                    {/* Pagination */}
                     {assignments.last_page > 1 && (
-                        <div className="flex items-center justify-between border-t border-slate-50 px-6 py-4 sm:px-8">
-                            <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+                        <div className="flex items-center justify-between border-t border-slate-50 px-6 py-4">
+                            <p className="text-xs font-bold text-slate-400">
                                 Page <span className="text-slate-900">{assignments.current_page}</span> of{' '}
                                 <span className="text-slate-900">{assignments.last_page}</span>
                             </p>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5">
                                 {assignments.links.map((link, i) => (
                                     <Link
                                         key={i}
                                         href={link.url || '#'}
                                         preserveScroll
                                         preserveState
-                                        className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-3 text-xs font-bold transition-all ${
+                                        className={`flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2.5 text-xs font-bold transition-all ${
                                             link.active
-                                                ? 'bg-slate-900 text-white shadow-lg'
+                                                ? 'bg-slate-900 text-white'
                                                 : link.url
-                                                  ? 'bg-white text-slate-400 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'
-                                                  : 'cursor-not-allowed text-slate-300 opacity-30'
+                                                  ? 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50'
+                                                  : 'cursor-not-allowed text-slate-300 opacity-40'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
@@ -661,50 +1138,51 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
             </div>
 
+            {/* ── Modals ── */}
             <ConfirmationModal
                 isOpen={isRemindModalOpen}
                 onClose={() => setIsRemindModalOpen(false)}
                 onConfirm={handleRemind}
-                title="Send Reminders"
-                message={`You are about to send payment reminders to ${Number(stats.pending_count) + Number(stats.overdue_count)} residents who have outstanding payments. Do you want to proceed?`}
+                title="Send Payment Reminders"
+                message={`You are about to send reminders to ${Number(stats.pending_count) + Number(stats.overdue_count)} residents with outstanding payments.`}
                 confirmLabel="Yes, Send Reminders"
                 cancelLabel="Cancel"
                 type="info"
                 isLoading={isReminding}
             />
+
             <ConfirmationModal
                 isOpen={isRecordModalOpen}
-                onClose={() => setIsRecordModalOpen(false)}
+                onClose={() => { setIsRecordModalOpen(false); setSelectedAssignment(null); }}
                 onConfirm={handleRecordPayment}
                 title="Record Manual Payment"
-                message={`Record a manual payment for ${selectedAssignment?.user.name}. This will update their status and contribution.`}
+                message={`Record a manual payment for ${selectedAssignment?.user.name}.`}
                 confirmLabel="Record Payment"
                 cancelLabel="Cancel"
                 type="info"
                 isLoading={isRecording}
             >
-                <div className="mt-6 space-y-5">
+                <div className="mt-5 space-y-4">
                     <div>
-                        <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Amount (NGN)</label>
+                        <label className="mb-1.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Amount (NGN)</label>
                         <input
                             type="number"
                             inputMode="numeric"
-                            pattern="[0-9]*"
                             value={recordData.amount}
                             onChange={(e) => setRecordData({ ...recordData, amount: e.target.value })}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
-                            placeholder="0.00"
+                            className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3.5 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
+                            placeholder="0"
                         />
                     </div>
                     <div>
-                        <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Payment Method</label>
+                        <label className="mb-1.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Payment Method</label>
                         <select
                             value={recordData.method}
                             onChange={(e) => setRecordData({ ...recordData, method: e.target.value })}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
+                            className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3.5 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
                         >
                             <option value="bank_transfer">Bank Transfer</option>
                             <option value="cash">Cash</option>
@@ -713,75 +1191,19 @@ export default function ShowCollection({ collection, stats, assignments, totalRe
                     </div>
                 </div>
             </ConfirmationModal>
+
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDelete}
                 title="Delete Collection"
-                message={`Are you sure you want to delete "${collection.name}"? This will remove all ${stats.total_assignments} assignment(s) permanently. This cannot be undone.`}
+                message={`Are you sure you want to delete "${collection.name}"? This will permanently remove all ${stats.total_assignments} assignment(s). This cannot be undone.`}
                 confirmLabel="Yes, Delete Collection"
                 cancelLabel="Cancel"
                 type="danger"
                 isLoading={isDeleting}
             />
         </>
-    );
-}
-
-function MetricCard({
-    title,
-    value,
-    icon,
-    color,
-    percentage,
-    context,
-}: {
-    title: string;
-    value: string | number;
-    icon: React.ReactNode;
-    color: string;
-    percentage?: number;
-    context?: string;
-}) {
-    const colors: Record<string, string> = {
-        indigo: 'bg-indigo-50 text-indigo-600 ring-indigo-100',
-        emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
-        amber: 'bg-amber-50 text-amber-600 ring-amber-100',
-        rose: 'bg-rose-50 text-rose-600 ring-rose-100',
-    };
-
-    return (
-        <div
-            className={`group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all duration-300 hover:shadow-md hover:ring-slate-200`}
-        >
-            <div className="relative z-10 flex h-full flex-col justify-between">
-                <div>
-                    <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}>{icon}</div>
-                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{title}</span>
-                </div>
-                <div className="mt-4 flex items-end justify-between">
-                    <span className="text-2xl font-bold tracking-tight text-slate-900">{value}</span>
-                    {percentage !== undefined && (
-                        <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold ${colors[color]}`}>{Math.round(percentage)}%</span>
-                    )}
-                    {context && <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{context}</span>}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function DetailItem({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
-    return (
-        <div className="group flex items-center gap-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition-all duration-300 group-hover:bg-slate-900 group-hover:text-white">
-                {icon}
-            </div>
-            <div>
-                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{label}</p>
-                <p className="text-sm font-bold text-slate-900 capitalize">{value}</p>
-            </div>
-        </div>
     );
 }
 
