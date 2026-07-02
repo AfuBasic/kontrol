@@ -750,397 +750,374 @@ export default function ShowCollection({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════
-                    ZONE 4 — PROGRESS PANEL + TREND CHART
+                    ZONES 4 / 5 / 6 — TWO-COLUMN COMMAND LAYOUT
+                    Left (2/3): Resident table — PRIMARY work area
+                    Right (1/3): Progress + Trend + Recent Payments sidebar
                 ══════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
-                    {/* Progress Panel (2/3) */}
+
+                    {/* ── LEFT: Resident Work Area (dominant 2/3) ── */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8 lg:col-span-2"
+                        className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100 lg:col-span-2"
                     >
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-slate-900">Revenue Performance</h3>
-                                <p className="text-xs text-slate-400">Total volume and collection health</p>
-                            </div>
-                        </div>
-
-                        {/* Three revenue pillars */}
-                        <div className="mb-8 grid grid-cols-3 gap-4">
-                            <div className="rounded-xl bg-slate-50 px-4 py-3">
-                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Target</p>
-                                <p className="text-lg font-black text-slate-900">{fmtCompact(stats.total_expected)}</p>
-                                <p className="text-[10px] text-slate-400">{fmt(stats.total_expected)}</p>
-                            </div>
-                            <div className="rounded-xl bg-emerald-50 px-4 py-3">
-                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-emerald-500/70 uppercase">Collected</p>
-                                <p className="text-lg font-black text-emerald-700">{fmtCompact(stats.total_collected)}</p>
-                                <p className="text-[10px] text-emerald-500/70">{fmt(stats.total_collected)}</p>
-                            </div>
-                            <div className="rounded-xl bg-rose-50 px-4 py-3">
-                                <p className="mb-0.5 text-[10px] font-bold tracking-widest text-rose-400/70 uppercase">Outstanding</p>
-                                <p className="text-lg font-black text-rose-700">{fmtCompact(outstanding)}</p>
-                                <p className="text-[10px] text-rose-400/70">{fmt(outstanding)}</p>
-                            </div>
-                        </div>
-
-                        {/* Animated progress bar */}
-                        <div className="mb-3 flex items-center justify-between text-xs font-bold">
-                            <span className="text-slate-700">Overall Progress</span>
-                            <span className="text-emerald-600">
-                                {stats.paid_count} of {stats.total_assignments} paid ({collectionRate}%)
-                            </span>
-                        </div>
-                        <div className="relative h-5 overflow-hidden rounded-full bg-slate-100 ring-4 ring-slate-50">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${collectionRate}%` }}
-                                transition={{ duration: 1.2, ease: 'easeOut' }}
-                                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
-                            />
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
-                        </div>
-
-                        {/* Segmented distribution bar */}
-                        {stats.total_assignments > 0 && (
-                            <div className="mt-6">
-                                <p className="mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Resident Distribution</p>
-                                <div className="flex h-2.5 overflow-hidden rounded-full">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${paidPct}%` }}
-                                        transition={{ duration: 1, ease: 'easeOut' }}
-                                        className="bg-emerald-500"
-                                    />
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${pendingPct}%` }}
-                                        transition={{ duration: 1, delay: 0.1, ease: 'easeOut' }}
-                                        className="bg-amber-400"
-                                    />
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${overduePct}%` }}
-                                        transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
-                                        className="bg-rose-500"
-                                    />
+                        {/* Table toolbar */}
+                        <div className="border-b border-slate-50 bg-slate-50/50 p-5 sm:p-6">
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-bold text-slate-900">Resident Status</h3>
+                                    <p className="text-xs text-slate-400">{assignments.total} total assignments</p>
                                 </div>
-                                <div className="mt-2 flex gap-4 text-[10px] font-bold tracking-widest uppercase">
-                                    <span className="flex items-center gap-1.5 text-slate-500">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> Paid ({stats.paid_count})
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-slate-500">
-                                        <span className="h-2 w-2 rounded-full bg-amber-400" /> Pending ({stats.pending_count})
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-slate-500">
-                                        <span className="h-2 w-2 rounded-full bg-rose-500" /> Overdue ({stats.overdue_count})
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Trend Chart (1/3) */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8"
-                    >
-                        <div className="mb-1 flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4 text-slate-400" />
-                            <h3 className="font-bold text-slate-900">Payment Activity</h3>
-                        </div>
-                        <p className="mb-4 text-xs text-slate-400">Last 14 days</p>
-                        {dailyTrend === undefined ? (
-                            <div className="space-y-2">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="h-4 animate-pulse rounded bg-slate-100" style={{ width: `${60 + i * 8}%` }} />
-                                ))}
-                            </div>
-                        ) : (
-                            <SparklineChart data={dailyTrend} />
-                        )}
-                    </motion.div>
-                </div>
-
-                {/* ══════════════════════════════════════════════════════════
-                    ZONE 5 — RECENT PAYMENTS TIMELINE
-                ══════════════════════════════════════════════════════════ */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="rounded-2xl bg-white p-6 ring-1 ring-slate-100 sm:p-8"
-                >
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h3 className="font-bold text-slate-900">Recent Payments</h3>
-                            <p className="text-xs text-slate-400">Live payment activity</p>
-                        </div>
-                    </div>
-
-                    {recentPayments === undefined ? (
-                        <div className="space-y-4">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-3">
-                                    <div className="h-9 w-9 animate-pulse rounded-full bg-slate-100" />
-                                    <div className="flex-1 space-y-1.5">
-                                        <div className="h-3 w-32 animate-pulse rounded bg-slate-100" />
-                                        <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100" />
-                                    </div>
-                                    <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : recentPayments.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                            <TrendingUp className="mb-2 h-8 w-8 opacity-20" />
-                            <p className="text-sm font-medium">No payments recorded yet</p>
-                        </div>
-                    ) : (
-                        <div className="relative">
-                            <div className="absolute top-0 left-4 h-full w-px bg-slate-100" />
-                            <div className="space-y-5">
-                                {recentPayments.map((p, i) => (
-                                    <motion.div
-                                        key={p.id}
-                                        initial={{ opacity: 0, x: -8 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.06 }}
-                                        className="relative flex items-start gap-4 pl-10"
-                                    >
-                                        <div className="absolute left-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 ring-4 ring-white">
-                                            {p.user_name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="truncate text-sm font-bold text-slate-900">{p.user_name}</p>
-                                                <span className="shrink-0 text-sm font-bold text-emerald-600">{fmt(p.amount)}</span>
-                                            </div>
-                                            <div className="mt-0.5 flex items-center gap-2">
-                                                <span className="text-[10px] font-medium text-slate-400">{p.paid_at_human || '—'}</span>
-                                                <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
-                                                    {p.provider === 'manual' ? 'manual' : p.provider}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
-
-                {/* ══════════════════════════════════════════════════════════
-                    ZONE 6 — RESIDENT WORK AREA
-                ══════════════════════════════════════════════════════════ */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35 }}
-                    className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100"
-                >
-                    {/* Table toolbar */}
-                    <div className="border-b border-slate-50 bg-slate-50/50 p-5 sm:p-6">
-                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 className="font-bold text-slate-900">Resident Status</h3>
-                                <p className="text-xs text-slate-400">{assignments.total} total assignments</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setIsRemindModalOpen(true)}
-                                    className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95"
-                                >
-                                    <Bell className="h-3.5 w-3.5" /> Send Reminders
-                                </button>
-                                <button
-                                    onClick={handleExport}
-                                    className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                                >
-                                    <Download className="h-3.5 w-3.5" /> Export
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <div className="flex-1">
-                                <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents by name or email…" />
-                            </div>
-                            <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
-                                {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
+                                <div className="flex items-center gap-2">
                                     <button
-                                        key={f}
-                                        onClick={() => handleFilterChange(f)}
-                                        className={`rounded-lg px-4 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all ${
-                                            statusFilter === f ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
-                                        }`}
+                                        onClick={() => setIsRemindModalOpen(true)}
+                                        className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95"
                                     >
-                                        {f}
+                                        <Bell className="h-3.5 w-3.5" /> Send Reminders
                                     </button>
-                                ))}
+                                    <button
+                                        onClick={handleExport}
+                                        className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                                    >
+                                        <Download className="h-3.5 w-3.5" /> Export
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[640px] text-left">
-                            <thead>
-                                <tr className="border-b border-slate-50 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                    <th className="px-6 py-4">Resident</th>
-                                    <th className="px-6 py-4 text-right">Amount Due</th>
-                                    <th className="px-6 py-4 text-right">Paid</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="hidden px-6 py-4 sm:table-cell">Due Date</th>
-                                    <th className="px-6 py-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                <AnimatePresence mode="popLayout">
-                                    {assignments.data.map((a) => (
-                                        <motion.tr
-                                            key={a.id}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.15 }}
-                                            className={`group transition-colors hover:bg-slate-50/60 ${
-                                                a.status === 'paid'
-                                                    ? 'border-l-2 border-l-emerald-300/50'
-                                                    : a.status === 'overdue'
-                                                      ? 'border-l-2 border-l-rose-300/50'
-                                                      : ''
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <div className="flex-1">
+                                    <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents by name or email…" />
+                                </div>
+                                <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
+                                    {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
+                                        <button
+                                            key={f}
+                                            onClick={() => handleFilterChange(f)}
+                                            className={`rounded-lg px-4 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all ${
+                                                statusFilter === f ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
                                             }`}
                                         >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div
-                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                                            {f}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[560px] text-left">
+                                <thead>
+                                    <tr className="border-b border-slate-50 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                        <th className="px-5 py-4">Resident</th>
+                                        <th className="px-5 py-4 text-right">Amount Due</th>
+                                        <th className="px-5 py-4 text-right">Paid</th>
+                                        <th className="px-5 py-4">Status</th>
+                                        <th className="hidden px-5 py-4 sm:table-cell">Due</th>
+                                        <th className="px-5 py-4 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    <AnimatePresence mode="popLayout">
+                                        {assignments.data.map((a) => (
+                                            <motion.tr
+                                                key={a.id}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.15 }}
+                                                className={`group transition-colors hover:bg-slate-50/60 ${
+                                                    a.status === 'paid'
+                                                        ? 'border-l-2 border-l-emerald-400'
+                                                        : a.status === 'overdue'
+                                                          ? 'border-l-2 border-l-rose-400'
+                                                          : a.status === 'partial'
+                                                            ? 'border-l-2 border-l-blue-400'
+                                                            : 'border-l-2 border-l-transparent'
+                                                }`}
+                                            >
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                                                                a.status === 'paid'
+                                                                    ? 'bg-emerald-50 text-emerald-600'
+                                                                    : a.status === 'overdue'
+                                                                      ? 'bg-rose-50 text-rose-600'
+                                                                      : a.status === 'partial'
+                                                                        ? 'bg-blue-50 text-blue-600'
+                                                                        : 'bg-slate-100 text-slate-500'
+                                                            }`}
+                                                        >
+                                                            {a.user.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-bold text-slate-900">{a.user.name}</p>
+                                                            <p className="truncate text-xs text-slate-400">{a.user.email}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-4 text-right">
+                                                    <span className="text-sm font-bold text-slate-900">{fmt(a.amount_due)}</span>
+                                                </td>
+                                                <td className="px-5 py-4 text-right">
+                                                    {a.amount_paid > 0 ? (
+                                                        <span className="text-sm font-bold text-emerald-600">{fmt(a.amount_paid)}</span>
+                                                    ) : (
+                                                        <span className="text-sm text-slate-300">—</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-5 py-4">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase ${
                                                             a.status === 'paid'
                                                                 ? 'bg-emerald-50 text-emerald-600'
                                                                 : a.status === 'overdue'
                                                                   ? 'bg-rose-50 text-rose-600'
-                                                                  : 'bg-slate-100 text-slate-500'
+                                                                  : a.status === 'partial'
+                                                                    ? 'bg-blue-50 text-blue-600'
+                                                                    : 'bg-amber-50 text-amber-600'
                                                         }`}
                                                     >
-                                                        {a.user.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-sm font-bold text-slate-900">{a.user.name}</p>
-                                                        <p className="truncate text-xs text-slate-400">{a.user.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="text-sm font-bold text-slate-900">{fmt(a.amount_due)}</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {a.amount_paid > 0 ? (
-                                                    <span className="text-sm font-bold text-emerald-600">{fmt(a.amount_paid)}</span>
-                                                ) : (
-                                                    <span className="text-sm text-slate-300">—</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase ${
-                                                        a.status === 'paid'
-                                                            ? 'bg-emerald-50 text-emerald-600'
-                                                            : a.status === 'overdue'
-                                                              ? 'bg-rose-50 text-rose-600'
-                                                              : a.status === 'partial'
-                                                                ? 'bg-blue-50 text-blue-600'
-                                                                : 'bg-amber-50 text-amber-600'
-                                                    }`}
-                                                >
-                                                    {a.status === 'paid' && <CheckCircle className="h-2.5 w-2.5" />}
-                                                    {a.status === 'overdue' && <AlertCircle className="h-2.5 w-2.5" />}
-                                                    {a.status}
-                                                </span>
-                                            </td>
-                                            <td className="hidden px-6 py-4 sm:table-cell">
-                                                <p className="text-sm text-slate-600">
-                                                    {new Date(a.due_date).toLocaleDateString('en-NG', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric',
-                                                    })}
-                                                </p>
-                                                {a.paid_at && (
-                                                    <p className="text-[10px] font-medium text-emerald-500">
-                                                        Paid {new Date(a.paid_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                                                        {a.status === 'paid' && <CheckCircle className="h-2.5 w-2.5" />}
+                                                        {a.status === 'overdue' && <AlertCircle className="h-2.5 w-2.5" />}
+                                                        {a.status}
+                                                    </span>
+                                                </td>
+                                                <td className="hidden px-5 py-4 sm:table-cell">
+                                                    <p className="text-xs text-slate-600">
+                                                        {new Date(a.due_date).toLocaleDateString('en-NG', {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        })}
                                                     </p>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {a.status !== 'paid' && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedAssignment(a);
-                                                            setRecordData({ ...recordData, amount: (a.amount_due - a.amount_paid).toString() });
-                                                            setIsRecordModalOpen(true);
-                                                        }}
-                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-emerald-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:ring-emerald-200 active:scale-95"
-                                                        title="Record Payment"
-                                                    >
-                                                        <CreditCard className="h-3.5 w-3.5" />
-                                                        <span className="hidden sm:inline">Record</span>
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </motion.tr>
-                                    ))}
-                                </AnimatePresence>
+                                                    {a.paid_at && (
+                                                        <p className="text-[10px] font-medium text-emerald-500">
+                                                            Paid {new Date(a.paid_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                                                        </p>
+                                                    )}
+                                                </td>
+                                                <td className="px-5 py-4 text-right">
+                                                    {a.status !== 'paid' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedAssignment(a);
+                                                                setRecordData({ ...recordData, amount: (a.amount_due - a.amount_paid).toString() });
+                                                                setIsRecordModalOpen(true);
+                                                            }}
+                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-emerald-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:ring-emerald-200 active:scale-95"
+                                                        >
+                                                            <CreditCard className="h-3.5 w-3.5" />
+                                                            <span className="hidden sm:inline">Record</span>
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </AnimatePresence>
 
-                                {assignments.data.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="px-8 py-16 text-center">
-                                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                                                <Search className="h-7 w-7" />
-                                            </div>
-                                            <p className="font-bold text-slate-900">No results found</p>
-                                            <p className="text-sm text-slate-400">Try adjusting your search or filter.</p>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    {assignments.last_page > 1 && (
-                        <div className="flex items-center justify-between border-t border-slate-50 px-6 py-4">
-                            <p className="text-xs font-bold text-slate-400">
-                                Page <span className="text-slate-900">{assignments.current_page}</span> of{' '}
-                                <span className="text-slate-900">{assignments.last_page}</span>
-                            </p>
-                            <div className="flex gap-1.5">
-                                {assignments.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url || '#'}
-                                        preserveScroll
-                                        preserveState
-                                        className={`flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2.5 text-xs font-bold transition-all ${
-                                            link.active
-                                                ? 'bg-slate-900 text-white'
-                                                : link.url
-                                                  ? 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50'
-                                                  : 'cursor-not-allowed text-slate-300 opacity-40'
-                                        }`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ))}
-                            </div>
+                                    {assignments.data.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} className="px-8 py-16 text-center">
+                                                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                                                    <Search className="h-7 w-7" />
+                                                </div>
+                                                <p className="font-bold text-slate-900">No results found</p>
+                                                <p className="text-sm text-slate-400">Try adjusting your search or filter.</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                    )}
-                </motion.div>
-            </div>
 
+                        {/* Pagination */}
+                        {assignments.last_page > 1 && (
+                            <div className="flex items-center justify-between border-t border-slate-50 px-5 py-4">
+                                <p className="text-xs font-bold text-slate-400">
+                                    Page <span className="text-slate-900">{assignments.current_page}</span> of{' '}
+                                    <span className="text-slate-900">{assignments.last_page}</span>
+                                </p>
+                                <div className="flex gap-1.5">
+                                    {assignments.links.map((link, i) => (
+                                        <Link
+                                            key={i}
+                                            href={link.url || '#'}
+                                            preserveScroll
+                                            preserveState
+                                            className={`flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2.5 text-xs font-bold transition-all ${
+                                                link.active
+                                                    ? 'bg-slate-900 text-white'
+                                                    : link.url
+                                                      ? 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50'
+                                                      : 'cursor-not-allowed text-slate-300 opacity-40'
+                                            }`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+
+                    {/* ── RIGHT: Sidebar — Progress + Chart + Timeline ── */}
+                    <div className="flex flex-col gap-4">
+
+                        {/* Progress Panel */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.25 }}
+                            className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                        >
+                            <h3 className="mb-4 font-bold text-slate-900">Revenue</h3>
+
+                            {/* Three revenue pillars */}
+                            <div className="mb-5 space-y-2">
+                                <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5">
+                                    <p className="text-xs font-bold text-slate-400 uppercase">Target</p>
+                                    <p className="text-sm font-black text-slate-900">{fmtCompact(stats.total_expected)}</p>
+                                </div>
+                                <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-2.5">
+                                    <p className="text-xs font-bold text-emerald-500/70 uppercase">Collected</p>
+                                    <p className="text-sm font-black text-emerald-700">{fmtCompact(stats.total_collected)}</p>
+                                </div>
+                                <div className="flex items-center justify-between rounded-xl bg-rose-50 px-4 py-2.5">
+                                    <p className="text-xs font-bold text-rose-400/70 uppercase">Outstanding</p>
+                                    <p className="text-sm font-black text-rose-700">{fmtCompact(outstanding)}</p>
+                                </div>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-slate-500">Progress</span>
+                                <span className="text-emerald-600">{collectionRate}%</span>
+                            </div>
+                            <div className="relative h-3 overflow-hidden rounded-full bg-slate-100">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${collectionRate}%` }}
+                                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+                                />
+                            </div>
+
+                            {/* Segmented distribution bar */}
+                            {stats.total_assignments > 0 && (
+                                <div className="mt-4">
+                                    <div className="flex h-2 overflow-hidden rounded-full">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${paidPct}%` }}
+                                            transition={{ duration: 1, ease: 'easeOut' }}
+                                            className="bg-emerald-500"
+                                        />
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${pendingPct}%` }}
+                                            transition={{ duration: 1, delay: 0.1, ease: 'easeOut' }}
+                                            className="bg-amber-400"
+                                        />
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${overduePct}%` }}
+                                            transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                                            className="bg-rose-500"
+                                        />
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-3 text-[9px] font-bold tracking-widest uppercase text-slate-400">
+                                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Paid ({stats.paid_count})</span>
+                                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Pending ({stats.pending_count})</span>
+                                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Overdue ({stats.overdue_count})</span>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+
+                        {/* Trend Chart */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                        >
+                            <div className="mb-1 flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4 text-slate-400" />
+                                <h3 className="font-bold text-slate-900">Payment Activity</h3>
+                            </div>
+                            <p className="mb-3 text-xs text-slate-400">Daily totals — last 14 days</p>
+                            {dailyTrend === undefined ? (
+                                <div className="space-y-2">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="h-3 animate-pulse rounded bg-slate-100" style={{ width: `${55 + i * 10}%` }} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <SparklineChart data={dailyTrend} />
+                            )}
+                        </motion.div>
+
+                        {/* Recent Payments Timeline */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.35 }}
+                            className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                        >
+                            <h3 className="mb-1 font-bold text-slate-900">Recent Payments</h3>
+                            <p className="mb-4 text-xs text-slate-400">Latest activity</p>
+
+                            {recentPayments === undefined ? (
+                                <div className="space-y-4">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
+                                            <div className="flex-1 space-y-1.5">
+                                                <div className="h-3 w-28 animate-pulse rounded bg-slate-100" />
+                                                <div className="h-2.5 w-16 animate-pulse rounded bg-slate-100" />
+                                            </div>
+                                            <div className="h-3 w-12 animate-pulse rounded bg-slate-100" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : recentPayments.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-slate-300">
+                                    <TrendingUp className="mb-2 h-7 w-7" />
+                                    <p className="text-xs font-medium text-slate-400">No payments yet</p>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <div className="absolute top-0 left-3.5 h-full w-px bg-slate-100" />
+                                    <div className="space-y-4">
+                                        {recentPayments.map((p, i) => (
+                                            <motion.div
+                                                key={p.id}
+                                                initial={{ opacity: 0, x: -6 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                className="relative flex items-start gap-3 pl-8"
+                                            >
+                                                <div className="absolute left-0 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 ring-4 ring-white">
+                                                    {p.user_name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-baseline justify-between gap-1">
+                                                        <p className="truncate text-xs font-bold text-slate-900">{p.user_name}</p>
+                                                        <span className="shrink-0 text-xs font-bold text-emerald-600">{fmt(p.amount)}</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400">{p.paid_at_human || '—'}</p>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+
+                    </div>
+                </div>
             {/* ── Modals ── */}
             <ConfirmationModal
                 isOpen={isRemindModalOpen}
