@@ -1118,6 +1118,8 @@ export default function ShowCollection({
 
                     </div>
                 </div>
+            </div>
+
             {/* ── Modals ── */}
             <ConfirmationModal
                 isOpen={isRemindModalOpen}
