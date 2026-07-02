@@ -352,37 +352,38 @@ export default function ShowCollection({
 
     const daysLeft = daysUntil(collection.due_at);
     const outstanding = stats.total_expected - stats.total_collected;
+    const remindableCount = Number(stats.pending_count) + Number(stats.overdue_count);
 
     // ── Intelligence Banner logic
     const banner = useMemo(() => {
         if (collection.status === 'draft') {
-            return { icon: '📋', text: 'This collection is in draft mode. Publish to start collecting payments.', color: 'indigo' };
+            return { Icon: Edit2, text: 'This collection is in draft mode. Publish to start collecting payments.', color: 'indigo' };
         }
         if (collection.status === 'archived') {
-            return { icon: '📦', text: 'This collection is archived.', color: 'slate' };
+            return { Icon: Info, text: 'This collection is archived.', color: 'slate' };
         }
         if (stats.total_assignments === 0) {
-            return { icon: '⏳', text: 'Waiting for assignments to be generated…', color: 'amber' };
+            return { Icon: Clock, text: 'Waiting for assignments to be generated…', color: 'amber' };
         }
         if (collectionRate === 100) {
-            return { icon: '🎉', text: 'Outstanding — all residents have paid. Collection is complete!', color: 'emerald' };
+            return { Icon: CheckCircle, text: 'Outstanding — all residents have paid. Collection is complete!', color: 'emerald' };
         }
         if (stats.overdue_count > 0 && collectionRate < 50) {
             return {
-                icon: '⚠️',
+                Icon: AlertCircle,
                 text: `Collections are behind target — ${collectionRate}% collected with ${stats.overdue_count} overdue ${stats.overdue_count === 1 ? 'resident' : 'residents'}.`,
                 color: 'rose',
             };
         }
         if (daysLeft !== null && daysLeft <= 3 && collectionRate < 80) {
             return {
-                icon: '⏰',
+                Icon: Clock,
                 text: `Closing soon — only ${collectionRate}% collected with ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining. Consider sending reminders.`,
                 color: 'amber',
             };
         }
         return {
-            icon: '✅',
+            Icon: CheckCircle,
             text: `Collections are on track — ${collectionRate}% collected${daysLeft !== null ? ` with ${daysLeft} days remaining` : ''}.`,
             color: 'emerald',
         };
@@ -576,7 +577,9 @@ export default function ShowCollection({
                                 {collection.status === 'active' && (
                                     <button
                                         onClick={() => setIsRemindModalOpen(true)}
-                                        className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/20"
+                                        disabled={remindableCount === 0}
+                                        title={remindableCount === 0 ? 'No residents to remind' : `Remind ${remindableCount} resident${remindableCount === 1 ? '' : 's'}`}
+                                        className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         <Bell className="h-3.5 w-3.5" /> Remind
                                     </button>
@@ -644,7 +647,7 @@ export default function ShowCollection({
                     transition={{ delay: 0.15 }}
                     className={`flex items-center gap-3 rounded-2xl border px-5 py-4 text-sm font-medium ${bannerColors[banner.color]}`}
                 >
-                    <span className="text-lg">{banner.icon}</span>
+                    <banner.Icon className="h-4 w-4 shrink-0" />
                     <span>{banner.text}</span>
                 </motion.div>
 
@@ -773,7 +776,9 @@ export default function ShowCollection({
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setIsRemindModalOpen(true)}
-                                        className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95"
+                                        disabled={remindableCount === 0}
+                                        title={remindableCount === 0 ? 'No residents to remind' : `Remind ${remindableCount} resident${remindableCount === 1 ? '' : 's'}`}
+                                        className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         <Bell className="h-3.5 w-3.5" /> Send Reminders
                                     </button>
