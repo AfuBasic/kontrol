@@ -138,14 +138,12 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                 </div>
             </div>
 
-            {/* Advanced Filters Expandable Drawer */}
             <AnimatePresence>
                 {showMore && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
                     >
                         <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-4">
                             <SearchableSelect
