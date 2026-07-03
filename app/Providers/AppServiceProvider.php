@@ -112,6 +112,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('estate-board-enhance', function ($request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
         RateLimiter::for('estate-board-comments', function ($request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });

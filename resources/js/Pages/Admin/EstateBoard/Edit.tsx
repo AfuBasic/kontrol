@@ -1,10 +1,11 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
+import { ArrowLeft, Eye, FileEdit, Trash2, Upload } from 'lucide-react';
 import { useRef, useState, lazy, Suspense } from 'react';
 
 import { index, show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import type { EstateBoardPost, PostAudience, PostStatus } from '@/types';
+import { audienceOptions, categoryOptions, priorityOptions } from '@/lib/estate-board-options';
+import type { EstateBoardPost, PostAudience, PostCategory, PostPriority, PostStatus } from '@/types';
 
 // Dynamic Imports
 const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
@@ -16,18 +17,14 @@ type Props = {
 type FormData = {
     title: string;
     body: string;
+    category: PostCategory;
+    priority: PostPriority;
     status: PostStatus;
     audience: PostAudience;
     images: File[];
     remove_media_ids: number[];
     _method?: string;
 };
-
-const audienceOptions: { value: PostAudience; label: string; description: string; icon: typeof Globe }[] = [
-    { value: 'all', label: 'Everyone', description: 'Visible to all residents and security', icon: Globe },
-    { value: 'residents', label: 'Residents Only', description: 'Only visible to residents', icon: Users },
-    { value: 'security', label: 'Security Only', description: 'Only visible to security personnel', icon: Shield },
-];
 
 export default function EditPost({ post }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +35,8 @@ export default function EditPost({ post }: Props) {
     const form = useForm<FormData>({
         title: post.title || '',
         body: post.body,
+        category: post.category || 'general',
+        priority: post.priority || 'normal',
         status: post.status,
         audience: post.audience,
         images: [],
@@ -46,6 +45,7 @@ export default function EditPost({ post }: Props) {
     });
 
     const { data, setData, processing, errors, post: submitForm } = form;
+    const validationErrors = Object.entries(errors).filter(([, message]) => Boolean(message));
 
     function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files || []);
@@ -158,6 +158,17 @@ export default function EditPost({ post }: Props) {
                     transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                     className="rounded-xl border border-gray-200 bg-white p-6"
                 >
+                    {validationErrors.length > 0 && (
+                        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                            <p className="text-sm font-medium text-red-800">Please fix the following before saving:</p>
+                            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                                {validationErrors.map(([field, message]) => (
+                                    <li key={field}>{message}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     {/* Title */}
                     <div className="mb-6">
                         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -186,10 +197,104 @@ export default function EditPost({ post }: Props) {
                                 onChange={(value) => setData('body', value)}
                                 placeholder="Write your announcement..."
                                 title={data.title}
+                                category={data.category}
+                                priority={data.priority}
+                                audience={data.audience}
                                 error={errors.body}
                             />
                         </Suspense>
                         <p className="mt-1 text-xs text-gray-500">Use the toolbar for formatting. AI enhancement available after 20 characters.</p>
+                    </div>
+
+                    {/* Category */}
+                    <div className="mb-6">
+                        <label className="mb-3 block text-sm font-medium text-gray-700">
+                            Category <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                            {categoryOptions.map((option) => (
+                                <label
+                                    key={option.value}
+                                    className={`relative flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
+                                        data.category === option.value
+                                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                            : 'border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="category"
+                                        value={option.value}
+                                        checked={data.category === option.value}
+                                        onChange={() => setData('category', option.value)}
+                                        className="sr-only"
+                                    />
+                                    <div
+                                        className={`rounded-lg p-2 ${
+                                            data.category === option.value ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'
+                                        }`}
+                                    >
+                                        <option.icon className="h-4 w-4" />
+                                    </div>
+                                    <p
+                                        className={`text-sm font-medium ${
+                                            data.category === option.value ? 'text-primary-900' : 'text-gray-900'
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </p>
+                                </label>
+                            ))}
+                        </div>
+                        {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+                    </div>
+
+                    {/* Priority */}
+                    <div className="mb-6">
+                        <label className="mb-3 block text-sm font-medium text-gray-700">
+                            Priority <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {priorityOptions.map((option) => (
+                                <label
+                                    key={option.value}
+                                    className={`relative flex cursor-pointer rounded-lg border p-4 transition-all ${
+                                        data.priority === option.value
+                                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                            : 'border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="priority"
+                                        value={option.value}
+                                        checked={data.priority === option.value}
+                                        onChange={() => setData('priority', option.value)}
+                                        className="sr-only"
+                                    />
+                                    <div className="flex items-start gap-3">
+                                        <div
+                                            className={`rounded-lg p-2 ${
+                                                data.priority === option.value ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'
+                                            }`}
+                                        >
+                                            <option.icon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <p
+                                                className={`text-sm font-medium ${
+                                                    data.priority === option.value ? 'text-primary-900' : 'text-gray-900'
+                                                }`}
+                                            >
+                                                {option.label}
+                                            </p>
+                                            <p className="mt-0.5 text-xs text-gray-500">{option.description}</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                        {errors.priority && <p className="mt-1 text-sm text-red-600">{errors.priority}</p>}
                     </div>
 
                     {/* Audience */}

@@ -25,6 +25,7 @@ import { marked } from 'marked';
 import { useCallback, useEffect, useState } from 'react';
 
 import ContentEnhanceController from '@/actions/App/Http/Controllers/Api/ContentEnhanceController';
+import type { PostAudience, PostCategory, PostPriority } from '@/types';
 
 // Configure marked for safe HTML output
 marked.setOptions({
@@ -39,6 +40,9 @@ type MarkdownEditorProps = {
     placeholder?: string;
     minCharsToEnhance?: number;
     title?: string;
+    category?: PostCategory;
+    priority?: PostPriority;
+    audience?: PostAudience;
     error?: string;
     className?: string;
 };
@@ -78,6 +82,9 @@ export default function MarkdownEditor({
     placeholder = 'Write something...',
     minCharsToEnhance = 20,
     title,
+    category,
+    priority,
+    audience,
     error,
     className = '',
 }: MarkdownEditorProps) {
@@ -145,8 +152,12 @@ export default function MarkdownEditor({
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
                 },
                 body: JSON.stringify({
+                    mode: 'enhance',
                     content: editor.getText(),
                     title: title || null,
+                    category: category || null,
+                    priority: priority || null,
+                    audience: audience || null,
                     type: 'estate_board',
                 }),
             });
@@ -168,7 +179,7 @@ export default function MarkdownEditor({
         } finally {
             setIsEnhancing(false);
         }
-    }, [canEnhance, isEnhancing, editor, title, onChange]);
+    }, [canEnhance, isEnhancing, editor, title, category, priority, audience, onChange]);
 
     const handleRevert = useCallback(() => {
         if (originalContent !== null && editor) {
@@ -331,7 +342,7 @@ export default function MarkdownEditor({
                                 className="flex items-center gap-1.5 rounded-lg bg-linear-to-r from-violet-600 to-purple-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:shadow-md"
                             >
                                 <Sparkles className="h-3.5 w-3.5" />
-                                Enhance with AI
+                                Polish with AI
                             </motion.button>
                         )}
                     </AnimatePresence>
@@ -377,6 +388,15 @@ export default function MarkdownEditor({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-gray-400">
+                <span>
+                    {canEnhance
+                        ? 'Polish your draft with AI, or edit manually.'
+                        : `${textLength}/${minCharsToEnhance} characters needed for AI polish`}
+                </span>
+                <span>{textLength.toLocaleString()} characters</span>
+            </div>
 
             {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
         </div>

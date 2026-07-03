@@ -1,27 +1,26 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, FileEdit, Globe, Shield, Trash2, Upload, Users } from 'lucide-react';
-import { useRef, useState, lazy, Suspense } from 'react';
+import { ArrowLeft, Eye, FileEdit, Trash2, Upload } from 'lucide-react';
+import { marked } from 'marked';
+import { useCallback, useRef, useState, lazy, Suspense } from 'react';
 
+import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
+import EstateBoardPostPreview from '@/Components/Admin/EstateBoardPostPreview';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import type { PostAudience, PostStatus } from '@/types';
+import { audienceOptions, categoryOptions, priorityOptions } from '@/lib/estate-board-options';
+import type { PostAudience, PostCategory, PostPriority, PostStatus } from '@/types';
 
-// Dynamic Imports
 const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
 
 type FormData = {
     title: string;
     body: string;
+    category: PostCategory;
+    priority: PostPriority;
     status: PostStatus;
     audience: PostAudience;
     images: File[];
 };
-
-const audienceOptions: { value: PostAudience; label: string; description: string; icon: typeof Globe }[] = [
-    { value: 'all', label: 'Everyone', description: 'Visible to all residents and security', icon: Globe },
-    { value: 'residents', label: 'Residents Only', description: 'Only visible to residents', icon: Users },
-    { value: 'security', label: 'Security Only', description: 'Only visible to security personnel', icon: Shield },
-];
 
 export default function CreatePost() {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,24 +29,41 @@ export default function CreatePost() {
     const { data, setData, post, processing, errors } = useForm<FormData>({
         title: '',
         body: '',
+        category: 'general',
+        priority: 'normal',
         status: 'published',
         audience: 'all',
         images: [],
     });
 
+    const validationErrors = Object.entries(errors).filter(([, message]) => Boolean(message));
+
+    const handleAiDraft = useCallback(
+        (result: { body: string; suggestedTitle?: string | null }) => {
+            const html = marked.parse(result.body) as string;
+            setData('body', html);
+
+            if (result.suggestedTitle && !data.title.trim()) {
+                setData('title', result.suggestedTitle);
+            }
+        },
+        [data.title, setData],
+    );
+
     function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
+        if (files.length === 0) {
+            return;
+        }
 
         const newImages = [...data.images, ...files].slice(0, 10);
         setData('images', newImages);
 
-        // Generate previews
         const newPreviews: string[] = [];
         newImages.forEach((file) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                newPreviews.push(e.target?.result as string);
+            reader.onload = (event) => {
+                newPreviews.push(event.target?.result as string);
                 if (newPreviews.length === newImages.length) {
                     setPreviews([...newPreviews]);
                 }
@@ -73,7 +89,6 @@ export default function CreatePost() {
         <>
             <Head title="Create Post" />
 
-            {/* Back Button */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -86,240 +101,310 @@ export default function CreatePost() {
                 </Link>
             </motion.div>
 
-            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
                 className="mb-8"
             >
-                <h1 className="text-2xl font-semibold text-gray-900">Create Post</h1>
-                <p className="mt-1 text-gray-500">Share an announcement with your estate community.</p>
+                <h1 className="text-2xl font-semibold text-gray-900">Create Announcement</h1>
+                <p className="mt-1 max-w-2xl text-gray-500">
+                    Start with a short brief or template, generate a draft, refine it, then publish.
+                </p>
             </motion.div>
 
             <form onSubmit={handleSubmit}>
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                    className="rounded-xl border border-gray-200 bg-white p-6"
-                >
-                    {/* Title */}
-                    <div className="mb-6">
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                            Title <span className="text-gray-400">(optional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="title"
-                            value={data.title}
-                            onChange={(e) => setData('title', e.target.value)}
-                            placeholder="Give your post a title..."
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                        />
-                        {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-                    </div>
-
-                    {/* Body */}
-                    <div className="mb-6">
-                        <label htmlFor="body" className="mb-1 block text-sm font-medium text-gray-700">
-                            Content <span className="text-red-500">*</span>
-                        </label>
-                        <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-slate-100" />}>
-                            <MarkdownEditor
-                                id="body"
-                                value={data.body}
-                                onChange={(value) => setData('body', value)}
-                                placeholder="Write your announcement..."
-                                title={data.title}
-                                error={errors.body}
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+                    <div className="order-2 space-y-6 xl:order-1">
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                        >
+                            <EstateBoardAiAssistant
+                                context={{
+                                    title: data.title,
+                                    category: data.category,
+                                    priority: data.priority,
+                                    audience: data.audience,
+                                }}
+                                onDraft={handleAiDraft}
+                                onTemplateSelect={({ category, priority }) => {
+                                    setData({
+                                        category,
+                                        priority,
+                                    });
+                                }}
+                                disabled={processing}
                             />
-                        </Suspense>
-                        <p className="mt-1 text-xs text-gray-500">Use the toolbar for formatting. AI enhancement available after 20 characters.</p>
-                    </div>
+                        </motion.div>
 
-                    {/* Audience */}
-                    <div className="mb-6">
-                        <label className="mb-3 block text-sm font-medium text-gray-700">
-                            This post is for <span className="text-red-500">*</span>
-                        </label>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            {audienceOptions.map((option) => (
-                                <label
-                                    key={option.value}
-                                    className={`relative flex cursor-pointer rounded-lg border p-4 transition-all ${
-                                        data.audience === option.value
-                                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                            : 'border-gray-200 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="audience"
-                                        value={option.value}
-                                        checked={data.audience === option.value}
-                                        onChange={() => setData('audience', option.value)}
-                                        className="sr-only"
-                                    />
-                                    <div className="flex items-start gap-3">
-                                        <div
-                                            className={`rounded-lg p-2 ${
-                                                data.audience === option.value ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'
-                                            }`}
-                                        >
-                                            <option.icon className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p
-                                                className={`text-sm font-medium ${
-                                                    data.audience === option.value ? 'text-primary-900' : 'text-gray-900'
-                                                }`}
-                                            >
-                                                {option.label}
-                                            </p>
-                                            <p className="mt-0.5 text-xs text-gray-500">{option.description}</p>
-                                        </div>
-                                    </div>
-                                </label>
-                            ))}
-                        </div>
-                        {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
-                    </div>
-
-                    {/* Images */}
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Images <span className="text-gray-400">(optional, max 10)</span>
-                        </label>
-                        <div className="mt-2">
-                            {previews.length > 0 && (
-                                <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-                                    {previews.map((preview, idx) => (
-                                        <div key={idx} className="group relative">
-                                            <img src={preview} alt="" className="h-24 w-full rounded-lg object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(idx)}
-                                                className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                            >
-                                                <Trash2 className="h-3 w-3" />
-                                            </button>
-                                        </div>
-                                    ))}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+                            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                        >
+                            {validationErrors.length > 0 && (
+                                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                                    <p className="text-sm font-medium text-red-800">Please fix the following before publishing:</p>
+                                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                                        {validationErrors.map(([field, message]) => (
+                                            <li key={field}>{message}</li>
+                                        ))}
+                                    </ul>
                                 </div>
                             )}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                multiple
-                                onChange={handleFilesChange}
-                                className="hidden"
+
+                            <div className="mb-6">
+                                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                                    Title <span className="text-gray-400">(optional)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="title"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="Give your announcement a clear title..."
+                                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 focus:outline-none"
+                                />
+                                {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                            </div>
+
+                            <div>
+                                <label htmlFor="body" className="mb-1 block text-sm font-medium text-gray-700">
+                                    Content <span className="text-red-500">*</span>
+                                </label>
+                                <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-slate-100" />}>
+                                    <MarkdownEditor
+                                        id="body"
+                                        value={data.body}
+                                        onChange={(value) => setData('body', value)}
+                                        placeholder="Generate a draft above, or write your announcement here..."
+                                        title={data.title}
+                                        category={data.category}
+                                        priority={data.priority}
+                                        audience={data.audience}
+                                        error={errors.body}
+                                    />
+                                </Suspense>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    <div className="order-1 space-y-6 xl:order-2 xl:sticky xl:top-6 xl:self-start">
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
+                        >
+                            <EstateBoardPostPreview
+                                title={data.title}
+                                body={data.body}
+                                category={data.category}
+                                priority={data.priority}
+                                audience={data.audience}
                             />
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={data.images.length >= 10}
-                                className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <Upload className="h-5 w-5" />
-                                <span>Click to upload images</span>
-                            </button>
-                            <p className="mt-1 text-xs text-gray-500">JPG, PNG, or WebP. Max 5MB each.</p>
-                        </div>
-                        {errors.images && <p className="mt-1 text-sm text-red-600">{errors.images}</p>}
-                    </div>
+                        </motion.div>
 
-                    {/* Status */}
-                    <div className="mb-6">
-                        <label className="mb-3 block text-sm font-medium text-gray-700">Status</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <label
-                                className={`relative flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                                    data.status === 'published'
-                                        ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="status"
-                                    value="published"
-                                    checked={data.status === 'published'}
-                                    onChange={() => setData('status', 'published')}
-                                    className="sr-only"
-                                />
-                                <div
-                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                        data.status === 'published' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
-                                    }`}
-                                >
-                                    <Eye className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <p className={`text-sm font-semibold ${data.status === 'published' ? 'text-green-900' : 'text-gray-900'}`}>
-                                        Publish Now
-                                    </p>
-                                    <p className="text-xs text-gray-500">Visible to your audience</p>
-                                </div>
-                                {data.status === 'published' && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-green-500" />}
-                            </label>
-                            <label
-                                className={`relative flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                                    data.status === 'draft'
-                                        ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="status"
-                                    value="draft"
-                                    checked={data.status === 'draft'}
-                                    onChange={() => setData('status', 'draft')}
-                                    className="sr-only"
-                                />
-                                <div
-                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                        data.status === 'draft' ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'
-                                    }`}
-                                >
-                                    <FileEdit className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <p className={`text-sm font-semibold ${data.status === 'draft' ? 'text-amber-900' : 'text-gray-900'}`}>
-                                        Save as Draft
-                                    </p>
-                                    <p className="text-xs text-gray-500">Only you can see this</p>
-                                </div>
-                                {data.status === 'draft' && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500" />}
-                            </label>
-                        </div>
-                        {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
-                    </div>
-                </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.18, ease: 'easeOut' }}
+                            className="space-y-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                        >
+                            <div>
+                                <h2 className="text-sm font-semibold text-gray-900">Publish settings</h2>
+                                <p className="mt-0.5 text-xs text-gray-500">Set these first — they guide the AI draft and preview.</p>
+                            </div>
 
-                {/* Actions */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
-                    className="mt-6 flex justify-end gap-3"
-                >
-                    <Link
-                        href={index.url()}
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                    >
-                        Cancel
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-                    >
-                        {processing ? 'Creating...' : data.status === 'published' ? 'Publish Post' : 'Save Draft'}
-                    </button>
-                </motion.div>
+                            <div>
+                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Category</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {categoryOptions.map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-all ${
+                                                data.category === option.value
+                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                                    : 'border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="category"
+                                                value={option.value}
+                                                checked={data.category === option.value}
+                                                onChange={() => setData('category', option.value)}
+                                                className="sr-only"
+                                            />
+                                            <option.icon className="h-4 w-4 text-gray-500" />
+                                            <span className="text-xs font-medium text-gray-800">{option.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Priority</label>
+                                <div className="space-y-2">
+                                    {priorityOptions.map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
+                                                data.priority === option.value
+                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                                    : 'border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="priority"
+                                                value={option.value}
+                                                checked={data.priority === option.value}
+                                                onChange={() => setData('priority', option.value)}
+                                                className="sr-only"
+                                            />
+                                            <option.icon className="h-4 w-4 text-gray-500" />
+                                            <div>
+                                                <p className="text-xs font-medium text-gray-900">{option.label}</p>
+                                                <p className="text-[11px] text-gray-500">{option.description}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.priority && <p className="mt-1 text-sm text-red-600">{errors.priority}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Audience</label>
+                                <div className="space-y-2">
+                                    {audienceOptions.map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
+                                                data.audience === option.value
+                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                                    : 'border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="audience"
+                                                value={option.value}
+                                                checked={data.audience === option.value}
+                                                onChange={() => setData('audience', option.value)}
+                                                className="sr-only"
+                                            />
+                                            <option.icon className="h-4 w-4 text-gray-500" />
+                                            <div>
+                                                <p className="text-xs font-medium text-gray-900">{option.label}</p>
+                                                <p className="text-[11px] text-gray-500">{option.description}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Images</label>
+                                {previews.length > 0 && (
+                                    <div className="mb-3 grid grid-cols-2 gap-2">
+                                        {previews.map((preview, idx) => (
+                                            <div key={idx} className="group relative">
+                                                <img src={preview} alt="" className="h-20 w-full rounded-lg object-cover" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    multiple
+                                    onChange={handleFilesChange}
+                                    className="hidden"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={data.images.length >= 10}
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <Upload className="h-4 w-4" />
+                                    Add images
+                                </button>
+                                {errors.images && <p className="mt-1 text-sm text-red-600">{errors.images}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Status</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <label
+                                        className={`flex cursor-pointer flex-col rounded-xl border-2 p-3 transition-all ${
+                                            data.status === 'published'
+                                                ? 'border-green-500 bg-green-50'
+                                                : 'border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="published"
+                                            checked={data.status === 'published'}
+                                            onChange={() => setData('status', 'published')}
+                                            className="sr-only"
+                                        />
+                                        <Eye className="h-4 w-4 text-green-600" />
+                                        <span className="mt-2 text-xs font-semibold text-gray-900">Publish</span>
+                                    </label>
+                                    <label
+                                        className={`flex cursor-pointer flex-col rounded-xl border-2 p-3 transition-all ${
+                                            data.status === 'draft' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="draft"
+                                            checked={data.status === 'draft'}
+                                            onChange={() => setData('status', 'draft')}
+                                            className="sr-only"
+                                        />
+                                        <FileEdit className="h-4 w-4 text-amber-600" />
+                                        <span className="mt-2 text-xs font-semibold text-gray-900">Draft</span>
+                                    </label>
+                                </div>
+                                {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
+                            </div>
+
+                            <div className="flex gap-2 border-t border-gray-100 pt-4">
+                                <Link
+                                    href={index.url()}
+                                    className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </Link>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="flex-1 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                >
+                                    {processing ? 'Saving...' : data.status === 'published' ? 'Publish' : 'Save draft'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
             </form>
         </>
     );

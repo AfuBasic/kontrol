@@ -2,60 +2,130 @@
 
 namespace App\Services;
 
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Prism;
+use App\Ai\Agents\EstateBoardDraftAgent;
+use App\Ai\Agents\EstateBoardEnhanceAgent;
+use Laravel\Ai\Enums\Lab;
 
 class ContentEnhancerService
 {
-    protected const MODEL = 'claude-sonnet-4-5-20250929';
+    /**
+     * @param  array{category?: string|null, priority?: string|null, audience?: string|null}  $context
+     */
+    public function enhanceEstateBoardPost(string $content, ?string $title = null, array $context = []): string
+    {
+        $response = (new EstateBoardEnhanceAgent)->prompt(
+            $this->buildEnhancePrompt($content, $title, $context),
+            provider: Lab::Gemini,
+        );
+
+        return trim((string) $response);
+    }
 
     /**
-     * Enhance estate board post content for clarity and engagement.
+     * @param  array{category?: string|null, priority?: string|null, audience?: string|null}  $context
+     * @return array{title: string|null, body: string}
      */
-    public function enhanceEstateBoardPost(string $content, ?string $title = null): string
+    public function draftEstateBoardPost(string $brief, ?string $title = null, array $context = []): array
     {
-        $context = $title
+        $response = (new EstateBoardDraftAgent)->prompt(
+            $this->buildDraftPrompt($brief, $title, $context),
+            provider: Lab::Gemini,
+        );
+
+        return $this->parseDraftResponse(trim((string) $response), $title);
+    }
+
+    /**
+     * @param  array{category?: string|null, priority?: string|null, audience?: string|null}  $context
+     */
+    protected function buildEnhancePrompt(string $content, ?string $title, array $context): string
+    {
+        $contextLines = $this->formatContextLines($context);
+
+        $titleContext = $title
             ? "The post has a title: \"{$title}\""
             : 'The post has no title';
 
-        $response = (new Prism)
-            ->text()
-            ->using(Provider::Anthropic, self::MODEL)
-            ->withSystemPrompt($this->getSystemPrompt())
-            ->withPrompt($this->buildPrompt($content, $context))
-            ->asText();
-
-        return trim($response->text);
-    }
-
-    protected function getSystemPrompt(): string
-    {
-        return <<<'PROMPT'
-You are an expert copywriter specializing in community communications for residential estates. Your task is to enhance announcements and posts to be clear, engaging, and professional while maintaining a warm community tone.
-
-Guidelines:
-- Keep the core message and intent intact
-- Use clear, concise language
-- Maintain a professional yet friendly tone appropriate for estate communications
-- Ensure important information stands out
-- Fix grammar and spelling issues
-- Improve structure and readability
-- Keep announcements focused and actionable when appropriate
-- Do not add information that wasn't in the original
-- Do not use excessive emojis or informal language
-- Respond ONLY with the enhanced content, no explanations or preambles
-PROMPT;
-    }
-
-    protected function buildPrompt(string $content, string $context): string
-    {
         return <<<PROMPT
-Please enhance the following estate board post for clarity and engagement. {$context}
+Please enhance the following estate board post for clarity and engagement. {$titleContext}
+{$contextLines}
 
 Original content:
 {$content}
 
 Enhanced content:
 PROMPT;
+    }
+
+    /**
+     * @param  array{category?: string|null, priority?: string|null, audience?: string|null}  $context
+     */
+    protected function buildDraftPrompt(string $brief, ?string $title, array $context): string
+    {
+        $contextLines = $this->formatContextLines($context);
+
+        $titleContext = $title
+            ? "Use this title if appropriate: \"{$title}\""
+            : 'Suggest a clear, concise title';
+
+        return <<<PROMPT
+Draft an estate board announcement from the following brief. {$titleContext}
+{$contextLines}
+
+Brief:
+{$brief}
+
+Required format:
+TITLE: [title]
+BODY:
+[content]
+PROMPT;
+    }
+
+    /**
+     * @param  array{category?: string|null, priority?: string|null, audience?: string|null}  $context
+     */
+    protected function formatContextLines(array $context): string
+    {
+        $lines = [];
+
+        if (! empty($context['category'])) {
+            $lines[] = "Category: {$context['category']}";
+        }
+
+        if (! empty($context['priority'])) {
+            $lines[] = "Priority: {$context['priority']}";
+        }
+
+        if (! empty($context['audience'])) {
+            $lines[] = "Audience: {$context['audience']}";
+        }
+
+        if ($lines === []) {
+            return '';
+        }
+
+        return "Context:\n- ".implode("\n- ", $lines);
+    }
+
+    /**
+     * @return array{title: string|null, body: string}
+     */
+    protected function parseDraftResponse(string $response, ?string $fallbackTitle): array
+    {
+        if (preg_match('/TITLE:\s*(.+?)\s*BODY:\s*(.+)$/si', $response, $matches)) {
+            $parsedTitle = trim($matches[1]);
+            $parsedBody = trim($matches[2]);
+
+            return [
+                'title' => $parsedTitle !== '' ? $parsedTitle : $fallbackTitle,
+                'body' => $parsedBody,
+            ];
+        }
+
+        return [
+            'title' => $fallbackTitle,
+            'body' => $response,
+        ];
     }
 }

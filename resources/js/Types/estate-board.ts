@@ -2,6 +2,10 @@ export type PostStatus = 'draft' | 'published';
 
 export type PostAudience = 'all' | 'residents' | 'security';
 
+export type PostCategory = 'general' | 'meeting' | 'maintenance' | 'security' | 'event';
+
+export type PostPriority = 'normal' | 'important' | 'critical';
+
 export type PostMedia = {
     id: number;
     url: string;
@@ -22,6 +26,8 @@ export type EstateBoardPost = {
     hashid: any;
     title: string | null;
     body: string;
+    category?: PostCategory;
+    priority?: PostPriority;
     status: PostStatus;
     audience: PostAudience;
     published_at: string | null;

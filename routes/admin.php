@@ -50,7 +50,9 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::get('/', [EstateBoardController::class, 'index'])->name('index');
         Route::get('/manage', [EstateBoardController::class, 'manage'])->name('manage');
         Route::get('/create', [EstateBoardController::class, 'create'])->name('create');
-        Route::post('/enhance-content', ContentEnhanceController::class)->name('enhance-content');
+        Route::post('/enhance-content', ContentEnhanceController::class)
+            ->middleware('throttle:estate-board-enhance')
+            ->name('enhance-content');
         Route::get('/{post}', [EstateBoardController::class, 'show'])->name('show');
         Route::get('/{post}/edit', [EstateBoardController::class, 'edit'])->name('edit');
 
