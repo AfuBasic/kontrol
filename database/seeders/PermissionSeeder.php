@@ -57,6 +57,24 @@ class PermissionSeeder extends Seeder
         'visitors' => [
             'visitors.view' => 'View visitor logs and entry history',
         ],
+        'transactions' => [
+            'transactions.view' => 'View estate financial ledger and transactions',
+            'transactions.view_own' => 'View own transaction records only',
+            'transactions.create' => 'Create transaction records',
+            'transactions.record_offline_payment' => 'Record offline payments',
+            'transactions.view_receipts' => 'View transaction receipts',
+            'transactions.download_receipts' => 'Download transaction receipts',
+            'transactions.export' => 'Export transaction data',
+            'transactions.refund' => 'Issue refunds',
+            'transactions.adjust' => 'Create manual adjustments',
+            'transactions.reverse' => 'Reverse transactions',
+            'transactions.delete' => 'Delete transaction records',
+            'transactions.manage' => 'Manage all transaction operations',
+            'transactions.audit' => 'View transaction audit history',
+            'transactions.reports' => 'Generate financial reports',
+            'transactions.insights' => 'View financial insights',
+            'transactions.settings' => 'Manage transaction module settings',
+        ],
     ];
 
     /**

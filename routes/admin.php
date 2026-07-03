@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SettlementController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VisitorLogController;
 use App\Http\Controllers\Api\ContentEnhanceController;
@@ -175,6 +176,16 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send')->middleware('feature:automated-invoicing');
         Route::get('/history', [PaymentHistoryController::class, 'index'])->name('history')->middleware('feature:financial-audit');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
+    });
+
+    // Estate Transactions (Financial Ledger)
+    Route::prefix('transactions')->name('transactions.')->middleware(['feature:payment-collection', 'permission:transactions.view'])->group(function (): void {
+        Route::get('/', [TransactionController::class, 'index'])->name('index');
+        Route::get('/export', [TransactionController::class, 'export'])->middleware('permission:transactions.export')->name('export');
+        Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
+        Route::post('/offline-payment', [TransactionController::class, 'recordOfflinePayment'])->middleware('permission:transactions.record_offline_payment')->name('offline-payment');
+        Route::post('/{transaction}/refund', [TransactionController::class, 'issueRefund'])->middleware('permission:transactions.refund')->name('refund');
+        Route::post('/{transaction}/adjustment', [TransactionController::class, 'createAdjustment'])->middleware('permission:transactions.adjust')->name('adjustment');
     });
 
     // Collections (Resident dues management)

@@ -27,6 +27,7 @@ import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
@@ -82,6 +83,13 @@ const baseNav: NavItem[] = [
         name: 'Collections',
         href: CollectionController.index.url(),
         icon: BanknotesIcon,
+        feature: 'payment-collection',
+    },
+    {
+        name: 'Transactions',
+        href: TransactionController.index.url(),
+        icon: CreditCardIcon,
+        permission: 'transactions.view',
         feature: 'payment-collection',
     },
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },

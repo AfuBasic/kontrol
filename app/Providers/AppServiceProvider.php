@@ -10,6 +10,10 @@ use App\Listeners\Billing\SendPaymentReceivedNotification;
 use App\Listeners\WarmEstateSettings;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
+use App\Models\Payment;
+use App\Models\PaymentTransaction;
+use App\Observers\PaymentObserver;
+use App\Observers\PaymentTransactionObserver;
 use App\Policies\EstateBoardCommentPolicy;
 use App\Policies\EstateBoardPostPolicy;
 use App\Services\SMS\SMSProvider;
@@ -47,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerPolicies();
+        $this->registerObservers();
         $this->configureRateLimiting();
         $this->registerEventListeners();
         $this->configureTunnelSupport();
@@ -93,6 +98,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(EstateBoardPost::class, EstateBoardPostPolicy::class);
         Gate::policy(EstateBoardComment::class, EstateBoardCommentPolicy::class);
+    }
+
+    protected function registerObservers(): void
+    {
+        Payment::observe(PaymentObserver::class);
+        PaymentTransaction::observe(PaymentTransactionObserver::class);
     }
 
     protected function configureRateLimiting(): void
