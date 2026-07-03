@@ -16,31 +16,33 @@ const formatCurrency = (amountKobo: number) =>
 export default function TodaySummary({ summary, loading }: Props) {
     if (loading || !summary) {
         return (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-100" />
-                ))}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl bg-slate-50/50 p-4 ring-1 ring-slate-100/50">
+                <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
+                <div className="h-6 w-32 animate-pulse rounded bg-slate-200" />
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
             </div>
         );
     }
 
-    const items = [
-        { label: 'Money In', value: formatCurrency(summary.money_in_today), tone: 'text-emerald-600' },
-        { label: 'Money Out', value: formatCurrency(summary.money_out_today), tone: 'text-slate-700' },
-        { label: 'Pending', value: summary.pending_today.toString(), tone: 'text-amber-600' },
-        { label: 'Failed', value: summary.failed_today.toString(), tone: 'text-rose-600' },
-    ];
-
     return (
-        <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3">
-            <p className="mb-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Today</p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                {items.map((item) => (
-                    <div key={item.label}>
-                        <p className="text-[10px] font-medium text-slate-400">{item.label}</p>
-                        <p className={`mt-0.5 text-lg font-bold tracking-tight ${item.tone}`}>{item.value}</p>
-                    </div>
-                ))}
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 rounded-2xl bg-slate-50/50 px-5 py-4 text-sm text-slate-500 ring-1 ring-slate-100/50">
+            <span className="text-xs font-black tracking-widest text-slate-400 uppercase">Today</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span>
+                    <strong className="font-extrabold text-slate-900">{formatCurrency(summary.money_in_today)}</strong> received
+                </span>
+                <span className="text-slate-300">•</span>
+                <span>
+                    <strong className="font-bold text-slate-700">{summary.money_out_today > 0 ? formatCurrency(summary.money_out_today) : '0'}</strong> refunded
+                </span>
+                <span className="text-slate-300">•</span>
+                <span>
+                    <strong className="font-bold text-slate-700">{summary.pending_today}</strong> pending
+                </span>
+                <span className="text-slate-300">•</span>
+                <span>
+                    <strong className="font-bold text-slate-700">{summary.failed_today}</strong> failed
+                </span>
             </div>
         </div>
     );

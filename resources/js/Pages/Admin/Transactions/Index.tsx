@@ -1,5 +1,5 @@
 import { Deferred, Head } from '@inertiajs/react';
-import { Download, FileText, Plus } from 'lucide-react';
+import { Activity, Download, FileText, Plus, Receipt } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
@@ -44,7 +44,24 @@ interface Props {
         pending_today: number;
         failed_today: number;
     };
-    activity?: Array<{ id: string; headline: string }>;
+    activity?: Array<{
+        id: string;
+        headline: string;
+        type: string;
+        direction: string;
+        status: string;
+        amount: number;
+        description: string | null;
+        reason: string | null;
+        failure_reason: string | null;
+        reference_number: string;
+        payment_method_label: string | null;
+        resident_name: string | null;
+        collection_name: string | null;
+        coupon_code: string | null;
+        occurred_at: string | null;
+        time_ago: string | null;
+    }>;
     charts?: Record<string, unknown> | null;
     hasTransactions: boolean;
     recordableAssignments: RecordableAssignment[];
@@ -100,9 +117,9 @@ export default function TransactionsIndex({
     const showEmpty = !hasTransactions && transactions.data.length === 0;
 
     const actionButtonClass = (enabled: boolean) =>
-        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+        `inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-black tracking-widest uppercase transition ${
             enabled
-                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-95'
                 : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
         }`;
 
@@ -111,10 +128,11 @@ export default function TransactionsIndex({
             <Head title="Transactions" />
 
             <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+                {/* Clean Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Transactions</h1>
-                        <p className="mt-1 text-sm text-slate-500">Every financial movement across your estate.</p>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900">Transactions</h1>
+                        <p className="mt-1 text-sm text-slate-400">Every financial movement across your estate.</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                         {permissions.record_offline && (
@@ -154,42 +172,49 @@ export default function TransactionsIndex({
                     </div>
                 </div>
 
+                {/* Today Inline Summary bar */}
                 <Deferred data="todaySummary" fallback={<TodaySummary loading />}>
                     <TodaySummary summary={todaySummary} />
                 </Deferred>
 
-                {!showEmpty && (
-                    <section>
-                        <h2 className="mb-3 text-sm font-bold text-slate-900">Recent Financial Activity</h2>
-                        <Deferred data="activity" fallback={<ActivityFeed loading />}>
-                            <ActivityFeed entries={activity as never} onSelect={openTransaction} />
-                        </Deferred>
-                    </section>
-                )}
-
-                {showEmpty && (
+                {/* Main Content Area */}
+                {showEmpty ? (
                     <LedgerEmptyState
                         canRecordOffline={permissions.record_offline}
                         onRecordOffline={() => setOfflineModalOpen(true)}
                     />
-                )}
+                ) : (
+                    <div className="space-y-6">
+                        {/* Interactive Filter block */}
+                        <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
 
-                {!showEmpty && (
-                    <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
-                )}
+                        {/* Hero Section: Financial Activity timeline feed */}
+                        <section className="space-y-3">
+                            <div className="flex items-center gap-2 text-slate-400">
+                                <Activity className="h-4 w-4" />
+                                <h2 className="text-xs font-black tracking-widest uppercase">Financial Activity Feed</h2>
+                            </div>
+                            <Deferred data="activity" fallback={<ActivityFeed loading />}>
+                                <ActivityFeed entries={activity as never} onSelect={openTransaction} />
+                            </Deferred>
+                        </section>
 
-                {!showEmpty && (
-                    <TransactionsTable
-                        transactions={transactions}
-                        onSelect={(tx) => openTransaction(tx.ulid)}
-                        permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
-                    />
-                )}
+                        {/* Secondary Section: Audit Ledger Table (For accountants) */}
+                        <section className="pt-4 border-t border-slate-100">
+                            <TransactionsTable
+                                transactions={transactions}
+                                onSelect={(tx) => openTransaction(tx.ulid)}
+                                permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
+                            />
+                        </section>
 
-                {!showEmpty && permissions.reports && (
-                    <Deferred data="charts" fallback={<LedgerCharts loading />}>
-                        <LedgerCharts data={charts as never} />
-                    </Deferred>
+                        {/* focused Cash flow Trend charts */}
+                        {permissions.reports && (
+                            <Deferred data="charts" fallback={<LedgerCharts loading />}>
+                                <LedgerCharts data={charts as never} />
+                            </Deferred>
+                        )}
+                    </div>
                 )}
             </div>
 
