@@ -179,7 +179,7 @@ test('property owner dashboard, residents, properties, collections, and announce
     // 6. Assign resident to property
     $response = $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->post(route('resident.property-owner.properties.assign-resident', $property->id), [
-            'resident_id' => $resident1->id,
+            'resident_ids' => [$resident1->id],
         ]);
     $response->assertRedirect();
 
@@ -210,6 +210,8 @@ test('property owner dashboard, residents, properties, collections, and announce
         ->post(route('resident.property-owner.announcements.store'), [
             'title' => 'Renovation Notice',
             'body' => 'Painting starts Monday',
+            'category' => 'general',
+            'priority' => 'normal',
             'applies_to' => 'all',
         ]);
     $response->assertRedirect(route('resident.property-owner.announcements.index'));

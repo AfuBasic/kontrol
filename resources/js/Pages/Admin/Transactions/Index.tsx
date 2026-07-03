@@ -7,10 +7,18 @@ import ActivityFeed from '@/Components/Admin/Transactions/ActivityFeed';
 import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
 import LedgerFilters from '@/Components/Admin/Transactions/LedgerFilters';
+import RecordOfflinePaymentModal from '@/Components/Admin/Transactions/RecordOfflinePaymentModal';
 import TodaySummary from '@/Components/Admin/Transactions/TodaySummary';
 import TransactionDrawer from '@/Components/Admin/Transactions/TransactionDrawer';
 import TransactionsTable from '@/Components/Admin/Transactions/TransactionsTable';
 import AdminLayout from '@/Layouts/AdminLayout';
+
+interface RecordableAssignment {
+    id: number;
+    resident_name: string | null;
+    collection_name: string | null;
+    remaining: number;
+}
 
 interface Transaction {
     ulid: string;
@@ -39,6 +47,7 @@ interface Props {
     activity?: Array<{ id: string; headline: string }>;
     charts?: Record<string, unknown> | null;
     hasTransactions: boolean;
+    recordableAssignments: RecordableAssignment[];
     transactions: {
         data: Transaction[];
         links: Array<{ url: string | null; label: string; active: boolean }>;
@@ -65,6 +74,7 @@ export default function TransactionsIndex({
     activity,
     charts,
     hasTransactions,
+    recordableAssignments,
     transactions,
     filters,
     filterOptions,
@@ -72,6 +82,9 @@ export default function TransactionsIndex({
 }: Props) {
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [offlineModalOpen, setOfflineModalOpen] = useState(false);
+
+    const canExport = hasTransactions && transactions.total > 0;
 
     const openTransaction = (ulid: string) => {
         setSelectedUlid(ulid);
@@ -79,18 +92,25 @@ export default function TransactionsIndex({
     };
 
     const handleExport = () => {
+        if (!canExport) return;
         const params = new URLSearchParams(filters as Record<string, string>);
         window.location.href = `${TransactionController.export.url()}?${params.toString()}`;
     };
 
     const showEmpty = !hasTransactions && transactions.data.length === 0;
 
+    const actionButtonClass = (enabled: boolean) =>
+        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            enabled
+                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
+        }`;
+
     return (
         <>
             <Head title="Transactions" />
 
             <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-                {/* Page header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Transactions</h1>
@@ -100,7 +120,8 @@ export default function TransactionsIndex({
                         {permissions.record_offline && (
                             <button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                onClick={() => setOfflineModalOpen(true)}
+                                className={actionButtonClass(true)}
                             >
                                 <Plus className="h-4 w-4" />
                                 Record Offline Payment
@@ -110,7 +131,9 @@ export default function TransactionsIndex({
                             <button
                                 type="button"
                                 onClick={handleExport}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                disabled={!canExport}
+                                className={actionButtonClass(canExport)}
+                                title={canExport ? 'Export transactions' : 'No transactions to export'}
                             >
                                 <Download className="h-4 w-4" />
                                 Export
@@ -120,7 +143,9 @@ export default function TransactionsIndex({
                             <button
                                 type="button"
                                 onClick={handleExport}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                disabled={!canExport}
+                                className={actionButtonClass(canExport)}
+                                title={canExport ? 'Generate report' : 'No transactions to report'}
                             >
                                 <FileText className="h-4 w-4" />
                                 Report
@@ -129,12 +154,10 @@ export default function TransactionsIndex({
                     </div>
                 </div>
 
-                {/* Today's summary */}
                 <Deferred data="todaySummary" fallback={<TodaySummary loading />}>
                     <TodaySummary summary={todaySummary} />
                 </Deferred>
 
-                {/* Recent financial activity — focal point */}
                 {!showEmpty && (
                     <section>
                         <h2 className="mb-3 text-sm font-bold text-slate-900">Recent Financial Activity</h2>
@@ -144,20 +167,17 @@ export default function TransactionsIndex({
                     </section>
                 )}
 
-                {/* Empty state */}
                 {showEmpty && (
                     <LedgerEmptyState
                         canRecordOffline={permissions.record_offline}
-                        onRecordOffline={() => {}}
+                        onRecordOffline={() => setOfflineModalOpen(true)}
                     />
                 )}
 
-                {/* Filters — after activity */}
                 {!showEmpty && (
                     <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
                 )}
 
-                {/* Ledger table */}
                 {!showEmpty && (
                     <TransactionsTable
                         transactions={transactions}
@@ -166,13 +186,18 @@ export default function TransactionsIndex({
                     />
                 )}
 
-                {/* Charts & reports */}
                 {!showEmpty && permissions.reports && (
                     <Deferred data="charts" fallback={<LedgerCharts loading />}>
                         <LedgerCharts data={charts as never} />
                     </Deferred>
                 )}
             </div>
+
+            <RecordOfflinePaymentModal
+                isOpen={offlineModalOpen}
+                onClose={() => setOfflineModalOpen(false)}
+                assignments={recordableAssignments}
+            />
 
             <TransactionDrawer
                 transactionUlid={selectedUlid}

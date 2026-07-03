@@ -2,8 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Payment;
-use App\Models\PaymentTransaction;
+use App\Models\Estate;
 use App\Services\Ledger\LedgerService;
 use Illuminate\Console\Command;
 
@@ -17,29 +16,24 @@ class BackfillEstateTransactions extends Command
     {
         $estateId = $this->option('estate');
 
-        $paymentQuery = Payment::query()->when($estateId, fn ($q) => $q->where('estate_id', $estateId));
-        $paymentCount = $paymentQuery->count();
+        if ($estateId) {
+            $estate = Estate::query()->findOrFail($estateId);
+            $synced = $ledgerService->backfillEstate($estate);
+            $this->info("Backfilled {$synced} records for estate {$estate->id}.");
 
-        $this->info("Backfilling {$paymentCount} collection payments...");
+            return self::SUCCESS;
+        }
 
-        $paymentQuery->chunkById(200, function ($payments) use ($ledgerService) {
-            foreach ($payments as $payment) {
-                $ledgerService->recordFromPayment($payment);
+        $total = 0;
+        Estate::query()->each(function (Estate $estate) use ($ledgerService, &$total) {
+            $synced = $ledgerService->backfillEstate($estate);
+            $total += $synced;
+            if ($synced > 0) {
+                $this->line("  Estate {$estate->id}: {$synced} records");
             }
         });
 
-        $transactionQuery = PaymentTransaction::query()->when($estateId, fn ($q) => $q->where('estate_id', $estateId));
-        $transactionCount = $transactionQuery->count();
-
-        $this->info("Backfilling {$transactionCount} subscription payments...");
-
-        $transactionQuery->chunkById(200, function ($transactions) use ($ledgerService) {
-            foreach ($transactions as $transaction) {
-                $ledgerService->recordFromPaymentTransaction($transaction);
-            }
-        });
-
-        $this->info('Backfill complete.');
+        $this->info("Backfill complete. {$total} records synced.");
 
         return self::SUCCESS;
     }

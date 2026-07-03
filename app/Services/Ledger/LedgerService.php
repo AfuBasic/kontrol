@@ -7,6 +7,7 @@ use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CollectionAssignment;
+use App\Models\Estate;
 use App\Models\EstateTransaction;
 use App\Models\EstateTransactionAudit;
 use App\Models\Payment;
@@ -318,6 +319,47 @@ class LedgerService
         $this->audit($transaction, 'synced', $previous, $transaction->fresh()->toArray(), $context['audit_reason'] ?? null);
 
         return $transaction->fresh();
+    }
+
+    public function backfillEstate(Estate $estate): int
+    {
+        $synced = 0;
+
+        Payment::query()
+            ->where('estate_id', $estate->id)
+            ->chunkById(200, function ($payments) use (&$synced) {
+                foreach ($payments as $payment) {
+                    $this->recordFromPayment($payment);
+                    $synced++;
+                }
+            });
+
+        PaymentTransaction::query()
+            ->where('estate_id', $estate->id)
+            ->chunkById(200, function ($transactions) use (&$synced) {
+                foreach ($transactions as $transaction) {
+                    $this->recordFromPaymentTransaction($transaction);
+                    $synced++;
+                }
+            });
+
+        return $synced;
+    }
+
+    public function ensureEstateLedgerSynced(Estate $estate): int
+    {
+        if (EstateTransaction::query()->where('estate_id', $estate->id)->exists()) {
+            return 0;
+        }
+
+        $hasSourceData = Payment::query()->where('estate_id', $estate->id)->exists()
+            || PaymentTransaction::query()->where('estate_id', $estate->id)->exists();
+
+        if (! $hasSourceData) {
+            return 0;
+        }
+
+        return $this->backfillEstate($estate);
     }
 
     private function mapPaymentMethod(?string $method): PaymentMethod

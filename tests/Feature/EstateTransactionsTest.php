@@ -12,6 +12,7 @@ use App\Models\EstateTransactionAudit;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Ledger\LedgerService;
+use App\Services\Ledger\TransactionOverviewService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -144,6 +145,145 @@ it('issues refunds and records related ledger entries', function () {
     expect($refund->type)->toBe(TransactionType::Refund)
         ->and($refund->parent_id)->toBe($parent->id)
         ->and($parent->fresh()->status)->toBe(TransactionStatus::Reversed);
+});
+
+it('rejects export when no transactions exist', function () {
+    $this->actingAs($this->admin)
+        ->get(route('admin.transactions.export'))
+        ->assertStatus(422);
+});
+
+it('auto-syncs legacy payments into the ledger on first visit', function () {
+    $resident = User::factory()->create();
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $resident->id,
+    ]);
+
+    Payment::factory()->create([
+        'user_id' => $resident->id,
+        'estate_id' => $this->estate->id,
+        'collection_assignment_id' => $assignment->id,
+        'amount' => 5000,
+        'status' => 'success',
+    ]);
+
+    // Simulate legacy state: payments exist but the ledger table was never backfilled.
+    EstateTransaction::query()->delete();
+
+    expect(EstateTransaction::count())->toBe(0);
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.transactions.index'))
+        ->assertOk();
+
+    expect(EstateTransaction::count())->toBeGreaterThan(0);
+});
+
+it('orders activity timeline by payment date not ledger insert date', function () {
+    $ledger = app(LedgerService::class);
+
+    $older = $ledger->record([
+        'idempotency_key' => 'timeline_older',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::CollectionPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 100000,
+        'status' => TransactionStatus::Success,
+        'paid_at' => now()->subDays(10),
+    ]);
+
+    $newer = $ledger->record([
+        'idempotency_key' => 'timeline_newer',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::CollectionPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 200000,
+        'status' => TransactionStatus::Success,
+        'paid_at' => now()->subDay(),
+    ]);
+
+    $older->update(['created_at' => now()]);
+    $newer->update(['created_at' => now()]);
+
+    $timeline = app(TransactionOverviewService::class)->timeline($this->estate);
+
+    expect($timeline->first()['id'])->toBe($newer->ulid)
+        ->and($timeline->first()['occurred_at'])->toBe($newer->paid_at?->toIso8601String());
+});
+
+it('excludes pending payments from the activity timeline', function () {
+    $ledger = app(LedgerService::class);
+
+    $ledger->record([
+        'idempotency_key' => 'pending_timeline',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::PendingPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 500000,
+        'status' => TransactionStatus::Pending,
+    ]);
+
+    $completed = $ledger->record([
+        'idempotency_key' => 'completed_timeline',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::CollectionPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 500000,
+        'status' => TransactionStatus::Success,
+        'paid_at' => now()->subDays(3),
+    ]);
+
+    $timeline = app(TransactionOverviewService::class)->timeline($this->estate);
+
+    expect($timeline)->toHaveCount(1)
+        ->and($timeline->first()['id'])->toBe($completed->ulid);
+});
+
+it('records offline payments from the transactions page', function () {
+    $resident = User::factory()->create();
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 10000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.transactions.offline-payment'), [
+            'assignment_id' => $assignment->id,
+            'amount' => 2500,
+            'method' => 'bank_transfer',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect(EstateTransaction::query()->where('estate_id', $this->estate->id)->count())->toBe(1)
+        ->and($assignment->fresh()->amount_paid)->toBe(2500)
+        ->and($assignment->fresh()->status)->toBe('partial');
 });
 
 it('exports transactions for users with export permission', function () {

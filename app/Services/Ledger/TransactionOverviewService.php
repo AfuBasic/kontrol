@@ -8,6 +8,7 @@ use App\Enums\TransactionType;
 use App\Models\Estate;
 use App\Models\EstateTransaction;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -54,7 +55,8 @@ class TransactionOverviewService
     {
         return $this->baseQuery($estate)
             ->with(['user:id,name,email', 'collection:id,name', 'creator:id,name'])
-            ->latest()
+            ->whereNot('status', TransactionStatus::Pending)
+            ->orderByRaw('COALESCE(paid_at, failed_at, reversed_at, created_at) DESC')
             ->limit($limit)
             ->get()
             ->map(fn (EstateTransaction $transaction) => $this->formatTimelineEntry($transaction));
@@ -337,6 +339,8 @@ class TransactionOverviewService
                 ?? 'Payment failed';
         }
 
+        $occurredAt = $this->occurredAt($transaction);
+
         return [
             'id' => $transaction->ulid,
             'headline' => $headline,
@@ -355,22 +359,42 @@ class TransactionOverviewService
             'coupon_code' => $transaction->coupon_code,
             'created_by_name' => $transaction->creator?->name,
             'created_at' => $transaction->created_at?->toIso8601String(),
-            'time_ago' => $transaction->created_at?->diffForHumans(),
+            'occurred_at' => $occurredAt->toIso8601String(),
+            'time_ago' => $occurredAt->diffForHumans(),
         ];
+    }
+
+    private function occurredAt(EstateTransaction $transaction): CarbonInterface
+    {
+        return $transaction->paid_at
+            ?? $transaction->failed_at
+            ?? $transaction->reversed_at
+            ?? $transaction->created_at
+            ?? now();
     }
 
     private function timelineHeadline(EstateTransaction $transaction): string
     {
-        return match ($transaction->type) {
-            TransactionType::CollectionPayment, TransactionType::CardPayment, TransactionType::BankTransfer => 'Payment Received',
-            TransactionType::OfflinePayment => 'Offline Payment Recorded',
-            TransactionType::Refund, TransactionType::ReversedPayment => 'Refund Issued',
-            TransactionType::CouponRedemption, TransactionType::DiscountApplied => 'Coupon Applied',
-            TransactionType::ManualAdjustment => 'Manual Adjustment',
-            TransactionType::FailedPayment => 'Failed Payment',
-            TransactionType::PendingPayment => 'Pending Payment',
-            TransactionType::WaiverGranted => 'Waiver Granted',
+        $action = match ($transaction->type) {
+            TransactionType::CollectionPayment, TransactionType::CardPayment, TransactionType::BankTransfer => 'Payment received',
+            TransactionType::SubscriptionPayment => 'Subscription payment',
+            TransactionType::OfflinePayment => 'Offline payment recorded',
+            TransactionType::Refund, TransactionType::ReversedPayment => 'Refund issued',
+            TransactionType::CouponRedemption, TransactionType::DiscountApplied => 'Coupon applied',
+            TransactionType::ManualAdjustment => 'Manual adjustment',
+            TransactionType::FailedPayment => 'Payment failed',
+            TransactionType::PendingPayment => 'Payment initiated',
+            TransactionType::WaiverGranted => 'Waiver granted',
             default => $transaction->type->label(),
         };
+
+        $context = $transaction->collection?->name
+            ?? ($transaction->description !== 'Collection Payment' ? $transaction->description : null);
+
+        if ($context) {
+            return $action.' · '.$context;
+        }
+
+        return $action.' · '.$transaction->reference_number;
     }
 }

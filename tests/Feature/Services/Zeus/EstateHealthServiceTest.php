@@ -72,6 +72,7 @@ test('it calculates score with payment failures', function () {
         'amount' => 100,
         'status' => 'success',
         'paystack_reference' => 'ref_1',
+        'idempotency_key' => 'key_1',
     ]);
     PaymentTransaction::forceCreate([
         'estate_id' => $estate->id,
@@ -79,6 +80,7 @@ test('it calculates score with payment failures', function () {
         'amount' => 100,
         'status' => 'success',
         'paystack_reference' => 'ref_2',
+        'idempotency_key' => 'key_2',
     ]);
     PaymentTransaction::forceCreate([
         'estate_id' => $estate->id,
@@ -86,6 +88,7 @@ test('it calculates score with payment failures', function () {
         'amount' => 100,
         'status' => 'success',
         'paystack_reference' => 'ref_3',
+        'idempotency_key' => 'key_3',
     ]);
     PaymentTransaction::forceCreate([
         'estate_id' => $estate->id,
@@ -93,6 +96,7 @@ test('it calculates score with payment failures', function () {
         'amount' => 100,
         'status' => 'failed',
         'paystack_reference' => 'ref_4',
+        'idempotency_key' => 'key_4',
     ]);
 
     // Ratio = 0.25. Penalty = 60 * 0.25 = 15

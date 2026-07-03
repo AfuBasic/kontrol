@@ -16,6 +16,7 @@ interface ActivityEntry {
     resident_name: string | null;
     collection_name: string | null;
     coupon_code: string | null;
+    occurred_at: string | null;
     time_ago: string | null;
 }
 
@@ -91,7 +92,10 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
                                     <p className="mt-0.5 text-sm text-slate-600">{entry.resident_name}</p>
                                 )}
                                 <p className="mt-0.5 text-sm text-slate-500">
-                                    {entry.collection_name || entry.description}
+                                    {entry.reference_number}
+                                    {entry.payment_method_label && (
+                                        <span className="text-slate-400"> · {entry.payment_method_label}</span>
+                                    )}
                                     {entry.coupon_code && (
                                         <span className="ml-1 font-medium text-amber-700">{entry.coupon_code}</span>
                                     )}
@@ -107,6 +111,15 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
                             </div>
                             <div className="shrink-0 text-right">
                                 <p className="text-xs text-slate-400">{entry.time_ago}</p>
+                                {entry.occurred_at && (
+                                    <p className="mt-0.5 text-[10px] text-slate-300">
+                                        {new Date(entry.occurred_at).toLocaleDateString('en-NG', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                        })}
+                                    </p>
+                                )}
                             </div>
                         </motion.button>
                     );

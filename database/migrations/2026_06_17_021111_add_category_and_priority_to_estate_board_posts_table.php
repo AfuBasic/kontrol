@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('estate_board_posts', function (Blueprint $table) {
-            //
+            $table->string('category')->nullable()->after('body');
+            $table->string('priority')->nullable()->after('category');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('estate_board_posts', function (Blueprint $table) {
-            //
+            $table->dropColumn(['category', 'priority']);
         });
     }
 };

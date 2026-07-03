@@ -43,6 +43,8 @@ class TransactionController extends Controller
         $estate = $this->estateContext->getEstate();
         setPermissionsTeamId($estate->id);
 
+        $this->ledgerService->ensureEstateLedgerSynced($estate);
+
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
             'payment_method', 'provider', 'coupon', 'created_by', 'approved_by',
@@ -71,6 +73,20 @@ class TransactionController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $recordableAssignments = CollectionAssignment::query()
+            ->where('estate_id', $estate->id)
+            ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+            ->whereColumn('amount_due', '>', 'amount_paid')
+            ->with(['user:id,name', 'collection:id,name'])
+            ->orderBy('due_date')
+            ->get()
+            ->map(fn (CollectionAssignment $assignment) => [
+                'id' => $assignment->id,
+                'resident_name' => $assignment->user?->name,
+                'collection_name' => $assignment->collection?->name,
+                'remaining' => $assignment->amount_due - $assignment->amount_paid,
+            ]);
+
         return Inertia::render('Admin/Transactions/Index', [
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
             'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
@@ -78,6 +94,7 @@ class TransactionController extends Controller
                 ? $this->overviewService->charts($estate)
                 : null),
             'hasTransactions' => $this->overviewService->hasTransactions($estate),
+            'recordableAssignments' => $recordableAssignments,
             'transactions' => $transactions,
             'filters' => $filters,
             'filterOptions' => [
@@ -179,6 +196,13 @@ class TransactionController extends Controller
         $this->authorize('transactions.export');
 
         $estate = $this->estateContext->getEstate();
+
+        abort_if(
+            ! $this->overviewService->hasTransactions($estate),
+            422,
+            'No transactions to export.'
+        );
+
         $format = $request->query('format', 'csv');
         $filters = $request->only([
             'search', 'resident_id', 'collection_id', 'type', 'status',
