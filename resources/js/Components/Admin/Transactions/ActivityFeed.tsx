@@ -7,8 +7,11 @@ import {
     PenLine,
     RefreshCcw,
     CornerDownRight,
-    Clock
+    Clock,
+    FileText,
+    Gift
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface ActivityEntry {
     id: string;
@@ -38,65 +41,32 @@ interface Props {
 const formatCurrency = (amountKobo: number) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(amountKobo / 100);
 
-function getStatusConfig(entry: ActivityEntry) {
-    if (entry.status === 'failed') {
-        return {
-            icon: AlertCircle,
-            color: 'text-rose-500 bg-rose-50 border-rose-100/50',
-            label: 'Payment Failed',
-        };
-    }
-    if (entry.status === 'pending') {
-        return {
-            icon: Clock,
-            color: 'text-amber-500 bg-amber-50 border-amber-100/50',
-            label: 'Payment Pending',
-        };
-    }
-    if (entry.type.includes('refund') || entry.type.includes('reverse')) {
-        return {
-            icon: RefreshCcw,
-            color: 'text-violet-500 bg-violet-50 border-violet-100/50',
-            label: 'Refund Issued',
-        };
-    }
-    if (entry.type.includes('coupon') || entry.type.includes('discount')) {
-        return {
-            icon: BadgePercent,
-            color: 'text-indigo-500 bg-indigo-50 border-indigo-100/50',
-            label: 'Discount Applied',
-        };
-    }
-    if (entry.type.includes('adjustment')) {
-        return {
-            icon: PenLine,
-            color: 'text-blue-500 bg-blue-50 border-blue-100/50',
-            label: 'Manual Adjustment',
-        };
-    }
-    return {
-        icon: entry.direction === 'debit' ? ArrowDownLeft : ArrowUpRight,
-        color: 'text-emerald-500 bg-emerald-50 border-emerald-100/50',
-        label: 'Payment Received',
-    };
-}
-
 export default function ActivityFeed({ entries, loading, onSelect }: Props) {
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
     if (loading || !entries) {
         return (
-            <div className="space-y-3">
+            <div className="space-y-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-50/70 border border-slate-100" />
+                    <div key={i} className="h-24 animate-pulse rounded-3xl bg-slate-50 border border-slate-100" />
                 ))}
             </div>
         );
     }
 
     if (entries.length === 0) {
-        return null;
+        return (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-450 border border-slate-100 mb-3">
+                    <FileText className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">No events found</p>
+                <p className="text-xs text-slate-400 mt-1">Try adjusting your filters or dates.</p>
+            </div>
+        );
     }
 
-    // Group entries dynamically by Day
+    // Group entries dynamically
     const grouped = entries.reduce((groups, entry) => {
         const date = entry.occurred_at ? new Date(entry.occurred_at) : new Date();
         const today = new Date();
@@ -109,7 +79,15 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
         } else if (date.toDateString() === yesterday.toDateString()) {
             groupKey = 'Yesterday';
         } else {
-            groupKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            const diffTime = Math.abs(today.getTime() - date.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays <= 7) {
+                groupKey = 'This Week';
+            } else if (diffDays <= 14) {
+                groupKey = 'Last Week';
+            } else {
+                groupKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            }
         }
 
         if (!groups[groupKey]) {
@@ -119,96 +97,134 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
         return groups;
     }, {} as Record<string, ActivityEntry[]>);
 
+    const toggleGroup = (key: string) => {
+        setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
     return (
         <div className="space-y-8">
-            {Object.entries(grouped).map(([groupTitle, items]) => (
-                <div key={groupTitle} className="space-y-3">
-                    <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase pl-2">
-                        {groupTitle}
-                    </h3>
-                    <div className="space-y-2">
-                        {items.map((entry, index) => {
-                            const config = getStatusConfig(entry);
-                            const Icon = config.icon;
+            {Object.entries(grouped).map(([groupTitle, items]) => {
+                // Collapsed by default after one week (if not explicitly toggled)
+                const isOlderThanWeek = groupTitle !== 'Today' && groupTitle !== 'Yesterday' && groupTitle !== 'This Week';
+                const isExpanded = expandedGroups[groupTitle] ?? !isOlderThanWeek;
 
-                            return (
-                                <motion.div
-                                    key={entry.id}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                                    onClick={() => onSelect?.(entry.id)}
-                                    className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100/70 bg-white p-4.5 transition-all hover:border-slate-200 hover:shadow-xs active:scale-[0.99] cursor-pointer"
+                return (
+                    <div key={groupTitle} className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-1 px-1">
+                            <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                {groupTitle}
+                            </h3>
+                            {isOlderThanWeek && (
+                                <button
+                                    onClick={() => toggleGroup(groupTitle)}
+                                    className="text-[9px] font-black tracking-widest text-[#1F6FDB] uppercase hover:text-blue-700 transition"
                                 >
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        {/* Minimal Circle Status Icon */}
-                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${config.color}`}>
-                                            <Icon className="h-4.5 w-4.5" />
-                                        </div>
+                                    {isExpanded ? 'Collapse' : `Expand (${items.length})`}
+                                </button>
+                            )}
+                        </div>
 
-                                        {/* Content details */}
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase leading-none">
-                                                    {config.label}
-                                                </span>
-                                                <span className="text-slate-300">•</span>
-                                                <span className="text-[10px] font-bold text-slate-400">{entry.time_ago}</span>
-                                            </div>
-                                            <h4 className="mt-1 text-sm font-extrabold text-slate-900 leading-tight truncate">
-                                                {entry.resident_name || 'System Account'}
-                                                {entry.collection_name && (
-                                                    <>
-                                                        <span className="mx-1.5 font-normal text-slate-300">/</span>
-                                                        <span className="font-semibold text-slate-500">{entry.collection_name}</span>
-                                                    </>
-                                                )}
-                                            </h4>
-                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] font-semibold text-slate-400">
-                                                <span className="font-mono text-slate-400">{entry.reference_number}</span>
-                                                {entry.payment_method_label && (
-                                                    <>
-                                                        <span className="text-slate-200">•</span>
-                                                        <span>{entry.payment_method_label}</span>
-                                                    </>
-                                                )}
-                                                {entry.coupon_code && (
-                                                    <>
-                                                        <span className="text-slate-200">•</span>
-                                                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1 py-0.5 text-amber-700">
-                                                            🏷 {entry.coupon_code}
+                        {isExpanded && (
+                            <div className="relative pl-4 space-y-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-200">
+                                {items.map((entry) => {
+                                    const isRefund = entry.type.includes('refund') || entry.type.includes('reverse');
+                                    const isFailed = entry.status === 'failed';
+                                    const isCoupon = entry.type.includes('coupon') || entry.type.includes('discount');
+                                    const isAdjust = entry.type.includes('adjustment');
+
+                                    // Event-specific styled cards
+                                    return (
+                                        <motion.div
+                                            key={entry.id}
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            onClick={() => onSelect?.(entry.id)}
+                                            className="group relative flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-xs transition hover:border-slate-300 active:scale-[0.99] cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-start gap-3">
+                                                    {/* Custom Event Badge */}
+                                                    {isFailed && (
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 border border-rose-100 text-rose-600">
+                                                            <AlertCircle className="h-4.5 w-4.5" />
+                                                        </div>
+                                                    )}
+                                                    {isRefund && (
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-100 text-violet-600">
+                                                            <RefreshCcw className="h-4.5 w-4.5" />
+                                                        </div>
+                                                    )}
+                                                    {isCoupon && (
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
+                                                            <Gift className="h-4.5 w-4.5" />
+                                                        </div>
+                                                    )}
+                                                    {isAdjust && (
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
+                                                            <PenLine className="h-4.5 w-4.5" />
+                                                        </div>
+                                                    )}
+                                                    {!isFailed && !isRefund && !isCoupon && !isAdjust && (
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+                                                            <ArrowUpRight className="h-4.5 w-4.5" />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Headline & Details */}
+                                                    <div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${
+                                                            isFailed ? 'text-rose-500' : isRefund ? 'text-violet-600' : isCoupon ? 'text-amber-600' : isAdjust ? 'text-blue-600' : 'text-emerald-600'
+                                                        }`}>
+                                                            {isFailed ? '🔴 Payment Failed' : isRefund ? '↩ Refund Issued' : isCoupon ? '🏷 Coupon Applied' : isAdjust ? '✍ Manual Adjustment' : '🟢 Payment Received'}
                                                         </span>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {entry.reason && (
-                                                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
-                                                    <CornerDownRight className="h-3 w-3 text-slate-300" />
-                                                    <span>{entry.reason}</span>
+                                                        <h4 className="text-sm font-extrabold text-slate-800 mt-0.5 leading-tight">
+                                                            {entry.resident_name || 'System Action'}
+                                                        </h4>
+                                                        <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                                                            {entry.collection_name || entry.description || 'System accounting ledger action'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            {entry.failure_reason && (
-                                                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-rose-500 font-bold">
-                                                    <CornerDownRight className="h-3 w-3 text-rose-200" />
-                                                    <span>{entry.failure_reason}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
 
-                                    {/* Right Amount details */}
-                                    <div className="shrink-0 text-right">
-                                        <p className="text-base font-black text-slate-900">
-                                            {entry.direction === 'debit' ? '−' : ''}
-                                            {formatCurrency(entry.amount)}
-                                        </p>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                                                {/* Directional Amount */}
+                                                <div className="text-right">
+                                                    <p className="text-sm font-black text-slate-900">
+                                                        {entry.direction === 'debit' ? '-' : ''}{formatCurrency(entry.amount)}
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-350 font-bold block mt-0.5">
+                                                        {entry.time_ago}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Contextual Extra Blocks */}
+                                            {isFailed && entry.failure_reason && (
+                                                <div className="rounded-xl bg-rose-50/50 border border-rose-100/50 p-2.5 text-xs text-rose-700 font-semibold leading-relaxed">
+                                                    Reason: {entry.failure_reason}
+                                                </div>
+                                            )}
+
+                                            {isCoupon && entry.coupon_code && (
+                                                <div className="flex items-center gap-2 rounded-xl bg-amber-50/50 border border-amber-100/50 p-2.5 text-xs text-amber-800 font-bold">
+                                                    <span>Code: <span className="font-mono text-[11px] bg-white border border-amber-100 px-1 py-0.5 rounded">{entry.coupon_code}</span></span>
+                                                    {entry.reason && <span className="text-slate-400 font-normal">({entry.reason})</span>}
+                                                </div>
+                                            )}
+
+                                            {entry.reason && !isCoupon && (
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+                                                    <CornerDownRight className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span>"{entry.reason}"</span>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

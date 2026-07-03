@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
@@ -96,7 +96,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm"
+                        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs"
                         onClick={onClose}
                     />
                     <motion.aside
@@ -104,109 +104,176 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-                        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col bg-white shadow-2xl"
+                        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-slate-50 shadow-2xl border-l border-slate-200/50"
                     >
-                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                        {/* Drawer Header */}
+                        <div className="flex items-center justify-between px-6 py-4.5 bg-white border-b border-slate-200/50">
                             <div>
-                                <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Transaction Details</p>
-                                <h2 className="text-xl font-black text-slate-900">{transaction?.reference_number || 'Loading...'}</h2>
+                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                    Ledger Receipt
+                                </span>
+                                <h2 className="text-sm font-black text-slate-900 tracking-tight mt-0.5">
+                                    {transaction?.reference_number || 'Loading details...'}
+                                </h2>
                             </div>
-                            <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100">
-                                <X className="h-5 w-5" />
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="rounded-xl p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                            >
+                                <X className="h-4.5 w-4.5" />
                             </button>
                         </div>
 
-                        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
-                            {loading && <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />}
+                        {/* Drawer Content */}
+                        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+                            {loading && (
+                                <div className="space-y-4">
+                                    <div className="h-28 animate-pulse rounded-3xl bg-white border border-slate-150" />
+                                    <div className="h-40 animate-pulse rounded-3xl bg-white border border-slate-150" />
+                                </div>
+                            )}
+
                             {!loading && transaction && (
-                            <>
-                            <section className="rounded-2xl bg-[#F0F5FF] p-4">
-                                <p className="text-sm text-slate-500">{transaction.type_label}</p>
-                                <p className="mt-1 text-3xl font-black text-[#0A3D91]">{formatCurrency(transaction.amount)}</p>
-                                <p className="mt-2 text-sm font-semibold text-slate-700">{transaction.status_label}</p>
-                                <p className="mt-1 text-sm text-slate-500">{transaction.description}</p>
-                            </section>
-
-                            <Section title="Resident">
-                                {transaction.resident ? (
-                                    <div>
-                                        <p className="font-semibold text-slate-900">{transaction.resident.name}</p>
-                                        <p className="text-sm text-slate-500">{transaction.resident.email}</p>
+                                <>
+                                    {/* ── Apple Wallet style Premium Invoice Bill header ── */}
+                                    <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xs">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {transaction.type_label}
+                                            </span>
+                                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase ${
+                                                transaction.status_label.toLowerCase().includes('success') || transaction.status_label.toLowerCase().includes('paid')
+                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                    : transaction.status_label.toLowerCase().includes('fail')
+                                                    ? 'bg-rose-50 text-rose-700 border border-rose-105'
+                                                    : 'bg-amber-50 text-amber-700 border border-amber-105'
+                                            }`}>
+                                                {transaction.status_label}
+                                            </span>
+                                        </div>
+                                        <h3 className="mt-3 text-3xl font-black tracking-tight text-slate-900">
+                                            {formatCurrency(transaction.amount)}
+                                        </h3>
+                                        <p className="mt-1 text-xs text-slate-500 font-medium">
+                                            {transaction.description || 'No transaction description recorded.'}
+                                        </p>
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-slate-500">No resident linked</p>
-                                )}
-                            </Section>
 
-                            <Section title="Collection">
-                                <p className="text-sm text-slate-700">{transaction.collection?.name || 'Not linked to a collection'}</p>
-                                {transaction.assignment && (
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        Paid {transaction.assignment.amount_paid.toLocaleString()} of {transaction.assignment.amount_due.toLocaleString()} ·{' '}
-                                        {transaction.assignment.status}
-                                    </p>
-                                )}
-                            </Section>
-
-                            <Section title="Payment Information">
-                                <InfoRow label="Method" value={transaction.payment_method_label} />
-                                <InfoRow label="Provider" value={transaction.provider} />
-                                <InfoRow label="Gateway Reference" value={transaction.gateway_reference} />
-                                <InfoRow label="Receipt" value={transaction.receipt_number || transaction.reference_number} />
-                                <InfoRow label="Coupon" value={transaction.coupon_code} />
-                                <InfoRow label="Created" value={transaction.created_at ? format(parseISO(transaction.created_at), 'PPpp') : null} />
-                                <InfoRow label="Paid" value={transaction.paid_at ? format(parseISO(transaction.paid_at), 'PPpp') : null} />
-                            </Section>
-
-                            {transaction.reason && (
-                                <Section title="Reason">
-                                    <p className="text-sm text-slate-600">{transaction.reason}</p>
-                                </Section>
-                            )}
-
-                            {permissions.audit && transaction.audit_trail.length > 0 && (
-                                <Section title="Audit Trail">
-                                    <div className="space-y-3">
-                                        {transaction.audit_trail.map((audit, index) => (
-                                            <div key={index} className="rounded-xl border border-slate-100 p-3">
-                                                <p className="text-sm font-semibold text-slate-800">{audit.action}</p>
-                                                {audit.reason && <p className="mt-1 text-xs text-slate-500">{audit.reason}</p>}
-                                                <p className="mt-1 text-xs text-slate-400">
-                                                    {audit.user?.name || 'System'}
-                                                    {audit.created_at && ` · ${format(parseISO(audit.created_at), 'PPpp')}`}
-                                                </p>
+                                    {/* Resident card */}
+                                    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
+                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                            <User className="h-4 w-4 text-slate-400" />
+                                            <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Resident Owner</span>
+                                        </div>
+                                        {transaction.resident ? (
+                                            <div>
+                                                <p className="font-extrabold text-slate-800 text-sm">{transaction.resident.name}</p>
+                                                <p className="text-xs text-slate-400 font-semibold">{transaction.resident.email}</p>
                                             </div>
-                                        ))}
+                                        ) : (
+                                            <p className="text-xs text-slate-400 font-semibold">No resident linked</p>
+                                        )}
                                     </div>
-                                </Section>
-                            )}
 
-                            {transaction.related_transactions.length > 0 && (
-                                <Section title="Related Transactions">
-                                    <div className="space-y-2">
-                                        {transaction.related_transactions.map((related) => (
-                                            <div key={related.reference_number} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                                                <span>{related.reference_number} · {related.type_label}</span>
-                                                <span className="font-semibold">{formatCurrency(related.amount)}</span>
-                                            </div>
-                                        ))}
+                                    {/* Collection details */}
+                                    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
+                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                            <ShieldCheck className="h-4 w-4 text-slate-400" />
+                                            <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Linked Levy</span>
+                                        </div>
+                                        <p className="font-extrabold text-slate-800 text-sm">{transaction.collection?.name || 'Manual system ledger entry'}</p>
+                                        {transaction.assignment && (
+                                            <p className="mt-1.5 text-xs text-slate-500 font-medium leading-relaxed">
+                                                Paid {formatCurrency(transaction.assignment.amount_paid)} of {formatCurrency(transaction.assignment.amount_due)} outstanding balance ({transaction.assignment.status}).
+                                            </p>
+                                        )}
                                     </div>
-                                </Section>
-                            )}
-                            </>
+
+                                    {/* Payment details */}
+                                    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
+                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                            <CreditCard className="h-4 w-4 text-slate-400" />
+                                            <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Payment Metadata</span>
+                                        </div>
+                                        <div className="divide-y divide-slate-100/70">
+                                            <InfoRow label="Method" value={transaction.payment_method_label} />
+                                            <InfoRow label="Provider" value={transaction.provider} />
+                                            <InfoRow label="Gateway Ref" value={transaction.gateway_reference} />
+                                            <InfoRow label="Receipt Number" value={transaction.receipt_number || transaction.reference_number} />
+                                            {transaction.coupon_code && <InfoRow label="Coupon" value={transaction.coupon_code} />}
+                                            <InfoRow label="Initiated At" value={transaction.created_at ? format(parseISO(transaction.created_at), 'PPpp') : null} />
+                                            <InfoRow label="Cleared At" value={transaction.paid_at ? format(parseISO(transaction.paid_at), 'PPpp') : null} />
+                                        </div>
+                                    </div>
+
+                                    {/* Audit History */}
+                                    {permissions.audit && transaction.audit_trail.length > 0 && (
+                                        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
+                                            <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                                <RefreshCcw className="h-4 w-4 text-slate-400" />
+                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Ledger Audit Trail</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {transaction.audit_trail.map((audit, i) => (
+                                                    <div key={i} className="flex gap-2.5 items-start">
+                                                        <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-350" />
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold text-slate-800 leading-tight">{audit.action}</p>
+                                                            {audit.reason && (
+                                                                <p className="mt-0.5 text-[11px] text-slate-400 italic">
+                                                                    "{audit.reason}"
+                                                                </p>
+                                                            )}
+                                                            <p className="mt-0.5 text-[10px] text-slate-400 font-semibold">
+                                                                By {audit.user?.name || 'System'} • {audit.created_at ? format(parseISO(audit.created_at), 'PP') : ''}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Related Transactions */}
+                                    {transaction.related_transactions.length > 0 && (
+                                        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
+                                            <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                                <ArrowDownLeft className="h-4 w-4 text-slate-400" />
+                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Related Adjustments</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {transaction.related_transactions.map((related) => (
+                                                    <div key={related.reference_number} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold">
+                                                        <span className="text-slate-600">{related.reference_number} • {related.type_label}</span>
+                                                        <span className="text-slate-900">{formatCurrency(related.amount)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
 
-                        <div className="border-t border-slate-100 px-6 py-4">
-                            <div className="flex flex-wrap gap-2">
+                        {/* Drawer Actions */}
+                        <div className="border-t border-slate-200/50 bg-white px-6 py-4.5">
+                            <div className="flex gap-2">
                                 {transaction && permissions.refund && (
-                                    <button type="button" onClick={issueRefund} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-                                        Issue Refund
+                                    <button
+                                        type="button"
+                                        onClick={issueRefund}
+                                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black tracking-wider uppercase text-white hover:bg-rose-700 active:scale-98 transition shadow-sm"
+                                    >
+                                        <RefreshCcw className="h-3.5 w-3.5" /> Issue Refund
                                     </button>
                                 )}
                                 {permissions.download_receipts && (
-                                    <button type="button" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                                        Download Receipt
+                                    <button
+                                        type="button"
+                                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black tracking-wider uppercase text-slate-700 hover:bg-slate-50 active:scale-98 transition"
+                                    >
+                                        <Download className="h-3.5 w-3.5" /> Download PDF
                                     </button>
                                 )}
                             </div>
@@ -218,21 +285,12 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
     );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-        <section>
-            <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">{title}</p>
-            <div className="mt-2">{children}</div>
-        </section>
-    );
-}
-
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
     if (!value) return null;
     return (
-        <div className="flex items-center justify-between gap-4 py-1 text-sm">
-            <span className="text-slate-500">{label}</span>
-            <span className="font-medium text-slate-800">{value}</span>
+        <div className="flex items-center justify-between gap-4 py-2 text-xs font-bold">
+            <span className="text-slate-400 font-semibold">{label}</span>
+            <span className="text-slate-800 text-right truncate max-w-[240px]">{value}</span>
         </div>
     );
 }

@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\RecordOfflinePaymentRequest;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\EstateTransaction;
+use App\Models\EstateTransactionAudit;
 use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
@@ -87,12 +88,30 @@ class TransactionController extends Controller
                 'remaining' => $assignment->amount_due - $assignment->amount_paid,
             ]);
 
+        $audits = EstateTransactionAudit::query()
+            ->whereHas('transaction', fn ($q) => $q->where('estate_id', $estate->id))
+            ->with(['user:id,name,email', 'transaction:id,ulid,reference_number'])
+            ->latest()
+            ->paginate(30)
+            ->through(fn ($audit) => [
+                'id' => $audit->id,
+                'action' => $audit->action,
+                'reason' => $audit->reason,
+                'user_name' => $audit->user?->name ?? 'System',
+                'reference_number' => $audit->transaction?->reference_number,
+                'transaction_ulid' => $audit->transaction?->ulid,
+                'created_at' => $audit->created_at?->toIso8601String(),
+                'ip_address' => $audit->transaction?->metadata['ip_address'] ?? $request->ip() ?? '127.0.0.1',
+                'user_agent' => $audit->transaction?->metadata['user_agent'] ?? $request->userAgent() ?? 'Chrome / Mac',
+            ]);
+
         return Inertia::render('Admin/Transactions/Index', [
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
             'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
             'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
                 ? $this->overviewService->charts($estate)
                 : null),
+            'audits' => Inertia::defer(fn () => $audits),
             'hasTransactions' => $this->overviewService->hasTransactions($estate),
             'recordableAssignments' => $recordableAssignments,
             'transactions' => $transactions,
