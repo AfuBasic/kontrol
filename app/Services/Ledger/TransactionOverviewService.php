@@ -20,23 +20,28 @@ class TransactionOverviewService
     public function todaySummary(Estate $estate): array
     {
         $today = Carbon::today();
-        $todayQuery = $this->baseQuery($estate)->whereDate('created_at', $today);
 
-        $moneyInToday = (clone $todayQuery)
+        $moneyInToday = $this->baseQuery($estate)
+            ->whereDate('paid_at', $today)
             ->where('direction', TransactionDirection::Credit)
             ->where('status', TransactionStatus::Success)
             ->sum('amount');
 
-        $moneyOutToday = (clone $todayQuery)
-            ->where('direction', TransactionDirection::Debit)
+        $moneyOutToday = $this->baseQuery($estate)
+            ->where(function ($query) use ($today) {
+                $query->whereDate('reversed_at', $today)
+                    ->orWhere(fn ($q) => $q->whereDate('failed_at', $today)->where('direction', TransactionDirection::Debit));
+            })
             ->where('status', TransactionStatus::Success)
             ->sum('amount');
 
-        $pendingToday = (clone $todayQuery)
+        $pendingToday = $this->baseQuery($estate)
+            ->whereDate('created_at', $today)
             ->where('status', TransactionStatus::Pending)
             ->count();
 
-        $failedToday = (clone $todayQuery)
+        $failedToday = $this->baseQuery($estate)
+            ->whereDate('failed_at', $today)
             ->where('status', TransactionStatus::Failed)
             ->count();
 
