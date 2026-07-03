@@ -513,6 +513,40 @@ export default function CollectionsIndex({
                 </motion.div>
 
                 {/* ══════════════════════════════════════════════════════════════
+                    SMART INSIGHTS STRIP
+                ══════════════════════════════════════════════════════════════ */}
+                {smartInsights.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"
+                    >
+                        <div className="mb-3 flex items-center gap-2">
+                            <Zap className="h-3.5 w-3.5 text-slate-400" />
+                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Smart Insights</p>
+                        </div>
+                        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+                            {smartInsights.map((chip, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.05 + i * 0.05 }}
+                                    className={cn(
+                                        'flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold',
+                                        chipColorMap[chip.color]
+                                    )}
+                                >
+                                    {chip.icon}
+                                    {chip.text}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ══════════════════════════════════════════════════════════════
                     ZONE 2+3 — TODAY'S SNAPSHOT + COLLECTION INSIGHTS
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
@@ -1037,40 +1071,6 @@ export default function CollectionsIndex({
                         </Deferred>
                     </motion.div>
                 </div>
-
-                {/* ══════════════════════════════════════════════════════════════
-                    ZONE 7 — SMART INSIGHTS STRIP
-                ══════════════════════════════════════════════════════════════ */}
-                {smartInsights.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"
-                    >
-                        <div className="mb-3 flex items-center gap-2">
-                            <Zap className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Smart Insights</p>
-                        </div>
-                        <div className="no-scrollbar flex gap-2 overflow-x-auto">
-                            {smartInsights.map((chip, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.4 + i * 0.05 }}
-                                    className={cn(
-                                        'flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold',
-                                        chipColorMap[chip.color]
-                                    )}
-                                >
-                                    {chip.icon}
-                                    {chip.text}
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
 
             </div>
 
