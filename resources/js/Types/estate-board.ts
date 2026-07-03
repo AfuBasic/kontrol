@@ -36,6 +36,7 @@ export type EstateBoardPost = {
     author: PostAuthor;
     media: PostMedia[];
     comments_count: number;
+    reads_count?: number;
     media_count?: number;
     property_owner_id?: number | null;
 };

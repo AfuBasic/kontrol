@@ -195,7 +195,7 @@ class EstateBoardService
         return EstateBoardPost::query()
             ->forEstate($estateId)
             ->with(['author:id,name,email'])
-            ->withCount(['comments', 'media'])
+            ->withCount(['comments', 'media', 'reads'])
             ->orderByDesc('created_at')
             ->cursorPaginate($perPage);
     }

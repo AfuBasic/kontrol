@@ -92,10 +92,16 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
                         {getAudienceIcon(post.audience)}
                         <span>{getAudienceLabel(post.audience)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1" title="Comments">
                         <MessageCircle className="h-3.5 w-3.5" />
                         <span>{post.comments_count}</span>
                     </div>
+                    {post.status === 'published' && (
+                        <div className="flex items-center gap-1" title="Reads">
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>{post.reads_count ?? 0}</span>
+                        </div>
+                    )}
                     {(post.media_count ?? 0) > 0 && (
                         <div className="flex items-center gap-1">
                             <ImageIcon className="h-3.5 w-3.5" />

@@ -9,15 +9,7 @@ class EstateBoardPostRead extends Model
     protected $fillable = [
         'estate_board_post_id',
         'user_id',
-        'read_at',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'read_at' => 'datetime',
-        ];
-    }
 
     public function post()
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Actions\EstateBoard\RecordPostReadAction;
 use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
 use App\Models\EstateBoardPost;
@@ -46,11 +47,13 @@ class EstateBoardController extends Controller
     /**
      * Show a single post.
      */
-    public function show(EstateBoardPost $post): Response
+    public function show(EstateBoardPost $post, RecordPostReadAction $recordPostRead): Response
     {
         $this->authorize('view', $post);
 
         $estateId = $this->estateContext->getEstateId();
+        $recordPostRead->execute($post, auth()->user());
+
         $postData = $this->boardService->getPost($post->id, $estateId, $this->allowedAudiences);
 
         abort_if($postData === null, 404);
