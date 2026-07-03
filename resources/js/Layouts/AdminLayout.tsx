@@ -16,6 +16,7 @@ import {
     UsersIcon,
     XMarkIcon,
     ClipboardDocumentListIcon,
+    CurrencyDollarIcon,
     MegaphoneIcon,
     BanknotesIcon,
 } from '@heroicons/react/24/outline';
@@ -88,8 +89,7 @@ const baseNav: NavItem[] = [
     {
         name: 'Transactions',
         href: TransactionController.index.url(),
-        icon: CreditCardIcon,
-        permission: 'transactions.view',
+        icon: CurrencyDollarIcon,
         feature: 'payment-collection',
     },
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
