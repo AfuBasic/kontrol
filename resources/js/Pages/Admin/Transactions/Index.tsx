@@ -294,8 +294,8 @@ export default function TransactionsIndex({
 
                         {/* Content Switching Area */}
                         {activeTab === 'activity' && (
-                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <div className="mb-4 flex items-center justify-between">
+                            <div className="space-y-4">
+                                <div className="mb-2 flex items-center justify-between px-1">
                                     <div className="flex items-center gap-2">
                                         <Activity className="h-4 w-4 text-slate-400" />
                                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Live Activity Feed</h3>
@@ -309,7 +309,7 @@ export default function TransactionsIndex({
                         )}
 
                         {activeTab === 'ledger' && (
-                            <div className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-sm">
+                            <div className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-xs">
                                 <TransactionsTable
                                     transactions={transactions}
                                     onSelect={(tx) => openTransaction(tx.ulid)}

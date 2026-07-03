@@ -89,92 +89,76 @@ function RowActions({ transaction, onSelect, permissions }: { transaction: Trans
 }
 
 export default function TransactionsTable({ transactions, onSelect, permissions }: Props) {
-    if (transactions.data.length === 0) {
-        return null;
-    }
-
     return (
-        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white">
+        <div className="overflow-hidden rounded-xl bg-white">
             <div className="border-b border-slate-100 px-5 py-3">
-                <p className="text-sm font-semibold text-slate-900">All Transactions</p>
-                <p className="text-xs text-slate-400">{transactions.total.toLocaleString()} records</p>
+                <p className="text-sm font-semibold text-slate-900 font-black">All Transactions</p>
+                <p className="text-xs text-slate-400 font-bold">{transactions.total.toLocaleString()} records</p>
             </div>
 
-            <div className="hidden overflow-x-auto md:block">
-                <table className="min-w-full">
-                    <thead>
-                        <tr className="border-b border-slate-100 text-left text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
-                            {['Transaction', 'Resident', 'Collection', 'Amount', 'Method', 'Status', 'Reference', 'Date', ''].map((h) => (
-                                <th key={h} className="px-4 py-3">{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {transactions.data.map((tx) => (
-                            <tr key={tx.ulid} onClick={() => onSelect(tx)} className="group cursor-pointer transition hover:bg-slate-50/60">
-                                <td className="px-4 py-3">
-                                    <p className="text-sm font-medium text-slate-900">{tx.type_label}</p>
-                                </td>
-                                <td className="px-4 py-3 text-sm text-slate-600">{tx.resident?.name || '—'}</td>
-                                <td className="px-4 py-3 text-sm text-slate-600">{tx.collection?.name || '—'}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-slate-900">{formatCurrency(tx.amount, tx.direction)}</td>
-                                <td className="px-4 py-3 text-sm text-slate-500">{tx.payment_method_label || tx.provider || '—'}</td>
-                                <td className="px-4 py-3"><StatusBadge status={tx.status} label={tx.status_label} /></td>
-                                <td className="px-4 py-3 font-mono text-xs text-slate-500">{tx.reference_number}</td>
-                                <td className="px-4 py-3 text-sm text-slate-500">
-                                    {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '—'}
-                                </td>
-                                <td className="px-4 py-3">
-                                    <RowActions transaction={tx} onSelect={onSelect} permissions={permissions} />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <div className="space-y-2 p-4 md:hidden">
-                {transactions.data.map((tx) => (
-                    <button key={tx.ulid} type="button" onClick={() => onSelect(tx)} className="w-full rounded-lg border border-slate-100 p-3 text-left transition hover:bg-slate-50">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-slate-900">{tx.type_label}</p>
-                                <p className="text-xs text-slate-500">{tx.resident?.name || 'System'}</p>
-                            </div>
-                            <p className="text-sm font-semibold">{formatCurrency(tx.amount, tx.direction)}</p>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between">
-                            <StatusBadge status={tx.status} label={tx.status_label} />
-                            <span className="font-mono text-[10px] text-slate-400">{tx.reference_number}</span>
-                        </div>
-                    </button>
-                ))}
-            </div>
-
-            {transactions.last_page > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
-                    <p className="text-xs text-slate-400">Page {transactions.current_page} of {transactions.last_page}</p>
-                    <div className="flex gap-1">
-                        {transactions.links.map((link, i) => {
-                            if (!link.url) return null;
-                            if (link.label.includes('Previous')) {
-                                return (
-                                    <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </button>
-                                );
-                            }
-                            if (link.label.includes('Next')) {
-                                return (
-                                    <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
-                                        <ChevronRight className="h-4 w-4" />
-                                    </button>
-                                );
-                            }
-                            return null;
-                        })}
+            {transactions.data.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400 font-bold">No ledger transactions found</div>
+            ) : (
+                <>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className="border-b border-slate-100 text-left text-[10px] font-black tracking-wide text-slate-400 uppercase">
+                                    {['Transaction', 'Resident', 'Collection', 'Amount', 'Method', 'Status', 'Reference', 'Date', ''].map((h) => (
+                                        <th key={h} className="px-4 py-3">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100/50">
+                                {transactions.data.map((tx) => (
+                                    <tr key={tx.ulid} onClick={() => onSelect(tx)} className="group cursor-pointer transition hover:bg-slate-50/50">
+                                        <td className="px-4 py-3">
+                                            <p className="text-xs font-bold text-slate-900">{tx.type_label}</p>
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.resident?.name || '—'}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '—'}</td>
+                                        <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.direction)}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '—'}</td>
+                                        <td className="px-4 py-3"><StatusBadge status={tx.status} label={tx.status_label} /></td>
+                                        <td className="px-4 py-3 font-mono text-[10px] text-slate-450 font-semibold">{tx.reference_number}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">
+                                            {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '—'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <RowActions transaction={tx} onSelect={onSelect} permissions={permissions} />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+
+                    {transactions.last_page > 1 && (
+                        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
+                            <p className="text-xs text-slate-400">Page {transactions.current_page} of {transactions.last_page}</p>
+                            <div className="flex gap-1">
+                                {transactions.links.map((link, i) => {
+                                    if (!link.url) return null;
+                                    if (link.label.includes('Previous')) {
+                                        return (
+                                            <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                        );
+                                    }
+                                    if (link.label.includes('Next')) {
+                                        return (
+                                            <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
