@@ -17,7 +17,6 @@ use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
 use App\Services\Ledger\LedgerService;
 use App\Services\Ledger\TransactionExportService;
-use App\Services\Ledger\TransactionInsightService;
 use App\Services\Ledger\TransactionOverviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +31,6 @@ class TransactionController extends Controller
     public function __construct(
         private EstateContextService $estateContext,
         private TransactionOverviewService $overviewService,
-        private TransactionInsightService $insightService,
         private TransactionExportService $exportService,
         private LedgerService $ledgerService,
         private CollectionService $collectionService,
@@ -67,13 +65,19 @@ class TransactionController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $admins = User::query()
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('Admin/Transactions/Index', [
-            'hero' => Inertia::defer(fn () => $this->overviewService->heroMetrics($estate)),
-            'timeline' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
-            'moneyFlow' => Inertia::defer(fn () => $this->overviewService->moneyFlow($estate)),
-            'insights' => Inertia::defer(fn () => Gate::allows('transactions.insights')
-                ? $this->insightService->generate($estate)
-                : []),
+            'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
+            'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
+            'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
+                ? $this->overviewService->charts($estate)
+                : null),
+            'hasTransactions' => $this->overviewService->hasTransactions($estate),
             'transactions' => $transactions,
             'filters' => $filters,
             'filterOptions' => [
@@ -91,6 +95,7 @@ class TransactionController extends Controller
                     'value' => $m->value,
                     'label' => $m->label(),
                 ]),
+                'admins' => $admins,
             ],
             'permissions' => [
                 'export' => Gate::allows('transactions.export'),

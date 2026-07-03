@@ -5,8 +5,6 @@ namespace App\Services\Ledger;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
-use App\Models\Collection;
-use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateTransaction;
 use Carbon\Carbon;
@@ -18,7 +16,7 @@ class TransactionOverviewService
     /**
      * @return array<string, mixed>
      */
-    public function heroMetrics(Estate $estate): array
+    public function todaySummary(Estate $estate): array
     {
         $today = Carbon::today();
         $todayQuery = $this->baseQuery($estate)->whereDate('created_at', $today);
@@ -33,126 +31,26 @@ class TransactionOverviewService
             ->where('status', TransactionStatus::Success)
             ->sum('amount');
 
-        $statusCounts = $this->baseQuery($estate)
-            ->selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $pendingToday = (clone $todayQuery)
+            ->where('status', TransactionStatus::Pending)
+            ->count();
 
-        $refundsToday = (clone $todayQuery)
-            ->where('type', TransactionType::Refund)
-            ->sum('amount');
-
-        $outstanding = CollectionAssignment::query()
-            ->where('estate_id', $estate->id)
-            ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
-            ->selectRaw('SUM(amount_due - amount_paid) as outstanding')
-            ->value('outstanding') ?? 0;
-
-        $collectionHealth = $this->collectionHealth($estate);
+        $failedToday = (clone $todayQuery)
+            ->where('status', TransactionStatus::Failed)
+            ->count();
 
         return [
             'money_in_today' => (int) $moneyInToday,
             'money_out_today' => (int) $moneyOutToday,
-            'net_movement_today' => (int) $moneyInToday - (int) $moneyOutToday,
-            'successful_count' => (int) ($statusCounts[TransactionStatus::Success->value] ?? 0),
-            'pending_count' => (int) ($statusCounts[TransactionStatus::Pending->value] ?? 0),
-            'failed_count' => (int) ($statusCounts[TransactionStatus::Failed->value] ?? 0),
-            'refunds_today' => (int) $refundsToday,
-            'outstanding_balance' => (int) $outstanding * 100,
-            'collection_health' => $collectionHealth,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function collectionHealth(Estate $estate): array
-    {
-        $activeCollections = Collection::query()
-            ->where('estate_id', $estate->id)
-            ->where('status', 'active')
-            ->count();
-
-        if ($activeCollections === 0) {
-            return [
-                'score' => 100,
-                'level' => 'excellent',
-                'label' => 'Excellent',
-                'interpretation' => 'No active collections requiring attention.',
-                'projected_completion' => null,
-            ];
-        }
-
-        $assignments = CollectionAssignment::query()
-            ->where('estate_id', $estate->id)
-            ->whereHas('collection', fn (Builder $q) => $q->where('status', 'active'))
-            ->get();
-
-        $totalDue = $assignments->sum('amount_due');
-        $totalPaid = $assignments->sum('amount_paid');
-        $completionRate = $totalDue > 0 ? ($totalPaid / $totalDue) * 100 : 100;
-
-        $overdueCount = $assignments->where('status', 'overdue')->count();
-        $overdueRate = $assignments->count() > 0 ? ($overdueCount / $assignments->count()) * 100 : 0;
-
-        $recentPayments = EstateTransaction::query()
-            ->where('estate_id', $estate->id)
-            ->where('direction', TransactionDirection::Credit)
-            ->where('status', TransactionStatus::Success)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->count();
-
-        $velocityScore = min(100, $recentPayments * 5);
-        $score = (int) round(
-            ($completionRate * 0.45)
-            + (max(0, 100 - $overdueRate * 2) * 0.35)
-            + ($velocityScore * 0.20)
-        );
-
-        $level = match (true) {
-            $score >= 85 => 'excellent',
-            $score >= 70 => 'healthy',
-            $score >= 50 => 'needs_attention',
-            default => 'critical',
-        };
-
-        $label = match ($level) {
-            'excellent' => 'Excellent',
-            'healthy' => 'Healthy',
-            'needs_attention' => 'Needs Attention',
-            default => 'Critical',
-        };
-
-        $interpretation = match ($level) {
-            'excellent' => 'Collections are progressing ahead of schedule.',
-            'healthy' => 'Collections are on track with steady payment activity.',
-            'needs_attention' => 'Collections are slowing down. Consider sending reminders today.',
-            default => 'Collections require immediate attention. Multiple overdue payments detected.',
-        };
-
-        $remaining = max(0, $totalDue - $totalPaid);
-        $dailyVelocity = max(1, $recentPayments > 0
-            ? (int) ($assignments->avg('amount_due') ?? 0)
-            : 0);
-        $daysToComplete = $dailyVelocity > 0 ? (int) ceil($remaining / $dailyVelocity) : null;
-
-        return [
-            'score' => $score,
-            'level' => $level,
-            'label' => $label,
-            'interpretation' => $interpretation,
-            'completion_rate' => round($completionRate, 1),
-            'overdue_count' => $overdueCount,
-            'projected_completion' => $daysToComplete
-                ? now()->addDays($daysToComplete)->toDateString()
-                : null,
+            'pending_today' => $pendingToday,
+            'failed_today' => $failedToday,
         ];
     }
 
     /**
      * @return SupportCollection<int, array<string, mixed>>
      */
-    public function timeline(Estate $estate, int $limit = 20): SupportCollection
+    public function timeline(Estate $estate, int $limit = 12): SupportCollection
     {
         return $this->baseQuery($estate)
             ->with(['user:id,name,email', 'collection:id,name', 'creator:id,name'])
@@ -163,52 +61,89 @@ class TransactionOverviewService
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
-    public function moneyFlow(Estate $estate, int $days = 30): array
+    public function charts(Estate $estate, int $days = 30): array
     {
         $start = now()->subDays($days - 1)->startOfDay();
 
         $transactions = $this->baseQuery($estate)
             ->where('created_at', '>=', $start)
-            ->where('status', TransactionStatus::Success)
             ->get();
 
-        $flow = [];
+        $dailyVolume = [];
+        $moneyInVsOut = [];
         for ($i = 0; $i < $days; $i++) {
             $date = $start->copy()->addDays($i)->toDateString();
-            $flow[$date] = [
-                'date' => $date,
-                'money_in' => 0,
-                'refunds' => 0,
-                'adjustments' => 0,
-                'money_out' => 0,
-                'net_revenue' => 0,
-            ];
+            $dailyVolume[$date] = ['date' => $date, 'count' => 0, 'volume' => 0];
+            $moneyInVsOut[$date] = ['date' => $date, 'money_in' => 0, 'money_out' => 0];
         }
+
+        $paymentMethods = [];
+        $transactionTypes = [];
+        $revenueTrend = [];
+        $refundTrend = [];
 
         foreach ($transactions as $transaction) {
             $date = $transaction->created_at->toDateString();
-            if (! isset($flow[$date])) {
-                continue;
+
+            if (isset($dailyVolume[$date])) {
+                $dailyVolume[$date]['count']++;
+                if ($transaction->status === TransactionStatus::Success) {
+                    $dailyVolume[$date]['volume'] += $transaction->amount;
+                }
             }
 
-            if ($transaction->type === TransactionType::Refund) {
-                $flow[$date]['refunds'] += $transaction->amount;
-            } elseif (in_array($transaction->type, [TransactionType::ManualAdjustment, TransactionType::Debit, TransactionType::Credit], true)) {
-                $flow[$date]['adjustments'] += $transaction->amount;
-            } elseif ($transaction->direction === TransactionDirection::Credit) {
-                $flow[$date]['money_in'] += $transaction->amount;
-            } elseif ($transaction->direction === TransactionDirection::Debit) {
-                $flow[$date]['money_out'] += $transaction->amount;
+            if ($transaction->status === TransactionStatus::Success && isset($moneyInVsOut[$date])) {
+                if ($transaction->direction === TransactionDirection::Credit) {
+                    $moneyInVsOut[$date]['money_in'] += $transaction->amount;
+                } else {
+                    $moneyInVsOut[$date]['money_out'] += $transaction->amount;
+                }
+            }
+
+            if ($transaction->payment_method) {
+                $key = $transaction->payment_method->value;
+                $paymentMethods[$key] = ($paymentMethods[$key] ?? 0) + 1;
+            }
+
+            $typeKey = $transaction->type->value;
+            $transactionTypes[$typeKey] = ($transactionTypes[$typeKey] ?? 0) + 1;
+
+            if ($transaction->direction === TransactionDirection::Credit && $transaction->status === TransactionStatus::Success) {
+                $revenueTrend[$date] = ($revenueTrend[$date] ?? 0) + $transaction->amount;
+            }
+
+            if ($transaction->type === TransactionType::Refund && $transaction->status === TransactionStatus::Success) {
+                $refundTrend[$date] = ($refundTrend[$date] ?? 0) + $transaction->amount;
             }
         }
 
-        foreach ($flow as &$day) {
-            $day['net_revenue'] = $day['money_in'] - $day['refunds'] - $day['adjustments'] - $day['money_out'];
-        }
+        return [
+            'money_in_vs_out' => array_values($moneyInVsOut),
+            'daily_volume' => array_values($dailyVolume),
+            'payment_methods' => collect($paymentMethods)->map(fn ($count, $method) => [
+                'method' => $method,
+                'count' => $count,
+            ])->values()->all(),
+            'transaction_types' => collect($transactionTypes)->map(fn ($count, $type) => [
+                'type' => $type,
+                'count' => $count,
+            ])->values()->all(),
+            'revenue_trend' => collect($revenueTrend)->map(fn ($amount, $date) => [
+                'date' => $date,
+                'amount' => $amount,
+            ])->values()->all(),
+            'refund_trend' => collect($refundTrend)->map(fn ($amount, $date) => [
+                'date' => $date,
+                'amount' => $amount,
+            ])->values()->all(),
+        ];
+    }
 
-        return array_values($flow);
+    public function hasTransactions(Estate $estate): bool
+    {
+        return $this->baseQuery($estate)->exists();
     }
 
     /**
@@ -390,8 +325,21 @@ class TransactionOverviewService
      */
     private function formatTimelineEntry(EstateTransaction $transaction): array
     {
+        $headline = $this->timelineHeadline($transaction);
+        $failureReason = null;
+
+        if ($transaction->status === TransactionStatus::Failed) {
+            $metadata = $transaction->metadata ?? [];
+            $gateway = $transaction->gateway_response ?? [];
+            $failureReason = $metadata['error_message']
+                ?? $metadata['message']
+                ?? $gateway['message']
+                ?? 'Payment failed';
+        }
+
         return [
             'id' => $transaction->ulid,
+            'headline' => $headline,
             'type' => $transaction->type->value,
             'type_label' => $transaction->type->label(),
             'direction' => $transaction->direction->value,
@@ -399,6 +347,7 @@ class TransactionOverviewService
             'amount' => $transaction->amount,
             'description' => $transaction->description,
             'reason' => $transaction->reason,
+            'failure_reason' => $failureReason,
             'reference_number' => $transaction->reference_number,
             'payment_method_label' => $transaction->payment_method?->label(),
             'resident_name' => $transaction->user?->name,
@@ -406,6 +355,22 @@ class TransactionOverviewService
             'coupon_code' => $transaction->coupon_code,
             'created_by_name' => $transaction->creator?->name,
             'created_at' => $transaction->created_at?->toIso8601String(),
+            'time_ago' => $transaction->created_at?->diffForHumans(),
         ];
+    }
+
+    private function timelineHeadline(EstateTransaction $transaction): string
+    {
+        return match ($transaction->type) {
+            TransactionType::CollectionPayment, TransactionType::CardPayment, TransactionType::BankTransfer => 'Payment Received',
+            TransactionType::OfflinePayment => 'Offline Payment Recorded',
+            TransactionType::Refund, TransactionType::ReversedPayment => 'Refund Issued',
+            TransactionType::CouponRedemption, TransactionType::DiscountApplied => 'Coupon Applied',
+            TransactionType::ManualAdjustment => 'Manual Adjustment',
+            TransactionType::FailedPayment => 'Failed Payment',
+            TransactionType::PendingPayment => 'Pending Payment',
+            TransactionType::WaiverGranted => 'Waiver Granted',
+            default => $transaction->type->label(),
+        };
     }
 }

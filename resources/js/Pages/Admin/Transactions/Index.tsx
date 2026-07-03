@@ -1,39 +1,44 @@
-import { Deferred, Head, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Activity, Landmark } from 'lucide-react';
-import { useState } from 'react';
+import { Deferred, Head } from '@inertiajs/react';
+import { Download, FileText, Plus } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
 
 import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
-import FinancialHero from '@/Components/Admin/Transactions/FinancialHero';
-import InsightsPanel from '@/Components/Admin/Transactions/InsightsPanel';
-import MoneyFlowChart from '@/Components/Admin/Transactions/MoneyFlowChart';
-import QuickActions from '@/Components/Admin/Transactions/QuickActions';
+import ActivityFeed from '@/Components/Admin/Transactions/ActivityFeed';
+import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
+import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';
+import LedgerFilters from '@/Components/Admin/Transactions/LedgerFilters';
+import TodaySummary from '@/Components/Admin/Transactions/TodaySummary';
 import TransactionDrawer from '@/Components/Admin/Transactions/TransactionDrawer';
-import TransactionFilters from '@/Components/Admin/Transactions/TransactionFilters';
-import TransactionTimeline from '@/Components/Admin/Transactions/TransactionTimeline';
 import TransactionsTable from '@/Components/Admin/Transactions/TransactionsTable';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Transaction {
     ulid: string;
     reference_number: string;
     gateway_reference: string | null;
+    type: string;
     type_label: string;
     status: string;
     status_label: string;
     amount: number;
+    direction: string;
     payment_method_label: string | null;
     provider: string | null;
     created_at: string | null;
     resident: { name: string } | null;
     collection: { name: string } | null;
-    created_by: { name: string } | null;
 }
 
 interface Props {
-    hero?: any;
-    timeline?: any[];
-    moneyFlow?: any[];
-    insights?: any[];
+    todaySummary?: {
+        money_in_today: number;
+        money_out_today: number;
+        pending_today: number;
+        failed_today: number;
+    };
+    activity?: Array<{ id: string; headline: string }>;
+    charts?: Record<string, unknown> | null;
+    hasTransactions: boolean;
     transactions: {
         data: Transaction[];
         links: Array<{ url: string | null; label: string; active: boolean }>;
@@ -42,7 +47,7 @@ interface Props {
         total: number;
     };
     filters: Record<string, string>;
-    filterOptions: any;
+    filterOptions: Record<string, unknown>;
     permissions: {
         export: boolean;
         refund: boolean;
@@ -55,12 +60,21 @@ interface Props {
     };
 }
 
-export default function TransactionsIndex({ hero, timeline, moneyFlow, insights, transactions, filters, filterOptions, permissions }: Props) {
+export default function TransactionsIndex({
+    todaySummary,
+    activity,
+    charts,
+    hasTransactions,
+    transactions,
+    filters,
+    filterOptions,
+    permissions,
+}: Props) {
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
-    const openTransaction = (transaction: Transaction) => {
-        setSelectedUlid(transaction.ulid);
+    const openTransaction = (ulid: string) => {
+        setSelectedUlid(ulid);
         setDrawerOpen(true);
     };
 
@@ -69,76 +83,95 @@ export default function TransactionsIndex({ hero, timeline, moneyFlow, insights,
         window.location.href = `${TransactionController.export.url()}?${params.toString()}`;
     };
 
-    const handleRecordOffline = () => {
-        router.visit(TransactionController.index.url(), { preserveScroll: true });
-    };
+    const showEmpty = !hasTransactions && transactions.data.length === 0;
 
     return (
         <>
             <Head title="Transactions" />
 
-            <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A3D91] via-[#1F6FDB] to-[#4B9BFF] p-6 text-white shadow-xl sm:p-8">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div>
-                            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-                                <Landmark className="h-4 w-4" />
-                                Financial Ledger
-                            </div>
-                            <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Transactions</h1>
-                            <p className="mt-2 max-w-2xl text-sm text-white/85 sm:text-base">
-                                The estate&apos;s financial operating system. Every movement of money — transparent, traceable, and secure.
-                            </p>
-                        </div>
-                        <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
-                            <div className="flex items-center gap-2 text-sm text-white/80">
-                                <Activity className="h-4 w-4" />
-                                Financial Overview
-                            </div>
-                            <p className="mt-1 text-2xl font-black">{transactions.total.toLocaleString()}</p>
-                            <p className="text-xs text-white/70">total ledger entries</p>
-                        </div>
+            <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+                {/* Page header */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Transactions</h1>
+                        <p className="mt-1 text-sm text-slate-500">Every financial movement across your estate.</p>
                     </div>
-                </motion.div>
+                    <div className="flex shrink-0 items-center gap-2">
+                        {permissions.record_offline && (
+                            <button
+                                type="button"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Record Offline Payment
+                            </button>
+                        )}
+                        {permissions.export && (
+                            <button
+                                type="button"
+                                onClick={handleExport}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                            >
+                                <Download className="h-4 w-4" />
+                                Export
+                            </button>
+                        )}
+                        {permissions.reports && (
+                            <button
+                                type="button"
+                                onClick={handleExport}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Report
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                <Deferred data="hero" fallback={<FinancialHero loading />}>
-                    <FinancialHero hero={hero} />
+                {/* Today's summary */}
+                <Deferred data="todaySummary" fallback={<TodaySummary loading />}>
+                    <TodaySummary summary={todaySummary} />
                 </Deferred>
 
-                <div className="grid gap-6 xl:grid-cols-3">
-                    <div className="space-y-6 xl:col-span-2">
-                        <TransactionFilters filters={filters} filterOptions={filterOptions} />
-                        <TransactionsTable transactions={transactions} onSelect={openTransaction} />
-                    </div>
-
-                    <div className="space-y-6">
-                        <QuickActions
-                            permissions={permissions}
-                            onExport={handleExport}
-                            onRecordOffline={handleRecordOffline}
-                            onCreateAdjustment={() => setDrawerOpen(true)}
-                        />
-
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                            <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Transaction Timeline</p>
-                            <div className="mt-4">
-                                <Deferred data="timeline" fallback={<TransactionTimeline loading />}>
-                                    <TransactionTimeline entries={timeline} />
-                                </Deferred>
-                            </div>
-                        </div>
-
-                        <Deferred data="insights" fallback={<InsightsPanel loading />}>
-                            <InsightsPanel insights={insights} />
+                {/* Recent financial activity — focal point */}
+                {!showEmpty && (
+                    <section>
+                        <h2 className="mb-3 text-sm font-bold text-slate-900">Recent Financial Activity</h2>
+                        <Deferred data="activity" fallback={<ActivityFeed loading />}>
+                            <ActivityFeed entries={activity as never} onSelect={openTransaction} />
                         </Deferred>
-                    </div>
-                </div>
+                    </section>
+                )}
 
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <Deferred data="moneyFlow" fallback={<MoneyFlowChart loading />}>
-                        <MoneyFlowChart data={moneyFlow} />
+                {/* Empty state */}
+                {showEmpty && (
+                    <LedgerEmptyState
+                        canRecordOffline={permissions.record_offline}
+                        onRecordOffline={() => {}}
+                    />
+                )}
+
+                {/* Filters — after activity */}
+                {!showEmpty && (
+                    <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
+                )}
+
+                {/* Ledger table */}
+                {!showEmpty && (
+                    <TransactionsTable
+                        transactions={transactions}
+                        onSelect={(tx) => openTransaction(tx.ulid)}
+                        permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
+                    />
+                )}
+
+                {/* Charts & reports */}
+                {!showEmpty && permissions.reports && (
+                    <Deferred data="charts" fallback={<LedgerCharts loading />}>
+                        <LedgerCharts data={charts as never} />
                     </Deferred>
-                </div>
+                )}
             </div>
 
             <TransactionDrawer
@@ -155,3 +188,5 @@ export default function TransactionsIndex({ hero, timeline, moneyFlow, insights,
         </>
     );
 }
+
+TransactionsIndex.layout = (page: ReactNode) => <AdminLayout children={page} title="Transactions" />;

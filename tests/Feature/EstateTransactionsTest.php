@@ -17,6 +17,7 @@ use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
@@ -44,6 +45,7 @@ it('renders the transactions ledger page for authorized admins', function () {
             ->has('transactions')
             ->has('filters')
             ->has('permissions')
+            ->has('hasTransactions')
         );
 });
 
@@ -51,7 +53,7 @@ it('denies access to users without transactions.view permission', function () {
     $user = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
 
-    $role = \Spatie\Permission\Models\Role::firstOrCreate([
+    $role = Role::firstOrCreate([
         'name' => 'estate-manager',
         'estate_id' => $this->estate->id,
         'guard_name' => 'web',
