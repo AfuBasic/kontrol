@@ -1,64 +1,118 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { clsx, type ClassValue } from 'clsx';
-import { motion, animate, useMotionValue, AnimatePresence } from 'framer-motion';
+import { animate, AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import {
-    Wallet,
-    Users,
-    Calendar,
-    ArrowRight,
+    Activity,
+    AlertCircle,
     AlertTriangle,
+    ArrowRight,
+    BarChart3,
+    Bell,
     Building2,
-    Settings2,
-    Send,
-    Edit2,
-    Search,
-    Filter,
-    RotateCcw,
+    CheckCircle,
     ChevronLeft,
     ChevronRight,
-    TrendingUp,
     Clock,
-    Activity,
     CreditCard,
-    AlertCircle,
-    CheckCircle2,
-    Loader2,
+    Download,
+    DollarSign,
+    Edit2,
+    Info,
+    Layers,
+    Search,
+    Settings2,
+    Shield,
+    Target,
+    TrendingDown,
+    TrendingUp,
+    Trophy,
+    Wallet,
+    Zap,
 } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { twMerge } from 'tailwind-merge';
-import { index, create, show, edit, publish } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { create, edit, index, publish, show } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { index as analyticsIndex } from '@/actions/App/Http/Controllers/Admin/CollectionAnalyticsController';
 import BankingSetupModal from '@/Components/BankingSetupModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import { useDebounce } from '@/Hooks/useDebounce';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-function AnimatedNumber({ value }: { value: number }) {
+function fmt(n: number) {
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
+}
+
+function fmtCompact(n: number) {
+    if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `₦${(n / 1_000).toFixed(0)}k`;
+    return fmt(n);
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function AnimatedNumber({ value, prefix = '₦' }: { value: number; prefix?: string }) {
     const motionValue = useMotionValue(0);
     const ref = useRef<HTMLSpanElement>(null);
-
     useEffect(() => {
         const controls = animate(motionValue, value, {
             duration: 1.4,
-            ease: [0.16, 1, 0.3, 1], // ultra premium ease-out curve
-            onUpdate: (latest) => {
-                if (ref.current) {
-                    ref.current.textContent = '₦' + Math.round(latest).toLocaleString();
-                }
+            ease: [0.16, 1, 0.3, 1],
+            onUpdate: (v) => {
+                if (ref.current) ref.current.textContent = prefix + Math.round(v).toLocaleString('en-NG');
             },
         });
         return () => controls.stop();
-    }, [value, motionValue]);
-
-    return <span ref={ref}>₦0</span>;
+    }, [value, motionValue, prefix]);
+    return <span ref={ref}>{prefix}0</span>;
 }
+
+function SkeletonBlock({ className }: { className?: string }) {
+    return <div className={cn('animate-pulse rounded-xl bg-slate-100', className)} />;
+}
+
+function HealthRing({ score, color }: { score: number; color: string }) {
+    const size = 110;
+    const sw = 8;
+    const r = (size - sw) / 2;
+    const circ = 2 * Math.PI * r;
+    const colorMap: Record<string, string> = {
+        emerald: '#10b981',
+        blue: '#3b82f6',
+        amber: '#f59e0b',
+        rose: '#ef4444',
+        slate: '#94a3b8',
+    };
+    return (
+        <svg width={size} height={size} className="shrink-0">
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw} />
+            <motion.circle
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                fill="none"
+                stroke={colorMap[color] ?? '#10b981'}
+                strokeWidth={sw}
+                strokeLinecap="round"
+                strokeDasharray={circ}
+                initial={{ strokeDashoffset: circ }}
+                animate={{ strokeDashoffset: circ * (1 - score / 100) }}
+                transition={{ duration: 1.6, ease: 'easeOut' }}
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            />
+        </svg>
+    );
+}
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type Collection = {
     ulid: string;
@@ -67,7 +121,6 @@ type Collection = {
     description: string | null;
     amount: number;
     billing_type: 'one_time' | 'recurring';
-    recurring_interval: string | null;
     status: 'draft' | 'active' | 'archived';
     assignments_count: number;
     targets_count: number;
@@ -75,12 +128,54 @@ type Collection = {
     created_at: string;
 };
 
+type HealthScore = {
+    score: number;
+    grade: string;
+    color: string;
+    explanation: string;
+};
+
+type TodaySnapshot = {
+    collected_today: number;
+    payments_today: number;
+    payers_today: number;
+    collected_this_week: number;
+    payments_this_week: number;
+};
+
+type ActivityItem = {
+    id: number;
+    user_name: string;
+    amount: number;
+    collection_name: string;
+    paid_at_human: string;
+};
+
+type CollectionInsight = {
+    id: number;
+    ulid: string;
+    name: string;
+    due_at: string | null;
+    expected: number;
+    collected: number;
+    outstanding: number;
+    rate: number;
+    overdue_count: number;
+    pending_count: number;
+    total_count: number;
+};
+
+type CollectionInsights = {
+    best: CollectionInsight | null;
+    worst: CollectionInsight | null;
+    largest_outstanding: CollectionInsight | null;
+    all: CollectionInsight[];
+};
+
 type AnalyticsData = {
     trends: { date: string; expected: number; actual: number }[];
     activity: { id: number; actor: string; action: string; amount: number; timestamp: string }[];
     performance: { id: number; name: string; expected: number; collected: number; progress: number }[];
-    distribution: { name: string; value: number }[];
-    outstanding: { user_id: number; name: string; property: string; amount: number; days_overdue: number }[];
 };
 
 type Props = {
@@ -89,123 +184,159 @@ type Props = {
         total: number;
         per_page: number;
         current_page: number;
-        links: any[];
+        last_page: number;
+        links: { url: string | null; label: string; active: boolean }[];
     };
     totalResidents: number;
     hasBanking: boolean;
     banks: { name: string; code: string }[];
-    settlement: {
-        bank_name: string | null;
-        bank_code: string | null;
-        account_number: string | null;
-        account_name: string | null;
-    };
-    filters: {
-        search: string;
-        status: string;
-    };
-    stats: {
-        total_expected: number;
-        total_realised: number;
-        active_collections: number;
-        defaulters_count: number;
-    };
+    settlement: { bank_name: string | null; bank_code: string | null; account_number: string | null; account_name: string | null };
+    filters: { search: string; status: string };
+    stats: { total_expected: number; total_realised: number; active_collections: number; defaulters_count: number };
+    healthScore: HealthScore;
+    todaySnapshot: TodaySnapshot;
+    recentActivity: ActivityItem[];
+    collectionInsights: CollectionInsights;
 };
 
-const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+// ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function CollectionsIndex({ collections, totalResidents, hasBanking, banks, settlement, filters, stats }: Props) {
+export default function CollectionsIndex({
+    collections,
+    totalResidents,
+    hasBanking,
+    banks,
+    settlement,
+    filters,
+    stats,
+    healthScore,
+    todaySnapshot,
+    recentActivity,
+    collectionInsights,
+}: Props) {
     const [isBankingModalOpen, setIsBankingModalOpen] = useState(false);
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
     const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
-
     const [search, setSearch] = useState(filters.search || '');
-    const [status, setStatus] = useState(filters.status || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const debouncedSearch = useDebounce(search, 300);
-
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
     const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
-    const [daysFilter, setDaysFilter] = useState(30);
 
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, preserveScroll: true, replace: true });
+            router.get(index.url(), { search: debouncedSearch, status: statusFilter }, { preserveState: true, preserveScroll: true, replace: true });
         }
-    }, [debouncedSearch, filters.search, status]);
+    }, [debouncedSearch, filters.search, statusFilter]);
 
     useEffect(() => {
         setIsAnalyticsLoading(true);
         axios
-            .get(analyticsIndex.url(), { params: { days: daysFilter } })
-            .then((res) => {
-                setAnalyticsData(res.data);
-                setIsAnalyticsLoading(false);
-            })
-            .catch((err) => {
-                console.error('Failed to fetch analytics:', err);
-                setIsAnalyticsLoading(false);
-            });
-    }, [daysFilter]);
-
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
-        setStatus(newStatus);
-        router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
-    };
-
-    const clearFilters = useCallback(() => {
-        setSearch('');
-        setStatus('');
-        router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
+            .get(analyticsIndex.url(), { params: { days: 30 } })
+            .then((res) => { setAnalyticsData(res.data); setIsAnalyticsLoading(false); })
+            .catch(() => setIsAnalyticsLoading(false));
     }, []);
+
+    const handleStatusChange = useCallback((s: string) => {
+        setStatusFilter(s);
+        router.get(index.url(), { search, status: s }, { preserveState: true, preserveScroll: true, replace: true });
+    }, [search]);
 
     const handlePublish = () => {
         if (!selectedCollection) return;
         setIsPublishing(true);
-        router.post(
-            publish.url(selectedCollection.ulid),
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setIsPublishing(false);
-                    setIsPublishModalOpen(false);
-                    setSelectedCollection(null);
-                },
-            },
-        );
+        router.post(publish.url(selectedCollection.ulid), {}, {
+            preserveScroll: true,
+            onFinish: () => { setIsPublishing(false); setIsPublishModalOpen(false); setSelectedCollection(null); },
+        });
     };
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
-
+    // ── Derived values
     const expected = Number(stats.total_expected || 0);
     const realised = Number(stats.total_realised || 0);
     const outstanding = expected - realised;
     const realisedPct = expected > 0 ? Math.round((realised / expected) * 100) : 0;
 
-    const hasActiveFilters = Boolean(search || status);
-    const showFilters = collections.total > 0 || hasActiveFilters;
-    const showPagination = collections.total > collections.per_page;
+    const gradeColors: Record<string, string> = {
+        emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+        blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+        amber: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        rose: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+        slate: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    };
 
-    const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
+    // Smart insights: auto-generated observations from data
+    const smartInsights = useMemo(() => {
+        const chips: { text: string; icon: React.ReactNode; color: string }[] = [];
+
+        if (realisedPct === 100 && expected > 0) {
+            chips.push({ text: 'All collections are fully paid', icon: <CheckCircle className="h-3.5 w-3.5" />, color: 'emerald' });
+        } else if (realisedPct > 75) {
+            chips.push({ text: `${realisedPct}% of total target collected`, icon: <TrendingUp className="h-3.5 w-3.5" />, color: 'emerald' });
+        } else if (realisedPct > 0) {
+            chips.push({ text: `${realisedPct}% of target collected so far`, icon: <Activity className="h-3.5 w-3.5" />, color: 'blue' });
+        }
+
+        if (stats.defaulters_count > 0) {
+            chips.push({
+                text: `${stats.defaulters_count} ${stats.defaulters_count === 1 ? 'resident has' : 'residents have'} outstanding balances`,
+                icon: <AlertCircle className="h-3.5 w-3.5" />,
+                color: 'rose',
+            });
+        }
+
+        if (collectionInsights?.best && collectionInsights.best.rate === 100) {
+            chips.push({ text: `${collectionInsights.best.name} is fully collected`, icon: <Trophy className="h-3.5 w-3.5" />, color: 'emerald' });
+        } else if (collectionInsights?.best) {
+            chips.push({ text: `${collectionInsights.best.name} leads at ${collectionInsights.best.rate}%`, icon: <Trophy className="h-3.5 w-3.5" />, color: 'blue' });
+        }
+
+        if (collectionInsights?.worst) {
+            chips.push({
+                text: `${collectionInsights.worst.name} needs attention — ${collectionInsights.worst.rate}% collected`,
+                icon: <AlertTriangle className="h-3.5 w-3.5" />,
+                color: 'amber',
+            });
+        }
+
+        if (stats.active_collections > 0) {
+            chips.push({
+                text: `${stats.active_collections} active ${stats.active_collections === 1 ? 'collection' : 'collections'} in progress`,
+                icon: <Layers className="h-3.5 w-3.5" />,
+                color: 'slate',
+            });
+        }
+
+        if (outstanding > 0) {
+            chips.push({ text: `${fmtCompact(outstanding)} outstanding across all collections`, icon: <DollarSign className="h-3.5 w-3.5" />, color: 'amber' });
+        }
+
+        if (totalResidents > 0) {
+            chips.push({ text: `${totalResidents} residents on this estate`, icon: <Info className="h-3.5 w-3.5" />, color: 'slate' });
+        }
+
+        return chips;
+    }, [realisedPct, expected, stats, collectionInsights, outstanding, totalResidents]);
+
+    const chipColorMap: Record<string, string> = {
+        emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+        blue: 'bg-blue-50 text-blue-700 border-blue-100',
+        amber: 'bg-amber-50 text-amber-700 border-amber-100',
+        rose: 'bg-rose-50 text-rose-700 border-rose-100',
+        slate: 'bg-slate-50 text-slate-600 border-slate-200',
+    };
+
+    const ChartTooltip = ({ active, payload, label }: any) => {
+        if (active && payload?.length) {
             return (
-                <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
-                    <p className="mb-2 text-xs font-bold text-slate-500 uppercase">{label}</p>
-                    {payload.map((entry: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between gap-4 py-1">
-                            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                {entry.name === 'expected' ? 'Expected' : 'Collected'}
-                            </span>
-                            <span className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(entry.value)}</span>
+                <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-xl">
+                    <p className="mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{label}</p>
+                    {payload.map((e: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2 text-xs font-bold">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: e.color }} />
+                            <span className="text-slate-500">{e.name === 'expected' ? 'Expected' : 'Collected'}</span>
+                            <span className="ml-auto text-slate-900">{fmtCompact(e.value)}</span>
                         </div>
                     ))}
                 </div>
@@ -218,702 +349,752 @@ export default function CollectionsIndex({ collections, totalResidents, hasBanki
         <>
             <Head title="Financial Command Center" />
 
-            {!hasBanking && (
-                <div className="mb-8 overflow-hidden rounded-3xl border border-amber-200 bg-amber-50 shadow-sm dark:border-amber-500/20 dark:bg-amber-500/10">
-                    <div className="flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center">
-                        <div className="flex items-start gap-4">
-                            <div className="rounded-2xl bg-amber-100 p-3 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
-                                <AlertTriangle className="h-6 w-6" />
+            <div className="space-y-5">
+
+                {/* ── Banking Alert ── */}
+                {!hasBanking && (
+                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                                <AlertTriangle className="h-4.5 w-4.5" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black tracking-tight text-amber-900 dark:text-amber-500">Settlement Account Required</h2>
-                                <p className="max-w-xl text-sm text-amber-700 dark:text-amber-400/80">
-                                    To create collections and receive payments from residents, you must first set up your estate's settlement bank
-                                    account.
-                                </p>
+                                <p className="font-bold text-amber-900">Settlement account required</p>
+                                <p className="text-xs text-amber-700">Set up a bank account before creating collections.</p>
                             </div>
                         </div>
+                        <button onClick={() => setIsBankingModalOpen(true)} className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-amber-700 active:scale-95">
+                            <Building2 className="h-3.5 w-3.5" /> Setup Bank Account
+                        </button>
+                    </motion.div>
+                )}
+
+                {/* ── Page Header ── */}
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900">Financial Command Center</h1>
+                        <p className="text-sm text-slate-400">Estate collections overview and financial intelligence.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsBankingModalOpen(true)}
-                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-amber-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-700 active:scale-95"
+                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                         >
-                            <Building2 className="h-5 w-5" />
-                            Setup Bank Account
+                            <Settings2 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">{hasBanking ? 'Settlement' : 'Setup Bank'}</span>
                         </button>
+                        {hasBanking ? (
+                            <Link href={create.url()} className="flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95">
+                                <PlusIcon className="h-3.5 w-3.5" /> New Collection
+                            </Link>
+                        ) : (
+                            <button onClick={() => setIsBankingModalOpen(true)} className="flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-400">
+                                <PlusIcon className="h-3.5 w-3.5" /> New Collection
+                            </button>
+                        )}
                     </div>
                 </div>
-            )}
 
-            <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Financial Dashboard</h1>
-                    <p className="mt-1 text-slate-500 dark:text-slate-400">
-                        Overview of estate revenue, outstanding balances, and collection performance.
-                    </p>
-                </div>
-
-                <div className="flex flex-row items-center gap-3">
-                    <button
-                        onClick={() => setIsBankingModalOpen(true)}
-                        className={cn(
-                            'inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-bold transition-all active:scale-95 sm:text-sm',
-                            hasBanking
-                                ? 'bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-slate-800'
-                                : 'bg-amber-600 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-700',
-                        )}
-                    >
-                        <Settings2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                        <span className="truncate">{hasBanking ? 'Settlement' : 'Setup Bank'}</span>
-                    </button>
-
-                    {hasBanking ? (
-                        <Link
-                            href={create.url()}
-                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#1F6FDB] px-4 py-3.5 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95 sm:text-sm"
-                        >
-                            <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span className="truncate">New Collection</span>
-                        </Link>
-                    ) : (
-                        <button
-                            onClick={() => setIsBankingModalOpen(true)}
-                            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-200 px-4 py-3.5 text-xs font-bold text-slate-400 transition-colors hover:bg-slate-300 sm:text-sm dark:bg-slate-800 dark:text-slate-500"
-                        >
-                            <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span className="truncate">Setup Bank</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* SECTION 1 & 2: EXECUTIVE FINANCIAL OVERVIEW & KPIs */}
-            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Hero Card */}
-                <div className="group relative overflow-hidden rounded-[2.5rem] bg-[#0A0F1C] p-8 text-white shadow-2xl ring-1 ring-white/10 lg:col-span-2">
-                    <div className="pointer-events-none absolute -top-40 -right-40 h-80 w-80 rounded-full bg-indigo-500/20 blur-[80px] transition-colors duration-700 group-hover:bg-indigo-400/30" />
-                    <div className="pointer-events-none absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-emerald-500/10 blur-[80px] transition-colors duration-700 group-hover:bg-emerald-400/20" />
+                {/* ══════════════════════════════════════════════════════════════
+                    ZONE 1 — FINANCIAL HEALTH HERO
+                ══════════════════════════════════════════════════════════════ */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative overflow-hidden rounded-3xl bg-[#0A0F1C] p-7 text-white shadow-2xl ring-1 ring-white/5 sm:p-9"
+                >
+                    {/* Background glows */}
+                    <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/20 blur-[80px]" />
+                    <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
 
                     <div className="relative z-10">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-indigo-400">
-                                <Wallet className="h-5 w-5" />
-                                <span className="text-[11px] font-black tracking-widest uppercase">Total Expected Revenue</span>
-                            </div>
-                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black tracking-wider text-emerald-400 uppercase backdrop-blur-md">
-                                {realisedPct}% Collection Rate
-                            </span>
-                        </div>
+                        {/* Top row */}
+                        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                            {/* Left: Health Score */}
+                            <div className="flex items-center gap-5">
+                                <Deferred data="healthScore" fallback={
+                                    <div className="relative flex h-[110px] w-[110px] items-center justify-center">
+                                        <div className="h-[110px] w-[110px] animate-pulse rounded-full bg-white/10" />
+                                    </div>
+                                }>
+                                    {healthScore && (
+                                        <div className="relative">
+                                            <HealthRing score={healthScore.score} color={healthScore.color} />
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                <motion.span
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="text-2xl font-black text-white leading-none"
+                                                >
+                                                    {healthScore.score}
+                                                </motion.span>
+                                                <span className="text-[9px] font-bold tracking-widest text-white/40 uppercase">Score</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </Deferred>
 
-                        <div className="mt-4">
-                            <h2 className="text-5xl font-black tracking-tight lg:text-6xl">
-                                <AnimatedNumber value={expected} />
-                            </h2>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="mt-8">
-                            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800/50 ring-1 ring-white/10 backdrop-blur-sm ring-inset">
-                                <motion.div
-                                    className="relative h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500"
-                                    initial={{ width: '0%' }}
-                                    animate={{ width: `${realisedPct}%` }}
-                                    transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-                                >
-                                    <div className="absolute inset-0 animate-pulse bg-white/20" />
-                                </motion.div>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 grid grid-cols-2 gap-6 border-t border-white/10 pt-6">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Total Collected</span>
-                                </div>
-                                <p className="mt-2 text-2xl font-black tracking-tight text-white">
-                                    <AnimatedNumber value={realised} />
-                                </p>
-                            </div>
-                            <div className="border-l border-white/10 pl-6">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Outstanding Balance</span>
-                                </div>
-                                <p className="mt-2 text-2xl font-black tracking-tight text-white">
-                                    <AnimatedNumber value={outstanding} />
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* KPI Cards */}
-                <div className="flex flex-col gap-6">
-                    <div className="flex-1 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md dark:bg-slate-900 dark:ring-white/10">
-                        <div className="flex items-center justify-between">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                                <Activity className="h-6 w-6" />
-                            </div>
-                            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                <CheckCircle2 className="h-3 w-3" /> Live
-                            </span>
-                        </div>
-                        <div className="mt-6">
-                            <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Active Collections</p>
-                            <h3 className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-white">{stats.active_collections}</h3>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md dark:bg-slate-900 dark:ring-white/10">
-                        <div className="flex items-center justify-between">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
-                                <AlertCircle className="h-6 w-6" />
-                            </div>
-                            <span className="text-xs font-bold text-slate-400 dark:text-slate-500">Overdue</span>
-                        </div>
-                        <div className="mt-6">
-                            <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Defaulters</p>
-                            <h3 className="mt-1 text-3xl font-black tracking-tight text-slate-900 dark:text-white">{stats.defaulters_count}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ANALYTICS SECTIONS */}
-            {isAnalyticsLoading ? (
-                <div className="mb-12 flex h-64 items-center justify-center rounded-[2.5rem] border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-                    <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                        <p className="text-sm font-semibold text-slate-500">Loading financial data...</p>
-                    </div>
-                </div>
-            ) : analyticsData ? (
-                <>
-                    {/* SECTION 3 & 5: REVENUE TRENDS AND DISTRIBUTION */}
-                    <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                        {/* Revenue Trends */}
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2 dark:bg-slate-900 dark:ring-white/10">
-                            <div className="mb-6 flex flex-col justify-between gap-4 px-2 sm:flex-row sm:items-center">
                                 <div>
-                                    <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Revenue Performance</h3>
-                                    <p className="text-sm font-medium text-slate-500">Expected vs Actual collections over time.</p>
+                                    <p className="mb-1.5 text-[10px] font-bold tracking-widest text-white/40 uppercase">Financial Health</p>
+                                    <Deferred data="healthScore" fallback={
+                                        <div className="space-y-2">
+                                            <SkeletonBlock className="h-6 w-24 bg-white/10" />
+                                            <SkeletonBlock className="h-3.5 w-48 bg-white/10" />
+                                        </div>
+                                    }>
+                                        {healthScore && (
+                                            <>
+                                                <div className={cn('mb-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', gradeColors[healthScore.color])}>
+                                                    <Shield className="h-3 w-3" />
+                                                    {healthScore.grade}
+                                                </div>
+                                                <p className="max-w-xs text-sm text-white/55 leading-relaxed">{healthScore.explanation}</p>
+                                            </>
+                                        )}
+                                    </Deferred>
                                 </div>
-                                <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-                                    {[7, 30, 90].map((days) => (
+                            </div>
+
+                            {/* Right: Revenue pillars */}
+                            <div className="grid grid-cols-3 gap-4 lg:gap-6">
+                                <div className="text-center lg:text-right">
+                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-white/30 uppercase">Expected</p>
+                                    <p className="text-xl font-black tracking-tight text-white sm:text-2xl">
+                                        <AnimatedNumber value={expected} />
+                                    </p>
+                                </div>
+                                <div className="text-center lg:text-right">
+                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-emerald-400/60 uppercase">Collected</p>
+                                    <p className="text-xl font-black tracking-tight text-emerald-400 sm:text-2xl">
+                                        <AnimatedNumber value={realised} />
+                                    </p>
+                                </div>
+                                <div className="text-center lg:text-right">
+                                    <p className="mb-1 text-[9px] font-bold tracking-widest text-rose-400/60 uppercase">Outstanding</p>
+                                    <p className="text-xl font-black tracking-tight text-rose-400 sm:text-2xl">
+                                        <AnimatedNumber value={outstanding} />
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div>
+                            <div className="mb-2 flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-white/40">Overall Collection Progress</span>
+                                <span className="text-white/70">{realisedPct}% of target</span>
+                            </div>
+                            <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${realisedPct}%` }}
+                                    transition={{ duration: 1.4, ease: 'easeOut' }}
+                                    className={cn(
+                                        'absolute inset-y-0 left-0 rounded-full',
+                                        realisedPct >= 85 ? 'bg-emerald-400' :
+                                        realisedPct >= 60 ? 'bg-blue-400' :
+                                        realisedPct >= 30 ? 'bg-amber-400' : 'bg-rose-400'
+                                    )}
+                                />
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-medium text-white/30">
+                                <span>{stats.active_collections} active collection{stats.active_collections !== 1 ? 's' : ''}</span>
+                                <span>·</span>
+                                <span>{totalResidents} residents</span>
+                                {stats.defaulters_count > 0 && (
+                                    <>
+                                        <span>·</span>
+                                        <span className="text-rose-400/70">{stats.defaulters_count} with outstanding balances</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* ══════════════════════════════════════════════════════════════
+                    ZONE 2+3 — TODAY'S SNAPSHOT + COLLECTION INSIGHTS
+                ══════════════════════════════════════════════════════════════ */}
+                <div className="grid gap-4 lg:grid-cols-3">
+
+                    {/* Zone 2 — Today's Snapshot */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                    >
+                        <div className="mb-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-slate-900">Today's Activity</h3>
+                                <p className="text-xs text-slate-400">Live payment updates</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1">
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase">Live</span>
+                            </div>
+                        </div>
+
+                        <Deferred data="todaySnapshot" fallback={
+                            <div className="space-y-3">
+                                {[...Array(4)].map((_, i) => <SkeletonBlock key={i} className="h-10" />)}
+                            </div>
+                        }>
+                            {todaySnapshot && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-widest text-emerald-500/70 uppercase">Collected Today</p>
+                                            <p className="text-lg font-black text-emerald-700">{fmtCompact(todaySnapshot.collected_today)}</p>
+                                        </div>
+                                        <DollarSign className="h-5 w-5 text-emerald-300" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Payments</p>
+                                            <p className="text-lg font-black text-slate-900">{todaySnapshot.payments_today}</p>
+                                        </div>
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Payers</p>
+                                            <p className="text-lg font-black text-slate-900">{todaySnapshot.payers_today}</p>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-xl bg-blue-50 px-4 py-3">
+                                        <p className="text-[9px] font-bold tracking-widest text-blue-500/70 uppercase">This Week</p>
+                                        <p className="text-base font-black text-blue-700">{fmtCompact(todaySnapshot.collected_this_week)}</p>
+                                        <p className="text-[10px] text-blue-400">{todaySnapshot.payments_this_week} payment{todaySnapshot.payments_this_week !== 1 ? 's' : ''}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </Deferred>
+                    </motion.div>
+
+                    {/* Zone 3 — Collection Insights */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="lg:col-span-2"
+                    >
+                        <h3 className="mb-3 font-bold text-slate-900">Collection Insights</h3>
+                        <Deferred data="collectionInsights" fallback={
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                {[...Array(3)].map((_, i) => <SkeletonBlock key={i} className="h-[120px]" />)}
+                            </div>
+                        }>
+                            {collectionInsights && (
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    {/* Best Performing */}
+                                    {collectionInsights.best ? (
+                                        <Link href={show.url(collectionInsights.best.ulid)} className="group rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100 transition-all hover:shadow-md hover:-translate-y-0.5">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                                                    <Trophy className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-emerald-600/70 uppercase">Best Performing</span>
+                                            </div>
+                                            <p className="mb-1 truncate text-sm font-bold text-slate-900">{collectionInsights.best.name}</p>
+                                            <p className="text-2xl font-black text-emerald-700">{collectionInsights.best.rate}%</p>
+                                            <p className="mt-1 text-[10px] font-medium text-emerald-600/70">
+                                                {collectionInsights.best.total_count - Math.round(collectionInsights.best.total_count * (1 - collectionInsights.best.rate / 100))} of {collectionInsights.best.total_count} residents paid
+                                            </p>
+                                        </Link>
+                                    ) : (
+                                        <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                                                    <Trophy className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Best Performing</span>
+                                            </div>
+                                            <p className="text-sm text-slate-400">No active collections</p>
+                                        </div>
+                                    )}
+
+                                    {/* Needs Attention */}
+                                    {collectionInsights.worst ? (
+                                        <Link href={show.url(collectionInsights.worst.ulid)} className="group rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100 transition-all hover:shadow-md hover:-translate-y-0.5">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                                                    <AlertCircle className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-amber-600/70 uppercase">Needs Attention</span>
+                                            </div>
+                                            <p className="mb-1 truncate text-sm font-bold text-slate-900">{collectionInsights.worst.name}</p>
+                                            <p className="text-2xl font-black text-amber-700">{collectionInsights.worst.rate}%</p>
+                                            <p className="mt-1 text-[10px] font-medium text-amber-600/70">
+                                                {fmtCompact(collectionInsights.worst.outstanding)} outstanding
+                                            </p>
+                                        </Link>
+                                    ) : (
+                                        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                                                    <CheckCircle className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-emerald-600/70 uppercase">All Clear</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-emerald-700">No collections needing attention</p>
+                                        </div>
+                                    )}
+
+                                    {/* Largest Outstanding */}
+                                    {collectionInsights.largest_outstanding && collectionInsights.largest_outstanding.outstanding > 0 ? (
+                                        <Link href={show.url(collectionInsights.largest_outstanding.ulid)} className="group rounded-2xl bg-rose-50 p-4 ring-1 ring-rose-100 transition-all hover:shadow-md hover:-translate-y-0.5">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                                                    <TrendingDown className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-rose-600/70 uppercase">Largest Gap</span>
+                                            </div>
+                                            <p className="mb-1 truncate text-sm font-bold text-slate-900">{collectionInsights.largest_outstanding.name}</p>
+                                            <p className="text-2xl font-black text-rose-700">{fmtCompact(collectionInsights.largest_outstanding.outstanding)}</p>
+                                            <p className="mt-1 text-[10px] font-medium text-rose-600/70">still outstanding</p>
+                                        </Link>
+                                    ) : (
+                                        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                                                    <CheckCircle className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[9px] font-bold tracking-widest text-emerald-600/70 uppercase">No Gap</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-emerald-700">No outstanding balances</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </Deferred>
+                    </motion.div>
+                </div>
+
+                {/* ══════════════════════════════════════════════════════════════
+                    ZONE 4 — MONEY FLOW + TREND CHART
+                ══════════════════════════════════════════════════════════════ */}
+                <div className="grid gap-4 lg:grid-cols-3">
+                    {/* Money Flow Funnel */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                    >
+                        <h3 className="mb-4 font-bold text-slate-900">Money Flow</h3>
+                        <div className="space-y-2">
+                            <div className="rounded-xl bg-slate-50 px-4 py-3">
+                                <div className="mb-0.5 flex items-center justify-between">
+                                    <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Target Revenue</p>
+                                    <Wallet className="h-3.5 w-3.5 text-slate-300" />
+                                </div>
+                                <p className="text-lg font-black text-slate-900">{fmtCompact(expected)}</p>
+                                <p className="text-[10px] text-slate-400">{fmt(expected)}</p>
+                            </div>
+                            <div className="flex justify-center">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
+                                    <ArrowRight className="h-3 w-3 rotate-90 text-slate-400" />
+                                </div>
+                            </div>
+                            <div className="rounded-xl bg-emerald-50 px-4 py-3">
+                                <div className="mb-0.5 flex items-center justify-between">
+                                    <p className="text-[10px] font-bold tracking-widest text-emerald-500/70 uppercase">Collected</p>
+                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-300" />
+                                </div>
+                                <p className="text-lg font-black text-emerald-700">{fmtCompact(realised)}</p>
+                                <p className="text-[10px] text-emerald-500/70">{realisedPct}% of target</p>
+                            </div>
+                            <div className="flex justify-center">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
+                                    <ArrowRight className="h-3 w-3 rotate-90 text-slate-400" />
+                                </div>
+                            </div>
+                            <div className="rounded-xl bg-rose-50 px-4 py-3">
+                                <div className="mb-0.5 flex items-center justify-between">
+                                    <p className="text-[10px] font-bold tracking-widest text-rose-400/70 uppercase">Outstanding</p>
+                                    <Target className="h-3.5 w-3.5 text-rose-300" />
+                                </div>
+                                <p className="text-lg font-black text-rose-700">{fmtCompact(outstanding)}</p>
+                                <p className="text-[10px] text-rose-400/70">{100 - realisedPct}% remaining</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Trend Chart */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="rounded-2xl bg-white p-5 ring-1 ring-slate-100 lg:col-span-2"
+                    >
+                        <div className="mb-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-slate-900">Revenue Trend</h3>
+                                <p className="text-xs text-slate-400">Expected vs. collected — last 30 days</p>
+                            </div>
+                            <BarChart3 className="h-4 w-4 text-slate-300" />
+                        </div>
+
+                        {isAnalyticsLoading ? (
+                            <div className="flex h-[180px] items-end gap-1">
+                                {[...Array(12)].map((_, i) => (
+                                    <div key={i} className="flex-1 animate-pulse rounded-t-lg bg-slate-100" style={{ height: `${30 + Math.random() * 70}%` }} />
+                                ))}
+                            </div>
+                        ) : analyticsData?.trends?.length ? (
+                            <ResponsiveContainer width="100%" height={190}>
+                                <AreaChart data={analyticsData.trends} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="gradExpected" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700 }} tickLine={false} axisLine={false} interval={4} />
+                                    <YAxis hide />
+                                    <RechartsTooltip content={<ChartTooltip />} />
+                                    <Area type="monotone" dataKey="expected" stroke="#6366f1" strokeWidth={1.5} fill="url(#gradExpected)" dot={false} />
+                                    <Area type="monotone" dataKey="actual" stroke="#10b981" strokeWidth={2} fill="url(#gradActual)" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-[190px] flex-col items-center justify-center text-slate-300">
+                                <BarChart3 className="mb-2 h-8 w-8" />
+                                <p className="text-xs font-medium text-slate-400">No trend data yet</p>
+                            </div>
+                        )}
+
+                        <div className="mt-2 flex gap-4 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-indigo-400" /> Expected</span>
+                            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Collected</span>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* ══════════════════════════════════════════════════════════════
+                    ZONE 5+6 — COLLECTIONS LIST + RECENT ACTIVITY
+                ══════════════════════════════════════════════════════════════ */}
+                <div className="grid gap-4 lg:grid-cols-3">
+
+                    {/* Zone 5 — Collections List (primary, 2/3) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100 lg:col-span-2"
+                    >
+                        {/* Toolbar */}
+                        <div className="border-b border-slate-50 bg-slate-50/50 p-4 sm:p-5">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-bold text-slate-900">All Collections</h3>
+                                    <p className="text-xs text-slate-400">{collections.total} total</p>
+                                </div>
+                                {hasBanking && (
+                                    <Link href={create.url()} className="flex items-center gap-1.5 rounded-xl bg-[#0A3D91] px-3 py-2 text-[10px] font-bold text-white transition-all hover:bg-[#0f4fb5] active:scale-95">
+                                        <PlusIcon className="h-3 w-3" /> New
+                                    </Link>
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                {/* Search */}
+                                <div className="relative flex-1">
+                                    <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Search collections…"
+                                        className="w-full rounded-xl bg-white py-2 pl-9 pr-3 text-xs font-medium text-slate-900 ring-1 ring-slate-200 outline-none transition-all focus:ring-2 focus:ring-[#1F6FDB]/30 placeholder:text-slate-400"
+                                    />
+                                </div>
+                                {/* Status filter tabs */}
+                                <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
+                                    {(['', 'active', 'draft', 'archived'] as const).map((s) => (
                                         <button
-                                            key={days}
-                                            onClick={() => setDaysFilter(days)}
+                                            key={s}
+                                            onClick={() => handleStatusChange(s)}
                                             className={cn(
-                                                'rounded-lg px-4 py-1.5 text-xs font-bold transition-all',
-                                                daysFilter === days
-                                                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+                                                'rounded-lg px-3 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all',
+                                                statusFilter === s ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
                                             )}
                                         >
-                                            {days}D
+                                            {s === '' ? 'All' : s}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                            <div className="h-[300px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={analyticsData.trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorExpected" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
-                                            </linearGradient>
-                                            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
-                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
-                                        <YAxis
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 12, fill: '#94a3b8' }}
-                                            tickFormatter={(val) => `₦${val / 1000}k`}
-                                        />
-                                        <RechartsTooltip content={<CustomTooltip />} />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="expected"
-                                            stroke="#818cf8"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorExpected)"
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="actual"
-                                            stroke="#34d399"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorActual)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
                         </div>
 
-                        {/* Revenue Distribution */}
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10">
-                            <div className="mb-2 px-2">
-                                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Revenue Distribution</h3>
-                                <p className="text-sm font-medium text-slate-500">Total collected by category.</p>
-                            </div>
-                            <div className="flex h-[240px] items-center justify-center">
-                                {analyticsData.distribution.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={analyticsData.distribution}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={90}
-                                                paddingAngle={5}
-                                                dataKey="value"
-                                                stroke="none"
-                                            >
-                                                {analyticsData.distribution.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <RechartsTooltip content={<CustomTooltip />} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex flex-col items-center text-slate-400">
-                                        <PieChart className="mb-2 h-8 w-8" />
-                                        <p className="text-sm">No revenue data</p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="mt-4 flex flex-col gap-2 px-2">
-                                {analyticsData.distribution.slice(0, 4).map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div
-                                                className="h-3 w-3 rounded-full"
-                                                style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
-                                            />
-                                            <span className="max-w-[120px] truncate text-xs font-bold text-slate-600 dark:text-slate-400">
-                                                {item.name}
-                                            </span>
-                                        </div>
-                                        <span className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(item.value)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SECTION 4, 6 & 7: PERFORMANCE, ACTIVITY, OUTSTANDING */}
-                    <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                        {/* Collection Performance */}
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2 dark:bg-slate-900 dark:ring-white/10">
-                            <div className="mb-6 px-2">
-                                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Active Collection Performance</h3>
-                                <p className="text-sm font-medium text-slate-500">Track progress of ongoing collections.</p>
-                            </div>
-                            <div className="flex flex-col gap-6 px-2">
-                                {analyticsData.performance.length > 0 ? (
-                                    analyticsData.performance.map((collection) => (
-                                        <div key={collection.id}>
-                                            <div className="mb-2 flex items-center justify-between">
-                                                <span className="text-sm font-bold text-slate-900 dark:text-white">{collection.name}</span>
-                                                <span className="text-xs font-black text-slate-500">
-                                                    {formatCurrency(collection.collected)} / {formatCurrency(collection.expected)}
-                                                </span>
-                                            </div>
-                                            <div className="relative flex items-center gap-4">
-                                                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                                                    <motion.div
-                                                        className="h-full rounded-full bg-indigo-500"
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${collection.progress}%` }}
-                                                        transition={{ duration: 1, ease: 'easeOut' }}
-                                                    />
-                                                </div>
-                                                <span className="w-12 text-right text-xs font-black text-indigo-600 dark:text-indigo-400">
-                                                    {collection.progress}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-8 text-center text-sm text-slate-500">No active collections found.</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Recent Activity */}
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10">
-                            <div className="mb-6 px-2">
-                                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Recent Activity</h3>
-                                <p className="text-sm font-medium text-slate-500">Latest financial events.</p>
-                            </div>
-                            <div className="flex flex-col gap-5 px-2">
-                                {analyticsData.activity.length > 0 ? (
-                                    analyticsData.activity.map((act, i) => (
-                                        <div key={i} className="flex gap-4">
-                                            <div className="relative flex flex-col items-center">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                                    <CreditCard className="h-4 w-4" />
-                                                </div>
-                                                {i !== analyticsData.activity.length - 1 && (
-                                                    <div className="absolute top-8 bottom-[-20px] w-px bg-slate-100 dark:bg-slate-800" />
-                                                )}
-                                            </div>
-                                            <div className="pb-2">
-                                                <p className="text-sm text-slate-600 dark:text-slate-300">
-                                                    <span className="font-bold text-slate-900 dark:text-white">{act.actor}</span> {act.action}
-                                                </p>
-                                                <div className="mt-1 flex items-center gap-2">
-                                                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                                                        {formatCurrency(act.amount)}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400">• {act.timestamp}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-8 text-center text-sm text-slate-500">No recent activity.</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Outstanding Balances */}
-                        <div className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-3 dark:bg-slate-900 dark:ring-white/10">
-                            <div className="mb-6 flex items-center justify-between px-2">
-                                <div>
-                                    <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Top Outstanding Balances</h3>
-                                    <p className="text-sm font-medium text-slate-500">Accounts requiring immediate attention.</p>
-                                </div>
-                            </div>
+                        {/* Table */}
+                        {collections.data.length > 0 ? (
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
+                                <table className="w-full min-w-[520px] text-left">
                                     <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-800">
-                                            <th className="pb-3 pl-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">Resident</th>
-                                            <th className="pb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">Property</th>
-                                            <th className="pb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">Days Overdue</th>
-                                            <th className="pb-3 text-right text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                                                Amount Owed
-                                            </th>
+                                        <tr className="border-b border-slate-50 text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                                            <th className="px-5 py-3.5">Collection</th>
+                                            <th className="px-5 py-3.5">Progress</th>
+                                            <th className="px-5 py-3.5 text-right">Amount</th>
+                                            <th className="px-5 py-3.5">Status</th>
+                                            <th className="px-5 py-3.5 text-right">View</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {analyticsData.outstanding.length > 0 ? (
-                                            analyticsData.outstanding.map((out, i) => (
-                                                <tr key={i} className="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                    <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">{out.name}</td>
-                                                    <td className="py-4 font-semibold text-slate-500">{out.property}</td>
-                                                    <td className="py-4">
-                                                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-2 py-1 text-xs font-bold text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
-                                                            <Clock className="h-3 w-3" />
-                                                            {out.days_overdue} Days
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-4 text-right font-black text-rose-600 dark:text-rose-400">
-                                                        {formatCurrency(out.amount)}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={4} className="py-8 text-center text-sm text-slate-500">
-                                                    No outstanding balances. Great job!
-                                                </td>
-                                            </tr>
-                                        )}
+                                    <tbody className="divide-y divide-slate-50">
+                                        <AnimatePresence mode="popLayout">
+                                            {collections.data.map((c) => {
+                                                const insight = collectionInsights?.all?.find((i) => i.ulid === c.ulid);
+                                                const rate = insight?.rate ?? 0;
+                                                return (
+                                                    <motion.tr
+                                                        key={c.ulid}
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="group transition-colors hover:bg-slate-50/60"
+                                                    >
+                                                        <td className="px-5 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={cn(
+                                                                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold',
+                                                                    c.status === 'active' ? 'bg-blue-50 text-blue-600' :
+                                                                    c.status === 'archived' ? 'bg-slate-100 text-slate-400' :
+                                                                    'bg-amber-50 text-amber-600'
+                                                                )}>
+                                                                    {c.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="truncate text-sm font-bold text-slate-900">{c.name}</p>
+                                                                    <p className="text-[10px] text-slate-400">{c.assignments_count} assignments</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-5 py-4">
+                                                            {c.status === 'active' && insight ? (
+                                                                <div>
+                                                                    <div className="mb-1 flex items-center justify-between text-[10px] font-bold">
+                                                                        <span className="text-slate-400">{rate}%</span>
+                                                                    </div>
+                                                                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+                                                                        <motion.div
+                                                                            initial={{ width: 0 }}
+                                                                            animate={{ width: `${rate}%` }}
+                                                                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                                                                            className={cn(
+                                                                                'h-full rounded-full',
+                                                                                rate >= 85 ? 'bg-emerald-500' :
+                                                                                rate >= 50 ? 'bg-blue-500' :
+                                                                                rate > 0 ? 'bg-amber-500' : 'bg-rose-400'
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-[10px] text-slate-300">—</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-5 py-4 text-right">
+                                                            <span className="text-sm font-bold text-slate-900">{fmtCompact(c.amount)}</span>
+                                                        </td>
+                                                        <td className="px-5 py-4">
+                                                            <span className={cn(
+                                                                'inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase',
+                                                                c.status === 'active' ? 'bg-blue-50 text-blue-600' :
+                                                                c.status === 'draft' ? 'bg-amber-50 text-amber-600' :
+                                                                'bg-slate-100 text-slate-400'
+                                                            )}>
+                                                                {c.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-right">
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                {c.status === 'draft' && (
+                                                                    <button
+                                                                        onClick={() => { setSelectedCollection(c); setIsPublishModalOpen(true); }}
+                                                                        className="flex h-7 items-center gap-1 rounded-lg bg-[#1F6FDB] px-2.5 text-[9px] font-bold text-white transition-all hover:bg-blue-700 active:scale-95"
+                                                                    >
+                                                                        <Zap className="h-3 w-3" /> Publish
+                                                                    </button>
+                                                                )}
+                                                                <Link
+                                                                    href={show.url(c.ulid)}
+                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition-all hover:bg-blue-500 hover:text-white"
+                                                                >
+                                                                    <ArrowRight className="h-3.5 w-3.5" />
+                                                                </Link>
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                );
+                                            })}
+                                        </AnimatePresence>
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-                </>
-            ) : null}
+                        ) : (
+                            <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                                    <Wallet className="h-8 w-8" />
+                                </div>
+                                <p className="font-bold text-slate-900">No collections found</p>
+                                <p className="mt-1 max-w-xs text-sm text-slate-400">
+                                    {filters.search || filters.status ? 'Try adjusting your search or filter.' : 'Create your first collection to start managing estate dues.'}
+                                </p>
+                                {hasBanking && !filters.search && !filters.status && (
+                                    <Link href={create.url()} className="mt-6 flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 active:scale-95">
+                                        <PlusIcon className="h-4 w-4" /> Create Collection
+                                    </Link>
+                                )}
+                            </div>
+                        )}
 
-            {/* Filter controls for the table below */}
-            <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">All Collections</h3>
+                        {/* Pagination */}
+                        {collections.last_page > 1 && (
+                            <div className="flex items-center justify-between border-t border-slate-50 px-5 py-3.5">
+                                <p className="text-xs font-bold text-slate-400">
+                                    Page <span className="text-slate-900">{collections.current_page}</span> of <span className="text-slate-900">{collections.last_page}</span>
+                                </p>
+                                <div className="flex gap-1">
+                                    {collections.links.map((link, i) => (
+                                        <Link
+                                            key={i}
+                                            href={link.url || '#'}
+                                            preserveScroll
+                                            preserveState
+                                            className={cn(
+                                                'flex h-7 min-w-[1.75rem] items-center justify-center rounded-lg px-2 text-xs font-bold transition-all',
+                                                link.active ? 'bg-slate-900 text-white' :
+                                                link.url ? 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50' :
+                                                'cursor-not-allowed text-slate-300 opacity-40'
+                                            )}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+
+                    {/* Zone 6 — Recent Activity Feed (sidebar) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.35 }}
+                        className="rounded-2xl bg-white p-5 ring-1 ring-slate-100"
+                    >
+                        <h3 className="mb-1 font-bold text-slate-900">Recent Payments</h3>
+                        <p className="mb-4 text-xs text-slate-400">Latest financial activity</p>
+
+                        <Deferred data="recentActivity" fallback={
+                            <div className="space-y-4">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <SkeletonBlock className="h-8 w-8 rounded-full" />
+                                        <div className="flex-1 space-y-1.5">
+                                            <SkeletonBlock className="h-3 w-28" />
+                                            <SkeletonBlock className="h-2.5 w-20" />
+                                        </div>
+                                        <SkeletonBlock className="h-3 w-14" />
+                                    </div>
+                                ))}
+                            </div>
+                        }>
+                            {recentActivity && recentActivity.length > 0 ? (
+                                <div className="relative">
+                                    <div className="absolute top-0 left-3.5 h-full w-px bg-slate-100" />
+                                    <div className="space-y-4">
+                                        {recentActivity.map((p, i) => (
+                                            <motion.div
+                                                key={p.id}
+                                                initial={{ opacity: 0, x: -6 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: i * 0.04 }}
+                                                className="relative flex items-start gap-3 pl-8"
+                                            >
+                                                <div className="absolute left-0 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 ring-4 ring-white">
+                                                    {p.user_name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-baseline justify-between gap-1">
+                                                        <p className="truncate text-xs font-bold text-slate-900">{p.user_name}</p>
+                                                        <span className="shrink-0 text-xs font-bold text-emerald-600">{fmtCompact(p.amount)}</span>
+                                                    </div>
+                                                    <p className="truncate text-[10px] text-slate-400">{p.collection_name}</p>
+                                                    <p className="text-[10px] text-slate-300">{p.paid_at_human}</p>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-10 text-slate-300">
+                                    <Activity className="mb-2 h-8 w-8" />
+                                    <p className="text-xs font-medium text-slate-400">No payments recorded yet</p>
+                                </div>
+                            )}
+                        </Deferred>
+                    </motion.div>
+                </div>
+
+                {/* ══════════════════════════════════════════════════════════════
+                    ZONE 7 — SMART INSIGHTS STRIP
+                ══════════════════════════════════════════════════════════════ */}
+                {smartInsights.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="rounded-2xl bg-white p-4 ring-1 ring-slate-100"
+                    >
+                        <div className="mb-3 flex items-center gap-2">
+                            <Zap className="h-3.5 w-3.5 text-slate-400" />
+                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Smart Insights</p>
+                        </div>
+                        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+                            {smartInsights.map((chip, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.4 + i * 0.05 }}
+                                    className={cn(
+                                        'flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold',
+                                        chipColorMap[chip.color]
+                                    )}
+                                >
+                                    {chip.icon}
+                                    {chip.text}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
             </div>
 
-            {showFilters && (
-                <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-                    <div className="relative flex-1">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                            <Search className="h-4.5 w-4.5 text-slate-400" />
-                        </div>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 shadow-xs placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-500"
-                            placeholder="Search collections by name..."
-                        />
-                    </div>
-                    <div className="w-full sm:w-48">
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                <Filter className="h-4.5 w-4.5 text-slate-400" />
-                            </div>
-                            <select
-                                value={status}
-                                onChange={handleStatusChange}
-                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="active">Active</option>
-                                <option value="draft">Draft</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                        </div>
-                    </div>
-                    {hasActiveFilters && (
-                        <button
-                            type="button"
-                            onClick={clearFilters}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-xs transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                        >
-                            <RotateCcw className="h-4 w-4" />
-                            Reset
-                        </button>
-                    )}
-                </div>
-            )}
-
-            <BankingSetupModal isOpen={isBankingModalOpen} onClose={() => setIsBankingModalOpen(false)} banks={banks} currentSettings={settlement} />
+            {/* ── Modals ── */}
+            <BankingSetupModal
+                isOpen={isBankingModalOpen}
+                onClose={() => setIsBankingModalOpen(false)}
+                banks={banks}
+                currentSettings={settlement}
+            />
 
             <ConfirmationModal
                 isOpen={isPublishModalOpen}
-                onClose={() => {
-                    setIsPublishModalOpen(false);
-                    setSelectedCollection(null);
-                }}
+                onClose={() => { setIsPublishModalOpen(false); setSelectedCollection(null); }}
                 onConfirm={handlePublish}
                 title="Publish Collection"
-                message={`Are you sure you want to publish "${selectedCollection?.name}"? This will generate assignments for residents.`}
+                message={`Publishing "${selectedCollection?.name}" will notify residents and start collecting payments. This cannot be undone.`}
                 confirmLabel="Yes, Publish Now"
                 cancelLabel="Cancel"
                 type="info"
                 isLoading={isPublishing}
             />
-
-            {/* List View */}
-            <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xs dark:border-white/10 dark:bg-slate-900">
-                {collections.data.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left">
-                            <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/75 dark:border-slate-800 dark:bg-slate-800/50">
-                                    <th className="p-5 text-[10px] font-black tracking-wider text-slate-400 uppercase">Collection Details</th>
-                                    <th className="p-5 text-[10px] font-black tracking-wider text-slate-400 uppercase">Amount per target</th>
-                                    <th className="p-5 text-[10px] font-black tracking-wider text-slate-400 uppercase">Interval</th>
-                                    <th className="p-5 text-[10px] font-black tracking-wider text-slate-400 uppercase">Audience</th>
-                                    <th className="p-5 text-[10px] font-black tracking-wider text-slate-400 uppercase">Status</th>
-                                    <th className="p-5 text-right text-[10px] font-black tracking-wider text-slate-400 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {collections.data.map((collection) => (
-                                    <tr
-                                        key={collection.ulid}
-                                        onClick={() => router.visit(show.url(collection.ulid))}
-                                        className="group cursor-pointer transition-colors hover:bg-slate-50/75 dark:hover:bg-slate-800/50"
-                                    >
-                                        <td className="max-w-md p-5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-colors group-hover:bg-blue-50 group-hover:text-blue-500 dark:bg-slate-800 dark:group-hover:bg-blue-500/10">
-                                                    <Wallet className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-black tracking-tight text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                                                        {collection.name}
-                                                    </div>
-                                                    {collection.description && (
-                                                        <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-400">
-                                                            {collection.description}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-5 font-black text-slate-900 dark:text-white">{formatCurrency(collection.amount)}</td>
-                                        <td className="p-5">
-                                            <span className="inline-flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                                <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                <span className="capitalize">{collection.recurring_interval || 'Once'}</span>
-                                            </span>
-                                        </td>
-                                        <td className="p-5">
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300">
-                                                <Users className="text-slate-450 h-4 w-4" />
-                                                <span>
-                                                    {collection.status === 'active'
-                                                        ? collection.assignments_count
-                                                        : collection.applies_to === 'all'
-                                                          ? totalResidents
-                                                          : collection.targets_count}{' '}
-                                                    Targets
-                                                </span>
-                                            </span>
-                                        </td>
-                                        <td className="p-5">
-                                            <span
-                                                className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] font-black tracking-wider uppercase ${
-                                                    collection.status === 'active'
-                                                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
-                                                        : collection.status === 'draft'
-                                                          ? 'border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400'
-                                                          : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                                                }`}
-                                            >
-                                                {collection.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-5 text-right" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center justify-end gap-2">
-                                                {collection.status === 'draft' && hasBanking && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedCollection(collection);
-                                                                setIsPublishModalOpen(true);
-                                                            }}
-                                                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white text-emerald-500 shadow-xs ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:text-emerald-600 hover:ring-emerald-100 dark:bg-slate-800 dark:ring-white/10 dark:hover:bg-emerald-500/10"
-                                                            title="Publish Collection"
-                                                        >
-                                                            <Send className="h-4 w-4" />
-                                                        </button>
-                                                        <Link
-                                                            href={edit.url(collection.ulid)}
-                                                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400 shadow-xs ring-1 ring-slate-200 transition-all hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-100 dark:bg-slate-800 dark:ring-white/10 dark:hover:bg-blue-500/10"
-                                                            title="Edit Collection"
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </Link>
-                                                    </>
-                                                )}
-                                                <Link
-                                                    href={show.url(collection.ulid)}
-                                                    className="text-slate-650 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 transition-all hover:bg-blue-500 hover:text-white dark:bg-slate-800 dark:hover:bg-blue-600"
-                                                >
-                                                    <ArrowRight className="h-4.5 w-4.5" />
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-24 text-center">
-                        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-50 text-slate-300 dark:bg-slate-800">
-                            <Wallet className="h-10 w-10" />
-                        </div>
-                        <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">No collections found</h3>
-                        <p className="mt-2 max-w-sm text-slate-500">Create your first collection to start managing estate dues and levies.</p>
-                        {hasBanking ? (
-                            <Link
-                                href={create.url()}
-                                className="mt-8 flex items-center gap-2 rounded-2xl bg-white px-8 py-3.5 text-sm font-black text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:ring-white/10 dark:hover:bg-slate-700"
-                            >
-                                <PlusIcon className="h-5 w-5" />
-                                Create Collection
-                            </Link>
-                        ) : (
-                            <button
-                                onClick={() => setIsBankingModalOpen(true)}
-                                className="mt-8 flex cursor-pointer items-center gap-2 rounded-2xl bg-amber-600 px-8 py-3.5 text-sm font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-700 active:scale-95"
-                            >
-                                <Building2 className="h-5 w-5" />
-                                Setup Bank Account First
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Pagination */}
-            {showPagination && (
-                <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white p-4 shadow-xs dark:border-white/10 dark:bg-slate-900">
-                    <p className="text-xs font-semibold text-slate-500">
-                        Showing page <span className="font-bold text-slate-900 dark:text-white">{collections.current_page}</span> of total{' '}
-                        <span className="font-bold text-slate-900 dark:text-white">{collections.total}</span> items.
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                        {collections.links.map((link, idx) => {
-                            if (link.label.includes('Previous')) {
-                                return link.url ? (
-                                    <Link
-                                        key={idx}
-                                        href={link.url}
-                                        className="text-slate-650 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                    >
-                                        <ChevronLeft className="h-4.5 w-4.5" />
-                                    </Link>
-                                ) : (
-                                    <span
-                                        key={idx}
-                                        className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl bg-slate-50/50 text-slate-300 dark:bg-slate-800/50"
-                                    >
-                                        <ChevronLeft className="h-4.5 w-4.5" />
-                                    </span>
-                                );
-                            }
-                            if (link.label.includes('Next')) {
-                                return link.url ? (
-                                    <Link
-                                        key={idx}
-                                        href={link.url}
-                                        className="text-slate-650 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                    >
-                                        <ChevronRight className="h-4.5 w-4.5" />
-                                    </Link>
-                                ) : (
-                                    <span
-                                        key={idx}
-                                        className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-xl bg-slate-50/50 text-slate-300 dark:bg-slate-800/50"
-                                    >
-                                        <ChevronRight className="h-4.5 w-4.5" />
-                                    </span>
-                                );
-                            }
-
-                            // Number links
-                            return link.active ? (
-                                <span
-                                    key={idx}
-                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-xs font-bold text-white"
-                                >
-                                    {link.label}
-                                </span>
-                            ) : link.url ? (
-                                <Link
-                                    key={idx}
-                                    href={link.url}
-                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                                >
-                                    {link.label}
-                                </Link>
-                            ) : (
-                                <span key={idx} className="px-2 text-xs text-slate-400">
-                                    ...
-                                </span>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
         </>
     );
 }
 
-CollectionsIndex.layout = (page: any) => <AdminLayout children={page} />;
+CollectionsIndex.layout = (page: any) => <AdminLayout children={page} title="Financial Command Center" />;

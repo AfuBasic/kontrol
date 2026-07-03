@@ -12,6 +12,7 @@ use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
 use App\Services\PaystackService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -111,7 +112,172 @@ class CollectionController extends Controller
                 'status' => $request->status ?? '',
             ],
             'stats' => $stats,
+
+            // ── Deferred: Financial Health Score ──────────────────────────────
+            'healthScore' => Inertia::defer(function () use ($estate) {
+                $estateId = $estate->id;
+
+                /**
+                 * @param  Builder  $q
+                 */
+                $estateScope = fn ($q) => $q->where('estate_id', $estateId)
+                    ->whereDoesntHave('creator.roles', fn ($sq) => $sq
+                        ->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estateId));
+
+                $total = CollectionAssignment::whereHas('collection', $estateScope)->count();
+
+                if ($total === 0) {
+                    return [
+                        'score' => 0,
+                        'grade' => 'No Data',
+                        'color' => 'slate',
+                        'explanation' => 'No collection assignments have been created yet.',
+                    ];
+                }
+
+                $paid = CollectionAssignment::whereHas('collection', $estateScope)->where('status', 'paid')->count();
+                $overdue = CollectionAssignment::whereHas('collection', $estateScope)->where('status', 'overdue')->count();
+
+                $collectionRate = $paid / $total;
+                $overdueRatio = $overdue / $total;
+
+                $score = (int) min(100, round(
+                    $collectionRate * 55 +
+                    (1 - $overdueRatio) * 30 +
+                    15
+                ));
+
+                if ($score >= 85) {
+                    $grade = 'Excellent';
+                    $color = 'emerald';
+                    $explanation = 'Collections are progressing excellently. Keep the momentum.';
+                } elseif ($score >= 70) {
+                    $grade = 'Good';
+                    $color = 'blue';
+                    $explanation = 'Collections are on track. A few reminders could push you further.';
+                } elseif ($score >= 50) {
+                    $grade = 'At Risk';
+                    $color = 'amber';
+                    $explanation = 'Collections are slowing down. Send reminders today.';
+                } else {
+                    $grade = 'Critical';
+                    $color = 'rose';
+                    $explanation = 'Significant overdue balances detected. Immediate attention required.';
+                }
+
+                return compact('score', 'grade', 'color', 'explanation');
+            }),
+
+            // ── Deferred: Today & This Week Snapshot ──────────────────────────
+            'todaySnapshot' => Inertia::defer(function () use ($estate) {
+                $estateId = $estate->id;
+
+                $estateScope = fn ($q) => $q->where('estate_id', $estateId)
+                    ->whereDoesntHave('creator.roles', fn ($sq) => $sq
+                        ->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estateId));
+
+                $todayPayments = Payment::where('status', 'success')
+                    ->whereDate('paid_at', Carbon::today())
+                    ->whereHas('assignment.collection', $estateScope)
+                    ->get();
+
+                $weekPayments = Payment::where('status', 'success')
+                    ->where('paid_at', '>=', Carbon::now()->subDays(6)->startOfDay())
+                    ->whereHas('assignment.collection', $estateScope)
+                    ->get();
+
+                return [
+                    'collected_today' => (int) $todayPayments->sum('amount'),
+                    'payments_today' => $todayPayments->count(),
+                    'payers_today' => $todayPayments->unique('user_id')->count(),
+                    'collected_this_week' => (int) $weekPayments->sum('amount'),
+                    'payments_this_week' => $weekPayments->count(),
+                ];
+            }),
+
+            // ── Deferred: Recent Payment Activity ─────────────────────────────
+            'recentActivity' => Inertia::defer(function () use ($estate) {
+                $estateId = $estate->id;
+
+                $estateScope = fn ($q) => $q->where('estate_id', $estateId)
+                    ->whereDoesntHave('creator.roles', fn ($sq) => $sq
+                        ->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estateId));
+
+                return Payment::with(['user', 'assignment.collection'])
+                    ->where('status', 'success')
+                    ->whereHas('assignment.collection', $estateScope)
+                    ->latest('paid_at')
+                    ->take(10)
+                    ->get()
+                    ->map(fn ($p) => [
+                        'id' => $p->id,
+                        'user_name' => $p->user?->name ?? 'Unknown',
+                        'amount' => (int) $p->amount,
+                        'collection_name' => $p->assignment?->collection?->name ?? 'Collection',
+                        'paid_at_human' => $p->paid_at
+                            ? Carbon::parse($p->paid_at)->diffForHumans()
+                            : $p->created_at->diffForHumans(),
+                    ])
+                    ->toArray();
+            }),
+
+            // ── Deferred: Per-Collection Performance Insights ─────────────────
+            'collectionInsights' => Inertia::defer(function () use ($estate) {
+                $estateId = $estate->id;
+
+                $activeCollections = Collection::where('estate_id', $estateId)
+                    ->where('status', 'active')
+                    ->whereDoesntHave('creator.roles', fn ($q) => $q
+                        ->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estateId))
+                    ->select('id', 'ulid', 'name', 'due_at')
+                    ->withSum('assignments as total_expected', 'amount_due')
+                    ->withSum('assignments as total_collected', 'amount_paid')
+                    ->withCount(['assignments as overdue_count' => fn ($q) => $q->where('status', 'overdue')])
+                    ->withCount(['assignments as pending_count' => fn ($q) => $q->whereIn('status', ['pending', 'partial'])])
+                    ->withCount('assignments as total_count')
+                    ->get()
+                    ->map(fn ($c) => [
+                        'id' => $c->id,
+                        'ulid' => $c->ulid,
+                        'name' => $c->name,
+                        'due_at' => $c->due_at,
+                        'expected' => (int) $c->total_expected,
+                        'collected' => (int) $c->total_collected,
+                        'outstanding' => (int) ($c->total_expected - $c->total_collected),
+                        'rate' => $c->total_expected > 0
+                            ? (int) round($c->total_collected / $c->total_expected * 100)
+                            : 0,
+                        'overdue_count' => (int) $c->overdue_count,
+                        'pending_count' => (int) $c->pending_count,
+                        'total_count' => (int) $c->total_count,
+                    ]);
+
+                $best = $activeCollections->sortByDesc('rate')->first();
+                $worst = $activeCollections->where('outstanding', '>', 0)->sortBy('rate')->first();
+                $largestOutstanding = $activeCollections->sortByDesc('outstanding')->first();
+
+                // Ensure worst differs from best
+                if ($worst && $best && $worst['id'] === $best['id']) {
+                    $worst = $activeCollections
+                        ->where('outstanding', '>', 0)
+                        ->sortBy('rate')
+                        ->skip(1)
+                        ->first();
+                }
+
+                return [
+                    'best' => $best,
+                    'worst' => $worst ?: null,
+                    'largest_outstanding' => $largestOutstanding,
+                    'all' => $activeCollections->values()->toArray(),
+                ];
+            }),
         ]);
+
     }
 
     public function create(): Response

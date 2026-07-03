@@ -59,7 +59,7 @@ class CollectionAnalyticsController extends Controller
 
         // Actual revenue (payments successful)
         $actualRaw = Payment::where('status', 'success')
-            ->whereHas('collectionAssignment.collection', function ($q) use ($estateId) {
+            ->whereHas('assignment.collection', function ($q) use ($estateId) {
                 $q->where('estate_id', $estateId)
                     ->whereDoesntHave('creator.roles', function ($sq) use ($estateId) {
                         $sq->where('name', 'property_owner')
@@ -86,9 +86,9 @@ class CollectionAnalyticsController extends Controller
 
     private function getRecentActivity(int $estateId): array
     {
-        return Payment::with(['user', 'collectionAssignment.collection'])
+        return Payment::with(['user', 'assignment.collection'])
             ->where('status', 'success')
-            ->whereHas('collectionAssignment.collection', function ($q) use ($estateId) {
+            ->whereHas('assignment.collection', function ($q) use ($estateId) {
                 $q->where('estate_id', $estateId)
                     ->whereDoesntHave('creator.roles', function ($sq) use ($estateId) {
                         $sq->where('name', 'property_owner')
@@ -102,7 +102,7 @@ class CollectionAnalyticsController extends Controller
                 return [
                     'id' => $payment->id,
                     'actor' => $payment->user ? $payment->user->name : 'Unknown User',
-                    'action' => 'paid for '.($payment->collectionAssignment->collection->name ?? 'Collection'),
+                    'action' => 'paid for '.($payment->assignment->collection->name ?? 'Collection'),
                     'amount' => (float) $payment->amount,
                     'timestamp' => $payment->created_at->diffForHumans(),
                 ];
