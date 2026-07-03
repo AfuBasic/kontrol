@@ -7,7 +7,7 @@ import { useCallback, useRef, useState, lazy, Suspense } from 'react';
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
 import EstateBoardPostPreview from '@/Components/Admin/EstateBoardPostPreview';
 import { show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import { audienceOptions, categoryOptions, priorityOptions } from '@/lib/estate-board-options';
+import { audienceOptions, categoryOptions, priorityOptions } from '@/Lib/estate-board-options';
 import type { EstateBoardPost, PostAudience, PostCategory, PostPriority, PostStatus } from '@/types';
 
 const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));

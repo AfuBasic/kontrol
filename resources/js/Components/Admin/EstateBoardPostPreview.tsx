@@ -1,6 +1,6 @@
 import { Globe, Shield, Users } from 'lucide-react';
 
-import { CATEGORY_COLORS, PRIORITY_BADGES, getAudienceLabel } from '@/lib/estate-board-options';
+import { CATEGORY_COLORS, PRIORITY_BADGES, getAudienceLabel } from '@/Lib/estate-board-options';
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
 
 type Props = {
