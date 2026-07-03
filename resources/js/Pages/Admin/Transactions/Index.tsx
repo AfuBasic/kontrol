@@ -224,11 +224,6 @@ export default function TransactionsIndex({
                             <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
                         </div>
 
-                        {/* Inline Today Stats text strip (Monzo/Apple details) */}
-                        <Deferred data="todaySummary" fallback={<TodaySummary loading />}>
-                            <TodaySummary summary={todaySummary} />
-                        </Deferred>
-
                         {/* Switch View Controls */}
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-1 bg-slate-100/75 p-1 rounded-xl w-fit">

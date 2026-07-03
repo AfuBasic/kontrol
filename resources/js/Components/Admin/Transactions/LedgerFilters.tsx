@@ -1,9 +1,10 @@
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, Filter, RotateCcw, Search } from 'lucide-react';
+import { Filter, RotateCcw, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import SearchableSelect from '@/Components/UI/SearchableSelect';
 
 interface FilterOption {
     value: string;
@@ -109,16 +110,13 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                         onChange={(e) => update('date_from', e.target.value)}
                         className={`${inputClass} w-28 sm:w-32 h-10`}
                     />
-                    <select
+                    <SearchableSelect
+                        options={filterOptions.statuses.map((s) => ({ value: s.value, label: s.label }))}
                         value={local.status}
-                        onChange={(e) => update('status', e.target.value)}
-                        className={`${inputClass} w-28 sm:w-32 h-10`}
-                    >
-                        <option value="">All Statuses</option>
-                        {filterOptions.statuses.map((s) => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                    </select>
+                        onChange={(v) => update('status', v)}
+                        placeholder="All Statuses"
+                        className="w-32 sm:w-36"
+                    />
                     <button
                         type="button"
                         onClick={() => setShowMore(!showMore)}
@@ -149,43 +147,35 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Resident</label>
-                                <select value={local.resident_id} onChange={(e) => update('resident_id', e.target.value)} className={inputClass}>
-                                    <option value="">Select resident</option>
-                                    {filterOptions.residents.map((r) => (
-                                        <option key={r.id} value={r.id}>{r.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Collection</label>
-                                <select value={local.collection_id} onChange={(e) => update('collection_id', e.target.value)} className={inputClass}>
-                                    <option value="">Select collection</option>
-                                    {filterOptions.collections.map((c) => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Type</label>
-                                <select value={local.type} onChange={(e) => update('type', e.target.value)} className={inputClass}>
-                                    <option value="">Select type</option>
-                                    {filterOptions.types.map((t) => (
-                                        <option key={t.value} value={t.value}>{t.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Payment Method</label>
-                                <select value={local.payment_method} onChange={(e) => update('payment_method', e.target.value)} className={inputClass}>
-                                    <option value="">Select method</option>
-                                    {filterOptions.payment_methods.map((m) => (
-                                        <option key={m.value} value={m.value}>{m.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                        <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                            <SearchableSelect
+                                label="Resident"
+                                options={filterOptions.residents.map((r) => ({ value: r.id, label: r.name }))}
+                                value={local.resident_id}
+                                onChange={(v) => update('resident_id', v)}
+                                placeholder="Select resident"
+                            />
+                            <SearchableSelect
+                                label="Collection"
+                                options={filterOptions.collections.map((c) => ({ value: c.id, label: c.name }))}
+                                value={local.collection_id}
+                                onChange={(v) => update('collection_id', v)}
+                                placeholder="Select collection"
+                            />
+                            <SearchableSelect
+                                label="Type"
+                                options={filterOptions.types.map((t) => ({ value: t.value, label: t.label }))}
+                                value={local.type}
+                                onChange={(v) => update('type', v)}
+                                placeholder="Select type"
+                            />
+                            <SearchableSelect
+                                label="Payment Method"
+                                options={filterOptions.payment_methods.map((m) => ({ value: m.value, label: m.label }))}
+                                value={local.payment_method}
+                                onChange={(v) => update('payment_method', v)}
+                                placeholder="Select method"
+                            />
                             <div>
                                 <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Coupon Code</label>
                                 <input value={local.coupon} onChange={(e) => update('coupon', e.target.value)} placeholder="e.g. WELCOME25" className={inputClass} />
@@ -202,24 +192,20 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                                 <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Max Amount (NGN)</label>
                                 <input type="number" value={local.amount_max} onChange={(e) => update('amount_max', e.target.value)} placeholder="e.g. 100000" className={inputClass} />
                             </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Created By</label>
-                                <select value={local.created_by} onChange={(e) => update('created_by', e.target.value)} className={inputClass}>
-                                    <option value="">Select admin</option>
-                                    {filterOptions.admins.map((a) => (
-                                        <option key={a.id} value={a.id}>{a.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Approved By</label>
-                                <select value={local.approved_by} onChange={(e) => update('approved_by', e.target.value)} className={inputClass}>
-                                    <option value="">Select admin</option>
-                                    {filterOptions.admins.map((a) => (
-                                        <option key={a.id} value={a.id}>{a.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <SearchableSelect
+                                label="Created By"
+                                options={filterOptions.admins.map((a) => ({ value: a.id, label: a.name }))}
+                                value={local.created_by}
+                                onChange={(v) => update('created_by', v)}
+                                placeholder="Select admin"
+                            />
+                            <SearchableSelect
+                                label="Approved By"
+                                options={filterOptions.admins.map((a) => ({ value: a.id, label: a.name }))}
+                                value={local.approved_by}
+                                onChange={(v) => update('approved_by', v)}
+                                placeholder="Select admin"
+                            />
                             <div className="flex items-end sm:col-span-2">
                                 <button
                                     type="button"
