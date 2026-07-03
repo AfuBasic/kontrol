@@ -247,7 +247,7 @@ export default function TransactionsIndex({
                         </div>
 
                         {/* Premium Navigation Tabs */}
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-150 pb-2">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-1 bg-slate-100/75 p-1 rounded-xl w-fit">
                                 <button
                                     onClick={() => setActiveTab('activity')}
