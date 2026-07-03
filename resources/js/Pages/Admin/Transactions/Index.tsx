@@ -1,5 +1,5 @@
 import { Deferred, Head } from '@inertiajs/react';
-import { Activity, Download, FileText, Plus, Receipt } from 'lucide-react';
+import { Download, FileText, Plus, Activity, Table } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
@@ -100,6 +100,7 @@ export default function TransactionsIndex({
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [offlineModalOpen, setOfflineModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'feed' | 'table'>('feed');
 
     const canExport = hasTransactions && transactions.total > 0;
 
@@ -117,9 +118,9 @@ export default function TransactionsIndex({
     const showEmpty = !hasTransactions && transactions.data.length === 0;
 
     const actionButtonClass = (enabled: boolean) =>
-        `inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-black tracking-widest uppercase transition ${
+        `inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2.5 text-[11px] font-black tracking-widest uppercase transition ${
             enabled
-                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-95'
+                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-98'
                 : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
         }`;
 
@@ -127,8 +128,8 @@ export default function TransactionsIndex({
         <>
             <Head title="Transactions" />
 
-            <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-                {/* Clean Header */}
+            <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+                {/* Header Section */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-black tracking-tight text-slate-900">Transactions</h1>
@@ -172,12 +173,12 @@ export default function TransactionsIndex({
                     </div>
                 </div>
 
-                {/* Today Inline Summary bar */}
+                {/* Inline Today Stats Banner */}
                 <Deferred data="todaySummary" fallback={<TodaySummary loading />}>
                     <TodaySummary summary={todaySummary} />
                 </Deferred>
 
-                {/* Main Content Area */}
+                {/* Main View Shell */}
                 {showEmpty ? (
                     <LedgerEmptyState
                         canRecordOffline={permissions.record_offline}
@@ -185,30 +186,56 @@ export default function TransactionsIndex({
                     />
                 ) : (
                     <div className="space-y-6">
-                        {/* Interactive Filter block */}
+                        {/* Progressive Filters Bar */}
                         <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
 
-                        {/* Hero Section: Financial Activity timeline feed */}
-                        <section className="space-y-3">
-                            <div className="flex items-center gap-2 text-slate-400">
-                                <Activity className="h-4 w-4" />
-                                <h2 className="text-xs font-black tracking-widest uppercase">Financial Activity Feed</h2>
+                        {/* View Switcher Controls */}
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-1 bg-slate-100/70 p-1 rounded-xl">
+                                <button
+                                    onClick={() => setViewMode('feed')}
+                                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all ${
+                                        viewMode === 'feed'
+                                            ? 'bg-white text-slate-900 shadow-xs'
+                                            : 'text-slate-500 hover:text-slate-800'
+                                    }`}
+                                >
+                                    <Activity className="h-3 w-3" /> Activity Feed
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all ${
+                                        viewMode === 'table'
+                                            ? 'bg-white text-slate-900 shadow-xs'
+                                            : 'text-slate-500 hover:text-slate-800'
+                                    }`}
+                                >
+                                    <Table className="h-3 w-3" /> Audit Table
+                                </button>
                             </div>
-                            <Deferred data="activity" fallback={<ActivityFeed loading />}>
-                                <ActivityFeed entries={activity as never} onSelect={openTransaction} />
-                            </Deferred>
-                        </section>
+                            <span className="text-xs font-semibold text-slate-400">
+                                {transactions.total.toLocaleString()} transactions total
+                            </span>
+                        </div>
 
-                        {/* Secondary Section: Audit Ledger Table (For accountants) */}
-                        <section className="pt-4 border-t border-slate-100">
-                            <TransactionsTable
-                                transactions={transactions}
-                                onSelect={(tx) => openTransaction(tx.ulid)}
-                                permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
-                            />
-                        </section>
+                        {/* View Pane Switching */}
+                        {viewMode === 'feed' ? (
+                            <section>
+                                <Deferred data="activity" fallback={<ActivityFeed loading />}>
+                                    <ActivityFeed entries={activity as never} onSelect={openTransaction} />
+                                </Deferred>
+                            </section>
+                        ) : (
+                            <section className="bg-white rounded-2xl border border-slate-100/70 overflow-hidden">
+                                <TransactionsTable
+                                    transactions={transactions}
+                                    onSelect={(tx) => openTransaction(tx.ulid)}
+                                    permissions={{ export: permissions.export, download_receipts: permissions.download_receipts }}
+                                />
+                            </section>
+                        )}
 
-                        {/* focused Cash flow Trend charts */}
+                        {/* Financial Analytics charts */}
                         {permissions.reports && (
                             <Deferred data="charts" fallback={<LedgerCharts loading />}>
                                 <LedgerCharts data={charts as never} />

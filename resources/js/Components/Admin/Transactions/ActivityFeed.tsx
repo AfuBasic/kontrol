@@ -4,10 +4,10 @@ import {
     ArrowDownLeft,
     ArrowUpRight,
     BadgePercent,
-    Banknote,
-    FileText,
     PenLine,
     RefreshCcw,
+    CornerDownRight,
+    Clock
 } from 'lucide-react';
 
 interface ActivityEntry {
@@ -42,34 +42,41 @@ function getStatusConfig(entry: ActivityEntry) {
     if (entry.status === 'failed') {
         return {
             icon: AlertCircle,
-            color: 'text-rose-600 bg-rose-50 ring-rose-100/50',
-            label: 'Failed Payment',
+            color: 'text-rose-500 bg-rose-50 border-rose-100/50',
+            label: 'Payment Failed',
+        };
+    }
+    if (entry.status === 'pending') {
+        return {
+            icon: Clock,
+            color: 'text-amber-500 bg-amber-50 border-amber-100/50',
+            label: 'Payment Pending',
         };
     }
     if (entry.type.includes('refund') || entry.type.includes('reverse')) {
         return {
             icon: RefreshCcw,
-            color: 'text-violet-600 bg-violet-50 ring-violet-100/50',
+            color: 'text-violet-500 bg-violet-50 border-violet-100/50',
             label: 'Refund Issued',
         };
     }
     if (entry.type.includes('coupon') || entry.type.includes('discount')) {
         return {
             icon: BadgePercent,
-            color: 'text-amber-600 bg-amber-50 ring-amber-100/50',
-            label: 'Coupon Applied',
+            color: 'text-indigo-500 bg-indigo-50 border-indigo-100/50',
+            label: 'Discount Applied',
         };
     }
     if (entry.type.includes('adjustment')) {
         return {
             icon: PenLine,
-            color: 'text-blue-600 bg-blue-50 ring-blue-100/50',
+            color: 'text-blue-500 bg-blue-50 border-blue-100/50',
             label: 'Manual Adjustment',
         };
     }
     return {
         icon: entry.direction === 'debit' ? ArrowDownLeft : ArrowUpRight,
-        color: 'text-emerald-600 bg-emerald-50 ring-emerald-100/50',
+        color: 'text-emerald-500 bg-emerald-50 border-emerald-100/50',
         label: 'Payment Received',
     };
 }
@@ -77,9 +84,9 @@ function getStatusConfig(entry: ActivityEntry) {
 export default function ActivityFeed({ entries, loading, onSelect }: Props) {
     if (loading || !entries) {
         return (
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-50/50 ring-1 ring-slate-100/60" />
+                    <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-50/70 border border-slate-100" />
                 ))}
             </div>
         );
@@ -89,84 +96,119 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
         return null;
     }
 
+    // Group entries dynamically by Day
+    const grouped = entries.reduce((groups, entry) => {
+        const date = entry.occurred_at ? new Date(entry.occurred_at) : new Date();
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        let groupKey = 'Earlier';
+        if (date.toDateString() === today.toDateString()) {
+            groupKey = 'Today';
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            groupKey = 'Yesterday';
+        } else {
+            groupKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        }
+
+        if (!groups[groupKey]) {
+            groups[groupKey] = [];
+        }
+        groups[groupKey].push(entry);
+        return groups;
+    }, {} as Record<string, ActivityEntry[]>);
+
     return (
-        <div className="space-y-4">
-            {entries.map((entry, index) => {
-                const config = getStatusConfig(entry);
-                const Icon = config.icon;
+        <div className="space-y-8">
+            {Object.entries(grouped).map(([groupTitle, items]) => (
+                <div key={groupTitle} className="space-y-3">
+                    <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase pl-2">
+                        {groupTitle}
+                    </h3>
+                    <div className="space-y-2">
+                        {items.map((entry, index) => {
+                            const config = getStatusConfig(entry);
+                            const Icon = config.icon;
 
-                return (
-                    <motion.div
-                        key={entry.id}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04, ease: 'easeOut' }}
-                        onClick={() => onSelect?.(entry.id)}
-                        className="group relative cursor-pointer overflow-hidden rounded-2xl bg-white p-5 ring-1 ring-slate-100 transition-all hover:bg-slate-50/40 hover:shadow-md hover:shadow-slate-100/50"
-                    >
-                        <div className="flex items-start gap-4">
-                            {/* Icon Indicator */}
-                            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-4 ${config.color}`}>
-                                <Icon className="h-5.5 w-5.5" />
-                            </div>
+                            return (
+                                <motion.div
+                                    key={entry.id}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                    onClick={() => onSelect?.(entry.id)}
+                                    className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-100/70 bg-white p-4.5 transition-all hover:border-slate-200 hover:shadow-xs active:scale-[0.99] cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        {/* Minimal Circle Status Icon */}
+                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${config.color}`}>
+                                            <Icon className="h-4.5 w-4.5" />
+                                        </div>
 
-                            {/* Center story details */}
-                            <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-baseline justify-between gap-2">
-                                    <span className="text-xs font-black tracking-wider text-slate-400 uppercase">
-                                        {config.label}
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-400">{entry.time_ago}</span>
-                                </div>
-                                <h3 className="text-base font-extrabold text-slate-900 leading-tight">
-                                    {entry.resident_name || 'System'}
-                                    <span className="mx-2 text-slate-300 font-normal">·</span>
-                                    <span className="font-semibold text-slate-500">{entry.collection_name || entry.description}</span>
-                                </h3>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                                    <span className="font-mono text-[11px] font-bold text-slate-400">{entry.reference_number}</span>
-                                    {entry.payment_method_label && (
-                                        <>
-                                            <span className="text-slate-200">•</span>
-                                            <span>{entry.payment_method_label}</span>
-                                        </>
-                                    )}
-                                    {entry.coupon_code && (
-                                        <>
-                                            <span className="text-slate-200">•</span>
-                                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-700">
-                                                <BadgePercent className="h-3 w-3" /> {entry.coupon_code}
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
+                                        {/* Content details */}
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase leading-none">
+                                                    {config.label}
+                                                </span>
+                                                <span className="text-slate-300">•</span>
+                                                <span className="text-[10px] font-bold text-slate-400">{entry.time_ago}</span>
+                                            </div>
+                                            <h4 className="mt-1 text-sm font-extrabold text-slate-900 leading-tight truncate">
+                                                {entry.resident_name || 'System Account'}
+                                                {entry.collection_name && (
+                                                    <>
+                                                        <span className="mx-1.5 font-normal text-slate-300">/</span>
+                                                        <span className="font-semibold text-slate-500">{entry.collection_name}</span>
+                                                    </>
+                                                )}
+                                            </h4>
+                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] font-semibold text-slate-400">
+                                                <span className="font-mono text-slate-400">{entry.reference_number}</span>
+                                                {entry.payment_method_label && (
+                                                    <>
+                                                        <span className="text-slate-200">•</span>
+                                                        <span>{entry.payment_method_label}</span>
+                                                    </>
+                                                )}
+                                                {entry.coupon_code && (
+                                                    <>
+                                                        <span className="text-slate-200">•</span>
+                                                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1 py-0.5 text-amber-700">
+                                                            🏷 {entry.coupon_code}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            {entry.reason && (
+                                                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
+                                                    <CornerDownRight className="h-3 w-3 text-slate-300" />
+                                                    <span>{entry.reason}</span>
+                                                </div>
+                                            )}
+                                            {entry.failure_reason && (
+                                                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-rose-500 font-bold">
+                                                    <CornerDownRight className="h-3 w-3 text-rose-200" />
+                                                    <span>{entry.failure_reason}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                {entry.reason && (
-                                    <p className="mt-2 text-xs text-slate-500 bg-slate-50/65 rounded-lg px-2.5 py-1.5 border border-slate-100/50 inline-block">
-                                        <span className="font-bold text-slate-400">Reason:</span> {entry.reason}
-                                    </p>
-                                )}
-                                {entry.failure_reason && (
-                                    <p className="mt-2 text-xs font-semibold text-rose-600 bg-rose-50/40 rounded-lg px-2.5 py-1.5 border border-rose-100/50 inline-block">
-                                        {entry.failure_reason}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Right Pricing details */}
-                            <div className="shrink-0 text-right">
-                                <p className="text-lg font-black text-slate-950">
-                                    {entry.direction === 'debit' ? '−' : ''}
-                                    {formatCurrency(entry.amount)}
-                                </p>
-                                <button className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 opacity-0 transition group-hover:opacity-100 hover:text-slate-600">
-                                    <FileText className="h-3 w-3" /> Details
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                );
-            })}
+                                    {/* Right Amount details */}
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-base font-black text-slate-900">
+                                            {entry.direction === 'debit' ? '−' : ''}
+                                            {formatCurrency(entry.amount)}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
