@@ -3,7 +3,6 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
     Bold,
     Code,
@@ -15,34 +14,16 @@ import {
     ListOrdered,
     Quote,
     Redo,
-    RotateCcw,
-    Sparkles,
     Strikethrough,
     Undo,
-    X,
 } from 'lucide-react';
-import { marked } from 'marked';
 import { useCallback, useEffect, useState } from 'react';
-
-import ContentEnhanceController from '@/actions/App/Http/Controllers/Api/ContentEnhanceController';
-import type { PostAudience, PostCategory, PostPriority } from '@/types';
-
-// Configure marked for safe HTML output
-marked.setOptions({
-    breaks: true,
-    gfm: true,
-});
 
 type MarkdownEditorProps = {
     id?: string;
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
-    minCharsToEnhance?: number;
-    title?: string;
-    category?: PostCategory;
-    priority?: PostPriority;
-    audience?: PostAudience;
     error?: string;
     className?: string;
 };
@@ -80,17 +61,9 @@ export default function MarkdownEditor({
     value,
     onChange,
     placeholder = 'Write something...',
-    minCharsToEnhance = 20,
-    title,
-    category,
-    priority,
-    audience,
     error,
     className = '',
 }: MarkdownEditorProps) {
-    const [isEnhancing, setIsEnhancing] = useState(false);
-    const [originalContent, setOriginalContent] = useState<string | null>(null);
-    const [enhanceError, setEnhanceError] = useState<string | null>(null);
     const [linkUrl, setLinkUrl] = useState('');
     const [showLinkInput, setShowLinkInput] = useState(false);
 
@@ -124,7 +97,6 @@ export default function MarkdownEditor({
         },
     });
 
-    // Sync external value changes
     useEffect(() => {
         if (editor && value !== editor.getHTML()) {
             editor.commands.setContent(value);
@@ -132,69 +104,11 @@ export default function MarkdownEditor({
     }, [value, editor]);
 
     const textLength = editor?.getText().length || 0;
-    const canEnhance = textLength >= minCharsToEnhance;
-    const hasEnhanced = originalContent !== null;
-
-    const handleEnhance = useCallback(async () => {
-        if (!canEnhance || isEnhancing || !editor) return;
-
-        setIsEnhancing(true);
-        setEnhanceError(null);
-        setOriginalContent(editor.getHTML());
-
-        try {
-            const response = await fetch(ContentEnhanceController.url(), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    mode: 'enhance',
-                    content: editor.getText(),
-                    title: title || null,
-                    category: category || null,
-                    priority: priority || null,
-                    audience: audience || null,
-                    type: 'estate_board',
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success && data.enhanced) {
-                // Parse markdown to HTML
-                const enhanced = marked.parse(data.enhanced) as string;
-                editor.commands.setContent(enhanced);
-                onChange(enhanced);
-            } else {
-                setEnhanceError(data.message || 'Enhancement failed');
-                setOriginalContent(null);
-            }
-        } catch (err) {
-            setEnhanceError('Failed to connect. Please try again.');
-            setOriginalContent(null);
-        } finally {
-            setIsEnhancing(false);
-        }
-    }, [canEnhance, isEnhancing, editor, title, category, priority, audience, onChange]);
-
-    const handleRevert = useCallback(() => {
-        if (originalContent !== null && editor) {
-            editor.commands.setContent(originalContent);
-            onChange(originalContent);
-            setOriginalContent(null);
-        }
-    }, [originalContent, editor, onChange]);
-
-    const dismissError = useCallback(() => {
-        setEnhanceError(null);
-    }, []);
 
     const setLink = useCallback(() => {
-        if (!editor) return;
+        if (!editor) {
+            return;
+        }
 
         if (linkUrl === '') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run();
@@ -211,11 +125,10 @@ export default function MarkdownEditor({
 
     return (
         <div className={`relative ${className}`}>
-            {/* Toolbar */}
             <div
                 className={`flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-300 bg-gray-50 px-2 py-1.5 ${
-                    hasEnhanced ? 'border-violet-300 bg-violet-50/50' : ''
-                } ${error ? 'border-red-300' : ''}`}
+                    error ? 'border-red-300' : ''
+                }`}
             >
                 <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
                     <Bold className="h-4 w-4" />
@@ -306,95 +219,13 @@ export default function MarkdownEditor({
                 <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Y)">
                     <Redo className="h-4 w-4" />
                 </ToolbarButton>
-
-                {/* AI Enhancement Section */}
-                <div className="ml-auto flex items-center gap-2">
-                    <AnimatePresence>
-                        {hasEnhanced && (
-                            <motion.div
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 10 }}
-                                className="flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700"
-                            >
-                                <Sparkles className="h-3 w-3" />
-                                AI Enhanced
-                                <button
-                                    type="button"
-                                    onClick={handleRevert}
-                                    className="ml-1 rounded-full p-0.5 transition-colors hover:bg-violet-200"
-                                    title="Revert to original"
-                                >
-                                    <RotateCcw className="h-3 w-3" />
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <AnimatePresence>
-                        {canEnhance && !isEnhancing && !hasEnhanced && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                type="button"
-                                onClick={handleEnhance}
-                                className="flex items-center gap-1.5 rounded-lg bg-linear-to-r from-violet-600 to-purple-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:shadow-md"
-                            >
-                                <Sparkles className="h-3.5 w-3.5" />
-                                Polish with AI
-                            </motion.button>
-                        )}
-                    </AnimatePresence>
-
-                    <AnimatePresence>
-                        {isEnhancing && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="flex items-center gap-2 rounded-lg bg-violet-100 px-3 py-1.5 text-xs font-medium text-violet-700"
-                            >
-                                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-violet-300 border-t-violet-600" />
-                                Enhancing...
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
             </div>
 
-            {/* Editor Content */}
-            <div
-                className={`rounded-b-lg border border-gray-300 bg-white ${
-                    hasEnhanced ? 'border-violet-300 bg-violet-50/30' : ''
-                } ${error ? 'border-red-300' : ''}`}
-            >
+            <div className={`rounded-b-lg border border-gray-300 bg-white ${error ? 'border-red-300' : ''}`}>
                 <EditorContent editor={editor} />
             </div>
 
-            {/* Error Toast */}
-            <AnimatePresence>
-                {enhanceError && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 -bottom-12 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 shadow-lg ring-1 ring-red-100"
-                    >
-                        <span>{enhanceError}</span>
-                        <button type="button" onClick={dismissError} className="rounded p-0.5 hover:bg-red-100">
-                            <X className="h-3 w-3" />
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-gray-400">
-                <span>
-                    {canEnhance
-                        ? 'Polish your draft with AI, or edit manually.'
-                        : `${textLength}/${minCharsToEnhance} characters needed for AI polish`}
-                </span>
+            <div className="mt-1.5 flex justify-end text-xs text-gray-400">
                 <span>{textLength.toLocaleString()} characters</span>
             </div>
 

@@ -181,10 +181,6 @@ export default function CreatePost() {
                                         value={data.body}
                                         onChange={(value) => setData('body', value)}
                                         placeholder="Generate a draft above, or write your announcement here..."
-                                        title={data.title}
-                                        category={data.category}
-                                        priority={data.priority}
-                                        audience={data.audience}
                                         error={errors.body}
                                     />
                                 </Suspense>

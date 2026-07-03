@@ -16,30 +16,41 @@ interface Bank {
     code: string;
 }
 
+type SettlementSettings = {
+    bank_name: string | null;
+    bank_code: string | null;
+    account_number: string | null;
+    account_name: string | null;
+};
+
+const emptySettings: SettlementSettings = {
+    bank_name: null,
+    bank_code: null,
+    account_number: null,
+    account_name: null,
+};
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     banks: Bank[];
-    currentSettings: {
-        bank_name: string | null;
-        bank_code: string | null;
-        account_number: string | null;
-        account_name: string | null;
-    };
+    currentSettings?: SettlementSettings;
 }
 
-export default function BankingSetupModal({ isOpen, onClose, banks, currentSettings }: Props) {
+export default function BankingSetupModal({ isOpen, onClose, banks, currentSettings = emptySettings }: Props) {
+    const settings = currentSettings ?? emptySettings;
+
     const { data, setData, post, processing, errors, reset } = useForm({
-        bank_name: currentSettings.bank_name || '',
-        bank_code: currentSettings.bank_code || '',
-        account_number: currentSettings.account_number || '',
-        account_name: currentSettings.account_name || '',
+        bank_name: settings.bank_name || '',
+        bank_code: settings.bank_code || '',
+        account_number: settings.account_number || '',
+        account_name: settings.account_name || '',
     });
 
     const [bankQuery, setBankQuery] = useState('');
     const [resolvingBank, setResolvingBank] = useState(false);
     const [resolveError, setResolveError] = useState<string | null>(null);
-    const [isVerified, setIsVerified] = useState(!!currentSettings.account_name);
+    const [isVerified, setIsVerified] = useState(!!settings.account_name);
 
     const filteredBanks = bankQuery === '' ? banks : banks.filter((bank) => bank.name.toLowerCase().includes(bankQuery.toLowerCase()));
 
@@ -76,12 +87,12 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
 
     // Reset verification if details change
     useEffect(() => {
-        if (data.account_number !== currentSettings.account_number || data.bank_code !== currentSettings.bank_code) {
+        if (data.account_number !== settings.account_number || data.bank_code !== settings.bank_code) {
             setIsVerified(false);
         } else {
-            setIsVerified(!!currentSettings.account_name);
+            setIsVerified(!!settings.account_name);
         }
-    }, [data.account_number, data.bank_code]);
+    }, [data.account_number, data.bank_code, settings.account_number, settings.bank_code, settings.account_name]);
 
     return (
         <Transition.Root show={isOpen} as={Fragment}>
