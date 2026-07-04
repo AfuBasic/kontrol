@@ -51,7 +51,7 @@ export default function MobileBottomNav({ url, unreadNotifications = 0 }: Props)
                         <Link
                             key={item.name}
                             href={item.href}
-                            prefetch
+                            prefetch="click"
                             className={`relative flex flex-col items-center justify-center gap-1 transition-all active:scale-90 ${
                                 active ? 'text-[#1F6FDB]' : 'text-slate-400'
                             }`}

@@ -556,7 +556,7 @@ export default function AdminLayout({ children, title }: Props) {
                                     <Link
                                         key={item.name}
                                         href={item.href}
-                                        prefetch
+                                        prefetch="click"
                                         title={isCollapsed ? item.name : undefined}
                                         className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
                                             isCurrentPath(item.href)
@@ -587,7 +587,7 @@ export default function AdminLayout({ children, title }: Props) {
                                         <Link
                                             key={item.name}
                                             href={item.href}
-                                            prefetch
+                                            prefetch="click"
                                             title={isCollapsed ? item.name : undefined}
                                             className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
                                                 isCurrentPath(item.href)

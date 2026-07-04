@@ -185,7 +185,7 @@ export default function Home() {
                                 <MagneticButton>
                                     <Link
                                         href={apply.url()}
-                                        prefetch
+                                        prefetch="click"
                                         className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.28),0_0_34px_rgba(31,111,219,0.24)] transition duration-300 hover:bg-white/92 hover:shadow-[0_22px_64px_rgba(2,8,23,0.34),0_0_44px_rgba(31,111,219,0.34)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
                                     >
                                         Get Started Free

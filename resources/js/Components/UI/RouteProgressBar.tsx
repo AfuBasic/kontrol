@@ -1,64 +1,89 @@
 import { router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+import { isRouteChangeVisit } from '@/Lib/inertia';
 
 export default function RouteProgressBar() {
     const [progress, setProgress] = useState(0);
     const [visible, setVisible] = useState(false);
+    const activeRouteChangesRef = useRef(0);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
-        let interval: ReturnType<typeof setInterval> | null = null;
-
-        const start = (event: any) => {
-            const isSilent = event?.detail?.visit?.silent || event?.detail?.visit?.headers?.['X-Background-Reload'];
-            if (isSilent) return;
-
-            // Only show loader if we are navigating to a different route/pathname
-            try {
-                const visitUrl = event?.detail?.visit?.url;
-                const destPath = typeof visitUrl === 'string'
-                    ? new URL(visitUrl, window.location.origin).pathname
-                    : visitUrl?.pathname;
-
-                if (destPath && destPath === window.location.pathname) {
-                    return;
-                }
-            } catch (err) {
-                // Fallback to show progress if error occurs
+        const clearProgressInterval = () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
             }
+        };
 
+        const startProgress = () => {
+            clearProgressInterval();
             setProgress(0);
             setVisible(true);
-            
-            // Artificial progress simulation
-            interval = setInterval(() => {
+
+            intervalRef.current = setInterval(() => {
                 setProgress((prev) => {
-                    if (prev >= 90) return 90;
+                    if (prev >= 90) {
+                        return 90;
+                    }
+
                     return prev + (100 - prev) * 0.1;
                 });
             }, 200);
         };
 
-        const end = (event: any) => {
-            const isSilent = event?.detail?.visit?.silent || event?.detail?.visit?.headers?.['X-Background-Reload'];
-            if (isSilent) return;
-
-            if (interval) clearInterval(interval);
+        const finishProgress = () => {
+            clearProgressInterval();
             setProgress(100);
-            
-            // Small delay before hiding to show 100% completion
+
             setTimeout(() => {
                 setVisible(false);
-                setTimeout(() => setProgress(0), 400); // Reset for next time
+                setTimeout(() => setProgress(0), 400);
             }, 400);
         };
 
-        const startListener = router.on('start', (e) => start(e));
-        const finishListener = router.on('finish', (e) => end(e));
-        const errorListener = router.on('error', (e) => end(e));
+        const start = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
+            if (!isRouteChangeVisit(event)) {
+                return;
+            }
+
+            activeRouteChangesRef.current += 1;
+
+            if (activeRouteChangesRef.current === 1) {
+                startProgress();
+            }
+        };
+
+        const end = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
+            if (!isRouteChangeVisit(event)) {
+                return;
+            }
+
+            activeRouteChangesRef.current = Math.max(0, activeRouteChangesRef.current - 1);
+
+            if (activeRouteChangesRef.current === 0) {
+                finishProgress();
+            }
+        };
+
+        const handleError = () => {
+            if (activeRouteChangesRef.current === 0) {
+                return;
+            }
+
+            activeRouteChangesRef.current = 0;
+            finishProgress();
+        };
+
+        const startListener = router.on('start', start);
+        const finishListener = router.on('finish', end);
+        const errorListener = router.on('error', handleError);
 
         return () => {
-            if (interval) clearInterval(interval);
+            clearProgressInterval();
+            activeRouteChangesRef.current = 0;
             startListener();
             finishListener();
             errorListener();
@@ -69,7 +94,6 @@ export default function RouteProgressBar() {
         <AnimatePresence>
             {visible && (
                 <>
-                    {/* Top progress bar */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -80,20 +104,18 @@ export default function RouteProgressBar() {
                             className="h-full bg-indigo-600"
                             initial={{ width: '0%' }}
                             animate={{ width: `${progress}%` }}
-                            transition={{ 
+                            transition={{
                                 duration: progress === 100 ? 0.3 : 0.6,
-                                ease: "easeOut"
+                                ease: 'easeOut',
                             }}
                         />
-                        
-                        {/* Glow effect */}
-                        <div 
+
+                        <div
                             className="absolute top-0 right-0 h-full w-8 bg-indigo-400 blur-sm"
                             style={{ transform: `translateX(${100 - progress}%)` }}
                         />
                     </motion.div>
 
-                    {/* Premium glassmorphic loading overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -105,7 +127,9 @@ export default function RouteProgressBar() {
                             <div className="relative">
                                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-100 border-t-indigo-600" />
                             </div>
-                            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase animate-pulse">Loading</span>
+                            <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase animate-pulse">
+                                Loading
+                            </span>
                         </div>
                     </motion.div>
                 </>

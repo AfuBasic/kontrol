@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import MobileSheet from '@/Components/MobileSheet';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { isRouteChangeVisit } from '@/Lib/inertia';
 import type { SharedData } from '@/types';
 
 const MotionLink = motion(Link);
@@ -58,7 +59,11 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
     const [isNavigating, setIsNavigating] = useState(false);
 
     useEffect(() => {
-        const removeStartListener = router.on('start', () => setIsNavigating(true));
+        const removeStartListener = router.on('start', (event) => {
+            if (isRouteChangeVisit(event)) {
+                setIsNavigating(true);
+            }
+        });
         return () => {
             removeStartListener();
         };

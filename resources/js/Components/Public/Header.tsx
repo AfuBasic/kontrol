@@ -81,14 +81,14 @@ export default function Header({ hideCta = false, activePage }: HeaderProps) {
 
                         <Link
                             href="/product/residents"
-                            prefetch
+                            prefetch="click"
                             className={`text-sm font-medium transition-colors ${activePage === 'residents' ? 'text-[#FF7E67]' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                         >
                             For Residents
                         </Link>
                         <Link
                             href="/product/estates"
-                            prefetch
+                            prefetch="click"
                             className={`text-sm font-medium transition-colors ${activePage === 'estates' ? 'text-[#FF7E67]' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                         >
                             For Estates
