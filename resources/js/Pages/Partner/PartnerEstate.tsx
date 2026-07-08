@@ -447,11 +447,25 @@ export default function PartnerEstate({ partner }: Props) {
         setStep((s) => Math.max(s - 1, 0));
     }
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
+    function submitEstate() {
         post('/partner/partner-requests', {
             onSuccess: () => clearDraft(),
         });
+    }
+
+    function handleFormSubmit(e: React.FormEvent) {
+        // Never auto-submit when advancing steps (Enter key / button type swap).
+        e.preventDefault();
+
+        if (step < STEPS.length - 1) {
+            next();
+
+            return;
+        }
+
+        // Final step: only submit when the primary Submit control is used.
+        // Enter on review still submits intentionally.
+        submitEstate();
     }
 
     const showEstateNameError = (touched.estate_name || attemptedContinue) && !data.estate_name.trim();
@@ -509,7 +523,7 @@ export default function PartnerEstate({ partner }: Props) {
 
                         <MobileProgress step={step} />
 
-                        <form onSubmit={handleSubmit} className="mt-6 lg:mt-0">
+                        <form onSubmit={handleFormSubmit} className="mt-6 lg:mt-0">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={step}
@@ -896,7 +910,10 @@ export default function PartnerEstate({ partner }: Props) {
                                 {step < STEPS.length - 1 ? (
                                     <button
                                         type="button"
-                                        onClick={next}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            next();
+                                        }}
                                         className="group inline-flex items-center gap-2 rounded-2xl bg-stone-900 px-6 py-3.5 text-[13px] font-semibold text-white shadow-lg shadow-stone-900/15 transition hover:bg-stone-800 hover:shadow-xl active:scale-[0.98] dark:bg-white dark:text-stone-900 dark:shadow-white/10 dark:hover:bg-stone-100"
                                     >
                                         Continue
@@ -904,8 +921,12 @@ export default function PartnerEstate({ partner }: Props) {
                                     </button>
                                 ) : (
                                     <button
-                                        type="submit"
+                                        type="button"
                                         disabled={processing}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            submitEstate();
+                                        }}
                                         className="group inline-flex items-center gap-2 rounded-2xl bg-primary-600 px-6 py-3.5 text-[13px] font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-500 hover:shadow-xl disabled:opacity-60 active:scale-[0.98]"
                                     >
                                         {processing ? (
