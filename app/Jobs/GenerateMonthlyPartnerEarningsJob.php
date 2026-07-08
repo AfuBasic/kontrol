@@ -43,7 +43,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
                 DB::raw('COUNT(*) as record_count'),
             ])
             ->where('status', 'pending')
-            ->whereBetween(DB::raw('DATE(created_at)'), [$monthStart, $monthEnd])
+            ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
             ->whereNotNull('partner_id')
             ->groupBy('partner_id')
             ->get();
@@ -64,7 +64,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
                 CommissionableRevenue::query()
                     ->where('partner_id', $row->partner_id)
                     ->where('status', 'pending')
-                    ->whereBetween(DB::raw('DATE(created_at)'), [$monthStart, $monthEnd])
+                    ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
                     ->update(['status' => 'settled']);
             });
         }
