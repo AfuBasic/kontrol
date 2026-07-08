@@ -5,7 +5,6 @@ import {
     CheckIcon,
     ClockIcon,
     CloudArrowUpIcon,
-    DocumentTextIcon,
     HomeModernIcon,
     MapPinIcon,
     PaperAirplaneIcon,
@@ -67,18 +66,6 @@ const STEPS = [
         why: 'We only contact them after internal review. Accuracy avoids delays.',
     },
     {
-        key: 'documents',
-        title: 'Context & notes',
-        short: 'Notes',
-        description: 'Anything that helps our team.',
-        icon: DocumentTextIcon,
-        minutes: 1,
-        accent: 'from-emerald-500/15 to-teal-500/10',
-        iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-        tip: 'Uploads arrive soon. For now, note what you can provide offline.',
-        why: 'Context (intro letters, photos, gate access) shortens back-and-forth.',
-    },
-    {
         key: 'review',
         title: 'Review & submit',
         short: 'Review',
@@ -93,7 +80,6 @@ const STEPS = [
 ] as const;
 
 const DRAFT_KEY = 'partner-estate-draft-v1';
-const DOC_OPTIONS = ['Estate photos', 'Contact person ID', 'Gate pass / introduction letter'] as const;
 
 type FormData = {
     estate_name: string;
@@ -387,7 +373,6 @@ function SavePill({ status }: { status: 'idle' | 'saving' | 'saved' }) {
 export default function PartnerEstate({ partner }: Props) {
     const draft = typeof window !== 'undefined' ? loadDraft() : null;
     const [step, setStep] = useState(0);
-    const [docPlaceholder, setDocPlaceholder] = useState<string[]>([]);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [attemptedContinue, setAttemptedContinue] = useState(false);
@@ -807,75 +792,6 @@ export default function PartnerEstate({ partner }: Props) {
                                         )}
 
                                         {step === 3 && (
-                                            <div className="space-y-6">
-                                                <div>
-                                                    <p className="mb-3 text-[13px] font-medium text-stone-800 dark:text-slate-100">
-                                                        What can you provide offline?
-                                                    </p>
-                                                    <p className="mb-4 text-[12px] text-stone-400">
-                                                        Direct upload is coming. Toggle what you already have ready.
-                                                    </p>
-                                                    <div className="grid gap-2.5 sm:grid-cols-3">
-                                                        {DOC_OPTIONS.map((label) => {
-                                                            const checked = docPlaceholder.includes(label);
-
-                                                            return (
-                                                                <button
-                                                                    key={label}
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        setDocPlaceholder((prev) =>
-                                                                            checked
-                                                                                ? prev.filter((x) => x !== label)
-                                                                                : [...prev, label],
-                                                                        )
-                                                                    }
-                                                                    className={`rounded-2xl border px-3.5 py-4 text-left transition-all duration-200 ${
-                                                                        checked
-                                                                            ? 'border-primary-300 bg-primary-50/80 shadow-sm ring-1 ring-primary-500/10 dark:border-primary-700 dark:bg-primary-950/40'
-                                                                            : 'border-stone-200/80 bg-white/60 hover:border-stone-300 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:border-slate-600'
-                                                                    }`}
-                                                                >
-                                                                    <span
-                                                                        className={`mb-2 flex h-6 w-6 items-center justify-center rounded-full ${
-                                                                            checked
-                                                                                ? 'bg-primary-600 text-white'
-                                                                                : 'bg-stone-100 text-stone-400 dark:bg-slate-800'
-                                                                        }`}
-                                                                    >
-                                                                        {checked ? (
-                                                                            <CheckIcon className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                                                        ) : (
-                                                                            <DocumentTextIcon className="h-3.5 w-3.5" />
-                                                                        )}
-                                                                    </span>
-                                                                    <span className="block text-[12px] font-semibold text-stone-800 dark:text-slate-100">
-                                                                        {label}
-                                                                    </span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                <FieldShell
-                                                    id="notes"
-                                                    label="Notes for the review team"
-                                                    hint="Relationships, timing, access instructions — anything useful."
-                                                >
-                                                    <textarea
-                                                        id="notes"
-                                                        rows={4}
-                                                        value={data.notes}
-                                                        onChange={(e) => setData('notes', e.target.value)}
-                                                        placeholder="Share context that helps us move faster…"
-                                                        className={`${controlClass(false, !!data.notes)} resize-none`}
-                                                    />
-                                                </FieldShell>
-                                            </div>
-                                        )}
-
-                                        {step === 4 && (
                                             <div className="space-y-5">
                                                 <div className="overflow-hidden rounded-3xl border border-stone-200/70 bg-white/70 dark:border-slate-700/70 dark:bg-slate-900/50">
                                                     {[
@@ -909,11 +825,6 @@ export default function PartnerEstate({ partner }: Props) {
                                                                 { label: 'Phone', value: data.chairman_phone || '—' },
                                                                 { label: 'Email', value: data.chairman_email || '—' },
                                                             ],
-                                                        },
-                                                        {
-                                                            group: 'Notes',
-                                                            step: 3,
-                                                            rows: [{ label: 'Context', value: data.notes || '—' }],
                                                         },
                                                     ].map((section, idx) => (
                                                         <div
