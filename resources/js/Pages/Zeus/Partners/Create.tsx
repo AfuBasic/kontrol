@@ -13,7 +13,7 @@ export default function CreatePartner() {
         commission_type: '' as 'percentage' | 'fixed' | '',
         commission_rate: '',
         commission_length: '' as string | number,
-        status: 'active',
+        status: 'pending',
     });
 
     const [touchedMode, setTouchedMode] = useState(false);
@@ -50,12 +50,6 @@ export default function CreatePartner() {
         { label: '1 Year (12m)', value: 12 },
         { label: '2 Years (24m)', value: 24 },
         { label: 'Always Eligible', value: 'always' },
-    ];
-
-    const statusOptions = [
-        { label: 'Active', value: 'active', color: 'bg-[#34D399]/15 text-[#34D399] border-[#34D399]/30' },
-        { label: 'Inactive', value: 'inactive', color: 'bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]/30' },
-        { label: 'Suspended', value: 'suspended', color: 'bg-rose-500/15 text-rose-500 border-rose-500/30' },
     ];
 
     return (
@@ -254,35 +248,7 @@ export default function CreatePartner() {
                             </div>
                         </div>
 
-                        {/* Lifecycle Status Option (pills instead of dropdown) */}
-                        <div className="space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-6">
-                            <div className="flex items-center gap-2">
-                                <ShieldCheck className="h-4.5 w-4.5 text-[#9297A8]" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8]">
-                                    Account Status
-                                </h3>
-                            </div>
-                            <div className="flex gap-3">
-                                {statusOptions.map((opt) => {
-                                    const isSelected = data.status === opt.value;
-                                    return (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            onClick={() => setData('status', opt.value)}
-                                            className={`rounded-full px-4 py-2 text-xs font-bold border transition-all ${
-                                                isSelected
-                                                    ? opt.color + ' ring-1 ring-[#6C5DFD]'
-                                                    : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-[#9297A8] hover:border-gray-700'
-                                            }`}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            {errors.status && <p className="text-xs text-rose-500 mt-1">{errors.status}</p>}
-                        </div>
+
 
                         {/* Submit Actions */}
                         <div className="flex gap-4 border-t border-[rgba(255,255,255,0.08)] pt-6">
