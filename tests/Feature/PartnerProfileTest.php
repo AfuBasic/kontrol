@@ -35,6 +35,17 @@ it('allows partner members to view their profile', function () {
             ->where('partner.name', 'Apex Referrals')
             ->where('partner.commission_type', 'percentage')
             ->has('user.email')
+            ->has('activity')
+            ->has('preferences')
+            ->where('tab', 'account')
+        );
+
+    $this->actingAs($affiliate)
+        ->get(route('partner.profile', ['tab' => 'commission']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Partner/Profile')
+            ->where('tab', 'commission')
         );
 });
 
