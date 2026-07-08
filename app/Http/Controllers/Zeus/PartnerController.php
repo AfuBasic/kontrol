@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Zeus;
 use App\Actions\Zeus\InvitePartnerMemberAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\InvitePartnerMemberRequest;
+use App\Mail\Zeus\PartnerMemberInvitationMail;
 use App\Models\Partner;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -108,9 +111,10 @@ class PartnerController extends Controller
                     'id' => $m->id,
                     'name' => $m->name,
                     'email' => $m->email,
+                    'email_verified_at' => $m->email_verified_at?->toIso8601String(),
                     'created_at' => $m->created_at->toIso8601String(),
                 ]),
-            'partnerPortalUrl' => "$scheme://partner.$appDomain/login",
+            'partnerPortalUrl' => "$scheme://$appDomain/login",
         ]);
     }
 
@@ -169,5 +173,18 @@ class PartnerController extends Controller
         return redirect()
             ->route('zeus.partners.edit', $partner)
             ->with('success', 'Portal invitation sent successfully.');
+    }
+
+    public function resendInvitation(Partner $partner, User $user): RedirectResponse
+    {
+        if ($user->partner_id !== $partner->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        Mail::to($user->email)->send(new PartnerMemberInvitationMail($user, $partner));
+
+        return redirect()
+            ->route('zeus.partners.edit', $partner)
+            ->with('success', 'Portal invitation resent successfully.');
     }
 }
