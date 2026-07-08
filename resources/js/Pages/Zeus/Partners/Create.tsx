@@ -99,7 +99,7 @@ export default function CreatePartner() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Partner Name</label>
+                                    <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Partner Name</label>
                                     <div className="relative">
                                         <User className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
                                         <input
@@ -116,7 +116,7 @@ export default function CreatePartner() {
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Email Address</label>
+                                        <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Email Address</label>
                                         <div className="relative">
                                             <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
                                             <input
@@ -132,7 +132,7 @@ export default function CreatePartner() {
                                     </div>
 
                                     <div>
-                                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Phone Number</label>
+                                        <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Phone Number</label>
                                         <div className="relative">
                                             <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
                                             <input
@@ -157,7 +157,6 @@ export default function CreatePartner() {
 
                             {/* Step 1: Commission Mode Cards */}
                             <div className="space-y-3">
-                                <label className="block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Choose Commission Mode</label>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     {modeOptions.map((opt) => {
                                         const Icon = opt.icon;
@@ -198,7 +197,7 @@ export default function CreatePartner() {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden space-y-2 mt-4"
                                     >
-                                        <label className="block text-xs font-bold uppercase tracking-wider text-[#9297A8]">
+                                        <label className="block text-xs font-semibold text-[#9297A8]">
                                             {data.commission_type === 'percentage' ? 'Commission Rate (%)' : 'Flat Amount (kobo)'}
                                         </label>
                                         <div className="relative">
@@ -229,8 +228,8 @@ export default function CreatePartner() {
 
                             {/* Step 3: Commission Length Dropdown */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-bold uppercase tracking-wider text-[#9297A8]">
-                                    Commission Eligibility Length
+                                <label className="block text-xs font-semibold text-[#9297A8]">
+                                    Commission Length
                                 </label>
                                 <div className="grid gap-2 sm:grid-cols-4">
                                     {lengthOptions.map((opt) => {
