@@ -65,7 +65,7 @@ class InvitationController extends Controller
 
         // Redirect based on role
         if ($user->hasRole('affiliate')) {
-            return redirect()->route('affiliate.dashboard');
+            return redirect()->route('partner.dashboard');
         }
 
         if ($estate = $user->estates()->first()) {

@@ -172,3 +172,37 @@ test('zeus admin can create a fixed fee partner and it stores the rate in kobo',
     expect($partner->commission_type)->toBe('fixed');
     expect((int) $partner->commission_rate)->toBe(500000);
 });
+
+test('zeus admin cannot resend invitation emails to a member more than 3 times in a minute', function () {
+    $sessionKey = config('zeus.session_key');
+    $partner = Partner::factory()->create([
+        'name' => 'Gamma Referrals',
+        'commission_type' => 'percentage',
+        'commission_rate' => 10,
+        'status' => 'pending',
+    ]);
+
+    $user = User::factory()->create([
+        'name' => 'Gamma Member',
+        'email' => 'member@gamma.com',
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+
+    setPermissionsTeamId(0);
+    $user->assignRole('affiliate');
+
+    // Make 3 successful requests
+    for ($i = 0; $i < 3; $i++) {
+        $this->withSession([$sessionKey => true])
+            ->from(route('zeus.partners.edit', $partner))
+            ->post(route('zeus.partners.members.resend-invite', [$partner, $user]))
+            ->assertRedirect(route('zeus.partners.edit', $partner));
+    }
+
+    // The 4th request should fail with a 429 Too Many Requests status
+    $this->withSession([$sessionKey => true])
+        ->from(route('zeus.partners.edit', $partner))
+        ->post(route('zeus.partners.members.resend-invite', [$partner, $user]))
+        ->assertStatus(429);
+});

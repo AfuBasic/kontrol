@@ -67,7 +67,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::resource('partners', PartnerController::class);
         Route::post('/partners/{partner}/regenerate-key', [PartnerController::class, 'regenerateKey'])->name('partners.regenerate-key');
         Route::post('/partners/{partner}/invite-member', [PartnerController::class, 'inviteMember'])->name('partners.invite-member');
-        Route::post('/partners/{partner}/members/{user}/resend-invite', [PartnerController::class, 'resendInvitation'])->name('partners.members.resend-invite');
+        Route::post('/partners/{partner}/members/{user}/resend-invite', [PartnerController::class, 'resendInvitation'])
+            ->middleware('throttle:3,1')
+            ->name('partners.members.resend-invite');
 
         // Partner earnings
         Route::get('/partners/{partner}/earnings', [PartnerEarningsController::class, 'index'])->name('partners.earnings.index');
