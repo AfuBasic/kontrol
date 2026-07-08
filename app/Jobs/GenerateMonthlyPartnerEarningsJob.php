@@ -35,7 +35,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
         Log::info('GenerateMonthlyPartnerEarningsJob: settling', ['month' => $monthKey]);
 
         // Fetch all unsettled commissions for the target month, grouped by partner
-        $rows = CommissionableRevenue::query()
+        $query = CommissionableRevenue::query()
             ->select([
                 'partner_id',
                 DB::raw('SUM(commission_amount) as total_commission'),
@@ -45,8 +45,9 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
             ->where('status', 'pending')
             ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
             ->whereNotNull('partner_id')
-            ->groupBy('partner_id')
-            ->get();
+            ->groupBy('partner_id');
+
+        $rows = $query->get();
 
         foreach ($rows as $row) {
             DB::transaction(function () use ($row, $monthKey, $monthStart, $monthEnd, $month) {

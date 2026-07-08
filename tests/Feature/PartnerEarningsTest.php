@@ -36,7 +36,7 @@ describe('GenerateMonthlyPartnerEarningsJob', function () {
         (new GenerateMonthlyPartnerEarningsJob($targetMonth))->handle();
 
         $earning = PartnerEarning::where('partner_id', $partner->id)
-            ->where('month', '2026-06-01')
+            ->whereDate('month', '2026-06-01')
             ->firstOrFail();
 
         expect($earning->total_amount)->toBe(8000);
