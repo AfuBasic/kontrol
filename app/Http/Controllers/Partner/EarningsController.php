@@ -20,27 +20,33 @@ class EarningsController extends Controller
             ->addMonthNoOverflow()
             ->startOfMonth();
 
+        $empty = [
+            'earnings' => [
+                'data' => [],
+                'current_page' => 1,
+                'last_page' => 1,
+                'total' => 0,
+                'prev_page_url' => null,
+                'next_page_url' => null,
+                'links' => [],
+            ],
+            'summary' => [
+                'total_earned' => 0,
+                'pending_commissions' => 0,
+                'current_month_earnings' => 0,
+                'previous_month_earnings' => 0,
+                'month_over_month_change' => null,
+                'projected_settlement' => 0,
+                'next_settlement_date' => $nextSettlement->format('F j, Y'),
+                'next_settlement_iso' => $nextSettlement->toDateString(),
+                'days_until_settlement' => max(0, (int) CarbonImmutable::now()->startOfDay()->diffInDays($nextSettlement, false)),
+            ],
+            'chart' => [],
+            'timeline' => [],
+        ];
+
         if (! $partner) {
-            return Inertia::render('Partner/Earnings', [
-                'earnings' => [
-                    'data' => [],
-                    'current_page' => 1,
-                    'last_page' => 1,
-                    'total' => 0,
-                    'prev_page_url' => null,
-                    'next_page_url' => null,
-                    'links' => [],
-                ],
-                'summary' => [
-                    'total_earned' => 0,
-                    'pending_commissions' => 0,
-                    'current_month_earnings' => 0,
-                    'next_settlement_date' => $nextSettlement->format('F j, Y'),
-                    'next_settlement_iso' => $nextSettlement->toDateString(),
-                    'days_until_settlement' => max(0, (int) CarbonImmutable::now()->startOfDay()->diffInDays($nextSettlement, false)),
-                ],
-                'chart' => [],
-            ]);
+            return Inertia::render('Partner/Earnings', $empty);
         }
 
         $earnings = $partner->earnings()
@@ -61,6 +67,8 @@ class EarningsController extends Controller
             ->sum('commission_amount');
 
         $currentMonthStart = CarbonImmutable::now()->startOfMonth();
+        $previousMonthStart = $currentMonthStart->subMonthNoOverflow();
+
         $currentMonthEarnings = (int) $partner->earnings()
             ->whereDate('month', $currentMonthStart->toDateString())
             ->sum('total_amount');
@@ -70,6 +78,17 @@ class EarningsController extends Controller
                 ->where('status', 'pending')
                 ->where('created_at', '>=', $currentMonthStart)
                 ->sum('commission_amount');
+        }
+
+        $previousMonthEarnings = (int) $partner->earnings()
+            ->whereDate('month', $previousMonthStart->toDateString())
+            ->sum('total_amount');
+
+        $monthOverMonth = null;
+        if ($previousMonthEarnings > 0) {
+            $monthOverMonth = round((($currentMonthEarnings - $previousMonthEarnings) / $previousMonthEarnings) * 100, 1);
+        } elseif ($currentMonthEarnings > 0) {
+            $monthOverMonth = 100.0;
         }
 
         $chart = $partner->earnings()
@@ -85,19 +104,35 @@ class EarningsController extends Controller
             ->values()
             ->all();
 
-        $summary = [
-            'total_earned' => (int) $partner->earnings()->sum('total_amount'),
-            'pending_commissions' => $pendingCommissions,
-            'current_month_earnings' => $currentMonthEarnings,
-            'next_settlement_date' => $nextSettlement->format('F j, Y'),
-            'next_settlement_iso' => $nextSettlement->toDateString(),
-            'days_until_settlement' => max(0, (int) CarbonImmutable::now()->startOfDay()->diffInDays($nextSettlement, false)),
-        ];
+        $timeline = $partner->earnings()
+            ->orderByDesc('month')
+            ->limit(6)
+            ->get()
+            ->map(fn (PartnerEarning $earning) => [
+                'id' => $earning->id,
+                'label' => $earning->month->format('F Y'),
+                'amount' => $earning->total_amount,
+                'settled_at' => $earning->settled_at?->format('M j, Y'),
+                'is_settled' => $earning->isSettled(),
+            ])
+            ->values()
+            ->all();
 
         return Inertia::render('Partner/Earnings', [
             'earnings' => $earnings,
-            'summary' => $summary,
+            'summary' => [
+                'total_earned' => (int) $partner->earnings()->sum('total_amount'),
+                'pending_commissions' => $pendingCommissions,
+                'current_month_earnings' => $currentMonthEarnings,
+                'previous_month_earnings' => $previousMonthEarnings,
+                'month_over_month_change' => $monthOverMonth,
+                'projected_settlement' => $pendingCommissions,
+                'next_settlement_date' => $nextSettlement->format('F j, Y'),
+                'next_settlement_iso' => $nextSettlement->toDateString(),
+                'days_until_settlement' => max(0, (int) CarbonImmutable::now()->startOfDay()->diffInDays($nextSettlement, false)),
+            ],
             'chart' => $chart,
+            'timeline' => $timeline,
         ]);
     }
 }
