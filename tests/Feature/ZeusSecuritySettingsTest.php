@@ -70,7 +70,7 @@ test('login checks for 2FA and redirects to verification page if enabled', funct
         'username' => config('zeus.username'),
         'password' => config('zeus.password'),
     ])
-        ->assertRedirect(route('zeus.login.2fa'))
+        ->assertRedirect(route('zeus.login.two_factor'))
         ->assertSessionHas('zeus_pending_login', true);
 
     expect(session(config('zeus.session_key')))->toBeNull();
@@ -81,7 +81,7 @@ test('submitting invalid 2FA code during login fails', function () {
     ZeusSetting::set('google2fa_secret', $secret);
 
     $this->withSession(['zeus_pending_login' => true])
-        ->post(route('zeus.login.2fa.submit'), [
+        ->post(route('zeus.login.two_factor.submit'), [
             'code' => '000000',
         ])
         ->assertSessionHasErrors('code');
@@ -96,7 +96,7 @@ test('submitting valid 2FA code during login logs the admin in successfully', fu
     $validCode = $totp->getTotpCode($secret);
 
     $this->withSession(['zeus_pending_login' => true])
-        ->post(route('zeus.login.2fa.submit'), [
+        ->post(route('zeus.login.two_factor.submit'), [
             'code' => $validCode,
         ])
         ->assertRedirect(route('zeus.dashboard'))

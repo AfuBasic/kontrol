@@ -36,7 +36,7 @@ class AuthController extends Controller
         if (! empty($secret)) {
             $request->session()->put('zeus_pending_login', true);
 
-            return redirect()->route('zeus.login.2fa');
+            return redirect()->route('zeus.login.two_factor');
         }
 
         $request->session()->put(config('zeus.session_key'), true);
