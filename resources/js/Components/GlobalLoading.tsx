@@ -3,12 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-import { isRouteChangeVisit } from '@/Lib/inertia';
+import { isBackgroundVisit, isPartialVisit } from '@/Lib/inertia';
+import type { InertiaVisitEvent } from '@/Lib/inertia';
 
 export default function GlobalLoading() {
     const [loading, setLoading] = useState(false);
     const activeRouteChangesRef = useRef(0);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    /**
+     * Track which visit objects we started showing the loader for.
+     * We check this set on `finish` instead of re-running the full
+     * isRouteChangeVisit() check, because by the time `finish` fires
+     * window.location has already updated to the destination URL, making
+     * the pathname-equality guard always return false (same path = no change).
+     */
+    const pendingVisitsRef = useRef<WeakSet<object>>(new WeakSet());
 
     useEffect(() => {
         const clearPendingTimeout = () => {
@@ -18,11 +27,25 @@ export default function GlobalLoading() {
             }
         };
 
-        const start = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
-            if (!isRouteChangeVisit(event)) {
+        const start = (event: InertiaVisitEvent) => {
+            const visit = event.detail.visit;
+
+            // Ignore background (prefetch/silent) and partial (only/except/deferred) visits
+            if (isBackgroundVisit(event) || isPartialVisit(visit)) {
                 return;
             }
 
+            if (visit.showProgress === false || visit.preserveUrl) {
+                return;
+            }
+
+            const method = (visit.method ?? 'get').toLowerCase();
+            if (method !== 'get') {
+                return;
+            }
+
+            // Mark this visit object so finish() knows to decrement
+            pendingVisitsRef.current.add(visit as object);
             activeRouteChangesRef.current += 1;
 
             if (activeRouteChangesRef.current !== 1) {
@@ -35,11 +58,15 @@ export default function GlobalLoading() {
             }, 150);
         };
 
-        const end = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
-            if (!isRouteChangeVisit(event)) {
+        const end = (event: InertiaVisitEvent) => {
+            const visit = event.detail.visit;
+
+            // Only decrement if we started tracking this visit on `start`
+            if (!pendingVisitsRef.current.has(visit as object)) {
                 return;
             }
 
+            pendingVisitsRef.current.delete(visit as object);
             activeRouteChangesRef.current = Math.max(0, activeRouteChangesRef.current - 1);
 
             if (activeRouteChangesRef.current > 0) {
@@ -56,6 +83,7 @@ export default function GlobalLoading() {
             }
 
             activeRouteChangesRef.current = 0;
+            pendingVisitsRef.current = new WeakSet();
             clearPendingTimeout();
             setLoading(false);
         };
@@ -67,6 +95,7 @@ export default function GlobalLoading() {
         return () => {
             clearPendingTimeout();
             activeRouteChangesRef.current = 0;
+            pendingVisitsRef.current = new WeakSet();
             startListener();
             finishListener();
             errorListener();
