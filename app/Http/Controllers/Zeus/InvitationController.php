@@ -64,6 +64,7 @@ class InvitationController extends Controller
         broadcast(new ForceLogout($user->id));
 
         // Redirect based on role
+        setPermissionsTeamId(0);
         if ($user->hasRole('affiliate')) {
             return redirect()->route('partner.dashboard');
         }

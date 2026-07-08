@@ -15,6 +15,8 @@ class DetermineUserRedirect
         $estate = $user->estates()->wherePivot('status', 'accepted')->first();
         if ($estate) {
             setPermissionsTeamId($estate->id);
+        } else {
+            setPermissionsTeamId(0);
         }
 
         // Check for global roles first (security, household_member, resident)

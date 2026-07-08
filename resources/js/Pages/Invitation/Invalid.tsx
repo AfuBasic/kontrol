@@ -54,7 +54,7 @@ export default function Invalid() {
                                     Log in to your account
                                 </Link>
                                 <a
-                                    href="mailto:support@getkontrol.com"
+                                    href="mailto:support@usekontrol.com"
                                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold tracking-wide text-white transition-all hover:bg-white/10 active:scale-95"
                                 >
                                     Contact Support
