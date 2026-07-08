@@ -3,6 +3,7 @@
 use App\Jobs\Admin\RecurringAssignmentJob;
 use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
+use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -28,3 +29,6 @@ Schedule::job(new SendCollectionRemindersJob)->dailyAt('08:00');
 
 // Generate public sitemap daily at 3:00 AM
 Schedule::command('sitemap:generate')->dailyAt('03:00');
+
+// Partner commission settlement – runs on the 1st of each month at 00:30
+Schedule::job(new GenerateMonthlyPartnerEarningsJob)->monthlyOn(1, '00:30');
