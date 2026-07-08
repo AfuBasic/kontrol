@@ -8,6 +8,7 @@ use App\Listeners\Billing\SendInvoiceEmail;
 use App\Listeners\Billing\SendInvoiceGeneratedNotification;
 use App\Listeners\Billing\SendPaymentReceivedNotification;
 use App\Listeners\WarmEstateSettings;
+use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\Payment;
@@ -16,6 +17,7 @@ use App\Observers\PaymentObserver;
 use App\Observers\PaymentTransactionObserver;
 use App\Policies\EstateBoardCommentPolicy;
 use App\Policies\EstateBoardPostPolicy;
+use App\Policies\PartnerAssignmentPolicy;
 use App\Services\SMS\SMSProvider;
 use App\Services\SMS\SmsService;
 use App\Services\SMS\TermiiProvider;
@@ -98,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(EstateBoardPost::class, EstateBoardPostPolicy::class);
         Gate::policy(EstateBoardComment::class, EstateBoardCommentPolicy::class);
+        Gate::policy(Estate::class, PartnerAssignmentPolicy::class);
     }
 
     protected function registerObservers(): void

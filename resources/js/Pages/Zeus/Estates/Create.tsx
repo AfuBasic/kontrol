@@ -25,11 +25,18 @@ type Plan = {
     features: Feature[];
 };
 
-type Props = {
-    plans: Plan[];
+type Partner = {
+    id: number;
+    name: string;
+    commission_rate: string;
 };
 
-export default function CreateEstate({ plans }: Props) {
+type Props = {
+    plans: Plan[];
+    partners: Partner[];
+};
+
+export default function CreateEstate({ plans, partners }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
@@ -38,9 +45,16 @@ export default function CreateEstate({ plans }: Props) {
         charge_type: 'residents',
         free_trial_enabled: true,
         free_trial_days: 30,
+        has_partner: false,
+        partner_id: '',
+        partner_source: '',
+        partner_notes: '',
+        commission_starts_at: '',
+        commission_ends_at: '',
     });
 
     const [selectedPlanId, setSelectedPlanId] = useState<number | string>(plans.length > 0 ? plans[0].id : '');
+    const [partnerOpen, setPartnerOpen] = useState(false);
 
     const selectedPlan = plans.find((p) => p.id === selectedPlanId);
 
@@ -179,6 +193,112 @@ export default function CreateEstate({ plans }: Props) {
                                 ))}
                             </div>
                             {errors.plan_id && <p className="mt-2 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.plan_id}</p>}
+                        </div>
+
+                        {/* Partner Information */}
+                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const next = !partnerOpen;
+                                    setPartnerOpen(next);
+                                    setData('has_partner', next);
+                                }}
+                                className="flex w-full items-center justify-between px-7 py-5 text-left"
+                            >
+                                <h3 className="text-sm font-bold tracking-wider text-slate-900 uppercase">Partner Information</h3>
+                                <span className="text-xs font-semibold text-slate-400">{partnerOpen ? 'Collapse' : 'Expand'}</span>
+                            </button>
+
+                            <AnimatePresence>
+                                {partnerOpen && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="border-t border-slate-100 px-7 pb-7"
+                                    >
+                                        <div className="space-y-5 pt-5">
+                                            <div>
+                                                <label htmlFor="partner_id" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    Partner
+                                                </label>
+                                                <select
+                                                    id="partner_id"
+                                                    value={data.partner_id}
+                                                    onChange={(e) => setData('partner_id', e.target.value)}
+                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                >
+                                                    <option value="">Select partner...</option>
+                                                    {partners.map((partner) => (
+                                                        <option key={partner.id} value={partner.id}>
+                                                            {partner.name} ({partner.commission_rate}%)
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors.partner_id && (
+                                                    <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.partner_id}</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label htmlFor="partner_source" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    Partner Source
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="partner_source"
+                                                    value={data.partner_source}
+                                                    onChange={(e) => setData('partner_source', e.target.value)}
+                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    placeholder="e.g. partner_portal, conference"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                <div>
+                                                    <label htmlFor="commission_starts_at" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                        Commission Starts
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        id="commission_starts_at"
+                                                        value={data.commission_starts_at}
+                                                        onChange={(e) => setData('commission_starts_at', e.target.value)}
+                                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label htmlFor="commission_ends_at" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                        Commission Ends
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        id="commission_ends_at"
+                                                        value={data.commission_ends_at}
+                                                        onChange={(e) => setData('commission_ends_at', e.target.value)}
+                                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label htmlFor="partner_notes" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    Notes
+                                                </label>
+                                                <textarea
+                                                    id="partner_notes"
+                                                    value={data.partner_notes}
+                                                    onChange={(e) => setData('partner_notes', e.target.value)}
+                                                    rows={3}
+                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    placeholder="Internal notes about this partner..."
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         {/* Billing Configuration */}

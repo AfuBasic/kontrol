@@ -27,6 +27,19 @@ class EnsureUserHasRole
             return redirect('/login');
         }
 
+        $globalRoles = ['affiliate'];
+
+        // Check platform-wide roles first (stored against estate_id = 0)
+        foreach ($roles as $role) {
+            if (in_array($role, $globalRoles, true)) {
+                setPermissionsTeamId(0);
+
+                if ($user->hasRole($role)) {
+                    return $next($request);
+                }
+            }
+        }
+
         // Set the team context for Spatie Permission (use user's first accepted estate)
         $estate = $user->estates()->wherePivot('status', 'accepted')->first();
         if ($estate) {

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CommissionStatus;
+use App\Enums\PartnerStatus;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,14 +19,14 @@ use Illuminate\Support\Facades\DB;
 /**
  * @property int $id
  * @property string $name
- * @property int|null $referrer_id
+ * @property int|null $partner_id
  * @property string $email
  * @property string|null $address
  * @property string $status
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read EstateInviteLink|null $inviteLink
- * @property-read Referrer|null $referrer
+ * @property-read Partner|null $partner
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ResidentSubscription> $residentSubscriptions
  * @property-read int|null $resident_subscriptions_count
  * @property-read EstateSettings $settings
@@ -44,7 +46,7 @@ use Illuminate\Support\Facades\DB;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereReferrerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate wherePartnerId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Estate whereUpdatedAt($value)
  *
@@ -60,7 +62,32 @@ class Estate extends Model
         'address',
         'status',
         'billing_mode',
+        'partner_id',
+        'partner_source',
+        'commission_plan_id',
+        'commission_starts_at',
+        'commission_ends_at',
+        'partner_date',
+        'activation_date',
+        'partner_status',
+        'commission_status',
+        'partner_notes',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'partner_status' => PartnerStatus::class,
+            'commission_status' => CommissionStatus::class,
+            'commission_starts_at' => 'date',
+            'commission_ends_at' => 'date',
+            'partner_date' => 'date',
+            'activation_date' => 'date',
+        ];
+    }
 
     /**
      * @return BelongsToMany<User, $this>
@@ -290,11 +317,49 @@ class Estate extends Model
     }
 
     /**
-     * @return BelongsTo<Referrer, $this>
+     * @return BelongsTo<Partner, $this>
      */
-    public function referrer(): BelongsTo
+    public function partner(): BelongsTo
     {
-        return $this->belongsTo(Referrer::class)->withDefault();
+        return $this->belongsTo(Partner::class);
+    }
+
+    /**
+     * @return BelongsTo<CommissionPlan, $this>
+     */
+    public function commissionPlan(): BelongsTo
+    {
+        return $this->belongsTo(CommissionPlan::class);
+    }
+
+    public function commissionDaysRemaining(): ?int
+    {
+        if (! $this->commission_ends_at) {
+            return null;
+        }
+
+        $remaining = now()->startOfDay()->diffInDays($this->commission_ends_at, false);
+
+        return max(0, (int) $remaining);
+    }
+
+    public function hasActiveCommissionWindow(): bool
+    {
+        if ($this->commission_status !== CommissionStatus::Active) {
+            return false;
+        }
+
+        $today = now()->startOfDay();
+
+        if ($this->commission_starts_at && $today->lt($this->commission_starts_at)) {
+            return false;
+        }
+
+        if ($this->commission_ends_at && $today->gt($this->commission_ends_at)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

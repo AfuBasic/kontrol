@@ -57,6 +57,9 @@ class PermissionSeeder extends Seeder
         'visitors' => [
             'visitors.view' => 'View visitor logs and entry history',
         ],
+        'partners' => [
+            'change-partner-assignment' => 'Change partner assignment on estates',
+        ],
         'transactions' => [
             'transactions.view' => 'View estate financial ledger and transactions',
             'transactions.view_own' => 'View own transaction records only',

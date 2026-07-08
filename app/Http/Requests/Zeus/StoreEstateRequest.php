@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Zeus;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreEstateRequest extends FormRequest
 {
@@ -24,6 +25,16 @@ class StoreEstateRequest extends FormRequest
             'charge_type' => ['sometimes', 'in:residents,estate'],
             'free_trial_enabled' => ['sometimes', 'boolean'],
             'free_trial_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
+            'has_partner' => ['sometimes', 'boolean'],
+            'partner_id' => [
+                Rule::requiredIf(fn () => $this->boolean('has_partner')),
+                'nullable',
+                'exists:partners,id',
+            ],
+            'partner_source' => ['nullable', 'string', 'max:255'],
+            'partner_notes' => ['nullable', 'string', 'max:2000'],
+            'commission_starts_at' => ['nullable', 'date'],
+            'commission_ends_at' => ['nullable', 'date', 'after_or_equal:commission_starts_at'],
         ];
     }
 

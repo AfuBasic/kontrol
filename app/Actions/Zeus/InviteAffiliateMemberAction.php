@@ -20,7 +20,8 @@ class InviteAffiliateMemberAction
                 'user_type' => 'affiliate',
             ]);
 
-            // Assign affiliate role
+            // Assign affiliate role (global team scope)
+            setPermissionsTeamId(0);
             $user->assignRole('affiliate');
 
             // Send invitation email

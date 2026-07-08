@@ -7,12 +7,15 @@ use App\Actions\Zeus\DeleteEstateAction;
 use App\Actions\Zeus\ResetEstateAdminPasswordAction;
 use App\Actions\Zeus\ToggleEstateStatusAction;
 use App\Actions\Zeus\UpdateEstateAction;
+use App\Actions\Zeus\UpdatePartnerAssignmentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\StoreEstateRequest;
 use App\Http\Requests\Zeus\UpdateEstateRequest;
+use App\Http\Requests\Zeus\UpdatePartnerAssignmentRequest;
 use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\Partner;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
@@ -47,7 +50,8 @@ class EstateController extends Controller
         $estate->load([
             'subscriptionRecord.plan',
             'settings',
-            'referrer.affiliate',
+            'partner',
+            'commissionPlan',
         ]);
 
         $stats = $estate->residentSubscriptions()
@@ -133,7 +137,9 @@ class EstateController extends Controller
             ->get();
 
         return Inertia::render('Zeus/Estates/Show', [
-            'estate' => $estate,
+            'estate' => array_merge($estate->toArray(), [
+                'commission_days_remaining' => $estate->commissionDaysRemaining(),
+            ]),
             'residentStats' => $residentStats,
             'analytics' => [
                 'total_revenue' => $totalRevenue,
@@ -152,7 +158,20 @@ class EstateController extends Controller
     {
         return Inertia::render('Zeus/Estates/Create', [
             'plans' => Plan::with('features')->get(),
+            'partners' => Partner::active()->orderBy('name')->get(['id', 'name', 'commission_rate']),
         ]);
+    }
+
+    public function updatePartnerAssignment(
+        UpdatePartnerAssignmentRequest $request,
+        Estate $estate,
+        UpdatePartnerAssignmentAction $action,
+    ): RedirectResponse {
+        $action->execute($estate, $request->validated());
+
+        return redirect()
+            ->route('zeus.estates.show', $estate)
+            ->with('success', 'Partner assignment updated successfully.');
     }
 
     public function store(StoreEstateRequest $request, CreateEstateAction $action): RedirectResponse

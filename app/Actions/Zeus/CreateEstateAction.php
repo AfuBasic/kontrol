@@ -2,11 +2,17 @@
 
 namespace App\Actions\Zeus;
 
+use App\Enums\CommissionStatus;
+use App\Enums\PartnerStatus;
 use App\Events\Zeus\EstateCreated;
+use App\Models\CommissionPlan;
 use App\Models\Estate;
+use App\Models\Partner;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
+use App\Services\Commission\PartnerAttributionService;
+use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -15,6 +21,7 @@ class CreateEstateAction
 {
     public function __construct(
         private InitializeTrialService $initializeTrialService,
+        private PartnerAttributionService $attributionService,
     ) {}
 
     /**
@@ -73,7 +80,31 @@ class CreateEstateAction
             // 7. Initialize trial period based on settings
             $this->initializeTrialService->initializeForEstate($estate);
 
-            // 8. Dispatch event for side effects (invitation email)
+            // 8. Apply partner attribution when estate has a partner
+            if (! empty($data['has_partner']) && ! empty($data['partner_id'])) {
+                $partner = Partner::findOrFail($data['partner_id']);
+                $commissionPlan = CommissionPlan::cloneFromPartner($partner);
+                $startsAt = isset($data['commission_starts_at'])
+                    ? CarbonImmutable::parse($data['commission_starts_at'])
+                    : now()->startOfDay();
+                $endsAt = isset($data['commission_ends_at'])
+                    ? CarbonImmutable::parse($data['commission_ends_at'])
+                    : $startsAt->copy()->addMonths($commissionPlan->duration_months);
+
+                $estate->update([
+                    'partner_id' => $partner->id,
+                    'partner_source' => $data['partner_source'] ?? 'zeus_manual',
+                    'commission_plan_id' => $commissionPlan->id,
+                    'commission_starts_at' => $startsAt,
+                    'commission_ends_at' => $endsAt,
+                    'partner_date' => now()->toDateString(),
+                    'partner_status' => PartnerStatus::EstateCreated,
+                    'commission_status' => CommissionStatus::Active,
+                    'partner_notes' => $data['partner_notes'] ?? null,
+                ]);
+            }
+
+            // 9. Dispatch event for side effects (invitation email)
             event(new EstateCreated($estate, $user));
 
             return $estate;

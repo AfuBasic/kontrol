@@ -16,10 +16,26 @@ import {
     FileQuestion,
     Lock,
     Ticket,
+    Handshake,
 } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import PartnerTimeline from '@/Components/PartnerTimeline';
 import { toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
+
+interface Partner {
+    id: number;
+    name: string;
+    email: string;
+    commission_rate: string;
+}
+
+interface CommissionPlan {
+    id: number;
+    name: string;
+    commission_rate: string;
+    duration_months: number;
+}
 
 interface Estate {
     id: number;
@@ -29,6 +45,18 @@ interface Estate {
     address: string | null;
     status: 'active' | 'inactive';
     created_at: string;
+    partner_id?: number | null;
+    partner_source?: string | null;
+    partner_status?: string | null;
+    commission_status?: string | null;
+    partner_date?: string | null;
+    activation_date?: string | null;
+    commission_starts_at?: string | null;
+    commission_ends_at?: string | null;
+    partner_notes?: string | null;
+    commission_days_remaining?: number | null;
+    partner?: Partner | null;
+    commission_plan?: CommissionPlan | null;
     settings?: {
         charge_type: 'estate' | 'residents';
     };
@@ -261,6 +289,81 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Success Rate</p>
                             <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">{analytics.success_rate}%</p>
                         </div>
+                    </div>
+
+                    {/* Partner Attribution */}
+                    <div className="rounded-3xl border border-slate-100 bg-white/80 p-8 shadow-sm backdrop-blur-sm dark:border-slate-800/50 dark:bg-[#0f1423]/80">
+                        <h3 className="mb-6 flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                            <Handshake className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                            Partner Attribution
+                        </h3>
+
+                        {estate.partner ? (
+                            <div className="space-y-5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {estate.partner_status && (
+                                        <span className="inline-flex rounded-full bg-violet-50 px-2.5 py-0.5 text-[10px] font-bold tracking-widest text-violet-700 uppercase ring-1 ring-violet-200 ring-inset dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20">
+                                            {estate.partner_status.replace(/_/g, ' ')}
+                                        </span>
+                                    )}
+                                    {estate.commission_status && (
+                                        <span
+                                            className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
+                                                estate.commission_status === 'active'
+                                                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20'
+                                                    : estate.commission_status === 'expired'
+                                                      ? 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20'
+                                                      : 'bg-slate-50 text-slate-600 ring-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:ring-slate-700'
+                                            }`}
+                                        >
+                                            Commission {estate.commission_status}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Partner</p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{estate.partner.name}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{estate.partner.email}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Commission Rate</p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            {estate.commission_plan?.commission_rate ?? estate.partner.commission_rate}%
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Partner Date</p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDate(estate.partner_date ?? null)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Days Remaining</p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            {estate.commission_days_remaining ?? '—'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {estate.partner_status && (
+                                    <PartnerTimeline
+                                        currentStatus={estate.partner_status}
+                                        steps={[
+                                            { key: 'lead', label: 'Lead' },
+                                            { key: 'submitted', label: 'Submitted', date: formatDate(estate.partner_date ?? null) },
+                                            { key: 'reviewing', label: 'Reviewing' },
+                                            { key: 'approved', label: 'Approved' },
+                                            { key: 'estate_created', label: 'Estate Created', date: formatDate(estate.created_at) },
+                                            { key: 'activated', label: 'Activated', date: formatDate(estate.activation_date ?? null) },
+                                            { key: 'commission_active', label: 'Commission Active', date: formatDate(estate.commission_starts_at ?? null) },
+                                            { key: 'commission_expired', label: 'Commission Expired', date: formatDate(estate.commission_ends_at ?? null) },
+                                        ]}
+                                    />
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-slate-500 dark:text-slate-400">No partner attribution assigned to this estate.</p>
+                        )}
                     </div>
 
                     {/* Primary Admin */}

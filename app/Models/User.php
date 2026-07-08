@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -109,6 +110,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'user_type',
+        'partner_id',
         'password',
         'suspended_at',
         'email_verified_at',
@@ -140,6 +142,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'user_type' => 'string',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Partner, $this>
+     */
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
     }
 
     /**
