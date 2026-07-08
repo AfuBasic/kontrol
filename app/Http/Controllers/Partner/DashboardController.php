@@ -51,6 +51,7 @@ class DashboardController extends Controller
                 'partner_request_count' => $partnerRequestCount,
                 'commission_rate' => $commissionRate,
                 'commission_type' => $commissionType,
+                'commission_length' => $partner ? $partner->commission_length : null,
                 'next_settlement_date' => $nextSettlementDate,
             ],
         ]);
