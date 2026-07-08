@@ -6,6 +6,7 @@ use App\Enums\PartnerRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Partner\StorePartnerRequestRequest;
 use App\Models\PartnerRequest;
+use App\Models\ZeusNotification;
 use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,6 +74,21 @@ class PartnerRequestController extends Controller
             'partner_id' => $user->partner_id,
             'status' => PartnerRequestStatus::Submitted,
         ]);
+
+        $partnerRequest->loadMissing('partner');
+        $partnerName = $partnerRequest->partner?->name ?? 'A partner';
+
+        ZeusNotification::notify(
+            type: 'partner_estate_request',
+            title: 'New partner estate request',
+            body: "{$partnerName} submitted {$partnerRequest->estate_name} for review.",
+            actionUrl: route('zeus.partner-requests.index'),
+            data: [
+                'partner_request_id' => $partnerRequest->id,
+                'partner_id' => $partnerRequest->partner_id,
+                'estate_name' => $partnerRequest->estate_name,
+            ],
+        );
 
         $zeusInbox = config('zeus.notification_email');
 
