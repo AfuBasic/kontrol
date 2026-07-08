@@ -67,7 +67,7 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
         <ZeusLayout>
             <Head title={`${partner.name} – Earnings`} />
 
-            <div className="relative mx-auto max-w-7xl px-4 py-8 text-[#F2F3F6] bg-[#0A0B10] min-h-screen space-y-8">
+            <div className="relative mx-auto max-w-7xl px-4 py-8 text-[#F2F3F6] space-y-8">
                 {/* Decorative Glow */}
                 <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
 
