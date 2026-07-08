@@ -60,9 +60,25 @@ it('renders partner earnings with chart and pagination props', function () {
             ->has('summary.total_earned')
             ->has('summary.current_month_earnings')
             ->has('summary.days_until_settlement')
+            ->has('summary.projected_settlement')
             ->has('chart')
+            ->has('timeline')
             ->has('earnings.data')
             ->has('earnings.current_page')
+        );
+});
+
+it('renders partner notifications index', function () {
+    [, $affiliate] = partnerMember();
+
+    $this->actingAs($affiliate)
+        ->get(route('partner.notifications.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Partner/Notifications/Index')
+            ->has('notifications.data')
+            ->has('filters')
+            ->has('unreadCount')
         );
 });
 
