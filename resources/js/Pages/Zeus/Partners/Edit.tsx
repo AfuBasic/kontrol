@@ -5,7 +5,7 @@ import {
     UserGroupIcon,
     UserPlusIcon,
 } from '@heroicons/react/24/outline';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Percent, Coins, ShieldCheck, Phone, Mail, User } from 'lucide-react';
@@ -15,6 +15,7 @@ interface Member {
     id: number;
     name: string;
     email: string;
+    email_verified_at: string | null;
     created_at: string;
 }
 
@@ -63,6 +64,12 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
         inviteForm.post(`/zeus/partners/${partner.id}/invite-member`, {
             preserveScroll: true,
             onSuccess: () => inviteForm.reset(),
+        });
+    }
+
+    function resendInvite(memberId: number) {
+        router.post(`/zeus/partners/${partner.id}/members/${memberId}/resend-invite`, {}, {
+            preserveScroll: true,
         });
     }
 
@@ -433,12 +440,30 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                     {members.map((member) => (
                                         <li key={member.id} className="py-3 flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-semibold text-[#F2F3F6]">{member.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm font-semibold text-[#F2F3F6]">{member.name}</p>
+                                                    {!member.email_verified_at && (
+                                                        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold text-blue-400 border border-blue-500/20">
+                                                            Pending
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-[#9297A8] mt-0.5">{member.email}</p>
                                             </div>
-                                            <span className="text-[10px] text-gray-600">
-                                                Joined {new Date(member.created_at).toLocaleDateString('en-NG', { dateStyle: 'short' })}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                {!member.email_verified_at && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => resendInvite(member.id)}
+                                                        className="text-xs font-bold text-[#6C5DFD] hover:underline"
+                                                    >
+                                                        Resend Invite
+                                                    </button>
+                                                )}
+                                                <span className="text-[10px] text-gray-600">
+                                                    Joined {new Date(member.created_at).toLocaleDateString('en-NG', { dateStyle: 'short' })}
+                                                </span>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
