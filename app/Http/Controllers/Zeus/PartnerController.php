@@ -38,6 +38,7 @@ class PartnerController extends Controller
         return Inertia::render('Zeus/Partners/Index', [
             'partners' => $partners->through(function (Partner $partner) {
                 $primaryMember = $partner->members()->first();
+
                 return [
                     'id' => $partner->id,
                     'name' => $partner->name,
@@ -98,7 +99,7 @@ class PartnerController extends Controller
             // Automatically invite the primary member on creation
             $user = $inviteAction->execute($partner, $validated['email'], $partner->name);
 
-            if (!empty($validated['phone'])) {
+            if (! empty($validated['phone'])) {
                 $user->profile()->updateOrCreate(
                     ['user_id' => $user->id],
                     ['phone' => $validated['phone']]
@@ -176,6 +177,17 @@ class PartnerController extends Controller
         DB::transaction(function () use ($partner, $validated, $primaryMember) {
             $partnerData = collect($validated)->except(['email', 'phone'])->toArray();
             $partner->update($partnerData);
+
+            // Keep portal member login state in sync with partner status (users.suspended_at).
+            if ($validated['status'] === 'suspended') {
+                $partner->members()
+                    ->whereNull('suspended_at')
+                    ->update(['suspended_at' => now()]);
+            } else {
+                $partner->members()
+                    ->whereNotNull('suspended_at')
+                    ->update(['suspended_at' => null]);
+            }
 
             if ($primaryMember) {
                 $primaryMember->update([
