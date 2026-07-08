@@ -16,6 +16,7 @@ use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\RiskCenterController;
 use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Controllers\Zeus\TransactionController;
+use App\Http\Controllers\Zeus\SettingsController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
 use App\Http\Middleware\Zeus\RedirectIfZeusAuthenticated;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,8 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
     Route::middleware(RedirectIfZeusAuthenticated::class)->group(function (): void {
         Route::get('/', [AuthController::class, 'showLogin'])->name('login');
         Route::post('/', [AuthController::class, 'login'])->name('login.submit');
+        Route::get('/login/2fa', [AuthController::class, 'showLogin2FA'])->name('login.2fa');
+        Route::post('/login/2fa', [AuthController::class, 'login2FASubmit'])->name('login.2fa.submit');
     });
 
     // Authenticated routes
@@ -37,6 +40,11 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::get('/collections/{collection}', [CollectionOversightController::class, 'show'])->name('collections.show');
         Route::get('/risk-center', [RiskCenterController::class, 'index'])->name('risk-center');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+        // Settings / 2FA Configuration
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings/2fa/enable', [SettingsController::class, 'enable'])->name('settings.2fa.enable');
+        Route::post('/settings/2fa/disable', [SettingsController::class, 'disable'])->name('settings.2fa.disable');
 
         // Plans management
         Route::resource('plans', PlanController::class)->except(['show']);
