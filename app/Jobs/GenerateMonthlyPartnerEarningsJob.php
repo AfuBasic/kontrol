@@ -49,7 +49,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
             ->get();
 
         foreach ($rows as $row) {
-            DB::transaction(function () use ($row, $monthKey, $monthStart, $monthEnd) {
+            DB::transaction(function () use ($row, $monthKey, $monthStart, $monthEnd, $month) {
                 // Upsert the earnings record
                 PartnerEarning::updateOrCreate(
                     ['partner_id' => $row->partner_id, 'month' => $monthKey],
