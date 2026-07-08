@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
     { name: 'Collections', href: '/zeus/collections', icon: BanknotesIcon },
     { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
     { name: 'Risk Center', href: '/zeus/risk-center', icon: ShieldExclamationIcon },
+    { name: 'Settings', href: '/zeus/settings', icon: Cog6ToothIcon },
 ];
 
 export default function ZeusLayout({ children, backUrl }: Props) {
