@@ -71,7 +71,7 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
             'email' => ['required', 'email', 'unique:partners,email'],
-            'phone' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string', 'unique:partners,phone'],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
                 'required',
@@ -141,7 +141,7 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name,'.$partner->id],
             'email' => ['required', 'email', 'unique:partners,email,'.$partner->id],
-            'phone' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string', 'unique:partners,phone,'.$partner->id],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
                 'required',
