@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 class AuthenticateUser
 {
     /**
-     * Validate credentials and return the user without logging in.
+     * Validate that the user may begin (or complete) login.
      *
      * @throws ValidationException
      */
@@ -23,20 +23,38 @@ class AuthenticateUser
             ]);
         }
 
-        if ($user->suspended_at) {
+        $this->ensureCanLogin($user);
+
+        return $user;
+    }
+
+    /**
+     * Re-check a loaded user before completing login (e.g. after OTP).
+     *
+     * @throws ValidationException
+     */
+    public function ensureCanLogin(User $user): void
+    {
+        // Suspended accounts must never see "not activated" or other messaging.
+        if ($user->suspended_at !== null) {
             throw ValidationException::withMessages([
-                'email' => ['Your account has been suspended. Please contact the administrator.'],
+                'email' => ['Your account has been suspended. Please contact support.'],
             ]);
         }
 
-        // 1. Email Verification Check (Prioritize this)
         if (! $user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
                 'email' => ['Your email address is not verified. Please check your inbox for the verification link.'],
             ]);
         }
 
-        // 2. Membership Check
+        // Partner portal members are not attached to estates.
+        if ($user->user_type === 'affiliate' || $user->partner_id) {
+            $this->ensurePartnerMemberCanLogin($user);
+
+            return;
+        }
+
         $memberships = $user->estates()->get();
 
         if ($memberships->isEmpty()) {
@@ -45,10 +63,10 @@ class AuthenticateUser
             ]);
         }
 
-        $hasAcceptedMembership = $memberships->contains(fn ($e) => $e->pivot->status === 'accepted');
+        $hasAcceptedMembership = $memberships->contains(fn ($estate) => $estate->pivot->status === 'accepted');
 
         if (! $hasAcceptedMembership) {
-            $hasPendingMembership = $memberships->contains(fn ($e) => $e->pivot->status === 'pending');
+            $hasPendingMembership = $memberships->contains(fn ($estate) => $estate->pivot->status === 'pending');
 
             if ($hasPendingMembership) {
                 throw ValidationException::withMessages([
@@ -60,8 +78,36 @@ class AuthenticateUser
                 'email' => ['Your account is not yet activated. Please check your email for an invitation.'],
             ]);
         }
+    }
 
-        return $user;
+    /**
+     * @throws ValidationException
+     */
+    private function ensurePartnerMemberCanLogin(User $user): void
+    {
+        $partner = $user->partner;
+
+        if (! $partner) {
+            throw ValidationException::withMessages([
+                'email' => ['Your partner account is not linked. Please contact support.'],
+            ]);
+        }
+
+        match ($partner->status) {
+            'suspended' => throw ValidationException::withMessages([
+                'email' => ['Your account has been suspended. Please contact support.'],
+            ]),
+            'pending' => throw ValidationException::withMessages([
+                'email' => ['Your account is not yet activated. Please check your email for an invitation.'],
+            ]),
+            'inactive' => throw ValidationException::withMessages([
+                'email' => ['Your account is inactive. Please contact support.'],
+            ]),
+            'active' => null,
+            default => throw ValidationException::withMessages([
+                'email' => ['Your account cannot sign in right now. Please contact support.'],
+            ]),
+        };
     }
 
     /**
