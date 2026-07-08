@@ -62,6 +62,12 @@ class PartnerController extends Controller
 
     public function store(Request $request, InvitePartnerMemberAction $inviteAction): RedirectResponse
     {
+        $request->merge([
+            'commission_length' => ($request->input('commission_length') === 'always' || $request->input('commission_length') === '')
+                ? null
+                : $request->input('commission_length'),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
             'email' => ['required', 'email', 'unique:partners,email'],
@@ -126,6 +132,12 @@ class PartnerController extends Controller
 
     public function update(Request $request, Partner $partner): RedirectResponse
     {
+        $request->merge([
+            'commission_length' => ($request->input('commission_length') === 'always' || $request->input('commission_length') === '')
+                ? null
+                : $request->input('commission_length'),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name,'.$partner->id],
             'email' => ['required', 'email', 'unique:partners,email,'.$partner->id],
