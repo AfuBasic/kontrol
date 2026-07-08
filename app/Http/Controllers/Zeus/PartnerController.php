@@ -57,7 +57,7 @@ class PartnerController extends Controller
         return Inertia::render('Zeus/Partners/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, InvitePartnerMemberAction $inviteAction): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
@@ -71,14 +71,18 @@ class PartnerController extends Controller
                 $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
             ],
             'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
-            'status' => ['required', 'in:active,inactive,suspended'],
         ]);
 
-        Partner::create($validated);
+        $validated['status'] = 'pending';
+
+        $partner = Partner::create($validated);
+
+        // Automatically invite the primary member on creation
+        $inviteAction->execute($partner, $partner->email, $partner->name);
 
         return redirect()
             ->route('zeus.partners.index')
-            ->with('success', 'Partner created successfully.');
+            ->with('success', 'Partner created and invitation email sent.');
     }
 
     public function edit(Partner $partner): Response
@@ -99,8 +103,14 @@ class PartnerController extends Controller
             ],
             'members' => $partner->members()
                 ->orderBy('name')
-                ->get(['id', 'name', 'email', 'created_at']),
-            'partnerPortalUrl' => "{$scheme}://{$appDomain}/partner/dashboard",
+                ->get()
+                ->map(fn ($m) => [
+                    'id' => $m->id,
+                    'name' => $m->name,
+                    'email' => $m->email,
+                    'created_at' => $m->created_at->toIso8601String(),
+                ]),
+            'partnerPortalUrl' => "$scheme://partner.$appDomain/login",
         ]);
     }
 
@@ -118,7 +128,7 @@ class PartnerController extends Controller
                 $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
             ],
             'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
-            'status' => ['required', 'in:active,inactive,suspended'],
+            'status' => ['required', 'in:active,inactive,suspended,pending'],
         ]);
 
         $partner->update($validated);

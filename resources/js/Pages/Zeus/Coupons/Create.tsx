@@ -18,7 +18,6 @@ import {
     X,
     Clock,
     Infinity as InfinityIcon,
-    ArrowUpRight,
     Tag,
 } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';

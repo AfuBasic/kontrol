@@ -91,6 +91,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
     ];
 
     const statusOptions = [
+        { label: 'Pending', value: 'pending', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
         { label: 'Active', value: 'active', color: 'bg-[#34D399]/15 text-[#34D399] border-[#34D399]/30' },
         { label: 'Inactive', value: 'inactive', color: 'bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]/30' },
         { label: 'Suspended', value: 'suspended', color: 'bg-rose-500/15 text-rose-500 border-rose-500/30' },
