@@ -62,9 +62,6 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
             'email' => ['required', 'email', 'unique:partners,email'],
-            'description' => ['nullable', 'string'],
-            'website' => ['nullable', 'url'],
-            'contact_person' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
@@ -73,6 +70,7 @@ class PartnerController extends Controller
                 'min:0',
                 $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
             ],
+            'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
             'status' => ['required', 'in:active,inactive,suspended'],
         ]);
 
@@ -93,14 +91,11 @@ class PartnerController extends Controller
                 'id' => $partner->id,
                 'name' => $partner->name,
                 'email' => $partner->email,
-                'description' => $partner->description,
-                'website' => $partner->website,
-                'contact_person' => $partner->contact_person,
                 'phone' => $partner->phone,
                 'commission_type' => $partner->commission_type,
                 'commission_rate' => $partner->commission_rate,
+                'commission_length' => $partner->commission_length,
                 'status' => $partner->status,
-                'notes' => $partner->notes,
             ],
             'members' => $partner->members()
                 ->orderBy('name')
@@ -114,9 +109,6 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name,'.$partner->id],
             'email' => ['required', 'email', 'unique:partners,email,'.$partner->id],
-            'description' => ['nullable', 'string'],
-            'website' => ['nullable', 'url'],
-            'contact_person' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
@@ -125,8 +117,8 @@ class PartnerController extends Controller
                 'min:0',
                 $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
             ],
+            'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
             'status' => ['required', 'in:active,inactive,suspended'],
-            'notes' => ['nullable', 'string'],
         ]);
 
         $partner->update($validated);
