@@ -298,7 +298,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                                             Location
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                            Chairman
+                                            Contact
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase">
                                             Houses
@@ -461,7 +461,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                                         </dd>
                                     </div>
                                     <div>
-                                        <dt className="text-xs text-slate-500">Chairman</dt>
+                                        <dt className="text-xs text-slate-500">Contact person</dt>
                                         <dd className="mt-0.5 font-medium text-slate-900 dark:text-white">{selected.chairman_name}</dd>
                                     </div>
                                     <div>
