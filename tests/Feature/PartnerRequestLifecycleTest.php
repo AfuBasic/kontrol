@@ -28,7 +28,7 @@ it('allows partner members to submit partner requests', function () {
     $affiliate->assignRole('affiliate');
 
     $this->actingAs($affiliate)
-        ->post(route('affiliate.partner-requests.store'), [
+        ->post(route('partner.partner-requests.store'), [
             'estate_name' => 'Palm Grove Estate',
             'estate_address' => '12 Palm Avenue',
             'chairman_name' => 'John Chairman',
@@ -39,7 +39,7 @@ it('allows partner members to submit partner requests', function () {
             'lga' => 'Ikeja',
             'notes' => 'High potential estate',
         ])
-        ->assertRedirect(route('affiliate.partner-requests.index'))
+        ->assertRedirect(route('partner.partner-requests.index'))
         ->assertSessionHas('success');
 
     assertDatabaseHas('partner_requests', [
