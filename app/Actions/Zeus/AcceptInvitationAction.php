@@ -8,7 +8,6 @@ use App\Notifications\Admin\ResidentAcceptedInvitation;
 use App\Notifications\PropertyOwner\ResidentAcceptedToPropertyOwner;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class AcceptInvitationAction
 {
@@ -19,6 +18,10 @@ class AcceptInvitationAction
             $user->update([
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
+
+            if ($user->partner_id) {
+                $user->partner()->update(['status' => 'active']);
+            }
 
             // Update pivot status to accepted
             DB::table('estate_users_membership')
