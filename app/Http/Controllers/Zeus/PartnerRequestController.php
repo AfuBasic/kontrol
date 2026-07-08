@@ -18,7 +18,7 @@ class PartnerRequestController extends Controller
         $status = $request->query('status');
 
         $partnerRequests = PartnerRequest::query()
-            ->with(['partner:id,name,email,commission_rate', 'estate:id,ulid,name'])
+            ->with(['partner', 'estate:id,ulid,name'])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(20)

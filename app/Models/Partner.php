@@ -39,17 +39,20 @@ class Partner extends Model
 
     protected $fillable = [
         'name',
-        'email',
         'description',
         'website',
         'contact_person',
-        'phone',
         'commission_type',
         'commission_rate',
         'commission_length',
         'status',
         'api_key',
         'notes',
+    ];
+
+    protected $appends = [
+        'email',
+        'phone',
     ];
 
     protected $casts = [
@@ -101,6 +104,16 @@ class Partner extends Model
     public function scopeActive(mixed $query): mixed
     {
         return $query->where('status', 'active');
+    }
+
+    public function getEmailAttribute(): ?string
+    {
+        return $this->members()->first()?->email;
+    }
+
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->members()->first()?->profile?->phone;
     }
 
     public function generateApiKey(): string

@@ -33,7 +33,7 @@ test('zeus admin can create a partner and it starts as pending and invites the p
     $response->assertSessionHasNoErrors();
 
     // Verify partner is created in pending status
-    $partner = Partner::where('email', 'contact@apexreferrals.com')->first();
+    $partner = Partner::where('name', 'Apex Referral Network')->first();
     expect($partner)->not->toBeNull();
     expect($partner->status)->toBe('pending');
     expect($partner->commission_length)->toBe(12);
@@ -55,7 +55,6 @@ test('invited partner member accepting their invitation activates the partner st
     // 1. Create a partner and associated user manually in pending state
     $partner = Partner::create([
         'name' => 'Delta Partners',
-        'email' => 'delta@partners.com',
         'commission_type' => 'percentage',
         'commission_rate' => 10,
         'status' => 'pending',
@@ -87,10 +86,16 @@ test('zeus admin can edit and manually toggle the partner status on the edit pag
 
     $partner = Partner::create([
         'name' => 'Gamma Referrals',
-        'email' => 'gamma@referrals.com',
         'commission_type' => 'percentage',
         'commission_rate' => 10,
         'status' => 'pending',
+    ]);
+
+    $user = User::create([
+        'name' => 'Gamma Referrals',
+        'email' => 'gamma@referrals.com',
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
     ]);
 
     // Update status to suspended
@@ -116,7 +121,6 @@ test('zeus admin can resend invitation emails to a member', function () {
 
     $partner = Partner::create([
         'name' => 'Gamma Referrals',
-        'email' => 'gamma@referrals.com',
         'commission_type' => 'percentage',
         'commission_rate' => 10,
         'status' => 'pending',
@@ -162,7 +166,7 @@ test('zeus admin can create a fixed fee partner and it stores the rate in kobo',
     $response->assertSessionHasNoErrors();
 
     // Verify stored partner commission_rate is 5000 * 100 = 500000 kobo
-    $partner = Partner::where('email', 'fixed@referrals.com')->first();
+    $partner = Partner::where('name', 'Fixed Fee Referrals')->first();
     expect($partner)->not->toBeNull();
     expect($partner->commission_type)->toBe('fixed');
     expect((int) $partner->commission_rate)->toBe(500000);

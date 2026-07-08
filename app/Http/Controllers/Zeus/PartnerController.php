@@ -71,8 +71,8 @@ class PartnerController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
-            'email' => ['required', 'email', 'unique:partners,email', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'unique:partners,phone'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'unique:user_profiles,phone'],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
                 'required',
@@ -90,9 +90,18 @@ class PartnerController extends Controller
         $validated['status'] = 'pending';
 
         DB::transaction(function () use ($validated, $inviteAction) {
-            $partner = Partner::create($validated);
+            $partnerData = collect($validated)->except(['email', 'phone'])->toArray();
+            $partner = Partner::create($partnerData);
+
             // Automatically invite the primary member on creation
-            $inviteAction->execute($partner, $partner->email, $partner->name);
+            $user = $inviteAction->execute($partner, $validated['email'], $partner->name);
+
+            if (!empty($validated['phone'])) {
+                $user->profile()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    ['phone' => $validated['phone']]
+                );
+            }
         });
 
         return redirect()
@@ -140,10 +149,13 @@ class PartnerController extends Controller
                 : $request->input('commission_length'),
         ]);
 
+        $primaryMember = $partner->members()->first();
+        $primaryMemberId = $primaryMember?->id;
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name,'.$partner->id],
-            'email' => ['required', 'email', 'unique:partners,email,'.$partner->id],
-            'phone' => ['nullable', 'string', 'unique:partners,phone,'.$partner->id],
+            'email' => ['required', 'email', 'unique:users,email,'.$primaryMemberId],
+            'phone' => ['nullable', 'string', 'unique:user_profiles,phone,'.$primaryMember?->profile?->id],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
                 'required',
@@ -159,7 +171,21 @@ class PartnerController extends Controller
             $validated['commission_rate'] = $validated['commission_rate'] * 100;
         }
 
-        $partner->update($validated);
+        DB::transaction(function () use ($partner, $validated, $primaryMember) {
+            $partnerData = collect($validated)->except(['email', 'phone'])->toArray();
+            $partner->update($partnerData);
+
+            if ($primaryMember) {
+                $primaryMember->update([
+                    'email' => $validated['email'],
+                ]);
+
+                $primaryMember->profile()->updateOrCreate(
+                    ['user_id' => $primaryMember->id],
+                    ['phone' => $validated['phone']]
+                );
+            }
+        });
 
         return redirect()
             ->route('zeus.partners.index')
