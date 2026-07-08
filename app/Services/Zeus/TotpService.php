@@ -19,7 +19,7 @@ class TotpService
     {
         $otpauthUrl = 'otpauth://totp/'.rawurlencode($label).'?secret='.$secret.'&issuer='.rawurlencode($issuer);
 
-        return 'https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl='.urlencode($otpauthUrl);
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($otpauthUrl);
     }
 
     public function verify(string $secret, string $code, int $window = 1): bool
