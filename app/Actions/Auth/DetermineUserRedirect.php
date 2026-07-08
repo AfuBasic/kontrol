@@ -30,6 +30,11 @@ class DetermineUserRedirect
             return route('resident.dashboard');
         }
 
+        // Partner/affiliate portal members
+        if ($user->hasRole('affiliate')) {
+            return route('affiliate.dashboard');
+        }
+
         // Default to admin module for any other role (including estate-scoped 'admin')
         return route('admin.dashboard');
     }
