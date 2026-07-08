@@ -6,8 +6,10 @@ use App\Enums\PartnerRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Partner\StorePartnerRequestRequest;
 use App\Models\PartnerRequest;
+use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,11 +68,18 @@ class PartnerRequestController extends Controller
 
         abort_unless($user->partner_id, 403, 'Your account is not linked to a partner organization.');
 
-        PartnerRequest::create([
+        $partnerRequest = PartnerRequest::create([
             ...$request->validated(),
             'partner_id' => $user->partner_id,
             'status' => PartnerRequestStatus::Submitted,
         ]);
+
+        $zeusInbox = config('zeus.notification_email');
+
+        if (filled($zeusInbox)) {
+            Notification::route('mail', $zeusInbox)
+                ->notify(new PartnerEstateRequestSubmittedNotification($partnerRequest));
+        }
 
         return redirect()
             ->route('partner.partner-requests.index')
