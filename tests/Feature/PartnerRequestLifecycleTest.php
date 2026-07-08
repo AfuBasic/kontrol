@@ -5,8 +5,10 @@ use App\Models\Estate;
 use App\Models\Partner;
 use App\Models\PartnerRequest;
 use App\Models\User;
+use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\PlanSeeder;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\assertDatabaseHas;
@@ -18,6 +20,9 @@ beforeEach(function () {
 });
 
 it('allows partner members to submit partner requests', function () {
+    Notification::fake();
+    config(['zeus.notification_email' => 'zeus@kontrol.test']);
+
     $partner = Partner::factory()->create();
     $affiliate = User::factory()->create([
         'user_type' => 'affiliate',
@@ -47,6 +52,14 @@ it('allows partner members to submit partner requests', function () {
         'partner_id' => $partner->id,
         'status' => PartnerRequestStatus::Submitted->value,
     ]);
+
+    Notification::assertSentOnDemand(
+        PartnerEstateRequestSubmittedNotification::class,
+        function (PartnerEstateRequestSubmittedNotification $notification, array $channels, object $notifiable) {
+            return $notification->partnerRequest->estate_name === 'Palm Grove Estate'
+                && ($notifiable->routes['mail'] ?? null) === 'zeus@kontrol.test';
+        }
+    );
 });
 
 it('approves partner requests and creates attributed estates', function () {
