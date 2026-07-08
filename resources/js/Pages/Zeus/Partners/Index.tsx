@@ -85,7 +85,10 @@ export default function PartnersIndex({ partners, filters }: Props) {
         <ZeusLayout>
             <Head title="Partners Management" />
 
-            <div className="space-y-8">
+            <div className="relative mx-auto max-w-7xl px-4 py-8 text-[#F2F3F6] bg-[#0A0B10] min-h-screen space-y-8">
+                {/* Decorative Glow */}
+                <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
+
                 {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -94,64 +97,72 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <div className="mb-1.5 flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse shadow-sm" />
-                            <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">Strategic Network</span>
+                        <div className="mb-2 flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#6C5DFD] shadow-[0_0_12px_rgba(108,93,253,0.6)]" />
+                            <span className="text-[10px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">PARTNER ACCOUNTS</span>
                         </div>
-                        <h1 className="text-3xl font-black tracking-tight text-gray-900">
-                            Partner <span className="font-light text-gray-500">Accounts</span>
+                        <h1 className="text-4xl font-black tracking-tight text-[#F2F3F6]">
+                            Strategic <span className="font-light text-[#9297A8]">Partners</span>
                         </h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage external partners, update commission rates, and track performance.</p>
+                        <p className="text-sm text-[#9297A8] mt-2">Manage external partners, update commission structures, and audit referrals.</p>
                     </div>
                     <div>
                         <Link
                             href="/zeus/partners/create"
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-600/10 hover:bg-indigo-500 hover:shadow-lg transition-all duration-200 active:scale-95"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#6C5DFD] to-violet-650 px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#6C5DFD]/10 hover:shadow-xl active:scale-[0.98] transition-all"
                         >
-                            <PlusIcon className="h-5 w-5" />
-                            New Partner
+                            <PlusIcon className="h-4.5 w-4.5 stroke-[3]" />
+                            Create Partner
                         </Link>
                     </div>
                 </motion.div>
 
-                {/* Stats Overview */}
+                {/* KPI Metrics Dashboard Panel */}
                 <motion.div
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.05 }}
-                    className="grid gap-6 sm:grid-cols-3"
+                    className="grid gap-4 sm:grid-cols-3"
                 >
-                    <div className="relative overflow-hidden rounded-2xl border border-gray-150 bg-white p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-500">Total Partners</span>
-                            <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
-                                <UsersIcon className="h-5 w-5" />
-                            </div>
+                    {/* Stat Card 1 */}
+                    <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
+                        <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#6C5DFD]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Strategic Partners</span>
+                        <div className="mt-4 flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-[#F2F3F6]">{partners.total}</span>
+                            <span className="text-xs font-semibold text-[#9297A8]">registered</span>
                         </div>
-                        <p className="text-3xl font-bold text-gray-900 mt-4">{partners.total}</p>
-                        <p className="text-xs text-gray-400 mt-1">{activePartnersCount} currently active</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#34D399]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#34D399] shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                            <span>{activePartnersCount} live and active</span>
+                        </div>
                     </div>
 
-                    <div className="relative overflow-hidden rounded-2xl border border-gray-150 bg-white p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-500">Estates Referred</span>
-                            <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600">
-                                <BuildingOfficeIcon className="h-5 w-5" />
-                            </div>
+                    {/* Stat Card 2 */}
+                    <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
+                        <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#34D399]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Estates Referred</span>
+                        <div className="mt-4 flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-[#F2F3F6]">{totalEstatesCount}</span>
+                            <span className="text-xs font-semibold text-[#9297A8]">estates</span>
                         </div>
-                        <p className="text-3xl font-bold text-gray-900 mt-4">{totalEstatesCount}</p>
-                        <p className="text-xs text-gray-400 mt-1">Referred across current partner lists</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#60A5FA]">
+                            <BuildingOfficeIcon className="h-3.5 w-3.5" />
+                            <span>Across all partner lists</span>
+                        </div>
                     </div>
 
-                    <div className="relative overflow-hidden rounded-2xl border border-gray-150 bg-white p-6 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-500">Financial Settlements</span>
-                            <div className="rounded-lg bg-amber-50 p-2 text-amber-600">
-                                <BanknotesIcon className="h-5 w-5" />
-                            </div>
+                    {/* Stat Card 3 */}
+                    <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
+                        <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#A78BFA]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Settlement Program</span>
+                        <div className="mt-4 flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-[#F2F3F6]">Active</span>
                         </div>
-                        <p className="text-3xl font-bold text-gray-900 mt-4">Active</p>
-                        <p className="text-xs text-gray-400 mt-1">First-year monthly payouts enabled</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#A78BFA]">
+                            <BanknotesIcon className="h-3.5 w-3.5" />
+                            <span>Monthly payouts enabled</span>
+                        </div>
                     </div>
                 </motion.div>
 
@@ -160,30 +171,30 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                    className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl"
                 >
                     <form onSubmit={handleSearch} className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between">
                         <div className="flex flex-1 flex-col gap-4 sm:flex-row">
                             <div className="flex-1">
-                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">Search</label>
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Search Partners</label>
                                 <div className="relative">
-                                    <MagnifyingGlassIcon className="absolute top-3 left-3.5 h-4 w-4 text-gray-400" />
+                                    <MagnifyingGlassIcon className="absolute top-3.5 left-3.5 h-4 w-4 text-[#9297A8]" />
                                     <input
                                         type="text"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search by name, email..."
-                                        className="w-full rounded-xl border border-gray-250 py-2.5 pr-4 pl-10 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                     />
                                 </div>
                             </div>
 
                             <div className="w-full sm:w-48">
-                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">Status</label>
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Status Filter</label>
                                 <select
                                     value={status}
                                     onChange={(e) => handleStatusChange(e.target.value)}
-                                    className="w-full rounded-xl border border-gray-250 py-2.5 px-4 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                    className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 px-4 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
                                 >
                                     <option value="">All Statuses</option>
                                     <option value="active">Active</option>
@@ -196,7 +207,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                         <div className="flex gap-2">
                             <button
                                 type="submit"
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors active:scale-95"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 border border-[rgba(255,255,255,0.08)] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors"
                             >
                                 <FunnelIcon className="h-4 w-4" />
                                 Filter
@@ -205,9 +216,9 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                 <button
                                     type="button"
                                     onClick={clearFilters}
-                                    className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors active:scale-95"
+                                    className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-5 py-3 text-sm font-semibold text-[#9297A8] hover:bg-gray-850 hover:text-white transition-colors"
                                 >
-                                    Clear
+                                    Reset
                                 </button>
                             )}
                         </div>
@@ -219,92 +230,92 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.15 }}
-                    className="rounded-2xl border border-gray-255 bg-white shadow-sm overflow-hidden"
+                    className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] shadow-2xl overflow-hidden"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-[#12141C] border-b border-[rgba(255,255,255,0.08)] text-xs font-semibold uppercase tracking-wider text-[#9297A8]">
                                 <tr>
                                     <th className="px-6 py-4 text-left">Partner Details</th>
                                     <th className="px-6 py-4 text-left">Commission Rate</th>
-                                    <th className="px-6 py-4 text-center">Estates</th>
+                                    <th className="px-6 py-4 text-center">Referrals</th>
                                     <th className="px-6 py-4 text-center">Status</th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
                                 {partners.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-16 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-16 text-center text-[#9297A8]">
                                             {hasFilters ? 'No partners match your filter criteria.' : 'No partners found. Create one to get started.'}
                                         </td>
                                     </tr>
                                 ) : (
                                     partners.data.map((partner) => (
-                                        <tr key={partner.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={partner.id} className="hover:bg-[#12141C]/50 transition-colors">
                                             <td className="px-6 py-5">
                                                 <div>
-                                                    <p className="font-semibold text-gray-900 text-[14px]">{partner.name}</p>
-                                                    <p className="text-gray-500 text-xs mt-0.5">{partner.email}</p>
+                                                    <p className="font-bold text-[#F2F3F6] text-[14px]">{partner.name}</p>
+                                                    <p className="text-[#9297A8] text-xs mt-0.5">{partner.email}</p>
                                                     {partner.contact_person && (
-                                                        <p className="text-gray-400 text-[10px] mt-1">Attn: {partner.contact_person}</p>
+                                                        <p className="text-gray-650 text-[10px] mt-1">Attn: {partner.contact_person}</p>
                                                     )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-col">
-                                                    <span className="font-bold text-gray-900">
+                                                    <span className="font-bold text-[#F2F3F6]">
                                                         {formatCommission(partner.commission_rate, partner.commission_type)}
                                                     </span>
-                                                    <span className="text-[10px] text-gray-400 uppercase mt-0.5">
+                                                    <span className="text-[10px] text-[#9297A8] uppercase mt-0.5">
                                                         {partner.commission_type === 'fixed' ? 'Fixed Fee' : 'Percentage'}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-700 text-xs">
+                                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A0B10] border border-[rgba(255,255,255,0.08)] font-semibold text-[#F2F3F6] text-xs">
                                                     {partner.estates_count}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-center">
                                                 <span
-                                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${
                                                         partner.status === 'active'
-                                                            ? 'bg-emerald-50 text-emerald-700'
+                                                            ? 'bg-[#34D399]/10 text-[#34D399] border border-[#34D399]/20'
                                                             : partner.status === 'inactive'
-                                                            ? 'bg-gray-100 text-gray-600'
-                                                            : 'bg-rose-50 text-rose-700'
+                                                            ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20'
+                                                            : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
                                                     }`}
                                                 >
                                                     <span className={`h-1.5 w-1.5 rounded-full ${
                                                         partner.status === 'active'
-                                                            ? 'bg-emerald-500'
+                                                            ? 'bg-[#34D399]'
                                                             : partner.status === 'inactive'
-                                                            ? 'bg-gray-400'
+                                                            ? 'bg-[#F5A623]'
                                                             : 'bg-rose-500'
                                                     }`} />
-                                                    {partner.status.charAt(0).toUpperCase() + partner.status.slice(1)}
+                                                    {partner.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-3">
                                                     <Link
                                                         href={`/zeus/partners/${partner.id}/earnings`}
-                                                        className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#34D399] hover:underline"
                                                     >
                                                         <BanknotesIcon className="h-4 w-4" />
                                                         Earnings
                                                     </Link>
                                                     <Link
                                                         href={`/zeus/partners/${partner.id}/edit`}
-                                                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6C5DFD] hover:underline"
                                                     >
                                                         <PencilSquareIcon className="h-4 w-4" />
                                                         Edit
                                                     </Link>
                                                     <button
                                                         onClick={() => handleDelete(partner.id, partner.name)}
-                                                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:underline"
                                                     >
                                                         <TrashIcon className="h-4 w-4" />
                                                         Delete
@@ -320,8 +331,8 @@ export default function PartnersIndex({ partners, filters }: Props) {
 
                     {/* Pagination */}
                     {partners.last_page > 1 && (
-                        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-6 py-4">
-                            <p className="text-sm text-gray-500">
+                        <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] bg-[#12141C] px-6 py-4">
+                            <p className="text-sm text-[#9297A8]">
                                 Showing {partners.from} to {partners.to} of {partners.total} partners
                             </p>
                             <div className="flex gap-2">
@@ -331,10 +342,10 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                         <Link
                                             key={idx}
                                             href={link.url}
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                                                 link.active
-                                                    ? 'bg-indigo-600 text-white shadow-sm'
-                                                    : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
+                                                    ? 'bg-[#6C5DFD] text-white shadow-sm'
+                                                    : 'bg-[#0A0B10] border border-[rgba(255,255,255,0.08)] text-[#9297A8] hover:bg-[#12141C]'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
