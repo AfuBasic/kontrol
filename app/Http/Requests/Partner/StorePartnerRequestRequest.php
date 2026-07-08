@@ -28,4 +28,16 @@ class StorePartnerRequestRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'chairman_name' => 'contact person name',
+            'chairman_phone' => 'contact person phone',
+            'chairman_email' => 'contact person email',
+        ];
+    }
 }
