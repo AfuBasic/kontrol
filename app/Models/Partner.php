@@ -46,6 +46,7 @@ class Partner extends Model
         'phone',
         'commission_type',
         'commission_rate',
+        'commission_length',
         'status',
         'api_key',
         'notes',
