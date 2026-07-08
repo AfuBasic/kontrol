@@ -10,6 +10,8 @@ import {
 import { Head, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
+import EmptyState from '@/Components/Partner/EmptyState';
+import PageHeader from '@/Components/Partner/PageHeader';
 import PartnerLayout from '@/Layouts/PartnerLayout';
 
 interface PartnerRequest {
@@ -95,8 +97,8 @@ function RequestCard({
         <button
             type="button"
             onClick={() => onOpen(request)}
-            className={`w-full rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 ${
-                compact ? 'p-3' : 'p-4'
+            className={`w-full rounded-lg border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(28,25,23,0.04)] transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 ${
+                compact ? 'p-2.5' : 'p-3'
             }`}
         >
             <div className="flex items-start justify-between gap-2">
@@ -170,22 +172,20 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
         <PartnerLayout fullWidth={view === 'kanban'}>
             <Head title="Estate Pipeline – Partner Portal" />
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Estate Pipeline</h1>
-                        <p className="mt-2 text-slate-600 dark:text-slate-400">
-                            Track every estate from submission through activation.
-                        </p>
-                    </div>
-                    <Link
-                        href="/partner/partner-requests/create"
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-500"
-                    >
-                        <PlusIcon className="h-4 w-4" />
-                        Submit estate
-                    </Link>
-                </div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3.5">
+                <PageHeader
+                    title="Estate pipeline"
+                    description="Track every estate from submission through activation."
+                    actions={
+                        <Link
+                            href="/partner/partner-requests/create"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-500 active:scale-[0.98]"
+                        >
+                            <PlusIcon className="h-3.5 w-3.5" />
+                            Submit estate
+                        </Link>
+                    }
+                />
 
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center gap-3">
@@ -243,28 +243,24 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                 </div>
 
                 {partnerRequests.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center dark:border-slate-700 dark:bg-slate-900">
-                        <BuildingOffice2Icon className="mx-auto h-12 w-12 text-slate-300" />
-                        <h2 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">No estates in your pipeline</h2>
-                        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-                            Submit your first estate to start earning commissions when residents join Kontrol.
-                        </p>
-                        <Link
-                            href="/partner/partner-requests/create"
-                            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-500"
-                        >
-                            <PlusIcon className="h-4 w-4" />
-                            Submit first estate
-                        </Link>
+                    <div className="rounded-xl border border-dashed border-stone-300 bg-white dark:border-slate-700 dark:bg-slate-900">
+                        <EmptyState
+                            icon={BuildingOffice2Icon}
+                            title="Your pipeline is empty"
+                            description="You haven't submitted any estates yet. Referrals appear here as cards so you can track review, approval, and activation."
+                            nextStep="Submit your first estate — our team typically reviews within a few business days."
+                            action={{ label: 'Submit first estate', href: '/partner/partner-requests/create' }}
+                            secondaryAction={{ label: 'How commissions work', href: '/partner/support' }}
+                        />
                     </div>
                 ) : view === 'kanban' ? (
                     <div className="flex gap-4 overflow-x-auto pb-4">
                         {columns.map((col) => (
                             <div
                                 key={col.key}
-                                className="flex w-72 shrink-0 flex-col rounded-2xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/50"
+                                className="flex w-64 shrink-0 flex-col rounded-xl border border-stone-200/90 bg-stone-50/70 dark:border-slate-800 dark:bg-slate-900/50"
                             >
-                                <div className="flex items-center justify-between border-b border-slate-200 px-3 py-3 dark:border-slate-800">
+                                <div className="flex items-center justify-between border-b border-stone-200/80 px-2.5 py-2 dark:border-slate-800">
                                     <div className="flex items-center gap-2">
                                         <span
                                             className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ring-1 ring-inset ${statusBadgeClasses(col.key)}`}
