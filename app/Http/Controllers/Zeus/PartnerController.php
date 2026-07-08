@@ -38,6 +38,7 @@ class PartnerController extends Controller
                     'name' => $partner->name,
                     'email' => $partner->email,
                     'contact_person' => $partner->contact_person,
+                    'commission_type' => $partner->commission_type,
                     'commission_rate' => $partner->commission_rate,
                     'status' => $partner->status,
                     'estates_count' => $partner->estates()->count(),
@@ -65,7 +66,13 @@ class PartnerController extends Controller
             'website' => ['nullable', 'url'],
             'contact_person' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
-            'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'commission_type' => ['required', 'in:percentage,fixed'],
+            'commission_rate' => [
+                'required',
+                'numeric',
+                'min:0',
+                $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
+            ],
             'status' => ['required', 'in:active,inactive,suspended'],
         ]);
 
@@ -90,6 +97,7 @@ class PartnerController extends Controller
                 'website' => $partner->website,
                 'contact_person' => $partner->contact_person,
                 'phone' => $partner->phone,
+                'commission_type' => $partner->commission_type,
                 'commission_rate' => $partner->commission_rate,
                 'status' => $partner->status,
                 'notes' => $partner->notes,
@@ -97,7 +105,7 @@ class PartnerController extends Controller
             'members' => $partner->members()
                 ->orderBy('name')
                 ->get(['id', 'name', 'email', 'created_at']),
-            'partnerPortalUrl' => "{$scheme}://{$appDomain}/affiliate/dashboard",
+            'partnerPortalUrl' => "{$scheme}://{$appDomain}/partner/dashboard",
         ]);
     }
 
@@ -110,7 +118,13 @@ class PartnerController extends Controller
             'website' => ['nullable', 'url'],
             'contact_person' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
-            'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'commission_type' => ['required', 'in:percentage,fixed'],
+            'commission_rate' => [
+                'required',
+                'numeric',
+                'min:0',
+                $request->commission_type === 'percentage' ? 'max:100' : 'max:10000000',
+            ],
             'status' => ['required', 'in:active,inactive,suspended'],
             'notes' => ['nullable', 'string'],
         ]);
