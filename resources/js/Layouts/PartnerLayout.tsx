@@ -126,7 +126,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         return currentPath === href || currentPath.startsWith(href + '/');
     }
 
-    function renderNavLink(item: NavItem) {
+    function renderNavLink(item: NavItem, { showLabel = true }: { showLabel?: boolean } = {}) {
         const active = isActive(item.href, item.exact);
 
         return (
@@ -135,6 +135,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 href={item.href}
                 prefetch
                 aria-current={active ? 'page' : undefined}
+                title={item.name}
                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                     active
                         ? 'bg-white/10 text-white shadow-sm ring-1 ring-white/10'
@@ -142,7 +143,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 }`}
             >
                 <item.icon className={`h-5 w-5 shrink-0 ${active ? 'text-primary-300' : 'text-slate-400 group-hover:text-slate-200'}`} />
-                {!isCollapsed && <span className="truncate">{item.name}</span>}
+                {showLabel && <span className="truncate">{item.name}</span>}
             </Link>
         );
     }
@@ -212,11 +213,11 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     )}
 
                     <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4" aria-label="Primary">
-                        {primaryNav.map((item) => renderNavLink(item))}
+                        {primaryNav.map((item) => renderNavLink(item, { showLabel: !isCollapsed }))}
 
                         <div className="my-3 border-t border-slate-800" />
 
-                        {secondaryNav.map((item) => renderNavLink(item))}
+                        {secondaryNav.map((item) => renderNavLink(item, { showLabel: !isCollapsed }))}
                     </nav>
 
                     <div className="space-y-1 border-t border-slate-800 p-3">
@@ -278,7 +279,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                     <p className="text-xs text-slate-400">{user?.email}</p>
                                 </div>
                                 <nav className="flex-1 space-y-1 px-2 py-4">
-                                    {[...primaryNav, ...secondaryNav].map((item) => renderNavLink(item))}
+                                    {[...primaryNav, ...secondaryNav].map((item) => renderNavLink(item, { showLabel: true }))}
                                 </nav>
                                 <div className="border-t border-slate-800 p-3">
                                     <button
