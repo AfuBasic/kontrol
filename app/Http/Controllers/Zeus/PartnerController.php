@@ -29,7 +29,7 @@ class PartnerController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
+                    ->orWhereHas('members', fn ($query) => $query->where('email', 'like', "%$search%"));
             });
         }
 
@@ -37,10 +37,12 @@ class PartnerController extends Controller
 
         return Inertia::render('Zeus/Partners/Index', [
             'partners' => $partners->through(function (Partner $partner) {
+                $primaryMember = $partner->members()->first();
                 return [
                     'id' => $partner->id,
                     'name' => $partner->name,
                     'email' => $partner->email,
+                    'primary_member_id' => $primaryMember?->id,
                     'contact_person' => $partner->contact_person,
                     'commission_type' => $partner->commission_type,
                     'commission_rate' => $partner->commission_rate,

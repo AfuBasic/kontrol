@@ -1,6 +1,6 @@
-import {
     BanknotesIcon,
     BuildingOfficeIcon,
+    EnvelopeIcon,
     FunnelIcon,
     MagnifyingGlassIcon,
     PencilSquareIcon,
@@ -17,10 +17,11 @@ interface Partner {
     id: number;
     name: string;
     email: string;
+    primary_member_id?: number | null;
     contact_person: string | null;
     commission_type: 'percentage' | 'fixed';
     commission_rate: number;
-    status: 'active' | 'inactive' | 'suspended';
+    status: 'active' | 'inactive' | 'suspended' | 'pending';
     estates_count: number;
 }
 
@@ -67,6 +68,14 @@ export default function PartnersIndex({ partners, filters }: Props) {
         if (confirm(`Delete ${name}? This action cannot be undone.`)) {
             router.delete(`/zeus/partners/${partnerId}`, { preserveState: true });
         }
+    }
+
+    function resendInvite(partnerId: number, memberId: number) {
+        router.post(`/zeus/partners/${partnerId}/members/${memberId}/resend-invite`, {}, {
+            onSuccess: () => {
+                alert('Invitation email resent successfully.');
+            }
+        });
     }
 
     function clearFilters() {
@@ -298,6 +307,15 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-3">
+                                                    {partner.status === 'pending' && partner.primary_member_id && (
+                                                        <button
+                                                            onClick={() => resendInvite(partner.id, partner.primary_member_id!)}
+                                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:underline"
+                                                        >
+                                                            <EnvelopeIcon className="h-4 w-4" />
+                                                            Resend Invite
+                                                        </button>
+                                                    )}
                                                     <Link
                                                         href={`/zeus/partners/${partner.id}/earnings`}
                                                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#34D399] hover:underline"
