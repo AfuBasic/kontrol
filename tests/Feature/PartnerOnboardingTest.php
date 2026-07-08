@@ -110,3 +110,37 @@ test('zeus admin can edit and manually toggle the partner status on the edit pag
 
     expect($partner->fresh()->status)->toBe('suspended');
 });
+
+test('zeus admin can resend invitation emails to a member', function () {
+    $sessionKey = config('zeus.session_key');
+
+    $partner = Partner::create([
+        'name' => 'Gamma Referrals',
+        'email' => 'gamma@referrals.com',
+        'commission_type' => 'percentage',
+        'commission_rate' => 10,
+        'status' => 'pending',
+    ]);
+
+    $user = User::create([
+        'name' => 'Gamma Member',
+        'email' => 'member@gamma.com',
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+
+    setPermissionsTeamId(0);
+    $user->assignRole('affiliate');
+
+    Mail::fake();
+
+    $response = $this->withSession([$sessionKey => true])
+        ->post(route('zeus.partners.members.resend-invite', [$partner, $user]));
+
+    $response->assertRedirect(route('zeus.partners.edit', $partner));
+    $response->assertSessionHasNoErrors();
+
+    Mail::assertQueued(PartnerMemberInvitationMail::class, function ($mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
+});
