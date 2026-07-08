@@ -25,10 +25,13 @@ export default function CreatePartner() {
         <ZeusLayout>
             <Head title="Create Partner – Zeus" />
 
-            <div className="mx-auto max-w-3xl space-y-6">
+            <div className="relative mx-auto max-w-3xl px-4 py-8 text-[#F2F3F6] bg-[#0A0B10] min-h-screen space-y-6">
+                {/* Decorative Glow */}
+                <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
+
                 <Link
                     href="/zeus/partners"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9297A8] hover:text-[#F2F3F6] transition-colors"
                 >
                     <ChevronLeftIcon className="h-4 w-4" /> Back to Partners
                 </Link>
@@ -37,74 +40,80 @@ export default function CreatePartner() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm"
+                    className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-8 shadow-2xl space-y-6"
                 >
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Create Partner</h1>
-                        <p className="text-gray-500 mt-1">Add a new partner organization to your strategic referral network.</p>
+                    <div className="mb-4">
+                        <div className="mb-2 flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#6C5DFD] shadow-[0_0_12px_rgba(108,93,253,0.6)]" />
+                            <span className="text-[10px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">PARTNER ONBOARDING</span>
+                        </div>
+                        <h1 className="text-3xl font-bold text-[#F2F3F6]">Create Partner</h1>
+                        <p className="text-[#9297A8] mt-1">Register a new partner organization with custom commission rates.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Partner Details Section */}
                         <div className="space-y-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Partner Details</h3>
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8] border-b border-[rgba(255,255,255,0.05)] pb-2">
+                                Organization Details
+                            </h3>
 
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Organization Name</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Organization Name</label>
                                     <input
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                         placeholder="Acme Referrals Ltd"
                                         required
                                     />
-                                    {errors.name && <p className="mt-1.5 text-xs font-semibold text-rose-600">{errors.name}</p>}
+                                    {errors.name && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.name}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Billing / Contact Email</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Billing / Contact Email</label>
                                     <input
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                         placeholder="billing@acme.com"
                                         required
                                     />
-                                    {errors.email && <p className="mt-1.5 text-xs font-semibold text-rose-600">{errors.email}</p>}
+                                    {errors.email && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.email}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Contact Person Name</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Contact Person Name</label>
                                     <input
                                         type="text"
                                         value={data.contact_person}
                                         onChange={(e) => setData('contact_person', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                         placeholder="Jane Doe"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Phone Number</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Phone Number</label>
                                     <input
                                         type="tel"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                         placeholder="+234..."
                                     />
                                 </div>
 
                                 <div className="sm:col-span-2">
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Website URL</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Website URL</label>
                                     <input
                                         type="url"
                                         value={data.website}
                                         onChange={(e) => setData('website', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
                                         placeholder="https://acme.com"
                                     />
                                 </div>
@@ -112,16 +121,16 @@ export default function CreatePartner() {
                         </div>
 
                         {/* Commission configuration */}
-                        <div className="space-y-6 border-t border-gray-100 pt-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Commission Rules</h3>
+                        <div className="space-y-6 border-t border-[rgba(255,255,255,0.05)] pt-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8]">Commission Schedule</h3>
 
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Commission Type</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Commission Type</label>
                                     <select
                                         value={data.commission_type}
                                         onChange={(e) => setData('commission_type', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
                                     >
                                         <option value="percentage">Percentage (%)</option>
                                         <option value="fixed">Fixed Amount (₦)</option>
@@ -129,8 +138,8 @@ export default function CreatePartner() {
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                        {data.commission_type === 'percentage' ? 'Rate (%)' : 'Amount (in kobo)'}
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">
+                                        {data.commission_type === 'percentage' ? 'Rate (%)' : 'Amount (kobo)'}
                                     </label>
                                     <input
                                         type="number"
@@ -139,30 +148,30 @@ export default function CreatePartner() {
                                         min="0"
                                         max={data.commission_type === 'percentage' ? '100' : undefined}
                                         step="any"
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
                                         required
                                     />
-                                    <p className="mt-1 text-[11px] text-gray-400">
+                                    <p className="mt-1.5 text-[10px] text-[#9297A8]">
                                         {data.commission_type === 'fixed'
                                             ? 'Enter fixed value in kobo (e.g. 50000 kobo = ₦500.00)'
-                                            : 'Percentage rate applied to gross resident payments.'}
+                                            : 'Percentage rate applied to resident transaction fees.'}
                                     </p>
-                                    {errors.commission_rate && <p className="mt-1.5 text-xs font-semibold text-rose-600">{errors.commission_rate}</p>}
+                                    {errors.commission_rate && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.commission_rate}</p>}
                                 </div>
                             </div>
                         </div>
 
                         {/* Status & Notes */}
-                        <div className="space-y-6 border-t border-gray-100 pt-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Status & Profile</h3>
+                        <div className="space-y-6 border-t border-[rgba(255,255,255,0.05)] pt-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8]">Lifecycle & Notes</h3>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Default Status</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Account Status</label>
                                     <select
                                         value={data.status}
                                         onChange={(e) => setData('status', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
                                     >
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
@@ -171,30 +180,30 @@ export default function CreatePartner() {
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block text-sm font-semibold text-gray-700">Internal Description / Notes</label>
+                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Internal Notes / Profile Details</label>
                                     <textarea
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
                                         rows={3}
-                                        className="w-full rounded-xl border border-gray-250 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-gray-300"
-                                        placeholder="Add descriptive details about how the partnership is run..."
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
+                                        placeholder="Record helpful partner relationship details..."
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-3 border-t border-gray-150 pt-6">
+                        <div className="flex gap-4 border-t border-[rgba(255,255,255,0.08)] pt-6">
                             <Link
                                 href="/zeus/partners"
-                                className="flex-1 rounded-xl border border-gray-200 bg-white px-6 py-3.5 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="flex-1 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] py-4 text-center text-sm font-bold text-[#9297A8] hover:bg-gray-800 transition-colors"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-1 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/10 hover:bg-indigo-500 hover:shadow-lg transition-all disabled:opacity-60"
+                                className="flex-1 rounded-2xl bg-[#6C5DFD] py-4 text-sm font-bold text-white shadow-lg hover:bg-[#6C5DFD]/90 transition-all active:scale-[0.98] disabled:opacity-60"
                             >
                                 {processing ? 'Creating...' : 'Create Partner'}
                             </button>
