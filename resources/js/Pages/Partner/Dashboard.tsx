@@ -1,17 +1,38 @@
-import { UserIcon, LinkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { Head } from '@inertiajs/react';
+import { BanknotesIcon, BuildingOfficeIcon, LinkIcon, UserIcon } from '@heroicons/react/24/outline';
+import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import PartnerLayout from '@/Layouts/PartnerLayout';
+
+interface Stats {
+    total_earned: number;
+    pending_commissions: number;
+    partner_request_count: number;
+    commission_rate: string | null;
+    commission_type: string | null;
+    next_settlement_date: string;
+}
 
 interface Props {
     user: {
         id: number;
+        ulid: string;
         name: string;
         email: string;
     };
+    stats: Stats;
 }
 
-export default function AffiliateDashboard({ user }: Props) {
+function formatAmount(kobo: number): string {
+    return '₦' + (kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+}
+
+function formatCommission(rate: string | null, type: string | null): string {
+    if (!rate) return 'TBD';
+    if (type === 'fixed') return '₦' + (Number(rate) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+    return `${Number(rate).toFixed(2)}%`;
+}
+
+export default function PartnerDashboard({ user, stats }: Props) {
     return (
         <PartnerLayout>
             <Head title="Partner Portal" />
@@ -30,7 +51,7 @@ export default function AffiliateDashboard({ user }: Props) {
                             Welcome, {user.name}
                         </h1>
                     </div>
-                    <p className="text-lg text-gray-600">Manage your partner estates and track onboarding requests</p>
+                    <p className="text-lg text-gray-600">Manage your partner estates and track commission earnings</p>
                 </div>
 
                 {/* Quick Stats Grid */}
@@ -40,60 +61,84 @@ export default function AffiliateDashboard({ user }: Props) {
                     transition={{ duration: 0.4, delay: 0.05 }}
                     className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
                 >
-                    {/* Partner Request Count */}
-                    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                    {/* Total Earned */}
+                    <Link href="/partner/earnings" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-success-300 block">
                         <div className="mb-4 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">Partner Requests</span>
-                            <LinkIcon className="h-5 w-5 text-primary-500" />
+                            <span className="text-sm font-medium text-gray-600">Total Earned</span>
+                            <BanknotesIcon className="h-5 w-5 text-success-500" />
                         </div>
                         <div className="space-y-2">
-                            <p className="text-3xl font-bold text-gray-900">0</p>
-                            <p className="text-xs text-gray-500">Active partner requests</p>
+                            <p className="text-3xl font-bold text-gray-900">{formatAmount(stats.total_earned)}</p>
+                            <p className="text-xs text-gray-500">Settled commissions</p>
                         </div>
-                    </div>
+                    </Link>
 
-                    {/* Revenue */}
-                    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                    {/* Pending Commissions */}
+                    <Link href="/partner/earnings" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-warning-300 block">
                         <div className="mb-4 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">Revenue</span>
-                            <div className="from-warning-400 h-5 w-5 rounded bg-linear-to-br to-warning-600"></div>
+                            <span className="text-sm font-medium text-gray-600">Pending</span>
+                            <div className="h-5 w-5 rounded bg-linear-to-br from-warning-400 to-warning-600"></div>
                         </div>
                         <div className="space-y-2">
-                            <p className="text-3xl font-bold text-gray-900">$0.00</p>
-                            <p className="text-xs text-gray-500">Total earnings</p>
+                            <p className="text-3xl font-bold text-gray-900">{formatAmount(stats.pending_commissions)}</p>
+                            <p className="text-xs text-gray-500">Unsettled this period</p>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Commission Rate */}
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                         <div className="mb-4 flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-600">Commission</span>
-                            <div className="from-success-400 h-5 w-5 rounded bg-linear-to-br to-success-600"></div>
+                            <div className="h-5 w-5 rounded bg-linear-to-br from-primary-400 to-primary-600"></div>
                         </div>
                         <div className="space-y-2">
-                            <p className="text-3xl font-bold text-gray-900">TBD</p>
-                            <p className="text-xs text-gray-500">Your rate</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {formatCommission(stats.commission_rate, stats.commission_type)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                {stats.commission_type === 'fixed' ? 'Fixed per payment' : 'Per payment revenue'}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Status */}
-                    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                    {/* Partner Requests */}
+                    <Link href="/partner/partner-requests" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-primary-300 block">
                         <div className="mb-4 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">Status</span>
-                            <div className="h-2 w-2 rounded-full bg-success-500"></div>
+                            <span className="text-sm font-medium text-gray-600">Requests</span>
+                            <BuildingOfficeIcon className="h-5 w-5 text-primary-500" />
                         </div>
                         <div className="space-y-2">
-                            <p className="text-3xl text-lg font-bold text-gray-900">Active</p>
-                            <p className="text-xs text-gray-500">Account status</p>
+                            <p className="text-3xl font-bold text-gray-900">{stats.partner_request_count}</p>
+                            <p className="text-xs text-gray-500">Estate requests submitted</p>
                         </div>
+                    </Link>
+                </motion.div>
+
+                {/* Next Settlement Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="rounded-2xl border border-success-200 bg-linear-to-br from-success-50 to-success-100/50 p-6 flex items-center justify-between"
+                >
+                    <div>
+                        <p className="text-sm font-medium text-success-700">Next Settlement</p>
+                        <p className="text-2xl font-bold text-success-900 mt-1">{stats.next_settlement_date}</p>
+                        <p className="text-sm text-success-600 mt-1">Commissions earned this month will be settled on this date.</p>
                     </div>
+                    <Link
+                        href="/partner/earnings"
+                        className="rounded-xl bg-success-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-success-700 transition-colors"
+                    >
+                        View Earnings →
+                    </Link>
                 </motion.div>
 
                 {/* Account Information Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
+                    transition={{ duration: 0.4, delay: 0.15 }}
                     className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm"
                 >
                     <h2 className="mb-6 text-2xl font-bold text-gray-900">Account Information</h2>
@@ -110,40 +155,6 @@ export default function AffiliateDashboard({ user }: Props) {
                     </div>
                 </motion.div>
 
-                {/* Resources Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.15 }}
-                    className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm"
-                >
-                    <h2 className="mb-6 text-2xl font-bold text-gray-900">Resources & Documentation</h2>
-
-                    <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                            <DocumentTextIcon className="mt-1 h-6 w-6 shrink-0 text-primary-500" />
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Partner Onboarding Guide</h3>
-                                <p className="mt-1 text-sm text-gray-600">Learn how to submit estates and track your partner requests.</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                            <LinkIcon className="mt-1 h-6 w-6 shrink-0 text-primary-500" />
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Your Partner Link</h3>
-                                <p className="mt-1 text-sm text-gray-600">Share your unique partner link to start earning commissions.</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                            <UserIcon className="mt-1 h-6 w-6 shrink-0 text-primary-500" />
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Account Settings</h3>
-                                <p className="mt-1 text-sm text-gray-600">Update your profile information and payment details.</p>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
                 {/* Getting Started Section */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
@@ -151,26 +162,27 @@ export default function AffiliateDashboard({ user }: Props) {
                     transition={{ duration: 0.4, delay: 0.2 }}
                     className="rounded-2xl border border-primary-200 bg-linear-to-br from-primary-50 to-primary-100/50 p-8"
                 >
-                    <h2 className="mb-4 text-2xl font-bold text-primary-900">Get Started with Your Partner Portal</h2>
+                    <h2 className="mb-4 text-2xl font-bold text-primary-900">How commissions work</h2>
                     <p className="mb-6 text-primary-700">
-                        Your partner account is active. Submit estate onboarding requests and track commissions as estates go live.
+                        You earn a commission on every payment made by residents of estates you referred, for the first 12 months
+                        after the estate activates on Kontrol.
                     </p>
                     <ol className="space-y-3 text-primary-700">
                         <li className="flex gap-3">
                             <span className="font-semibold">1.</span>
-                            <span>Go to Partner Requests and submit a new estate</span>
+                            <span>Submit estate onboarding requests via Partner Requests</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="font-semibold">2.</span>
-                            <span>Our team reviews and approves qualified estates</span>
+                            <span>Our team reviews, creates, and activates the estate on Kontrol</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="font-semibold">3.</span>
-                            <span>Earn commissions when attributed estates generate revenue</span>
+                            <span>Earn commissions on resident payments for 12 months from activation</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="font-semibold">4.</span>
-                            <span>Track your earnings and performance in real-time</span>
+                            <span>Commissions are settled monthly — view them in the Earnings section</span>
                         </li>
                     </ol>
                 </motion.div>
