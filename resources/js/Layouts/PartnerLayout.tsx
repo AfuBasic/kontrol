@@ -1,8 +1,8 @@
 import {
     ArrowLeftStartOnRectangleIcon,
+    BanknotesIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    Cog6ToothIcon,
     LinkIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -26,8 +26,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/partner/dashboard', icon: Squares2X2Icon },
+    { name: 'Earnings', href: '/partner/earnings', icon: BanknotesIcon },
     { name: 'Partner Requests', href: '/partner/partner-requests', icon: LinkIcon },
-    { name: 'Settings', href: '/partner/settings', icon: Cog6ToothIcon },
 ];
 
 function Squares2X2Icon(props: { className?: string }) {
