@@ -6,7 +6,9 @@ import {
     UserPlusIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { Percent, Coins, ShieldCheck, Phone, Mail, User } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Member {
@@ -21,14 +23,11 @@ interface Props {
         id: number;
         name: string;
         email: string;
-        description: string | null;
-        website: string | null;
-        contact_person: string | null;
         phone: string | null;
         commission_type: 'percentage' | 'fixed';
         commission_rate: number;
+        commission_length: number | null;
         status: 'active' | 'inactive' | 'suspended';
-        notes?: string | null;
     };
     members: Member[];
     partnerPortalUrl: string;
@@ -38,14 +37,11 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
     const { data, setData, put, processing, errors } = useForm({
         name: partner.name,
         email: partner.email,
-        description: partner.description || '',
-        website: partner.website || '',
-        contact_person: partner.contact_person || '',
         phone: partner.phone || '',
-        commission_type: partner.commission_type || 'percentage',
+        commission_type: partner.commission_type,
         commission_rate: partner.commission_rate.toString(),
+        commission_length: partner.commission_length ?? 'always',
         status: partner.status,
-        notes: partner.notes || '',
     });
 
     const inviteForm = useForm({
@@ -55,6 +51,10 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        const payload = { ...data };
+        if (payload.commission_length === 'always' || payload.commission_length === '') {
+            payload.commission_length = '';
+        }
         put(`/zeus/partners/${partner.id}`);
     }
 
@@ -66,11 +66,41 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
         });
     }
 
+    const modeOptions = [
+        {
+            id: 'percentage',
+            title: 'Percentage Rate',
+            description: 'Apply percentage of the total transaction fees.',
+            icon: Percent,
+            color: 'text-[#6C5DFD] border-[#6C5DFD]/20 bg-[#6C5DFD]/5',
+        },
+        {
+            id: 'fixed',
+            title: 'Fixed Fee',
+            description: 'Apply a flat amount per subscription billing cycle.',
+            icon: Coins,
+            color: 'text-[#34D399] border-[#34D399]/20 bg-[#34D399]/5',
+        },
+    ];
+
+    const lengthOptions = [
+        { label: '6 Months', value: 6 },
+        { label: '1 Year (12m)', value: 12 },
+        { label: '2 Years (24m)', value: 24 },
+        { label: 'Always Eligible', value: 'always' },
+    ];
+
+    const statusOptions = [
+        { label: 'Active', value: 'active', color: 'bg-[#34D399]/15 text-[#34D399] border-[#34D399]/30' },
+        { label: 'Inactive', value: 'inactive', color: 'bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]/30' },
+        { label: 'Suspended', value: 'suspended', color: 'bg-rose-500/15 text-rose-500 border-rose-500/30' },
+    ];
+
     return (
         <ZeusLayout>
             <Head title={`Edit Partner – ${partner.name}`} />
 
-            <div className="relative mx-auto max-w-4xl px-4 py-8 text-[#F2F3F6] space-y-8">
+            <div className="relative mx-auto max-w-4xl px-4 py-8 text-[#F2F3F6] bg-[#0A0B10] min-h-screen space-y-8">
                 {/* Decorative Glow */}
                 <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
 
@@ -78,7 +108,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <Link
                         href="/zeus/partners"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9297A8] hover:text-[#F2F3F6] transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#9297A8] hover:text-[#F2F3F6] transition-colors uppercase tracking-wider"
                     >
                         <ChevronLeftIcon className="h-4 w-4" /> Back to Partners
                     </Link>
@@ -129,116 +159,178 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid gap-6 sm:grid-cols-2">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Name</label>
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                        required
-                                    />
-                                    {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name}</p>}
+                                    <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Partner Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                        <input
+                                            type="text"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                            required
+                                        />
+                                    </div>
+                                    {errors.name && <p className="mt-1.5 text-xs text-rose-500">{errors.name}</p>}
                                 </div>
 
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Email</label>
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                        required
-                                    />
-                                    {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email}</p>}
-                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Email Address</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                            <input
+                                                type="email"
+                                                value={data.email}
+                                                onChange={(e) => setData('email', e.target.value)}
+                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                                required
+                                            />
+                                        </div>
+                                        {errors.email && <p className="mt-1.5 text-xs text-rose-500">{errors.email}</p>}
+                                    </div>
 
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Contact Person</label>
-                                    <input
-                                        type="text"
-                                        value={data.contact_person}
-                                        onChange={(e) => setData('contact_person', e.target.value)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Phone</label>
-                                    <input
-                                        type="tel"
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    />
-                                </div>
-
-                                <div className="sm:col-span-2">
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Website</label>
-                                    <input
-                                        type="url"
-                                        value={data.website}
-                                        onChange={(e) => setData('website', e.target.value)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    />
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Phone Number</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                            <input
+                                                type="tel"
+                                                value={data.phone}
+                                                onChange={(e) => setData('phone', e.target.value)}
+                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                            />
+                                        </div>
+                                        {errors.phone && <p className="mt-1.5 text-xs text-rose-500">{errors.phone}</p>}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid gap-6 sm:grid-cols-2 border-t border-[rgba(255,255,255,0.05)] pt-6">
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Commission Type</label>
-                                    <select
-                                        value={data.commission_type}
-                                        onChange={(e) => setData('commission_type', e.target.value as 'percentage' | 'fixed')}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    >
-                                        <option value="percentage">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount (₦)</option>
-                                    </select>
+                            {/* Commission Schedule */}
+                            <div className="space-y-6 border-t border-[rgba(255,255,255,0.06)] pt-6">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8] mb-4">
+                                    Commission Schedule
+                                </h3>
+
+                                <div className="space-y-3">
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        {modeOptions.map((opt) => {
+                                            const Icon = opt.icon;
+                                            const isSelected = data.commission_type === opt.id;
+                                            return (
+                                                <button
+                                                    key={opt.id}
+                                                    type="button"
+                                                    onClick={() => setData('commission_type', opt.id as any)}
+                                                    className={`flex items-start gap-4 rounded-2xl border p-4 text-left transition-all ${
+                                                        isSelected
+                                                            ? 'border-[#6C5DFD] bg-[#6C5DFD]/5 shadow-lg'
+                                                            : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] hover:border-gray-700'
+                                                    }`}
+                                                >
+                                                    <div className={`rounded-xl p-2.5 ${opt.color}`}>
+                                                        <Icon className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-sm font-bold text-[#F2F3F6]">{opt.title}</span>
+                                                        <span className="block text-xs text-[#9297A8] mt-1">{opt.description}</span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">
-                                        {data.commission_type === 'percentage' ? 'Rate (%)' : 'Amount (kobo)'}
+                                <AnimatePresence>
+                                    {data.commission_type && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden space-y-2 mt-4"
+                                        >
+                                            <label className="block text-xs font-semibold text-[#9297A8]">
+                                                {data.commission_type === 'percentage' ? 'Commission Rate (%)' : 'Flat Amount (kobo)'}
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-3.5 text-sm font-bold text-[#9297A8]">
+                                                    {data.commission_type === 'percentage' ? '%' : '₦'}
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    value={data.commission_rate}
+                                                    onChange={(e) => setData('commission_rate', e.target.value)}
+                                                    min="0"
+                                                    max={data.commission_type === 'percentage' ? '100' : undefined}
+                                                    step="any"
+                                                    className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-9 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
+                                                    placeholder={data.commission_type === 'percentage' ? '10' : '50000'}
+                                                    required
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-[#9297A8]">
+                                                {data.commission_type === 'fixed'
+                                                    ? 'Enter flat amount in kobo (e.g. 50000 kobo = ₦500.00)'
+                                                    : 'Percentage rate applied to resident transaction fees.'}
+                                            </p>
+                                            {errors.commission_rate && <p className="text-xs text-rose-500 mt-1">{errors.commission_rate}</p>}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-semibold text-[#9297A8]">
+                                        Commission Length
                                     </label>
-                                    <input
-                                        type="number"
-                                        value={data.commission_rate}
-                                        onChange={(e) => setData('commission_rate', e.target.value)}
-                                        min="0"
-                                        max={data.commission_type === 'percentage' ? '100' : undefined}
-                                        step="any"
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                        required
-                                    />
-                                    {errors.commission_rate && <p className="mt-1 text-xs text-rose-500">{errors.commission_rate}</p>}
+                                    <div className="grid gap-2 sm:grid-cols-4">
+                                        {lengthOptions.map((opt) => {
+                                            const isSelected = data.commission_length === opt.value;
+                                            return (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() => setData('commission_length', opt.value)}
+                                                    className={`rounded-xl border py-2.5 text-center text-xs font-bold transition-all ${
+                                                        isSelected
+                                                            ? 'border-[#6C5DFD] bg-[#6C5DFD] text-white'
+                                                            : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-[#9297A8] hover:border-gray-700'
+                                                    }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {errors.commission_length && <p className="text-xs text-rose-500 mt-1">{errors.commission_length}</p>}
                                 </div>
                             </div>
 
-                            <div className="border-t border-[rgba(255,255,255,0.05)] pt-6 space-y-6">
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Status</label>
-                                    <select
-                                        value={data.status}
-                                        onChange={(e) => setData('status', e.target.value as typeof data.status)}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="suspended">Suspended</option>
-                                    </select>
+                            {/* Lifecycle Status Option */}
+                            <div className="space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-6">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8]">
+                                    Account Status
+                                </h3>
+                                <div className="flex gap-3">
+                                    {statusOptions.map((opt) => {
+                                        const isSelected = data.status === opt.value;
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => setData('status', opt.value as any)}
+                                                className={`rounded-full px-4 py-2 text-xs font-bold border transition-all ${
+                                                    isSelected
+                                                        ? opt.color + ' ring-1 ring-[#6C5DFD]'
+                                                        : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-[#9297A8] hover:border-gray-700'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-
-                                <div>
-                                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Description</label>
-                                    <textarea
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        rows={3}
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
-                                    />
-                                </div>
+                                {errors.status && <p className="text-xs text-rose-500 mt-1">{errors.status}</p>}
                             </div>
 
                             <div className="flex gap-4 border-t border-[rgba(255,255,255,0.08)] pt-6">
