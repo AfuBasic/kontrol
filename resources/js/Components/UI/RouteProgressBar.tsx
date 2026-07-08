@@ -2,13 +2,21 @@ import { router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 
-import { isRouteChangeVisit } from '@/Lib/inertia';
+import { isBackgroundVisit, isPartialVisit } from '@/Lib/inertia';
+import type { InertiaVisitEvent } from '@/Lib/inertia';
 
 export default function RouteProgressBar() {
     const [progress, setProgress] = useState(0);
     const [visible, setVisible] = useState(false);
     const activeRouteChangesRef = useRef(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    /**
+     * Track in-flight visits by object identity.
+     * isRouteChangeVisit() cannot be reused on `finish` because by then
+     * window.location already reflects the destination, making the
+     * pathname equality guard return false (same path = no change).
+     */
+    const pendingVisitsRef = useRef<WeakSet<object>>(new WeakSet());
 
     useEffect(() => {
         const clearProgressInterval = () => {
@@ -44,11 +52,23 @@ export default function RouteProgressBar() {
             }, 400);
         };
 
-        const start = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
-            if (!isRouteChangeVisit(event)) {
+        const start = (event: InertiaVisitEvent) => {
+            const visit = event.detail.visit;
+
+            if (isBackgroundVisit(event) || isPartialVisit(visit)) {
                 return;
             }
 
+            if (visit.showProgress === false || visit.preserveUrl) {
+                return;
+            }
+
+            const method = (visit.method ?? 'get').toLowerCase();
+            if (method !== 'get') {
+                return;
+            }
+
+            pendingVisitsRef.current.add(visit as object);
             activeRouteChangesRef.current += 1;
 
             if (activeRouteChangesRef.current === 1) {
@@ -56,11 +76,14 @@ export default function RouteProgressBar() {
             }
         };
 
-        const end = (event: Parameters<typeof isRouteChangeVisit>[0]) => {
-            if (!isRouteChangeVisit(event)) {
+        const end = (event: InertiaVisitEvent) => {
+            const visit = event.detail.visit;
+
+            if (!pendingVisitsRef.current.has(visit as object)) {
                 return;
             }
 
+            pendingVisitsRef.current.delete(visit as object);
             activeRouteChangesRef.current = Math.max(0, activeRouteChangesRef.current - 1);
 
             if (activeRouteChangesRef.current === 0) {
@@ -74,6 +97,7 @@ export default function RouteProgressBar() {
             }
 
             activeRouteChangesRef.current = 0;
+            pendingVisitsRef.current = new WeakSet();
             finishProgress();
         };
 
@@ -84,6 +108,7 @@ export default function RouteProgressBar() {
         return () => {
             clearProgressInterval();
             activeRouteChangesRef.current = 0;
+            pendingVisitsRef.current = new WeakSet();
             startListener();
             finishListener();
             errorListener();
