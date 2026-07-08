@@ -8,8 +8,10 @@ use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
+use App\Http\Controllers\Zeus\PartnerController;
+use App\Http\Controllers\Zeus\PartnerEarningsController;
+use App\Http\Controllers\Zeus\PartnerRequestController;
 use App\Http\Controllers\Zeus\PlanController;
-use App\Http\Controllers\Zeus\ReferrerController;
 use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\RiskCenterController;
 use App\Http\Controllers\Zeus\SubscriptionController;
@@ -53,15 +55,26 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         // Billing configuration
         Route::get('/billing', fn () => inertia('zeus/billing/index'))->name('billing.index');
 
-        // Referrers management
-        Route::resource('referrers', ReferrerController::class);
-        Route::post('/referrers/{referrer}/regenerate-key', [ReferrerController::class, 'regenerateKey'])->name('referrers.regenerate-key');
-        Route::post('/referrers/{referrer}/invite-member', [ReferrerController::class, 'inviteMember'])->name('referrers.invite-member');
+        // Partners management
+        Route::resource('partners', PartnerController::class);
+        Route::post('/partners/{partner}/regenerate-key', [PartnerController::class, 'regenerateKey'])->name('partners.regenerate-key');
+        Route::post('/partners/{partner}/invite-member', [PartnerController::class, 'inviteMember'])->name('partners.invite-member');
+
+        // Partner earnings
+        Route::get('/partners/{partner}/earnings', [PartnerEarningsController::class, 'index'])->name('partners.earnings.index');
+        Route::post('/partners/{partner}/earnings/settle', [PartnerEarningsController::class, 'settle'])->name('partners.earnings.settle');
 
         // Estate management
         Route::resource('estates', EstateController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
+        Route::patch('/estates/{estate}/partner-assignment', [EstateController::class, 'updatePartnerAssignment'])->name('estates.partner-assignment.update');
+
+        // Partner requests
+        Route::get('/partner-requests', [PartnerRequestController::class, 'index'])->name('partner-requests.index');
+        Route::post('/partner-requests/{partnerRequest}/approve', [PartnerRequestController::class, 'approve'])->name('partner-requests.approve');
+        Route::post('/partner-requests/{partnerRequest}/reject', [PartnerRequestController::class, 'reject'])->name('partner-requests.reject');
+        Route::post('/partner-requests/{partnerRequest}/request-info', [PartnerRequestController::class, 'requestInfo'])->name('partner-requests.request-info');
 
         // Application management
         Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
