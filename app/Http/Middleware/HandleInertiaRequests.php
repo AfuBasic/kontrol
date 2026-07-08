@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\Partner\NotificationController;
 use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Services\Resident\AccessCodeService;
@@ -44,6 +45,8 @@ class HandleInertiaRequests extends Middleware
         $estate = null;
 
         $partnerContext = null;
+        $partnerNotifications = [];
+        $partnerUnreadCount = 0;
 
         if ($user) {
             // Set team context for permission check
@@ -70,6 +73,15 @@ class HandleInertiaRequests extends Middleware
                         'commission_type' => $partner->commission_type,
                     ];
                 }
+
+                $partnerUnreadCount = $user->unreadNotifications()->count();
+                $partnerNotifications = $user->notifications()
+                    ->latest()
+                    ->take(8)
+                    ->get()
+                    ->map(fn ($notification) => NotificationController::transform($notification))
+                    ->values()
+                    ->all();
             }
         }
 
@@ -77,6 +89,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'partnerContext' => $partnerContext,
+            'partnerNotifications' => $partnerNotifications,
+            'partnerUnreadCount' => $partnerUnreadCount,
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -97,11 +111,11 @@ class HandleInertiaRequests extends Middleware
                             })
                             ->where(function ($q) use ($user, $estate) {
                                 $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
-                                  ->orWhere('estate_id', $estate->id)
-                                  ->orWhere('user_id', $user->id);
+                                    ->orWhere('estate_id', $estate->id)
+                                    ->orWhere('user_id', $user->id);
                             })
                             ->get()
-                            ->filter(fn ($coupon) => !$coupon->isLimitReached($user))
+                            ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
                             ->isNotEmpty();
                     })() : false,
                     'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
