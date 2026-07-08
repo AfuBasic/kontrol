@@ -22,17 +22,41 @@ class PartnerRequestController extends Controller
             ->when(! $partnerId, fn ($query) => $query->whereRaw('1 = 0'))
             ->with('estate:id,ulid,name,status')
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (PartnerRequest $partnerRequest) => $this->transformRequest($partnerRequest))
+            ->values();
+
+        $columns = collect(PartnerRequestStatus::cases())
+            ->map(fn (PartnerRequestStatus $status) => [
+                'key' => $status->value,
+                'label' => $status->label(),
+            ])
+            ->values()
+            ->all();
 
         return Inertia::render('Partner/PartnerRequests/Index', [
             'partnerRequests' => $partnerRequests,
+            'columns' => $columns,
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+                'status' => $request->string('status')->toString(),
+            ],
         ]);
     }
 
     public function create(Request $request): Response
     {
+        $partner = $request->user()->partner;
+
         return Inertia::render('Partner/PartnerEstate', [
-            'partner' => $request->user()->partner,
+            'partner' => $partner ? [
+                'id' => $partner->id,
+                'name' => $partner->name,
+                'commission_rate' => $partner->commission_rate !== null
+                    ? (string) $partner->commission_rate
+                    : null,
+                'commission_type' => $partner->commission_type,
+            ] : null,
         ]);
     }
 
@@ -51,5 +75,39 @@ class PartnerRequestController extends Controller
         return redirect()
             ->route('partner.partner-requests.index')
             ->with('success', 'Partner request submitted successfully. Our team will review it shortly.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transformRequest(PartnerRequest $partnerRequest): array
+    {
+        $status = $partnerRequest->status instanceof PartnerRequestStatus
+            ? $partnerRequest->status
+            : PartnerRequestStatus::tryFrom((string) $partnerRequest->status);
+
+        return [
+            'id' => $partnerRequest->id,
+            'estate_name' => $partnerRequest->estate_name,
+            'estate_address' => $partnerRequest->estate_address,
+            'chairman_name' => $partnerRequest->chairman_name,
+            'chairman_email' => $partnerRequest->chairman_email,
+            'chairman_phone' => $partnerRequest->chairman_phone,
+            'number_of_houses' => $partnerRequest->number_of_houses,
+            'state' => $partnerRequest->state,
+            'lga' => $partnerRequest->lga,
+            'notes' => $partnerRequest->notes,
+            'status' => $status?->value ?? (string) $partnerRequest->status,
+            'status_label' => $status?->label() ?? str_replace('_', ' ', (string) $partnerRequest->status),
+            'rejection_reason' => $partnerRequest->rejection_reason,
+            'info_request_message' => $partnerRequest->info_request_message,
+            'created_at' => $partnerRequest->created_at?->toIso8601String(),
+            'updated_at' => $partnerRequest->updated_at?->toIso8601String(),
+            'estate' => $partnerRequest->estate ? [
+                'ulid' => $partnerRequest->estate->ulid,
+                'name' => $partnerRequest->estate->name,
+                'status' => $partnerRequest->estate->status,
+            ] : null,
+        ];
     }
 }
