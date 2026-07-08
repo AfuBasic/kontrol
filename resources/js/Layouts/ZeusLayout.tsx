@@ -1,13 +1,11 @@
 import {
-    AdjustmentsHorizontalIcon,
     ArrowLeftStartOnRectangleIcon,
+    BellIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     Cog6ToothIcon,
     CurrencyDollarIcon,
     Squares2X2Icon,
-    SparklesIcon,
-    UsersIcon,
     XMarkIcon,
     HandRaisedIcon,
     UserGroupIcon,
@@ -37,14 +35,16 @@ type NavItem = {
     name: string;
     href: string;
     icon: React.ComponentType<{ className?: string }>;
+    badge?: number;
 };
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
     { name: 'Dashboard', href: '/zeus/dashboard', icon: Squares2X2Icon },
     { name: 'Estates', href: '/zeus/estates', icon: BuildingOfficeIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Partners', href: '/zeus/partners', icon: UserGroupIcon },
     { name: 'Partner Requests', href: '/zeus/partner-requests', icon: HandRaisedIcon },
+    { name: 'Notifications', href: '/zeus/notifications', icon: BellIcon },
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
     { name: 'Subscriptions', href: '/zeus/subscriptions', icon: ChartPieIcon },
@@ -56,7 +56,14 @@ const navItems: NavItem[] = [
 ];
 
 export default function ZeusLayout({ children, backUrl }: Props) {
-    const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props;
+    const { flash, zeusUnreadNotificationsCount } = usePage<{
+        flash: { success?: string; error?: string };
+        zeusUnreadNotificationsCount?: number;
+    }>().props;
+    const unreadCount = zeusUnreadNotificationsCount ?? 0;
+    const navItems = baseNavItems.map((item) =>
+        item.href === '/zeus/notifications' ? { ...item, badge: unreadCount } : item,
+    );
     const { url: fullUrl } = usePage();
     const url = fullUrl.split('?')[0];
     const { isCollapsed, toggle } = useSidebarState();
@@ -139,7 +146,15 @@ export default function ZeusLayout({ children, backUrl }: Props) {
                                                 active ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'
                                             }`}
                                         />
-                                        {!isCollapsed && <span>{item.name}</span>}
+                                        {!isCollapsed && <span className="flex-1">{item.name}</span>}
+                                        {!isCollapsed && (item.badge ?? 0) > 0 && (
+                                            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                                {item.badge! > 9 ? '9+' : item.badge}
+                                            </span>
+                                        )}
+                                        {isCollapsed && (item.badge ?? 0) > 0 && (
+                                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                        )}
                                         {active && <motion.div layoutId="activeNav" className="absolute left-0 h-4 w-0.5 rounded-full bg-blue-500" />}
                                     </Link>
                                 </div>
