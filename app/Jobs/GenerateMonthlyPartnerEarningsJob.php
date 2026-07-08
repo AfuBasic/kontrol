@@ -34,6 +34,23 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
 
         Log::info('GenerateMonthlyPartnerEarningsJob: settling', ['month' => $monthKey]);
 
+        // Mark expired commissions
+        $pendingRevenues = CommissionableRevenue::query()
+            ->with('partner')
+            ->where('status', 'pending')
+            ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
+            ->get();
+
+        foreach ($pendingRevenues as $revenue) {
+            $partner = $revenue->partner;
+            if ($partner && $partner->commission_length !== null) {
+                $expirationDate = $partner->created_at->addMonths($partner->commission_length);
+                if ($revenue->created_at->greaterThan($expirationDate)) {
+                    $revenue->update(['status' => 'expired']);
+                }
+            }
+        }
+
         // Fetch all unsettled commissions for the target month, grouped by partner
         $query = CommissionableRevenue::query()
             ->select([
@@ -50,7 +67,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
         $rows = $query->get();
 
         foreach ($rows as $row) {
-            DB::transaction(function () use ($row, $monthKey, $monthStart, $monthEnd, $month) {
+            DB::transaction(function () use ($row, $monthKey, $month) {
                 // Upsert the earnings record
                 PartnerEarning::updateOrCreate(
                     ['partner_id' => $row->partner_id, 'month' => $monthKey],
