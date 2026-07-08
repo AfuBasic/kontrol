@@ -109,14 +109,13 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     <div>
                         <Link
                             href="/zeus/partners/create"
-                            className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#6C5DFD] to-violet-650 px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#6C5DFD]/10 hover:shadow-xl active:scale-[0.98] transition-all"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-[#6C5DFD] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#6C5DFD]/10 hover:bg-[#6C5DFD]/90 active:scale-[0.98] transition-all"
                         >
                             <PlusIcon className="h-4.5 w-4.5 stroke-[3]" />
                             Create Partner
                         </Link>
                     </div>
                 </motion.div>
-
                 {/* KPI Metrics Dashboard Panel */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
