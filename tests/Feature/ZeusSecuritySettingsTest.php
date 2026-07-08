@@ -35,7 +35,7 @@ test('enabling 2FA with an invalid code fails', function () {
         $sessionKey => true,
         'zeus_temp_2fa_secret' => 'ORSXG5BRGIZTINJ2', // Sample base32 secret
     ])
-        ->post(route('zeus.settings.2fa.enable'), [
+        ->post(route('zeus.settings.two_factor.enable'), [
             'code' => '000000',
         ])
         ->assertSessionHasErrors('code');
@@ -53,7 +53,7 @@ test('enabling 2FA with a valid code succeeds and stores secret in database', fu
         $sessionKey => true,
         'zeus_temp_2fa_secret' => $secret,
     ])
-        ->post(route('zeus.settings.2fa.enable'), [
+        ->post(route('zeus.settings.two_factor.enable'), [
             'code' => $validCode,
         ])
         ->assertRedirect(route('zeus.settings.index'))
@@ -113,7 +113,7 @@ test('disabling 2FA with a valid code clears secret from database', function () 
     $validCode = $totp->getTotpCode($secret);
 
     $this->withSession([$sessionKey => true])
-        ->post(route('zeus.settings.2fa.disable'), [
+        ->post(route('zeus.settings.two_factor.disable'), [
             'code' => $validCode,
         ])
         ->assertRedirect(route('zeus.settings.index'))

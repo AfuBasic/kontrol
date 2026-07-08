@@ -14,9 +14,9 @@ use App\Http\Controllers\Zeus\PartnerRequestController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\RiskCenterController;
+use App\Http\Controllers\Zeus\SettingsController;
 use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Controllers\Zeus\TransactionController;
-use App\Http\Controllers\Zeus\SettingsController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
 use App\Http\Middleware\Zeus\RedirectIfZeusAuthenticated;
 use Illuminate\Support\Facades\Route;
@@ -43,8 +43,8 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
 
         // Settings / 2FA Configuration
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::post('/settings/2fa/enable', [SettingsController::class, 'enable'])->name('settings.2fa.enable');
-        Route::post('/settings/2fa/disable', [SettingsController::class, 'disable'])->name('settings.2fa.disable');
+        Route::post('/settings/2fa/enable', [SettingsController::class, 'enable'])->name('settings.two_factor.enable');
+        Route::post('/settings/2fa/disable', [SettingsController::class, 'disable'])->name('settings.two_factor.disable');
 
         // Plans management
         Route::resource('plans', PlanController::class)->except(['show']);
