@@ -33,6 +33,7 @@ class EnsureUserHasRole
         foreach ($roles as $role) {
             if (in_array($role, $globalRoles, true)) {
                 setPermissionsTeamId(0);
+                $user->unsetRelation('roles'); // Clear cached roles to apply the new team context
 
                 if ($user->hasRole($role)) {
                     return $next($request);
@@ -44,6 +45,7 @@ class EnsureUserHasRole
         $estate = $user->estates()->wherePivot('status', 'accepted')->first();
         if ($estate) {
             setPermissionsTeamId($estate->id);
+            $user->unsetRelation('roles'); // Clear cached roles to apply the estate context
         }
 
         // Check if user has any of the allowed roles
@@ -81,10 +83,11 @@ class EnsureUserHasRole
 
         // User doesn't have the required role - redirect to their appropriate module
         $correctRedirect = $this->determineRedirect->execute($user);
+        $correctPath = '/'.ltrim(parse_url($correctRedirect, PHP_URL_PATH), '/');
         $currentPath = '/'.ltrim($request->path(), '/');
 
         // Prevent redirect loop: if we would redirect to the same path, show 403 instead
-        if ($correctRedirect === $currentPath) {
+        if ($correctPath === $currentPath) {
             abort(403, 'You do not have permission to access this resource.');
         }
 
