@@ -78,6 +78,7 @@ class PartnerRequestController extends Controller
         $partnerRequest->loadMissing('partner');
         $partnerName = $partnerRequest->partner?->name ?? 'A partner';
 
+        // In-app Zeus inbox
         ZeusNotification::notify(
             type: 'partner_estate_request',
             title: 'New partner estate request',
@@ -90,12 +91,9 @@ class PartnerRequestController extends Controller
             ],
         );
 
-        $zeusInbox = config('zeus.notification_email');
-
-        if (filled($zeusInbox)) {
-            Notification::route('mail', $zeusInbox)
-                ->notify(new PartnerEstateRequestSubmittedNotification($partnerRequest));
-        }
+        // Email support@usekontrol.com (configurable via ZEUS_NOTIFICATION_EMAIL)
+        Notification::route('mail', config('zeus.notification_email', 'support@usekontrol.com'))
+            ->notify(new PartnerEstateRequestSubmittedNotification($partnerRequest));
 
         return redirect()
             ->route('partner.partner-requests.index')

@@ -21,7 +21,6 @@ beforeEach(function () {
 
 it('allows partner members to submit partner requests', function () {
     Notification::fake();
-    config(['zeus.notification_email' => 'zeus@kontrol.test']);
 
     $partner = Partner::factory()->create();
     $affiliate = User::factory()->create([
@@ -57,7 +56,7 @@ it('allows partner members to submit partner requests', function () {
         PartnerEstateRequestSubmittedNotification::class,
         function (PartnerEstateRequestSubmittedNotification $notification, array $channels, object $notifiable) {
             return $notification->partnerRequest->estate_name === 'Palm Grove Estate'
-                && ($notifiable->routes['mail'] ?? null) === 'zeus@kontrol.test';
+                && ($notifiable->routes['mail'] ?? null) === 'support@usekontrol.com';
         }
     );
 });

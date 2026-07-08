@@ -33,11 +33,11 @@ return [
     | Zeus Notification Inbox
     |--------------------------------------------------------------------------
     |
-    | Partner and platform alerts for Zeus operators are delivered here.
-    | Falls back to the application mail.from address when unset.
+    | Email recipient for partner and platform alerts (in addition to the
+    | in-app Zeus notifications inbox). Defaults to support@usekontrol.com.
     |
     */
 
-    'notification_email' => env('ZEUS_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
+    'notification_email' => env('ZEUS_NOTIFICATION_EMAIL', 'support@usekontrol.com'),
 
 ];
