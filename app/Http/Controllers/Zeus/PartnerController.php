@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -70,7 +71,7 @@ class PartnerController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'unique:partners,name'],
-            'email' => ['required', 'email', 'unique:partners,email'],
+            'email' => ['required', 'email', 'unique:partners,email', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'unique:partners,phone'],
             'commission_type' => ['required', 'in:percentage,fixed'],
             'commission_rate' => [
@@ -88,10 +89,11 @@ class PartnerController extends Controller
 
         $validated['status'] = 'pending';
 
-        $partner = Partner::create($validated);
-
-        // Automatically invite the primary member on creation
-        $inviteAction->execute($partner, $partner->email, $partner->name);
+        DB::transaction(function () use ($validated, $inviteAction) {
+            $partner = Partner::create($validated);
+            // Automatically invite the primary member on creation
+            $inviteAction->execute($partner, $partner->email, $partner->name);
+        });
 
         return redirect()
             ->route('zeus.partners.index')
