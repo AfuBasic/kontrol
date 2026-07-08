@@ -1,13 +1,14 @@
 import {
     ArrowLeftStartOnRectangleIcon,
     BanknotesIcon,
-    BellIcon,
     BuildingOffice2Icon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     LifebuoyIcon,
+    MoonIcon,
     PlusIcon,
     Squares2X2Icon,
+    SunIcon,
     UserCircleIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -15,7 +16,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState } from 'react';
 import MobileBottomNav from '@/Components/Partner/MobileBottomNav';
+import NotificationDropdown from '@/Components/Partner/NotificationDropdown';
 import Toast from '@/Components/Toast';
+import { usePartnerTheme } from '@/Hooks/usePartnerTheme';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
@@ -23,7 +26,7 @@ import { formatCommission } from '@/Utils/money';
 
 interface Props {
     children: ReactNode;
-    /** When true, content uses full width (e.g. Kanban boards). */
+    /** Wider max for boards; still centered. */
     fullWidth?: boolean;
 }
 
@@ -32,16 +35,17 @@ type NavItem = {
     href: string;
     icon: React.ComponentType<{ className?: string }>;
     exact?: boolean;
+    badge?: number;
 };
 
 const primaryNav: NavItem[] = [
     { name: 'Workspace', href: '/partner/dashboard', icon: Squares2X2Icon, exact: true },
-    { name: 'Estate Pipeline', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
+    { name: 'Pipeline', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
     { name: 'Earnings', href: '/partner/earnings', icon: BanknotesIcon },
 ];
 
 const secondaryNav: NavItem[] = [
-    { name: 'Profile', href: '/partner/profile', icon: UserCircleIcon },
+    { name: 'Account', href: '/partner/profile', icon: UserCircleIcon },
     { name: 'Support', href: '/partner/support', icon: LifebuoyIcon },
 ];
 
@@ -61,28 +65,23 @@ interface PartnerPageProps {
         commission_rate: string | null;
         commission_type: string | null;
     } | null;
+    partnerUnreadCount?: number;
 }
 
 function getGreeting(): string {
     const hour = new Date().getHours();
-
-    if (hour < 12) {
-        return 'Good morning';
-    }
-
-    if (hour < 17) {
-        return 'Good afternoon';
-    }
-
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
     return 'Good evening';
 }
 
 export default function PartnerLayout({ children, fullWidth = false }: Props) {
     const page = usePage<PartnerPageProps>();
-    const { flash, auth, partnerContext } = page.props;
+    const { flash, auth, partnerContext, partnerUnreadCount } = page.props;
     const { url: fullUrl } = page;
     const url = fullUrl.split('?')[0];
     const { isCollapsed, toggle } = useSidebarState('partner-sidebar-collapsed');
+    const { theme, toggleTheme } = usePartnerTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -97,6 +96,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         .join('')
         .slice(0, 2)
         .toUpperCase();
+    const unread = partnerUnreadCount ?? user?.unread_notifications_count ?? 0;
 
     useEffect(() => {
         if (flash?.success) {
@@ -119,10 +119,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
     }
 
     function isActive(href: string, exact = false): boolean {
-        if (exact) {
-            return currentPath === href;
-        }
-
+        if (exact) return currentPath === href;
         return currentPath === href || currentPath.startsWith(href + '/');
     }
 
@@ -136,36 +133,44 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 prefetch
                 aria-current={active ? 'page' : undefined}
                 title={item.name}
-                className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-150 ${
                     active
-                        ? 'bg-white/10 text-white shadow-sm ring-1 ring-white/10'
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        ? 'bg-white/[0.09] text-white shadow-sm ring-1 ring-white/10'
+                        : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100'
                 }`}
             >
-                <item.icon className={`h-5 w-5 shrink-0 ${active ? 'text-primary-300' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                {active && (
+                    <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-r bg-primary-400" aria-hidden />
+                )}
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? 'text-primary-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
                 {showLabel && <span className="truncate">{item.name}</span>}
             </Link>
         );
     }
 
+    const contentMax = fullWidth ? 'max-w-[1400px]' : 'max-w-6xl';
+
     return (
         <AnimatedLayout>
-            <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-                {/* Desktop / tablet sidebar */}
+            <div className="flex min-h-screen bg-[#f7f6f3] transition-colors duration-300 dark:bg-slate-950">
+                {/* Sidebar — narrower, lightweight */}
                 <motion.aside
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-800 bg-slate-900 transition-all duration-300 lg:flex ${
-                        isCollapsed ? 'w-20' : 'w-64'
-                    }`}
+                    initial={false}
+                    animate={{ width: isCollapsed ? 64 : 220 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+                    className="fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-slate-800/80 bg-[#0f1419] lg:flex"
                     aria-label="Partner sidebar"
+                    style={{ width: isCollapsed ? 64 : 220 }}
                 >
-                    <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4">
+                    <div className="flex h-12 items-center justify-between border-b border-white/[0.06] px-3">
                         {!isCollapsed && (
-                            <Link href="/partner/dashboard" className="flex-1" aria-label="Kontrol Partner Workspace">
-                                <div className="h-8 w-full overflow-hidden">
-                                    <img src="/assets/images/kontrol.png" alt="Kontrol" className="w-full -translate-y-8 brightness-0 invert" />
+                            <Link href="/partner/dashboard" className="min-w-0 flex-1" aria-label="Kontrol Partner">
+                                <div className="h-6 w-full overflow-hidden">
+                                    <img
+                                        src="/assets/images/kontrol.png"
+                                        alt="Kontrol"
+                                        className="h-auto w-[88px] -translate-y-[22px] brightness-0 invert opacity-90"
+                                    />
                                 </div>
                             </Link>
                         )}
@@ -173,37 +178,40 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                             type="button"
                             onClick={toggle}
                             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                            className="inline-flex rounded-lg p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                            className="inline-flex rounded-md p-1.5 text-slate-500 transition hover:bg-white/5 hover:text-slate-200"
                         >
-                            {isCollapsed ? <ChevronDoubleRightIcon className="h-5 w-5" /> : <ChevronDoubleLeftIcon className="h-5 w-5" />}
+                            {isCollapsed ? (
+                                <ChevronDoubleRightIcon className="h-4 w-4" />
+                            ) : (
+                                <ChevronDoubleLeftIcon className="h-4 w-4" />
+                            )}
                         </button>
                     </div>
 
-                    {/* Partner context card */}
                     {!isCollapsed && (
-                        <div className="border-b border-slate-800 px-4 py-4">
-                            <div className="flex items-center gap-3">
+                        <div className="border-b border-white/[0.06] px-3 py-3">
+                            <div className="flex items-center gap-2.5">
                                 <div
-                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/20 text-sm font-bold text-primary-300 ring-1 ring-primary-500/30"
+                                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-[11px] font-bold text-primary-300 ring-1 ring-primary-500/25"
                                     aria-hidden
                                 >
                                     {initials}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-white">{partnerName}</p>
-                                    <div className="mt-0.5 flex items-center gap-1.5">
+                                    <p className="truncate text-[12px] font-semibold text-white">{partnerName}</p>
+                                    <div className="mt-0.5 flex items-center gap-1">
                                         {partnerContext?.status === 'active' ? (
-                                            <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300 ring-1 ring-emerald-500/20">
+                                            <span className="rounded bg-emerald-500/15 px-1 py-px text-[9px] font-semibold text-emerald-300">
                                                 Verified
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300 ring-1 ring-amber-500/20">
+                                            <span className="rounded bg-amber-500/15 px-1 py-px text-[9px] font-semibold text-amber-300 capitalize">
                                                 {partnerContext?.status ?? 'Partner'}
                                             </span>
                                         )}
                                         {partnerContext?.commission_rate && (
-                                            <span className="truncate text-[10px] text-slate-400">
-                                                {formatCommission(partnerContext.commission_rate, partnerContext.commission_type)} plan
+                                            <span className="truncate text-[10px] text-slate-500">
+                                                {formatCommission(partnerContext.commission_rate, partnerContext.commission_type)}
                                             </span>
                                         )}
                                     </div>
@@ -212,38 +220,34 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                         </div>
                     )}
 
-                    <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4" aria-label="Primary">
+                    <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3" aria-label="Primary">
                         {primaryNav.map((item) => renderNavLink(item, { showLabel: !isCollapsed }))}
-
-                        <div className="my-3 border-t border-slate-800" />
-
+                        <div className="my-2 border-t border-white/[0.06]" />
                         {secondaryNav.map((item) => renderNavLink(item, { showLabel: !isCollapsed }))}
                     </nav>
 
-                    <div className="space-y-1 border-t border-slate-800 p-3">
+                    <div className="space-y-1 border-t border-white/[0.06] p-2">
                         <Link
                             href="/partner/partner-requests/create"
-                            className={`flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500 ${
-                                isCollapsed ? 'px-2' : ''
-                            }`}
+                            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary-600 px-2.5 py-2 text-[12px] font-semibold text-white transition hover:bg-primary-500 active:scale-[0.98]"
                             aria-label="Submit new estate"
                         >
-                            <PlusIcon className="h-5 w-5 shrink-0" />
-                            {!isCollapsed && <span>Submit Estate</span>}
+                            <PlusIcon className="h-4 w-4 shrink-0" />
+                            {!isCollapsed && <span>Submit estate</span>}
                         </Link>
                         <button
                             type="button"
                             onClick={handleLogout}
                             aria-label="Log out"
-                            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-red-500/10 hover:text-red-300"
+                            className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12px] font-medium text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
                         >
-                            <ArrowLeftStartOnRectangleIcon className="h-5 w-5 shrink-0" />
-                            {!isCollapsed && <span>Logout</span>}
+                            <ArrowLeftStartOnRectangleIcon className="h-4 w-4 shrink-0" />
+                            {!isCollapsed && <span>Log out</span>}
                         </button>
                     </div>
                 </motion.aside>
 
-                {/* Mobile slide-out menu (secondary / overflow) */}
+                {/* Mobile drawer */}
                 <AnimatePresence>
                     {mobileMenuOpen && (
                         <>
@@ -251,7 +255,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+                                className="fixed inset-0 z-40 bg-stone-900/40 backdrop-blur-sm lg:hidden"
                                 onClick={() => setMobileMenuOpen(false)}
                                 aria-hidden
                             />
@@ -259,36 +263,36 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 initial={{ x: '-100%' }}
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
-                                transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-                                className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-900 shadow-2xl lg:hidden"
+                                transition={{ type: 'spring', damping: 30, stiffness: 340 }}
+                                className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#0f1419] shadow-2xl lg:hidden"
                                 aria-label="Partner menu"
                             >
-                                <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4">
-                                    <span className="text-sm font-semibold text-white">Menu</span>
+                                <div className="flex h-12 items-center justify-between border-b border-white/[0.06] px-3">
+                                    <span className="text-[13px] font-semibold text-white">Menu</span>
                                     <button
                                         type="button"
                                         onClick={() => setMobileMenuOpen(false)}
                                         aria-label="Close menu"
-                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white"
+                                        className="rounded-md p-1.5 text-slate-400 hover:bg-white/5"
                                     >
-                                        <XMarkIcon className="h-5 w-5" />
+                                        <XMarkIcon className="h-4 w-4" />
                                     </button>
                                 </div>
-                                <div className="border-b border-slate-800 px-4 py-4">
-                                    <p className="text-sm font-semibold text-white">{partnerName}</p>
-                                    <p className="text-xs text-slate-400">{user?.email}</p>
+                                <div className="border-b border-white/[0.06] px-3 py-3">
+                                    <p className="text-[13px] font-semibold text-white">{partnerName}</p>
+                                    <p className="text-[11px] text-slate-500">{user?.email}</p>
                                 </div>
-                                <nav className="flex-1 space-y-1 px-2 py-4">
+                                <nav className="flex-1 space-y-0.5 px-2 py-3">
                                     {[...primaryNav, ...secondaryNav].map((item) => renderNavLink(item, { showLabel: true }))}
                                 </nav>
-                                <div className="border-t border-slate-800 p-3">
+                                <div className="border-t border-white/[0.06] p-2">
                                     <button
                                         type="button"
                                         onClick={handleLogout}
-                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-red-500/10 hover:text-red-300"
+                                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-300"
                                     >
-                                        <ArrowLeftStartOnRectangleIcon className="h-5 w-5" />
-                                        Logout
+                                        <ArrowLeftStartOnRectangleIcon className="h-4 w-4" />
+                                        Log out
                                     </button>
                                 </div>
                             </motion.aside>
@@ -296,57 +300,54 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     )}
                 </AnimatePresence>
 
-                {/* Main column */}
-                <div className="flex min-w-0 flex-1 flex-col">
-                    {/* Top header bar */}
-                    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-                        <div
-                            className={`flex h-14 items-center justify-between gap-3 px-4 sm:px-6 ${
-                                fullWidth ? '' : 'mx-auto max-w-7xl lg:px-8'
-                            } lg:h-16`}
-                        >
-                            <div className="flex min-w-0 items-center gap-3">
+                {/* Main */}
+                <div
+                    className={`flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ${isCollapsed ? 'lg:ml-16' : 'lg:ml-[220px]'}`}
+                >
+                    <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-[#f7f6f3]/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
+                        <div className={`mx-auto flex h-12 items-center justify-between gap-3 px-4 sm:px-5 ${contentMax}`}>
+                            <div className="flex min-w-0 items-center gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setMobileMenuOpen(true)}
-                                    className="inline-flex rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="inline-flex rounded-md p-1.5 text-stone-600 hover:bg-stone-200/60 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
                                     aria-label="Open menu"
                                 >
-                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                                         <path d="M3 12h18M3 6h18M3 18h18" />
                                     </svg>
                                 </button>
                                 <div className="min-w-0">
-                                    <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{getGreeting()}</p>
-                                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{partnerName}</p>
+                                    <p className="truncate text-[11px] font-medium text-stone-500 dark:text-slate-500">
+                                        {getGreeting()}
+                                    </p>
+                                    <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">{partnerName}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-1 sm:gap-2">
+                            <div className="flex items-center gap-0.5 sm:gap-1">
                                 <Link
                                     href="/partner/partner-requests/create"
-                                    className="hidden items-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-500 sm:inline-flex"
+                                    className="mr-1 hidden items-center gap-1 rounded-lg bg-primary-600 px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-500 active:scale-[0.98] sm:inline-flex"
                                 >
-                                    <PlusIcon className="h-4 w-4" />
-                                    Submit Estate
+                                    <PlusIcon className="h-3.5 w-3.5" />
+                                    Submit
                                 </Link>
                                 <button
                                     type="button"
-                                    aria-label="Notifications"
-                                    className="relative rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-white"
-                                    title="Notifications coming soon"
+                                    onClick={toggleTheme}
+                                    aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                                    className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-200/70 hover:text-stone-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                                 >
-                                    <BellIcon className="h-5 w-5" />
-                                    {(user?.unread_notifications_count ?? 0) > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
-                                    )}
+                                    {theme === 'dark' ? <SunIcon className="h-[18px] w-[18px]" /> : <MoonIcon className="h-[18px] w-[18px]" />}
                                 </button>
+                                <NotificationDropdown unreadCount={unread} />
                                 <Link
                                     href="/partner/profile"
-                                    className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-                                    aria-label="Open profile"
+                                    className="ml-0.5 flex items-center rounded-lg p-1 transition hover:bg-stone-200/70 dark:hover:bg-slate-800"
+                                    aria-label="Open account"
                                 >
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-xs font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
                                         {initials}
                                     </div>
                                 </Link>
@@ -354,12 +355,13 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                         </div>
                     </header>
 
-                    <main className="flex-1 pb-24 lg:pb-8">
+                    <main className="flex-1 pb-20 lg:pb-6">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.35 }}
-                            className={fullWidth ? 'px-4 py-6 sm:px-6 lg:px-8' : 'mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}
+                            key={currentPath}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className={`mx-auto px-4 py-4 sm:px-5 sm:py-5 ${contentMax}`}
                         >
                             {children}
                         </motion.div>
