@@ -28,4 +28,16 @@ return [
 
     'session_key' => 'zeus_authenticated',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Zeus Notification Inbox
+    |--------------------------------------------------------------------------
+    |
+    | Partner and platform alerts for Zeus operators are delivered here.
+    | Falls back to the application mail.from address when unset.
+    |
+    */
+
+    'notification_email' => env('ZEUS_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
+
 ];
