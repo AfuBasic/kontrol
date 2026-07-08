@@ -26,8 +26,8 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
     Route::middleware(RedirectIfZeusAuthenticated::class)->group(function (): void {
         Route::get('/', [AuthController::class, 'showLogin'])->name('login');
         Route::post('/', [AuthController::class, 'login'])->name('login.submit');
-        Route::get('/login/2fa', [AuthController::class, 'showLogin2FA'])->name('login.2fa');
-        Route::post('/login/2fa', [AuthController::class, 'login2FASubmit'])->name('login.2fa.submit');
+        Route::get('/login/2fa', [AuthController::class, 'showLogin2FA'])->name('login.two_factor');
+        Route::post('/login/2fa', [AuthController::class, 'login2FASubmit'])->name('login.two_factor.submit');
     });
 
     // Authenticated routes
