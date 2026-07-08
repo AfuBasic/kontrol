@@ -9,6 +9,7 @@ interface Stats {
     partner_request_count: number;
     commission_rate: string | null;
     commission_type: string | null;
+    commission_length: number | null;
     next_settlement_date: string;
 }
 
@@ -30,6 +31,13 @@ function formatCommission(rate: string | null, type: string | null): string {
     if (!rate) return 'TBD';
     if (type === 'fixed') return '₦' + (Number(rate) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
     return `${Number(rate).toFixed(2)}%`;
+}
+
+function formatLength(months: number | null): string {
+    if (!months) return 'Lifetime (Always)';
+    if (months === 12) return '1 Year (12m)';
+    if (months === 24) return '2 Years (24m)';
+    return `${months} Months`;
 }
 
 export default function PartnerDashboard({ user, stats }: Props) {
@@ -95,9 +103,14 @@ export default function PartnerDashboard({ user, stats }: Props) {
                             <p className="text-3xl font-bold text-gray-900">
                                 {formatCommission(stats.commission_rate, stats.commission_type)}
                             </p>
-                            <p className="text-xs text-gray-500">
-                                {stats.commission_type === 'fixed' ? 'Fixed per payment' : 'Per payment revenue'}
-                            </p>
+                            <div className="flex flex-col gap-0.5 mt-1">
+                                <span className="text-[10px] text-gray-500">
+                                    {stats.commission_type === 'fixed' ? 'Fixed per payment' : 'Per payment revenue'}
+                                </span>
+                                <span className="text-[10px] font-bold text-primary-600">
+                                    Length: {formatLength(stats.commission_length)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -164,7 +177,8 @@ export default function PartnerDashboard({ user, stats }: Props) {
                 >
                     <h2 className="mb-4 text-2xl font-bold text-primary-900">How commissions work</h2>
                     <p className="mb-6 text-primary-700">
-                        You earn a commission on every payment made by residents of estates you referred, for the first 12 months
+                        You earn a commission on every payment made by residents of estates you referred, for the first{' '}
+                        {stats.commission_length ? `${stats.commission_length} months` : 'lifetime'}{' '}
                         after the estate activates on Kontrol.
                     </p>
                     <ol className="space-y-3 text-primary-700">
@@ -178,7 +192,7 @@ export default function PartnerDashboard({ user, stats }: Props) {
                         </li>
                         <li className="flex gap-3">
                             <span className="font-semibold">3.</span>
-                            <span>Earn commissions on resident payments for 12 months from activation</span>
+                            <span>Earn commissions on resident payments for {stats.commission_length ? `${stats.commission_length} months` : 'always'} from activation</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="font-semibold">4.</span>
