@@ -31,14 +31,18 @@ class CommissionService
             return null;
         }
 
-        $estate->loadMissing('commissionPlan');
-
-        if (! $estate->commissionPlan) {
+        $plan = $estate->commissionPlan;
+        if (! $plan) {
             return null;
         }
 
-        $commissionRate = (float) $estate->commissionPlan->commission_rate;
-        $commissionAmount = (int) round($transaction->amount * ($commissionRate / 100));
+        $commissionRate = (float) $plan->commission_rate;
+
+        if ($plan->commission_type === 'fixed') {
+            $commissionAmount = (int) $commissionRate;
+        } else {
+            $commissionAmount = (int) round($transaction->amount * ($commissionRate / 100));
+        }
 
         return CommissionableRevenue::create([
             'estate_id' => $estate->id,

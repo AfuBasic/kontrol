@@ -14,6 +14,7 @@ class CommissionPlan extends Model
     protected $fillable = [
         'name',
         'commission_rate',
+        'commission_type',
         'source_partner_id',
         'duration_months',
         'notes',
@@ -51,6 +52,7 @@ class CommissionPlan extends Model
         return self::create([
             'name' => "{$partner->name} Commission Plan",
             'commission_rate' => $partner->commission_rate,
+            'commission_type' => $partner->commission_type,
             'source_partner_id' => $partner->id,
             'duration_months' => 12,
             'notes' => "Cloned from partner #{$partner->id} at ".now()->toDateTimeString(),

@@ -144,3 +144,26 @@ test('zeus admin can resend invitation emails to a member', function () {
         return $mail->hasTo($user->email);
     });
 });
+
+test('zeus admin can create a fixed fee partner and it stores the rate in kobo', function () {
+    $sessionKey = config('zeus.session_key');
+
+    $response = $this->withSession([$sessionKey => true])
+        ->post(route('zeus.partners.store'), [
+            'name' => 'Fixed Fee Referrals',
+            'email' => 'fixed@referrals.com',
+            'phone' => '+2348012345678',
+            'commission_type' => 'fixed',
+            'commission_rate' => '5000', // 5000 Naira
+            'commission_length' => 6,
+        ]);
+
+    $response->assertRedirect(route('zeus.partners.index'));
+    $response->assertSessionHasNoErrors();
+
+    // Verify stored partner commission_rate is 5000 * 100 = 500000 kobo
+    $partner = Partner::where('email', 'fixed@referrals.com')->first();
+    expect($partner)->not->toBeNull();
+    expect($partner->commission_type)->toBe('fixed');
+    expect((int) $partner->commission_rate)->toBe(500000);
+});

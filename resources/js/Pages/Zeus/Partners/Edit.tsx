@@ -259,7 +259,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                             className="overflow-hidden space-y-2 mt-4"
                                         >
                                             <label className="block text-xs font-semibold text-[#9297A8]">
-                                                {data.commission_type === 'percentage' ? 'Commission Rate (%)' : 'Flat Amount (kobo)'}
+                                                {data.commission_type === 'percentage' ? 'Commission Rate (%)' : 'Flat Amount (₦)'}
                                             </label>
                                             <div className="relative">
                                                 <span className="absolute left-4 top-3.5 text-sm font-bold text-[#9297A8]">
@@ -273,13 +273,13 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                                     max={data.commission_type === 'percentage' ? '100' : undefined}
                                                     step="any"
                                                     className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-9 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
-                                                    placeholder={data.commission_type === 'percentage' ? '10' : '50000'}
+                                                    placeholder={data.commission_type === 'percentage' ? '10' : '5000'}
                                                     required
                                                 />
                                             </div>
                                             <p className="text-[10px] text-[#9297A8]">
                                                 {data.commission_type === 'fixed'
-                                                    ? 'Enter flat amount in kobo (e.g. 50000 kobo = ₦500.00)'
+                                                    ? 'Enter flat amount in Naira (e.g. 5000 = ₦5,000.00)'
                                                     : 'Percentage rate applied to resident transaction fees.'}
                                             </p>
                                             {errors.commission_rate && <p className="text-xs text-rose-500 mt-1">{errors.commission_rate}</p>}

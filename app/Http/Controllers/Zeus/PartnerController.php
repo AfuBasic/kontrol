@@ -76,6 +76,10 @@ class PartnerController extends Controller
             'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
         ]);
 
+        if ($validated['commission_type'] === 'fixed') {
+            $validated['commission_rate'] = $validated['commission_rate'] * 100;
+        }
+
         $validated['status'] = 'pending';
 
         $partner = Partner::create($validated);
@@ -100,7 +104,9 @@ class PartnerController extends Controller
                 'email' => $partner->email,
                 'phone' => $partner->phone,
                 'commission_type' => $partner->commission_type,
-                'commission_rate' => $partner->commission_rate,
+                'commission_rate' => $partner->commission_type === 'fixed'
+                    ? $partner->commission_rate / 100
+                    : $partner->commission_rate,
                 'commission_length' => $partner->commission_length,
                 'status' => $partner->status,
             ],
@@ -134,6 +140,10 @@ class PartnerController extends Controller
             'commission_length' => ['nullable', 'integer', 'in:6,12,24'],
             'status' => ['required', 'in:active,inactive,suspended,pending'],
         ]);
+
+        if ($validated['commission_type'] === 'fixed') {
+            $validated['commission_rate'] = $validated['commission_rate'] * 100;
+        }
 
         $partner->update($validated);
 
