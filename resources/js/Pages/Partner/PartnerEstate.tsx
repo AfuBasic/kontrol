@@ -43,11 +43,11 @@ const STEPS = [
         tip: 'House count powers your commission estimate — rough numbers are fine.',
     },
     {
-        key: 'chairman',
-        title: 'Chairman',
+        key: 'contact',
+        title: 'Contact person',
         icon: UserIcon,
         minutes: 1,
-        tip: 'We contact the chairman after review — accuracy speeds approval.',
+        tip: 'We contact this person after review — accuracy speeds approval.',
     },
     {
         key: 'documents',
@@ -390,14 +390,14 @@ export default function PartnerEstate({ partner }: Props) {
 
                                 {step === 2 && (
                                     <>
-                                        <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Chairman contact</h2>
+                                        <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Contact person</h2>
                                         <div className="grid gap-3 sm:grid-cols-2">
                                             <div className="sm:col-span-2">
                                                 <label
                                                     htmlFor="chairman_name"
                                                     className="mb-1.5 block text-[12px] font-medium text-stone-700 dark:text-slate-300"
                                                 >
-                                                    Chairman name <span className="text-red-500">*</span>
+                                                    Contact person name <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     id="chairman_name"
@@ -406,6 +406,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     value={data.chairman_name}
                                                     onChange={(e) => setData('chairman_name', e.target.value)}
                                                     className={inputClass(!!errors.chairman_name)}
+                                                    autoComplete="name"
                                                 />
                                                 <FieldError message={errors.chairman_name} />
                                             </div>
@@ -414,7 +415,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     htmlFor="chairman_phone"
                                                     className="mb-1.5 block text-[12px] font-medium text-stone-700 dark:text-slate-300"
                                                 >
-                                                    Phone <span className="text-red-500">*</span>
+                                                    Contact person phone <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     id="chairman_phone"
@@ -423,6 +424,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     value={data.chairman_phone}
                                                     onChange={(e) => setData('chairman_phone', e.target.value)}
                                                     className={inputClass(!!errors.chairman_phone)}
+                                                    autoComplete="tel"
                                                 />
                                                 <FieldError message={errors.chairman_phone} />
                                             </div>
@@ -431,7 +433,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     htmlFor="chairman_email"
                                                     className="mb-1.5 block text-[12px] font-medium text-stone-700 dark:text-slate-300"
                                                 >
-                                                    Email <span className="text-red-500">*</span>
+                                                    Contact person email <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     id="chairman_email"
@@ -440,6 +442,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     value={data.chairman_email}
                                                     onChange={(e) => setData('chairman_email', e.target.value)}
                                                     className={inputClass(!!errors.chairman_email)}
+                                                    autoComplete="email"
                                                 />
                                                 <FieldError message={errors.chairman_email} />
                                             </div>
@@ -455,7 +458,7 @@ export default function PartnerEstate({ partner }: Props) {
                                         </p>
                                         <div className="rounded-lg border border-dashed border-stone-300 bg-stone-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/40">
                                             <div className="space-y-1.5">
-                                                {['Estate photos', 'Chairman ID', 'Gate pass / introduction letter'].map((label) => {
+                                                {['Estate photos', 'Contact person ID', 'Gate pass / introduction letter'].map((label) => {
                                                     const checked = docPlaceholder.includes(label);
 
                                                     return (
@@ -508,9 +511,9 @@ export default function PartnerEstate({ partner }: Props) {
                                                     step: 1,
                                                 },
                                                 { label: 'Houses', value: data.number_of_houses || '—', step: 1 },
-                                                { label: 'Chairman', value: data.chairman_name, step: 2 },
-                                                { label: 'Phone', value: data.chairman_phone, step: 2 },
-                                                { label: 'Email', value: data.chairman_email, step: 2 },
+                                                { label: 'Contact person', value: data.chairman_name, step: 2 },
+                                                { label: 'Contact phone', value: data.chairman_phone, step: 2 },
+                                                { label: 'Contact email', value: data.chairman_email, step: 2 },
                                                 { label: 'Notes', value: data.notes || '—', step: 3 },
                                             ].map((row) => (
                                                 <div key={row.label} className="flex items-start justify-between gap-3 px-3 py-2">
