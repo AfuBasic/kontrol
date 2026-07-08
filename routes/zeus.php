@@ -8,6 +8,7 @@ use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
+use App\Http\Controllers\Zeus\NotificationController;
 use App\Http\Controllers\Zeus\PartnerController;
 use App\Http\Controllers\Zeus\PartnerEarningsController;
 use App\Http\Controllers\Zeus\PartnerRequestController;
@@ -86,6 +87,13 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/partner-requests/{partnerRequest}/approve', [PartnerRequestController::class, 'approve'])->name('partner-requests.approve');
         Route::post('/partner-requests/{partnerRequest}/reject', [PartnerRequestController::class, 'reject'])->name('partner-requests.reject');
         Route::post('/partner-requests/{partnerRequest}/request-info', [PartnerRequestController::class, 'requestInfo'])->name('partner-requests.request-info');
+
+        // Zeus notifications inbox
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
         // Application management
         Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
