@@ -23,7 +23,7 @@ class PartnerMemberInvitationMail extends Mailable implements ShouldQueue
         public Partner $partner,
     ) {
         $appDomain = config('domains.app');
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        $scheme = request()->scheme();
 
         URL::forceRootUrl("{$scheme}://{$appDomain}");
 
