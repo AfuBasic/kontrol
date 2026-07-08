@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Http\Controllers\Partner\NotificationController;
 use App\Models\Coupon;
 use App\Models\Invoice;
+use App\Models\ZeusNotification;
 use App\Services\Resident\AccessCodeService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -91,6 +92,9 @@ class HandleInertiaRequests extends Middleware
             'partnerContext' => $partnerContext,
             'partnerNotifications' => $partnerNotifications,
             'partnerUnreadCount' => $partnerUnreadCount,
+            'zeusUnreadNotificationsCount' => $request->session()->get(config('zeus.session_key'))
+                ? ZeusNotification::query()->unread()->count()
+                : 0,
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
