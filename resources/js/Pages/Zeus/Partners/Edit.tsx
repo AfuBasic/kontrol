@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Percent, Coins, ShieldCheck, Phone, Mail, User } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 interface Member {
     id: number;
@@ -59,6 +60,10 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
         put(`/zeus/partners/${partner.id}`);
     }
 
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+    const [isInviting, setIsInviting] = useState(false);
+
     function handleInvite(e: React.FormEvent) {
         e.preventDefault();
         inviteForm.post(`/zeus/partners/${partner.id}/invite-member`, {
@@ -67,9 +72,21 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
         });
     }
 
-    function resendInvite(memberId: number) {
-        router.post(`/zeus/partners/${partner.id}/members/${memberId}/resend-invite`, {}, {
+    function initiateResend(memberId: number) {
+        setSelectedMemberId(memberId);
+        setInviteModalOpen(true);
+    }
+
+    function handleConfirmResend() {
+        if (selectedMemberId === null) return;
+        setIsInviting(true);
+        router.post(`/zeus/partners/${partner.id}/members/${selectedMemberId}/resend-invite`, {}, {
             preserveScroll: true,
+            onFinish: () => {
+                setIsInviting(false);
+                setInviteModalOpen(false);
+                setSelectedMemberId(null);
+            }
         });
     }
 
@@ -454,7 +471,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                                 {!member.email_verified_at && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => resendInvite(member.id)}
+                                                        onClick={() => initiateResend(member.id)}
                                                         className="text-xs font-bold text-[#6C5DFD] hover:underline"
                                                     >
                                                         Resend Invite
@@ -472,6 +489,17 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                     </div>
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={inviteModalOpen}
+                onClose={() => setInviteModalOpen(false)}
+                onConfirm={handleConfirmResend}
+                title="Resend Invitation"
+                message="Are you sure you want to resend the onboarding invitation email to this member? The previous invitation link will be invalidated."
+                confirmLabel="Resend Email"
+                cancelLabel="Cancel"
+                type="info"
+                isLoading={isInviting}
+            />
         </ZeusLayout>
     );
 }

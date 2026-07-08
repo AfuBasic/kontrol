@@ -229,14 +229,9 @@ class PartnerController extends Controller
 
     public function resendInvitation(Partner $partner, User $user): RedirectResponse
     {
-        if ($user->partner_id !== $partner->id) {
-            abort(403, 'Unauthorized.');
-        }
-
         Mail::to($user->email)->send(new PartnerMemberInvitationMail($user, $partner));
 
-        return redirect()
-            ->route('zeus.partners.edit', $partner)
-            ->with('success', 'Portal invitation resent successfully.');
+        return back()
+            ->with('success', 'Invitation email resent successfully.');
     }
 }

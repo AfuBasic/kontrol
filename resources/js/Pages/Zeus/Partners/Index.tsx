@@ -13,6 +13,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 interface Partner {
     id: number;
@@ -65,16 +66,33 @@ export default function PartnersIndex({ partners, filters }: Props) {
         router.get('/zeus/partners', { search, status: newStatus }, { preserveState: true });
     }
 
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
+    const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+    const [isInviting, setIsInviting] = useState(false);
+
     function handleDelete(partnerId: number, name: string) {
         if (confirm(`Delete ${name}? This action cannot be undone.`)) {
             router.delete(`/zeus/partners/${partnerId}`, { preserveState: true });
         }
     }
 
-    function resendInvite(partnerId: number, memberId: number) {
-        router.post(`/zeus/partners/${partnerId}/members/${memberId}/resend-invite`, {}, {
-            onSuccess: () => {
-                alert('Invitation email resent successfully.');
+    function initiateResend(partnerId: number, memberId: number) {
+        setSelectedPartnerId(partnerId);
+        setSelectedMemberId(memberId);
+        setInviteModalOpen(true);
+    }
+
+    function handleConfirmResend() {
+        if (selectedPartnerId === null || selectedMemberId === null) return;
+        setIsInviting(true);
+        router.post(`/zeus/partners/${selectedPartnerId}/members/${selectedMemberId}/resend-invite`, {}, {
+            preserveScroll: true,
+            onFinish: () => {
+                setIsInviting(false);
+                setInviteModalOpen(false);
+                setSelectedPartnerId(null);
+                setSelectedMemberId(null);
             }
         });
     }
@@ -310,7 +328,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                                 <div className="flex justify-end gap-3">
                                                     {partner.status === 'pending' && partner.primary_member_id && (
                                                         <button
-                                                            onClick={() => resendInvite(partner.id, partner.primary_member_id!)}
+                                                            onClick={() => initiateResend(partner.id, partner.primary_member_id!)}
                                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:underline"
                                                         >
                                                             <EnvelopeIcon className="h-4 w-4" />
@@ -374,6 +392,17 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     )}
                 </motion.div>
             </div>
+            <ConfirmationModal
+                isOpen={inviteModalOpen}
+                onClose={() => setInviteModalOpen(false)}
+                onConfirm={handleConfirmResend}
+                title="Resend Invitation"
+                message="Are you sure you want to resend the onboarding invitation email to this partner member? The previous invitation link will be invalidated."
+                confirmLabel="Resend Email"
+                cancelLabel="Cancel"
+                type="info"
+                isLoading={isInviting}
+            />
         </ZeusLayout>
     );
 }

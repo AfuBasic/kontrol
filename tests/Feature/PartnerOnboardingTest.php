@@ -126,7 +126,7 @@ test('zeus admin can resend invitation emails to a member', function () {
         'status' => 'pending',
     ]);
 
-    $user = User::create([
+    $user = User::factory()->create([
         'name' => 'Gamma Member',
         'email' => 'member@gamma.com',
         'user_type' => 'affiliate',
@@ -139,6 +139,7 @@ test('zeus admin can resend invitation emails to a member', function () {
     Mail::fake();
 
     $response = $this->withSession([$sessionKey => true])
+        ->from(route('zeus.partners.edit', $partner))
         ->post(route('zeus.partners.members.resend-invite', [$partner, $user]));
 
     $response->assertRedirect(route('zeus.partners.edit', $partner));
