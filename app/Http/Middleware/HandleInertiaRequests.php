@@ -43,6 +43,8 @@ class HandleInertiaRequests extends Middleware
         $roles = [];
         $estate = null;
 
+        $partnerContext = null;
+
         if ($user) {
             // Set team context for permission check
             $estate = $user->estates()->wherePivot('status', 'accepted')->first();
@@ -53,11 +55,28 @@ class HandleInertiaRequests extends Middleware
             $user->loadMissing('profile');
             $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
             $roles = $user->getRoleNames()->toArray();
+
+            if ($user->partner_id) {
+                $user->loadMissing('partner');
+                $partner = $user->partner;
+
+                if ($partner) {
+                    $partnerContext = [
+                        'name' => $partner->name,
+                        'status' => $partner->status,
+                        'commission_rate' => $partner->commission_rate !== null
+                            ? (string) $partner->commission_rate
+                            : null,
+                        'commission_type' => $partner->commission_type,
+                    ];
+                }
+            }
         }
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'partnerContext' => $partnerContext,
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
