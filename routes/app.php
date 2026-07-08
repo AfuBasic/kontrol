@@ -55,10 +55,10 @@ Route::prefix('resident')->group(base_path('routes/resident.php'));
 
 /*
 |--------------------------------------------------------------------------
-| Affiliate Routes
+| Partner Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('affiliate')->group(base_path('routes/affiliate.php'));
+Route::prefix('partner')->group(base_path('routes/partners.php'));
 
 /*
 |--------------------------------------------------------------------------
