@@ -69,6 +69,9 @@ class LoginOtpController extends Controller
             return back()->withErrors(['code' => 'The verification code is invalid or has expired.']);
         }
 
+        // Re-check suspension / activation in case status changed after OTP was issued.
+        $authenticateUser->ensureCanLogin($user->fresh() ?? $user);
+
         $remember = $request->session()->get('otp_remember', false);
         $viaSocial = $request->session()->get('otp_via_social', false);
 
