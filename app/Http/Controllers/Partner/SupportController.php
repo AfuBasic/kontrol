@@ -71,7 +71,7 @@ class SupportController extends Controller
 
         return Inertia::render('Partner/Support', [
             'support' => [
-                'email' => config('mail.from.address', 'support@usekontrol.com'),
+                'email' => 'support@usekontrol.com',
                 'response_sla' => '1 business day',
                 'avg_reply_hours' => 8,
                 'queue_status' => 'Low',
