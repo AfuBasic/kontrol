@@ -5,12 +5,26 @@ import { Fragment, useEffect, useState } from 'react';
 interface ToastProps {
     show: boolean;
     message: string;
+    title?: string;
+    time?: string;
     type?: 'success' | 'error' | 'info';
     onClick?: () => void;
     onClose: () => void;
 }
 
-export default function Toast({ show, message, type = 'success', onClick, onClose }: ToastProps) {
+function defaultTitle(type: 'success' | 'error' | 'info'): string {
+    if (type === 'success') {
+        return 'Success';
+    }
+
+    if (type === 'error') {
+        return 'Update';
+    }
+
+    return 'Notification';
+}
+
+export default function Toast({ show, message, title, time, type = 'success', onClick, onClose }: ToastProps) {
     const [visible, setVisible] = useState(show);
 
     useEffect(() => {
@@ -22,6 +36,8 @@ export default function Toast({ show, message, type = 'success', onClick, onClos
             return () => clearTimeout(timer);
         }
     }, [show, onClose]);
+
+    const heading = title || defaultTitle(type);
 
     return (
         <div aria-live="assertive" className="pointer-events-none fixed inset-0 z-50 flex items-end px-4 py-6 sm:items-start sm:p-6">
@@ -57,16 +73,20 @@ export default function Toast({ show, message, type = 'success', onClick, onClos
                                     )}
                                 </div>
                                 <div className="ml-3 w-0 flex-1 pt-0.5">
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Notification'}
-                                    </p>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <p className="text-sm font-semibold text-gray-900">{heading}</p>
+                                        {time ? <p className="shrink-0 text-[11px] font-medium text-gray-400 tabular-nums">{time}</p> : null}
+                                    </div>
                                     <p className="mt-1 text-sm text-gray-600">{message}</p>
                                 </div>
                                 <div className="ml-4 flex shrink-0">
                                     <button
                                         type="button"
                                         className="inline-flex rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
-                                        onClick={onClose}
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            onClose();
+                                        }}
                                     >
                                         <span className="sr-only">Close</span>
                                         <XMarkIcon className="h-5 w-5" aria-hidden="true" />

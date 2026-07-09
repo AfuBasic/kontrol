@@ -48,11 +48,17 @@ class EstateRequestRejectedNotification extends Notification implements ShouldBr
      */
     public function toArray(object $notifiable): array
     {
+        $estateName = $this->application->estate_name;
+
         return [
-            'title' => 'Estate Onboarding Rejected',
-            'body' => "Your onboarding request for '{$this->application->estate_name}' was declined. Reason: {$this->reason}",
+            'title' => 'Estate request rejected',
+            // Toast / in-app list: inform only — full reason lives on the estate request + email.
+            'body' => "Your onboarding request for “{$estateName}” was rejected.",
             'url' => '/partner/partner-requests',
             'estate_application_id' => $this->application->id,
+            // Laravel overwrites broadcast "type" with the notification class name.
+            // Keep severity for UI (toast color / badge).
+            'severity' => 'danger',
             'type' => 'danger',
         ];
     }
@@ -62,6 +68,8 @@ class EstateRequestRejectedNotification extends Notification implements ShouldBr
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage($this->toArray($notifiable));
+        // Sync so the partner UI updates as soon as the queued notification job runs.
+        return (new BroadcastMessage($this->toArray($notifiable)))
+            ->onConnection('sync');
     }
 }

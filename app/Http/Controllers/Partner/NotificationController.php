@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -82,9 +83,40 @@ class NotificationController extends Controller
             'body' => $body,
             'href' => $href,
             'read_at' => $notification->read_at?->toIso8601String(),
-            'created_at_human' => $notification->created_at?->diffForHumans() ?? '',
+            'created_at_human' => self::formatCreatedAt($notification->created_at),
             'type' => class_basename($notification->type),
         ];
+    }
+
+    /**
+     * Human-friendly local timestamp for partner notification UI.
+     * Examples: "Just now", "1:30 PM", "Yesterday 4:05 PM", "Jul 9, 1:30 PM"
+     */
+    public static function formatCreatedAt(?CarbonInterface $createdAt): string
+    {
+        if ($createdAt === null) {
+            return '';
+        }
+
+        $at = $createdAt->timezone(config('app.timezone'));
+
+        if ($at->gt(now()->subMinute())) {
+            return 'Just now';
+        }
+
+        if ($at->isToday()) {
+            return $at->format('g:i A');
+        }
+
+        if ($at->isYesterday()) {
+            return 'Yesterday '.$at->format('g:i A');
+        }
+
+        if ($at->isCurrentYear()) {
+            return $at->format('M j, g:i A');
+        }
+
+        return $at->format('M j, Y g:i A');
     }
 
     /**

@@ -79,6 +79,14 @@ function getGreeting(): string {
     return 'Good evening';
 }
 
+/** e.g. "1:30 PM" — compact clock time for toast chrome */
+function formatToastTime(date: Date): string {
+    return new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(date);
+}
+
 function performanceTier(status?: string): { label: string; tone: string } {
     if (status === 'active') {
         return { label: 'Growth', tone: 'bg-violet-500/15 text-violet-200 ring-violet-400/25' };
@@ -100,6 +108,8 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [toastTitle, setToastTitle] = useState<string | undefined>(undefined);
+    const [toastTime, setToastTime] = useState<string | undefined>(undefined);
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
     const currentPath = usePathFromUrl(url);
@@ -118,10 +128,14 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
 
     useEffect(() => {
         if (flash?.success) {
+            setToastTitle(undefined);
+            setToastTime(formatToastTime(new Date()));
             setToastMessage(flash.success);
             setToastType('success');
             setShowToast(true);
         } else if (flash?.error) {
+            setToastTitle(undefined);
+            setToastTime(formatToastTime(new Date()));
             setToastMessage(flash.error);
             setToastType('error');
             setShowToast(true);
@@ -136,28 +150,38 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         // Laravel notification broadcasts land on PrivateChannel App.Models.User.{id}
         // (Notifiable default — matches routes/channels.php authorization).
         const channelName = `App.Models.User.${user.id}`;
-        const channel = window.Echo.private(channelName).notification(
+        const channel = window.Echo.private(channelName);
+
+        channel.notification(
             (notification: {
                 title?: string;
                 body?: string;
                 message?: string;
                 type?: string;
+                severity?: string;
                 url?: string;
             }) => {
                 const message = notification.body || notification.message || notification.title || 'You have a new update.';
-                const isDanger =
-                    notification.type === 'danger' ||
-                    notification.type === 'error' ||
-                    (typeof notification.type === 'string' &&
-                        notification.type.includes('EstateRequestRejected'));
+                const severity = notification.severity || notification.type;
+                const isRejection =
+                    typeof notification.type === 'string' && notification.type.includes('EstateRequestRejected');
+                const isDanger = severity === 'danger' || severity === 'error' || isRejection;
 
+                setToastTitle(notification.title || (isRejection ? 'Estate request rejected' : undefined));
+                setToastTime(formatToastTime(new Date()));
                 setToastMessage(message);
                 setToastType(isDanger ? 'error' : 'success');
                 setShowToast(true);
 
                 // Refresh unread badge + dropdown listing without a full navigation.
+                // Also refresh My Estates list when a pipeline status change is broadcast.
+                const only = ['partnerUnreadCount', 'partnerNotifications', 'auth'];
+                if (window.location.pathname.startsWith('/partner/partner-requests')) {
+                    only.push('requests', 'stats', 'filters');
+                }
+
                 router.reload({
-                    only: ['partnerUnreadCount', 'partnerNotifications', 'auth'],
+                    only,
                     preserveScroll: true,
                     preserveState: true,
                 });
@@ -582,7 +606,14 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 <MobileBottomNav url={currentPath} />
 
                 {showToast && (
-                    <Toast show={showToast} message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />
+                    <Toast
+                        show={showToast}
+                        title={toastTitle}
+                        time={toastTime}
+                        message={toastMessage}
+                        type={toastType}
+                        onClose={() => setShowToast(false)}
+                    />
                 )}
             </div>
         </AnimatedLayout>
