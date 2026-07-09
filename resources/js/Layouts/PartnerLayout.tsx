@@ -133,23 +133,39 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
             return;
         }
 
-        const channel = window.Echo.private(`App.Models.User.${user.id}`)
-            .notification((notification: { title?: string; body?: string; message?: string }) => {
-                const message = notification.body || notification.message || 'You have a new update.';
+        // Laravel notification broadcasts land on PrivateChannel App.Models.User.{id}
+        // (Notifiable default — matches routes/channels.php authorization).
+        const channelName = `App.Models.User.${user.id}`;
+        const channel = window.Echo.private(channelName).notification(
+            (notification: {
+                title?: string;
+                body?: string;
+                message?: string;
+                type?: string;
+                url?: string;
+            }) => {
+                const message = notification.body || notification.message || notification.title || 'You have a new update.';
+                const isDanger =
+                    notification.type === 'danger' ||
+                    notification.type === 'error' ||
+                    (typeof notification.type === 'string' &&
+                        notification.type.includes('EstateRequestRejected'));
+
                 setToastMessage(message);
-                setToastType('success');
+                setToastType(isDanger ? 'error' : 'success');
                 setShowToast(true);
 
-                // Silently reload Inertia page props to update notification dropdown counts and listings
+                // Refresh unread badge + dropdown listing without a full navigation.
                 router.reload({
                     only: ['partnerUnreadCount', 'partnerNotifications', 'auth'],
                     preserveScroll: true,
                     preserveState: true,
                 });
-            });
+            },
+        );
 
         return () => {
-            channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
+            window.Echo.leave(channelName);
         };
     }, [user?.id]);
 
