@@ -686,7 +686,7 @@ export default function PartnerProfile({
                                     </div>
                                     <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
                                         <motion.div
-                                            className="h-full rounded-full bg-linear-to-r from-primary-500 to-emerald-400"
+                                            className="h-full rounded-full bg-linear-to-r from-sky-400 to-primary-600"
                                             initial={{ width: 0 }}
                                             animate={{ width: `${securityScore}%` }}
                                             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -854,7 +854,7 @@ export default function PartnerProfile({
                                     </p>
                                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
                                         <motion.div
-                                            className="h-full rounded-full bg-linear-to-r from-primary-500 to-emerald-400"
+                                            className="h-full rounded-full bg-linear-to-r from-sky-400 to-primary-600"
                                             initial={{ width: 0 }}
                                             animate={{ width: `${securityScore}%` }}
                                             transition={{ duration: 0.8 }}
