@@ -7,6 +7,7 @@ import {
     CheckCircleIcon,
     XCircleIcon,
     ExclamationTriangleIcon,
+    TrashIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 
@@ -24,6 +25,8 @@ interface PartnerRequest {
     rejection_reason: string | null;
     info_request_message: string | null;
     created_at: string;
+    is_trashed?: boolean;
+    deleted_at?: string | null;
     partner?: { id: number; name: string; email: string; commission_rate: string };
     estate?: { id: number; ulid: string; name: string } | null;
 }
@@ -60,6 +63,18 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
         if (confirm('Are you sure you want to approve this request and create the estate?')) {
             router.post(`/zeus/partner-requests/${id}/approve`, {}, { preserveScroll: true });
         }
+    };
+
+    const permanentlyDelete = (request: PartnerRequest) => {
+        if (
+            !confirm(
+                `Permanently delete “${request.estate_name}”? This cannot be undone and removes the record for partners and Zeus.`,
+            )
+        ) {
+            return;
+        }
+
+        router.delete(`/zeus/partner-requests/${request.id}`, { preserveScroll: true });
     };
 
     const submitReject = (e: React.FormEvent) => {
@@ -185,30 +200,37 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <span
-                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${
-                                                        request.status === 'accepted'
-                                                            ? 'bg-[#34D399]/10 text-[#34D399] border border-[#34D399]/20'
-                                                            : request.status === 'rejected'
-                                                              ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                                                              : 'bg-[#6C5DFD]/10 text-[#6C5DFD] border border-[#6C5DFD]/20'
-                                                    }`}
-                                                >
+                                                <div className="flex flex-col items-center gap-1.5">
                                                     <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${
                                                             request.status === 'accepted'
-                                                                ? 'bg-[#34D399]'
+                                                                ? 'bg-[#34D399]/10 text-[#34D399] border border-[#34D399]/20'
                                                                 : request.status === 'rejected'
-                                                                  ? 'bg-rose-500'
-                                                                  : 'bg-[#6C5DFD]'
+                                                                  ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                                                  : 'bg-[#6C5DFD]/10 text-[#6C5DFD] border border-[#6C5DFD]/20'
                                                         }`}
-                                                    />
-                                                    {request.status}
-                                                </span>
+                                                    >
+                                                        <span
+                                                            className={`h-1.5 w-1.5 rounded-full ${
+                                                                request.status === 'accepted'
+                                                                    ? 'bg-[#34D399]'
+                                                                    : request.status === 'rejected'
+                                                                      ? 'bg-rose-500'
+                                                                      : 'bg-[#6C5DFD]'
+                                                            }`}
+                                                        />
+                                                        {request.status}
+                                                    </span>
+                                                    {request.is_trashed ? (
+                                                        <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-300 uppercase">
+                                                            Removed by partner
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    {request.status === 'submitted' && !request.estate && (
+                                                    {request.status === 'submitted' && !request.estate && !request.is_trashed && (
                                                         <button
                                                             onClick={() => approve(request.id)}
                                                             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#34D399] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#34D399]/90 transition-colors active:scale-95 animate-pulse"
@@ -217,7 +239,7 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                                             Accept
                                                         </button>
                                                     )}
-                                                    {request.status === 'submitted' && (
+                                                    {request.status === 'submitted' && !request.is_trashed && (
                                                         <>
                                                             <button
                                                                 onClick={() => openModal(request, 'info')}
@@ -235,6 +257,15 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                                             </button>
                                                         </>
                                                     )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => permanentlyDelete(request)}
+                                                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20"
+                                                        title="Permanently delete"
+                                                    >
+                                                        <TrashIcon className="h-4 w-4" />
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
