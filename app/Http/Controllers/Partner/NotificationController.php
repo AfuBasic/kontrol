@@ -53,6 +53,13 @@ class NotificationController extends Controller
         return back();
     }
 
+    public function clearAll(Request $request): RedirectResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return back()->with('success', 'All notifications cleared.');
+    }
+
     /**
      * @return array{
      *     id: string,
