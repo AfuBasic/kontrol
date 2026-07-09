@@ -60,7 +60,6 @@ class SupportController extends Controller
                         'category' => 'Security',
                     ],
                 ],
-                'tickets' => [],
             ],
         ]);
     }

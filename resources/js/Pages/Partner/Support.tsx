@@ -1,4 +1,4 @@
-import { ChevronDownIcon, EnvelopeIcon, MagnifyingGlassIcon, TicketIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, EnvelopeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
@@ -10,13 +10,6 @@ interface FaqItem {
     category?: string;
 }
 
-interface Ticket {
-    id: string;
-    subject: string;
-    status: string;
-    updated_at: string;
-}
-
 interface Props {
     support: {
         email: string;
@@ -26,7 +19,6 @@ interface Props {
         status?: string;
         business_hours?: string;
         faq: FaqItem[];
-        tickets: Ticket[];
     };
 }
 
@@ -246,30 +238,6 @@ export default function PartnerSupport({ support }: Props) {
                     </div>
                 </section>
 
-                {/* Requests empty (compact) */}
-                {support.tickets.length === 0 ? (
-                    <div className="flex max-h-[160px] items-center gap-4 rounded-2xl bg-stone-50/80 px-5 py-4 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-400 shadow-sm dark:bg-white/10">
-                            <TicketIcon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-semibold text-stone-800 dark:text-white">No open requests</p>
-                            <p className="mt-0.5 text-[12px] text-stone-500">Email us and we&apos;ll follow up promptly.</p>
-                        </div>
-                    </div>
-                ) : (
-                    <ol className="relative ml-3 space-y-0 border-l border-stone-200 pl-5 dark:border-slate-700">
-                        {support.tickets.map((ticket) => (
-                            <li key={ticket.id} className="relative pb-4 last:pb-0">
-                                <span className="absolute top-1.5 -left-[1.4rem] h-2.5 w-2.5 rounded-full bg-primary-500 ring-4 ring-white dark:ring-slate-950" />
-                                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{ticket.subject}</p>
-                                <p className="mt-0.5 text-[11px] text-stone-500">
-                                    {ticket.status} · {ticket.updated_at}
-                                </p>
-                            </li>
-                        ))}
-                    </ol>
-                )}
             </div>
         </PartnerLayout>
     );
