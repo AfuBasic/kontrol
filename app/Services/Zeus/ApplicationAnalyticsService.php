@@ -58,7 +58,7 @@ class ApplicationAnalyticsService
     public function getGroupedApplications(): array
     {
         // Pipeline grouped by columns for the Kanban board
-        $applications = EstateApplication::with(['plan:id,name', 'assignedTo:id,name'])
+        $applications = EstateApplication::with(['assignedTo:id,name'])
             ->orderByDesc('created_at')
             ->get();
 

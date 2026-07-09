@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Zeus;
 use App\Actions\Zeus\ApproveEstateApplicationAction;
 use App\Http\Controllers\Controller;
 use App\Models\EstateApplication;
+use App\Notifications\Partner\EstateRequestRejectedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -112,6 +113,14 @@ class PartnerRequestController extends Controller
             'rejection_reason' => $validated['rejection_reason'],
             'reviewed_at' => now(),
         ]);
+
+        // Notify partner members via email + in-app
+        if ($partnerRequest->partner) {
+            $partnerMembers = $partnerRequest->partner->members;
+            foreach ($partnerMembers as $member) {
+                $member->notify(new EstateRequestRejectedNotification($partnerRequest, $validated['rejection_reason']));
+            }
+        }
 
         return redirect()
             ->route('zeus.partner-requests.index')

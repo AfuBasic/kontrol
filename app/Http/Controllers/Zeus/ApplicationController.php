@@ -8,6 +8,7 @@ use App\Mail\EstateApplicationRejectedMail;
 use App\Models\ApplicationNote;
 use App\Models\ApplicationTimeline;
 use App\Models\EstateApplication;
+use App\Notifications\Partner\EstateRequestRejectedNotification;
 use App\Services\Zeus\ApplicationAnalyticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -123,8 +124,17 @@ class ApplicationController extends Controller
         ]);
         $application->markAsRejected();
 
-        // Send rejection email with reason (queued, non-blocking)
-        Mail::to($application->email)->send(new EstateApplicationRejectedMail($application, $reason));
+        // Check if the application came through a partner
+        if ($application->isPartnerSourced() && $application->partner) {
+            // Notify all members linked to this partner via the partner notification (email + in-app)
+            $partnerMembers = $application->partner->members;
+            foreach ($partnerMembers as $member) {
+                $member->notify(new EstateRequestRejectedNotification($application, $reason));
+            }
+        } else {
+            // Send standard rejection email to the public applicant email
+            Mail::to($application->email)->send(new EstateApplicationRejectedMail($application, $reason));
+        }
 
         Cache::forget('zeus.applications.metrics');
         Cache::forget('zeus.applications.funnel');

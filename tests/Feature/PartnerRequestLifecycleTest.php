@@ -5,6 +5,7 @@ use App\Models\EstateApplication;
 use App\Models\Partner;
 use App\Models\User;
 use App\Models\ZeusNotification;
+use App\Notifications\Partner\EstateRequestRejectedNotification;
 use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\PlanSeeder;
@@ -98,9 +99,14 @@ it('approves partner applications and creates attributed estates', function () {
 });
 
 it('rejects partner applications with a reason', function () {
+    Notification::fake();
+
+    $partner = Partner::factory()->create();
+    $member = User::factory()->create(['partner_id' => $partner->id]);
+
     $application = EstateApplication::create([
         'source' => EstateApplication::SOURCE_PARTNER,
-        'partner_id' => Partner::factory()->create()->id,
+        'partner_id' => $partner->id,
         'estate_name' => 'Reject Me Estate',
         'contact_name' => 'Someone',
         'email' => 'reject@estate.test',
@@ -120,6 +126,15 @@ it('rejects partner applications with a reason', function () {
         'status' => 'rejected',
         'rejection_reason' => 'Insufficient documentation provided.',
     ]);
+
+    Notification::assertSentTo(
+        $member,
+        EstateRequestRejectedNotification::class,
+        function (EstateRequestRejectedNotification $notification) use ($application) {
+            return $notification->application->id === $application->id
+                && $notification->reason === 'Insufficient documentation provided.';
+        }
+    );
 });
 
 it('requests more information from partners', function () {
