@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Partner;
 use App\Http\Controllers\Controller;
 use App\Models\EstateApplication;
 use App\Services\PaystackService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,9 +20,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $partner = $user->partner;
-        $tab = $request->string('tab')->toString() ?: 'account';
+        $rawTab = $request->string('tab')->toString() ?: 'overview';
+        // Back-compat for older links
+        $tab = $rawTab === 'account' ? 'overview' : $rawTab;
 
         $activity = [];
+        $finance = [
+            'total_earned' => 0,
+            'pending_commissions' => 0,
+            'next_settlement_date' => CarbonImmutable::now()->addMonthNoOverflow()->startOfMonth()->format('F j, Y'),
+        ];
 
         if ($partner) {
             $activity = $partner->estateApplications()
@@ -38,6 +46,17 @@ class ProfileController extends Controller
                 ])
                 ->values()
                 ->all();
+
+            $finance = [
+                'total_earned' => (int) $partner->earnings()->sum('total_amount'),
+                'pending_commissions' => (int) $partner->commissionableRevenues()
+                    ->where('status', 'pending')
+                    ->sum('commission_amount'),
+                'next_settlement_date' => CarbonImmutable::now()
+                    ->addMonthNoOverflow()
+                    ->startOfMonth()
+                    ->format('F j, Y'),
+            ];
         }
 
         $banks = $tab === 'banking'
@@ -58,8 +77,11 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'created_at' => $user->created_at?->toDateString(),
+                'created_at_label' => $user->created_at?->format('F Y'),
             ],
             'partner' => $partner ? [
+                'id' => $partner->id,
+                'partner_code' => 'PRT-'.str_pad((string) $partner->id, 6, '0', STR_PAD_LEFT),
                 'name' => $partner->name,
                 'status' => $partner->status,
                 'description' => $partner->description,
@@ -71,6 +93,7 @@ class ProfileController extends Controller
                     : null,
                 'commission_length' => $partner->commission_length,
                 'created_at' => $partner->created_at?->toDateString(),
+                'created_at_label' => $partner->created_at?->format('F Y'),
                 'banking' => [
                     'bank_name' => $partner->bank_name,
                     'bank_code' => $partner->bank_code,
@@ -81,13 +104,15 @@ class ProfileController extends Controller
                     'is_verified' => $partner->hasVerifiedBankAccount(),
                 ],
             ] : null,
+            'finance' => $finance,
             'banks' => $banks,
             'activity' => $activity,
             'preferences' => [
-                // Used by the Notifications tab for static preference display.
                 'email_product' => true,
                 'email_settlements' => true,
                 'email_pipeline' => true,
+                'email_security' => true,
+                'browser_push' => false,
             ],
         ]);
     }

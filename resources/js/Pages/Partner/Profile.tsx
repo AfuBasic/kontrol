@@ -1,25 +1,21 @@
 import {
+    ArrowRightIcon,
     BanknotesIcon,
-    BellIcon,
-    BuildingOfficeIcon,
     CheckCircleIcon,
     ClockIcon,
-    EnvelopeIcon,
     ExclamationCircleIcon,
-    IdentificationIcon,
+    GlobeAltIcon,
     KeyIcon,
     ShieldCheckIcon,
-    UserIcon,
+    UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useEffect, useState } from 'react';
-import PageHeader from '@/Components/Partner/PageHeader';
-import Surface from '@/Components/Partner/Surface';
 import PartnerLayout from '@/Layouts/PartnerLayout';
-import { formatCommission, formatCommissionLength } from '@/Utils/money';
+import { formatAmount, formatCommission, formatCommissionLength } from '@/Utils/money';
 
 interface Bank {
     name: string;
@@ -43,8 +39,11 @@ interface Props {
         name: string;
         email: string;
         created_at: string | null;
+        created_at_label?: string | null;
     };
     partner: {
+        id: number;
+        partner_code: string;
         name: string;
         status: string;
         description: string | null;
@@ -54,8 +53,14 @@ interface Props {
         commission_rate: string | null;
         commission_length: number | null;
         created_at: string | null;
+        created_at_label?: string | null;
         banking: Banking;
     } | null;
+    finance?: {
+        total_earned: number;
+        pending_commissions: number;
+        next_settlement_date: string;
+    };
     banks: Bank[];
     activity: Array<{
         id: number;
@@ -69,56 +74,82 @@ interface Props {
         email_product: boolean;
         email_settlements: boolean;
         email_pipeline: boolean;
+        email_security?: boolean;
+        browser_push?: boolean;
     };
 }
 
 const TABS = [
-    { key: 'account', label: 'Account', icon: UserIcon },
-    { key: 'business', label: 'Business', icon: BuildingOfficeIcon },
-    { key: 'banking', label: 'Banking', icon: BanknotesIcon },
-    { key: 'commission', label: 'Commission', icon: IdentificationIcon },
-    { key: 'security', label: 'Security', icon: ShieldCheckIcon },
-    { key: 'notifications', label: 'Notifications', icon: BellIcon },
-    { key: 'activity', label: 'Activity', icon: ClockIcon },
+    { key: 'overview', label: 'Overview' },
+    { key: 'business', label: 'Business' },
+    { key: 'banking', label: 'Banking' },
+    { key: 'commission', label: 'Commission' },
+    { key: 'security', label: 'Security' },
+    { key: 'notifications', label: 'Notifications' },
+    { key: 'activity', label: 'Activity' },
 ] as const;
 
-function StatusBadge({ status }: { status: string }) {
-    const styles =
-        status === 'active'
-            ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/15 dark:bg-emerald-500/10 dark:text-emerald-300'
-            : 'bg-amber-50 text-amber-700 ring-amber-600/15 dark:bg-amber-500/10 dark:text-amber-300';
+type TabKey = (typeof TABS)[number]['key'];
 
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ring-1 ring-inset ${styles}`}>
-            {status}
-        </span>
-    );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <div>
-            <dt className="text-[10px] font-semibold tracking-wide text-stone-400 uppercase">{label}</dt>
-            <dd className="mt-0.5 text-[13px] font-medium text-stone-900 dark:text-white">{children}</dd>
+        <div className="flex items-start justify-between gap-4 border-b border-stone-100 py-3 last:border-0 dark:border-white/[0.05]">
+            <dt className="shrink-0 text-[12px] text-stone-400">{label}</dt>
+            <dd className="text-right text-[13px] font-medium text-stone-900 dark:text-white">{value ?? '—'}</dd>
         </div>
     );
 }
 
-function PrefToggle({ label, description, checked }: { label: string; description: string; checked: boolean }) {
+function SectionCard({
+    title,
+    action,
+    children,
+    className = '',
+}: {
+    title: string;
+    action?: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+}) {
     return (
-        <div className="flex items-start justify-between gap-4 rounded-lg border border-stone-200/80 px-3 py-2.5 dark:border-slate-700">
-            <div>
+        <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.035] dark:ring-white/[0.06] sm:p-6 ${className}`}
+        >
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">{title}</h2>
+                {action}
+            </div>
+            {children}
+        </motion.section>
+    );
+}
+
+function PrefSwitch({
+    label,
+    description,
+    checked,
+}: {
+    label: string;
+    description: string;
+    checked: boolean;
+}) {
+    return (
+        <div className="flex items-center justify-between gap-4 rounded-2xl bg-stone-50/80 px-4 py-3.5 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
+            <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{label}</p>
-                <p className="text-[11px] text-stone-500">{description}</p>
+                <p className="mt-0.5 text-[12px] text-stone-500">{description}</p>
             </div>
             <span
-                className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition ${checked ? 'bg-primary-600' : 'bg-stone-300 dark:bg-slate-600'}`}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-primary-600' : 'bg-stone-300 dark:bg-slate-600'}`}
                 role="switch"
                 aria-checked={checked}
                 aria-label={label}
             >
                 <span
-                    className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${checked ? 'left-4' : 'left-0.5'}`}
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${checked ? 'left-[1.35rem]' : 'left-0.5'}`}
                 />
             </span>
         </div>
@@ -202,62 +233,68 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
 
     if (!editing && banking.is_verified) {
         return (
-            <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                    <div>
-                        <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Payout bank account</h2>
-                        <p className="mt-0.5 text-[12px] text-stone-500">Verified account for partner commission settlements.</p>
+            <div className="space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <BanknotesIcon className="h-6 w-6" />
+                        </span>
+                        <div>
+                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">
+                                {banking.bank_name || 'Payout account'}
+                            </p>
+                            <p className="mt-0.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-600 dark:text-emerald-400">
+                                <CheckCircleIcon className="h-3.5 w-3.5" />
+                                Verified
+                            </p>
+                        </div>
                     </div>
                     <button
                         type="button"
                         onClick={() => setEditing(true)}
-                        className="rounded-lg border border-stone-200 px-3 py-1.5 text-[12px] font-semibold text-stone-700 hover:bg-stone-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                        className="rounded-xl bg-stone-900 px-3.5 py-2 text-[12px] font-semibold text-white dark:bg-white dark:text-stone-900"
                     >
                         Update
                     </button>
                 </div>
 
-                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                    <div className="mb-3 flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
-                        <CheckCircleIcon className="h-4 w-4" />
-                        <span className="text-[12px] font-semibold">Verified payout account</span>
-                    </div>
-                    <dl className="grid gap-3 sm:grid-cols-2">
-                        <Field label="Bank">{banking.bank_name || '—'}</Field>
-                        <Field label="Account name">{banking.account_name || '—'}</Field>
-                        <Field label="Account number">{banking.account_number_masked || '—'}</Field>
-                        <Field label="Verified">
-                            {banking.account_verified_at
+                <dl>
+                    <InfoRow label="Account name" value={banking.account_name || '—'} />
+                    <InfoRow label="Account number" value={banking.account_number_masked || '—'} />
+                    <InfoRow
+                        label="Verified"
+                        value={
+                            banking.account_verified_at
                                 ? new Date(banking.account_verified_at).toLocaleDateString('en-NG', { dateStyle: 'medium' })
-                                : '—'}
-                        </Field>
-                    </dl>
-                </div>
+                                : '—'
+                        }
+                    />
+                </dl>
             </div>
         );
     }
 
     return (
-        <div className="space-y-4">
-            <div>
-                <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">
-                    {banking.is_verified ? 'Update payout account' : 'Add payout bank account'}
-                </h2>
-                <p className="mt-0.5 text-[12px] text-stone-500">
-                    We verify the account with Paystack. The name must match your partner or contact name (order and middle names are fine).
-                </p>
-            </div>
+        <div className="space-y-5">
+            {!banking.is_verified && (
+                <div className="rounded-2xl bg-linear-to-br from-primary-50 to-sky-50 px-4 py-5 ring-1 ring-primary-500/10 dark:from-primary-500/10 dark:to-sky-500/5 dark:ring-primary-400/15">
+                    <p className="text-[14px] font-semibold text-stone-900 dark:text-white">Add payout bank</p>
+                    <p className="mt-1 text-[12px] text-stone-600 dark:text-slate-300">
+                        Verified with Paystack. Account name must match your business or contact person.
+                    </p>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {(errors as { message?: string }).message && (
-                    <div className="flex gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[12px] font-medium text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                    <div className="flex gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-[12px] font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
                         <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
                         {(errors as { message?: string }).message}
                     </div>
                 )}
 
                 <div>
-                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-stone-500 uppercase">Bank</label>
+                    <label className="mb-1.5 block text-[12px] font-medium text-stone-600 dark:text-slate-300">Bank</label>
                     <Combobox
                         value={banks.find((b) => b.code === data.bank_code) || null}
                         onChange={(bank: Bank | null) => {
@@ -274,7 +311,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                     >
                         <div className="relative">
                             <ComboboxInput
-                                className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[13px] font-medium text-stone-900 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium text-stone-900 outline-none ring-1 ring-stone-900/[0.06] focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
                                 displayValue={(bank: Bank | null) => bank?.name || ''}
                                 onChange={(event) => setBankQuery(event.target.value)}
                                 placeholder="Search for a bank…"
@@ -282,8 +319,14 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                             <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
                                 <span className="text-[11px] text-stone-400">▼</span>
                             </ComboboxButton>
-                            <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0" afterLeave={() => setBankQuery('')}>
-                                <ComboboxOptions className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-stone-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                            <Transition
+                                as={Fragment}
+                                leave="transition ease-in duration-100"
+                                leaveFrom="opacity-100"
+                                leaveTo="opacity-0"
+                                afterLeave={() => setBankQuery('')}
+                            >
+                                <ComboboxOptions className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-xl bg-white py-1 shadow-xl ring-1 ring-stone-900/10 dark:bg-slate-900 dark:ring-white/10">
                                     {filteredBanks.length === 0 ? (
                                         <div className="px-3 py-2 text-[12px] text-stone-500">No banks found.</div>
                                     ) : (
@@ -305,7 +348,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-stone-500 uppercase">
+                    <label className="mb-1.5 block text-[12px] font-medium text-stone-600 dark:text-slate-300">
                         Account number
                     </label>
                     <div className="flex gap-2">
@@ -316,20 +359,20 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                             value={data.account_number}
                             onChange={(e) => setData('account_number', e.target.value.replace(/\D/g, '').slice(0, 10))}
                             placeholder="10-digit NUBAN"
-                            className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[13px] font-medium tabular-nums outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium tabular-nums outline-none ring-1 ring-stone-900/[0.06] focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
                         />
                         <button
                             type="button"
                             onClick={resolveAccount}
                             disabled={resolving || data.account_number.length !== 10 || !data.bank_code}
-                            className="shrink-0 rounded-xl bg-stone-900 px-4 py-2.5 text-[12px] font-semibold text-white transition hover:bg-stone-800 disabled:opacity-40 dark:bg-white dark:text-stone-900"
+                            className="shrink-0 rounded-xl bg-stone-900 px-4 py-3 text-[12px] font-semibold text-white disabled:opacity-40 dark:bg-white dark:text-stone-900"
                         >
                             {resolving ? 'Checking…' : 'Verify'}
                         </button>
                     </div>
                     {errors.account_number && <p className="mt-1 text-[12px] text-rose-600">{errors.account_number}</p>}
                     {resolveError && (
-                        <p className="mt-1.5 flex items-start gap-1.5 text-[12px] font-medium text-rose-600 dark:text-rose-400">
+                        <p className="mt-1.5 flex items-start gap-1.5 text-[12px] font-medium text-rose-600">
                             <ExclamationCircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                             {resolveError}
                         </p>
@@ -338,23 +381,23 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
 
                 {data.account_name && (
                     <div
-                        className={`rounded-xl border px-3 py-3 ${
+                        className={`rounded-2xl px-4 py-3 ring-1 ${
                             matchAccepted
-                                ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/40 dark:bg-emerald-950/25'
-                                : 'border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/25'
+                                ? 'bg-emerald-50 ring-emerald-500/15 dark:bg-emerald-500/10'
+                                : 'bg-amber-50 ring-amber-500/15 dark:bg-amber-500/10'
                         }`}
                     >
-                        <p className="text-[10px] font-semibold tracking-wide text-stone-500 uppercase">Resolved account name</p>
+                        <p className="text-[10px] font-semibold tracking-wide text-stone-400 uppercase">Resolved name</p>
                         <p className="mt-0.5 text-[14px] font-semibold text-stone-900 dark:text-white">{data.account_name}</p>
                         {matchAccepted ? (
                             <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
                                 <CheckCircleIcon className="h-3.5 w-3.5" />
-                                Name matches your partner identity
+                                Matches partner identity
                                 {matchScore != null && ` (${Math.round(matchScore * 100)}%)`}
                             </p>
                         ) : (
                             <p className="mt-1 text-[11px] font-medium text-amber-800 dark:text-amber-300">
-                                Name does not match closely enough — use an account in your business or contact name.
+                                Name does not match closely enough.
                             </p>
                         )}
                     </div>
@@ -364,7 +407,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                     <button
                         type="submit"
                         disabled={processing || !matchAccepted || !data.account_name}
-                        className="rounded-xl bg-primary-600 px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-500 disabled:opacity-40"
+                        className="rounded-xl bg-primary-600 px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-40"
                     >
                         {processing ? 'Saving…' : 'Save payout account'}
                     </button>
@@ -382,28 +425,39 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                                 setResolveError(null);
                                 setMatchAccepted(true);
                             }}
-                            className="rounded-xl border border-stone-200 px-4 py-2.5 text-[12px] font-semibold text-stone-600 dark:border-slate-700 dark:text-slate-300"
+                            className="rounded-xl px-4 py-2.5 text-[12px] font-semibold text-stone-600 ring-1 ring-stone-200 dark:text-slate-300 dark:ring-white/10"
                         >
                             Cancel
                         </button>
                     )}
-                    {recentlySuccessful && (
-                        <span className="self-center text-[12px] font-medium text-emerald-600">Saved</span>
-                    )}
+                    {recentlySuccessful && <span className="self-center text-[12px] font-medium text-emerald-600">Saved</span>}
                 </div>
             </form>
         </div>
     );
 }
 
-export default function PartnerProfile({ tab, user, partner, banks = [], activity, preferences }: Props) {
-    const active = TABS.some((t) => t.key === tab) ? tab : 'account';
-    const initials = user.name
+export default function PartnerProfile({
+    tab,
+    user,
+    partner,
+    finance = { total_earned: 0, pending_commissions: 0, next_settlement_date: '—' },
+    banks = [],
+    activity,
+    preferences,
+}: Props) {
+    const active: TabKey = TABS.some((t) => t.key === tab) ? (tab as TabKey) : 'overview';
+    const businessName = partner?.name ?? user.name;
+    const initials = businessName
         .split(' ')
         .map((p) => p[0])
         .join('')
         .slice(0, 2)
         .toUpperCase();
+    const isVerified = partner?.status === 'active';
+    const memberSince = partner?.created_at_label ?? user.created_at_label ?? partner?.created_at ?? user.created_at ?? '—';
+    const partnerCode = partner?.partner_code ?? '—';
+    const securityScore = partner?.banking.is_verified ? 92 : 68;
 
     function setTab(key: string) {
         router.get('/partner/profile', { tab: key }, { preserveState: true, preserveScroll: true, replace: true });
@@ -411,33 +465,108 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
 
     return (
         <PartnerLayout>
-            <Head title="Account" />
+            <Head title="Account Center" />
 
-            <div className="space-y-4">
-                <PageHeader title="Account center" description="Manage identity, business details, banking, and security." />
-
-                {/* Identity strip */}
-                <Surface padding="sm">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-sm font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
-                            {initials}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">{user.name}</p>
-                            <p className="text-[12px] text-stone-500">{user.email}</p>
-                        </div>
-                        {partner && <StatusBadge status={partner.status} />}
+            <div className="mx-auto max-w-5xl space-y-6 pb-8">
+                {/* ═══ HERO ═══ */}
+                <motion.section
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative overflow-hidden rounded-[1.75rem] bg-[#061230] text-white shadow-[0_28px_64px_-32px_rgba(10,61,145,0.55)]"
+                >
+                    <div className="pointer-events-none absolute inset-0" aria-hidden>
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(31,111,219,0.42),transparent_58%)]" />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.1),transparent_48%)]" />
+                        <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-sky-200/20 to-transparent" />
                     </div>
-                </Surface>
 
-                <div className="flex flex-col gap-3 lg:flex-row">
-                    {/* Tabs nav */}
-                    <nav
-                        className="flex gap-1 overflow-x-auto lg:w-44 lg:shrink-0 lg:flex-col lg:overflow-visible"
-                        aria-label="Account sections"
-                    >
+                    <div className="relative px-5 py-7 sm:px-8 sm:py-9">
+                        <div className="flex flex-wrap items-start gap-5">
+                            <div className="relative">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-lg font-bold shadow-lg shadow-blue-900/40 ring-2 ring-white/15 sm:h-20 sm:w-20 sm:text-xl">
+                                    {initials}
+                                </div>
+                                {isVerified && (
+                                    <span className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-400 text-emerald-950 ring-2 ring-[#061230]">
+                                        <CheckCircleIcon className="h-4 w-4" />
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.85rem]">{businessName}</h1>
+                                    {isVerified && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-200 ring-1 ring-emerald-400/20">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                                            Verified
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="mt-1 text-[13px] text-white/50">
+                                    Commercial partner
+                                    {memberSince !== '—' && ` · Member since ${memberSince}`}
+                                </p>
+
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                    <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
+                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">
+                                            Commission
+                                        </p>
+                                        <p className="text-[13px] font-semibold">
+                                            {formatCommission(partner?.commission_rate ?? null, partner?.commission_type ?? null)}
+                                            <span className="ml-1 text-[11px] font-medium text-white/45">
+                                                · {formatCommissionLength(partner?.commission_length ?? null)}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
+                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">
+                                            Partner ID
+                                        </p>
+                                        <p className="font-mono text-[13px] font-semibold tracking-wide">{partnerCode}</p>
+                                    </div>
+                                    <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
+                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">Status</p>
+                                        <p className="text-[13px] font-semibold capitalize">{partner?.status ?? '—'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setTab('business')}
+                                className="rounded-xl bg-white px-4 py-2.5 text-[12px] font-semibold text-stone-900 transition hover:bg-white/95"
+                            >
+                                Edit business
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTab('banking')}
+                                className="rounded-xl bg-white/10 px-4 py-2.5 text-[12px] font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
+                            >
+                                {partner?.banking.is_verified ? 'Manage banking' : 'Add bank'}
+                            </button>
+                            <Link
+                                href="/partner/support"
+                                className="rounded-xl px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:text-white"
+                            >
+                                Support
+                            </Link>
+                        </div>
+                    </div>
+                </motion.section>
+
+                {/* ═══ HORIZONTAL TABS ═══ */}
+                <nav
+                    className="sticky top-14 z-20 -mx-1 overflow-x-auto px-1 sm:top-16"
+                    aria-label="Account sections"
+                >
+                    <div className="inline-flex min-w-full gap-0.5 rounded-2xl bg-white/90 p-1 shadow-sm ring-1 ring-stone-900/[0.05] backdrop-blur-xl dark:bg-slate-950/90 dark:ring-white/10 sm:min-w-0">
                         {TABS.map((t) => {
-                            const Icon = t.icon;
                             const isActive = active === t.key;
 
                             return (
@@ -445,218 +574,193 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
                                     key={t.key}
                                     type="button"
                                     onClick={() => setTab(t.key)}
-                                    className={`flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] font-medium transition ${
+                                    className={`relative shrink-0 rounded-xl px-3 py-2 text-[12px] font-semibold transition sm:px-3.5 ${
                                         isActive
-                                            ? 'bg-stone-900 text-white shadow-sm dark:bg-white dark:text-stone-900'
-                                            : 'text-stone-600 hover:bg-stone-200/60 dark:text-slate-400 dark:hover:bg-slate-800'
+                                            ? 'text-stone-900 dark:text-white'
+                                            : 'text-stone-500 hover:text-stone-800 dark:text-slate-400 dark:hover:text-slate-200'
                                     }`}
                                 >
-                                    <Icon className="h-3.5 w-3.5 shrink-0" />
-                                    {t.label}
+                                    {isActive && (
+                                        <motion.span
+                                            layoutId="accountTab"
+                                            className="absolute inset-0 rounded-xl bg-stone-100 dark:bg-white/10"
+                                            transition={{ type: 'spring', stiffness: 400, damping: 34 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10">{t.label}</span>
                                 </button>
                             );
                         })}
-                    </nav>
+                    </div>
+                </nav>
 
+                {/* ═══ TAB CONTENT ═══ */}
+                <AnimatePresence mode="wait">
                     <motion.div
                         key={active}
-                        initial={{ opacity: 0, y: 4 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="min-w-0 flex-1"
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.22 }}
+                        className="space-y-4"
                     >
-                        <Surface padding="md">
-                            {active === 'account' && (
-                                <div className="space-y-4">
-                                    <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Account</h2>
-                                    <dl className="grid gap-3 sm:grid-cols-2">
-                                        <Field label="Full name">{user.name}</Field>
-                                        <Field label="Email">
-                                            <span className="inline-flex items-center gap-1.5">
-                                                <EnvelopeIcon className="h-3.5 w-3.5 text-stone-400" />
-                                                {user.email}
-                                            </span>
-                                        </Field>
-                                        <Field label="Member since">{user.created_at ?? '—'}</Field>
-                                    </dl>
-                                    <p className="text-[12px] text-stone-500">
-                                        To update your name or email, contact support so we can verify the change.
-                                    </p>
-                                    <Link href="/partner/support" className="text-[12px] font-semibold text-primary-600 hover:underline">
-                                        Contact support →
-                                    </Link>
-                                </div>
-                            )}
-
-                            {active === 'business' && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Business</h2>
-                                        {partner && <StatusBadge status={partner.status} />}
+                        {active === 'overview' && (
+                            <div className="grid gap-4 lg:grid-cols-2">
+                                <SectionCard
+                                    title="Identity"
+                                    action={
+                                        <button
+                                            type="button"
+                                            onClick={() => setTab('business')}
+                                            className="text-[12px] font-semibold text-primary-600"
+                                        >
+                                            Edit
+                                        </button>
+                                    }
+                                >
+                                    <div className="mb-3 flex items-center gap-3">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/10 text-sm font-bold text-primary-700 dark:text-primary-300">
+                                            {initials}
+                                        </div>
+                                        <div>
+                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">
+                                                {businessName}
+                                            </p>
+                                            <p className="text-[12px] text-stone-500">{user.email}</p>
+                                        </div>
                                     </div>
-                                    {partner ? (
-                                        <dl className="grid gap-3 sm:grid-cols-2">
-                                            <Field label="Organization">{partner.name}</Field>
-                                            <Field label="Contact person">{partner.contact_person || '—'}</Field>
-                                            <Field label="Website">
-                                                {partner.website ? (
-                                                    <a href={partner.website} className="text-primary-600 hover:underline" target="_blank" rel="noreferrer">
-                                                        {partner.website}
-                                                    </a>
+                                    <dl>
+                                        <InfoRow label="Partner ID" value={<span className="font-mono">{partnerCode}</span>} />
+                                        <InfoRow
+                                            label="Verification"
+                                            value={
+                                                isVerified ? (
+                                                    <span className="text-emerald-600 dark:text-emerald-400">Verified</span>
                                                 ) : (
-                                                    '—'
-                                                )}
-                                            </Field>
-                                            <Field label="Partner since">{partner.created_at ?? '—'}</Field>
-                                            {partner.description && (
-                                                <div className="sm:col-span-2">
-                                                    <Field label="Description">{partner.description}</Field>
-                                                </div>
-                                            )}
+                                                    <span className="capitalize">{partner?.status ?? '—'}</span>
+                                                )
+                                            }
+                                        />
+                                        <InfoRow label="Member since" value={memberSince} />
+                                    </dl>
+                                </SectionCard>
+
+                                <SectionCard
+                                    title="Banking"
+                                    action={
+                                        <button
+                                            type="button"
+                                            onClick={() => setTab('banking')}
+                                            className="text-[12px] font-semibold text-primary-600"
+                                        >
+                                            {partner?.banking.is_verified ? 'Manage' : 'Add'}
+                                        </button>
+                                    }
+                                >
+                                    {partner?.banking.is_verified ? (
+                                        <dl>
+                                            <InfoRow label="Bank" value={partner.banking.bank_name} />
+                                            <InfoRow label="Account" value={partner.banking.account_number_masked} />
+                                            <InfoRow
+                                                label="Status"
+                                                value={<span className="text-emerald-600 dark:text-emerald-400">Verified</span>}
+                                            />
                                         </dl>
                                     ) : (
-                                        <p className="text-[13px] text-stone-500">No partner organization linked.</p>
-                                    )}
-                                </div>
-                            )}
-
-                            {active === 'banking' && (
-                                partner?.banking ? (
-                                    <BankingPanel banking={partner.banking} banks={banks} />
-                                ) : (
-                                    <p className="text-[13px] text-stone-500">No partner organization linked.</p>
-                                )
-                            )}
-
-                            {active === 'commission' && (
-                                <div className="space-y-4">
-                                    <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Commission plan</h2>
-                                    {partner ? (
-                                        <>
-                                            <div className="grid gap-2.5 sm:grid-cols-3">
-                                                <div className="rounded-lg bg-stone-50 p-3 dark:bg-slate-800/50">
-                                                    <p className="text-[10px] font-semibold text-stone-400 uppercase">Rate</p>
-                                                    <p className="mt-1 text-xl font-bold text-stone-900 dark:text-white">
-                                                        {formatCommission(partner.commission_rate, partner.commission_type)}
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-lg bg-stone-50 p-3 dark:bg-slate-800/50">
-                                                    <p className="text-[10px] font-semibold text-stone-400 uppercase">Duration</p>
-                                                    <p className="mt-1 text-xl font-bold text-stone-900 dark:text-white">
-                                                        {formatCommissionLength(partner.commission_length)}
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-lg bg-stone-50 p-3 dark:bg-slate-800/50">
-                                                    <p className="text-[10px] font-semibold text-stone-400 uppercase">Type</p>
-                                                    <p className="mt-1 text-[13px] font-semibold capitalize text-stone-900 dark:text-white">
-                                                        {partner.commission_type ?? '—'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p className="text-[12px] text-stone-500">
-                                                Plan history and amendments are managed by Kontrol. Reach out if you need a review.
+                                        <div className="rounded-xl bg-stone-50 px-4 py-5 text-center dark:bg-white/[0.03]">
+                                            <BanknotesIcon className="mx-auto h-8 w-8 text-stone-300" />
+                                            <p className="mt-2 text-[13px] font-semibold text-stone-800 dark:text-white">
+                                                No payout account
                                             </p>
                                             <button
                                                 type="button"
                                                 onClick={() => setTab('banking')}
-                                                className="text-[12px] font-semibold text-primary-600 hover:underline"
+                                                className="mt-3 text-[12px] font-semibold text-primary-600"
                                             >
-                                                Manage payout bank account →
+                                                Add bank →
                                             </button>
-                                        </>
-                                    ) : (
-                                        <p className="text-[13px] text-stone-500">Commission plan unavailable.</p>
+                                        </div>
                                     )}
-                                </div>
-                            )}
+                                </SectionCard>
 
-                            {active === 'security' && (
-                                <div className="space-y-4">
-                                    <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Security</h2>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between rounded-lg border border-stone-200/80 px-3 py-2.5 dark:border-slate-700">
-                                            <div className="flex items-center gap-2.5">
-                                                <KeyIcon className="h-4 w-4 text-stone-400" />
-                                                <div>
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">Password</p>
-                                                    <p className="text-[11px] text-stone-500">Use a unique password for this account</p>
-                                                </div>
-                                            </div>
-                                            <Link
-                                                href="/forgot-password"
-                                                className="text-[12px] font-semibold text-primary-600 hover:underline"
-                                            >
-                                                Reset
-                                            </Link>
-                                        </div>
-                                        <div className="flex items-center justify-between rounded-lg border border-stone-200/80 px-3 py-2.5 dark:border-slate-700">
-                                            <div className="flex items-center gap-2.5">
-                                                <ShieldCheckIcon className="h-4 w-4 text-stone-400" />
-                                                <div>
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                        Two-factor authentication
-                                                    </p>
-                                                    <p className="text-[11px] text-stone-500">Coming soon — extra protection for your account</p>
-                                                </div>
-                                            </div>
-                                            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-500 dark:bg-slate-800">
-                                                Soon
-                                            </span>
-                                        </div>
-                                        <div className="rounded-lg border border-stone-200/80 px-3 py-2.5 dark:border-slate-700">
-                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">Active sessions</p>
-                                            <p className="mt-0.5 text-[11px] text-stone-500">
-                                                Session management will list devices signed into this portal. Contact support to revoke access.
+                                <SectionCard
+                                    title="Commission"
+                                    action={
+                                        <Link href="/partner/earnings" className="text-[12px] font-semibold text-primary-600">
+                                            Earnings
+                                        </Link>
+                                    }
+                                >
+                                    <p className="text-3xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                        {formatCommission(partner?.commission_rate ?? null, partner?.commission_type ?? null)}
+                                    </p>
+                                    <p className="mt-1 text-[12px] text-stone-500">
+                                        {formatCommissionLength(partner?.commission_length ?? null)} · Monthly settlement
+                                    </p>
+                                    <dl className="mt-4">
+                                        <InfoRow label="Settled" value={formatAmount(finance.total_earned)} />
+                                        <InfoRow label="Pending" value={formatAmount(finance.pending_commissions)} />
+                                        <InfoRow label="Next settlement" value={finance.next_settlement_date} />
+                                    </dl>
+                                </SectionCard>
+
+                                <SectionCard title="Security">
+                                    <div className="mb-3 flex items-end justify-between">
+                                        <div>
+                                            <p className="text-[11px] text-stone-400">Security score</p>
+                                            <p className="text-2xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                {securityScore}
+                                                <span className="text-sm font-medium text-stone-400">%</span>
                                             </p>
                                         </div>
+                                        <span
+                                            className={`text-[12px] font-semibold ${
+                                                securityScore >= 85
+                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                    : 'text-amber-600 dark:text-amber-400'
+                                            }`}
+                                        >
+                                            {securityScore >= 85 ? 'Healthy' : 'Improve'}
+                                        </span>
                                     </div>
-                                </div>
-                            )}
+                                    <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
+                                        <motion.div
+                                            className="h-full rounded-full bg-linear-to-r from-primary-500 to-emerald-400"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${securityScore}%` }}
+                                            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setTab('security')}
+                                        className="mt-4 text-[12px] font-semibold text-primary-600"
+                                    >
+                                        Review security →
+                                    </button>
+                                </SectionCard>
 
-                            {active === 'notifications' && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">
-                                            Notification preferences
-                                        </h2>
-                                        <Link href="/partner/notifications" className="text-[12px] font-semibold text-primary-600 hover:underline">
-                                            Inbox →
-                                        </Link>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <PrefToggle
-                                            label="Product updates"
-                                            description="New features and announcements from Kontrol"
-                                            checked={preferences.email_product}
-                                        />
-                                        <PrefToggle
-                                            label="Settlements"
-                                            description="When commissions settle and statements are ready"
-                                            checked={preferences.email_settlements}
-                                        />
-                                        <PrefToggle
-                                            label="My Estates"
-                                            description="Estate approvals, info requests, and rejections"
-                                            checked={preferences.email_pipeline}
-                                        />
-                                    </div>
-                                    <p className="text-[11px] text-stone-400">
-                                        Preference saves will ship with the notification settings backend. In-app alerts are already live.
-                                    </p>
-                                </div>
-                            )}
-
-                            {active === 'activity' && (
-                                <div className="space-y-3">
-                                    <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Recent activity</h2>
+                                <SectionCard
+                                    title="Activity"
+                                    className="lg:col-span-2"
+                                    action={
+                                        <button
+                                            type="button"
+                                            onClick={() => setTab('activity')}
+                                            className="text-[12px] font-semibold text-primary-600"
+                                        >
+                                            View all
+                                        </button>
+                                    }
+                                >
                                     {activity.length === 0 ? (
-                                        <p className="py-8 text-center text-[12px] text-stone-500">No estate activity yet.</p>
+                                        <p className="text-[13px] text-stone-500">No estate activity yet.</p>
                                     ) : (
-                                        <ul className="divide-y divide-stone-100 dark:divide-slate-800">
-                                            {activity.map((item) => (
-                                                <li key={item.id} className="flex items-start justify-between gap-3 py-2.5">
-                                                    <div>
-                                                        <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                        <ul className="divide-y divide-stone-100 dark:divide-white/[0.05]">
+                                            {activity.slice(0, 4).map((item) => (
+                                                <li key={item.id} className="flex items-center justify-between gap-3 py-2.5">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">
                                                             {item.title}
                                                         </p>
                                                         <p className="text-[11px] text-stone-500">{item.status_label}</p>
@@ -666,12 +770,272 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
                                             ))}
                                         </ul>
                                     )}
-                                </div>
-                            )}
+                                </SectionCard>
+                            </div>
+                        )}
 
-                        </Surface>
+                        {active === 'business' && (
+                            <SectionCard title="Business profile">
+                                {partner ? (
+                                    <dl>
+                                        <InfoRow label="Organization" value={partner.name} />
+                                        <InfoRow label="Contact person" value={partner.contact_person || '—'} />
+                                        <InfoRow
+                                            label="Website"
+                                            value={
+                                                partner.website ? (
+                                                    <a
+                                                        href={partner.website}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="inline-flex items-center gap-1 text-primary-600"
+                                                    >
+                                                        <GlobeAltIcon className="h-3.5 w-3.5" />
+                                                        {partner.website}
+                                                    </a>
+                                                ) : (
+                                                    '—'
+                                                )
+                                            }
+                                        />
+                                        <InfoRow label="Status" value={<span className="capitalize">{partner.status}</span>} />
+                                        <InfoRow label="Partner since" value={memberSince} />
+                                        {partner.description && (
+                                            <div className="pt-3">
+                                                <p className="text-[12px] text-stone-400">Description</p>
+                                                <p className="mt-1 text-[13px] leading-relaxed text-stone-700 dark:text-slate-300">
+                                                    {partner.description}
+                                                </p>
+                                            </div>
+                                        )}
+                                        <p className="pt-4 text-[12px] text-stone-500">
+                                            To update registered business details,{' '}
+                                            <Link href="/partner/support" className="font-semibold text-primary-600">
+                                                contact support
+                                            </Link>
+                                            .
+                                        </p>
+                                    </dl>
+                                ) : (
+                                    <p className="text-[13px] text-stone-500">No partner organization linked.</p>
+                                )}
+                            </SectionCard>
+                        )}
+
+                        {active === 'banking' && (
+                            <SectionCard title="Payout banking">
+                                {partner?.banking ? (
+                                    <BankingPanel banking={partner.banking} banks={banks} />
+                                ) : (
+                                    <p className="text-[13px] text-stone-500">No partner organization linked.</p>
+                                )}
+                            </SectionCard>
+                        )}
+
+                        {active === 'commission' && (
+                            <div className="grid gap-4 lg:grid-cols-5">
+                                <SectionCard title="Plan" className="lg:col-span-2">
+                                    {partner ? (
+                                        <>
+                                            <p className="text-[11px] font-semibold tracking-wide text-stone-400 uppercase">
+                                                Growth
+                                            </p>
+                                            <p className="mt-1 text-4xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                {formatCommission(partner.commission_rate, partner.commission_type)}
+                                            </p>
+                                            <p className="mt-2 text-[13px] text-stone-500">
+                                                {formatCommissionLength(partner.commission_length)}
+                                            </p>
+                                            <p className="mt-1 text-[12px] capitalize text-stone-400">
+                                                {partner.commission_type ?? 'percentage'} plan
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="text-[13px] text-stone-500">Unavailable</p>
+                                    )}
+                                </SectionCard>
+                                <SectionCard title="Settlements" className="lg:col-span-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
+                                            <p className="text-[10px] text-stone-400">Total settled</p>
+                                            <p className="mt-1 text-xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                {formatAmount(finance.total_earned)}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
+                                            <p className="text-[10px] text-stone-400">Pending</p>
+                                            <p className="mt-1 text-xl font-semibold tabular-nums text-primary-700 dark:text-primary-300">
+                                                {formatAmount(finance.pending_commissions)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <dl className="mt-2">
+                                        <InfoRow label="Schedule" value="Monthly" />
+                                        <InfoRow label="Next settlement" value={finance.next_settlement_date} />
+                                    </dl>
+                                    <Link
+                                        href="/partner/earnings"
+                                        className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-primary-600"
+                                    >
+                                        Open earnings
+                                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                                    </Link>
+                                </SectionCard>
+                            </div>
+                        )}
+
+                        {active === 'security' && (
+                            <div className="grid gap-4 lg:grid-cols-2">
+                                <SectionCard title="Authentication">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
+                                            <div className="flex items-center gap-3">
+                                                <KeyIcon className="h-5 w-5 text-stone-400" />
+                                                <div>
+                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                                        Password
+                                                    </p>
+                                                    <p className="text-[11px] text-stone-500">Sign-in credential</p>
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href="/forgot-password"
+                                                className="text-[12px] font-semibold text-primary-600"
+                                            >
+                                                Reset
+                                            </Link>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
+                                            <div className="flex items-center gap-3">
+                                                <ShieldCheckIcon className="h-5 w-5 text-stone-400" />
+                                                <div>
+                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                                        Two-factor auth
+                                                    </p>
+                                                    <p className="text-[11px] text-stone-500">Extra sign-in protection</p>
+                                                </div>
+                                            </div>
+                                            <span className="rounded-full bg-stone-200/80 px-2 py-0.5 text-[10px] font-semibold text-stone-500 dark:bg-white/10">
+                                                Soon
+                                            </span>
+                                        </div>
+                                    </div>
+                                </SectionCard>
+
+                                <SectionCard title="Security score">
+                                    <p className="text-4xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                        {securityScore}
+                                        <span className="text-lg text-stone-400">%</span>
+                                    </p>
+                                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
+                                        <motion.div
+                                            className="h-full rounded-full bg-linear-to-r from-primary-500 to-emerald-400"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${securityScore}%` }}
+                                            transition={{ duration: 0.8 }}
+                                        />
+                                    </div>
+                                    <p className="mt-2 text-[12px] text-stone-500">
+                                        {partner?.banking.is_verified
+                                            ? 'Bank verified · Password protected'
+                                            : 'Add a verified bank account to improve your score'}
+                                    </p>
+                                </SectionCard>
+
+                                <SectionCard title="Sessions" className="lg:col-span-2">
+                                    <div className="flex items-start gap-3 rounded-xl bg-stone-50 px-4 py-3.5 dark:bg-white/[0.04]">
+                                        <UserCircleIcon className="mt-0.5 h-5 w-5 text-stone-400" />
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                                This device
+                                            </p>
+                                            <p className="mt-0.5 text-[12px] text-stone-500">
+                                                Active session · Device management coming soon
+                                            </p>
+                                        </div>
+                                    </div>
+                                </SectionCard>
+                            </div>
+                        )}
+
+                        {active === 'notifications' && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-[15px] font-semibold text-stone-900 dark:text-white">Preferences</h2>
+                                    <Link
+                                        href="/partner/notifications"
+                                        className="text-[12px] font-semibold text-primary-600"
+                                    >
+                                        Open inbox →
+                                    </Link>
+                                </div>
+                                <PrefSwitch
+                                    label="Product updates"
+                                    description="Features and announcements"
+                                    checked={preferences.email_product}
+                                />
+                                <PrefSwitch
+                                    label="Settlement alerts"
+                                    description="When commissions settle"
+                                    checked={preferences.email_settlements}
+                                />
+                                <PrefSwitch
+                                    label="Estate updates"
+                                    description="Approvals, rejections, and reviews"
+                                    checked={preferences.email_pipeline}
+                                />
+                                <PrefSwitch
+                                    label="Security alerts"
+                                    description="Sign-in and account changes"
+                                    checked={preferences.email_security ?? true}
+                                />
+                                <PrefSwitch
+                                    label="Browser notifications"
+                                    description="In-browser push when available"
+                                    checked={preferences.browser_push ?? false}
+                                />
+                            </div>
+                        )}
+
+                        {active === 'activity' && (
+                            <SectionCard title="Recent activity">
+                                {activity.length === 0 ? (
+                                    <div className="flex items-center gap-3 py-4">
+                                        <ClockIcon className="h-8 w-8 text-stone-300" />
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-stone-800 dark:text-white">
+                                                No activity yet
+                                            </p>
+                                            <p className="text-[12px] text-stone-500">Estate events will appear here.</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <ol className="relative ml-2 space-y-0 border-l border-stone-200 pl-5 dark:border-slate-700">
+                                        {activity.map((item, i) => (
+                                            <motion.li
+                                                key={item.id}
+                                                initial={{ opacity: 0, x: -6 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.03 * i }}
+                                                className="relative pb-5 last:pb-0"
+                                            >
+                                                <span className="absolute top-1.5 -left-[1.4rem] h-2.5 w-2.5 rounded-full bg-primary-500 ring-4 ring-white dark:ring-slate-950" />
+                                                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                                    {item.title}
+                                                </p>
+                                                <p className="mt-0.5 text-[12px] text-stone-500">
+                                                    {item.status_label}
+                                                    <span className="text-stone-300"> · </span>
+                                                    {item.at_human}
+                                                </p>
+                                            </motion.li>
+                                        ))}
+                                    </ol>
+                                )}
+                            </SectionCard>
+                        )}
                     </motion.div>
-                </div>
+                </AnimatePresence>
             </div>
         </PartnerLayout>
     );

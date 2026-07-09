@@ -37,7 +37,7 @@ it('allows partner members to view their profile', function () {
             ->has('user.email')
             ->has('activity')
             ->has('preferences')
-            ->where('tab', 'account')
+            ->where('tab', 'overview')
         );
 
     $this->actingAs($affiliate)
