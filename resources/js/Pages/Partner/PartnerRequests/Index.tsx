@@ -224,12 +224,7 @@ function StageJourney({ status }: { status: string }) {
 
                 return (
                     <div key={step.key} className="flex items-center gap-1.5">
-                        {i > 0 && (
-                            <span
-                                className={`h-px w-5 sm:w-7 ${done ? 'bg-emerald-400' : 'bg-stone-200 dark:bg-slate-700'}`}
-                                aria-hidden
-                            />
-                        )}
+                        {i > 0 && <span className={`h-px w-5 sm:w-7 ${done ? 'bg-emerald-400' : 'bg-stone-200 dark:bg-slate-700'}`} aria-hidden />}
                         <span className="flex items-center gap-1">
                             <span
                                 className={`h-2 w-2 rounded-full ${
@@ -242,11 +237,7 @@ function StageJourney({ status }: { status: string }) {
                             />
                             <span
                                 className={`text-[10px] font-medium ${
-                                    active
-                                        ? 'text-stone-800 dark:text-white'
-                                        : done
-                                          ? 'text-stone-500'
-                                          : 'text-stone-300 dark:text-slate-600'
+                                    active ? 'text-stone-800 dark:text-white' : done ? 'text-stone-500' : 'text-stone-300 dark:text-slate-600'
                                 }`}
                             >
                                 {step.label}
@@ -263,15 +254,7 @@ function matchesQuery(r: PartnerRequest, q: string): boolean {
     if (!q) {
         return true;
     }
-    const hay = [
-        r.estate_name,
-        r.chairman_name,
-        r.chairman_email,
-        r.chairman_phone ?? '',
-        r.state ?? '',
-        r.lga ?? '',
-        r.estate_address ?? '',
-    ]
+    const hay = [r.estate_name, r.chairman_name, r.chairman_email, r.chairman_phone ?? '', r.state ?? '', r.lga ?? '', r.estate_address ?? '']
         .join(' ')
         .toLowerCase();
 
@@ -361,7 +344,7 @@ function EstateCommandSearch({
                 aria-expanded={open && suggestions.length > 0}
                 aria-controls="estate-search-results"
                 autoComplete="off"
-                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-10 text-[13.5px] text-stone-900 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] transition placeholder:text-stone-400 focus:ring-2 focus:ring-primary-200 dark:bg-white/[0.04] dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
+                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-10 text-[13.5px] text-stone-900 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] transition outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-primary-200 dark:bg-white/[0.04] dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
             />
 
             <AnimatePresence>
@@ -395,9 +378,7 @@ function EstateCommandSearch({
                                             }`}
                                         >
                                             <div className="min-w-0">
-                                                <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                    {r.estate_name}
-                                                </p>
+                                                <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">{r.estate_name}</p>
                                                 <p className="mt-0.5 truncate text-[11px] text-stone-500">
                                                     {locationOf(r) || '—'} · {r.chairman_name}
                                                 </p>
@@ -473,17 +454,13 @@ function EstateOpportunity({
                 {!dense && (
                     <div>
                         <p className="text-[10px] text-stone-400">Houses</p>
-                        <p className="text-[12px] font-medium tabular-nums text-stone-700 dark:text-slate-200">
-                            {est.houses || '—'}
-                        </p>
+                        <p className="text-[12px] font-medium text-stone-700 tabular-nums dark:text-slate-200">{est.houses || '—'}</p>
                     </div>
                 )}
             </div>
 
             {request.status === 'rejected' && request.rejection_reason && (
-                <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-rose-600 dark:text-rose-400">
-                    {request.rejection_reason}
-                </p>
+                <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-rose-600 dark:text-rose-400">{request.rejection_reason}</p>
             )}
 
             <div className="mt-3 flex items-center justify-between gap-2 border-t border-stone-100 pt-2.5 dark:border-white/[0.05]">
@@ -589,7 +566,10 @@ function DetailDrawer({
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <p className="text-[11px] font-medium text-stone-400">Estate opportunity</p>
-                            <h2 id="estate-drawer-title" className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
+                            <h2
+                                id="estate-drawer-title"
+                                className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white"
+                            >
                                 {request.estate_name}
                             </h2>
                             <div className="mt-2.5 flex flex-wrap items-center gap-2">
@@ -642,9 +622,7 @@ function DetailDrawer({
                                 <>
                                     {request.status === 'rejected' && (
                                         <div className="rounded-2xl bg-rose-50 p-4 dark:bg-rose-500/10">
-                                            <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">
-                                                Rejection reason
-                                            </p>
+                                            <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">Rejection reason</p>
                                             <p className="mt-1.5 text-[13px] leading-relaxed text-rose-950 dark:text-rose-100">
                                                 {request.rejection_reason || 'No reason was provided.'}
                                             </p>
@@ -653,13 +631,13 @@ function DetailDrawer({
                                     <div className="grid grid-cols-2 gap-2.5">
                                         <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
                                             <p className="text-[10px] text-stone-400">Houses</p>
-                                            <p className="mt-1 text-[16px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <p className="mt-1 text-[16px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {est.houses || '—'}
                                             </p>
                                         </div>
                                         <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
                                             <p className="text-[10px] text-stone-400">Est. commission</p>
-                                            <p className="mt-1 text-[16px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <p className="mt-1 text-[16px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {est.commissionKobo != null ? formatAmount(est.commissionKobo) : '—'}
                                             </p>
                                         </div>
@@ -673,9 +651,7 @@ function DetailDrawer({
                                     </div>
                                     {request.estate && (
                                         <div className="rounded-2xl bg-emerald-50 p-3.5 dark:bg-emerald-500/10">
-                                            <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                                                Live estate
-                                            </p>
+                                            <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">Live estate</p>
                                             <p className="mt-1 text-[14px] font-semibold text-emerald-950 dark:text-emerald-100">
                                                 {request.estate.name}
                                             </p>
@@ -709,14 +685,10 @@ function DetailDrawer({
                                                     <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary-500/10 text-primary-600">
                                                         <CheckCircleIcon className="h-3.5 w-3.5" />
                                                     </span>
-                                                    {i < timeline.length - 1 && (
-                                                        <span className="mt-1 w-px flex-1 bg-stone-200 dark:bg-slate-700" />
-                                                    )}
+                                                    {i < timeline.length - 1 && <span className="mt-1 w-px flex-1 bg-stone-200 dark:bg-slate-700" />}
                                                 </div>
                                                 <div className="min-w-0 flex-1 rounded-xl bg-white p-3 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                        {event.description}
-                                                    </p>
+                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{event.description}</p>
                                                     <p className="mt-1 text-[11px] text-stone-500">
                                                         {event.creator_name || 'System'} · {formatDate(event.created_at, 'full')}
                                                     </p>
@@ -734,9 +706,7 @@ function DetailDrawer({
                                             <UserCircleIcon className="h-5 w-5 text-stone-500" />
                                         </div>
                                         <div>
-                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">
-                                                {request.chairman_name}
-                                            </p>
+                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">{request.chairman_name}</p>
                                             <p className="text-[13px] text-stone-500">{request.chairman_email}</p>
                                             <p className="text-[13px] text-stone-500">{request.chairman_phone || 'No phone'}</p>
                                         </div>
@@ -749,9 +719,7 @@ function DetailDrawer({
                                     {request.notes ? (
                                         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
                                             <p className="text-[10px] text-stone-400">Your notes</p>
-                                            <p className="mt-2 text-[13px] leading-relaxed text-stone-700 dark:text-slate-300">
-                                                {request.notes}
-                                            </p>
+                                            <p className="mt-2 text-[13px] leading-relaxed text-stone-700 dark:text-slate-300">{request.notes}</p>
                                         </div>
                                     ) : (
                                         <p className="py-6 text-center text-[13px] text-stone-500">No notes.</p>
@@ -776,9 +744,7 @@ function DetailDrawer({
                                         <div className="space-y-3 text-[13px]">
                                             {request.rejection_reason && (
                                                 <div className="rounded-2xl bg-rose-50 p-4 dark:bg-rose-500/10">
-                                                    <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">
-                                                        Rejection reason
-                                                    </p>
+                                                    <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">Rejection reason</p>
                                                     <p className="mt-1.5 leading-relaxed text-rose-950 dark:text-rose-100">
                                                         {request.rejection_reason}
                                                     </p>
@@ -846,13 +812,7 @@ function DetailDrawer({
 }
 
 /* ─── Connected estate drawer ─── */
-function ConnectedEstateDrawer({
-    estate,
-    onClose,
-}: {
-    estate: PartnerEstate;
-    onClose: () => void;
-}) {
+function ConnectedEstateDrawer({ estate, onClose }: { estate: PartnerEstate; onClose: () => void }) {
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if (e.key === 'Escape') {
@@ -937,14 +897,9 @@ function ConnectedEstateDrawer({
                 <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
                     <div className="grid grid-cols-2 gap-2.5">
                         {stats.map((stat) => (
-                            <div
-                                key={stat.label}
-                                className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]"
-                            >
+                            <div key={stat.label} className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
                                 <p className="text-[10px] text-stone-400">{stat.label}</p>
-                                <p className="mt-1 text-[20px] font-semibold tabular-nums text-stone-900 dark:text-white">
-                                    {stat.value}
-                                </p>
+                                <p className="mt-1 text-[20px] font-semibold text-stone-900 tabular-nums dark:text-white">{stat.value}</p>
                             </div>
                         ))}
                     </div>
@@ -954,13 +909,13 @@ function ConnectedEstateDrawer({
                         <div className="mt-3 grid grid-cols-2 gap-3">
                             <div>
                                 <p className="text-[10px] text-stone-400">Earned</p>
-                                <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                <p className="mt-0.5 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                     {formatAmount(estate.commission.earned_kobo)}
                                 </p>
                             </div>
                             <div>
                                 <p className="text-[10px] text-stone-400">Pending</p>
-                                <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                <p className="mt-0.5 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                     {formatAmount(estate.commission.pending_kobo)}
                                 </p>
                             </div>
@@ -982,9 +937,7 @@ function ConnectedEstateDrawer({
                                 <div>
                                     <dt className="text-[10px] text-stone-400">Activated</dt>
                                     <dd className="mt-0.5 text-stone-800 dark:text-slate-200">
-                                        {estate.activation_date
-                                            ? formatDate(estate.activation_date)
-                                            : formatDate(estate.created_at)}
+                                        {estate.activation_date ? formatDate(estate.activation_date) : formatDate(estate.created_at)}
                                     </dd>
                                 </div>
                                 <div>
@@ -1003,8 +956,8 @@ function ConnectedEstateDrawer({
 
                     <div className="rounded-2xl bg-sky-50 p-4 dark:bg-sky-500/10">
                         <p className="text-[12px] leading-relaxed text-sky-950 dark:text-sky-100">
-                            Use these numbers to follow up with estate leadership — more active residents usually means
-                            stronger commission performance for your partnership.
+                            Use these numbers to follow up with estate leadership, more active residents usually means stronger commission performance
+                            for your partnership.
                         </p>
                     </div>
                 </div>
@@ -1024,26 +977,15 @@ function ConnectedEstateDrawer({
 }
 
 /* ─── Page ─── */
-export default function PartnerRequestsIndex({
-    partnerRequests,
-    estates = [],
-    activeTab = 'requests',
-    columns,
-    commission,
-    filters,
-}: Props) {
+export default function PartnerRequestsIndex({ partnerRequests, estates = [], activeTab = 'estates', columns, commission, filters }: Props) {
     const page = usePage();
-    const sharedCommission = (
-        page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } }
-    ).partnerContext;
+    const sharedCommission = (page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } }).partnerContext;
     const commissionInfo = commission ?? {
         rate: sharedCommission?.commission_rate ?? null,
         type: sharedCommission?.commission_type ?? null,
     };
 
-    const [tab, setTab] = useState<PageTab>(
-        activeTab === 'estates' || filters?.tab === 'estates' ? 'estates' : 'requests',
-    );
+    const [tab, setTab] = useState<PageTab>(activeTab === 'requests' || filters?.tab === 'requests' ? 'requests' : 'estates');
     const [view, setView] = useState<ViewMode>(() => {
         if (typeof window === 'undefined') {
             return 'pipeline';
@@ -1061,7 +1003,7 @@ export default function PartnerRequestsIndex({
     }, [view]);
 
     useEffect(() => {
-        setTab(activeTab === 'estates' ? 'estates' : 'requests');
+        setTab(activeTab === 'requests' ? 'requests' : 'estates');
     }, [activeTab]);
 
     const filteredEstates = useMemo(() => {
@@ -1071,10 +1013,7 @@ export default function PartnerRequestsIndex({
         }
 
         return estates.filter((estate) => {
-            const haystack = [estate.name, estate.address, estate.email, estate.status_label]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase();
+            const haystack = [estate.name, estate.address, estate.email, estate.status_label].filter(Boolean).join(' ').toLowerCase();
 
             return haystack.includes(q);
         });
@@ -1088,7 +1027,7 @@ export default function PartnerRequestsIndex({
         setStatusFilter('');
         router.get(
             '/partner/partner-requests',
-            { tab: next === 'requests' ? undefined : next },
+            { tab: next === 'estates' ? undefined : next },
             { preserveState: true, preserveScroll: true, replace: true },
         );
     }
@@ -1134,12 +1073,8 @@ export default function PartnerRequestsIndex({
                 {/* Commercial workspace header */}
                 <header className="flex flex-wrap items-end justify-between gap-4">
                     <div className="min-w-0">
-                        <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase dark:text-slate-500">
-                            Portfolio
-                        </p>
-                        <h1 className="mt-1 text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">
-                            My Estates
-                        </h1>
+                        <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase dark:text-slate-500">Portfolio</p>
+                        <h1 className="mt-1 text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">My Estates</h1>
                         <p className="mt-1 max-w-lg text-[13px] text-stone-500 dark:text-slate-400">
                             Track onboarding requests and follow live estates connected to your partnership.
                         </p>
@@ -1155,15 +1090,11 @@ export default function PartnerRequestsIndex({
                 </header>
 
                 {/* Primary tabs */}
-                <div
-                    className="inline-flex rounded-2xl bg-stone-100/90 p-1 dark:bg-white/5"
-                    role="tablist"
-                    aria-label="My Estates sections"
-                >
+                <div className="inline-flex rounded-2xl bg-stone-100/90 p-1 dark:bg-white/5" role="tablist" aria-label="My Estates sections">
                     {(
                         [
-                            { key: 'requests' as const, label: 'Requests', count: partnerRequests.length },
                             { key: 'estates' as const, label: 'Estates', count: estates.length },
+                            { key: 'requests' as const, label: 'Requests', count: partnerRequests.length },
                         ] as const
                     ).map((item) => (
                         <button
@@ -1195,12 +1126,7 @@ export default function PartnerRequestsIndex({
                 {/* Minimal controls */}
                 <div className="flex flex-wrap items-center gap-2">
                     {tab === 'requests' ? (
-                        <EstateCommandSearch
-                            estates={partnerRequests}
-                            value={search}
-                            onChange={setSearch}
-                            onSelect={setSelected}
-                        />
+                        <EstateCommandSearch estates={partnerRequests} value={search} onChange={setSearch} onSelect={setSelected} />
                     ) : (
                         <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
                             <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
@@ -1210,7 +1136,7 @@ export default function PartnerRequestsIndex({
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search connected estates…"
                                 aria-label="Search connected estates"
-                                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-9 text-[13px] text-stone-800 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] dark:bg-white/[0.04] dark:text-white dark:ring-white/10"
+                                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-9 text-[13px] text-stone-800 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] outline-none dark:bg-white/[0.04] dark:text-white dark:ring-white/10"
                             />
                         </div>
                     )}
@@ -1221,7 +1147,7 @@ export default function PartnerRequestsIndex({
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 aria-label="Status"
-                                className="appearance-none rounded-2xl bg-white py-2.5 pr-9 pl-3.5 text-[13px] font-medium text-stone-700 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10"
+                                className="appearance-none rounded-2xl bg-white py-2.5 pr-9 pl-3.5 text-[13px] font-medium text-stone-700 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] outline-none dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10"
                             >
                                 <option value="">All statuses</option>
                                 <option value="submitted">Submitted</option>
@@ -1273,9 +1199,7 @@ export default function PartnerRequestsIndex({
                     ) : (
                         <div className="space-y-4">
                             <p className="text-[12px] text-stone-400">
-                                <span className="font-semibold text-stone-700 dark:text-slate-200">
-                                    {filteredEstates.length}
-                                </span>
+                                <span className="font-semibold text-stone-700 dark:text-slate-200">{filteredEstates.length}</span>
                                 {filteredEstates.length === 1 ? ' connected estate' : ' connected estates'}
                             </p>
                             <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
@@ -1308,27 +1232,25 @@ export default function PartnerRequestsIndex({
                                         <div className="mt-4 grid grid-cols-3 gap-2">
                                             <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
                                                 <p className="text-[9px] text-stone-400">Residents</p>
-                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                     {estate.counts.residents}
                                                 </p>
                                             </div>
                                             <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
                                                 <p className="text-[9px] text-stone-400">Security</p>
-                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                     {estate.counts.security}
                                                 </p>
                                             </div>
                                             <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
                                                 <p className="text-[9px] text-stone-400">Admins</p>
-                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                     {estate.counts.admins}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-2.5 dark:border-white/[0.05]">
-                                            <p className="text-[11px] text-stone-500">
-                                                Earned {formatAmount(estate.commission.earned_kobo)}
-                                            </p>
+                                            <p className="text-[11px] text-stone-500">Earned {formatAmount(estate.commission.earned_kobo)}</p>
                                             <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary-600 opacity-0 transition group-hover:opacity-100">
                                                 Open
                                                 <ArrowRightIcon className="h-3 w-3" />
@@ -1348,12 +1270,9 @@ export default function PartnerRequestsIndex({
                         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600">
                             <BuildingOffice2Icon className="h-7 w-7" />
                         </div>
-                        <h2 className="mt-5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
-                            Submit your first estate
-                        </h2>
+                        <h2 className="mt-5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">Submit your first estate</h2>
                         <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-stone-500">
-                            Refer an estate to start your pipeline. Track review, acceptance, and when residents begin
-                            generating commission.
+                            Refer an estate to start your pipeline. Track review, acceptance, and when residents begin generating commission.
                         </p>
                         <Link
                             href="/partner/partner-requests/create"
@@ -1372,11 +1291,7 @@ export default function PartnerRequestsIndex({
                                 {filtered.length === 1 ? ' estate' : ' estates'}
                                 {search.trim() ? ` matching “${search.trim()}”` : ''}
                             </p>
-                            <div
-                                className="inline-flex rounded-xl bg-stone-100/80 p-0.5 dark:bg-white/5"
-                                role="group"
-                                aria-label="View mode"
-                            >
+                            <div className="inline-flex rounded-xl bg-stone-100/80 p-0.5 dark:bg-white/5" role="group" aria-label="View mode">
                                 {(
                                     [
                                         { key: 'pipeline' as const, icon: Squares2X2Icon, label: 'Pipeline' },
@@ -1414,9 +1329,7 @@ export default function PartnerRequestsIndex({
                                 {filtered.length === 0 ? (
                                     <div className="py-16 text-center">
                                         <MagnifyingGlassIcon className="mx-auto h-7 w-7 text-stone-300" />
-                                        <p className="mt-3 text-[14px] font-semibold text-stone-800 dark:text-white">
-                                            No estates match
-                                        </p>
+                                        <p className="mt-3 text-[14px] font-semibold text-stone-800 dark:text-white">No estates match</p>
                                         <p className="mt-1 text-[13px] text-stone-500">Try a different search or status.</p>
                                         <button
                                             type="button"
@@ -1439,17 +1352,13 @@ export default function PartnerRequestsIndex({
                                                 <section key={col.key} className="flex w-[280px] shrink-0 flex-col">
                                                     <header className="mb-3 flex items-center gap-2 px-0.5">
                                                         <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                                                        <h2 className="text-[13px] font-semibold text-stone-800 dark:text-slate-100">
-                                                            {col.label}
-                                                        </h2>
-                                                        <span className="text-[12px] tabular-nums text-stone-400">{items.length}</span>
+                                                        <h2 className="text-[13px] font-semibold text-stone-800 dark:text-slate-100">{col.label}</h2>
+                                                        <span className="text-[12px] text-stone-400 tabular-nums">{items.length}</span>
                                                     </header>
                                                     <div className="flex flex-1 flex-col gap-2.5">
                                                         {items.length === 0 ? (
                                                             <div className="rounded-2xl px-4 py-10 text-center">
-                                                                <p className="text-[13px] font-medium text-stone-500">
-                                                                    No estates here
-                                                                </p>
+                                                                <p className="text-[13px] font-medium text-stone-500">No estates here</p>
                                                                 <p className="mt-1 text-[12px] leading-relaxed text-stone-400">
                                                                     {emptyPipelineCopy[col.key] ?? 'Nothing in this stage yet.'}
                                                                 </p>
@@ -1473,12 +1382,7 @@ export default function PartnerRequestsIndex({
                                 ) : view === 'cards' ? (
                                     <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
                                         {filtered.map((request) => (
-                                            <EstateOpportunity
-                                                key={request.id}
-                                                request={request}
-                                                onOpen={setSelected}
-                                                commission={commissionInfo}
-                                            />
+                                            <EstateOpportunity key={request.id} request={request} onOpen={setSelected} commission={commissionInfo} />
                                         ))}
                                     </div>
                                 ) : (
@@ -1490,7 +1394,7 @@ export default function PartnerRequestsIndex({
                                                         <th className="px-4 py-3 font-medium">Estate</th>
                                                         <th className="px-4 py-3 font-medium">Stage</th>
                                                         <th className="px-4 py-3 font-medium">Next</th>
-                                                        <th className="px-4 py-3 font-medium text-right">Houses</th>
+                                                        <th className="px-4 py-3 text-right font-medium">Houses</th>
                                                         <th className="px-4 py-3 font-medium">Submitted</th>
                                                     </tr>
                                                 </thead>
@@ -1511,22 +1415,17 @@ export default function PartnerRequestsIndex({
                                                             </td>
                                                             <td className="px-4 py-4">
                                                                 <div className="space-y-1.5">
-                                                                    <StatusBadge
-                                                                        status={request.status}
-                                                                        label={request.status_label}
-                                                                    />
+                                                                    <StatusBadge status={request.status} label={request.status_label} />
                                                                     <StageJourney status={request.status} />
                                                                 </div>
                                                             </td>
                                                             <td className="max-w-[180px] px-4 py-4 text-[12px] text-stone-600 dark:text-slate-300">
                                                                 {nextAction(request)}
                                                             </td>
-                                                            <td className="px-4 py-4 text-right text-[13px] tabular-nums text-stone-700 dark:text-slate-200">
+                                                            <td className="px-4 py-4 text-right text-[13px] text-stone-700 tabular-nums dark:text-slate-200">
                                                                 {request.number_of_houses ?? '—'}
                                                             </td>
-                                                            <td className="px-4 py-4 text-[12px] text-stone-400">
-                                                                {formatDate(request.created_at)}
-                                                            </td>
+                                                            <td className="px-4 py-4 text-[12px] text-stone-400">{formatDate(request.created_at)}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -1549,9 +1448,7 @@ export default function PartnerRequestsIndex({
                         onDeleted={() => setSelected(null)}
                     />
                 )}
-                {selectedEstate && (
-                    <ConnectedEstateDrawer estate={selectedEstate} onClose={() => setSelectedEstate(null)} />
-                )}
+                {selectedEstate && <ConnectedEstateDrawer estate={selectedEstate} onClose={() => setSelectedEstate(null)} />}
             </AnimatePresence>
         </PartnerLayout>
     );

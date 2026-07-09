@@ -26,7 +26,7 @@ class PartnerRequestController extends Controller
         $partner = $request->user()->partner;
         $tab = $request->string('tab')->toString();
         if (! in_array($tab, ['requests', 'estates'], true)) {
-            $tab = 'requests';
+            $tab = 'estates';
         }
 
         $applications = EstateApplication::query()
