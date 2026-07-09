@@ -336,17 +336,30 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                 <CalendarDaysIcon className="h-4 w-4 text-stone-400" />
                                 <h2 className="text-[15px] font-semibold text-stone-900 dark:text-white">Timeline</h2>
                             </div>
-                            <ol className="relative mt-5 ml-1 space-y-0 border-l border-stone-200 pl-5 dark:border-white/10">
-                                {orderedTimeline.map((event) => (
-                                    <li key={String(event.id)} className="relative pb-5 last:pb-0">
-                                        <span className="absolute top-1 -left-[1.4rem] h-2.5 w-2.5 rounded-full bg-primary-500 ring-4 ring-primary-500/10" />
-                                        <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{event.description}</p>
-                                        <p className="mt-0.5 text-[11px] text-stone-400">
-                                            {formatDate(event.created_at)}
-                                            {event.creator_name ? ` · ${event.creator_name}` : ''}
-                                        </p>
-                                    </li>
-                                ))}
+                            <ol className="mt-5 space-y-0">
+                                {orderedTimeline.map((event, index) => {
+                                    const isLast = index === orderedTimeline.length - 1;
+
+                                    return (
+                                        <li key={String(event.id)} className="flex gap-3">
+                                            <div className="flex w-4 shrink-0 flex-col items-center">
+                                                <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
+                                                {!isLast ? (
+                                                    <span className="mt-1 w-px flex-1 min-h-[1.25rem] bg-stone-200 dark:bg-white/15" />
+                                                ) : null}
+                                            </div>
+                                            <div className={`min-w-0 ${isLast ? 'pb-0' : 'pb-5'}`}>
+                                                <p className="text-[13px] font-semibold leading-snug text-stone-900 dark:text-white">
+                                                    {event.description}
+                                                </p>
+                                                <p className="mt-1 text-[11px] text-stone-400">
+                                                    {formatDate(event.created_at)}
+                                                    {event.creator_name ? ` · ${event.creator_name}` : ''}
+                                                </p>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
                             </ol>
                         </div>
 

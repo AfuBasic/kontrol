@@ -373,23 +373,36 @@ function ReferralTimelineDrawer({
                         <p className="mt-1.5 text-[14px] leading-relaxed text-stone-800 dark:text-slate-200">{referral.expected_next_step}</p>
                     </div>
 
-                    <ol className="relative ml-2 space-y-0 border-l-2 border-stone-200 pl-6 dark:border-white/10">
-                        {events.map((event, i) => (
-                            <motion.li
-                                key={String(event.id)}
-                                initial={{ opacity: 0, x: -6 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                                className="relative pb-7 last:pb-0"
-                            >
-                                <span className="absolute top-1 -left-[1.95rem] h-3 w-3 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
-                                <p className="text-[14px] font-semibold text-stone-900 dark:text-white">{event.description}</p>
-                                <p className="mt-1 text-[12px] text-stone-400">
-                                    {formatDate(event.created_at)}
-                                    {event.creator_name ? ` · ${event.creator_name}` : ''}
-                                </p>
-                            </motion.li>
-                        ))}
+                    <ol className="space-y-0">
+                        {events.map((event, i) => {
+                            const isLast = i === events.length - 1;
+
+                            return (
+                                <motion.li
+                                    key={String(event.id)}
+                                    initial={{ opacity: 0, x: -6 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.04 }}
+                                    className="flex gap-3"
+                                >
+                                    <div className="flex w-4 shrink-0 flex-col items-center">
+                                        <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
+                                        {!isLast ? (
+                                            <span className="mt-1 w-px flex-1 min-h-[1.5rem] bg-stone-200 dark:bg-white/15" />
+                                        ) : null}
+                                    </div>
+                                    <div className={`min-w-0 ${isLast ? 'pb-0' : 'pb-7'}`}>
+                                        <p className="text-[14px] font-semibold leading-snug text-stone-900 dark:text-white">
+                                            {event.description}
+                                        </p>
+                                        <p className="mt-1 text-[12px] text-stone-400">
+                                            {formatDate(event.created_at)}
+                                            {event.creator_name ? ` · ${event.creator_name}` : ''}
+                                        </p>
+                                    </div>
+                                </motion.li>
+                            );
+                        })}
                     </ol>
                 </div>
 
