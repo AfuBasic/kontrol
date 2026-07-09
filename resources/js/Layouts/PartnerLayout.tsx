@@ -129,6 +129,31 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
     }, [flash]);
 
     useEffect(() => {
+        if (!user?.id || !window.Echo) {
+            return;
+        }
+
+        const channel = window.Echo.private(`App.Models.User.${user.id}`)
+            .notification((notification: { title?: string; body?: string; message?: string }) => {
+                const message = notification.body || notification.message || 'You have a new update.';
+                setToastMessage(message);
+                setToastType('success');
+                setShowToast(true);
+
+                // Silently reload Inertia page props to update notification dropdown counts and listings
+                router.reload({
+                    only: ['partnerUnreadCount', 'partnerNotifications', 'auth'],
+                    preserveScroll: true,
+                    preserveState: true,
+                });
+            });
+
+        return () => {
+            channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
         setMobileMenuOpen(false);
     }, [url]);
 
