@@ -789,7 +789,7 @@ function DetailDrawer({
                             className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-2.5 text-[13px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-500/10"
                         >
                             <TrashIcon className="h-4 w-4" />
-                            {deleting ? 'Removing…' : 'Remove from my list'}
+                            {deleting ? 'Deleting…' : 'Delete rejected estate'}
                         </button>
                     ) : null}
                     <button
