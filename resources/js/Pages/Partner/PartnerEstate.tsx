@@ -231,25 +231,78 @@ function controlClass(hasError?: boolean): string {
     return `${controlBase} border-stone-200/90 dark:border-slate-700`;
 }
 
-function StepRail({ step, onJump }: { step: number; onJump: (index: number) => void }) {
+function isStepSatisfied(stepIndex: number, data: FormData): boolean {
+    if (stepIndex === 0) {
+        return data.estate_name.trim().length > 0;
+    }
+
+    if (stepIndex === 2) {
+        return (
+            data.chairman_name.trim().length > 0 &&
+            data.chairman_phone.trim().length > 0 &&
+            data.chairman_email.trim().length > 0
+        );
+    }
+
+    // Location (1) and Review (3) have no hard requirements of their own.
+    return true;
+}
+
+/** A step is reachable only when every prior step’s required fields are complete. */
+function canAccessStep(target: number, data: FormData): boolean {
+    for (let i = 0; i < target; i++) {
+        if (!isStepSatisfied(i, data)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function firstIncompleteStep(data: FormData, upTo = STEPS.length - 1): number {
+    for (let i = 0; i <= upTo; i++) {
+        if (!isStepSatisfied(i, data)) {
+            return i;
+        }
+    }
+
+    return upTo;
+}
+
+function StepRail({
+    step,
+    data,
+    onJump,
+}: {
+    step: number;
+    data: FormData;
+    onJump: (index: number) => void;
+}) {
     return (
         <nav aria-label="Submission progress" className="hidden lg:block">
             <ol className="space-y-1">
                 {STEPS.map((s, i) => {
                     const Icon = s.icon;
-                    const done = i < step;
+                    const done = i < step && isStepSatisfied(i, data);
                     const active = i === step;
+                    const reachable = canAccessStep(i, data);
+                    const locked = !reachable;
 
                     return (
                         <li key={s.key}>
                             <button
                                 type="button"
                                 onClick={() => onJump(i)}
+                                disabled={locked && i !== step}
                                 aria-current={active ? 'step' : undefined}
+                                aria-disabled={locked && i !== step}
+                                title={locked && i !== step ? 'Complete required fields on earlier steps first' : undefined}
                                 className={`group flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
                                     active
                                         ? 'bg-white shadow-sm ring-1 ring-stone-900/[0.06] dark:bg-white/[0.06] dark:ring-white/10'
-                                        : 'hover:bg-stone-100/80 dark:hover:bg-white/[0.03]'
+                                        : locked
+                                          ? 'cursor-not-allowed opacity-40'
+                                          : 'hover:bg-stone-100/80 dark:hover:bg-white/[0.03]'
                                 }`}
                             >
                                 <span
@@ -374,32 +427,24 @@ export default function PartnerEstate({ partner }: Props) {
     }
 
     function canProceed(): boolean {
-        if (step === 0) {
-            return data.estate_name.trim().length > 0;
-        }
+        return isStepSatisfied(step, data);
+    }
 
-        if (step === 2) {
-            return (
-                data.chairman_name.trim().length > 0 &&
-                data.chairman_phone.trim().length > 0 &&
-                data.chairman_email.trim().length > 0
-            );
+    function revealStepErrors(stepIndex: number) {
+        setAttemptedContinue(true);
+        if (stepIndex === 0) {
+            markTouched('estate_name');
         }
-
-        return true;
+        if (stepIndex === 2) {
+            markTouched('chairman_name');
+            markTouched('chairman_phone');
+            markTouched('chairman_email');
+        }
     }
 
     function next() {
         if (!canProceed()) {
-            setAttemptedContinue(true);
-            if (step === 0) {
-                markTouched('estate_name');
-            }
-            if (step === 2) {
-                markTouched('chairman_name');
-                markTouched('chairman_phone');
-                markTouched('chairman_email');
-            }
+            revealStepErrors(step);
 
             return;
         }
@@ -408,6 +453,30 @@ export default function PartnerEstate({ partner }: Props) {
 
     function back() {
         setStep((s) => Math.max(s - 1, 0));
+    }
+
+    /** Sidebar / progress jumps — never skip past incomplete required steps. */
+    function jumpToStep(target: number) {
+        if (target === step) {
+            return;
+        }
+
+        // Always allow going back.
+        if (target < step) {
+            setStep(target);
+
+            return;
+        }
+
+        if (canAccessStep(target, data)) {
+            setStep(target);
+
+            return;
+        }
+
+        const blockedAt = firstIncompleteStep(data, target);
+        setStep(blockedAt);
+        revealStepErrors(blockedAt);
     }
 
     function submitEstate() {
@@ -452,7 +521,7 @@ export default function PartnerEstate({ partner }: Props) {
                                 New referral
                             </h1>
                         </div>
-                        <StepRail step={step} onJump={setStep} />
+                        <StepRail step={step} data={data} onJump={jumpToStep} />
                     </aside>
 
                     {/* Form */}
