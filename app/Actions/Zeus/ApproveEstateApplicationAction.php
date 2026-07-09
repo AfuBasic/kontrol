@@ -4,6 +4,7 @@ namespace App\Actions\Zeus;
 
 use App\Models\Estate;
 use App\Models\EstateApplication;
+use App\Models\Plan;
 use App\Notifications\Partner\EstateRequestAcceptedNotification;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,12 @@ class ApproveEstateApplicationAction
                 'email' => $application->email,
                 'address' => $application->address,
             ];
+
+            // Resolve a default plan so that the estate is created with active features (such as resident-directory, payment-collection, etc.)
+            $defaultPlan = Plan::where('is_active', true)->first();
+            if ($defaultPlan) {
+                $payload['plan_id'] = $defaultPlan->id;
+            }
 
             if ($application->isPartnerSourced() && $application->partner_id) {
                 $payload['has_partner'] = true;
