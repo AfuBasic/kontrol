@@ -67,14 +67,43 @@ interface Column {
     label: string;
 }
 
+interface PartnerEstate {
+    id: number;
+    ulid: string;
+    name: string;
+    email: string | null;
+    address: string | null;
+    status: string;
+    status_label: string;
+    commission_status: string | null;
+    partner_status: string | null;
+    activation_date: string | null;
+    commission_starts_at: string | null;
+    commission_ends_at: string | null;
+    created_at: string | null;
+    counts: {
+        residents: number;
+        security: number;
+        admins: number;
+        members: number;
+    };
+    commission: {
+        earned_kobo: number;
+        pending_kobo: number;
+    };
+}
+
 interface Props {
     partnerRequests: PartnerRequest[];
+    estates?: PartnerEstate[];
+    activeTab?: 'requests' | 'estates';
     columns: Column[];
     commission?: { rate: string | null; type: string | null };
-    filters?: { search?: string; status?: string };
+    filters?: { search?: string; status?: string; tab?: string };
 }
 
 type ViewMode = 'pipeline' | 'cards' | 'table';
+type PageTab = 'requests' | 'estates';
 type DrawerTab = 'overview' | 'timeline' | 'contact' | 'notes' | 'feedback';
 
 /** ₦4,000/mo ARPU in kobo */
@@ -816,8 +845,193 @@ function DetailDrawer({
     );
 }
 
+/* ─── Connected estate drawer ─── */
+function ConnectedEstateDrawer({
+    estate,
+    onClose,
+}: {
+    estate: PartnerEstate;
+    onClose: () => void;
+}) {
+    useEffect(() => {
+        function onKey(e: KeyboardEvent) {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        }
+        document.addEventListener('keydown', onKey);
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.style.overflow = prev;
+        };
+    }, [onClose]);
+
+    const stats = [
+        { label: 'Residents', value: estate.counts.residents },
+        { label: 'Security', value: estate.counts.security },
+        { label: 'Admins', value: estate.counts.admins },
+        { label: 'Members', value: estate.counts.members },
+    ];
+
+    return (
+        <>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-stone-950/35 backdrop-blur-sm"
+                onClick={onClose}
+                aria-hidden
+            />
+            <motion.aside
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 32, stiffness: 360 }}
+                className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-[#faf9f7] shadow-2xl dark:bg-slate-950"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="connected-estate-drawer-title"
+            >
+                <div className="border-b border-stone-200/70 bg-white px-5 py-5 dark:border-white/10 dark:bg-slate-900">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-medium text-stone-400">Connected estate</p>
+                            <h2
+                                id="connected-estate-drawer-title"
+                                className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white"
+                            >
+                                {estate.name}
+                            </h2>
+                            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                <span
+                                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                        estate.status === 'active'
+                                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                            : 'bg-stone-500/10 text-stone-600 dark:text-slate-300'
+                                    }`}
+                                >
+                                    {estate.status_label}
+                                </span>
+                                {estate.commission_status ? (
+                                    <span className="text-[12px] text-stone-500 capitalize">
+                                        Commission · {estate.commission_status.replaceAll('_', ' ')}
+                                    </span>
+                                ) : null}
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Close"
+                            className="rounded-xl p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/10"
+                        >
+                            <XMarkIcon className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {stats.map((stat) => (
+                            <div
+                                key={stat.label}
+                                className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]"
+                            >
+                                <p className="text-[10px] text-stone-400">{stat.label}</p>
+                                <p className="mt-1 text-[20px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    {stat.value}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
+                        <p className="text-[11px] font-semibold text-stone-500">Commission from this estate</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                            <div>
+                                <p className="text-[10px] text-stone-400">Earned</p>
+                                <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    {formatAmount(estate.commission.earned_kobo)}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-stone-400">Pending</p>
+                                <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    {formatAmount(estate.commission.pending_kobo)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
+                        <p className="text-[11px] font-semibold text-stone-500">Estate details</p>
+                        <dl className="mt-3 space-y-2.5 text-[13px]">
+                            <div>
+                                <dt className="text-[10px] text-stone-400">Address</dt>
+                                <dd className="mt-0.5 text-stone-800 dark:text-slate-200">{estate.address || '—'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-[10px] text-stone-400">Contact email</dt>
+                                <dd className="mt-0.5 text-stone-800 dark:text-slate-200">{estate.email || '—'}</dd>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <dt className="text-[10px] text-stone-400">Activated</dt>
+                                    <dd className="mt-0.5 text-stone-800 dark:text-slate-200">
+                                        {estate.activation_date
+                                            ? formatDate(estate.activation_date)
+                                            : formatDate(estate.created_at)}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-[10px] text-stone-400">Commission window</dt>
+                                    <dd className="mt-0.5 text-stone-800 dark:text-slate-200">
+                                        {estate.commission_starts_at
+                                            ? `${formatDate(estate.commission_starts_at)}${
+                                                  estate.commission_ends_at ? ` – ${formatDate(estate.commission_ends_at)}` : ''
+                                              }`
+                                            : '—'}
+                                    </dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div className="rounded-2xl bg-sky-50 p-4 dark:bg-sky-500/10">
+                        <p className="text-[12px] leading-relaxed text-sky-950 dark:text-sky-100">
+                            Use these numbers to follow up with estate leadership — more active residents usually means
+                            stronger commission performance for your partnership.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="border-t border-stone-200/70 p-4 dark:border-white/10">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                    >
+                        Close
+                    </button>
+                </div>
+            </motion.aside>
+        </>
+    );
+}
+
 /* ─── Page ─── */
-export default function PartnerRequestsIndex({ partnerRequests, columns, commission, filters }: Props) {
+export default function PartnerRequestsIndex({
+    partnerRequests,
+    estates = [],
+    activeTab = 'requests',
+    columns,
+    commission,
+    filters,
+}: Props) {
     const page = usePage();
     const sharedCommission = (
         page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } }
@@ -827,6 +1041,9 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
         type: sharedCommission?.commission_type ?? null,
     };
 
+    const [tab, setTab] = useState<PageTab>(
+        activeTab === 'estates' || filters?.tab === 'estates' ? 'estates' : 'requests',
+    );
     const [view, setView] = useState<ViewMode>(() => {
         if (typeof window === 'undefined') {
             return 'pipeline';
@@ -837,10 +1054,44 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
     const [search, setSearch] = useState(filters?.search ?? '');
     const [statusFilter, setStatusFilter] = useState(filters?.status ?? '');
     const [selected, setSelected] = useState<PartnerRequest | null>(null);
+    const [selectedEstate, setSelectedEstate] = useState<PartnerEstate | null>(null);
 
     useEffect(() => {
         localStorage.setItem('partner-estates-view', view);
     }, [view]);
+
+    useEffect(() => {
+        setTab(activeTab === 'estates' ? 'estates' : 'requests');
+    }, [activeTab]);
+
+    const filteredEstates = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) {
+            return estates;
+        }
+
+        return estates.filter((estate) => {
+            const haystack = [estate.name, estate.address, estate.email, estate.status_label]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+            return haystack.includes(q);
+        });
+    }, [estates, search]);
+
+    function switchTab(next: PageTab) {
+        setTab(next);
+        setSelected(null);
+        setSelectedEstate(null);
+        setSearch('');
+        setStatusFilter('');
+        router.get(
+            '/partner/partner-requests',
+            { tab: next === 'requests' ? undefined : next },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    }
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -876,7 +1127,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
     };
 
     return (
-        <PartnerLayout fullWidth={view === 'pipeline'}>
+        <PartnerLayout fullWidth={tab === 'requests' && view === 'pipeline'}>
             <Head title="My Estates – Partner Portal" />
 
             <div className="space-y-6 pb-4">
@@ -884,13 +1135,13 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
                 <header className="flex flex-wrap items-end justify-between gap-4">
                     <div className="min-w-0">
                         <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase dark:text-slate-500">
-                            Commercial pipeline
+                            Portfolio
                         </p>
                         <h1 className="mt-1 text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">
                             My Estates
                         </h1>
                         <p className="mt-1 max-w-lg text-[13px] text-stone-500 dark:text-slate-400">
-                            Manage every estate from first conversation to activation.
+                            Track onboarding requests and follow live estates connected to your partnership.
                         </p>
                     </div>
                     {commissionInfo.rate && (
@@ -903,29 +1154,83 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
                     )}
                 </header>
 
+                {/* Primary tabs */}
+                <div
+                    className="inline-flex rounded-2xl bg-stone-100/90 p-1 dark:bg-white/5"
+                    role="tablist"
+                    aria-label="My Estates sections"
+                >
+                    {(
+                        [
+                            { key: 'requests' as const, label: 'Requests', count: partnerRequests.length },
+                            { key: 'estates' as const, label: 'Estates', count: estates.length },
+                        ] as const
+                    ).map((item) => (
+                        <button
+                            key={item.key}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === item.key}
+                            onClick={() => switchTab(item.key)}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
+                                tab === item.key
+                                    ? 'bg-white text-stone-900 shadow-sm dark:bg-white/15 dark:text-white'
+                                    : 'text-stone-500 hover:text-stone-800 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                        >
+                            {item.label}
+                            <span
+                                className={`rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${
+                                    tab === item.key
+                                        ? 'bg-stone-100 text-stone-700 dark:bg-white/10 dark:text-slate-200'
+                                        : 'bg-stone-200/60 text-stone-500 dark:bg-white/5'
+                                }`}
+                            >
+                                {item.count}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
                 {/* Minimal controls */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <EstateCommandSearch
-                        estates={partnerRequests}
-                        value={search}
-                        onChange={setSearch}
-                        onSelect={setSelected}
-                    />
+                    {tab === 'requests' ? (
+                        <EstateCommandSearch
+                            estates={partnerRequests}
+                            value={search}
+                            onChange={setSearch}
+                            onSelect={setSelected}
+                        />
+                    ) : (
+                        <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
+                            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search connected estates…"
+                                aria-label="Search connected estates"
+                                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-9 text-[13px] text-stone-800 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] dark:bg-white/[0.04] dark:text-white dark:ring-white/10"
+                            />
+                        </div>
+                    )}
 
-                    <div className="relative">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            aria-label="Status"
-                            className="appearance-none rounded-2xl bg-white py-2.5 pr-9 pl-3.5 text-[13px] font-medium text-stone-700 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10"
-                        >
-                            <option value="">All statuses</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="accepted">Accepted</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                        <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
-                    </div>
+                    {tab === 'requests' ? (
+                        <div className="relative">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                aria-label="Status"
+                                className="appearance-none rounded-2xl bg-white py-2.5 pr-9 pl-3.5 text-[13px] font-medium text-stone-700 shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none ring-1 ring-stone-900/[0.06] dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10"
+                            >
+                                <option value="">All statuses</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
+                        </div>
+                    ) : null}
 
                     <Link
                         href="/partner/partner-requests/create"
@@ -937,7 +1242,104 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
                     </Link>
                 </div>
 
-                {partnerRequests.length === 0 ? (
+                {tab === 'estates' ? (
+                    filteredEstates.length === 0 ? (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-[1.75rem] bg-white px-6 py-16 text-center shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]"
+                        >
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                                <BuildingOffice2Icon className="h-7 w-7" />
+                            </div>
+                            <h2 className="mt-5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
+                                {estates.length === 0 ? 'No connected estates yet' : 'No estates match'}
+                            </h2>
+                            <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-stone-500">
+                                {estates.length === 0
+                                    ? 'When Kontrol accepts a request and creates the estate, it will appear here with residents, security, and commission health.'
+                                    : 'Try a different search term.'}
+                            </p>
+                            {estates.length === 0 ? (
+                                <button
+                                    type="button"
+                                    onClick={() => switchTab('requests')}
+                                    className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                                >
+                                    View requests
+                                </button>
+                            ) : null}
+                        </motion.div>
+                    ) : (
+                        <div className="space-y-4">
+                            <p className="text-[12px] text-stone-400">
+                                <span className="font-semibold text-stone-700 dark:text-slate-200">
+                                    {filteredEstates.length}
+                                </span>
+                                {filteredEstates.length === 1 ? ' connected estate' : ' connected estates'}
+                            </p>
+                            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
+                                {filteredEstates.map((estate) => (
+                                    <button
+                                        key={estate.id}
+                                        type="button"
+                                        onClick={() => setSelectedEstate(estate)}
+                                        className="group rounded-2xl bg-white p-4 text-left shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(28,25,23,0.18)] hover:ring-stone-900/[0.08] dark:bg-white/[0.035] dark:ring-white/[0.06]"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">
+                                                    {estate.name}
+                                                </p>
+                                                <p className="mt-0.5 truncate text-[11px] text-stone-400">
+                                                    {estate.address || estate.email || 'No address on file'}
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                                    estate.status === 'active'
+                                                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                                        : 'bg-stone-500/10 text-stone-600'
+                                                }`}
+                                            >
+                                                {estate.status_label}
+                                            </span>
+                                        </div>
+                                        <div className="mt-4 grid grid-cols-3 gap-2">
+                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
+                                                <p className="text-[9px] text-stone-400">Residents</p>
+                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                    {estate.counts.residents}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
+                                                <p className="text-[9px] text-stone-400">Security</p>
+                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                    {estate.counts.security}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
+                                                <p className="text-[9px] text-stone-400">Admins</p>
+                                                <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                    {estate.counts.admins}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-2.5 dark:border-white/[0.05]">
+                                            <p className="text-[11px] text-stone-500">
+                                                Earned {formatAmount(estate.commission.earned_kobo)}
+                                            </p>
+                                            <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary-600 opacity-0 transition group-hover:opacity-100">
+                                                Open
+                                                <ArrowRightIcon className="h-3 w-3" />
+                                            </span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                ) : partnerRequests.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1146,6 +1548,9 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
                         onClose={() => setSelected(null)}
                         onDeleted={() => setSelected(null)}
                     />
+                )}
+                {selectedEstate && (
+                    <ConnectedEstateDrawer estate={selectedEstate} onClose={() => setSelectedEstate(null)} />
                 )}
             </AnimatePresence>
         </PartnerLayout>

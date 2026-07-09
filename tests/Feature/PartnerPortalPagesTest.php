@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\Partner;
 use App\Models\User;
@@ -111,10 +112,39 @@ it('renders estate pipeline with columns and transformed requests', function () 
             ->component('Partner/PartnerRequests/Index')
             ->has('columns')
             ->has('partnerRequests', 1)
+            ->has('estates')
+            ->where('activeTab', 'requests')
             ->where('partnerRequests.0.estate_name', 'Palm Grove Estate')
             ->where('partnerRequests.0.status', 'submitted')
             ->where('partnerRequests.0.status_label', 'Submitted')
             ->where('partnerRequests.0.state', 'Lagos')
+        );
+});
+
+it('renders connected estates for the partner estates tab', function () {
+    [$partner, $affiliate] = partnerMember();
+
+    $estate = Estate::factory()->create([
+        'name' => 'Live Partner Estate',
+        'partner_id' => $partner->id,
+        'status' => 'active',
+        'email' => 'live@estate.test',
+        'address' => '12 Live Road',
+    ]);
+
+    $this->actingAs($affiliate)
+        ->get(route('partner.partner-requests.index', ['tab' => 'estates']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Partner/PartnerRequests/Index')
+            ->where('activeTab', 'estates')
+            ->has('estates', 1)
+            ->where('estates.0.id', $estate->id)
+            ->where('estates.0.name', 'Live Partner Estate')
+            ->has('estates.0.counts.residents')
+            ->has('estates.0.counts.security')
+            ->has('estates.0.counts.admins')
+            ->has('estates.0.commission.earned_kobo')
         );
 });
 

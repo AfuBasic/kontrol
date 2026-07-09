@@ -7,9 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Partner\StorePartnerRequestRequest;
 use App\Models\ApplicationNote;
 use App\Models\ApplicationTimeline;
+use App\Models\CommissionableRevenue;
+use App\Models\Estate;
 use App\Models\EstateApplication;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,6 +24,10 @@ class PartnerRequestController extends Controller
     {
         $partnerId = $request->user()->partner_id;
         $partner = $request->user()->partner;
+        $tab = $request->string('tab')->toString();
+        if (! in_array($tab, ['requests', 'estates'], true)) {
+            $tab = 'requests';
+        }
 
         $applications = EstateApplication::query()
             ->when($partnerId, fn ($query) => $query->forPartner($partnerId))
@@ -35,6 +43,16 @@ class PartnerRequestController extends Controller
             ->map(fn (EstateApplication $application) => $this->transformForPartner($application))
             ->values();
 
+        $estates = collect();
+        if ($partnerId) {
+            $estates = Estate::query()
+                ->where('partner_id', $partnerId)
+                ->latest()
+                ->get()
+                ->map(fn (Estate $estate) => $this->transformEstateForPartner($estate, $partnerId))
+                ->values();
+        }
+
         $columns = [
             ['key' => 'submitted', 'label' => 'Submitted'],
             ['key' => 'accepted', 'label' => 'Accepted'],
@@ -43,6 +61,8 @@ class PartnerRequestController extends Controller
 
         return Inertia::render('Partner/PartnerRequests/Index', [
             'partnerRequests' => $applications,
+            'estates' => $estates,
+            'activeTab' => $tab,
             'columns' => $columns,
             'commission' => [
                 'rate' => $partner?->commission_rate !== null ? (string) $partner->commission_rate : null,
@@ -51,6 +71,7 @@ class PartnerRequestController extends Controller
             'filters' => [
                 'search' => $request->string('search')->toString(),
                 'status' => $request->string('status')->toString(),
+                'tab' => $tab,
             ],
         ]);
     }
@@ -145,6 +166,78 @@ class PartnerRequestController extends Controller
         return redirect()
             ->route('partner.partner-requests.index')
             ->with('success', 'Rejected estate removed from your list.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transformEstateForPartner(Estate $estate, int $partnerId): array
+    {
+        $roleCounts = $this->acceptedRoleCounts($estate->id);
+
+        $commissionEarned = (int) CommissionableRevenue::query()
+            ->where('partner_id', $partnerId)
+            ->where('estate_id', $estate->id)
+            ->sum('commission_amount');
+
+        $pendingCommission = (int) CommissionableRevenue::query()
+            ->where('partner_id', $partnerId)
+            ->where('estate_id', $estate->id)
+            ->where('status', 'pending')
+            ->sum('commission_amount');
+
+        $totalMembers = (int) DB::table('estate_users_membership')
+            ->where('estate_id', $estate->id)
+            ->where('status', 'accepted')
+            ->count();
+
+        return [
+            'id' => $estate->id,
+            'ulid' => $estate->ulid,
+            'name' => $estate->name,
+            'email' => $estate->email,
+            'address' => $estate->address,
+            'status' => $estate->status,
+            'status_label' => $estate->status === 'active' ? 'Active' : 'Inactive',
+            'commission_status' => $estate->commission_status?->value ?? (string) $estate->commission_status,
+            'partner_status' => $estate->partner_status?->value ?? (string) $estate->partner_status,
+            'activation_date' => $estate->activation_date?->toDateString(),
+            'commission_starts_at' => $estate->commission_starts_at?->toDateString(),
+            'commission_ends_at' => $estate->commission_ends_at?->toDateString(),
+            'created_at' => $estate->created_at?->toIso8601String(),
+            'counts' => [
+                'residents' => $roleCounts['resident'] ?? 0,
+                'security' => $roleCounts['security'] ?? 0,
+                'admins' => $roleCounts['admin'] ?? 0,
+                'members' => $totalMembers,
+            ],
+            'commission' => [
+                'earned_kobo' => $commissionEarned,
+                'pending_kobo' => $pendingCommission,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function acceptedRoleCounts(int $estateId): array
+    {
+        return DB::table('estate_users_membership')
+            ->join('model_has_roles', function ($join) {
+                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('estate_users_membership.estate_id', $estateId)
+            ->where('estate_users_membership.status', 'accepted')
+            ->where('model_has_roles.estate_id', $estateId)
+            ->whereIn('roles.name', ['resident', 'security', 'admin'])
+            ->groupBy('roles.name')
+            ->selectRaw('roles.name as role_name, count(*) as aggregate')
+            ->pluck('aggregate', 'role_name')
+            ->map(fn ($count) => (int) $count)
+            ->all();
     }
 
     /**
