@@ -98,6 +98,9 @@ function clearDraft() {
     localStorage.removeItem(DRAFT_KEY);
 }
 
+/** Illustrative ARPU: annual plan ≈ ₦4,000 / house / month. */
+const EST_MONTHLY_DUES_NAIRA = 4_000;
+
 function estimateAnnualCommission(
     houses: number,
     rate: string | null | undefined,
@@ -107,7 +110,8 @@ function estimateAnnualCommission(
         return null;
     }
 
-    const annualRevenueKobo = houses * 50_000 * 12 * 100;
+    // Store commission in kobo (same unit as formatAmount).
+    const annualRevenueKobo = houses * EST_MONTHLY_DUES_NAIRA * 12 * 100;
 
     if (type === 'fixed' && rate) {
         return Math.round(Number(rate) * houses * 12);
