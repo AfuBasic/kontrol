@@ -27,7 +27,7 @@ class SupportController extends Controller
                     ],
                     [
                         'question' => 'How do I update my bank details?',
-                        'answer' => 'Contact support with your partner account email. Bank detail updates require verification for security.',
+                        'answer' => 'Open Account → Banking, select your bank, enter your 10-digit account number, and verify. We match the Paystack account name to your partner or contact name (order and middle names are fine), then save.',
                         'category' => 'Account',
                     ],
                     [

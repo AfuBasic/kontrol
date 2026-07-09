@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
 use App\Models\EstateApplication;
+use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private PaystackService $paystackService,
+    ) {}
+
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
@@ -35,6 +40,17 @@ class ProfileController extends Controller
                 ->all();
         }
 
+        $banks = $tab === 'banking'
+            ? collect($this->paystackService->getBanks())
+                ->map(fn (array $bank) => [
+                    'name' => $bank['name'] ?? '',
+                    'code' => $bank['code'] ?? '',
+                ])
+                ->filter(fn (array $bank) => $bank['name'] !== '' && $bank['code'] !== '')
+                ->values()
+                ->all()
+            : [];
+
         return Inertia::render('Partner/Profile', [
             'tab' => $tab,
             'user' => [
@@ -55,7 +71,17 @@ class ProfileController extends Controller
                     : null,
                 'commission_length' => $partner->commission_length,
                 'created_at' => $partner->created_at?->toDateString(),
+                'banking' => [
+                    'bank_name' => $partner->bank_name,
+                    'bank_code' => $partner->bank_code,
+                    'account_number' => $partner->account_number,
+                    'account_number_masked' => $partner->maskedAccountNumber(),
+                    'account_name' => $partner->account_name,
+                    'account_verified_at' => $partner->account_verified_at?->toIso8601String(),
+                    'is_verified' => $partner->hasVerifiedBankAccount(),
+                ],
             ] : null,
+            'banks' => $banks,
             'activity' => $activity,
             'preferences' => [
                 'email_product' => true,

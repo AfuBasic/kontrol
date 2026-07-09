@@ -48,6 +48,11 @@ class Partner extends Model
         'status',
         'api_key',
         'notes',
+        'bank_name',
+        'bank_code',
+        'account_number',
+        'account_name',
+        'account_verified_at',
     ];
 
     protected $appends = [
@@ -57,9 +62,27 @@ class Partner extends Model
 
     protected $casts = [
         'commission_rate' => 'decimal:2',
+        'account_verified_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function hasVerifiedBankAccount(): bool
+    {
+        return filled($this->account_number)
+            && filled($this->account_name)
+            && filled($this->bank_code)
+            && $this->account_verified_at !== null;
+    }
+
+    public function maskedAccountNumber(): ?string
+    {
+        if (! filled($this->account_number) || strlen($this->account_number) < 4) {
+            return $this->account_number;
+        }
+
+        return str_repeat('*', max(strlen($this->account_number) - 4, 0)).substr($this->account_number, -4);
+    }
 
     /**
      * @return HasMany<PartnerEarning, $this>
