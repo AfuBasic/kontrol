@@ -87,6 +87,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/partner-requests/{partnerRequest}/approve', [PartnerRequestController::class, 'approve'])->name('partner-requests.approve');
         Route::post('/partner-requests/{partnerRequest}/reject', [PartnerRequestController::class, 'reject'])->name('partner-requests.reject');
         Route::post('/partner-requests/{partnerRequest}/request-info', [PartnerRequestController::class, 'requestInfo'])->name('partner-requests.request-info');
+        Route::delete('/partner-requests/{partnerRequest}', [PartnerRequestController::class, 'destroy'])
+            ->withTrashed()
+            ->name('partner-requests.destroy');
 
         // Zeus notifications inbox
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

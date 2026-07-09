@@ -23,6 +23,7 @@ class PartnerRequestController extends Controller
         $status = $request->query('status');
 
         $partnerRequests = EstateApplication::query()
+            ->withTrashed()
             ->where('source', EstateApplication::SOURCE_PARTNER)
             ->with(['partner', 'estate:id,ulid,name'])
             ->when($status, function ($query) use ($status) {
@@ -52,6 +53,8 @@ class PartnerRequestController extends Controller
                 'rejection_reason' => $application->rejection_reason,
                 'info_request_message' => $application->info_request_message,
                 'created_at' => $application->created_at?->toIso8601String(),
+                'is_trashed' => $application->trashed(),
+                'deleted_at' => $application->deleted_at?->toIso8601String(),
                 'partner' => $application->partner ? [
                     'id' => $application->partner->id,
                     'name' => $application->partner->name,
@@ -144,5 +147,22 @@ class PartnerRequestController extends Controller
         return redirect()
             ->route('zeus.partner-requests.index')
             ->with('success', 'Information requested from partner.');
+    }
+
+    /**
+     * Permanently delete a partner estate application (including partner soft-deletes).
+     */
+    public function destroy(EstateApplication $partnerRequest): RedirectResponse
+    {
+        abort_unless($partnerRequest->source === EstateApplication::SOURCE_PARTNER, 404);
+
+        $partnerRequest->forceDelete();
+
+        Cache::forget('zeus.applications.metrics');
+        Cache::forget('zeus.applications.funnel');
+
+        return redirect()
+            ->route('zeus.partner-requests.index')
+            ->with('success', 'Partner request permanently deleted.');
     }
 }
