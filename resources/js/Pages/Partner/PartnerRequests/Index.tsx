@@ -8,10 +8,11 @@ import {
     PlusIcon,
     RectangleStackIcon,
     Squares2X2Icon,
+    TrashIcon,
     UserCircleIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PartnerLayout from '@/Layouts/PartnerLayout';
@@ -478,15 +479,43 @@ function DetailDrawer({
     request,
     commission,
     onClose,
+    onDeleted,
 }: {
     request: PartnerRequest;
     commission?: { rate: string | null; type: string | null };
     onClose: () => void;
+    onDeleted?: () => void;
 }) {
     const [tab, setTab] = useState<DrawerTab>('overview');
+    const [deleting, setDeleting] = useState(false);
     const est = estimates(request, commission);
     const timeline = request.timeline ?? [];
     const adminNotes = request.admin_notes ?? [];
+    const canSoftDelete = request.status === 'rejected';
+
+    function handleSoftDelete() {
+        if (deleting || !canSoftDelete) {
+            return;
+        }
+
+        if (
+            !window.confirm(
+                `Remove “${request.estate_name}” from your list? You won’t see it again, but Kontrol keeps a copy for records.`,
+            )
+        ) {
+            return;
+        }
+
+        setDeleting(true);
+        router.delete(`/partner/partner-requests/${request.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                onDeleted?.();
+                onClose();
+            },
+            onFinish: () => setDeleting(false),
+        });
+    }
 
     const tabs: { key: DrawerTab; label: string }[] = [
         { key: 'overview', label: 'Overview' },
@@ -751,7 +780,18 @@ function DetailDrawer({
                     </AnimatePresence>
                 </div>
 
-                <div className="border-t border-stone-200/70 p-4 dark:border-white/10">
+                <div className="space-y-2 border-t border-stone-200/70 p-4 dark:border-white/10">
+                    {canSoftDelete ? (
+                        <button
+                            type="button"
+                            onClick={handleSoftDelete}
+                            disabled={deleting}
+                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-2.5 text-[13px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-500/10"
+                        >
+                            <TrashIcon className="h-4 w-4" />
+                            {deleting ? 'Removing…' : 'Remove from my list'}
+                        </button>
+                    ) : null}
                     <button
                         type="button"
                         onClick={onClose}
@@ -1089,7 +1129,12 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
 
             <AnimatePresence>
                 {selected && (
-                    <DetailDrawer request={selected} commission={commissionInfo} onClose={() => setSelected(null)} />
+                    <DetailDrawer
+                        request={selected}
+                        commission={commissionInfo}
+                        onClose={() => setSelected(null)}
+                        onDeleted={() => setSelected(null)}
+                    />
                 )}
             </AnimatePresence>
         </PartnerLayout>
