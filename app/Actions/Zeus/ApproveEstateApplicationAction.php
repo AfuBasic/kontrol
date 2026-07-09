@@ -4,6 +4,7 @@ namespace App\Actions\Zeus;
 
 use App\Models\Estate;
 use App\Models\EstateApplication;
+use App\Notifications\Partner\EstateRequestAcceptedNotification;
 use Illuminate\Support\Facades\DB;
 
 class ApproveEstateApplicationAction
@@ -17,10 +18,11 @@ class ApproveEstateApplicationAction
      *
      * Residents choose their own plans after the estate is live — intake
      * no longer selects a plan. Partner-sourced apps attach commission attribution.
+     * Partner members are notified by email + database + broadcast when applicable.
      */
     public function execute(EstateApplication $application): Estate
     {
-        return DB::transaction(function () use ($application) {
+        $estate = DB::transaction(function () use ($application) {
             $payload = [
                 'name' => $application->estate_name,
                 'email' => $application->email,
@@ -44,5 +46,20 @@ class ApproveEstateApplicationAction
 
             return $estate;
         });
+
+        $this->notifyPartnerMembers($application->fresh(['partner.members']), $estate);
+
+        return $estate;
+    }
+
+    private function notifyPartnerMembers(EstateApplication $application, Estate $estate): void
+    {
+        if (! $application->isPartnerSourced() || ! $application->partner) {
+            return;
+        }
+
+        foreach ($application->partner->members as $member) {
+            $member->notify(new EstateRequestAcceptedNotification($application, $estate));
+        }
     }
 }

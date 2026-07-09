@@ -5,6 +5,7 @@ use App\Models\EstateApplication;
 use App\Models\Partner;
 use App\Models\User;
 use App\Models\ZeusNotification;
+use App\Notifications\Partner\EstateRequestAcceptedNotification;
 use App\Notifications\Partner\EstateRequestRejectedNotification;
 use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Database\Seeders\PermissionSeeder;
@@ -68,7 +69,10 @@ it('allows partner members to submit estate applications', function () {
 });
 
 it('approves partner applications and creates attributed estates', function () {
+    Notification::fake();
+
     $partner = Partner::factory()->create(['commission_rate' => 15]);
+    $member = User::factory()->create(['partner_id' => $partner->id]);
     $application = EstateApplication::create([
         'source' => EstateApplication::SOURCE_PARTNER,
         'partner_id' => $partner->id,
@@ -96,6 +100,16 @@ it('approves partner applications and creates attributed estates', function () {
         ->and($estate->partner_id)->toBe($partner->id)
         ->and($estate->commission_plan_id)->not->toBeNull()
         ->and($estate->commission_status->value)->toBe('active');
+
+    Notification::assertSentTo(
+        $member,
+        EstateRequestAcceptedNotification::class,
+        function (EstateRequestAcceptedNotification $notification) use ($application, $estate, $member) {
+            return $notification->application->id === $application->id
+                && $notification->estate->id === $estate->id
+                && $notification->via($member) === ['mail', 'database', 'broadcast'];
+        }
+    );
 });
 
 it('rejects partner applications with a reason', function () {

@@ -163,11 +163,15 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
             }) => {
                 const message = notification.body || notification.message || notification.title || 'You have a new update.';
                 const severity = notification.severity || notification.type;
-                const isRejection =
-                    typeof notification.type === 'string' && notification.type.includes('EstateRequestRejected');
+                const typeName = typeof notification.type === 'string' ? notification.type : '';
+                const isRejection = typeName.includes('EstateRequestRejected');
+                const isAcceptance = typeName.includes('EstateRequestAccepted');
                 const isDanger = severity === 'danger' || severity === 'error' || isRejection;
 
-                setToastTitle(notification.title || (isRejection ? 'Estate request rejected' : undefined));
+                setToastTitle(
+                    notification.title ||
+                        (isRejection ? 'Estate request rejected' : isAcceptance ? 'Estate request accepted' : undefined),
+                );
                 setToastTime(formatToastTime(new Date()));
                 setToastMessage(message);
                 setToastType(isDanger ? 'error' : 'success');
@@ -177,7 +181,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 // Also refresh My Estates list when a pipeline status change is broadcast.
                 const only = ['partnerUnreadCount', 'partnerNotifications', 'auth'];
                 if (window.location.pathname.startsWith('/partner/partner-requests')) {
-                    only.push('requests', 'stats', 'filters');
+                    only.push('partnerRequests', 'columns', 'commission', 'filters');
                 }
 
                 router.reload({
