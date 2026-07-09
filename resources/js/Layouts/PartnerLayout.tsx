@@ -327,29 +327,37 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     />
 
                     {/* Brand */}
-                    <div className="relative z-10 flex h-[52px] items-center justify-between px-3">
+                    <div className="relative z-10 flex h-14 items-center justify-between gap-2 px-3.5">
                         {!isCollapsed ? (
-                            <Link href="/partner/dashboard" className="min-w-0 flex-1" aria-label="Kontrol Partner">
-                                <div className="h-7 w-full overflow-hidden">
-                                    <img
-                                        src="/assets/images/kontrol.png"
-                                        alt="Kontrol"
-                                        className="h-auto w-[92px] -translate-y-[24px] brightness-0 invert opacity-95"
-                                    />
-                                </div>
+                            <Link
+                                href="/partner/dashboard"
+                                className="flex min-w-0 flex-1 items-center"
+                                aria-label="Kontrol Partner"
+                            >
+                                <img
+                                    src="/assets/images/kontrol-white-logo-new.png"
+                                    alt="Kontrol"
+                                    className="h-8 w-auto max-w-[148px] object-contain object-left drop-shadow-[0_1px_8px_rgba(255,255,255,0.12)]"
+                                />
                             </Link>
                         ) : (
-                            <div className="flex flex-1 justify-center">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-[12px] font-bold text-white shadow-lg shadow-blue-900/40">
-                                    K
-                                </span>
-                            </div>
+                            <Link
+                                href="/partner/dashboard"
+                                className="flex flex-1 justify-center"
+                                aria-label="Kontrol Partner"
+                            >
+                                <img
+                                    src="/assets/images/kontrol-icon-white.png"
+                                    alt="Kontrol"
+                                    className="h-9 w-9 object-contain drop-shadow-[0_2px_8px_rgba(59,130,246,0.35)]"
+                                />
+                            </Link>
                         )}
                         <button
                             type="button"
                             onClick={toggle}
                             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-200"
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
                         >
                             {isCollapsed ? (
                                 <ChevronDoubleRightIcon className="h-3.5 w-3.5" />
