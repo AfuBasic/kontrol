@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $challenges
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $deleted_at
  * @property-read Partner|null $partner
  * @property-read Estate|null $estate
  * @property-read User|null $assignedTo
@@ -39,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class EstateApplication extends Model
 {
+    use SoftDeletes;
+
     public const SOURCE_PUBLIC = 'public';
 
     public const SOURCE_PARTNER = 'partner';
@@ -81,6 +85,7 @@ class EstateApplication extends Model
     {
         return [
             'reviewed_at' => 'datetime',
+            'deleted_at' => 'datetime',
             'number_of_houses' => 'integer',
         ];
     }
