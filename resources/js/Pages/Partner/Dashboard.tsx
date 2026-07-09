@@ -198,11 +198,11 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
             <Head title="Workspace" />
 
             <div className="relative space-y-7 pb-2 sm:space-y-8">
-                {/* Ambient wash */}
+                {/* Ambient wash — Kontrol blue family */}
                 <div className="pointer-events-none absolute inset-x-0 -top-6 h-[380px] overflow-hidden" aria-hidden>
-                    <div className="absolute -top-20 left-1/4 h-64 w-64 rounded-full bg-blue-400/12 blur-3xl dark:bg-blue-500/10" />
-                    <div className="absolute top-8 right-0 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl dark:bg-emerald-500/8" />
-                    <div className="absolute top-28 left-0 h-40 w-40 rounded-full bg-violet-400/8 blur-3xl dark:bg-violet-500/5" />
+                    <div className="absolute -top-20 left-1/4 h-64 w-64 rounded-full bg-primary-400/15 blur-3xl dark:bg-primary-500/12" />
+                    <div className="absolute top-8 right-0 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-500/8" />
+                    <div className="absolute top-28 left-0 h-40 w-40 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-500/6" />
                 </div>
 
                 {/* ── Hero ── */}
@@ -212,13 +212,14 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                     transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                     className="relative"
                 >
-                    <div className="relative overflow-hidden rounded-[1.75rem] bg-stone-950 px-5 py-7 text-white shadow-[0_24px_64px_-24px_rgba(28,25,23,0.45)] sm:rounded-[2rem] sm:px-9 sm:py-9 dark:bg-linear-to-br dark:from-slate-900 dark:via-slate-950 dark:to-black">
+                    <div className="relative overflow-hidden rounded-[1.75rem] bg-[#061230] px-5 py-7 text-white shadow-[0_24px_64px_-24px_rgba(10,61,145,0.45)] sm:rounded-[2rem] sm:px-9 sm:py-9 dark:bg-linear-to-br dark:from-primary-950 dark:via-slate-950 dark:to-black">
                         <div className="pointer-events-none absolute inset-0" aria-hidden>
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.38),transparent_58%)]" />
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.2),transparent_52%)]" />
-                            <div className="absolute -right-12 -bottom-16 h-56 w-56 rounded-full bg-blue-500/25 blur-3xl" />
-                            <div className="absolute top-1/3 left-1/3 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl" />
-                            <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-white/25 to-transparent" />
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(31,111,219,0.45),transparent_58%)]" />
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(10,61,145,0.35),transparent_52%)]" />
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_left,rgba(56,189,248,0.12),transparent_45%)]" />
+                            <div className="absolute -right-12 -bottom-16 h-56 w-56 rounded-full bg-primary-500/30 blur-3xl" />
+                            <div className="absolute top-1/3 left-1/3 h-32 w-32 rounded-full bg-sky-400/12 blur-2xl" />
+                            <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-sky-200/30 to-transparent" />
                             <div
                                 className="absolute inset-0 opacity-[0.03]"
                                 style={{
@@ -281,18 +282,18 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 </div>
                             </div>
 
-                            {/* Settlement glass card */}
+                            {/* Settlement glass card — Kontrol blue accents */}
                             <motion.div
                                 initial={{ opacity: 0, x: 16 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.18, duration: 0.5 }}
                                 className="relative flex"
                             >
-                                <div className="absolute -inset-3 rounded-[2rem] bg-emerald-400/15 blur-2xl" aria-hidden />
-                                <div className="relative flex w-full flex-col justify-between overflow-hidden rounded-[1.5rem] border border-white/15 bg-white/[0.09] p-5 shadow-2xl backdrop-blur-2xl sm:rounded-[1.75rem] sm:p-6">
+                                <div className="absolute -inset-3 rounded-[2rem] bg-sky-400/15 blur-2xl" aria-hidden />
+                                <div className="relative flex w-full flex-col justify-between overflow-hidden rounded-[1.5rem] border border-sky-200/15 bg-white/[0.08] p-5 shadow-2xl ring-1 ring-primary-400/10 backdrop-blur-2xl sm:rounded-[1.75rem] sm:p-6">
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-semibold tracking-[0.16em] text-emerald-200/80 uppercase">
+                                            <p className="text-[10px] font-semibold tracking-[0.16em] text-sky-200/85 uppercase">
                                                 Next settlement
                                             </p>
                                             <div className="mt-2.5 flex items-baseline gap-2">
@@ -304,12 +305,12 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                             </div>
                                             <p className="mt-1.5 text-[13px] text-white/50">{stats.next_settlement_date}</p>
                                         </div>
-                                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/20">
+                                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-400/15 text-sky-200 ring-1 ring-sky-300/25">
                                             <BanknotesIcon className="h-5 w-5" />
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="mt-5 h-px bg-linear-to-r from-white/20 via-white/10 to-transparent" />
+                                        <div className="mt-5 h-px bg-linear-to-r from-sky-200/25 via-white/10 to-transparent" />
                                         <p className="mt-4 text-[13px] text-white/55">
                                             Pending balance{' '}
                                             <span className="font-semibold text-white tabular-nums">
@@ -318,7 +319,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                         </p>
                                         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
                                             <motion.div
-                                                className="h-full rounded-full bg-linear-to-r from-emerald-300 to-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.5)]"
+                                                className="h-full rounded-full bg-linear-to-r from-sky-300 via-primary-400 to-primary-500 shadow-[0_0_12px_rgba(31,111,219,0.55)]"
                                                 initial={{ width: 0 }}
                                                 animate={{
                                                     width: `${Math.min(100, Math.max(8, 100 - stats.days_until_settlement * 3))}%`,
