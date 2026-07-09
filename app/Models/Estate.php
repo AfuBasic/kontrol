@@ -147,14 +147,7 @@ class Estate extends Model
             "estate_features:{$this->id}",
             now()->addMinutes(15),
             function () {
-                $subscription = $this->subscriptionRecord;
-
-                if (! $subscription || $subscription->isCancelled() || ! $subscription->plan) {
-                    return [];
-                }
-
-                return $subscription->plan->features()
-                    ->wherePivot('is_enabled', true)
+                return Feature::where('is_active', true)
                     ->pluck('slug')
                     ->toArray();
             }
