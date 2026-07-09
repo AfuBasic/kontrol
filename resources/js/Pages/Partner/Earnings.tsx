@@ -176,7 +176,7 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                                 icon={BanknotesIcon}
                                 title="No chart data yet"
                                 description="Once commissions settle, you'll see growth and dips here at a glance."
-                                nextStep="Grow your pipeline so residents can generate revenue."
+                                nextStep="Submit more estates so residents can generate revenue."
                                 action={{ label: 'Submit estate', href: '/partner/partner-requests/create' }}
                                 size="sm"
                                 className="flex-1 py-6"
@@ -241,7 +241,7 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                             <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
                                 <p className="text-[12px] font-medium text-stone-500">No settlements yet</p>
                                 <p className="mt-1 max-w-[200px] text-[11px] text-stone-400">
-                                    Settled months appear here as your pipeline converts.
+                                    Settled months appear here as your estates convert.
                                 </p>
                             </div>
                         ) : (
@@ -282,9 +282,9 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                             icon={BanknotesIcon}
                             title="No commissions yet"
                             description="You'll see monthly breakdowns once estates you referred have paying residents."
-                            nextStep="Submit estates and track activation in Pipeline."
+                            nextStep="Submit estates and track activation in My Estates."
                             action={{ label: 'Submit estate', href: '/partner/partner-requests/create' }}
-                            secondaryAction={{ label: 'Open pipeline', href: '/partner/partner-requests' }}
+                            secondaryAction={{ label: 'My Estates', href: '/partner/partner-requests' }}
                         />
                     ) : (
                         <>

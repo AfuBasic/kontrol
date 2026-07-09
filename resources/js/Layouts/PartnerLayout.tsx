@@ -38,7 +38,7 @@ type NavItem = {
 
 const workspaceNav: NavItem[] = [
     { name: 'Workspace', href: '/partner/dashboard', icon: Squares2X2Icon, exact: true },
-    { name: 'Pipeline', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
+    { name: 'My Estates', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
     { name: 'Earnings', href: '/partner/earnings', icon: BanknotesIcon },
 ];
 

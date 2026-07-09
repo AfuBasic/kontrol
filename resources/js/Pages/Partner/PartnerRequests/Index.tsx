@@ -170,11 +170,11 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
 
     return (
         <PartnerLayout fullWidth={view === 'kanban'}>
-            <Head title="Estate Pipeline – Partner Portal" />
+            <Head title="My Estates – Partner Portal" />
 
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3.5">
                 <PageHeader
-                    title="Estate pipeline"
+                    title="My Estates"
                     description="Track every estate from submission through activation."
                     actions={
                         <Link
@@ -196,7 +196,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search estates, chairmen, locations…"
-                            aria-label="Search estate pipeline"
+                            aria-label="Search my estates"
                             className="w-full rounded-xl bg-white py-2.5 pr-3 pl-9 text-sm text-slate-900 shadow-sm ring-1 ring-stone-900/[0.06] outline-none focus:ring-2 focus:ring-primary-200 dark:bg-slate-900 dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
                         />
                     </div>
@@ -250,7 +250,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                     <div className="rounded-2xl bg-white/80 shadow-[0_1px_0_rgba(28,25,23,0.04),0_12px_32px_-18px_rgba(28,25,23,0.14)] ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:shadow-none dark:ring-white/[0.06]">
                         <EmptyState
                             icon={BuildingOffice2Icon}
-                            title="Your pipeline is empty"
+                            title="No estates yet"
                             description="You haven't submitted any estates yet. Referrals appear here as cards so you can track review, approval, and activation."
                             nextStep="Submit your first estate — our team typically reviews within a few business days."
                             action={{ label: 'Submit first estate', href: '/partner/partner-requests/create' }}

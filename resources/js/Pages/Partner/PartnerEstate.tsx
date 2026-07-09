@@ -38,7 +38,7 @@ const STEPS = [
         minutes: 1,
         accent: 'from-sky-500/15 to-primary-500/10',
         iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-        tip: 'Use the official estate name — it becomes the label on your pipeline and commissions.',
+        tip: 'Use the official estate name — it becomes the label on My Estates and commissions.',
         why: 'Reviewers match this against maps and outreach. Clarity speeds approval.',
     },
     {
@@ -887,7 +887,7 @@ export default function PartnerEstate({ partner }: Props) {
 
                                                 <p className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-400 dark:text-slate-500">
                                                     <ClockIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                                    After submit, our team reviews this request. You can track status in Estate Pipeline.
+                                                    After submit, our team reviews this request. You can track status in My Estates.
                                                 </p>
                                             </div>
                                         )}

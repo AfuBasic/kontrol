@@ -14,7 +14,7 @@ interface Props {
 
 const navItems = [
     { name: 'Home', href: '/partner/dashboard', icon: Squares2X2Icon },
-    { name: 'Pipeline', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
+    { name: 'My Estates', href: '/partner/partner-requests', icon: BuildingOffice2Icon },
     { name: 'Submit', href: '/partner/partner-requests/create', icon: PlusCircleIcon, emphasize: true },
     { name: 'Earnings', href: '/partner/earnings', icon: BanknotesIcon },
     { name: 'Account', href: '/partner/profile', icon: UserCircleIcon },

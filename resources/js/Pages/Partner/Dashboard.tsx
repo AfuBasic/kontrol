@@ -173,7 +173,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
             glow: 'group-hover:shadow-blue-500/15',
         },
         {
-            label: 'Pipeline',
+            label: 'My Estates',
             display: null as string | null,
             numeric: stats.partner_request_count,
             hint: `${stats.converted_estates} live estates`,
@@ -239,7 +239,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                         {businessName}
                                     </h1>
                                     <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-white/50 sm:text-[15px]">
-                                        Grow the pipeline, track commissions, and act on what matters.
+                                        Grow your estates, track commissions, and act on what matters.
                                     </p>
                                 </div>
 
@@ -557,13 +557,13 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 sm:text-base dark:text-white">
                                     Recent activity
                                 </h2>
-                                <p className="mt-0.5 text-[12px] text-stone-500 dark:text-slate-400">Estate pipeline updates</p>
+                                <p className="mt-0.5 text-[12px] text-stone-500 dark:text-slate-400">Estate status updates</p>
                             </div>
                             <Link
                                 href="/partner/partner-requests"
                                 className="group inline-flex items-center gap-1 text-[12px] font-semibold text-blue-600 dark:text-blue-400"
                             >
-                                Pipeline
+                                My Estates
                                 <ArrowRightIcon className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
                             </Link>
                         </div>
@@ -574,7 +574,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                     icon={BuildingOffice2Icon}
                                     title="No activity yet"
                                     description="When you submit estates, status changes and reviews show up here."
-                                    nextStep="Submit your first estate to start the pipeline."
+                                    nextStep="Submit your first estate to get started."
                                     action={{ label: 'Submit estate', href: '/partner/partner-requests/create' }}
                                     size="sm"
                                     className="w-full py-8"
@@ -645,7 +645,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 </p>
                                 <ol className="mt-5 flex-1 space-y-2.5">
                                     {[
-                                        'Submit estates via Pipeline',
+                                        'Submit estates via My Estates',
                                         'Kontrol reviews and activates',
                                         'Earn on resident payments',
                                         'Monthly settlement',
