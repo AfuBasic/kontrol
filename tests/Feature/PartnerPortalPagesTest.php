@@ -111,7 +111,9 @@ it('renders estate pipeline with columns and transformed requests', function () 
             ->component('Partner/PartnerRequests/Index')
             ->has('columns')
             ->has('partnerRequests', 1)
+            ->has('referrals', 1)
             ->has('estates')
+            ->has('portfolio')
             ->where('activeTab', 'estates')
             ->where('partnerRequests.0.estate_name', 'Palm Grove Estate')
             ->where('partnerRequests.0.status', 'submitted')
@@ -138,13 +140,47 @@ it('renders connected estates for the partner estates tab', function () {
             ->component('Partner/PartnerRequests/Index')
             ->where('activeTab', 'estates')
             ->has('estates', 1)
+            ->has('portfolio.connected_estates')
             ->where('estates.0.id', $estate->id)
             ->where('estates.0.name', 'Live Partner Estate')
             ->has('estates.0.counts.residents')
+            ->has('estates.0.counts.subscribed')
             ->has('estates.0.counts.security')
             ->has('estates.0.counts.admins')
             ->has('estates.0.commission.earned_kobo')
+            ->has('estates.0.progress')
         );
+});
+
+it('renders partner estate detail workspace for connected estates', function () {
+    [$partner, $affiliate] = partnerMember();
+
+    $estate = Estate::factory()->create([
+        'name' => 'Detail Estate',
+        'partner_id' => $partner->id,
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($affiliate)
+        ->get(route('partner.estates.show', $estate))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Partner/Estates/Show')
+            ->where('estate.id', $estate->id)
+            ->where('estate.name', 'Detail Estate')
+            ->has('recentResidents')
+            ->has('monthlySeries')
+            ->has('timeline')
+        );
+});
+
+it('forbids partners from viewing estates they do not own', function () {
+    [, $affiliate] = partnerMember();
+    $other = Estate::factory()->create(['status' => 'active']);
+
+    $this->actingAs($affiliate)
+        ->get(route('partner.estates.show', $other))
+        ->assertNotFound();
 });
 
 it('shares partnerContext on partner pages', function () {

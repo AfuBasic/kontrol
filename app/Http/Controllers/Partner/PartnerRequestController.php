@@ -11,8 +11,10 @@ use App\Models\CommissionableRevenue;
 use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -25,11 +27,16 @@ class PartnerRequestController extends Controller
         $partnerId = $request->user()->partner_id;
         $partner = $request->user()->partner;
         $tab = $request->string('tab')->toString();
-        if (! in_array($tab, ['requests', 'estates'], true)) {
-            $tab = 'estates';
+        if (! in_array($tab, ['estates', 'referrals'], true)) {
+            // Legacy alias
+            if ($tab === 'requests') {
+                $tab = 'referrals';
+            } else {
+                $tab = 'estates';
+            }
         }
 
-        $applications = EstateApplication::query()
+        $referrals = EstateApplication::query()
             ->when($partnerId, fn ($query) => $query->forPartner($partnerId))
             ->when(! $partnerId, fn ($query) => $query->whereRaw('1 = 0'))
             ->with([
@@ -40,30 +47,35 @@ class PartnerRequestController extends Controller
             ])
             ->latest()
             ->get()
-            ->map(fn (EstateApplication $application) => $this->transformForPartner($application))
+            ->map(fn (EstateApplication $application) => $this->transformReferral($application))
             ->values();
 
         $estates = collect();
         if ($partnerId) {
             $estates = Estate::query()
                 ->where('partner_id', $partnerId)
+                ->with(['residentSubscriptions' => fn ($q) => $q->select('id', 'estate_id', 'status', 'user_id', 'created_at')])
                 ->latest()
                 ->get()
                 ->map(fn (Estate $estate) => $this->transformEstateForPartner($estate, $partnerId))
                 ->values();
         }
 
-        $columns = [
-            ['key' => 'submitted', 'label' => 'Submitted'],
-            ['key' => 'accepted', 'label' => 'Accepted'],
-            ['key' => 'rejected', 'label' => 'Rejected'],
-        ];
+        $portfolio = $this->buildPortfolioSummary($estates, $partnerId);
 
         return Inertia::render('Partner/PartnerRequests/Index', [
-            'partnerRequests' => $applications,
+            'partnerRequests' => $referrals,
+            'referrals' => $referrals,
             'estates' => $estates,
+            'portfolio' => $portfolio,
             'activeTab' => $tab,
-            'columns' => $columns,
+            'columns' => [
+                ['key' => 'submitted', 'label' => 'Submitted'],
+                ['key' => 'under_review', 'label' => 'Under Review'],
+                ['key' => 'info_requested', 'label' => 'Info Requested'],
+                ['key' => 'accepted', 'label' => 'Approved'],
+                ['key' => 'rejected', 'label' => 'Rejected'],
+            ],
             'commission' => [
                 'rate' => $partner?->commission_rate !== null ? (string) $partner->commission_rate : null,
                 'type' => $partner?->commission_type,
@@ -72,6 +84,84 @@ class PartnerRequestController extends Controller
                 'search' => $request->string('search')->toString(),
                 'status' => $request->string('status')->toString(),
                 'tab' => $tab,
+            ],
+            'statusOptions' => [
+                ['value' => '', 'label' => 'All'],
+                ['value' => 'active', 'label' => 'Active'],
+                ['value' => 'pending', 'label' => 'Pending'],
+                ['value' => 'under_review', 'label' => 'Under Review'],
+                ['value' => 'suspended', 'label' => 'Suspended'],
+                ['value' => 'archived', 'label' => 'Archived'],
+            ],
+        ]);
+    }
+
+    public function showEstate(Request $request, Estate $estate): Response
+    {
+        $partnerId = $request->user()->partner_id;
+        abort_unless($partnerId && (int) $estate->partner_id === (int) $partnerId, 404);
+
+        $estate->load(['residentSubscriptions']);
+        $payload = $this->transformEstateForPartner($estate, $partnerId);
+
+        $recentResidents = $estate->users()
+            ->wherePivot('status', 'accepted')
+            ->wherePivot('created_at', '>=', now()->subDays(30))
+            ->orderByPivot('created_at', 'desc')
+            ->limit(8)
+            ->get(['users.id', 'users.name', 'users.email'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'joined_at' => $user->pivot->created_at?->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+
+        $monthlySeries = CommissionableRevenue::query()
+            ->where('partner_id', $partnerId)
+            ->where('estate_id', $estate->id)
+            ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
+            ->get(['created_at', 'revenue_amount', 'commission_amount'])
+            ->groupBy(fn (CommissionableRevenue $row) => $row->created_at?->format('Y-m') ?? 'unknown')
+            ->map(fn ($rows, $month) => [
+                'month' => (string) $month,
+                'revenue_kobo' => (int) $rows->sum('revenue_amount'),
+                'commission_kobo' => (int) $rows->sum('commission_amount'),
+            ])
+            ->sortKeys()
+            ->values()
+            ->all();
+
+        $application = EstateApplication::query()
+            ->where('partner_id', $partnerId)
+            ->where('estate_id', $estate->id)
+            ->with(['timelineEvents' => fn ($q) => $q->latest(), 'assignedTo:id,name'])
+            ->latest()
+            ->first();
+
+        $timeline = $application
+            ? $this->transformReferral($application)['timeline']
+            : [[
+                'id' => 'live',
+                'event_type' => 'activated',
+                'description' => 'Estate connected to your partnership',
+                'creator_name' => 'Kontrol',
+                'created_at' => $estate->created_at?->toIso8601String(),
+                'metadata' => null,
+            ]];
+
+        return Inertia::render('Partner/Estates/Show', [
+            'estate' => $payload,
+            'recentResidents' => $recentResidents,
+            'monthlySeries' => $monthlySeries,
+            'timeline' => $timeline,
+            'commission' => [
+                'rate' => $request->user()->partner?->commission_rate !== null
+                    ? (string) $request->user()->partner->commission_rate
+                    : null,
+                'type' => $request->user()->partner?->commission_type,
             ],
         ]);
     }
@@ -119,7 +209,6 @@ class PartnerRequestController extends Controller
         } catch (ValidationException $exception) {
             $errors = $exception->errors();
 
-            // Map unified field names back to partner form keys.
             if (isset($errors['contact_name'])) {
                 $errors['chairman_name'] = $errors['contact_name'];
                 unset($errors['contact_name']);
@@ -137,14 +226,10 @@ class PartnerRequestController extends Controller
         }
 
         return redirect()
-            ->route('partner.partner-requests.index')
-            ->with('success', 'Partner request submitted successfully. Our team will review it shortly.');
+            ->route('partner.partner-requests.index', ['tab' => 'referrals'])
+            ->with('success', 'Referral submitted successfully. Our team will review it shortly.');
     }
 
-    /**
-     * Soft-delete a rejected estate application from the partner portal.
-     * The record remains available to Zeus until permanently deleted there.
-     */
     public function destroy(Request $request, EstateApplication $partnerRequest): RedirectResponse
     {
         $user = $request->user();
@@ -158,14 +243,55 @@ class PartnerRequestController extends Controller
         abort_unless(
             $partnerRequest->partnerStatusKey() === 'rejected',
             422,
-            'Only rejected estates can be removed from your list.',
+            'Only rejected referrals can be removed from your list.',
         );
 
         $partnerRequest->delete();
 
         return redirect()
-            ->route('partner.partner-requests.index')
-            ->with('success', 'Rejected estate removed from your list.');
+            ->route('partner.partner-requests.index', ['tab' => 'referrals'])
+            ->with('success', 'Rejected referral removed from your list.');
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $estates
+     * @return array<string, mixed>
+     */
+    private function buildPortfolioSummary($estates, ?int $partnerId): array
+    {
+        $connected = $estates->count();
+        $active = $estates->where('portfolio_status', 'active')->count();
+        $residents = (int) $estates->sum(fn (array $e) => $e['counts']['residents'] ?? 0);
+
+        $monthStart = CarbonImmutable::now()->startOfMonth();
+        $monthlyRevenue = 0;
+        $lifetimeCommission = 0;
+        $pendingSettlement = 0;
+
+        if ($partnerId) {
+            $monthlyRevenue = (int) CommissionableRevenue::query()
+                ->where('partner_id', $partnerId)
+                ->where('created_at', '>=', $monthStart)
+                ->sum('revenue_amount');
+
+            $lifetimeCommission = (int) CommissionableRevenue::query()
+                ->where('partner_id', $partnerId)
+                ->sum('commission_amount');
+
+            $pendingSettlement = (int) CommissionableRevenue::query()
+                ->where('partner_id', $partnerId)
+                ->where('status', 'pending')
+                ->sum('commission_amount');
+        }
+
+        return [
+            'connected_estates' => $connected,
+            'active_estates' => $active,
+            'residents' => $residents,
+            'monthly_revenue_kobo' => $monthlyRevenue,
+            'lifetime_commission_kobo' => $lifetimeCommission,
+            'pending_settlement_kobo' => $pendingSettlement,
+        ];
     }
 
     /**
@@ -174,6 +300,25 @@ class PartnerRequestController extends Controller
     private function transformEstateForPartner(Estate $estate, int $partnerId): array
     {
         $roleCounts = $this->acceptedRoleCounts($estate->id);
+        $residents = $roleCounts['resident'] ?? 0;
+
+        $subscribed = (int) $estate->residentSubscriptions()
+            ->whereIn('status', ['active', 'trialing', 'trial', 'past_due'])
+            ->count();
+
+        if ($subscribed === 0 && $residents > 0) {
+            // Fallback: accepted residents with a resident subscription row of any non-cancelled status
+            $subscribed = (int) $estate->residentSubscriptions()
+                ->whereNotIn('status', ['cancelled', 'canceled', 'inactive'])
+                ->count();
+        }
+
+        $monthStart = CarbonImmutable::now()->startOfMonth();
+        $monthlyRevenue = (int) CommissionableRevenue::query()
+            ->where('partner_id', $partnerId)
+            ->where('estate_id', $estate->id)
+            ->where('created_at', '>=', $monthStart)
+            ->sum('revenue_amount');
 
         $commissionEarned = (int) CommissionableRevenue::query()
             ->where('partner_id', $partnerId)
@@ -186,36 +331,121 @@ class PartnerRequestController extends Controller
             ->where('status', 'pending')
             ->sum('commission_amount');
 
-        $totalMembers = (int) DB::table('estate_users_membership')
-            ->where('estate_id', $estate->id)
-            ->where('status', 'accepted')
+        $weekAgo = now()->subWeek();
+        $newResidentsWeek = (int) DB::table('estate_users_membership')
+            ->join('model_has_roles', function ($join) {
+                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('estate_users_membership.estate_id', $estate->id)
+            ->where('estate_users_membership.status', 'accepted')
+            ->where('model_has_roles.estate_id', $estate->id)
+            ->where('roles.name', 'resident')
+            ->where('estate_users_membership.created_at', '>=', $weekAgo)
             ->count();
+
+        $portfolio = $this->portfolioStatus($estate);
+        $progress = $residents > 0
+            ? (int) min(100, round(($subscribed / max(1, $residents)) * 100))
+            : ($estate->status === 'active' ? 35 : 10);
+
+        $application = EstateApplication::query()
+            ->where('partner_id', $partnerId)
+            ->where(function ($q) use ($estate) {
+                $q->where('estate_id', $estate->id)
+                    ->orWhere('estate_name', $estate->name);
+            })
+            ->latest()
+            ->first();
+
+        $location = collect([
+            $application?->lga,
+            $application?->state,
+        ])->filter()->implode(' • ');
+
+        if ($location === '' && $estate->address) {
+            $location = $estate->address;
+        }
+
+        $activityLine = $newResidentsWeek > 0
+            ? $newResidentsWeek.' new resident'.($newResidentsWeek === 1 ? '' : 's').' this week'
+            : ($pendingCommission > 0
+                ? 'Pending commission ready for settlement'
+                : ($estate->status === 'active' ? 'Estate is live on Kontrol' : 'Awaiting activation'));
 
         return [
             'id' => $estate->id,
             'ulid' => $estate->ulid,
+            'reference' => strtoupper(substr((string) $estate->ulid, -8)),
             'name' => $estate->name,
             'email' => $estate->email,
             'address' => $estate->address,
+            'location' => $location !== '' ? $location : null,
+            'chairman_name' => $application?->contact_name,
+            'chairman_email' => $application?->email ?? $estate->email,
+            'chairman_phone' => $application?->phone,
             'status' => $estate->status,
-            'status_label' => $estate->status === 'active' ? 'Active' : 'Inactive',
+            'status_label' => $portfolio['label'],
+            'portfolio_status' => $portfolio['key'],
             'commission_status' => $estate->commission_status?->value ?? (string) $estate->commission_status,
-            'partner_status' => $estate->partner_status?->value ?? (string) $estate->partner_status,
+            'partner_status' => $estate->partner_status?->value ?? null,
             'activation_date' => $estate->activation_date?->toDateString(),
             'commission_starts_at' => $estate->commission_starts_at?->toDateString(),
             'commission_ends_at' => $estate->commission_ends_at?->toDateString(),
             'created_at' => $estate->created_at?->toIso8601String(),
             'counts' => [
-                'residents' => $roleCounts['resident'] ?? 0,
+                'residents' => $residents,
+                'subscribed' => $subscribed,
                 'security' => $roleCounts['security'] ?? 0,
                 'admins' => $roleCounts['admin'] ?? 0,
-                'members' => $totalMembers,
+                'members' => (int) DB::table('estate_users_membership')
+                    ->where('estate_id', $estate->id)
+                    ->where('status', 'accepted')
+                    ->count(),
             ],
             'commission' => [
                 'earned_kobo' => $commissionEarned,
                 'pending_kobo' => $pendingCommission,
+                'monthly_revenue_kobo' => $monthlyRevenue,
             ],
+            'progress' => $progress,
+            'recent_activity' => $activityLine,
+            'new_residents_week' => $newResidentsWeek,
+            'href' => route('partner.estates.show', $estate, false),
+            'earnings_href' => '/partner/earnings',
         ];
+    }
+
+    /**
+     * @return array{key: string, label: string}
+     */
+    private function portfolioStatus(Estate $estate): array
+    {
+        $commission = $estate->commission_status?->value;
+        $partnerStatus = $estate->partner_status?->value;
+
+        if ($commission === 'expired' || $partnerStatus === 'commission_expired') {
+            return ['key' => 'archived', 'label' => 'Archived'];
+        }
+
+        if ($estate->status === 'inactive') {
+            return ['key' => 'suspended', 'label' => 'Suspended'];
+        }
+
+        if (in_array($partnerStatus, ['reviewing', 'submitted'], true)) {
+            return ['key' => 'under_review', 'label' => 'Under Review'];
+        }
+
+        if (in_array($partnerStatus, ['estate_created', 'approved'], true) && $estate->status !== 'active') {
+            return ['key' => 'pending', 'label' => 'Pending'];
+        }
+
+        if ($estate->status === 'active') {
+            return ['key' => 'active', 'label' => 'Active'];
+        }
+
+        return ['key' => 'pending', 'label' => 'Pending'];
     }
 
     /**
@@ -243,12 +473,9 @@ class PartnerRequestController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function transformForPartner(EstateApplication $application): array
+    private function transformReferral(EstateApplication $application): array
     {
-        $statusKey = $application->partnerStatusKey();
-        $isGenerating = $statusKey === 'accepted'
-            && $application->estate
-            && in_array($application->estate->status, ['active', 'live', 'trial'], true);
+        $stage = $this->referralStage($application);
 
         $timeline = $application->timelineEvents
             ->map(fn (ApplicationTimeline $event) => [
@@ -262,10 +489,21 @@ class PartnerRequestController extends Controller
             ->values()
             ->all();
 
-        // Synthetic baseline when no audit trail yet.
         if ($timeline === []) {
-            $timeline = $this->syntheticTimeline($application, $statusKey);
+            $timeline = $this->syntheticTimeline($application, $application->partnerStatusKey());
         }
+
+        $latest = $timeline[0] ?? null;
+        $nextStep = match ($stage['key']) {
+            'submitted' => 'Kontrol will begin reviewing your submission.',
+            'under_review' => 'Our team is evaluating estate fit and documentation.',
+            'info_requested' => 'Provide the requested information to continue review.',
+            'accepted' => $application->estate
+                ? 'Estate is live — track performance in Estates.'
+                : 'Estate workspace is being prepared.',
+            'rejected' => 'Review the rejection reason or submit a new referral.',
+            default => 'Awaiting the next update from Kontrol.',
+        };
 
         $notes = $application->notesList
             ->map(fn (ApplicationNote $note) => [
@@ -280,6 +518,7 @@ class PartnerRequestController extends Controller
 
         return [
             'id' => $application->id,
+            'reference' => 'REF-'.str_pad((string) $application->id, 5, '0', STR_PAD_LEFT),
             'estate_name' => $application->estate_name,
             'estate_address' => $application->address,
             'chairman_name' => $application->contact_name,
@@ -289,9 +528,13 @@ class PartnerRequestController extends Controller
             'state' => $application->state,
             'lga' => $application->lga,
             'notes' => $application->notes,
-            'status' => $statusKey,
+            'status' => $application->partnerStatusKey(),
             'status_label' => $application->partnerStatusLabel(),
-            'is_generating_revenue' => $isGenerating,
+            'stage' => $stage['key'],
+            'stage_label' => $stage['label'],
+            'is_generating_revenue' => $stage['key'] === 'accepted'
+                && $application->estate
+                && $application->estate->status === 'active',
             'rejection_reason' => $application->rejection_reason,
             'info_request_message' => $application->info_request_message,
             'challenges' => $application->challenges,
@@ -302,13 +545,30 @@ class PartnerRequestController extends Controller
                 'name' => $application->assignedTo->name,
             ] : null,
             'estate' => $application->estate ? [
+                'id' => $application->estate->id,
                 'ulid' => $application->estate->ulid,
                 'name' => $application->estate->name,
                 'status' => $application->estate->status,
             ] : null,
+            'latest_activity' => $latest['description'] ?? 'Submitted for review',
+            'expected_next_step' => $nextStep,
             'timeline' => $timeline,
             'admin_notes' => $notes,
         ];
+    }
+
+    /**
+     * @return array{key: string, label: string}
+     */
+    private function referralStage(EstateApplication $application): array
+    {
+        return match ($application->status) {
+            'info_requested' => ['key' => 'info_requested', 'label' => 'Information Requested'],
+            'under_review' => ['key' => 'under_review', 'label' => 'Under Review'],
+            'approved' => ['key' => 'accepted', 'label' => 'Approved'],
+            'rejected' => ['key' => 'rejected', 'label' => 'Rejected'],
+            default => ['key' => 'submitted', 'label' => 'Submitted'],
+        };
     }
 
     /**
@@ -320,20 +580,45 @@ class PartnerRequestController extends Controller
             [
                 'id' => 'synth-submitted',
                 'event_type' => 'submitted',
-                'description' => 'Estate submitted for review',
+                'description' => 'Referral submitted for review',
                 'creator_name' => 'Partner',
                 'created_at' => $application->created_at?->toIso8601String(),
                 'metadata' => null,
             ],
         ];
 
+        if (in_array($application->status, ['under_review', 'info_requested', 'approved', 'rejected'], true)) {
+            $events[] = [
+                'id' => 'synth-review',
+                'event_type' => 'under_review',
+                'description' => 'Documents under review by Kontrol',
+                'creator_name' => 'Kontrol',
+                'created_at' => $application->updated_at?->toIso8601String(),
+                'metadata' => null,
+            ];
+        }
+
+        if ($application->status === 'info_requested') {
+            $events[] = [
+                'id' => 'synth-info',
+                'event_type' => 'info_requested',
+                'description' => $application->info_request_message
+                    ? 'Information requested: '.$application->info_request_message
+                    : 'Additional information requested',
+                'creator_name' => 'Kontrol',
+                'created_at' => $application->reviewed_at?->toIso8601String()
+                    ?? $application->updated_at?->toIso8601String(),
+                'metadata' => null,
+            ];
+        }
+
         if ($statusKey === 'accepted') {
             $events[] = [
                 'id' => 'synth-accepted',
                 'event_type' => 'accepted',
                 'description' => $application->estate
-                    ? 'Estate accepted: '.$application->estate->name
-                    : 'Estate application accepted',
+                    ? 'Approved and converted to estate: '.$application->estate->name
+                    : 'Referral approved',
                 'creator_name' => 'Kontrol',
                 'created_at' => $application->reviewed_at?->toIso8601String()
                     ?? $application->updated_at?->toIso8601String(),
@@ -347,7 +632,7 @@ class PartnerRequestController extends Controller
                 'event_type' => 'rejected',
                 'description' => $application->rejection_reason
                     ? 'Rejected: '.$application->rejection_reason
-                    : 'Application rejected',
+                    : 'Referral rejected',
                 'creator_name' => 'Kontrol',
                 'created_at' => $application->reviewed_at?->toIso8601String()
                     ?? $application->updated_at?->toIso8601String(),
@@ -355,6 +640,6 @@ class PartnerRequestController extends Controller
             ];
         }
 
-        return $events;
+        return array_reverse($events);
     }
 }

@@ -1,15 +1,21 @@
 import {
     ArrowRightIcon,
+    BanknotesIcon,
     BuildingOffice2Icon,
+    CalendarDaysIcon,
+    ChartBarIcon,
     CheckCircleIcon,
     ChevronDownIcon,
-    ListBulletIcon,
+    ClipboardDocumentIcon,
+    ClockIcon,
+    DocumentTextIcon,
+    EllipsisHorizontalIcon,
+    LinkIcon,
     MagnifyingGlassIcon,
     PlusIcon,
-    RectangleStackIcon,
-    Squares2X2Icon,
     TrashIcon,
-    UserCircleIcon,
+    UserGroupIcon,
+    UsersIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -19,70 +25,55 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import PartnerLayout from '@/Layouts/PartnerLayout';
 import { formatAmount, formatCommission } from '@/Utils/money';
 
+/* ─── Types ─── */
+
 interface TimelineEvent {
     id: number | string;
     event_type: string;
     description: string;
     creator_name: string | null;
     created_at: string | null;
-    metadata?: Record<string, unknown> | null;
 }
 
-interface AdminNote {
+interface Referral {
     id: number;
-    body: string;
-    type: string | null;
-    creator_name: string | null;
-    created_at: string | null;
-}
-
-interface PartnerRequest {
-    id: number;
+    reference: string;
     estate_name: string;
     estate_address: string | null;
     chairman_name: string;
     chairman_email: string;
     chairman_phone: string | null;
-    number_of_houses: number | null;
     state: string | null;
     lga: string | null;
-    notes: string | null;
     status: string;
     status_label: string;
-    is_generating_revenue?: boolean;
+    stage: string;
+    stage_label: string;
     rejection_reason: string | null;
     info_request_message: string | null;
-    challenges?: string | null;
-    reviewed_at?: string | null;
     created_at: string;
-    updated_at: string;
     assigned_manager?: { name: string } | null;
-    estate?: { ulid: string; name: string; status: string } | null;
-    timeline?: TimelineEvent[];
-    admin_notes?: AdminNote[];
+    estate?: { id: number; ulid: string; name: string; status: string } | null;
+    latest_activity: string;
+    expected_next_step: string;
+    timeline: TimelineEvent[];
 }
 
-interface Column {
-    key: string;
-    label: string;
-}
-
-interface PartnerEstate {
+interface PortfolioEstate {
     id: number;
     ulid: string;
+    reference: string;
     name: string;
     email: string | null;
     address: string | null;
-    status: string;
+    location: string | null;
+    chairman_name: string | null;
+    chairman_email: string | null;
+    portfolio_status: string;
     status_label: string;
-    commission_status: string | null;
-    partner_status: string | null;
-    activation_date: string | null;
-    commission_starts_at: string | null;
-    commission_ends_at: string | null;
-    created_at: string | null;
     counts: {
         residents: number;
+        subscribed: number;
         security: number;
         admins: number;
         members: number;
@@ -90,247 +81,150 @@ interface PartnerEstate {
     commission: {
         earned_kobo: number;
         pending_kobo: number;
+        monthly_revenue_kobo: number;
     };
+    progress: number;
+    recent_activity: string;
+    href: string;
+    earnings_href: string;
+}
+
+interface PortfolioSummary {
+    connected_estates: number;
+    active_estates: number;
+    residents: number;
+    monthly_revenue_kobo: number;
+    lifetime_commission_kobo: number;
+    pending_settlement_kobo: number;
 }
 
 interface Props {
-    partnerRequests: PartnerRequest[];
-    estates?: PartnerEstate[];
-    activeTab?: 'requests' | 'estates';
-    columns: Column[];
+    partnerRequests?: Referral[];
+    referrals?: Referral[];
+    estates?: PortfolioEstate[];
+    portfolio?: PortfolioSummary;
+    activeTab?: 'estates' | 'referrals' | 'requests';
     commission?: { rate: string | null; type: string | null };
     filters?: { search?: string; status?: string; tab?: string };
+    statusOptions?: { value: string; label: string }[];
 }
 
-type ViewMode = 'pipeline' | 'cards' | 'table';
-type PageTab = 'requests' | 'estates';
-type DrawerTab = 'overview' | 'timeline' | 'contact' | 'notes' | 'feedback';
+type PageTab = 'estates' | 'referrals';
 
-/** ₦4,000/mo ARPU in kobo */
-const EST_ARPU_KOBO = 400_000;
+const REFERRAL_FLOW = [
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'under_review', label: 'Under Review' },
+    { key: 'info_requested', label: 'Info Requested' },
+    { key: 'accepted', label: 'Approved' },
+] as const;
 
-const STAGE_META: Record<string, { tone: string; bar: string; label: string; progress: number; dot: string }> = {
-    submitted: {
-        tone: 'text-sky-700 bg-sky-500/10 dark:text-sky-300',
-        bar: 'bg-sky-500',
-        label: 'Submitted',
-        progress: 40,
-        dot: 'bg-sky-500',
-    },
-    accepted: {
-        tone: 'text-emerald-700 bg-emerald-500/10 dark:text-emerald-300',
-        bar: 'bg-emerald-500',
-        label: 'Accepted',
-        progress: 100,
-        dot: 'bg-emerald-500',
-    },
-    rejected: {
-        tone: 'text-rose-700 bg-rose-500/10 dark:text-rose-300',
-        bar: 'bg-rose-500',
-        label: 'Rejected',
-        progress: 0,
-        dot: 'bg-rose-500',
-    },
+const emptyPortfolio: PortfolioSummary = {
+    connected_estates: 0,
+    active_estates: 0,
+    residents: 0,
+    monthly_revenue_kobo: 0,
+    lifetime_commission_kobo: 0,
+    pending_settlement_kobo: 0,
 };
 
-function stageMeta(status: string) {
-    return STAGE_META[status] ?? STAGE_META.submitted;
-}
+/* ─── Helpers ─── */
 
-function formatDate(iso: string | null | undefined, style: 'short' | 'full' = 'short'): string {
+function formatDate(iso: string | null | undefined): string {
     if (!iso) {
         return '—';
     }
-    const d = new Date(iso);
-    if (style === 'full') {
-        return d.toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' });
-    }
-
-    return d.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function locationOf(r: PartnerRequest): string {
-    return [r.lga, r.state].filter(Boolean).join(', ');
+function statusTone(status: string): string {
+    switch (status) {
+        case 'active':
+            return 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/20';
+        case 'pending':
+            return 'bg-amber-500/15 text-amber-200 ring-amber-400/20';
+        case 'under_review':
+            return 'bg-sky-500/15 text-sky-200 ring-sky-400/20';
+        case 'suspended':
+            return 'bg-rose-500/15 text-rose-200 ring-rose-400/20';
+        case 'archived':
+            return 'bg-white/10 text-white/55 ring-white/10';
+        case 'rejected':
+            return 'bg-rose-500/15 text-rose-300 ring-rose-400/25';
+        case 'accepted':
+            return 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/20';
+        case 'info_requested':
+            return 'bg-amber-500/15 text-amber-200 ring-amber-400/20';
+        default:
+            return 'bg-primary-500/15 text-sky-200 ring-primary-400/20';
+    }
 }
 
-function nextAction(r: PartnerRequest): string {
-    if (r.status === 'rejected') {
-        return r.rejection_reason ? 'Rejected — see reason' : 'Rejected';
-    }
-    if (r.status === 'accepted') {
-        if (r.is_generating_revenue) {
-            return 'Generating commissions';
-        }
-        if (r.estate) {
-            return 'Activated — residents can subscribe';
-        }
-
-        return 'Accepted — estate setup in progress';
-    }
-    if (r.info_request_message) {
-        return 'Information requested by Kontrol';
-    }
-
-    return 'Waiting for review';
-}
-
-function estimates(request: PartnerRequest, commission?: { rate: string | null; type: string | null }) {
-    const houses = request.number_of_houses ?? 0;
-    const annualKobo = houses > 0 ? houses * EST_ARPU_KOBO * 12 : null;
-    let commissionKobo: number | null = null;
-
-    if (annualKobo && commission?.rate && commission.type !== 'fixed') {
-        commissionKobo = Math.round((annualKobo * Number(commission.rate)) / 100);
-    } else if (annualKobo && commission?.rate && commission.type === 'fixed') {
-        commissionKobo = Number(commission.rate);
-    }
-
-    return { houses, commissionKobo };
-}
-
-function StatusBadge({ status, label }: { status: string; label?: string }) {
-    const meta = stageMeta(status);
-
-    return (
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.tone}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-            {label ?? meta.label}
-        </span>
-    );
-}
-
-/** Compact stage journey: Submitted → Accepted */
-function StageJourney({ status }: { status: string }) {
-    if (status === 'rejected') {
-        return (
-            <div className="flex items-center gap-2 text-[11px] text-rose-600 dark:text-rose-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                Rejected
-            </div>
-        );
-    }
-
-    const steps = [
-        { key: 'submitted', label: 'Submitted' },
-        { key: 'accepted', label: 'Accepted' },
-    ];
-    const current = status === 'accepted' ? 1 : 0;
-
-    return (
-        <div className="flex items-center gap-1.5">
-            {steps.map((step, i) => {
-                const done = current >= i;
-                const active = current === i;
-
-                return (
-                    <div key={step.key} className="flex items-center gap-1.5">
-                        {i > 0 && <span className={`h-px w-5 sm:w-7 ${done ? 'bg-emerald-400' : 'bg-stone-200 dark:bg-slate-700'}`} aria-hidden />}
-                        <span className="flex items-center gap-1">
-                            <span
-                                className={`h-2 w-2 rounded-full ${
-                                    done
-                                        ? active
-                                            ? 'bg-emerald-500 ring-2 ring-emerald-500/25'
-                                            : 'bg-emerald-500'
-                                        : 'bg-stone-200 dark:bg-slate-600'
-                                }`}
-                            />
-                            <span
-                                className={`text-[10px] font-medium ${
-                                    active ? 'text-stone-800 dark:text-white' : done ? 'text-stone-500' : 'text-stone-300 dark:text-slate-600'
-                                }`}
-                            >
-                                {step.label}
-                            </span>
-                        </span>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
-function matchesQuery(r: PartnerRequest, q: string): boolean {
+function matchesEstate(estate: PortfolioEstate, q: string): boolean {
     if (!q) {
         return true;
     }
-    const hay = [r.estate_name, r.chairman_name, r.chairman_email, r.chairman_phone ?? '', r.state ?? '', r.lga ?? '', r.estate_address ?? '']
+    const hay = [
+        estate.name,
+        estate.chairman_name,
+        estate.location,
+        estate.address,
+        estate.reference,
+        estate.ulid,
+        estate.status_label,
+        estate.portfolio_status,
+    ]
+        .filter(Boolean)
         .join(' ')
         .toLowerCase();
 
     return hay.includes(q);
 }
 
-/* ─── Command search ─── */
+/* ─── Estate command search ─── */
+
 function EstateCommandSearch({
     estates,
     value,
     onChange,
     onSelect,
 }: {
-    estates: PartnerRequest[];
+    estates: PortfolioEstate[];
     value: string;
     onChange: (v: string) => void;
-    onSelect: (r: PartnerRequest) => void;
+    onSelect: (e: PortfolioEstate) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const rootRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
 
     const suggestions = useMemo(() => {
         const q = value.trim().toLowerCase();
         if (!q) {
-            return [];
+            return estates.slice(0, 6);
         }
 
-        return estates.filter((r) => matchesQuery(r, q)).slice(0, 8);
+        return estates.filter((e) => matchesEstate(e, q)).slice(0, 8);
     }, [estates, value]);
 
     useEffect(() => {
         setActiveIndex(0);
-    }, [value]);
+    }, [value, open]);
 
     useEffect(() => {
-        function onDown(e: MouseEvent) {
-            if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        function onDoc(e: MouseEvent) {
+            if (!rootRef.current?.contains(e.target as Node)) {
                 setOpen(false);
             }
         }
-        document.addEventListener('mousedown', onDown);
+        document.addEventListener('mousedown', onDoc);
 
-        return () => document.removeEventListener('mousedown', onDown);
+        return () => document.removeEventListener('mousedown', onDoc);
     }, []);
 
-    function onKeyDown(e: React.KeyboardEvent) {
-        if (!open && (e.key === 'ArrowDown' || e.key === 'Enter') && suggestions.length) {
-            setOpen(true);
-
-            return;
-        }
-        if (!open) {
-            return;
-        }
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1));
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setActiveIndex((i) => Math.max(i - 1, 0));
-        } else if (e.key === 'Enter' && suggestions[activeIndex]) {
-            e.preventDefault();
-            onSelect(suggestions[activeIndex]);
-            setOpen(false);
-        } else if (e.key === 'Escape') {
-            setOpen(false);
-        }
-    }
-
     return (
-        <div className="relative min-w-0 flex-1" ref={rootRef}>
-            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-stone-400" />
+        <div ref={rootRef} className="relative min-w-[220px] flex-1 sm:max-w-md">
+            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3.5 z-10 h-4 w-4 -translate-y-1/2 text-white/35" />
             <input
-                ref={inputRef}
                 type="search"
                 value={value}
                 onChange={(e) => {
@@ -338,64 +232,72 @@ function EstateCommandSearch({
                     setOpen(true);
                 }}
                 onFocus={() => setOpen(true)}
-                onKeyDown={onKeyDown}
-                placeholder="Search estates, contacts, locations…"
+                onKeyDown={(e) => {
+                    if (!open && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+                        setOpen(true);
+                        return;
+                    }
+                    if (e.key === 'Escape') {
+                        setOpen(false);
+                        return;
+                    }
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setActiveIndex((i) => Math.min(i + 1, Math.max(0, suggestions.length - 1)));
+                    }
+                    if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setActiveIndex((i) => Math.max(i - 1, 0));
+                    }
+                    if (e.key === 'Enter' && suggestions[activeIndex]) {
+                        e.preventDefault();
+                        onSelect(suggestions[activeIndex]);
+                        setOpen(false);
+                    }
+                }}
+                placeholder="Search estates…"
                 aria-label="Search estates"
-                aria-expanded={open && suggestions.length > 0}
-                aria-controls="estate-search-results"
-                autoComplete="off"
-                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-10 text-[13.5px] text-stone-900 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] transition outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-primary-200 dark:bg-white/[0.04] dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] py-3 pr-4 pl-10 text-[13px] text-white outline-none placeholder:text-white/35 focus:border-sky-400/40 focus:ring-2 focus:ring-sky-400/20"
             />
-
             <AnimatePresence>
-                {open && value.trim() && (
+                {open && (
                     <motion.div
-                        id="estate-search-results"
-                        role="listbox"
-                        initial={{ opacity: 0, y: 4 }}
+                        initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 2 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-full right-0 left-0 z-40 mt-2 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-stone-900/10 dark:bg-slate-900 dark:ring-white/10"
+                        exit={{ opacity: 0, y: 4 }}
+                        className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0b1224] shadow-2xl shadow-black/40"
                     >
                         {suggestions.length === 0 ? (
-                            <p className="px-4 py-6 text-center text-[13px] text-stone-500">No estates match “{value.trim()}”</p>
+                            <p className="px-4 py-6 text-center text-[13px] text-white/40">No estates match</p>
                         ) : (
-                            <ul className="max-h-80 overflow-y-auto py-1.5">
-                                {suggestions.map((r, i) => (
-                                    <li key={r.id} role="option" aria-selected={i === activeIndex}>
+                            <ul className="max-h-72 overflow-y-auto py-1.5">
+                                {suggestions.map((estate, i) => (
+                                    <li key={estate.id}>
                                         <button
                                             type="button"
                                             onMouseEnter={() => setActiveIndex(i)}
                                             onClick={() => {
-                                                onSelect(r);
+                                                onSelect(estate);
                                                 setOpen(false);
                                             }}
-                                            className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition ${
-                                                i === activeIndex
-                                                    ? 'bg-stone-50 dark:bg-white/[0.06]'
-                                                    : 'hover:bg-stone-50/80 dark:hover:bg-white/[0.04]'
+                                            className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition ${
+                                                i === activeIndex ? 'bg-white/[0.07]' : 'hover:bg-white/[0.04]'
                                             }`}
                                         >
                                             <div className="min-w-0">
-                                                <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">{r.estate_name}</p>
-                                                <p className="mt-0.5 truncate text-[11px] text-stone-500">
-                                                    {locationOf(r) || '—'} · {r.chairman_name}
+                                                <p className="truncate text-[13px] font-semibold text-white">{estate.name}</p>
+                                                <p className="mt-0.5 truncate text-[11px] text-white/40">
+                                                    {estate.location || estate.reference} · {estate.chairman_name || '—'}
                                                 </p>
                                             </div>
-                                            <StatusBadge status={r.status} label={r.status_label} />
+                                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}>
+                                                {estate.status_label}
+                                            </span>
                                         </button>
                                     </li>
                                 ))}
                             </ul>
                         )}
-                        <div className="border-t border-stone-100 px-3 py-1.5 text-[10px] text-stone-400 dark:border-white/10">
-                            <kbd className="rounded bg-stone-100 px-1 py-0.5 font-mono dark:bg-white/10">↑↓</kbd> navigate
-                            <span className="mx-1.5">·</span>
-                            <kbd className="rounded bg-stone-100 px-1 py-0.5 font-mono dark:bg-white/10">↵</kbd> open
-                            <span className="mx-1.5">·</span>
-                            <kbd className="rounded bg-stone-100 px-1 py-0.5 font-mono dark:bg-white/10">esc</kbd> close
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -403,407 +305,129 @@ function EstateCommandSearch({
     );
 }
 
-/* ─── Estate opportunity card ─── */
-function EstateOpportunity({
-    request,
-    onOpen,
-    commission,
-    dense = false,
-}: {
-    request: PartnerRequest;
-    onOpen: (r: PartnerRequest) => void;
-    commission?: { rate: string | null; type: string | null };
-    dense?: boolean;
-}) {
-    const est = estimates(request, commission);
-    const loc = locationOf(request);
-    const action = nextAction(request);
+/* ─── Referral timeline drawer ─── */
 
-    return (
-        <motion.button
-            type="button"
-            layout
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => onOpen(request)}
-            className={`group w-full rounded-2xl bg-white text-left shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.04] transition hover:shadow-[0_12px_28px_-16px_rgba(28,25,23,0.18)] hover:ring-stone-900/[0.08] dark:bg-white/[0.035] dark:shadow-none dark:ring-white/[0.06] dark:hover:ring-white/12 ${
-                dense ? 'p-3' : 'p-4'
-            }`}
-        >
-            <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                    <p className={`truncate font-semibold tracking-tight text-stone-900 dark:text-white ${dense ? 'text-[13px]' : 'text-[15px]'}`}>
-                        {request.estate_name}
-                    </p>
-                    {loc && <p className="mt-0.5 truncate text-[11px] text-stone-400">{loc}</p>}
-                </div>
-                <StatusBadge status={request.status} label={request.status_label} />
-            </div>
-
-            <div className="mt-3">
-                <StageJourney status={request.status} />
-            </div>
-
-            <div className={`mt-3 grid gap-2 ${dense ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                <div>
-                    <p className="text-[10px] text-stone-400">Contact</p>
-                    <p className="truncate text-[12px] font-medium text-stone-700 dark:text-slate-200">{request.chairman_name}</p>
-                </div>
-                {!dense && (
-                    <div>
-                        <p className="text-[10px] text-stone-400">Houses</p>
-                        <p className="text-[12px] font-medium text-stone-700 tabular-nums dark:text-slate-200">{est.houses || '—'}</p>
-                    </div>
-                )}
-            </div>
-
-            {request.status === 'rejected' && request.rejection_reason && (
-                <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-rose-600 dark:text-rose-400">{request.rejection_reason}</p>
-            )}
-
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-stone-100 pt-2.5 dark:border-white/[0.05]">
-                <p className="truncate text-[11px] font-medium text-stone-500 dark:text-slate-400">{action}</p>
-                <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-primary-600 opacity-0 transition group-hover:opacity-100 dark:text-primary-400">
-                    Open
-                    <ArrowRightIcon className="h-3 w-3" />
-                </span>
-            </div>
-
-            {!dense && est.commissionKobo != null && request.status !== 'rejected' && (
-                <p className="mt-1.5 text-[10px] text-stone-400">
-                    Est. ~{formatAmount(est.commissionKobo)}
-                    <span className="text-stone-300"> /yr</span>
-                </p>
-            )}
-        </motion.button>
-    );
-}
-
-/* ─── Detail drawer ─── */
-function DetailDrawer({
-    request,
-    commission,
+function ReferralTimelineDrawer({
+    referral,
     onClose,
     onDeleted,
 }: {
-    request: PartnerRequest;
-    commission?: { rate: string | null; type: string | null };
+    referral: Referral;
     onClose: () => void;
     onDeleted?: () => void;
 }) {
-    const [tab, setTab] = useState<DrawerTab>('overview');
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-    const est = estimates(request, commission);
-    const timeline = request.timeline ?? [];
-    const adminNotes = request.admin_notes ?? [];
-    const canSoftDelete = request.status === 'rejected';
-
-    function confirmSoftDelete() {
-        if (deleting || !canSoftDelete) {
-            return;
-        }
-
-        setDeleting(true);
-        router.delete(`/partner/partner-requests/${request.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setConfirmDeleteOpen(false);
-                onDeleted?.();
-                onClose();
-            },
-            onFinish: () => setDeleting(false),
-        });
-    }
-
-    const tabs: { key: DrawerTab; label: string }[] = [
-        { key: 'overview', label: 'Overview' },
-        { key: 'timeline', label: 'Timeline' },
-        { key: 'contact', label: 'Contact' },
-        { key: 'notes', label: 'Notes' },
-        { key: 'feedback', label: 'Feedback' },
-    ];
+    const canDelete = referral.status === 'rejected';
+    const events = [...(referral.timeline ?? [])].reverse();
 
     useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
         function onKey(e: KeyboardEvent) {
             if (e.key === 'Escape') {
                 onClose();
             }
         }
         document.addEventListener('keydown', onKey);
-        const prev = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
 
         return () => {
-            document.removeEventListener('keydown', onKey);
             document.body.style.overflow = prev;
+            document.removeEventListener('keydown', onKey);
         };
     }, [onClose]);
 
     return (
         <>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-stone-950/35 backdrop-blur-sm"
-                onClick={onClose}
-                aria-hidden
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-stone-950/50 backdrop-blur-sm" onClick={onClose} />
             <motion.aside
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 32, stiffness: 360 }}
                 className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-[#faf9f7] shadow-2xl dark:bg-slate-950"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="estate-drawer-title"
             >
                 <div className="border-b border-stone-200/70 bg-white px-5 py-5 dark:border-white/10 dark:bg-slate-900">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <p className="text-[11px] font-medium text-stone-400">Estate opportunity</p>
-                            <h2
-                                id="estate-drawer-title"
-                                className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white"
-                            >
-                                {request.estate_name}
+                            <p className="text-[11px] font-medium text-stone-400">Referral timeline</p>
+                            <h2 className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
+                                {referral.estate_name}
                             </h2>
-                            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                                <StatusBadge status={request.status} label={request.status_label} />
-                                <span className="text-[12px] text-stone-500">{nextAction(request)}</span>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${statusTone(referral.stage)}`}>
+                                    {referral.stage_label}
+                                </span>
+                                <span className="text-[12px] text-stone-400">{referral.reference}</span>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            aria-label="Close"
-                            className="rounded-xl p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/10"
-                        >
+                        <button type="button" onClick={onClose} className="rounded-xl p-2 text-stone-400 hover:bg-stone-100 dark:hover:bg-white/10">
                             <XMarkIcon className="h-5 w-5" />
                         </button>
                     </div>
-                    <div className="mt-4">
-                        <StageJourney status={request.status} />
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-5 py-6">
+                    <div className="mb-6 rounded-2xl bg-white p-4 ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
+                        <p className="text-[11px] font-semibold text-stone-500">Expected next step</p>
+                        <p className="mt-1.5 text-[14px] leading-relaxed text-stone-800 dark:text-slate-200">{referral.expected_next_step}</p>
                     </div>
-                </div>
 
-                <div className="flex gap-1 overflow-x-auto border-b border-stone-200/70 px-3 py-2 dark:border-white/10">
-                    {tabs.map((t) => (
-                        <button
-                            key={t.key}
-                            type="button"
-                            onClick={() => setTab(t.key)}
-                            className={`shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition ${
-                                tab === t.key
-                                    ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
-                                    : 'text-stone-500 hover:bg-stone-100 dark:text-slate-400 dark:hover:bg-white/5'
-                            }`}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="flex-1 overflow-y-auto px-5 py-5">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={tab}
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="space-y-4"
-                        >
-                            {tab === 'overview' && (
-                                <>
-                                    {request.status === 'rejected' && (
-                                        <div className="rounded-2xl bg-rose-50 p-4 dark:bg-rose-500/10">
-                                            <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">Rejection reason</p>
-                                            <p className="mt-1.5 text-[13px] leading-relaxed text-rose-950 dark:text-rose-100">
-                                                {request.rejection_reason || 'No reason was provided.'}
-                                            </p>
-                                        </div>
-                                    )}
-                                    <div className="grid grid-cols-2 gap-2.5">
-                                        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                            <p className="text-[10px] text-stone-400">Houses</p>
-                                            <p className="mt-1 text-[16px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                                {est.houses || '—'}
-                                            </p>
-                                        </div>
-                                        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                            <p className="text-[10px] text-stone-400">Est. commission</p>
-                                            <p className="mt-1 text-[16px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                                {est.commissionKobo != null ? formatAmount(est.commissionKobo) : '—'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                        <p className="text-[10px] text-stone-400">Location</p>
-                                        <p className="mt-1 text-[13px] font-medium text-stone-800 dark:text-slate-200">
-                                            {request.estate_address || '—'}
-                                        </p>
-                                        <p className="mt-0.5 text-[12px] text-stone-500">{locationOf(request) || '—'}</p>
-                                    </div>
-                                    {request.estate && (
-                                        <div className="rounded-2xl bg-emerald-50 p-3.5 dark:bg-emerald-500/10">
-                                            <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">Live estate</p>
-                                            <p className="mt-1 text-[14px] font-semibold text-emerald-950 dark:text-emerald-100">
-                                                {request.estate.name}
-                                            </p>
-                                        </div>
-                                    )}
-                                    <div className="grid grid-cols-2 gap-3 text-[12px]">
-                                        <div>
-                                            <p className="text-stone-400">Submitted</p>
-                                            <p className="mt-0.5 font-medium text-stone-800 dark:text-slate-200">
-                                                {formatDate(request.created_at, 'full')}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-stone-400">Updated</p>
-                                            <p className="mt-0.5 font-medium text-stone-800 dark:text-slate-200">
-                                                {formatDate(request.updated_at, 'full')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {tab === 'timeline' && (
-                                <ol>
-                                    {timeline.length === 0 ? (
-                                        <p className="py-8 text-center text-[13px] text-stone-500">No timeline events yet.</p>
-                                    ) : (
-                                        timeline.map((event, i) => (
-                                            <li key={event.id} className="relative flex gap-3 pb-5 last:pb-0">
-                                                <div className="relative flex flex-col items-center">
-                                                    <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary-500/10 text-primary-600">
-                                                        <CheckCircleIcon className="h-3.5 w-3.5" />
-                                                    </span>
-                                                    {i < timeline.length - 1 && <span className="mt-1 w-px flex-1 bg-stone-200 dark:bg-slate-700" />}
-                                                </div>
-                                                <div className="min-w-0 flex-1 rounded-xl bg-white p-3 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{event.description}</p>
-                                                    <p className="mt-1 text-[11px] text-stone-500">
-                                                        {event.creator_name || 'System'} · {formatDate(event.created_at, 'full')}
-                                                    </p>
-                                                </div>
-                                            </li>
-                                        ))
-                                    )}
-                                </ol>
-                            )}
-
-                            {tab === 'contact' && (
-                                <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 dark:bg-white/10">
-                                            <UserCircleIcon className="h-5 w-5 text-stone-500" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">{request.chairman_name}</p>
-                                            <p className="text-[13px] text-stone-500">{request.chairman_email}</p>
-                                            <p className="text-[13px] text-stone-500">{request.chairman_phone || 'No phone'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {tab === 'notes' && (
-                                <div className="space-y-3">
-                                    {request.notes ? (
-                                        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                            <p className="text-[10px] text-stone-400">Your notes</p>
-                                            <p className="mt-2 text-[13px] leading-relaxed text-stone-700 dark:text-slate-300">{request.notes}</p>
-                                        </div>
-                                    ) : (
-                                        <p className="py-6 text-center text-[13px] text-stone-500">No notes.</p>
-                                    )}
-                                    {adminNotes.map((note) => (
-                                        <div
-                                            key={note.id}
-                                            className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]"
-                                        >
-                                            <p className="text-[10px] text-stone-400">
-                                                {note.creator_name || 'Kontrol'} · {formatDate(note.created_at)}
-                                            </p>
-                                            <p className="mt-2 text-[13px] text-stone-700 dark:text-slate-300">{note.body}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {tab === 'feedback' && (
-                                <>
-                                    {request.rejection_reason || request.challenges || request.info_request_message ? (
-                                        <div className="space-y-3 text-[13px]">
-                                            {request.rejection_reason && (
-                                                <div className="rounded-2xl bg-rose-50 p-4 dark:bg-rose-500/10">
-                                                    <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">Rejection reason</p>
-                                                    <p className="mt-1.5 leading-relaxed text-rose-950 dark:text-rose-100">
-                                                        {request.rejection_reason}
-                                                    </p>
-                                                </div>
-                                            )}
-                                            {request.info_request_message && (
-                                                <div className="rounded-2xl bg-amber-50 p-3.5 dark:bg-amber-500/10">
-                                                    {request.info_request_message}
-                                                </div>
-                                            )}
-                                            {request.challenges && (
-                                                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                                    {request.challenges}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <p className="py-10 text-center text-[13px] text-stone-500">No administrator feedback yet.</p>
-                                    )}
-                                </>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                    <ol className="relative ml-2 space-y-0 border-l-2 border-stone-200 pl-6 dark:border-white/10">
+                        {events.map((event, i) => (
+                            <motion.li
+                                key={String(event.id)}
+                                initial={{ opacity: 0, x: -6 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.04 }}
+                                className="relative pb-7 last:pb-0"
+                            >
+                                <span className="absolute top-1 -left-[1.95rem] h-3 w-3 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
+                                <p className="text-[14px] font-semibold text-stone-900 dark:text-white">{event.description}</p>
+                                <p className="mt-1 text-[12px] text-stone-400">
+                                    {formatDate(event.created_at)}
+                                    {event.creator_name ? ` · ${event.creator_name}` : ''}
+                                </p>
+                            </motion.li>
+                        ))}
+                    </ol>
                 </div>
 
                 <div className="space-y-2 border-t border-stone-200/70 p-4 dark:border-white/10">
-                    {canSoftDelete ? (
+                    {canDelete ? (
                         <button
                             type="button"
-                            onClick={() => setConfirmDeleteOpen(true)}
-                            disabled={deleting}
-                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-2.5 text-[13px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-500/10"
+                            onClick={() => setConfirmDelete(true)}
+                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 py-2.5 text-[13px] font-semibold text-rose-700 dark:border-rose-500/30 dark:text-rose-300"
                         >
                             <TrashIcon className="h-4 w-4" />
-                            Delete rejected estate
+                            Remove rejected referral
                         </button>
                     ) : null}
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
-                    >
+                    <button type="button" onClick={onClose} className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900">
                         Close
                     </button>
                 </div>
             </motion.aside>
 
             <ConfirmationModal
-                isOpen={confirmDeleteOpen}
-                onClose={() => {
-                    if (!deleting) {
-                        setConfirmDeleteOpen(false);
-                    }
+                isOpen={confirmDelete}
+                onClose={() => !deleting && setConfirmDelete(false)}
+                onConfirm={() => {
+                    setDeleting(true);
+                    router.delete(`/partner/partner-requests/${referral.id}`, {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            setConfirmDelete(false);
+                            onDeleted?.();
+                            onClose();
+                        },
+                        onFinish: () => setDeleting(false),
+                    });
                 }}
-                onConfirm={confirmSoftDelete}
-                title="Remove rejected estate?"
-                message={`“${request.estate_name}” will be removed from your list. You won’t see it again, but Kontrol keeps a copy for records.`}
-                confirmLabel={deleting ? 'Removing…' : 'Remove from my list'}
-                cancelLabel="Keep it"
+                title="Remove rejected referral?"
+                message={`“${referral.estate_name}” will leave your referrals list. Kontrol keeps a record.`}
+                confirmLabel={deleting ? 'Removing…' : 'Remove'}
                 type="danger"
                 isLoading={deleting}
             />
@@ -811,220 +435,76 @@ function DetailDrawer({
     );
 }
 
-/* ─── Connected estate drawer ─── */
-function ConnectedEstateDrawer({ estate, onClose }: { estate: PartnerEstate; onClose: () => void }) {
-    useEffect(() => {
-        function onKey(e: KeyboardEvent) {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        }
-        document.addEventListener('keydown', onKey);
-        const prev = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.removeEventListener('keydown', onKey);
-            document.body.style.overflow = prev;
-        };
-    }, [onClose]);
-
-    const stats = [
-        { label: 'Residents', value: estate.counts.residents },
-        { label: 'Security', value: estate.counts.security },
-        { label: 'Admins', value: estate.counts.admins },
-        { label: 'Members', value: estate.counts.members },
-    ];
-
-    return (
-        <>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-stone-950/35 backdrop-blur-sm"
-                onClick={onClose}
-                aria-hidden
-            />
-            <motion.aside
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 32, stiffness: 360 }}
-                className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-[#faf9f7] shadow-2xl dark:bg-slate-950"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="connected-estate-drawer-title"
-            >
-                <div className="border-b border-stone-200/70 bg-white px-5 py-5 dark:border-white/10 dark:bg-slate-900">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                            <p className="text-[11px] font-medium text-stone-400">Connected estate</p>
-                            <h2
-                                id="connected-estate-drawer-title"
-                                className="mt-1 truncate text-xl font-semibold tracking-tight text-stone-900 dark:text-white"
-                            >
-                                {estate.name}
-                            </h2>
-                            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                                <span
-                                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                        estate.status === 'active'
-                                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                                            : 'bg-stone-500/10 text-stone-600 dark:text-slate-300'
-                                    }`}
-                                >
-                                    {estate.status_label}
-                                </span>
-                                {estate.commission_status ? (
-                                    <span className="text-[12px] text-stone-500 capitalize">
-                                        Commission · {estate.commission_status.replaceAll('_', ' ')}
-                                    </span>
-                                ) : null}
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            aria-label="Close"
-                            className="rounded-xl p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/10"
-                        >
-                            <XMarkIcon className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-                    <div className="grid grid-cols-2 gap-2.5">
-                        {stats.map((stat) => (
-                            <div key={stat.label} className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                                <p className="text-[10px] text-stone-400">{stat.label}</p>
-                                <p className="mt-1 text-[20px] font-semibold text-stone-900 tabular-nums dark:text-white">{stat.value}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                        <p className="text-[11px] font-semibold text-stone-500">Commission from this estate</p>
-                        <div className="mt-3 grid grid-cols-2 gap-3">
-                            <div>
-                                <p className="text-[10px] text-stone-400">Earned</p>
-                                <p className="mt-0.5 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                    {formatAmount(estate.commission.earned_kobo)}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-stone-400">Pending</p>
-                                <p className="mt-0.5 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                    {formatAmount(estate.commission.pending_kobo)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04]">
-                        <p className="text-[11px] font-semibold text-stone-500">Estate details</p>
-                        <dl className="mt-3 space-y-2.5 text-[13px]">
-                            <div>
-                                <dt className="text-[10px] text-stone-400">Address</dt>
-                                <dd className="mt-0.5 text-stone-800 dark:text-slate-200">{estate.address || '—'}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-[10px] text-stone-400">Contact email</dt>
-                                <dd className="mt-0.5 text-stone-800 dark:text-slate-200">{estate.email || '—'}</dd>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <dt className="text-[10px] text-stone-400">Activated</dt>
-                                    <dd className="mt-0.5 text-stone-800 dark:text-slate-200">
-                                        {estate.activation_date ? formatDate(estate.activation_date) : formatDate(estate.created_at)}
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-[10px] text-stone-400">Commission window</dt>
-                                    <dd className="mt-0.5 text-stone-800 dark:text-slate-200">
-                                        {estate.commission_starts_at
-                                            ? `${formatDate(estate.commission_starts_at)}${
-                                                  estate.commission_ends_at ? ` – ${formatDate(estate.commission_ends_at)}` : ''
-                                              }`
-                                            : '—'}
-                                    </dd>
-                                </div>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <div className="rounded-2xl bg-sky-50 p-4 dark:bg-sky-500/10">
-                        <p className="text-[12px] leading-relaxed text-sky-950 dark:text-sky-100">
-                            Use these numbers to follow up with estate leadership, more active residents usually means stronger commission performance
-                            for your partnership.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="border-t border-stone-200/70 p-4 dark:border-white/10">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
-                    >
-                        Close
-                    </button>
-                </div>
-            </motion.aside>
-        </>
-    );
-}
-
 /* ─── Page ─── */
-export default function PartnerRequestsIndex({ partnerRequests, estates = [], activeTab = 'estates', columns, commission, filters }: Props) {
+
+export default function PartnerRequestsIndex({
+    partnerRequests,
+    referrals,
+    estates = [],
+    portfolio = emptyPortfolio,
+    activeTab = 'estates',
+    commission,
+    filters,
+    statusOptions = [],
+}: Props) {
     const page = usePage();
-    const sharedCommission = (page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } }).partnerContext;
+    const sharedCommission = (page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } })
+        .partnerContext;
     const commissionInfo = commission ?? {
         rate: sharedCommission?.commission_rate ?? null,
         type: sharedCommission?.commission_type ?? null,
     };
 
-    const [tab, setTab] = useState<PageTab>(activeTab === 'requests' || filters?.tab === 'requests' ? 'requests' : 'estates');
-    const [view, setView] = useState<ViewMode>(() => {
-        if (typeof window === 'undefined') {
-            return 'pipeline';
-        }
+    const referralList = referrals ?? partnerRequests ?? [];
+    const initialTab: PageTab =
+        activeTab === 'referrals' || activeTab === 'requests' || filters?.tab === 'referrals' || filters?.tab === 'requests'
+            ? 'referrals'
+            : 'estates';
 
-        return (localStorage.getItem('partner-estates-view') as ViewMode) || 'pipeline';
-    });
+    const [tab, setTab] = useState<PageTab>(initialTab);
     const [search, setSearch] = useState(filters?.search ?? '');
     const [statusFilter, setStatusFilter] = useState(filters?.status ?? '');
-    const [selected, setSelected] = useState<PartnerRequest | null>(null);
-    const [selectedEstate, setSelectedEstate] = useState<PartnerEstate | null>(null);
+    const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
 
     useEffect(() => {
-        localStorage.setItem('partner-estates-view', view);
-    }, [view]);
-
-    useEffect(() => {
-        setTab(activeTab === 'requests' ? 'requests' : 'estates');
-    }, [activeTab]);
+        setTab(initialTab);
+    }, [initialTab]);
 
     const filteredEstates = useMemo(() => {
         const q = search.trim().toLowerCase();
-        if (!q) {
-            return estates;
-        }
 
         return estates.filter((estate) => {
-            const haystack = [estate.name, estate.address, estate.email, estate.status_label].filter(Boolean).join(' ').toLowerCase();
+            if (statusFilter && estate.portfolio_status !== statusFilter) {
+                return false;
+            }
 
-            return haystack.includes(q);
+            return matchesEstate(estate, q);
         });
-    }, [estates, search]);
+    }, [estates, search, statusFilter]);
+
+    const referralsByStage = useMemo(() => {
+        const map: Record<string, Referral[]> = {};
+        for (const col of REFERRAL_FLOW) {
+            map[col.key] = [];
+        }
+        map.rejected = [];
+        for (const r of referralList) {
+            const key = r.stage || r.status;
+            if (!map[key]) {
+                map[key] = [];
+            }
+            map[key].push(r);
+        }
+
+        return map;
+    }, [referralList]);
 
     function switchTab(next: PageTab) {
         setTab(next);
-        setSelected(null);
-        setSelectedEstate(null);
         setSearch('');
         setStatusFilter('');
+        setSelectedReferral(null);
         router.get(
             '/partner/partner-requests',
             { tab: next === 'estates' ? undefined : next },
@@ -1032,423 +512,457 @@ export default function PartnerRequestsIndex({ partnerRequests, estates = [], ac
         );
     }
 
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-
-        return partnerRequests.filter((r) => {
-            if (statusFilter && r.status !== statusFilter) {
-                return false;
-            }
-
-            return matchesQuery(r, q);
-        });
-    }, [partnerRequests, search, statusFilter]);
-
-    const byStatus = useMemo(() => {
-        const map: Record<string, PartnerRequest[]> = {};
-        for (const col of columns) {
-            map[col.key] = [];
+    async function copyEstateLink(estate: PortfolioEstate) {
+        const url = `${window.location.origin}${estate.href}`;
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch {
+            // ignore
         }
-        for (const r of filtered) {
-            if (!map[r.status]) {
-                map[r.status] = [];
-            }
-            map[r.status].push(r);
-        }
+        setMenuOpenId(null);
+    }
 
-        return map;
-    }, [filtered, columns]);
-
-    const emptyPipelineCopy: Record<string, string> = {
-        submitted: 'New referrals will land here while Kontrol reviews them.',
-        accepted: 'Once accepted, estates appear here and can go live.',
-        rejected: 'Rejected referrals will show here with a reason.',
-    };
+    const kpis = [
+        { label: 'Connected Estates', value: String(portfolio.connected_estates) },
+        { label: 'Active Estates', value: String(portfolio.active_estates) },
+        { label: 'Residents', value: String(portfolio.residents) },
+        { label: 'Monthly Revenue', value: formatAmount(portfolio.monthly_revenue_kobo) },
+        { label: 'Lifetime Commission', value: formatAmount(portfolio.lifetime_commission_kobo) },
+        { label: 'Pending Settlement', value: formatAmount(portfolio.pending_settlement_kobo) },
+    ];
 
     return (
-        <PartnerLayout fullWidth={tab === 'requests' && view === 'pipeline'}>
+        <PartnerLayout fullWidth>
             <Head title="My Estates – Partner Portal" />
 
-            <div className="space-y-6 pb-4">
-                {/* Commercial workspace header */}
-                <header className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="min-w-0">
-                        <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase dark:text-slate-500">Portfolio</p>
-                        <h1 className="mt-1 text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">My Estates</h1>
-                        <p className="mt-1 max-w-lg text-[13px] text-stone-500 dark:text-slate-400">
-                            Track onboarding requests and follow live estates connected to your partnership.
-                        </p>
-                    </div>
-                    {commissionInfo.rate && (
-                        <p className="text-[12px] text-stone-400">
-                            Your rate{' '}
-                            <span className="font-semibold text-stone-700 dark:text-slate-200">
-                                {formatCommission(commissionInfo.rate, commissionInfo.type)}
-                            </span>
-                        </p>
-                    )}
-                </header>
+            <div className="space-y-7 pb-8">
+                {/* Hero header */}
+                <motion.section
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative overflow-hidden rounded-[1.75rem] text-white shadow-[0_24px_64px_-28px_rgba(6,18,48,0.55)]"
+                >
+                    <div className="absolute inset-0 bg-[#061230]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(31,111,219,0.4),transparent_55%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.1),transparent_45%)]" />
 
-                {/* Primary tabs */}
-                <div className="inline-flex rounded-2xl bg-stone-100/90 p-1 dark:bg-white/5" role="tablist" aria-label="My Estates sections">
-                    {(
-                        [
-                            { key: 'estates' as const, label: 'Estates', count: estates.length },
-                            { key: 'requests' as const, label: 'Requests', count: partnerRequests.length },
-                        ] as const
-                    ).map((item) => (
-                        <button
-                            key={item.key}
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === item.key}
-                            onClick={() => switchTab(item.key)}
-                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
-                                tab === item.key
-                                    ? 'bg-white text-stone-900 shadow-sm dark:bg-white/15 dark:text-white'
-                                    : 'text-stone-500 hover:text-stone-800 dark:text-slate-400 dark:hover:text-slate-200'
-                            }`}
-                        >
-                            {item.label}
-                            <span
-                                className={`rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${
-                                    tab === item.key
-                                        ? 'bg-stone-100 text-stone-700 dark:bg-white/10 dark:text-slate-200'
-                                        : 'bg-stone-200/60 text-stone-500 dark:bg-white/5'
-                                }`}
-                            >
-                                {item.count}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Minimal controls */}
-                <div className="flex flex-wrap items-center gap-2">
-                    {tab === 'requests' ? (
-                        <EstateCommandSearch estates={partnerRequests} value={search} onChange={setSearch} onSelect={setSelected} />
-                    ) : (
-                        <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
-                            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                            <input
-                                type="search"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search connected estates…"
-                                aria-label="Search connected estates"
-                                className="w-full rounded-2xl bg-white py-2.5 pr-3 pl-9 text-[13px] text-stone-800 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] outline-none dark:bg-white/[0.04] dark:text-white dark:ring-white/10"
-                            />
-                        </div>
-                    )}
-
-                    {tab === 'requests' ? (
-                        <div className="relative">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                aria-label="Status"
-                                className="appearance-none rounded-2xl bg-white py-2.5 pr-9 pl-3.5 text-[13px] font-medium text-stone-700 shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.06] outline-none dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10"
-                            >
-                                <option value="">All statuses</option>
-                                <option value="submitted">Submitted</option>
-                                <option value="accepted">Accepted</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                            <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
-                        </div>
-                    ) : null}
-
-                    <Link
-                        href="/partner/partner-requests/create"
-                        className="inline-flex items-center gap-1.5 rounded-2xl bg-stone-900 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-[0.98] dark:bg-white dark:text-stone-900"
-                    >
-                        <PlusIcon className="h-4 w-4" />
-                        <span className="hidden sm:inline">Submit estate</span>
-                        <span className="sm:hidden">New</span>
-                    </Link>
-                </div>
-
-                {tab === 'estates' ? (
-                    filteredEstates.length === 0 ? (
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-[1.75rem] bg-white px-6 py-16 text-center shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]"
-                        >
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
-                                <BuildingOffice2Icon className="h-7 w-7" />
+                    <div className="relative px-5 py-7 sm:px-8 sm:py-8">
+                        <div className="flex flex-wrap items-end justify-between gap-4">
+                            <div>
+                                <p className="text-[11px] font-semibold tracking-[0.16em] text-white/40 uppercase">Portfolio</p>
+                                <h1 className="mt-1.5 text-[1.85rem] font-semibold tracking-tight sm:text-[2.1rem]">My Estates</h1>
+                                <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-white/50">
+                                    Manage live estates as commercial assets — performance, residents, and commission in one place.
+                                </p>
                             </div>
-                            <h2 className="mt-5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
-                                {estates.length === 0 ? 'No connected estates yet' : 'No estates match'}
-                            </h2>
-                            <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-stone-500">
-                                {estates.length === 0
-                                    ? 'When Kontrol accepts a request and creates the estate, it will appear here with residents, security, and commission health.'
-                                    : 'Try a different search term.'}
-                            </p>
-                            {estates.length === 0 ? (
-                                <button
-                                    type="button"
-                                    onClick={() => switchTab('requests')}
-                                    className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                            <div className="flex flex-wrap items-center gap-2">
+                                {commissionInfo.rate ? (
+                                    <p className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[12px] text-white/60">
+                                        Your rate{' '}
+                                        <span className="font-semibold text-white">
+                                            {formatCommission(commissionInfo.rate, commissionInfo.type)}
+                                        </span>
+                                    </p>
+                                ) : null}
+                                <Link
+                                    href="/partner/partner-requests/create"
+                                    className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-[13px] font-semibold text-stone-900 shadow-sm transition hover:bg-sky-50"
                                 >
-                                    View requests
-                                </button>
-                            ) : null}
-                        </motion.div>
-                    ) : (
-                        <div className="space-y-4">
-                            <p className="text-[12px] text-stone-400">
-                                <span className="font-semibold text-stone-700 dark:text-slate-200">{filteredEstates.length}</span>
-                                {filteredEstates.length === 1 ? ' connected estate' : ' connected estates'}
-                            </p>
-                            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-                                {filteredEstates.map((estate) => (
-                                    <button
-                                        key={estate.id}
-                                        type="button"
-                                        onClick={() => setSelectedEstate(estate)}
-                                        className="group rounded-2xl bg-white p-4 text-left shadow-[0_1px_2px_rgba(28,25,23,0.04)] ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(28,25,23,0.18)] hover:ring-stone-900/[0.08] dark:bg-white/[0.035] dark:ring-white/[0.06]"
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="min-w-0">
-                                                <p className="truncate text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">
-                                                    {estate.name}
-                                                </p>
-                                                <p className="mt-0.5 truncate text-[11px] text-stone-400">
-                                                    {estate.address || estate.email || 'No address on file'}
-                                                </p>
-                                            </div>
-                                            <span
-                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                                    estate.status === 'active'
-                                                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                                                        : 'bg-stone-500/10 text-stone-600'
-                                                }`}
-                                            >
-                                                {estate.status_label}
-                                            </span>
-                                        </div>
-                                        <div className="mt-4 grid grid-cols-3 gap-2">
-                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
-                                                <p className="text-[9px] text-stone-400">Residents</p>
-                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                                    {estate.counts.residents}
-                                                </p>
-                                            </div>
-                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
-                                                <p className="text-[9px] text-stone-400">Security</p>
-                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                                    {estate.counts.security}
-                                                </p>
-                                            </div>
-                                            <div className="rounded-xl bg-stone-50 px-2 py-2 dark:bg-white/[0.04]">
-                                                <p className="text-[9px] text-stone-400">Admins</p>
-                                                <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
-                                                    {estate.counts.admins}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-2.5 dark:border-white/[0.05]">
-                                            <p className="text-[11px] text-stone-500">Earned {formatAmount(estate.commission.earned_kobo)}</p>
-                                            <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary-600 opacity-0 transition group-hover:opacity-100">
-                                                Open
-                                                <ArrowRightIcon className="h-3 w-3" />
-                                            </span>
-                                        </div>
-                                    </button>
-                                ))}
+                                    <PlusIcon className="h-4 w-4" />
+                                    Submit estate
+                                </Link>
                             </div>
                         </div>
-                    )
-                ) : partnerRequests.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-[1.75rem] bg-white px-6 py-16 text-center shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]"
-                    >
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600">
-                            <BuildingOffice2Icon className="h-7 w-7" />
-                        </div>
-                        <h2 className="mt-5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">Submit your first estate</h2>
-                        <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-stone-500">
-                            Refer an estate to start your pipeline. Track review, acceptance, and when residents begin generating commission.
-                        </p>
-                        <Link
-                            href="/partner/partner-requests/create"
-                            className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
-                        >
-                            <PlusIcon className="h-4 w-4" />
-                            Submit estate
-                        </Link>
-                    </motion.div>
-                ) : (
-                    <>
-                        {/* Content chrome: count + secondary view switch */}
-                        <div className="flex items-center justify-between gap-3">
-                            <p className="text-[12px] text-stone-400">
-                                <span className="font-semibold text-stone-700 dark:text-slate-200">{filtered.length}</span>
-                                {filtered.length === 1 ? ' estate' : ' estates'}
-                                {search.trim() ? ` matching “${search.trim()}”` : ''}
-                            </p>
-                            <div className="inline-flex rounded-xl bg-stone-100/80 p-0.5 dark:bg-white/5" role="group" aria-label="View mode">
-                                {(
-                                    [
-                                        { key: 'pipeline' as const, icon: Squares2X2Icon, label: 'Pipeline' },
-                                        { key: 'cards' as const, icon: RectangleStackIcon, label: 'Cards' },
-                                        { key: 'table' as const, icon: ListBulletIcon, label: 'Table' },
-                                    ] as const
-                                ).map((item) => (
-                                    <button
-                                        key={item.key}
-                                        type="button"
-                                        onClick={() => setView(item.key)}
-                                        aria-pressed={view === item.key}
-                                        title={item.label}
-                                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition ${
-                                            view === item.key
-                                                ? 'bg-white text-stone-900 shadow-sm dark:bg-white/15 dark:text-white'
-                                                : 'text-stone-500 dark:text-slate-400'
+
+                        {/* Tabs */}
+                        <div className="mt-7 inline-flex rounded-2xl border border-white/10 bg-white/[0.06] p-1" role="tablist">
+                            {(
+                                [
+                                    { key: 'estates' as const, label: 'Estates', count: estates.length },
+                                    { key: 'referrals' as const, label: 'Referrals', count: referralList.length },
+                                ] as const
+                            ).map((item) => (
+                                <button
+                                    key={item.key}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={tab === item.key}
+                                    onClick={() => switchTab(item.key)}
+                                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
+                                        tab === item.key
+                                            ? 'bg-white text-stone-900 shadow-sm'
+                                            : 'text-white/55 hover:text-white'
+                                    }`}
+                                >
+                                    {item.label}
+                                    <span
+                                        className={`rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${
+                                            tab === item.key ? 'bg-stone-100 text-stone-700' : 'bg-white/10 text-white/60'
                                         }`}
                                     >
-                                        <item.icon className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">{item.label}</span>
-                                    </button>
-                                ))}
+                                        {item.count}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </motion.section>
+
+                {tab === 'estates' ? (
+                    <>
+                        {/* KPI pills */}
+                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {kpis.map((kpi, i) => (
+                                <motion.div
+                                    key={kpi.label}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.03 * i }}
+                                    className="min-w-[9.5rem] shrink-0 rounded-2xl bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,25,23,0.04),0_12px_28px_-22px_rgba(28,25,23,0.18)] ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04] dark:ring-white/[0.07]"
+                                >
+                                    <p className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">{kpi.label}</p>
+                                    <p className="mt-1 text-[15px] font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
+                                        {kpi.value}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Search + status */}
+                        <div className="flex flex-wrap items-center gap-2 rounded-[1.25rem] border border-stone-900/[0.05] bg-[#0b1224] p-2.5 shadow-sm dark:border-white/10">
+                            <EstateCommandSearch
+                                estates={estates}
+                                value={search}
+                                onChange={setSearch}
+                                onSelect={(estate) => router.visit(estate.href)}
+                            />
+                            <div className="relative">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    aria-label="Status"
+                                    className="appearance-none rounded-xl border border-white/10 bg-white/[0.06] py-3 pr-9 pl-3.5 text-[13px] font-medium text-white outline-none"
+                                >
+                                    {(statusOptions.length
+                                        ? statusOptions
+                                        : [
+                                              { value: '', label: 'All' },
+                                              { value: 'active', label: 'Active' },
+                                              { value: 'pending', label: 'Pending' },
+                                              { value: 'under_review', label: 'Under Review' },
+                                              { value: 'suspended', label: 'Suspended' },
+                                              { value: 'archived', label: 'Archived' },
+                                          ]
+                                    ).map((opt) => (
+                                        <option key={opt.value || 'all'} value={opt.value} className="text-stone-900">
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
                             </div>
                         </div>
 
-                        <AnimatePresence mode="wait">
+                        {estates.length === 0 ? (
                             <motion.div
-                                key={`${view}-${statusFilter}-${search}`}
-                                initial={{ opacity: 0, y: 8 }}
+                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
+                                className="relative overflow-hidden rounded-[1.75rem] bg-linear-to-br from-[#061230] via-[#0a1a3a] to-[#0c274f] px-6 py-16 text-center text-white shadow-[0_24px_64px_-28px_rgba(6,18,48,0.5)]"
                             >
-                                {filtered.length === 0 ? (
-                                    <div className="py-16 text-center">
-                                        <MagnifyingGlassIcon className="mx-auto h-7 w-7 text-stone-300" />
-                                        <p className="mt-3 text-[14px] font-semibold text-stone-800 dark:text-white">No estates match</p>
-                                        <p className="mt-1 text-[13px] text-stone-500">Try a different search or status.</p>
+                                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.12),transparent_55%)]" />
+                                <div className="relative">
+                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 ring-1 ring-white/15">
+                                        <BuildingOffice2Icon className="h-8 w-8 text-sky-200" />
+                                    </div>
+                                    <h2 className="mt-6 text-2xl font-semibold tracking-tight">No estates yet</h2>
+                                    <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-white/55">
+                                        Start by submitting your first estate. Once approved, it appears here as a portfolio asset you can follow.
+                                    </p>
+                                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                                        <Link
+                                            href="/partner/partner-requests/create"
+                                            className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-[13px] font-semibold text-stone-900"
+                                        >
+                                            <PlusIcon className="h-4 w-4" />
+                                            Submit Estate
+                                        </Link>
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                setSearch('');
-                                                setStatusFilter('');
-                                            }}
-                                            className="mt-4 text-[13px] font-semibold text-primary-600"
+                                            onClick={() => switchTab('referrals')}
+                                            className="text-[13px] font-semibold text-sky-200/90 underline-offset-4 hover:underline"
                                         >
-                                            Clear
+                                            How referrals work
                                         </button>
                                     </div>
-                                ) : view === 'pipeline' ? (
-                                    <div className="flex gap-4 overflow-x-auto pb-2">
-                                        {columns.map((col) => {
-                                            const items = byStatus[col.key] ?? [];
-                                            const meta = stageMeta(col.key);
-
-                                            return (
-                                                <section key={col.key} className="flex w-[280px] shrink-0 flex-col">
-                                                    <header className="mb-3 flex items-center gap-2 px-0.5">
-                                                        <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                                                        <h2 className="text-[13px] font-semibold text-stone-800 dark:text-slate-100">{col.label}</h2>
-                                                        <span className="text-[12px] text-stone-400 tabular-nums">{items.length}</span>
-                                                    </header>
-                                                    <div className="flex flex-1 flex-col gap-2.5">
-                                                        {items.length === 0 ? (
-                                                            <div className="rounded-2xl px-4 py-10 text-center">
-                                                                <p className="text-[13px] font-medium text-stone-500">No estates here</p>
-                                                                <p className="mt-1 text-[12px] leading-relaxed text-stone-400">
-                                                                    {emptyPipelineCopy[col.key] ?? 'Nothing in this stage yet.'}
-                                                                </p>
-                                                            </div>
-                                                        ) : (
-                                                            items.map((request) => (
-                                                                <EstateOpportunity
-                                                                    key={request.id}
-                                                                    request={request}
-                                                                    onOpen={setSelected}
-                                                                    commission={commissionInfo}
-                                                                    dense
-                                                                />
-                                                            ))
-                                                        )}
-                                                    </div>
-                                                </section>
-                                            );
-                                        })}
-                                    </div>
-                                ) : view === 'cards' ? (
-                                    <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-                                        {filtered.map((request) => (
-                                            <EstateOpportunity key={request.id} request={request} onOpen={setSelected} commission={commissionInfo} />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]">
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full">
-                                                <thead>
-                                                    <tr className="border-b border-stone-100 text-left text-[11px] font-medium text-stone-400 dark:border-white/10">
-                                                        <th className="px-4 py-3 font-medium">Estate</th>
-                                                        <th className="px-4 py-3 font-medium">Stage</th>
-                                                        <th className="px-4 py-3 font-medium">Next</th>
-                                                        <th className="px-4 py-3 text-right font-medium">Houses</th>
-                                                        <th className="px-4 py-3 font-medium">Submitted</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {filtered.map((request) => (
-                                                        <tr
-                                                            key={request.id}
-                                                            onClick={() => setSelected(request)}
-                                                            className="cursor-pointer border-b border-stone-50 transition last:border-0 hover:bg-stone-50/80 dark:border-white/[0.04] dark:hover:bg-white/[0.03]"
-                                                        >
-                                                            <td className="px-4 py-4">
-                                                                <p className="text-[14px] font-semibold tracking-tight text-stone-900 dark:text-white">
-                                                                    {request.estate_name}
-                                                                </p>
-                                                                <p className="mt-0.5 text-[12px] text-stone-500">
-                                                                    {locationOf(request) || '—'} · {request.chairman_name}
-                                                                </p>
-                                                            </td>
-                                                            <td className="px-4 py-4">
-                                                                <div className="space-y-1.5">
-                                                                    <StatusBadge status={request.status} label={request.status_label} />
-                                                                    <StageJourney status={request.status} />
-                                                                </div>
-                                                            </td>
-                                                            <td className="max-w-[180px] px-4 py-4 text-[12px] text-stone-600 dark:text-slate-300">
-                                                                {nextAction(request)}
-                                                            </td>
-                                                            <td className="px-4 py-4 text-right text-[13px] text-stone-700 tabular-nums dark:text-slate-200">
-                                                                {request.number_of_houses ?? '—'}
-                                                            </td>
-                                                            <td className="px-4 py-4 text-[12px] text-stone-400">{formatDate(request.created_at)}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
                             </motion.div>
-                        </AnimatePresence>
+                        ) : filteredEstates.length === 0 ? (
+                            <div className="rounded-[1.5rem] bg-white px-6 py-14 text-center ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03]">
+                                <MagnifyingGlassIcon className="mx-auto h-7 w-7 text-stone-300" />
+                                <p className="mt-3 text-[15px] font-semibold text-stone-900 dark:text-white">No estates match</p>
+                                <p className="mt-1 text-[13px] text-stone-500">Try another search or status.</p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setStatusFilter('');
+                                    }}
+                                    className="mt-4 text-[13px] font-semibold text-primary-600"
+                                >
+                                    Clear filters
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid gap-5 lg:grid-cols-2">
+                                {filteredEstates.map((estate, index) => (
+                                    <motion.article
+                                        key={estate.id}
+                                        initial={{ opacity: 0, y: 14 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: Math.min(index * 0.04, 0.24) }}
+                                        whileHover={{ y: -3 }}
+                                        className="group relative overflow-hidden rounded-[1.5rem] bg-white p-6 shadow-[0_1px_0_rgba(28,25,23,0.04),0_24px_48px_-28px_rgba(28,25,23,0.22)] ring-1 ring-stone-900/[0.05] transition dark:bg-white/[0.035] dark:ring-white/[0.07]"
+                                    >
+                                        <div className="pointer-events-none absolute -top-16 -right-10 h-40 w-40 rounded-full bg-primary-500/[0.07] blur-3xl" />
+
+                                        <div className="relative flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="truncate text-[1.35rem] font-semibold tracking-tight text-stone-900 dark:text-white">
+                                                        {estate.name}
+                                                    </h3>
+                                                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}>
+                                                        {estate.status_label}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1.5 text-[13px] text-stone-500">
+                                                    {estate.location || estate.address || 'Location pending'}
+                                                    {estate.chairman_name ? ` · ${estate.chairman_name}` : ''}
+                                                </p>
+                                                <p className="mt-1 text-[11px] font-medium tracking-wide text-stone-400 uppercase">
+                                                    {estate.reference}
+                                                </p>
+                                            </div>
+
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setMenuOpenId(menuOpenId === estate.id ? null : estate.id)}
+                                                    className="rounded-xl p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/10"
+                                                    aria-label="More actions"
+                                                >
+                                                    <EllipsisHorizontalIcon className="h-5 w-5" />
+                                                </button>
+                                                {menuOpenId === estate.id ? (
+                                                    <div className="absolute top-10 right-0 z-20 w-48 overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-xl dark:border-white/10 dark:bg-slate-900">
+                                                        {[
+                                                            { label: 'Open Estate', href: estate.href },
+                                                            { label: 'View Commission', href: estate.earnings_href },
+                                                        ].map((item) => (
+                                                            <Link
+                                                                key={item.label}
+                                                                href={item.href}
+                                                                className="block px-3 py-2 text-[13px] text-stone-700 hover:bg-stone-50 dark:text-slate-200 dark:hover:bg-white/5"
+                                                                onClick={() => setMenuOpenId(null)}
+                                                            >
+                                                                {item.label}
+                                                            </Link>
+                                                        ))}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => copyEstateLink(estate)}
+                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-stone-700 hover:bg-stone-50 dark:text-slate-200 dark:hover:bg-white/5"
+                                                        >
+                                                            <LinkIcon className="h-3.5 w-3.5" />
+                                                            Copy Estate Link
+                                                        </button>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </div>
+
+                                        <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                            {[
+                                                { label: 'Residents', value: estate.counts.residents, icon: UsersIcon },
+                                                { label: 'Subscribed', value: estate.counts.subscribed, icon: UserGroupIcon },
+                                                {
+                                                    label: 'Revenue',
+                                                    value: formatAmount(estate.commission.monthly_revenue_kobo),
+                                                    icon: ChartBarIcon,
+                                                },
+                                                {
+                                                    label: 'Commission',
+                                                    value: formatAmount(estate.commission.earned_kobo),
+                                                    icon: BanknotesIcon,
+                                                },
+                                            ].map((cell) => (
+                                                <div
+                                                    key={cell.label}
+                                                    className="rounded-2xl bg-stone-50/90 px-3 py-3 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.04] dark:ring-white/[0.05]"
+                                                >
+                                                    <div className="flex items-center gap-1.5 text-stone-400">
+                                                        <cell.icon className="h-3.5 w-3.5" />
+                                                        <p className="text-[10px] font-medium tracking-wide uppercase">{cell.label}</p>
+                                                    </div>
+                                                    <p className="mt-1.5 text-[15px] font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
+                                                        {cell.value}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="relative mt-5">
+                                            <div className="mb-1.5 flex items-center justify-between text-[11px] text-stone-400">
+                                                <span>Progress</span>
+                                                <span className="font-semibold tabular-nums text-stone-600 dark:text-slate-300">
+                                                    {estate.progress}%
+                                                </span>
+                                            </div>
+                                            <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
+                                                <motion.div
+                                                    className="h-full rounded-full bg-linear-to-r from-primary-500 to-sky-400"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${estate.progress}%` }}
+                                                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                                />
+                                            </div>
+                                            <p className="mt-2 text-[12px] text-stone-500">{estate.recent_activity}</p>
+                                        </div>
+
+                                        <div className="relative mt-6 flex flex-wrap gap-2 border-t border-stone-100 pt-5 dark:border-white/[0.06]">
+                                            <Link
+                                                href={estate.href}
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[12px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                                            >
+                                                Open Estate
+                                                <ArrowRightIcon className="h-3.5 w-3.5" />
+                                            </Link>
+                                            <Link
+                                                href={estate.earnings_href}
+                                                className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-[12px] font-semibold text-stone-700 dark:border-white/10 dark:bg-transparent dark:text-slate-200"
+                                            >
+                                                View Earnings
+                                            </Link>
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl px-2 py-2 text-[12px] font-medium text-stone-400">
+                                                <ClockIcon className="h-3.5 w-3.5" />
+                                                Timeline
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl px-2 py-2 text-[12px] font-medium text-stone-400">
+                                                <DocumentTextIcon className="h-3.5 w-3.5" />
+                                                Documents
+                                            </span>
+                                        </div>
+                                    </motion.article>
+                                ))}
+                            </div>
+                        )}
                     </>
+                ) : (
+                    /* ─── Referrals workflow ─── */
+                    <div className="space-y-6">
+                        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06] sm:p-6">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {REFERRAL_FLOW.map((step, i) => (
+                                    <div key={step.key} className="flex items-center gap-2">
+                                        <div className="rounded-full bg-stone-100 px-3 py-1.5 text-[12px] font-semibold text-stone-700 dark:bg-white/10 dark:text-slate-200">
+                                            {step.label}
+                                            <span className="ml-1.5 tabular-nums text-stone-400">
+                                                {(referralsByStage[step.key] ?? []).length}
+                                            </span>
+                                        </div>
+                                        {i < REFERRAL_FLOW.length - 1 ? (
+                                            <ArrowRightIcon className="hidden h-3.5 w-3.5 text-stone-300 sm:block" />
+                                        ) : null}
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-[13px] text-stone-500">
+                                Referrals are temporary workflow items that convert into portfolio estates once approved.
+                            </p>
+                        </div>
+
+                        {referralList.length === 0 ? (
+                            <div className="rounded-[1.5rem] bg-white px-6 py-14 text-center ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03]">
+                                <ClipboardDocumentIcon className="mx-auto h-8 w-8 text-stone-300" />
+                                <h2 className="mt-4 text-xl font-semibold text-stone-900 dark:text-white">No referrals in flight</h2>
+                                <p className="mx-auto mt-2 max-w-md text-[14px] text-stone-500">
+                                    Submit an estate to start the review pipeline. You’ll see stage-by-stage progress here.
+                                </p>
+                                <Link
+                                    href="/partner/partner-requests/create"
+                                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                                >
+                                    <PlusIcon className="h-4 w-4" />
+                                    Submit estate
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {referralList.map((referral, i) => (
+                                    <motion.button
+                                        key={referral.id}
+                                        type="button"
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: Math.min(i * 0.03, 0.2) }}
+                                        onClick={() => setSelectedReferral(referral)}
+                                        className="group flex w-full flex-col gap-3 rounded-[1.25rem] bg-white p-5 text-left shadow-[0_1px_0_rgba(28,25,23,0.04),0_16px_32px_-24px_rgba(28,25,23,0.18)] ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/[0.035] dark:ring-white/[0.06] sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="text-[16px] font-semibold tracking-tight text-stone-900 dark:text-white">
+                                                    {referral.estate_name}
+                                                </h3>
+                                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(referral.stage)}`}>
+                                                    {referral.stage_label}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-[13px] text-stone-500">
+                                                {referral.chairman_name}
+                                                {referral.lga || referral.state
+                                                    ? ` · ${[referral.lga, referral.state].filter(Boolean).join(', ')}`
+                                                    : ''}
+                                                {' · '}
+                                                Submitted {formatDate(referral.created_at)}
+                                            </p>
+                                            <p className="mt-2 text-[12px] text-stone-400">
+                                                <span className="font-medium text-stone-600 dark:text-slate-300">Latest · </span>
+                                                {referral.latest_activity}
+                                            </p>
+                                            <p className="mt-1 text-[12px] text-stone-500">
+                                                <span className="font-medium text-stone-600 dark:text-slate-300">Next · </span>
+                                                {referral.expected_next_step}
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                                            {referral.assigned_manager?.name ? (
+                                                <p className="text-[11px] text-stone-400">
+                                                    Reviewer · {referral.assigned_manager.name}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[11px] text-stone-400">Reviewer · Unassigned</p>
+                                            )}
+                                            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-600 group-hover:gap-1.5">
+                                                Open Timeline
+                                                <ArrowRightIcon className="h-3.5 w-3.5" />
+                                            </span>
+                                        </div>
+                                    </motion.button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
             <AnimatePresence>
-                {selected && (
-                    <DetailDrawer
-                        request={selected}
-                        commission={commissionInfo}
-                        onClose={() => setSelected(null)}
-                        onDeleted={() => setSelected(null)}
+                {selectedReferral ? (
+                    <ReferralTimelineDrawer
+                        referral={selectedReferral}
+                        onClose={() => setSelectedReferral(null)}
+                        onDeleted={() => setSelectedReferral(null)}
                     />
-                )}
-                {selectedEstate && <ConnectedEstateDrawer estate={selectedEstate} onClose={() => setSelectedEstate(null)} />}
+                ) : null}
             </AnimatePresence>
         </PartnerLayout>
     );

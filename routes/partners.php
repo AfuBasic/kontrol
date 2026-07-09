@@ -41,4 +41,7 @@ Route::middleware('role:affiliate')->group(function (): void {
     Route::post('/partner-requests', [PartnerRequestController::class, 'store'])->name('partner.partner-requests.store');
     Route::delete('/partner-requests/{partnerRequest}', [PartnerRequestController::class, 'destroy'])
         ->name('partner.partner-requests.destroy');
+
+    Route::get('/estates/{estate:ulid}', [PartnerRequestController::class, 'showEstate'])
+        ->name('partner.estates.show');
 });

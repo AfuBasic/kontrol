@@ -45,7 +45,7 @@ it('allows partner members to submit estate applications', function () {
             'lga' => 'Ikeja',
             'notes' => 'High potential estate',
         ])
-        ->assertRedirect(route('partner.partner-requests.index'))
+        ->assertRedirect(route('partner.partner-requests.index', ['tab' => 'referrals']))
         ->assertSessionHas('success');
 
     assertDatabaseHas('estate_applications', [
