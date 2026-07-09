@@ -1,4 +1,4 @@
-import { BellIcon, CheckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { BellIcon, CheckIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import EmptyState from '@/Components/Partner/EmptyState';
@@ -35,6 +35,8 @@ interface Props {
 export default function PartnerNotificationsIndex({ notifications, filters, unreadCount }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [type, setType] = useState(filters.type ?? 'all');
+    const [clearing, setClearing] = useState(false);
+    const hasNotifications = notifications.total > 0;
 
     function applyFilters(next: { search?: string; type?: string }) {
         router.get(
@@ -60,6 +62,26 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
         );
     }
 
+    function clearAllNotifications() {
+        if (clearing || !hasNotifications) {
+            return;
+        }
+
+        if (!window.confirm('Clear all notifications? This cannot be undone.')) {
+            return;
+        }
+
+        setClearing(true);
+        router.post(
+            '/partner/notifications/clear-all',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setClearing(false),
+            },
+        );
+    }
+
     return (
         <PartnerLayout>
             <Head title="Notifications" />
@@ -69,15 +91,32 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                     title="Notifications"
                     description="Estate updates, settlements, and account alerts."
                     actions={
-                        unreadCount > 0 ? (
-                            <button
-                                type="button"
-                                onClick={() => router.post('/partner/notifications/read-all', {}, { preserveScroll: true })}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                            >
-                                <CheckIcon className="h-3.5 w-3.5" />
-                                Mark all read
-                            </button>
+                        hasNotifications || unreadCount > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                                {unreadCount > 0 ? (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            router.post('/partner/notifications/read-all', {}, { preserveScroll: true })
+                                        }
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                    >
+                                        <CheckIcon className="h-3.5 w-3.5" />
+                                        Mark all read
+                                    </button>
+                                ) : null}
+                                {hasNotifications ? (
+                                    <button
+                                        type="button"
+                                        onClick={clearAllNotifications}
+                                        disabled={clearing}
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                                    >
+                                        <TrashIcon className="h-3.5 w-3.5" />
+                                        {clearing ? 'Clearing…' : 'Clear all'}
+                                    </button>
+                                ) : null}
+                            </div>
                         ) : undefined
                     }
                 />
