@@ -93,7 +93,7 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
         <PartnerLayout>
             <Head title="Earnings" />
 
-            <div className="space-y-4">
+            <div className="space-y-5">
                 <PageHeader
                     title="Earnings"
                     description="Commissions, settlements, and monthly performance."
@@ -102,7 +102,7 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                             type="button"
                             onClick={() => exportCsv(earnings.data)}
                             disabled={earnings.data.length === 0}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-[12px] font-semibold text-stone-700 shadow-sm ring-1 ring-stone-900/[0.06] transition hover:bg-stone-50 disabled:opacity-40 dark:bg-white/[0.04] dark:text-slate-200 dark:ring-white/10 dark:hover:bg-white/[0.07]"
                         >
                             <ArrowDownTrayIcon className="h-3.5 w-3.5" />
                             CSV statement
@@ -110,22 +110,26 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                     }
                 />
 
-                <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
-                    <Surface padding="sm" className="border-emerald-200/70 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                <div className="grid auto-rows-fr grid-cols-2 gap-3 xl:grid-cols-4">
+                    <Surface
+                        padding="sm"
+                        stretch
+                        className="min-h-[96px] bg-emerald-50/50 ring-emerald-500/10 dark:bg-emerald-950/25 dark:ring-emerald-500/15"
+                    >
                         <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
                             <CheckCircleIcon className="h-3.5 w-3.5" />
                             <span className="text-[11px] font-medium">Lifetime</span>
                         </div>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-emerald-900 dark:text-emerald-100">
+                        <p className="mt-auto pt-2 text-xl font-semibold tabular-nums tracking-tight text-emerald-900 dark:text-emerald-100">
                             {formatAmount(summary.total_earned)}
                         </p>
                     </Surface>
-                    <Surface padding="sm">
+                    <Surface padding="sm" stretch className="min-h-[96px]">
                         <div className="flex items-center gap-1.5 text-primary-600 dark:text-primary-400">
                             <ChartBarIcon className="h-3.5 w-3.5" />
                             <span className="text-[11px] font-medium">This month</span>
                         </div>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-stone-900 dark:text-white">
+                        <p className="mt-auto pt-2 text-xl font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
                             {formatAmount(summary.current_month_earnings)}
                         </p>
                         {mom !== null && (
@@ -135,21 +139,25 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                             </p>
                         )}
                     </Surface>
-                    <Surface padding="sm" className="border-amber-200/70 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/20">
+                    <Surface
+                        padding="sm"
+                        stretch
+                        className="min-h-[96px] bg-amber-50/50 ring-amber-500/10 dark:bg-amber-950/25 dark:ring-amber-500/15"
+                    >
                         <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                             <ClockIcon className="h-3.5 w-3.5" />
                             <span className="text-[11px] font-medium">Pending / projected</span>
                         </div>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-amber-900 dark:text-amber-100">
+                        <p className="mt-auto pt-2 text-xl font-semibold tabular-nums tracking-tight text-amber-900 dark:text-amber-100">
                             {formatAmount(summary.projected_settlement)}
                         </p>
                     </Surface>
-                    <Surface padding="sm">
+                    <Surface padding="sm" stretch className="min-h-[96px]">
                         <div className="flex items-center gap-1.5 text-stone-500">
                             <CalendarIcon className="h-3.5 w-3.5" />
                             <span className="text-[11px] font-medium">Next settlement</span>
                         </div>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-stone-900 dark:text-white">
+                        <p className="mt-auto pt-2 text-xl font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
                             {summary.days_until_settlement}
                             <span className="ml-1 text-[12px] font-semibold text-stone-400">days</span>
                         </p>
@@ -157,10 +165,12 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                     </Surface>
                 </div>
 
-                <div className="grid gap-3 lg:grid-cols-5">
-                    <Surface className="lg:col-span-3" padding="sm">
-                        <h2 className="text-[13px] font-semibold text-stone-900 dark:text-white">Monthly trend</h2>
-                        <p className="mb-2 text-[11px] text-stone-500">Last 12 months of settled commission</p>
+                <div className="grid items-stretch gap-3.5 lg:grid-cols-5">
+                    <Surface className="lg:col-span-3" padding="md" stretch>
+                        <h2 className="text-[13px] font-semibold tracking-tight text-stone-900 dark:text-white">
+                            Monthly trend
+                        </h2>
+                        <p className="mb-3 text-[11px] text-stone-500">Last 12 months of settled commission</p>
                         {chartData.length === 0 ? (
                             <EmptyState
                                 icon={BanknotesIcon}
@@ -168,10 +178,11 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                                 description="Once commissions settle, you'll see growth and dips here at a glance."
                                 nextStep="Grow your pipeline so residents can generate revenue."
                                 action={{ label: 'Submit estate', href: '/partner/partner-requests/create' }}
-                                className="py-8"
+                                size="sm"
+                                className="flex-1 py-6"
                             />
                         ) : (
-                            <div className="h-52 w-full">
+                            <div className="min-h-[208px] flex-1 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                                         <defs>
@@ -180,42 +191,72 @@ export default function PartnerEarnings({ earnings, summary, chart, timeline }: 
                                                 <stop offset="100%" stopColor="#059669" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="#a8a29e" axisLine={false} tickLine={false} />
+                                        <XAxis
+                                            dataKey="label"
+                                            tick={{ fontSize: 10, fill: '#a8a29e' }}
+                                            stroke="transparent"
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
                                         <YAxis
-                                            tick={{ fontSize: 10 }}
-                                            stroke="#a8a29e"
+                                            tick={{ fontSize: 10, fill: '#a8a29e' }}
                                             width={40}
                                             axisLine={false}
                                             tickLine={false}
-                                            tickFormatter={(v) => `₦${Number(v).toLocaleString('en-NG', { notation: 'compact' })}`}
+                                            tickFormatter={(v) =>
+                                                `₦${Number(v).toLocaleString('en-NG', { notation: 'compact' })}`
+                                            }
                                         />
                                         <Tooltip
                                             formatter={(value) => [formatAmount(Number(value) * 100), 'Commission']}
-                                            contentStyle={{ borderRadius: 10, border: '1px solid #e7e5e4', fontSize: 12 }}
+                                            contentStyle={{
+                                                borderRadius: 14,
+                                                border: 'none',
+                                                boxShadow: '0 12px 40px -12px rgba(0,0,0,0.18)',
+                                                fontSize: 12,
+                                                background: 'rgba(28,25,23,0.92)',
+                                                color: '#fff',
+                                            }}
                                         />
-                                        <Area type="monotone" dataKey="amount" stroke="#059669" strokeWidth={2} fill="url(#earnFill)" />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="amount"
+                                            stroke="#059669"
+                                            strokeWidth={2}
+                                            fill="url(#earnFill)"
+                                            animationDuration={800}
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         )}
                     </Surface>
 
-                    <Surface className="lg:col-span-2" padding="sm">
-                        <h2 className="text-[13px] font-semibold text-stone-900 dark:text-white">Settlement timeline</h2>
+                    <Surface className="lg:col-span-2" padding="md" stretch>
+                        <h2 className="text-[13px] font-semibold tracking-tight text-stone-900 dark:text-white">
+                            Settlement timeline
+                        </h2>
                         <p className="mb-3 text-[11px] text-stone-500">Recent settlement events</p>
                         {(timeline ?? []).length === 0 ? (
-                            <p className="py-8 text-center text-[12px] text-stone-500">No settlements yet.</p>
+                            <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+                                <p className="text-[12px] font-medium text-stone-500">No settlements yet</p>
+                                <p className="mt-1 max-w-[200px] text-[11px] text-stone-400">
+                                    Settled months appear here as your pipeline converts.
+                                </p>
+                            </div>
                         ) : (
-                            <ol className="relative space-y-0 border-l border-stone-200 pl-4 dark:border-slate-700">
+                            <ol className="relative flex-1 space-y-0 border-l border-stone-200/80 pl-4 dark:border-slate-700">
                                 {(timeline ?? []).map((item) => (
-                                    <li key={item.id} className="relative pb-3 last:pb-0">
+                                    <li key={item.id} className="relative pb-3.5 last:pb-0">
                                         <span
                                             className={`absolute top-1.5 -left-[1.15rem] h-2 w-2 rounded-full ring-3 ring-white dark:ring-slate-900 ${
                                                 item.is_settled ? 'bg-emerald-500' : 'bg-amber-500'
                                             }`}
                                         />
-                                        <p className="text-[12px] font-semibold text-stone-900 dark:text-white">{item.label}</p>
-                                        <p className="text-[12px] font-bold tabular-nums text-stone-800 dark:text-slate-200">
+                                        <p className="text-[12px] font-semibold text-stone-900 dark:text-white">
+                                            {item.label}
+                                        </p>
+                                        <p className="text-[12px] font-semibold tabular-nums text-stone-800 dark:text-slate-200">
                                             {formatAmount(item.amount)}
                                         </p>
                                         <p className="text-[10px] text-stone-400">

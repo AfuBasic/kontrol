@@ -97,8 +97,8 @@ function RequestCard({
         <button
             type="button"
             onClick={() => onOpen(request)}
-            className={`w-full rounded-lg border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(28,25,23,0.04)] transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 ${
-                compact ? 'p-2.5' : 'p-3'
+            className={`w-full rounded-xl bg-white text-left shadow-[0_1px_0_rgba(28,25,23,0.04),0_6px_16px_-10px_rgba(28,25,23,0.12)] ring-1 ring-stone-900/[0.05] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-14px_rgba(28,25,23,0.18)] hover:ring-primary-500/20 dark:bg-slate-900 dark:shadow-none dark:ring-white/[0.07] dark:hover:ring-primary-400/25 ${
+                compact ? 'p-2.5' : 'p-3.5'
             }`}
         >
             <div className="flex items-start justify-between gap-2">
@@ -179,7 +179,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                     actions={
                         <Link
                             href="/partner/partner-requests/create"
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-500 active:scale-[0.98]"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3.5 py-2 text-[12px] font-semibold text-white shadow-lg shadow-stone-900/15 transition hover:bg-stone-800 active:scale-[0.98] dark:bg-white dark:text-stone-900 dark:hover:bg-stone-100"
                         >
                             <PlusIcon className="h-3.5 w-3.5" />
                             Submit estate
@@ -197,7 +197,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search estates, chairmen, locations…"
                             aria-label="Search estate pipeline"
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-3 pl-9 text-sm text-slate-900 shadow-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            className="w-full rounded-xl bg-white py-2.5 pr-3 pl-9 text-sm text-slate-900 shadow-sm ring-1 ring-stone-900/[0.06] outline-none focus:ring-2 focus:ring-primary-200 dark:bg-slate-900 dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
                         />
                     </div>
                     <div className="relative">
@@ -206,7 +206,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             aria-label="Filter by status"
-                            className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pr-8 pl-9 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            className="appearance-none rounded-xl bg-white py-2.5 pr-8 pl-9 text-sm text-slate-700 shadow-sm ring-1 ring-stone-900/[0.06] dark:bg-slate-900 dark:text-slate-200 dark:ring-white/10"
                         >
                             <option value="">All statuses</option>
                             {columns.map((col) => (
@@ -216,7 +216,11 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                             ))}
                         </select>
                     </div>
-                    <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900" role="group" aria-label="View mode">
+                    <div
+                        className="inline-flex rounded-xl bg-white p-1 shadow-sm ring-1 ring-stone-900/[0.06] dark:bg-slate-900 dark:ring-white/10"
+                        role="group"
+                        aria-label="View mode"
+                    >
                         <button
                             type="button"
                             onClick={() => setView('kanban')}
@@ -243,7 +247,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                 </div>
 
                 {partnerRequests.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-stone-300 bg-white dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-2xl bg-white/80 shadow-[0_1px_0_rgba(28,25,23,0.04),0_12px_32px_-18px_rgba(28,25,23,0.14)] ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:shadow-none dark:ring-white/[0.06]">
                         <EmptyState
                             icon={BuildingOffice2Icon}
                             title="Your pipeline is empty"
@@ -254,13 +258,13 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, filters
                         />
                     </div>
                 ) : view === 'kanban' ? (
-                    <div className="flex gap-4 overflow-x-auto pb-4">
+                    <div className="flex gap-3.5 overflow-x-auto pb-4">
                         {columns.map((col) => (
                             <div
                                 key={col.key}
-                                className="flex w-64 shrink-0 flex-col rounded-xl border border-stone-200/90 bg-stone-50/70 dark:border-slate-800 dark:bg-slate-900/50"
+                                className="flex w-64 shrink-0 flex-col rounded-2xl bg-stone-100/70 ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]"
                             >
-                                <div className="flex items-center justify-between border-b border-stone-200/80 px-2.5 py-2 dark:border-slate-800">
+                                <div className="flex items-center justify-between border-b border-stone-200/60 px-3 py-2.5 dark:border-white/[0.06]">
                                     <div className="flex items-center gap-2">
                                         <span
                                             className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ring-1 ring-inset ${statusBadgeClasses(col.key)}`}
