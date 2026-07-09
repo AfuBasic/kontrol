@@ -84,6 +84,7 @@ class ProfileController extends Controller
             'banks' => $banks,
             'activity' => $activity,
             'preferences' => [
+                // Used by the Notifications tab for static preference display.
                 'email_product' => true,
                 'email_settlements' => true,
                 'email_pipeline' => true,

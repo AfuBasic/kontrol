@@ -4,7 +4,6 @@ import {
     BuildingOfficeIcon,
     CheckCircleIcon,
     ClockIcon,
-    Cog6ToothIcon,
     EnvelopeIcon,
     ExclamationCircleIcon,
     IdentificationIcon,
@@ -81,7 +80,6 @@ const TABS = [
     { key: 'security', label: 'Security', icon: ShieldCheckIcon },
     { key: 'notifications', label: 'Notifications', icon: BellIcon },
     { key: 'activity', label: 'Activity', icon: ClockIcon },
-    { key: 'preferences', label: 'Preferences', icon: Cog6ToothIcon },
 ] as const;
 
 function StatusBadge({ status }: { status: string }) {
@@ -416,7 +414,7 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
             <Head title="Account" />
 
             <div className="space-y-4">
-                <PageHeader title="Account center" description="Manage identity, business details, security, and preferences." />
+                <PageHeader title="Account center" description="Manage identity, business details, banking, and security." />
 
                 {/* Identity strip */}
                 <Surface padding="sm">
@@ -671,27 +669,6 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
                                 </div>
                             )}
 
-                            {active === 'preferences' && (
-                                <div className="space-y-4">
-                                    <h2 className="text-[14px] font-semibold text-stone-900 dark:text-white">Preferences</h2>
-                                    <p className="text-[12px] text-stone-500">
-                                        Theme is controlled from the top bar (sun/moon). Your choice is saved on this device.
-                                    </p>
-                                    <div className="rounded-lg border border-stone-200/80 px-3 py-2.5 dark:border-slate-700">
-                                        <p className="text-[13px] font-semibold text-stone-900 dark:text-white">Banking & payouts</p>
-                                        <p className="mt-0.5 text-[11px] text-stone-500">
-                                            Update your verified payout account anytime from the Banking tab.
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setTab('banking')}
-                                            className="mt-2 inline-flex text-[12px] font-semibold text-primary-600 hover:underline"
-                                        >
-                                            Open banking →
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </Surface>
                     </motion.div>
                 </div>
