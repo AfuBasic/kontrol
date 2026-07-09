@@ -52,7 +52,6 @@ class EarningsController extends Controller
                 'summary' => $emptySummary,
                 'chart' => [],
                 'timeline' => [],
-                'activity' => [],
                 'topEstates' => [],
                 'pipeline' => [
                     'submitted' => 0,
@@ -138,7 +137,6 @@ class EarningsController extends Controller
             ->values()
             ->all();
 
-        $activity = $this->buildActivityFeed($partner->id);
         $topEstates = $this->topEstates($partner->id);
         $pipeline = $this->pipelineStats($partner->id);
         $attention = $this->attentionItems($partner->id, $pendingCommissions, $pipeline);
@@ -166,7 +164,6 @@ class EarningsController extends Controller
             ],
             'chart' => $chart,
             'timeline' => $timeline,
-            'activity' => $activity,
             'topEstates' => $topEstates,
             'pipeline' => $pipeline,
             'attention' => $attention,
@@ -188,113 +185,6 @@ class EarningsController extends Controller
             'next_page_url' => null,
             'links' => [],
         ];
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function buildActivityFeed(int $partnerId): array
-    {
-        $events = collect();
-
-        $partner = Auth::user()?->partner;
-        if (! $partner) {
-            return [];
-        }
-
-        $partner->earnings()
-            ->orderByDesc('month')
-            ->limit(8)
-            ->get()
-            ->each(function (PartnerEarning $earning) use ($events) {
-                $events->push([
-                    'id' => 'earn-'.$earning->id,
-                    'type' => $earning->isSettled() ? 'settlement_paid' : 'settlement_generated',
-                    'title' => $earning->isSettled() ? 'Commission settled' : 'Settlement generated',
-                    'description' => $earning->month->format('F Y').' period',
-                    'amount' => $earning->total_amount,
-                    'status' => $earning->isSettled() ? 'paid' : 'pending',
-                    'status_label' => $earning->isSettled() ? 'Paid' : 'Pending',
-                    'estate_name' => null,
-                    'at' => ($earning->settled_at ?? $earning->updated_at)?->toIso8601String(),
-                    'at_human' => ($earning->settled_at ?? $earning->updated_at)?->diffForHumans(),
-                ]);
-            });
-
-        $partner->commissionableRevenues()
-            ->with('estate:id,name')
-            ->latest()
-            ->limit(10)
-            ->get()
-            ->each(function (CommissionableRevenue $row) use ($events) {
-                $events->push([
-                    'id' => 'rev-'.$row->id,
-                    'type' => 'commission_earned',
-                    'title' => 'Commission earned',
-                    'description' => $row->estate?->name
-                        ? 'Resident payment · '.$row->estate->name
-                        : 'Resident payment',
-                    'amount' => $row->commission_amount,
-                    'status' => $row->status,
-                    'status_label' => $row->status === 'settled' ? 'Settled' : 'Pending',
-                    'estate_name' => $row->estate?->name,
-                    'at' => $row->created_at?->toIso8601String(),
-                    'at_human' => $row->created_at?->diffForHumans(),
-                ]);
-            });
-
-        $partner->estateApplications()
-            ->latest()
-            ->limit(8)
-            ->get()
-            ->each(function (EstateApplication $app) use ($events) {
-                $key = $app->partnerStatusKey();
-                $events->push([
-                    'id' => 'app-'.$app->id,
-                    'type' => match ($key) {
-                        'accepted' => 'estate_accepted',
-                        'rejected' => 'estate_rejected',
-                        default => 'estate_submitted',
-                    },
-                    'title' => match ($key) {
-                        'accepted' => 'Estate accepted',
-                        'rejected' => 'Estate rejected',
-                        default => 'Estate submitted',
-                    },
-                    'description' => $app->estate_name,
-                    'amount' => null,
-                    'status' => $key,
-                    'status_label' => $app->partnerStatusLabel(),
-                    'estate_name' => $app->estate_name,
-                    'at' => $app->updated_at?->toIso8601String(),
-                    'at_human' => $app->updated_at?->diffForHumans(),
-                ]);
-            });
-
-        $partner->estates()
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->each(function (Estate $estate) use ($events) {
-                $events->push([
-                    'id' => 'est-'.$estate->id,
-                    'type' => 'estate_activated',
-                    'title' => 'Estate activated',
-                    'description' => $estate->name,
-                    'amount' => null,
-                    'status' => 'active',
-                    'status_label' => 'Live',
-                    'estate_name' => $estate->name,
-                    'at' => $estate->created_at?->toIso8601String(),
-                    'at_human' => $estate->created_at?->diffForHumans(),
-                ]);
-            });
-
-        return $events
-            ->sortByDesc(fn (array $e) => $e['at'] ?? '')
-            ->take(12)
-            ->values()
-            ->all();
     }
 
     /**

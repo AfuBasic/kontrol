@@ -65,7 +65,6 @@ it('renders partner earnings with chart and pagination props', function () {
             ->has('summary.settlement_progress')
             ->has('chart')
             ->has('timeline')
-            ->has('activity')
             ->has('topEstates')
             ->has('pipeline')
             ->has('attention')

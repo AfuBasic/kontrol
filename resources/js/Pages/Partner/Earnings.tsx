@@ -6,7 +6,6 @@ import {
     CheckCircleIcon,
     ExclamationTriangleIcon,
     LightBulbIcon,
-    SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion, useMotionValue, useMotionValueEvent, useSpring } from 'framer-motion';
@@ -42,19 +41,6 @@ interface Summary {
     eligible_payment_count: number;
 }
 
-interface ActivityItem {
-    id: string;
-    type: string;
-    title: string;
-    description: string;
-    amount: number | null;
-    status: string;
-    status_label: string;
-    estate_name: string | null;
-    at: string | null;
-    at_human: string | null;
-}
-
 interface TopEstate {
     estate_id: number | null;
     estate_name: string;
@@ -85,7 +71,6 @@ interface Props {
     };
     summary: Summary;
     chart?: unknown[];
-    activity?: ActivityItem[];
     topEstates?: TopEstate[];
     pipeline?: {
         submitted: number;
@@ -121,40 +106,6 @@ function AnimatedNaira({ kobo, className }: { kobo: number; className?: string }
     );
 }
 
-function activityIcon(type: string) {
-    switch (type) {
-        case 'settlement_paid':
-        case 'settlement_generated':
-        case 'commission_earned':
-            return BanknotesIcon;
-        case 'estate_accepted':
-        case 'estate_activated':
-            return CheckCircleIcon;
-        case 'estate_submitted':
-            return BuildingOffice2Icon;
-        case 'estate_rejected':
-            return ExclamationTriangleIcon;
-        default:
-            return SparklesIcon;
-    }
-}
-
-function activityDot(type: string) {
-    switch (type) {
-        case 'settlement_paid':
-        case 'estate_accepted':
-        case 'estate_activated':
-            return 'bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.15)]';
-        case 'settlement_generated':
-        case 'commission_earned':
-            return 'bg-primary-500 shadow-[0_0_0_4px_rgba(31,111,219,0.15)]';
-        case 'estate_rejected':
-            return 'bg-rose-500 shadow-[0_0_0_4px_rgba(244,63,94,0.15)]';
-        default:
-            return 'bg-sky-500 shadow-[0_0_0_4px_rgba(14,165,233,0.15)]';
-    }
-}
-
 const INSIGHTS = [
     {
         key: 'scale',
@@ -173,7 +124,6 @@ const INSIGHTS = [
 export default function PartnerEarnings({
     earnings,
     summary,
-    activity = [],
     topEstates = [],
     pipeline = { submitted: 0, accepted: 0, rejected: 0, live_estates: 0 },
     attention = [],
@@ -374,82 +324,7 @@ export default function PartnerEarnings({
                 </section>
 
                 {/* ═══════════════════════════════════════════
-                    2. ACTIVITY TIMELINE
-                    ═══════════════════════════════════════════ */}
-                <section>
-                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Activity
-                    </h2>
-
-                    {activity.length === 0 ? (
-                        <div className="flex max-h-[220px] items-center gap-4 rounded-2xl bg-stone-50/80 px-5 py-6 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-stone-400 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/10">
-                                <SparklesIcon className="h-5 w-5" />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-[14px] font-semibold text-stone-800 dark:text-white">Quiet so far</p>
-                                <p className="mt-0.5 text-[12px] text-stone-500">
-                                    Events appear as estates move and residents pay.
-                                </p>
-                            </div>
-                            <Link
-                                href="/partner/partner-requests/create"
-                                className="shrink-0 rounded-xl bg-stone-900 px-3.5 py-2 text-[12px] font-semibold text-white dark:bg-white dark:text-stone-900"
-                            >
-                                Submit estate
-                            </Link>
-                        </div>
-                    ) : (
-                        <ol className="relative ml-3 space-y-0 border-l border-stone-200 pl-6 dark:border-slate-700">
-                            {activity.map((item, i) => {
-                                const Icon = activityIcon(item.type);
-
-                                return (
-                                    <motion.li
-                                        key={item.id}
-                                        initial={{ opacity: 0, x: -8 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.04 * i, duration: 0.3 }}
-                                        className="group relative pb-7 last:pb-0"
-                                    >
-                                        <span
-                                            className={`absolute top-1.5 -left-[1.9rem] h-2.5 w-2.5 rounded-full ${activityDot(item.type)}`}
-                                            aria-hidden
-                                        />
-                                        <div className="flex items-start gap-3 rounded-xl p-2 transition group-hover:bg-white group-hover:shadow-sm group-hover:ring-1 group-hover:ring-stone-900/[0.04] dark:group-hover:bg-white/[0.04] dark:group-hover:ring-white/10">
-                                            <span className="mt-0.5 hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500 sm:flex dark:bg-white/10 dark:text-slate-400">
-                                                <Icon className="h-4 w-4" />
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                                                    <p className="text-[14px] font-semibold text-stone-900 dark:text-white">
-                                                        {item.title}
-                                                    </p>
-                                                    {item.amount != null && (
-                                                        <p className="text-[13px] font-semibold tabular-nums text-stone-900 dark:text-white">
-                                                            {formatAmount(item.amount)}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <p className="mt-0.5 text-[12px] text-stone-500">
-                                                    {item.estate_name || item.description}
-                                                </p>
-                                                <p className="mt-1 text-[11px] text-stone-400">
-                                                    {item.at_human}
-                                                    <span className="text-stone-300 dark:text-slate-600"> · </span>
-                                                    {item.status_label}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </motion.li>
-                                );
-                            })}
-                        </ol>
-                    )}
-                </section>
-
-                {/* ═══════════════════════════════════════════
-                    3. SETTLEMENT PREVIEW — financial centre
+                    2. SETTLEMENT PREVIEW — financial centre
                     ═══════════════════════════════════════════ */}
                 <section>
                     <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
