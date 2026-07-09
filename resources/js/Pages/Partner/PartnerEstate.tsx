@@ -3,6 +3,7 @@ import {
     ArrowRightIcon,
     BuildingOffice2Icon,
     CheckIcon,
+    ChevronDownIcon,
     InformationCircleIcon,
     MapPinIcon,
     PaperAirplaneIcon,
@@ -10,6 +11,7 @@ import {
     UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
 import { Head, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -394,6 +396,7 @@ export default function PartnerEstate({ partner }: Props) {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [attemptedContinue, setAttemptedContinue] = useState(false);
+    const [stateQuery, setStateQuery] = useState('');
 
     const { data, setData, post, processing, errors } = useForm<FormData>({
         ...emptyForm,
@@ -419,6 +422,15 @@ export default function PartnerEstate({ partner }: Props) {
         () => estimateAnnualCommission(houses, partner?.commission_rate, partner?.commission_type),
         [houses, partner?.commission_rate, partner?.commission_type],
     );
+
+    const filteredStates = useMemo(() => {
+        const q = stateQuery.trim().toLowerCase();
+        if (!q) {
+            return NIGERIA_STATES;
+        }
+
+        return NIGERIA_STATES.filter((state) => state.toLowerCase().includes(q));
+    }, [stateQuery]);
 
     const current = STEPS[step];
 
@@ -597,22 +609,46 @@ export default function PartnerEstate({ partner }: Props) {
                                             <>
                                                 <div className="grid gap-5 sm:grid-cols-2">
                                                     <Field id="state" label="State">
-                                                        <select
-                                                            id="state"
-                                                            value={data.state}
-                                                            onChange={(e) => setData('state', e.target.value)}
-                                                            className={`${controlClass()} appearance-none bg-[length:1rem] bg-[right_0.85rem_center] bg-no-repeat pr-9`}
-                                                            style={{
-                                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a8a29e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                                                        <Combobox
+                                                            value={data.state || null}
+                                                            onChange={(state: string | null) => {
+                                                                setData('state', state ?? '');
+                                                                setStateQuery('');
                                                             }}
+                                                            onClose={() => setStateQuery('')}
                                                         >
-                                                            <option value="">Select state</option>
-                                                            {NIGERIA_STATES.map((state) => (
-                                                                <option key={state} value={state}>
-                                                                    {state}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                            <div className="relative">
+                                                                <ComboboxInput
+                                                                    id="state"
+                                                                    className={`${controlClass()} pr-10`}
+                                                                    displayValue={(state: string | null) => state ?? ''}
+                                                                    onChange={(event) => setStateQuery(event.target.value)}
+                                                                    placeholder="Search state…"
+                                                                    autoComplete="off"
+                                                                />
+                                                                <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3 text-stone-400">
+                                                                    <ChevronDownIcon className="h-4 w-4" aria-hidden />
+                                                                </ComboboxButton>
+                                                                <ComboboxOptions className="absolute z-50 mt-1.5 max-h-56 w-full overflow-auto rounded-xl bg-white py-1 shadow-xl ring-1 ring-stone-900/10 focus:outline-none dark:bg-slate-900 dark:ring-white/10">
+                                                                    {filteredStates.length === 0 ? (
+                                                                        <div className="px-3.5 py-2.5 text-[13px] text-stone-500">
+                                                                            No states found
+                                                                        </div>
+                                                                    ) : (
+                                                                        filteredStates.map((state) => (
+                                                                            <ComboboxOption
+                                                                                key={state}
+                                                                                value={state}
+                                                                                className="group flex cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-[14px] text-stone-800 data-focus:bg-primary-50 data-focus:text-primary-900 dark:text-slate-200 dark:data-focus:bg-primary-950/40 dark:data-focus:text-primary-100"
+                                                                            >
+                                                                                <span className="truncate">{state}</span>
+                                                                                <CheckIcon className="h-4 w-4 shrink-0 text-primary-600 opacity-0 group-data-selected:opacity-100 dark:text-primary-400" />
+                                                                            </ComboboxOption>
+                                                                        ))
+                                                                    )}
+                                                                </ComboboxOptions>
+                                                            </div>
+                                                        </Combobox>
                                                     </Field>
 
                                                     <Field id="lga" label="LGA">
