@@ -86,11 +86,12 @@ class DashboardController extends Controller
                     'status_label' => $application->partnerStatusLabel(),
                     'description' => match ($application->partnerStatusKey()) {
                         'submitted' => 'Estate request submitted',
-                        'reviewing' => 'Under review by Kontrol',
-                        'info_requested' => 'More information requested',
-                        'approved' => 'Request approved',
-                        'estate_created' => 'Estate created on Kontrol',
-                        'rejected' => 'Request rejected',
+                        'accepted' => $application->estate
+                            ? 'Accepted — estate live on Kontrol'
+                            : 'Estate accepted',
+                        'rejected' => $application->rejection_reason
+                            ? 'Rejected: '.$application->rejection_reason
+                            : 'Request rejected',
                         default => 'Status updated',
                     },
                     'at' => $application->updated_at?->toIso8601String(),

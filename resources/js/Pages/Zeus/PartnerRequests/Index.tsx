@@ -187,39 +187,37 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                             <td className="px-6 py-5 text-center">
                                                 <span
                                                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${
-                                                        request.status === 'approved' || request.status === 'estate_created'
+                                                        request.status === 'accepted'
                                                             ? 'bg-[#34D399]/10 text-[#34D399] border border-[#34D399]/20'
                                                             : request.status === 'rejected'
-                                                            ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                                                            : request.status === 'info_requested'
-                                                            ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20'
-                                                            : 'bg-[#6C5DFD]/10 text-[#6C5DFD] border border-[#6C5DFD]/20'
+                                                              ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                                              : 'bg-[#6C5DFD]/10 text-[#6C5DFD] border border-[#6C5DFD]/20'
                                                     }`}
                                                 >
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${
-                                                        request.status === 'approved' || request.status === 'estate_created'
-                                                            ? 'bg-[#34D399]'
-                                                            : request.status === 'rejected'
-                                                            ? 'bg-rose-500'
-                                                            : request.status === 'info_requested'
-                                                            ? 'bg-[#F5A623]'
-                                                            : 'bg-[#6C5DFD]'
-                                                    }`} />
-                                                    {request.status.replace(/_/g, ' ')}
+                                                    <span
+                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                            request.status === 'accepted'
+                                                                ? 'bg-[#34D399]'
+                                                                : request.status === 'rejected'
+                                                                  ? 'bg-rose-500'
+                                                                  : 'bg-[#6C5DFD]'
+                                                        }`}
+                                                    />
+                                                    {request.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    {!request.estate && ['submitted', 'reviewing', 'info_requested'].includes(request.status) && (
+                                                    {request.status === 'submitted' && !request.estate && (
                                                         <button
                                                             onClick={() => approve(request.id)}
                                                             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#34D399] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#34D399]/90 transition-colors active:scale-95 animate-pulse"
                                                         >
                                                             <CheckCircleIcon className="h-4 w-4" />
-                                                            Approve
+                                                            Accept
                                                         </button>
                                                     )}
-                                                    {request.status !== 'rejected' && request.status !== 'estate_created' && (
+                                                    {request.status === 'submitted' && (
                                                         <>
                                                             <button
                                                                 onClick={() => openModal(request, 'info')}

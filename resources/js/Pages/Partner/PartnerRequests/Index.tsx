@@ -80,41 +80,20 @@ type DrawerTab = 'overview' | 'timeline' | 'contact' | 'notes' | 'feedback';
 /** ₦4,000/mo ARPU in kobo (matches annual plan economics). */
 const EST_ARPU_KOBO = 400_000;
 
-const STAGE_ORDER = ['submitted', 'reviewing', 'info_requested', 'approved', 'estate_created', 'rejected'];
+const STAGE_ORDER = ['submitted', 'accepted', 'rejected'];
 
 const STAGE_META: Record<string, { tone: string; bar: string; label: string; progress: number; dot: string }> = {
     submitted: {
         tone: 'bg-sky-50 text-sky-700 ring-sky-500/15 dark:bg-sky-500/10 dark:text-sky-300',
         bar: 'bg-sky-500',
         label: 'Submitted',
-        progress: 15,
+        progress: 35,
         dot: 'bg-sky-500',
     },
-    reviewing: {
-        tone: 'bg-blue-50 text-blue-700 ring-blue-500/15 dark:bg-blue-500/10 dark:text-blue-300',
-        bar: 'bg-blue-500',
-        label: 'Review',
-        progress: 35,
-        dot: 'bg-blue-500',
-    },
-    info_requested: {
-        tone: 'bg-amber-50 text-amber-800 ring-amber-500/15 dark:bg-amber-500/10 dark:text-amber-300',
-        bar: 'bg-amber-500',
-        label: 'Info',
-        progress: 45,
-        dot: 'bg-amber-500',
-    },
-    approved: {
-        tone: 'bg-violet-50 text-violet-700 ring-violet-500/15 dark:bg-violet-500/10 dark:text-violet-300',
-        bar: 'bg-violet-500',
-        label: 'Approved',
-        progress: 70,
-        dot: 'bg-violet-500',
-    },
-    estate_created: {
+    accepted: {
         tone: 'bg-emerald-50 text-emerald-700 ring-emerald-500/15 dark:bg-emerald-500/10 dark:text-emerald-300',
         bar: 'bg-emerald-500',
-        label: 'Activated',
+        label: 'Accepted',
         progress: 100,
         dot: 'bg-emerald-500',
     },
@@ -255,6 +234,12 @@ function EstateCard({
                     {location ? highlightMatch(location, q) : null}
                     {location && request.chairman_name ? ' · ' : null}
                     {request.chairman_name ? highlightMatch(request.chairman_name, q) : null}
+                </p>
+            )}
+
+            {request.status === 'rejected' && request.rejection_reason && (
+                <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-rose-600 dark:text-rose-400">
+                    {request.rejection_reason}
                 </p>
             )}
 
@@ -536,7 +521,7 @@ function DetailDrawer({
     const timeline = request.timeline ?? [];
     const adminNotes = request.admin_notes ?? [];
     const stages = STAGE_ORDER.filter((s) => s !== 'rejected');
-    const stageIndex = stages.indexOf(request.status === 'rejected' ? 'submitted' : request.status);
+    const stageIndex = request.status === 'accepted' ? 1 : 0;
 
     const tabs: { key: DrawerTab; label: string }[] = [
         { key: 'overview', label: 'Overview' },
@@ -653,14 +638,14 @@ function DetailDrawer({
                         >
                             {tab === 'overview' && (
                                 <>
-                                    {request.info_request_message && (
-                                        <div className="rounded-xl bg-amber-50 p-3.5 text-[13px] text-amber-950 ring-1 ring-amber-500/15 dark:bg-amber-500/10 dark:text-amber-100">
-                                            {request.info_request_message}
-                                        </div>
-                                    )}
-                                    {request.rejection_reason && (
-                                        <div className="rounded-xl bg-rose-50 p-3.5 text-[13px] text-rose-950 ring-1 ring-rose-500/15 dark:bg-rose-500/10 dark:text-rose-100">
-                                            {request.rejection_reason}
+                                    {request.status === 'rejected' && (
+                                        <div className="rounded-xl bg-rose-50 p-4 ring-1 ring-rose-500/15 dark:bg-rose-500/10">
+                                            <p className="text-[10px] font-bold tracking-wide text-rose-700 uppercase dark:text-rose-300">
+                                                Rejection reason
+                                            </p>
+                                            <p className="mt-1.5 text-[13px] leading-relaxed text-rose-950 dark:text-rose-100">
+                                                {request.rejection_reason || 'No reason was provided.'}
+                                            </p>
                                         </div>
                                     )}
                                     <div className="grid grid-cols-2 gap-2.5">
@@ -802,16 +787,21 @@ function DetailDrawer({
 
                             {tab === 'feedback' && (
                                 <>
-                                    {request.info_request_message || request.rejection_reason || request.challenges ? (
+                                    {request.rejection_reason || request.challenges || request.info_request_message ? (
                                         <div className="space-y-3 text-[13px]">
+                                            {request.rejection_reason && (
+                                                <div className="rounded-xl bg-rose-50 p-4 ring-1 ring-rose-500/15 dark:bg-rose-500/10">
+                                                    <p className="text-[10px] font-bold tracking-wide text-rose-700 uppercase dark:text-rose-300">
+                                                        Rejection reason
+                                                    </p>
+                                                    <p className="mt-1.5 leading-relaxed text-rose-950 dark:text-rose-100">
+                                                        {request.rejection_reason}
+                                                    </p>
+                                                </div>
+                                            )}
                                             {request.info_request_message && (
                                                 <div className="rounded-xl bg-amber-50 p-3.5 dark:bg-amber-500/10">
                                                     {request.info_request_message}
-                                                </div>
-                                            )}
-                                            {request.rejection_reason && (
-                                                <div className="rounded-xl bg-rose-50 p-3.5 dark:bg-rose-500/10">
-                                                    {request.rejection_reason}
                                                 </div>
                                             )}
                                             {request.challenges && (
@@ -902,10 +892,7 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
         return [
             { key: '', label: 'All', count: partnerRequests.length },
             { key: 'submitted', label: 'Submitted', count: count('submitted') },
-            { key: 'reviewing', label: 'Review', count: count('reviewing') },
-            { key: 'info_requested', label: 'Info', count: count('info_requested') },
-            { key: 'approved', label: 'Approved', count: count('approved') },
-            { key: 'estate_created', label: 'Activated', count: count('estate_created') },
+            { key: 'accepted', label: 'Accepted', count: count('accepted') },
             { key: 'rejected', label: 'Rejected', count: count('rejected') },
         ];
     }, [partnerRequests]);

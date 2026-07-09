@@ -178,32 +178,29 @@ class EstateApplication extends Model
     }
 
     /**
-     * Partner portal status label.
+     * Partner portal status label (Submitted / Accepted / Rejected only).
      */
     public function partnerStatusLabel(): string
     {
-        return match ($this->status) {
-            'received', 'pending' => 'Submitted',
-            'under_review' => 'Reviewing',
-            'info_requested' => 'Info Requested',
-            'approved' => $this->estate_id ? 'Estate Created' : 'Approved',
+        return match ($this->partnerStatusKey()) {
+            'accepted' => 'Accepted',
             'rejected' => 'Rejected',
-            default => str_replace('_', ' ', $this->status),
+            default => 'Submitted',
         };
     }
 
     /**
      * Partner pipeline column key.
+     *
+     * Collapses internal review states into three partner-facing buckets:
+     * submitted → accepted → rejected.
      */
     public function partnerStatusKey(): string
     {
         return match ($this->status) {
-            'received', 'pending' => 'submitted',
-            'under_review' => 'reviewing',
-            'info_requested' => 'info_requested',
-            'approved' => $this->estate_id ? 'estate_created' : 'approved',
+            'approved' => 'accepted',
             'rejected' => 'rejected',
-            default => $this->status,
+            default => 'submitted',
         };
     }
 }

@@ -26,24 +26,13 @@ class PartnerRequestController extends Controller
             ->with(['partner', 'estate:id,ulid,name'])
             ->when($status, function ($query) use ($status) {
                 $mapped = match ($status) {
-                    'submitted' => ['received', 'pending'],
-                    'reviewing' => ['under_review'],
-                    'info_requested' => ['info_requested'],
-                    'approved' => ['approved'],
-                    'estate_created' => ['approved'],
+                    'submitted' => ['received', 'pending', 'under_review', 'info_requested'],
+                    'accepted' => ['approved'],
                     'rejected' => ['rejected'],
                     default => [$status],
                 };
 
                 $query->whereIn('status', $mapped);
-
-                if ($status === 'estate_created') {
-                    $query->whereNotNull('estate_id');
-                }
-
-                if ($status === 'approved') {
-                    $query->whereNull('estate_id');
-                }
             })
             ->latest()
             ->paginate(20)
@@ -81,10 +70,7 @@ class PartnerRequestController extends Controller
             ],
             'statusOptions' => [
                 ['value' => 'submitted', 'label' => 'Submitted'],
-                ['value' => 'reviewing', 'label' => 'Reviewing'],
-                ['value' => 'info_requested', 'label' => 'Info Requested'],
-                ['value' => 'approved', 'label' => 'Approved'],
-                ['value' => 'estate_created', 'label' => 'Estate Created'],
+                ['value' => 'accepted', 'label' => 'Accepted'],
                 ['value' => 'rejected', 'label' => 'Rejected'],
             ],
         ]);

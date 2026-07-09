@@ -81,17 +81,14 @@ function getGreeting(): string {
 
 function statusDot(status: string): string {
     switch (status) {
+        case 'accepted':
         case 'approved':
         case 'estate_created':
             return 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.55)]';
         case 'rejected':
             return 'bg-rose-400 shadow-[0_0_12px_rgba(251,113,133,0.45)]';
-        case 'info_requested':
-            return 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.45)]';
-        case 'reviewing':
-            return 'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.45)]';
         default:
-            return 'bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.45)]';
+            return 'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.45)]';
     }
 }
 

@@ -37,10 +37,7 @@ class PartnerRequestController extends Controller
 
         $columns = [
             ['key' => 'submitted', 'label' => 'Submitted'],
-            ['key' => 'reviewing', 'label' => 'Under Review'],
-            ['key' => 'info_requested', 'label' => 'Info Requested'],
-            ['key' => 'approved', 'label' => 'Approved'],
-            ['key' => 'estate_created', 'label' => 'Activated'],
+            ['key' => 'accepted', 'label' => 'Accepted'],
             ['key' => 'rejected', 'label' => 'Rejected'],
         ];
 
@@ -129,7 +126,7 @@ class PartnerRequestController extends Controller
     private function transformForPartner(EstateApplication $application): array
     {
         $statusKey = $application->partnerStatusKey();
-        $isGenerating = $statusKey === 'estate_created'
+        $isGenerating = $statusKey === 'accepted'
             && $application->estate
             && in_array($application->estate->status, ['active', 'live', 'trial'], true);
 
@@ -210,49 +207,16 @@ class PartnerRequestController extends Controller
             ],
         ];
 
-        if (in_array($statusKey, ['reviewing', 'info_requested', 'approved', 'estate_created'], true)) {
+        if ($statusKey === 'accepted') {
             $events[] = [
-                'id' => 'synth-review',
-                'event_type' => 'review_started',
-                'description' => 'Review started by Kontrol',
+                'id' => 'synth-accepted',
+                'event_type' => 'accepted',
+                'description' => $application->estate
+                    ? 'Estate accepted: '.$application->estate->name
+                    : 'Estate application accepted',
                 'creator_name' => 'Kontrol',
                 'created_at' => $application->reviewed_at?->toIso8601String()
                     ?? $application->updated_at?->toIso8601String(),
-                'metadata' => null,
-            ];
-        }
-
-        if ($statusKey === 'info_requested' || $application->info_request_message) {
-            $events[] = [
-                'id' => 'synth-info',
-                'event_type' => 'info_requested',
-                'description' => $application->info_request_message
-                    ?: 'Additional information requested',
-                'creator_name' => 'Kontrol',
-                'created_at' => $application->updated_at?->toIso8601String(),
-                'metadata' => null,
-            ];
-        }
-
-        if (in_array($statusKey, ['approved', 'estate_created'], true)) {
-            $events[] = [
-                'id' => 'synth-approved',
-                'event_type' => 'approved',
-                'description' => 'Estate application approved',
-                'creator_name' => 'Kontrol',
-                'created_at' => $application->reviewed_at?->toIso8601String()
-                    ?? $application->updated_at?->toIso8601String(),
-                'metadata' => null,
-            ];
-        }
-
-        if ($statusKey === 'estate_created' && $application->estate) {
-            $events[] = [
-                'id' => 'synth-created',
-                'event_type' => 'estate_created',
-                'description' => 'Live estate created: '.$application->estate->name,
-                'creator_name' => 'Kontrol',
-                'created_at' => $application->updated_at?->toIso8601String(),
                 'metadata' => null,
             ];
         }
@@ -261,7 +225,9 @@ class PartnerRequestController extends Controller
             $events[] = [
                 'id' => 'synth-rejected',
                 'event_type' => 'rejected',
-                'description' => $application->rejection_reason ?: 'Application rejected',
+                'description' => $application->rejection_reason
+                    ? 'Rejected: '.$application->rejection_reason
+                    : 'Application rejected',
                 'creator_name' => 'Kontrol',
                 'created_at' => $application->reviewed_at?->toIso8601String()
                     ?? $application->updated_at?->toIso8601String(),
