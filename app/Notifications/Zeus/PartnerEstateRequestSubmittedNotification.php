@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Zeus;
 
-use App\Models\PartnerRequest;
+use App\Models\EstateApplication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,9 +13,9 @@ class PartnerEstateRequestSubmittedNotification extends Notification implements 
     use Queueable;
 
     public function __construct(
-        public PartnerRequest $partnerRequest,
+        public EstateApplication $application,
     ) {
-        $this->partnerRequest->loadMissing('partner');
+        $this->application->loadMissing('partner');
     }
 
     /**
@@ -28,21 +28,21 @@ class PartnerEstateRequestSubmittedNotification extends Notification implements 
 
     public function toMail(object $notifiable): MailMessage
     {
-        $partnerName = $this->partnerRequest->partner?->name ?? 'A partner';
-        $estateName = $this->partnerRequest->estate_name;
-        $url = route('zeus.partner-requests.index');
+        $partnerName = $this->application->partner?->name ?? 'A partner';
+        $estateName = $this->application->estate_name;
+        $url = route('zeus.applications.index');
 
         return (new MailMessage)
             ->subject("New partner estate request: {$estateName}")
             ->view('mail.zeus.partner-estate-request-submitted', [
                 'partnerName' => $partnerName,
                 'estateName' => $estateName,
-                'contactName' => $this->partnerRequest->chairman_name,
-                'contactEmail' => $this->partnerRequest->chairman_email,
-                'contactPhone' => $this->partnerRequest->chairman_phone,
-                'state' => $this->partnerRequest->state,
-                'lga' => $this->partnerRequest->lga,
-                'numberOfHouses' => $this->partnerRequest->number_of_houses,
+                'contactName' => $this->application->contact_name,
+                'contactEmail' => $this->application->email,
+                'contactPhone' => $this->application->phone,
+                'state' => $this->application->state,
+                'lga' => $this->application->lga,
+                'numberOfHouses' => $this->application->number_of_houses,
                 'url' => $url,
             ]);
     }
@@ -54,10 +54,10 @@ class PartnerEstateRequestSubmittedNotification extends Notification implements 
     {
         return [
             'title' => 'New partner estate request',
-            'message' => ($this->partnerRequest->partner?->name ?? 'A partner')
-                .' submitted '.$this->partnerRequest->estate_name.'.',
-            'action_url' => route('zeus.partner-requests.index'),
-            'partner_request_id' => $this->partnerRequest->id,
+            'message' => ($this->application->partner?->name ?? 'A partner')
+                .' submitted '.$this->application->estate_name.'.',
+            'action_url' => route('zeus.applications.index'),
+            'estate_application_id' => $this->application->id,
             'type' => 'info',
         ];
     }

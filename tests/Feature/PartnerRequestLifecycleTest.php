@@ -1,10 +1,10 @@
 <?php
 
-use App\Enums\PartnerRequestStatus;
 use App\Models\Estate;
+use App\Models\EstateApplication;
 use App\Models\Partner;
-use App\Models\PartnerRequest;
 use App\Models\User;
+use App\Models\ZeusNotification;
 use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\PlanSeeder;
@@ -19,7 +19,7 @@ beforeEach(function () {
     $this->seed(PlanSeeder::class);
 });
 
-it('allows partner members to submit partner requests', function () {
+it('allows partner members to submit estate applications', function () {
     Notification::fake();
 
     $partner = Partner::factory()->create();
@@ -35,9 +35,9 @@ it('allows partner members to submit partner requests', function () {
         ->post(route('partner.partner-requests.store'), [
             'estate_name' => 'Palm Grove Estate',
             'estate_address' => '12 Palm Avenue',
-            'chairman_name' => 'John Chairman',
+            'chairman_name' => 'John Contact',
             'chairman_phone' => '08012345678',
-            'chairman_email' => 'chairman@palmgrove.test',
+            'chairman_email' => 'contact@palmgrove.test',
             'number_of_houses' => 120,
             'state' => 'Lagos',
             'lga' => 'Ikeja',
@@ -46,41 +46,50 @@ it('allows partner members to submit partner requests', function () {
         ->assertRedirect(route('partner.partner-requests.index'))
         ->assertSessionHas('success');
 
-    assertDatabaseHas('partner_requests', [
+    assertDatabaseHas('estate_applications', [
         'estate_name' => 'Palm Grove Estate',
         'partner_id' => $partner->id,
-        'status' => PartnerRequestStatus::Submitted->value,
+        'source' => 'partner',
+        'contact_name' => 'John Contact',
+        'email' => 'contact@palmgrove.test',
+        'status' => 'received',
     ]);
+
+    expect(ZeusNotification::query()->where('type', 'partner_estate_request')->count())->toBe(1);
 
     Notification::assertSentOnDemand(
         PartnerEstateRequestSubmittedNotification::class,
         function (PartnerEstateRequestSubmittedNotification $notification, array $channels, object $notifiable) {
-            return $notification->partnerRequest->estate_name === 'Palm Grove Estate'
+            return $notification->application->estate_name === 'Palm Grove Estate'
                 && ($notifiable->routes['mail'] ?? null) === 'support@usekontrol.com';
         }
     );
 });
 
-it('approves partner requests and creates attributed estates', function () {
+it('approves partner applications and creates attributed estates', function () {
     $partner = Partner::factory()->create(['commission_rate' => 15]);
-    $partnerRequest = PartnerRequest::factory()->create([
+    $application = EstateApplication::create([
+        'source' => EstateApplication::SOURCE_PARTNER,
         'partner_id' => $partner->id,
-        'chairman_email' => 'unique-chairman@estate.test',
-        'status' => PartnerRequestStatus::Submitted,
+        'estate_name' => 'Unique Partner Estate '.uniqid(),
+        'contact_name' => 'Chair',
+        'email' => 'unique-chairman@estate.test',
+        'phone' => '08099998888',
+        'status' => 'received',
     ]);
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.approve', $partnerRequest))
+    $this->post(route('zeus.partner-requests.approve', $application))
         ->assertRedirect(route('zeus.partner-requests.index'))
         ->assertSessionHas('success');
 
-    $partnerRequest->refresh();
+    $application->refresh();
 
-    expect($partnerRequest->status)->toBe(PartnerRequestStatus::EstateCreated)
-        ->and($partnerRequest->estate_id)->not->toBeNull();
+    expect($application->status)->toBe('approved')
+        ->and($application->estate_id)->not->toBeNull();
 
-    $estate = Estate::find($partnerRequest->estate_id);
+    $estate = Estate::find($application->estate_id);
 
     expect($estate)->not->toBeNull()
         ->and($estate->partner_id)->toBe($partner->id)
@@ -88,52 +97,83 @@ it('approves partner requests and creates attributed estates', function () {
         ->and($estate->commission_status->value)->toBe('active');
 });
 
-it('rejects partner requests with a reason', function () {
-    $partnerRequest = PartnerRequest::factory()->create([
-        'status' => PartnerRequestStatus::Reviewing,
+it('rejects partner applications with a reason', function () {
+    $application = EstateApplication::create([
+        'source' => EstateApplication::SOURCE_PARTNER,
+        'partner_id' => Partner::factory()->create()->id,
+        'estate_name' => 'Reject Me Estate',
+        'contact_name' => 'Someone',
+        'email' => 'reject@estate.test',
+        'phone' => '08011112222',
+        'status' => 'under_review',
     ]);
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.reject', $partnerRequest), [
+    $this->post(route('zeus.partner-requests.reject', $application), [
         'rejection_reason' => 'Insufficient documentation provided.',
     ])
         ->assertRedirect(route('zeus.partner-requests.index'));
 
-    assertDatabaseHas('partner_requests', [
-        'id' => $partnerRequest->id,
-        'status' => PartnerRequestStatus::Rejected->value,
+    assertDatabaseHas('estate_applications', [
+        'id' => $application->id,
+        'status' => 'rejected',
         'rejection_reason' => 'Insufficient documentation provided.',
     ]);
 });
 
 it('requests more information from partners', function () {
-    $partnerRequest = PartnerRequest::factory()->create([
-        'status' => PartnerRequestStatus::Submitted,
+    $application = EstateApplication::create([
+        'source' => EstateApplication::SOURCE_PARTNER,
+        'partner_id' => Partner::factory()->create()->id,
+        'estate_name' => 'Info Needed Estate',
+        'contact_name' => 'Someone',
+        'email' => 'info@estate.test',
+        'phone' => '08033334444',
+        'status' => 'received',
     ]);
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.request-info', $partnerRequest), [
-        'info_request_message' => 'Please provide the estate layout plan.',
+    $this->post(route('zeus.partner-requests.request-info', $application), [
+        'info_request_message' => 'Please share gate access details.',
     ])
         ->assertRedirect(route('zeus.partner-requests.index'));
 
-    assertDatabaseHas('partner_requests', [
-        'id' => $partnerRequest->id,
-        'status' => PartnerRequestStatus::InfoRequested->value,
-        'info_request_message' => 'Please provide the estate layout plan.',
+    assertDatabaseHas('estate_applications', [
+        'id' => $application->id,
+        'status' => 'info_requested',
+        'info_request_message' => 'Please share gate access details.',
     ]);
 });
 
-it('lists partner requests for zeus admins', function () {
-    PartnerRequest::factory()->count(2)->create();
+it('blocks duplicate open applications for the same estate name', function () {
+    Notification::fake();
 
-    session()->put(config('zeus.session_key'), true);
+    $partner = Partner::factory()->create();
+    $affiliate = User::factory()->create([
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+    setPermissionsTeamId(0);
+    $affiliate->assignRole('affiliate');
 
-    $this->get(route('zeus.partner-requests.index'))
-        ->assertSuccessful()
-        ->assertInertia(fn ($page) => $page
-            ->component('Zeus/PartnerRequests/Index')
-            ->has('partnerRequests.data', 2));
+    EstateApplication::create([
+        'source' => EstateApplication::SOURCE_PARTNER,
+        'partner_id' => $partner->id,
+        'estate_name' => 'Duplicate Estate',
+        'contact_name' => 'A',
+        'email' => 'a@test.com',
+        'phone' => '08000000001',
+        'status' => 'received',
+    ]);
+
+    $this->actingAs($affiliate)
+        ->post(route('partner.partner-requests.store'), [
+            'estate_name' => 'Duplicate Estate',
+            'chairman_name' => 'B',
+            'chairman_phone' => '08000000002',
+            'chairman_email' => 'b@test.com',
+        ])
+        ->assertSessionHasErrors('estate_name');
 });

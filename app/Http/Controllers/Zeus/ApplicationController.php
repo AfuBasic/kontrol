@@ -33,7 +33,7 @@ class ApplicationController extends Controller
 
     public function show(EstateApplication $application): Response
     {
-        $application->load(['plan', 'assignedTo', 'notesList', 'timelineEvents']);
+        $application->load(['partner', 'estate', 'assignedTo', 'notesList', 'timelineEvents']);
 
         return Inertia::render('Zeus/Applications/Show', [
             'application' => $application,
@@ -92,7 +92,7 @@ class ApplicationController extends Controller
 
     public function approve(EstateApplication $application, ApproveEstateApplicationAction $action): RedirectResponse
     {
-        if (! in_array($application->status, ['received', 'under_review'])) {
+        if (! in_array($application->status, ['received', 'pending', 'under_review', 'info_requested'], true)) {
             return redirect()
                 ->route('zeus.applications.index')
                 ->with('error', 'This application cannot be approved from its current status.');
@@ -110,7 +110,7 @@ class ApplicationController extends Controller
 
     public function reject(EstateApplication $application, Request $request): RedirectResponse
     {
-        if (! in_array($application->status, ['received', 'under_review'])) {
+        if (! in_array($application->status, ['received', 'pending', 'under_review', 'info_requested'], true)) {
             return redirect()
                 ->route('zeus.applications.index')
                 ->with('error', 'This application cannot be rejected from its current status.');
@@ -118,6 +118,9 @@ class ApplicationController extends Controller
 
         $reason = $request->input('reason', 'Application does not meet our current criteria.');
 
+        $application->update([
+            'rejection_reason' => $reason,
+        ]);
         $application->markAsRejected();
 
         // Send rejection email with reason (queued, non-blocking)

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Partner;
 
-use App\Enums\PartnerRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Models\EstateApplication;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,21 +19,17 @@ class ProfileController extends Controller
         $activity = [];
 
         if ($partner) {
-            $activity = $partner->partnerRequests()
+            $activity = $partner->estateApplications()
                 ->latest()
                 ->limit(15)
                 ->get()
-                ->map(fn ($requestModel) => [
-                    'id' => $requestModel->id,
-                    'title' => $requestModel->estate_name,
-                    'status' => $requestModel->status instanceof PartnerRequestStatus
-                        ? $requestModel->status->value
-                        : (string) $requestModel->status,
-                    'status_label' => $requestModel->status instanceof PartnerRequestStatus
-                        ? $requestModel->status->label()
-                        : str_replace('_', ' ', (string) $requestModel->status),
-                    'at' => $requestModel->updated_at?->toIso8601String(),
-                    'at_human' => $requestModel->updated_at?->diffForHumans(),
+                ->map(fn (EstateApplication $application) => [
+                    'id' => $application->id,
+                    'title' => $application->estate_name,
+                    'status' => $application->partnerStatusKey(),
+                    'status_label' => $application->partnerStatusLabel(),
+                    'at' => $application->updated_at?->toIso8601String(),
+                    'at_human' => $application->updated_at?->diffForHumans(),
                 ])
                 ->values()
                 ->all();

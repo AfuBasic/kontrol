@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Auth\DetermineUserRedirect;
+use App\Actions\Public\StoreEstateApplicationAction;
 use App\Http\Controllers\Controller;
-use App\Mail\EstateApplicationAcknowledgmentMail;
-use App\Mail\EstateApplicationMail;
 use App\Mail\SupportRequestMail;
 use App\Models\EstateApplication;
 use Illuminate\Http\Request;
@@ -44,35 +43,25 @@ class LandingController extends Controller
     }
 
     /**
-     * Handle the application form submission.
+     * Handle the public estate application form submission.
      */
-    public function apply(Request $request)
+    public function apply(Request $request, StoreEstateApplicationAction $storeApplication)
     {
-        $validated = $request->validate([
-            'estateName' => 'required|string|max:255',
-            'estateLocation' => 'required|string|max:255',
-            'contactName' => 'required|string|max:255',
-            'contactEmail' => 'required|email|max:255|unique:estate_applications,email|unique:estates,email|unique:users,email',
-            'contactPhone' => 'nullable|string|max:20|unique:estate_applications,phone',
-        ], [
-            'contactEmail.unique' => "Application Error. Your application couldn't be processed at this time.",
-            'contactPhone.unique' => "Application Error. Your application couldn't be processed at this time.",
-        ]);
+        // Accept both legacy camelCase keys and snake_case from the unified form.
+        $payload = [
+            'source' => EstateApplication::SOURCE_PUBLIC,
+            'estate_name' => $request->input('estate_name', $request->input('estateName')),
+            'contact_name' => $request->input('contact_name', $request->input('contactName')),
+            'email' => $request->input('email', $request->input('contactEmail')),
+            'phone' => $request->input('phone', $request->input('contactPhone')),
+            'address' => $request->input('address', $request->input('estateLocation')),
+            'state' => $request->input('state'),
+            'lga' => $request->input('lga'),
+            'number_of_houses' => $request->input('number_of_houses'),
+            'notes' => $request->input('notes'),
+        ];
 
-        $application = EstateApplication::create([
-            'estate_name' => $validated['estateName'],
-            'address' => $validated['estateLocation'],
-            'email' => $validated['contactEmail'],
-            'phone' => $validated['contactPhone'] ?? '',
-            'notes' => 'Contact Name: '.$validated['contactName'],
-            'status' => 'received',
-        ]);
-
-        Mail::to('afutunde@gmail.com')
-            ->send(new EstateApplicationMail($application));
-
-        Mail::to($validated['contactEmail'])
-            ->send(new EstateApplicationAcknowledgmentMail($application));
+        $storeApplication->execute($payload);
 
         return back()->with('success', 'Application received successfully!');
     }

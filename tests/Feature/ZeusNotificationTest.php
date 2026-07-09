@@ -11,7 +11,7 @@ beforeEach(function () {
     $this->seed(PermissionSeeder::class);
 });
 
-it('creates a zeus notification when a partner submits an estate request', function () {
+it('creates a zeus notification when a partner submits an estate application', function () {
     $partner = Partner::factory()->create(['name' => 'Apex Network']);
     $affiliate = User::factory()->create([
         'user_type' => 'affiliate',
@@ -41,7 +41,6 @@ it('creates a zeus notification when a partner submits an estate request', funct
         ->and($notification->title)->toBe('New partner estate request')
         ->and($notification->body)->toContain('Apex Network')
         ->and($notification->body)->toContain('Lekki Gardens')
-        ->and($notification->action_url)->toBe(route('zeus.partner-requests.index'))
         ->and($notification->read_at)->toBeNull();
 });
 

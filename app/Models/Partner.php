@@ -78,11 +78,19 @@ class Partner extends Model
     }
 
     /**
-     * @return HasMany<PartnerRequest, $this>
+     * @return HasMany<EstateApplication, $this>
      */
     public function partnerRequests(): HasMany
     {
-        return $this->hasMany(PartnerRequest::class);
+        return $this->hasMany(EstateApplication::class);
+    }
+
+    /**
+     * @return HasMany<EstateApplication, $this>
+     */
+    public function estateApplications(): HasMany
+    {
+        return $this->hasMany(EstateApplication::class);
     }
 
     /**

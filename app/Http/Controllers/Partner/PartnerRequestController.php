@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Partner;
 
-use App\Enums\PartnerRequestStatus;
+use App\Actions\Public\StoreEstateApplicationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Partner\StorePartnerRequestRequest;
-use App\Models\PartnerRequest;
-use App\Models\ZeusNotification;
-use App\Notifications\Zeus\PartnerEstateRequestSubmittedNotification;
+use App\Models\EstateApplication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,25 +18,26 @@ class PartnerRequestController extends Controller
     {
         $partnerId = $request->user()->partner_id;
 
-        $partnerRequests = PartnerRequest::query()
-            ->when($partnerId, fn ($query) => $query->where('partner_id', $partnerId))
+        $applications = EstateApplication::query()
+            ->when($partnerId, fn ($query) => $query->forPartner($partnerId))
             ->when(! $partnerId, fn ($query) => $query->whereRaw('1 = 0'))
             ->with('estate:id,ulid,name,status')
             ->latest()
             ->get()
-            ->map(fn (PartnerRequest $partnerRequest) => $this->transformRequest($partnerRequest))
+            ->map(fn (EstateApplication $application) => $this->transformForPartner($application))
             ->values();
 
-        $columns = collect(PartnerRequestStatus::cases())
-            ->map(fn (PartnerRequestStatus $status) => [
-                'key' => $status->value,
-                'label' => $status->label(),
-            ])
-            ->values()
-            ->all();
+        $columns = [
+            ['key' => 'submitted', 'label' => 'Submitted'],
+            ['key' => 'reviewing', 'label' => 'Reviewing'],
+            ['key' => 'info_requested', 'label' => 'Info Requested'],
+            ['key' => 'approved', 'label' => 'Approved'],
+            ['key' => 'estate_created', 'label' => 'Estate Created'],
+            ['key' => 'rejected', 'label' => 'Rejected'],
+        ];
 
         return Inertia::render('Partner/PartnerRequests/Index', [
-            'partnerRequests' => $partnerRequests,
+            'partnerRequests' => $applications,
             'columns' => $columns,
             'filters' => [
                 'search' => $request->string('search')->toString(),
@@ -63,37 +62,49 @@ class PartnerRequestController extends Controller
         ]);
     }
 
-    public function store(StorePartnerRequestRequest $request): RedirectResponse
-    {
+    public function store(
+        StorePartnerRequestRequest $request,
+        StoreEstateApplicationAction $storeApplication,
+    ): RedirectResponse {
         $user = $request->user();
 
         abort_unless($user->partner_id, 403, 'Your account is not linked to a partner organization.');
 
-        $partnerRequest = PartnerRequest::create([
-            ...$request->validated(),
-            'partner_id' => $user->partner_id,
-            'status' => PartnerRequestStatus::Submitted,
-        ]);
+        $validated = $request->validated();
 
-        $partnerRequest->loadMissing('partner');
-        $partnerName = $partnerRequest->partner?->name ?? 'A partner';
+        try {
+            $storeApplication->execute([
+                'source' => EstateApplication::SOURCE_PARTNER,
+                'partner_id' => $user->partner_id,
+                'estate_name' => $validated['estate_name'],
+                'contact_name' => $validated['chairman_name'],
+                'email' => $validated['chairman_email'],
+                'phone' => $validated['chairman_phone'],
+                'address' => $validated['estate_address'] ?? null,
+                'state' => $validated['state'] ?? null,
+                'lga' => $validated['lga'] ?? null,
+                'number_of_houses' => $validated['number_of_houses'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+        } catch (ValidationException $exception) {
+            $errors = $exception->errors();
 
-        // In-app Zeus inbox
-        ZeusNotification::notify(
-            type: 'partner_estate_request',
-            title: 'New partner estate request',
-            body: "{$partnerName} submitted {$partnerRequest->estate_name} for review.",
-            actionUrl: route('zeus.partner-requests.index'),
-            data: [
-                'partner_request_id' => $partnerRequest->id,
-                'partner_id' => $partnerRequest->partner_id,
-                'estate_name' => $partnerRequest->estate_name,
-            ],
-        );
+            // Map unified field names back to partner form keys.
+            if (isset($errors['contact_name'])) {
+                $errors['chairman_name'] = $errors['contact_name'];
+                unset($errors['contact_name']);
+            }
+            if (isset($errors['email'])) {
+                $errors['chairman_email'] = $errors['email'];
+                unset($errors['email']);
+            }
+            if (isset($errors['phone'])) {
+                $errors['chairman_phone'] = $errors['phone'];
+                unset($errors['phone']);
+            }
 
-        // Email support@usekontrol.com (configurable via ZEUS_NOTIFICATION_EMAIL)
-        Notification::route('mail', config('zeus.notification_email', 'support@usekontrol.com'))
-            ->notify(new PartnerEstateRequestSubmittedNotification($partnerRequest));
+            throw ValidationException::withMessages($errors);
+        }
 
         return redirect()
             ->route('partner.partner-requests.index')
@@ -103,33 +114,29 @@ class PartnerRequestController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function transformRequest(PartnerRequest $partnerRequest): array
+    private function transformForPartner(EstateApplication $application): array
     {
-        $status = $partnerRequest->status instanceof PartnerRequestStatus
-            ? $partnerRequest->status
-            : PartnerRequestStatus::tryFrom((string) $partnerRequest->status);
-
         return [
-            'id' => $partnerRequest->id,
-            'estate_name' => $partnerRequest->estate_name,
-            'estate_address' => $partnerRequest->estate_address,
-            'chairman_name' => $partnerRequest->chairman_name,
-            'chairman_email' => $partnerRequest->chairman_email,
-            'chairman_phone' => $partnerRequest->chairman_phone,
-            'number_of_houses' => $partnerRequest->number_of_houses,
-            'state' => $partnerRequest->state,
-            'lga' => $partnerRequest->lga,
-            'notes' => $partnerRequest->notes,
-            'status' => $status?->value ?? (string) $partnerRequest->status,
-            'status_label' => $status?->label() ?? str_replace('_', ' ', (string) $partnerRequest->status),
-            'rejection_reason' => $partnerRequest->rejection_reason,
-            'info_request_message' => $partnerRequest->info_request_message,
-            'created_at' => $partnerRequest->created_at?->toIso8601String(),
-            'updated_at' => $partnerRequest->updated_at?->toIso8601String(),
-            'estate' => $partnerRequest->estate ? [
-                'ulid' => $partnerRequest->estate->ulid,
-                'name' => $partnerRequest->estate->name,
-                'status' => $partnerRequest->estate->status,
+            'id' => $application->id,
+            'estate_name' => $application->estate_name,
+            'estate_address' => $application->address,
+            'chairman_name' => $application->contact_name,
+            'chairman_email' => $application->email,
+            'chairman_phone' => $application->phone,
+            'number_of_houses' => $application->number_of_houses,
+            'state' => $application->state,
+            'lga' => $application->lga,
+            'notes' => $application->notes,
+            'status' => $application->partnerStatusKey(),
+            'status_label' => $application->partnerStatusLabel(),
+            'rejection_reason' => $application->rejection_reason,
+            'info_request_message' => $application->info_request_message,
+            'created_at' => $application->created_at?->toIso8601String(),
+            'updated_at' => $application->updated_at?->toIso8601String(),
+            'estate' => $application->estate ? [
+                'ulid' => $application->estate->ulid,
+                'name' => $application->estate->name,
+                'status' => $application->estate->status,
             ] : null,
         ];
     }

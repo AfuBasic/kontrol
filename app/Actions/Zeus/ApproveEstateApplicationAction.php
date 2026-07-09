@@ -4,7 +4,6 @@ namespace App\Actions\Zeus;
 
 use App\Models\Estate;
 use App\Models\EstateApplication;
-use App\Models\EstateSubscription;
 use Illuminate\Support\Facades\DB;
 
 class ApproveEstateApplicationAction
@@ -16,25 +15,32 @@ class ApproveEstateApplicationAction
     /**
      * Approve an estate application and create the estate.
      *
-     * Uses the information from the application to create the estate,
-     * which triggers the existing invitation flow.
-     *
-     * If a plan_id is specified in the application, creates an EstateSubscription
-     * linking the estate to that plan.
+     * Residents choose their own plans after the estate is live — intake
+     * no longer selects a plan. Partner-sourced apps attach commission attribution.
      */
     public function execute(EstateApplication $application): Estate
     {
         return DB::transaction(function () use ($application) {
-            // Create the estate using the application data
-            $estate = $this->createEstateAction->execute([
+            $payload = [
                 'name' => $application->estate_name,
                 'email' => $application->email,
                 'address' => $application->address,
-                'plan_id' => $application->plan_id,
-            ]);
+            ];
 
-            // Mark the application as approved
-            $application->markAsApproved();
+            if ($application->isPartnerSourced() && $application->partner_id) {
+                $payload['has_partner'] = true;
+                $payload['partner_id'] = $application->partner_id;
+                $payload['partner_source'] = 'partner_request';
+                $payload['partner_notes'] = $application->notes;
+            }
+
+            $estate = $this->createEstateAction->execute($payload);
+
+            $application->update([
+                'status' => 'approved',
+                'estate_id' => $estate->id,
+                'reviewed_at' => now(),
+            ]);
 
             return $estate;
         });

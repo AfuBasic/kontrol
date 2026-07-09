@@ -39,14 +39,19 @@ interface TimelineEvent {
 interface Application {
     id: number;
     estate_name: string;
+    contact_name: string | null;
     email: string;
     phone: string;
     address: string | null;
+    state: string | null;
+    lga: string | null;
+    number_of_houses: number | null;
+    source: string;
     status: string;
     notes: string | null;
     challenges: string | null;
     created_at: string;
-    plan: { id: number; name: string } | null;
+    partner?: { id: number; name: string } | null;
     assignedTo: User | null;
     notes_list: Note[];
     timeline_events: TimelineEvent[];
@@ -284,10 +289,43 @@ export default function ApplicationShow({ application }: Props) {
                             <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                                 <BriefcaseIcon className="h-5 w-5 text-slate-400" />
                                 <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Requested Plan</p>
-                                    <span className="font-bold text-slate-900 dark:text-white">{application.plan?.name || 'N/A'}</span>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Source</p>
+                                    <span className="font-bold text-slate-900 capitalize dark:text-white">
+                                        {application.source === 'partner'
+                                            ? `Partner${application.partner ? ` · ${application.partner.name}` : ''}`
+                                            : 'Public'}
+                                    </span>
                                 </div>
                             </div>
+                            {application.contact_name && (
+                                <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                                    <BriefcaseIcon className="h-5 w-5 text-slate-400" />
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Contact person</p>
+                                        <span className="font-bold text-slate-900 dark:text-white">{application.contact_name}</span>
+                                    </div>
+                                </div>
+                            )}
+                            {(application.state || application.lga) && (
+                                <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                                    <MapPinIcon className="h-5 w-5 text-slate-400" />
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Location</p>
+                                        <span className="font-medium">
+                                            {[application.lga, application.state].filter(Boolean).join(', ')}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            {application.number_of_houses != null && (
+                                <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                                    <BriefcaseIcon className="h-5 w-5 text-slate-400" />
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Houses</p>
+                                        <span className="font-medium">{application.number_of_houses}</span>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                                 <CalendarIcon className="h-5 w-5 text-slate-400" />
                                 <div>

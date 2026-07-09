@@ -191,12 +191,7 @@ export default function ApplicationModal({ isOpen, onClose, selectedPlanId, sele
                                             <SuccessState key="success" estateName={estateName} />
                                         ) : (
                                             <motion.div key="form" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                                                <ApplicationForm
-                                                    onSuccess={handleSuccess}
-                                                    selectedPlanId={selectedPlanId}
-                                                    selectedPlanName={selectedPlanName}
-                                                    selectedPlanInterval={selectedPlanInterval}
-                                                />
+                                                <ApplicationForm onSuccess={handleSuccess} />
                                             </motion.div>
                                         )}
                                     </AnimatePresence>

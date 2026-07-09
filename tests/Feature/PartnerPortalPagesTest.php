@@ -1,8 +1,7 @@
 <?php
 
-use App\Enums\PartnerRequestStatus;
+use App\Models\EstateApplication;
 use App\Models\Partner;
-use App\Models\PartnerRequest;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Spatie\Permission\Models\Role;
@@ -85,10 +84,14 @@ it('renders partner notifications index', function () {
 it('renders estate pipeline with columns and transformed requests', function () {
     [$partner, $affiliate] = partnerMember();
 
-    PartnerRequest::factory()->create([
+    EstateApplication::create([
+        'source' => EstateApplication::SOURCE_PARTNER,
         'partner_id' => $partner->id,
         'estate_name' => 'Palm Grove Estate',
-        'status' => PartnerRequestStatus::Submitted,
+        'contact_name' => 'Contact Person',
+        'email' => 'contact@palmgrove.test',
+        'phone' => '08012345678',
+        'status' => 'received',
         'state' => 'Lagos',
         'lga' => 'Ikeja',
         'number_of_houses' => 80,

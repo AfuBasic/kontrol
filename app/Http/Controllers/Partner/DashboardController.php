@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Partner;
 
-use App\Enums\PartnerRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Models\EstateApplication;
 use App\Models\PartnerEarning;
-use App\Models\PartnerRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -54,12 +53,9 @@ class DashboardController extends Controller
                     ->sum('commission_amount');
             }
 
-            $partnerRequestCount = $partner->partnerRequests()->count();
-            $approvedRequestCount = $partner->partnerRequests()
-                ->whereIn('status', [
-                    PartnerRequestStatus::Approved,
-                    PartnerRequestStatus::EstateCreated,
-                ])
+            $partnerRequestCount = $partner->estateApplications()->count();
+            $approvedRequestCount = $partner->estateApplications()
+                ->where('status', 'approved')
                 ->count();
             $convertedEstates = $partner->estates()->count();
             $commissionRate = $partner->commission_rate;
@@ -78,35 +74,27 @@ class DashboardController extends Controller
                 ->values()
                 ->all();
 
-            $recentActivity = $partner->partnerRequests()
+            $recentActivity = $partner->estateApplications()
                 ->latest()
                 ->limit(8)
                 ->get()
-                ->map(fn (PartnerRequest $request) => [
-                    'id' => $request->id,
+                ->map(fn (EstateApplication $application) => [
+                    'id' => $application->id,
                     'type' => 'partner_request',
-                    'title' => $request->estate_name,
-                    'status' => $request->status instanceof PartnerRequestStatus
-                        ? $request->status->value
-                        : (string) $request->status,
-                    'status_label' => $request->status instanceof PartnerRequestStatus
-                        ? $request->status->label()
-                        : str_replace('_', ' ', (string) $request->status),
-                    'description' => match (
-                        $request->status instanceof PartnerRequestStatus
-                            ? $request->status
-                            : PartnerRequestStatus::tryFrom((string) $request->status)
-                    ) {
-                        PartnerRequestStatus::Submitted => 'Estate request submitted',
-                        PartnerRequestStatus::Reviewing => 'Under review by Kontrol',
-                        PartnerRequestStatus::InfoRequested => 'More information requested',
-                        PartnerRequestStatus::Approved => 'Request approved',
-                        PartnerRequestStatus::EstateCreated => 'Estate created on Kontrol',
-                        PartnerRequestStatus::Rejected => 'Request rejected',
+                    'title' => $application->estate_name,
+                    'status' => $application->partnerStatusKey(),
+                    'status_label' => $application->partnerStatusLabel(),
+                    'description' => match ($application->partnerStatusKey()) {
+                        'submitted' => 'Estate request submitted',
+                        'reviewing' => 'Under review by Kontrol',
+                        'info_requested' => 'More information requested',
+                        'approved' => 'Request approved',
+                        'estate_created' => 'Estate created on Kontrol',
+                        'rejected' => 'Request rejected',
                         default => 'Status updated',
                     },
-                    'at' => $request->updated_at?->toIso8601String(),
-                    'at_human' => $request->updated_at?->diffForHumans(),
+                    'at' => $application->updated_at?->toIso8601String(),
+                    'at_human' => $application->updated_at?->diffForHumans(),
                 ])
                 ->values()
                 ->all();
@@ -144,8 +132,8 @@ class DashboardController extends Controller
                 ];
             }
 
-            $infoRequested = $partner->partnerRequests()
-                ->where('status', PartnerRequestStatus::InfoRequested)
+            $infoRequested = $partner->estateApplications()
+                ->where('status', 'info_requested')
                 ->count();
 
             if ($infoRequested > 0) {

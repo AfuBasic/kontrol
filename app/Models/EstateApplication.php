@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,119 +11,94 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property string $source
+ * @property int|null $partner_id
+ * @property int|null $estate_id
  * @property string $estate_name
+ * @property string|null $contact_name
  * @property string $email
  * @property string|null $address
+ * @property string|null $state
+ * @property string|null $lga
  * @property string $phone
+ * @property int|null $number_of_houses
  * @property string|null $notes
  * @property string $status
+ * @property string|null $rejection_reason
+ * @property string|null $info_request_message
  * @property CarbonImmutable|null $reviewed_at
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property int|null $plan_id
  * @property int|null $assigned_to
  * @property string|null $challenges
- * @property-read Plan|null $plan
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Partner|null $partner
+ * @property-read Estate|null $estate
  * @property-read User|null $assignedTo
  * @property-read Collection<int, ApplicationNote> $notesList
  * @property-read Collection<int, ApplicationTimeline> $timelineEvents
- *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereEstateName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereNotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication wherePlanId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereReviewedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateApplication whereUpdatedAt($value)
- *
- * @mixin \Eloquent
  */
 class EstateApplication extends Model
 {
+    public const SOURCE_PUBLIC = 'public';
+
+    public const SOURCE_PARTNER = 'partner';
+
+    public const OPEN_STATUSES = [
+        'pending',
+        'received',
+        'under_review',
+        'info_requested',
+    ];
+
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
+        'source',
+        'partner_id',
+        'estate_id',
         'estate_name',
+        'contact_name',
         'email',
         'address',
+        'state',
+        'lga',
         'phone',
+        'number_of_houses',
         'notes',
-        'plan_id',
         'status',
         'reviewed_at',
         'assigned_to',
         'challenges',
+        'rejection_reason',
+        'info_request_message',
     ];
 
     /**
-     * The attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'reviewed_at' => 'datetime',
+            'number_of_houses' => 'integer',
         ];
     }
 
     /**
-     * @return BelongsTo<Plan, $this>
+     * @return BelongsTo<Partner, $this>
      */
-    public function plan(): BelongsTo
+    public function partner(): BelongsTo
     {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsTo(Partner::class);
     }
 
     /**
-     * Check if the application is pending.
+     * @return BelongsTo<Estate, $this>
      */
-    public function isPending(): bool
+    public function estate(): BelongsTo
     {
-        return $this->status === 'pending';
-    }
-
-    /**
-     * Mark as contacted.
-     */
-    public function markAsContacted(): void
-    {
-        $this->update([
-            'status' => 'contacted',
-            'reviewed_at' => now(),
-        ]);
-    }
-
-    /**
-     * Mark as approved.
-     */
-    public function markAsApproved(): void
-    {
-        $this->update([
-            'status' => 'approved',
-            'reviewed_at' => now(),
-        ]);
-    }
-
-    /**
-     * Mark as rejected.
-     */
-    public function markAsRejected(): void
-    {
-        $this->update([
-            'status' => 'rejected',
-            'reviewed_at' => now(),
-        ]);
+        return $this->belongsTo(Estate::class);
     }
 
     /**
@@ -147,5 +123,87 @@ class EstateApplication extends Model
     public function timelineEvents(): HasMany
     {
         return $this->hasMany(ApplicationTimeline::class);
+    }
+
+    public function isPending(): bool
+    {
+        return in_array($this->status, self::OPEN_STATUSES, true);
+    }
+
+    public function isPartnerSourced(): bool
+    {
+        return $this->source === self::SOURCE_PARTNER || $this->partner_id !== null;
+    }
+
+    public function markAsContacted(): void
+    {
+        $this->update([
+            'status' => 'under_review',
+            'reviewed_at' => now(),
+        ]);
+    }
+
+    public function markAsApproved(): void
+    {
+        $this->update([
+            'status' => 'approved',
+            'reviewed_at' => now(),
+        ]);
+    }
+
+    public function markAsRejected(): void
+    {
+        $this->update([
+            'status' => 'rejected',
+            'reviewed_at' => now(),
+        ]);
+    }
+
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::OPEN_STATUSES);
+    }
+
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeForPartner(Builder $query, int $partnerId): Builder
+    {
+        return $query->where('partner_id', $partnerId);
+    }
+
+    /**
+     * Partner portal status label.
+     */
+    public function partnerStatusLabel(): string
+    {
+        return match ($this->status) {
+            'received', 'pending' => 'Submitted',
+            'under_review' => 'Reviewing',
+            'info_requested' => 'Info Requested',
+            'approved' => $this->estate_id ? 'Estate Created' : 'Approved',
+            'rejected' => 'Rejected',
+            default => str_replace('_', ' ', $this->status),
+        };
+    }
+
+    /**
+     * Partner pipeline column key.
+     */
+    public function partnerStatusKey(): string
+    {
+        return match ($this->status) {
+            'received', 'pending' => 'submitted',
+            'under_review' => 'reviewing',
+            'info_requested' => 'info_requested',
+            'approved' => $this->estate_id ? 'estate_created' : 'approved',
+            'rejected' => 'rejected',
+            default => $this->status,
+        };
     }
 }

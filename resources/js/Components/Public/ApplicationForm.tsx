@@ -1,13 +1,11 @@
 import { useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2, Loader2, Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
+import { ArrowRight, Building2, Home, Loader2, Mail, MapPin, Phone, User } from 'lucide-react';
 import type { FocusEvent, FormEvent } from 'react';
+import { NIGERIA_STATES } from '@/Utils/nigeria-states';
 
 interface Props {
     onSuccess: (estateName: string) => void;
-    selectedPlanId?: number;
-    selectedPlanName?: string;
-    selectedPlanInterval?: 'quarterly' | 'semi-annually' | 'annually';
 }
 
 const inputClasses = {
@@ -16,11 +14,7 @@ const inputClasses = {
     error: 'border-red-300 focus:border-red-500 focus:ring-red-500/10',
 };
 
-/**
- * Scroll input into view when focused on mobile to prevent keyboard from obscuring it.
- */
-function handleInputFocus(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    // Small delay to allow keyboard to fully appear
+function handleInputFocus(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setTimeout(() => {
         e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
@@ -28,14 +22,17 @@ function handleInputFocus(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>)
 
 const labelClasses = 'mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700';
 
-export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPlanName, selectedPlanInterval }: Props) {
+export default function ApplicationForm({ onSuccess }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         estate_name: '',
+        contact_name: '',
         email: '',
         phone: '',
         address: '',
+        state: '',
+        lga: '',
+        number_of_houses: '',
         notes: '',
-        plan_id: selectedPlanId || null,
     });
 
     function handleSubmit(e: FormEvent) {
@@ -53,9 +50,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.06,
-            },
+            transition: { staggerChildren: 0.06 },
         },
     };
 
@@ -66,27 +61,12 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
 
     return (
         <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-5">
-            {/* Selected Plan Banner */}
-            {selectedPlanId && selectedPlanName && (
-                <motion.div variants={itemVariants} className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-sm text-blue-900">
-                        <span className="font-semibold">Selected Plan:</span> {selectedPlanName}
-                        {selectedPlanInterval && (
-                            <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 uppercase">
-                                {selectedPlanInterval === 'annually' ? 'Annual' : 'Quarterly'} Plan
-                            </span>
-                        )}
-                    </p>
-                </motion.div>
-            )}
-
-            {/* Community Name */}
             <motion.div variants={itemVariants}>
                 <label htmlFor="estate_name" className={labelClasses}>
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-white">
                         <Building2 className="h-3.5 w-3.5" />
                     </div>
-                    Community Name <span className="text-red-500">*</span>
+                    Estate name <span className="text-red-500">*</span>
                 </label>
                 <input
                     id="estate_name"
@@ -104,15 +84,36 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                 )}
             </motion.div>
 
-            {/* Email & Phone Row */}
+            <motion.div variants={itemVariants}>
+                <label htmlFor="contact_name" className={labelClasses}>
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                        <User className="h-3.5 w-3.5" />
+                    </div>
+                    Contact person name <span className="text-red-500">*</span>
+                </label>
+                <input
+                    id="contact_name"
+                    type="text"
+                    value={data.contact_name}
+                    onChange={(e) => setData('contact_name', e.target.value)}
+                    onFocus={handleInputFocus}
+                    placeholder="Full name"
+                    className={`${inputClasses.base} ${errors.contact_name ? inputClasses.error : inputClasses.normal}`}
+                />
+                {errors.contact_name && (
+                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-2 text-sm font-medium text-red-600">
+                        {errors.contact_name}
+                    </motion.p>
+                )}
+            </motion.div>
+
             <div className="grid gap-5 sm:grid-cols-2">
-                {/* Email */}
                 <motion.div variants={itemVariants}>
                     <label htmlFor="email" className={labelClasses}>
                         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white">
                             <Mail className="h-3.5 w-3.5" />
                         </div>
-                        Email <span className="text-red-500">*</span>
+                        Contact person email <span className="text-red-500">*</span>
                     </label>
                     <input
                         id="email"
@@ -120,7 +121,7 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
                         onFocus={handleInputFocus}
-                        placeholder="admin@community.com"
+                        placeholder="name@estate.com"
                         className={`${inputClasses.base} ${errors.email ? inputClasses.error : inputClasses.normal}`}
                     />
                     {errors.email && (
@@ -130,19 +131,16 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                     )}
                 </motion.div>
 
-                {/* Phone */}
                 <motion.div variants={itemVariants}>
                     <label htmlFor="phone" className={labelClasses}>
                         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white">
                             <Phone className="h-3.5 w-3.5" />
                         </div>
-                        Phone <span className="text-red-500">*</span>
+                        Contact person phone <span className="text-red-500">*</span>
                     </label>
                     <input
                         id="phone"
                         type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         onFocus={handleInputFocus}
@@ -157,13 +155,12 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                 </motion.div>
             </div>
 
-            {/* Address */}
             <motion.div variants={itemVariants}>
                 <label htmlFor="address" className={labelClasses}>
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500 text-white">
                         <MapPin className="h-3.5 w-3.5" />
                     </div>
-                    Community Address <span className="font-normal text-slate-400">(optional)</span>
+                    Estate address <span className="font-normal text-slate-400">(optional)</span>
                 </label>
                 <input
                     id="address"
@@ -171,49 +168,83 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
                     onFocus={handleInputFocus}
-                    placeholder="Full address of the community"
+                    placeholder="Street, area, landmarks"
                     className={`${inputClasses.base} ${inputClasses.normal}`}
                 />
             </motion.div>
 
-            {/* Notes */}
-            <motion.div variants={itemVariants}>
-                <label htmlFor="notes" className={labelClasses}>
-                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-600 text-white">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                    </div>
-                    Additional Notes <span className="font-normal text-slate-400">(optional)</span>
-                </label>
-                <textarea
-                    id="notes"
-                    value={data.notes}
-                    onChange={(e) => setData('notes', e.target.value)}
-                    onFocus={handleInputFocus}
-                    placeholder="Anything else you'd like us to know?"
-                    rows={3}
-                    className={`${inputClasses.base} ${inputClasses.normal} resize-none`}
-                />
-            </motion.div>
+            <div className="grid gap-5 sm:grid-cols-3">
+                <motion.div variants={itemVariants}>
+                    <label htmlFor="state" className={labelClasses}>
+                        State
+                    </label>
+                    <select
+                        id="state"
+                        value={data.state}
+                        onChange={(e) => setData('state', e.target.value)}
+                        onFocus={handleInputFocus}
+                        className={`${inputClasses.base} ${inputClasses.normal}`}
+                    >
+                        <option value="">Select state</option>
+                        {NIGERIA_STATES.map((state) => (
+                            <option key={state} value={state}>
+                                {state}
+                            </option>
+                        ))}
+                    </select>
+                </motion.div>
 
-            {/* Submit Button */}
+                <motion.div variants={itemVariants}>
+                    <label htmlFor="lga" className={labelClasses}>
+                        LGA
+                    </label>
+                    <input
+                        id="lga"
+                        type="text"
+                        value={data.lga}
+                        onChange={(e) => setData('lga', e.target.value)}
+                        onFocus={handleInputFocus}
+                        placeholder="e.g. Eti-Osa"
+                        className={`${inputClasses.base} ${inputClasses.normal}`}
+                    />
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                    <label htmlFor="number_of_houses" className={labelClasses}>
+                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-600 text-white">
+                            <Home className="h-3.5 w-3.5" />
+                        </div>
+                        Houses
+                    </label>
+                    <input
+                        id="number_of_houses"
+                        type="number"
+                        min={1}
+                        value={data.number_of_houses}
+                        onChange={(e) => setData('number_of_houses', e.target.value)}
+                        onFocus={handleInputFocus}
+                        placeholder="Approx."
+                        className={`${inputClasses.base} ${inputClasses.normal}`}
+                    />
+                </motion.div>
+            </div>
+
             <motion.div variants={itemVariants} className="pt-2">
                 <button
                     type="submit"
                     disabled={processing}
                     className="group relative w-full overflow-hidden rounded-xl bg-slate-900 px-6 py-4 text-base font-semibold text-white shadow-xl shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-2xl hover:shadow-slate-900/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {/* Gradient overlay on hover */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-violet-600 opacity-0 transition-opacity group-hover:opacity-100" />
-
                     <span className="relative flex items-center justify-center gap-2">
                         {processing ? (
                             <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                Submitting Application...
+                                Submitting…
                             </>
                         ) : (
                             <>
-                                Submit Application
+                                Submit application
                                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </>
                         )}
@@ -221,9 +252,8 @@ export default function ApplicationForm({ onSuccess, selectedPlanId, selectedPla
                 </button>
             </motion.div>
 
-            {/* Trust Message */}
             <motion.p variants={itemVariants} className="text-center text-sm text-slate-500">
-                We'll review your application and reach out personally within <span className="font-semibold text-slate-700">24-48 hours</span>.
+                We&apos;ll review your application and reach out within <span className="font-semibold text-slate-700">24–48 hours</span>.
             </motion.p>
         </motion.form>
     );
