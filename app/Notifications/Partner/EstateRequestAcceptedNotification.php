@@ -52,7 +52,7 @@ class EstateRequestAcceptedNotification extends Notification implements ShouldBr
 
         return [
             'title' => 'Estate request accepted',
-            'body' => "Great news — “{$estateName}” has been approved and is now live on Kontrol.",
+            'body' => "Great news! “{$estateName}” has been approved and is now live on Kontrol.",
             'url' => '/partner/partner-requests',
             'estate_application_id' => $this->application->id,
             'estate_id' => $this->estate->id,
