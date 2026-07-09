@@ -1,12 +1,10 @@
 import {
     ArrowRightIcon,
     BookOpenIcon,
-    ChatBubbleLeftRightIcon,
     ChevronDownIcon,
     DocumentTextIcon,
     EnvelopeIcon,
     MagnifyingGlassIcon,
-    PlayCircleIcon,
     SparklesIcon,
     TicketIcon,
     UsersIcon,
@@ -201,101 +199,6 @@ export default function PartnerSupport({ support }: Props) {
                         </div>
                     </div>
                 </motion.section>
-
-                {/* ═══ QUICK ACTIONS ═══ */}
-                <section className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-                    {[
-                        {
-                            icon: EnvelopeIcon,
-                            title: 'Email support',
-                            body: `Typical reply in ${support.response_sla}`,
-                            href: mailto,
-                            external: true,
-                        },
-                        {
-                            icon: ChatBubbleLeftRightIcon,
-                            title: 'Live chat',
-                            body: 'Coming soon',
-                            badge: 'Soon',
-                        },
-                        {
-                            icon: BookOpenIcon,
-                            title: 'Knowledge base',
-                            body: 'Browse guides',
-                            onClick: () => document.getElementById('help-search')?.focus(),
-                        },
-                        {
-                            icon: PlayCircleIcon,
-                            title: 'Video tutorials',
-                            body: 'Watch onboarding',
-                            href: '/partner/partner-requests/create',
-                        },
-                    ].map((action, i) => {
-                        const Icon = action.icon;
-                        const inner = (
-                            <>
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-100 text-stone-600 transition group-hover:bg-primary-500/10 group-hover:text-primary-600 dark:bg-white/10 dark:text-slate-300">
-                                    <Icon className="h-4 w-4" />
-                                </span>
-                                <p className="mt-3 text-[13px] font-semibold text-stone-900 dark:text-white">
-                                    {action.title}
-                                </p>
-                                <p className="mt-0.5 text-[11px] text-stone-500">{action.body}</p>
-                                {action.badge && (
-                                    <span className="mt-2 inline-flex rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-500 dark:bg-white/10">
-                                        {action.badge}
-                                    </span>
-                                )}
-                            </>
-                        );
-
-                        const className =
-                            'group relative rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-md hover:ring-stone-900/[0.08] dark:bg-white/[0.035] dark:ring-white/[0.06] dark:hover:ring-white/12';
-
-                        if (action.href && action.external) {
-                            return (
-                                <motion.a
-                                    key={action.title}
-                                    href={action.href}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.04 * i }}
-                                    className={className}
-                                >
-                                    {inner}
-                                </motion.a>
-                            );
-                        }
-                        if (action.href) {
-                            return (
-                                <motion.div
-                                    key={action.title}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.04 * i }}
-                                >
-                                    <Link href={action.href} className={`block ${className}`}>
-                                        {inner}
-                                    </Link>
-                                </motion.div>
-                            );
-                        }
-
-                        return (
-                            <motion.button
-                                key={action.title}
-                                type="button"
-                                onClick={action.onClick}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.04 * i }}
-                                className={`w-full text-left ${className}`}
-                            >
-                                {inner}
-                            </motion.button>
-                        );
-                    })}
-                </section>
 
                 {/* ═══ SEARCH + HELP LIBRARY ═══ */}
                 <section className="space-y-4">
