@@ -34,6 +34,7 @@ Route::middleware('role:affiliate')->group(function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('partner.notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('partner.notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('partner.notifications.read-all');
+    Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('partner.notifications.clear-all');
 
     Route::get('/partner-requests', [PartnerRequestController::class, 'index'])->name('partner.partner-requests.index');
     Route::get('/partner-requests/create', [PartnerRequestController::class, 'create'])->name('partner.partner-requests.create');
