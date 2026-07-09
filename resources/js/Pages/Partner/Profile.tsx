@@ -635,7 +635,7 @@ export default function PartnerProfile({ tab, user, partner, banks = [], activit
                                             checked={preferences.email_settlements}
                                         />
                                         <PrefToggle
-                                            label="Pipeline"
+                                            label="My Estates"
                                             description="Estate approvals, info requests, and rejections"
                                             checked={preferences.email_pipeline}
                                         />
