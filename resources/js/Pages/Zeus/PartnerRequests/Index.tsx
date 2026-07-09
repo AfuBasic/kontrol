@@ -1,6 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import {
     InboxIcon,
@@ -43,6 +44,10 @@ interface Props {
 export default function PartnerRequestsIndex({ partnerRequests, filters, statusOptions }: Props) {
     const [activeRequest, setActiveRequest] = useState<PartnerRequest | null>(null);
     const [modalType, setModalType] = useState<'reject' | 'info' | null>(null);
+    const [approveTarget, setApproveTarget] = useState<PartnerRequest | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<PartnerRequest | null>(null);
+    const [approving, setApproving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const rejectForm = useForm({ rejection_reason: '' });
     const infoForm = useForm({ info_request_message: '' });
@@ -59,22 +64,34 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
         setModalType(null);
     };
 
-    const approve = (id: number) => {
-        if (confirm('Are you sure you want to approve this request and create the estate?')) {
-            router.post(`/zeus/partner-requests/${id}/approve`, {}, { preserveScroll: true });
-        }
-    };
-
-    const permanentlyDelete = (request: PartnerRequest) => {
-        if (
-            !confirm(
-                `Permanently delete “${request.estate_name}”? This cannot be undone and removes the record for partners and Zeus.`,
-            )
-        ) {
+    const confirmApprove = () => {
+        if (!approveTarget || approving) {
             return;
         }
 
-        router.delete(`/zeus/partner-requests/${request.id}`, { preserveScroll: true });
+        setApproving(true);
+        router.post(
+            `/zeus/partner-requests/${approveTarget.id}/approve`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setApproveTarget(null),
+                onFinish: () => setApproving(false),
+            },
+        );
+    };
+
+    const confirmPermanentDelete = () => {
+        if (!deleteTarget || deleting) {
+            return;
+        }
+
+        setDeleting(true);
+        router.delete(`/zeus/partner-requests/${deleteTarget.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setDeleteTarget(null),
+            onFinish: () => setDeleting(false),
+        });
     };
 
     const submitReject = (e: React.FormEvent) => {
@@ -232,7 +249,7 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                                 <div className="flex justify-end gap-2">
                                                     {request.status === 'submitted' && !request.estate && !request.is_trashed && (
                                                         <button
-                                                            onClick={() => approve(request.id)}
+                                                            onClick={() => setApproveTarget(request)}
                                                             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#34D399] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#34D399]/90 transition-colors active:scale-95 animate-pulse"
                                                         >
                                                             <CheckCircleIcon className="h-4 w-4" />
@@ -259,7 +276,7 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                                                     )}
                                                     <button
                                                         type="button"
-                                                        onClick={() => permanentlyDelete(request)}
+                                                        onClick={() => setDeleteTarget(request)}
                                                         className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20"
                                                         title="Permanently delete"
                                                     >
@@ -371,6 +388,46 @@ export default function PartnerRequestsIndex({ partnerRequests, filters, statusO
                     </div>
                 )}
             </AnimatePresence>
+
+            <ConfirmationModal
+                isOpen={approveTarget !== null}
+                onClose={() => {
+                    if (!approving) {
+                        setApproveTarget(null);
+                    }
+                }}
+                onConfirm={confirmApprove}
+                title="Approve partner request?"
+                message={
+                    approveTarget
+                        ? `Approve “${approveTarget.estate_name}” and create the estate? This starts onboarding for the partner submission.`
+                        : ''
+                }
+                confirmLabel={approving ? 'Approving…' : 'Approve & create estate'}
+                cancelLabel="Cancel"
+                type="info"
+                isLoading={approving}
+            />
+
+            <ConfirmationModal
+                isOpen={deleteTarget !== null}
+                onClose={() => {
+                    if (!deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                onConfirm={confirmPermanentDelete}
+                title="Permanently delete request?"
+                message={
+                    deleteTarget
+                        ? `Delete “${deleteTarget.estate_name}” forever? This cannot be undone and removes the record for partners and Zeus.`
+                        : ''
+                }
+                confirmLabel={deleting ? 'Deleting…' : 'Delete permanently'}
+                cancelLabel="Cancel"
+                type="danger"
+                isLoading={deleting}
+            />
         </ZeusLayout>
     );
 }

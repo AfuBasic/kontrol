@@ -15,6 +15,7 @@ import {
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import PartnerLayout from '@/Layouts/PartnerLayout';
 import { formatAmount, formatCommission } from '@/Utils/money';
 
@@ -488,21 +489,14 @@ function DetailDrawer({
 }) {
     const [tab, setTab] = useState<DrawerTab>('overview');
     const [deleting, setDeleting] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const est = estimates(request, commission);
     const timeline = request.timeline ?? [];
     const adminNotes = request.admin_notes ?? [];
     const canSoftDelete = request.status === 'rejected';
 
-    function handleSoftDelete() {
+    function confirmSoftDelete() {
         if (deleting || !canSoftDelete) {
-            return;
-        }
-
-        if (
-            !window.confirm(
-                `Remove “${request.estate_name}” from your list? You won’t see it again, but Kontrol keeps a copy for records.`,
-            )
-        ) {
             return;
         }
 
@@ -510,6 +504,7 @@ function DetailDrawer({
         router.delete(`/partner/partner-requests/${request.id}`, {
             preserveScroll: true,
             onSuccess: () => {
+                setConfirmDeleteOpen(false);
                 onDeleted?.();
                 onClose();
             },
@@ -784,12 +779,12 @@ function DetailDrawer({
                     {canSoftDelete ? (
                         <button
                             type="button"
-                            onClick={handleSoftDelete}
+                            onClick={() => setConfirmDeleteOpen(true)}
                             disabled={deleting}
                             className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-2.5 text-[13px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-500/10"
                         >
                             <TrashIcon className="h-4 w-4" />
-                            {deleting ? 'Deleting…' : 'Delete rejected estate'}
+                            Delete rejected estate
                         </button>
                     ) : null}
                     <button
@@ -801,6 +796,22 @@ function DetailDrawer({
                     </button>
                 </div>
             </motion.aside>
+
+            <ConfirmationModal
+                isOpen={confirmDeleteOpen}
+                onClose={() => {
+                    if (!deleting) {
+                        setConfirmDeleteOpen(false);
+                    }
+                }}
+                onConfirm={confirmSoftDelete}
+                title="Remove rejected estate?"
+                message={`“${request.estate_name}” will be removed from your list. You won’t see it again, but Kontrol keeps a copy for records.`}
+                confirmLabel={deleting ? 'Removing…' : 'Remove from my list'}
+                cancelLabel="Keep it"
+                type="danger"
+                isLoading={deleting}
+            />
         </>
     );
 }

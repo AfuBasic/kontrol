@@ -1,6 +1,7 @@
 import { BellIcon, CheckIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import EmptyState from '@/Components/Partner/EmptyState';
 import PageHeader from '@/Components/Partner/PageHeader';
 import Surface from '@/Components/Partner/Surface';
@@ -36,6 +37,7 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
     const [search, setSearch] = useState(filters.search ?? '');
     const [type, setType] = useState(filters.type ?? 'all');
     const [clearing, setClearing] = useState(false);
+    const [confirmClearOpen, setConfirmClearOpen] = useState(false);
     const hasNotifications = notifications.total > 0;
 
     function applyFilters(next: { search?: string; type?: string }) {
@@ -67,16 +69,13 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
             return;
         }
 
-        if (!window.confirm('Clear all notifications? This cannot be undone.')) {
-            return;
-        }
-
         setClearing(true);
         router.post(
             '/partner/notifications/clear-all',
             {},
             {
                 preserveScroll: true,
+                onSuccess: () => setConfirmClearOpen(false),
                 onFinish: () => setClearing(false),
             },
         );
@@ -108,12 +107,12 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                                 {hasNotifications ? (
                                     <button
                                         type="button"
-                                        onClick={clearAllNotifications}
+                                        onClick={() => setConfirmClearOpen(true)}
                                         disabled={clearing}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-500/10"
                                     >
                                         <TrashIcon className="h-3.5 w-3.5" />
-                                        {clearing ? 'Clearing…' : 'Clear all'}
+                                        Clear all
                                     </button>
                                 ) : null}
                             </div>
@@ -248,6 +247,22 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                     )}
                 </Surface>
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmClearOpen}
+                onClose={() => {
+                    if (!clearing) {
+                        setConfirmClearOpen(false);
+                    }
+                }}
+                onConfirm={clearAllNotifications}
+                title="Clear all notifications?"
+                message="This permanently removes every notification from your inbox. This cannot be undone."
+                confirmLabel={clearing ? 'Clearing…' : 'Clear all'}
+                cancelLabel="Cancel"
+                type="danger"
+                isLoading={clearing}
+            />
         </PartnerLayout>
     );
 }
