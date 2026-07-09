@@ -121,6 +121,33 @@ class PartnerRequestController extends Controller
     }
 
     /**
+     * Soft-delete a rejected estate application from the partner portal.
+     * The record remains available to Zeus until permanently deleted there.
+     */
+    public function destroy(Request $request, EstateApplication $partnerRequest): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user->partner_id, 403);
+        abort_unless(
+            (int) $partnerRequest->partner_id === (int) $user->partner_id,
+            403,
+            'You can only manage estates belonging to your organization.',
+        );
+        abort_unless(
+            $partnerRequest->partnerStatusKey() === 'rejected',
+            422,
+            'Only rejected estates can be removed from your list.',
+        );
+
+        $partnerRequest->delete();
+
+        return redirect()
+            ->route('partner.partner-requests.index')
+            ->with('success', 'Rejected estate removed from your list.');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function transformForPartner(EstateApplication $application): array
