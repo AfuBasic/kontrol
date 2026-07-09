@@ -791,29 +791,11 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
         localStorage.setItem('partner-estates-view', view);
     }, [view]);
 
-    const kpis = useMemo(() => {
-        const count = (key: string) => partnerRequests.filter((r) => r.status === key).length;
-        const generating = partnerRequests.filter((r) => r.is_generating_revenue).length;
-        const awaiting = count('submitted');
-
-        return [
-            { key: '', label: 'All', count: partnerRequests.length },
-            { key: 'submitted', label: 'Awaiting review', count: awaiting },
-            { key: 'accepted', label: 'Accepted', count: count('accepted') },
-            { key: 'generating', label: 'Generating', count: generating },
-            { key: 'rejected', label: 'Rejected', count: count('rejected') },
-        ];
-    }, [partnerRequests]);
-
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
 
         return partnerRequests.filter((r) => {
-            if (statusFilter === 'generating') {
-                if (!r.is_generating_revenue) {
-                    return false;
-                }
-            } else if (statusFilter && r.status !== statusFilter) {
+            if (statusFilter && r.status !== statusFilter) {
                 return false;
             }
 
@@ -930,36 +912,6 @@ export default function PartnerRequestsIndex({ partnerRequests, columns, commiss
                     </motion.div>
                 ) : (
                     <>
-                        {/* Subtle KPI pills */}
-                        <div className="flex flex-wrap gap-1.5">
-                            {kpis.map((kpi) => {
-                                const isActive =
-                                    kpi.key === 'generating'
-                                        ? statusFilter === 'generating'
-                                        : kpi.key === ''
-                                          ? !statusFilter
-                                          : statusFilter === kpi.key;
-
-                                return (
-                                    <button
-                                        key={kpi.key || 'all'}
-                                        type="button"
-                                        onClick={() => setStatusFilter(kpi.key)}
-                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition ${
-                                            isActive
-                                                ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
-                                                : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-slate-400 dark:hover:bg-white/5'
-                                        }`}
-                                    >
-                                        {kpi.label}
-                                        <span className={`tabular-nums ${isActive ? 'opacity-70' : 'text-stone-400'}`}>
-                                            {kpi.count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
                         {/* Content chrome: count + secondary view switch */}
                         <div className="flex items-center justify-between gap-3">
                             <p className="text-[12px] text-stone-400">
