@@ -304,53 +304,85 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 <div
                     className={`flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ${isCollapsed ? 'lg:ml-16' : 'lg:ml-[220px]'}`}
                 >
-                    <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-[#f7f6f3]/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
-                        <div className={`mx-auto flex h-12 items-center justify-between gap-3 px-4 sm:px-5 ${contentMax}`}>
-                            <div className="flex min-w-0 items-center gap-2.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setMobileMenuOpen(true)}
-                                    className="inline-flex rounded-md p-1.5 text-stone-600 hover:bg-stone-200/60 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800"
-                                    aria-label="Open menu"
-                                >
-                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                                        <path d="M3 12h18M3 6h18M3 18h18" />
-                                    </svg>
-                                </button>
-                                <div className="min-w-0">
-                                    <p className="truncate text-[11px] font-medium text-stone-500 dark:text-slate-500">
-                                        {getGreeting()}
-                                    </p>
-                                    <p className="truncate text-[13px] font-semibold text-stone-900 dark:text-white">{partnerName}</p>
-                                </div>
-                            </div>
+                    <header className="sticky top-0 z-30">
+                        {/* Frosted top chrome — borderless, gradient edge */}
+                        <div className="relative border-b border-stone-900/[0.04] bg-white/55 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-slate-950/55">
+                            <div
+                                className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-stone-300/50 to-transparent dark:via-white/10"
+                                aria-hidden
+                            />
+                            <div className={`mx-auto flex h-14 items-center justify-between gap-3 px-4 sm:h-16 sm:px-5 ${contentMax}`}>
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMobileMenuOpen(true)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-stone-900/[0.04] text-stone-600 ring-1 ring-stone-900/[0.04] transition hover:bg-stone-900/[0.07] lg:hidden dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/10"
+                                        aria-label="Open menu"
+                                    >
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                            <path d="M3 12h18M3 6h18M3 18h18" />
+                                        </svg>
+                                    </button>
 
-                            <div className="flex items-center gap-0.5 sm:gap-1">
-                                <Link
-                                    href="/partner/partner-requests/create"
-                                    className="mr-1 hidden items-center gap-1 rounded-lg bg-primary-600 px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-500 active:scale-[0.98] sm:inline-flex"
-                                >
-                                    <PlusIcon className="h-3.5 w-3.5" />
-                                    Submit
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={toggleTheme}
-                                    aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                                    className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-200/70 hover:text-stone-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                                >
-                                    {theme === 'dark' ? <SunIcon className="h-[18px] w-[18px]" /> : <MoonIcon className="h-[18px] w-[18px]" />}
-                                </button>
-                                <NotificationDropdown unreadCount={unread} />
-                                <Link
-                                    href="/partner/profile"
-                                    className="ml-0.5 flex items-center rounded-lg p-1 transition hover:bg-stone-200/70 dark:hover:bg-slate-800"
-                                    aria-label="Open account"
-                                >
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
-                                        {initials}
+                                    <div className="min-w-0">
+                                        <p className="truncate text-[11px] font-medium tracking-wide text-stone-400 dark:text-slate-500">
+                                            {getGreeting()}
+                                        </p>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <p className="truncate text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">
+                                                {partnerName}
+                                            </p>
+                                            {partnerContext?.status === 'active' && (
+                                                <span className="hidden shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-500/15 sm:inline-flex dark:text-emerald-300">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
+                                                    Verified
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </Link>
+                                </div>
+
+                                {/* Action cluster — pill tray */}
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <Link
+                                        href="/partner/partner-requests/create"
+                                        className="group relative hidden items-center gap-1.5 overflow-hidden rounded-full bg-stone-900 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-stone-900/15 transition hover:bg-stone-800 hover:shadow-xl active:scale-[0.98] sm:inline-flex dark:bg-white dark:text-stone-900 dark:shadow-white/10 dark:hover:bg-stone-100"
+                                    >
+                                        <span className="absolute inset-0 bg-linear-to-r from-blue-500/0 via-blue-500/10 to-violet-500/0 opacity-0 transition group-hover:opacity-100 dark:via-blue-500/5" />
+                                        <PlusIcon className="relative h-3.5 w-3.5 transition group-hover:rotate-90" />
+                                        <span className="relative">Submit estate</span>
+                                    </Link>
+
+                                    <div className="flex items-center gap-0.5 rounded-full bg-stone-900/[0.03] p-1 ring-1 ring-stone-900/[0.05] dark:bg-white/[0.04] dark:ring-white/10">
+                                        <button
+                                            type="button"
+                                            onClick={toggleTheme}
+                                            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition hover:bg-white hover:text-stone-800 hover:shadow-sm dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
+                                        >
+                                            {theme === 'dark' ? (
+                                                <SunIcon className="h-4 w-4" />
+                                            ) : (
+                                                <MoonIcon className="h-4 w-4" />
+                                            )}
+                                        </button>
+
+                                        <NotificationDropdown unreadCount={unread} />
+
+                                        <Link
+                                            href="/partner/profile"
+                                            className="group relative ml-0.5 flex items-center gap-2 rounded-full py-0.5 pr-1 pl-0.5 transition hover:bg-white/80 dark:hover:bg-white/10"
+                                            aria-label="Open account"
+                                        >
+                                            <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-[11px] font-bold text-white shadow-md shadow-blue-600/25 ring-2 ring-white dark:ring-slate-900">
+                                                {initials}
+                                                {partnerContext?.status === 'active' && (
+                                                    <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-slate-900" />
+                                                )}
+                                            </span>
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </header>

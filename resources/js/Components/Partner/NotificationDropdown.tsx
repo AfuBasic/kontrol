@@ -84,11 +84,11 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
                 aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
                 aria-expanded={open}
                 aria-haspopup="true"
-                className="relative rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-stone-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition hover:bg-white hover:text-stone-800 hover:shadow-sm dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
             >
-                <BellIcon className="h-4.5 w-4.5 h-[18px] w-[18px]" />
+                <BellIcon className="h-4 w-4" />
                 {count > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+                    <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
                         {count > 9 ? '9+' : count}
                     </span>
                 )}
@@ -97,11 +97,11 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
             <AnimatePresence>
                 {open && (
                     <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,22rem)] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl shadow-stone-900/10 ring-1 ring-black/[0.04] dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40 dark:ring-white/5"
+                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute right-0 z-50 mt-3 w-[min(100vw-2rem,22rem)] overflow-hidden rounded-2xl border border-stone-200/80 bg-white/95 shadow-[0_24px_64px_-16px_rgba(28,25,23,0.28)] ring-1 ring-black/[0.03] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/50 dark:ring-white/5"
                         role="menu"
                     >
                         <div className="flex items-center justify-between border-b border-stone-100 px-3.5 py-2.5 dark:border-slate-800">
