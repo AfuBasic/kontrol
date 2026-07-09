@@ -5,7 +5,6 @@ import {
     ClockIcon,
     ExclamationCircleIcon,
     GlobeAltIcon,
-    KeyIcon,
     ShieldCheckIcon,
     UserCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -70,12 +69,6 @@ interface Props {
         at: string | null;
         at_human: string | null;
     }>;
-    preferences: {
-        email_product: boolean;
-        email_settlements: boolean;
-        email_pipeline: boolean;
-        email_security?: boolean;
-    };
 }
 
 const TABS = [
@@ -84,7 +77,6 @@ const TABS = [
     { key: 'banking', label: 'Banking' },
     { key: 'commission', label: 'Commission' },
     { key: 'security', label: 'Security' },
-    { key: 'notifications', label: 'Notifications' },
     { key: 'activity', label: 'Activity' },
 ] as const;
 
@@ -123,35 +115,6 @@ function SectionCard({
             </div>
             {children}
         </motion.section>
-    );
-}
-
-function PrefSwitch({
-    label,
-    description,
-    checked,
-}: {
-    label: string;
-    description: string;
-    checked: boolean;
-}) {
-    return (
-        <div className="flex items-center justify-between gap-4 rounded-2xl bg-stone-50/80 px-4 py-3.5 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
-            <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{label}</p>
-                <p className="mt-0.5 text-[12px] text-stone-500">{description}</p>
-            </div>
-            <span
-                className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-primary-600' : 'bg-stone-300 dark:bg-slate-600'}`}
-                role="switch"
-                aria-checked={checked}
-                aria-label={label}
-            >
-                <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${checked ? 'left-[1.35rem]' : 'left-0.5'}`}
-                />
-            </span>
-        </div>
     );
 }
 
@@ -443,7 +406,6 @@ export default function PartnerProfile({
     finance = { total_earned: 0, pending_commissions: 0, next_settlement_date: '—' },
     banks = [],
     activity,
-    preferences,
 }: Props) {
     const active: TabKey = TABS.some((t) => t.key === tab) ? (tab as TabKey) : 'overview';
     const businessName = partner?.name ?? user.name;
@@ -885,42 +847,6 @@ export default function PartnerProfile({
 
                         {active === 'security' && (
                             <div className="grid gap-4 lg:grid-cols-2">
-                                <SectionCard title="Authentication">
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
-                                            <div className="flex items-center gap-3">
-                                                <KeyIcon className="h-5 w-5 text-stone-400" />
-                                                <div>
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                        Password
-                                                    </p>
-                                                    <p className="text-[11px] text-stone-500">Sign-in credential</p>
-                                                </div>
-                                            </div>
-                                            <Link
-                                                href="/forgot-password"
-                                                className="text-[12px] font-semibold text-primary-600"
-                                            >
-                                                Reset
-                                            </Link>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
-                                            <div className="flex items-center gap-3">
-                                                <ShieldCheckIcon className="h-5 w-5 text-stone-400" />
-                                                <div>
-                                                    <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                        Two-factor auth
-                                                    </p>
-                                                    <p className="text-[11px] text-stone-500">Extra sign-in protection</p>
-                                                </div>
-                                            </div>
-                                            <span className="rounded-full bg-stone-200/80 px-2 py-0.5 text-[10px] font-semibold text-stone-500 dark:bg-white/10">
-                                                Soon
-                                            </span>
-                                        </div>
-                                    </div>
-                                </SectionCard>
-
                                 <SectionCard title="Security score">
                                     <p className="text-4xl font-semibold tabular-nums text-stone-900 dark:text-white">
                                         {securityScore}
@@ -936,12 +862,12 @@ export default function PartnerProfile({
                                     </div>
                                     <p className="mt-2 text-[12px] text-stone-500">
                                         {partner?.banking.is_verified
-                                            ? 'Bank verified · Password protected'
+                                            ? 'Bank verified · Account protected'
                                             : 'Add a verified bank account to improve your score'}
                                     </p>
                                 </SectionCard>
 
-                                <SectionCard title="Sessions" className="lg:col-span-2">
+                                <SectionCard title="Sessions">
                                     <div className="flex items-start gap-3 rounded-xl bg-stone-50 px-4 py-3.5 dark:bg-white/[0.04]">
                                         <UserCircleIcon className="mt-0.5 h-5 w-5 text-stone-400" />
                                         <div>
@@ -954,40 +880,26 @@ export default function PartnerProfile({
                                         </div>
                                     </div>
                                 </SectionCard>
-                            </div>
-                        )}
 
-                        {active === 'notifications' && (
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-[15px] font-semibold text-stone-900 dark:text-white">Preferences</h2>
-                                    <Link
-                                        href="/partner/notifications"
-                                        className="text-[12px] font-semibold text-primary-600"
-                                    >
-                                        Open inbox →
-                                    </Link>
-                                </div>
-                                <PrefSwitch
-                                    label="Product updates"
-                                    description="Features and announcements"
-                                    checked={preferences.email_product}
-                                />
-                                <PrefSwitch
-                                    label="Settlement alerts"
-                                    description="When commissions settle"
-                                    checked={preferences.email_settlements}
-                                />
-                                <PrefSwitch
-                                    label="Estate updates"
-                                    description="Approvals, rejections, and reviews"
-                                    checked={preferences.email_pipeline}
-                                />
-                                <PrefSwitch
-                                    label="Security alerts"
-                                    description="Sign-in and account changes"
-                                    checked={preferences.email_security ?? true}
-                                />
+                                <SectionCard title="Login email" className="lg:col-span-2">
+                                    <div className="flex flex-wrap items-start justify-between gap-4">
+                                        <div className="min-w-0">
+                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
+                                                {user.email}
+                                            </p>
+                                            <p className="mt-1 max-w-lg text-[12px] leading-relaxed text-stone-500">
+                                                If you have an issue with your login email, contact support so we can
+                                                verify the change securely.
+                                            </p>
+                                        </div>
+                                        <Link
+                                            href="/partner/support"
+                                            className="shrink-0 rounded-xl bg-stone-900 px-3.5 py-2 text-[12px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                                        >
+                                            Contact support
+                                        </Link>
+                                    </div>
+                                </SectionCard>
                             </div>
                         )}
 

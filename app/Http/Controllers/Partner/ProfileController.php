@@ -107,12 +107,6 @@ class ProfileController extends Controller
             'finance' => $finance,
             'banks' => $banks,
             'activity' => $activity,
-            'preferences' => [
-                'email_product' => true,
-                'email_settlements' => true,
-                'email_pipeline' => true,
-                'email_security' => true,
-            ],
         ]);
     }
 }

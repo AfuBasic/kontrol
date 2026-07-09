@@ -36,7 +36,6 @@ it('allows partner members to view their profile', function () {
             ->where('partner.commission_type', 'percentage')
             ->has('user.email')
             ->has('activity')
-            ->has('preferences')
             ->where('tab', 'overview')
         );
 
