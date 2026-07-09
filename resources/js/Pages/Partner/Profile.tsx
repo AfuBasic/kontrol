@@ -75,7 +75,6 @@ interface Props {
         email_settlements: boolean;
         email_pipeline: boolean;
         email_security?: boolean;
-        browser_push?: boolean;
     };
 }
 
@@ -988,11 +987,6 @@ export default function PartnerProfile({
                                     label="Security alerts"
                                     description="Sign-in and account changes"
                                     checked={preferences.email_security ?? true}
-                                />
-                                <PrefSwitch
-                                    label="Browser notifications"
-                                    description="In-browser push when available"
-                                    checked={preferences.browser_push ?? false}
                                 />
                             </div>
                         )}

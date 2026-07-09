@@ -112,7 +112,6 @@ class ProfileController extends Controller
                 'email_settlements' => true,
                 'email_pipeline' => true,
                 'email_security' => true,
-                'browser_push' => false,
             ],
         ]);
     }
