@@ -28,26 +28,38 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
     // Record sharing event in background
     axios.post(`/resident/visitors/${accessCode.id}/share`).catch(() => {});
 
-    const formattedStartsAt = accessCode.starts_at
-        ? new Date(accessCode.starts_at).toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
+    const formattedFrom = accessCode.starts_at
+        ? new Date(accessCode.starts_at).toLocaleDateString('en-GB', {
               day: 'numeric',
+              month: 'numeric',
               year: 'numeric',
           }) +
-          ' at ' +
+          ', ' +
           new Date(accessCode.starts_at).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
           })
         : null;
 
-    const formattedExpiry = accessCode.expires_at
-        ? new Date(accessCode.expires_at).toLocaleTimeString('en-US', {
+    const formattedTo = accessCode.expires_at
+        ? new Date(accessCode.expires_at).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'numeric',
+              year: 'numeric',
+          }) +
+          ', ' +
+          new Date(accessCode.expires_at).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
           })
-        : 'Never Expires';
+        : null;
+
+    // Compose location: "Plot 7, Block 8, Akinola Street, Adelade Estate"
+    const locationParts = [
+        accessCode.resident_address ?? null,
+        accessCode.estate_name ?? null,
+    ].filter(Boolean);
+    const location = locationParts.length > 0 ? locationParts.join(', ') : null;
 
     let text = '';
     if (accessCode.type === 'event') {
@@ -56,12 +68,24 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
 
 Please use this pass for entry.
 🎫 Access Code: ${accessCode.code}
-📅 Valid From: ${formattedStartsAt || 'Start of event'}`;
+📅 Valid From: ${formattedFrom || 'Start of event'}`;
     } else {
-        text = `You've been granted visitor access to ${accessCode.estate_name || 'the Estate'}.
+        text = `Hello,
+Your access code is: ${accessCode.code}`;
 
-Access Code: ${accessCode.code}
-Valid Until: ${formattedExpiry}`;
+        if (location) {
+            text += `\n\nLocation: ${location}.`;
+        }
+
+        if (formattedFrom) {
+            text += `\nFrom: ${formattedFrom}`;
+        }
+
+        if (formattedTo) {
+            text += `\nTo: ${formattedTo}`;
+        }
+
+        text += `\n\nTo start enjoying Kontrol in your community too, please visit https://usekontrol.com\n\nService delivered by Kontrol.`;
     }
 
     const title = 'Visitor Access Pass';

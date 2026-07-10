@@ -28,6 +28,9 @@ class AccessCodeController extends Controller
         $activeCodes = $this->accessCodeService->getActiveCodes($searchActive)->loadCount('accessLogs');
         $historyCodes = $this->accessCodeService->getCodeHistory(20, $searchHistory)->loadCount('accessLogs');
 
+        // Resolved once — same for all codes (it's the authenticated resident's address).
+        $residentAddress = $this->resolveResidentAddress();
+
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_active' => $searchActive,
@@ -51,6 +54,7 @@ class AccessCodeController extends Controller
                 'used_at' => $code->used_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
+                'resident_address' => $residentAddress,
             ]),
             'historyCodes' => $historyCodes->map(fn ($code) => [
                 'id' => $code->id,
@@ -71,6 +75,7 @@ class AccessCodeController extends Controller
                 'revoked_at' => $code->revoked_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at->toISOString(),
+                'resident_address' => $residentAddress,
             ]),
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
@@ -159,6 +164,7 @@ class AccessCodeController extends Controller
                 'estate_name' => $userCode->estate->name,
                 'host_name' => $userCode->user->name,
                 'notes' => $userCode->notes,
+                'resident_address' => $this->resolveResidentAddress(),
             ],
         ]);
     }
@@ -200,6 +206,7 @@ class AccessCodeController extends Controller
                 'host_name' => $userCode->user->name,
                 'notes' => $userCode->notes,
                 'uses_count' => $userCode->accessLogs()->count(),
+                'resident_address' => $this->resolveResidentAddress(),
             ],
             'usageLogs' => [
                 'data' => collect($usageLogs->items())->map(fn ($log) => [
@@ -234,6 +241,21 @@ class AccessCodeController extends Controller
         $this->accessCodeService->revokeCode($userCode);
 
         return back()->with('success', 'Access code revoked successfully.');
+    }
+
+    /**
+     * Compose the resident's house address from their profile.
+     * Returns e.g. "Plot 7, Block 8, Akinola Street" or null if not set.
+     */
+    private function resolveResidentAddress(): ?string
+    {
+        $profile = auth()->user()?->profile;
+
+        $parts = collect([$profile?->unit_number, $profile?->address])
+            ->filter()
+            ->values();
+
+        return $parts->isNotEmpty() ? $parts->implode(', ') : null;
     }
 
     /**
