@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\CommissionableRevenue;
-use App\Models\Partner;
 use App\Models\PartnerEarning;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -18,32 +17,49 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public const MODE_SNAPSHOT = 'snapshot';
+
+    public const MODE_CLOSE = 'close';
+
     /**
-     * @param  CarbonImmutable|null  $forMonth  The month to settle (defaults to previous calendar month).
+     * @param  CarbonImmutable|null  $forMonth  Month to aggregate (defaults to previous calendar month for close, current for snapshot).
+     * @param  string  $mode  'snapshot' leaves revenues pending; 'close' locks them as aggregated.
      */
     public function __construct(
         public readonly ?CarbonImmutable $forMonth = null,
+        public readonly string $mode = self::MODE_CLOSE,
     ) {}
 
     public function handle(): void
     {
-        $month = ($this->forMonth ?? CarbonImmutable::now()->subMonthNoOverflow())->startOfMonth();
-        $monthStart = $month->startOfMonth()->toDateString();
-        $monthEnd = $month->endOfMonth()->toDateString();
+        $mode = in_array($this->mode, [self::MODE_SNAPSHOT, self::MODE_CLOSE], true)
+            ? $this->mode
+            : self::MODE_CLOSE;
+
+        $defaultMonth = $mode === self::MODE_SNAPSHOT
+            ? CarbonImmutable::now()
+            : CarbonImmutable::now()->subMonthNoOverflow();
+
+        $month = ($this->forMonth ?? $defaultMonth)->startOfMonth();
         $monthKey = $month->format('Y-m-01');
+        $rangeStart = $month->startOfMonth()->startOfDay();
+        $rangeEnd = $month->endOfMonth()->endOfDay();
 
-        Log::info('GenerateMonthlyPartnerEarningsJob: settling', ['month' => $monthKey]);
+        Log::info('GenerateMonthlyPartnerEarningsJob: aggregating', [
+            'month' => $monthKey,
+            'mode' => $mode,
+        ]);
 
-        // Mark expired commissions
+        // Expire commissions that fall outside the partner's commission length.
         $pendingRevenues = CommissionableRevenue::query()
             ->with('partner')
             ->where('status', 'pending')
-            ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
+            ->whereBetween('created_at', [$rangeStart, $rangeEnd])
             ->get();
 
         foreach ($pendingRevenues as $revenue) {
             $partner = $revenue->partner;
-            if ($partner && $partner->commission_length !== null) {
+            if ($partner && $partner->commission_length !== null && $partner->created_at) {
                 $expirationDate = $partner->created_at->addMonths($partner->commission_length);
                 if ($revenue->created_at->greaterThan($expirationDate)) {
                     $revenue->update(['status' => 'expired']);
@@ -51,45 +67,60 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
             }
         }
 
-        // Fetch all unsettled commissions for the target month, grouped by partner
-        $query = CommissionableRevenue::query()
+        // Snapshot only sums pending (re-runnable). Close includes already-aggregated rows for the period.
+        $statusFilter = $mode === self::MODE_SNAPSHOT
+            ? ['pending']
+            : ['pending', 'aggregated'];
+
+        $rows = CommissionableRevenue::query()
             ->select([
                 'partner_id',
                 DB::raw('SUM(commission_amount) as total_commission'),
                 DB::raw('SUM(revenue_amount) as total_revenue'),
                 DB::raw('COUNT(*) as record_count'),
             ])
-            ->where('status', 'pending')
-            ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
+            ->whereIn('status', $statusFilter)
+            ->whereBetween('created_at', [$rangeStart, $rangeEnd])
             ->whereNotNull('partner_id')
-            ->groupBy('partner_id');
-
-        $rows = $query->get();
+            ->groupBy('partner_id')
+            ->get();
 
         foreach ($rows as $row) {
-            DB::transaction(function () use ($row, $monthKey, $month) {
-                // Upsert the earnings record
+            DB::transaction(function () use ($row, $monthKey, $rangeStart, $rangeEnd, $mode) {
+                // Never auto-set settled_at — payment is a separate Zeus action.
+                $earning = PartnerEarning::query()
+                    ->where('partner_id', $row->partner_id)
+                    ->whereDate('month', $monthKey)
+                    ->first();
+
+                if ($earning?->isSettled()) {
+                    // Do not overwrite a paid period.
+                    return;
+                }
+
                 PartnerEarning::updateOrCreate(
                     ['partner_id' => $row->partner_id, 'month' => $monthKey],
                     [
-                        'total_amount' => $row->total_commission,
-                        'revenue_amount' => $row->total_revenue,
-                        'settled_at' => now(),
+                        'total_amount' => (int) $row->total_commission,
+                        'revenue_amount' => (int) $row->total_revenue,
+                        'settled_at' => null,
                     ]
                 );
 
-                // Mark commissions as settled
-                CommissionableRevenue::query()
-                    ->where('partner_id', $row->partner_id)
-                    ->where('status', 'pending')
-                    ->whereBetween('created_at', [$month->startOfMonth()->startOfDay(), $month->endOfMonth()->endOfDay()])
-                    ->update(['status' => 'settled']);
+                if ($mode === self::MODE_CLOSE) {
+                    CommissionableRevenue::query()
+                        ->where('partner_id', $row->partner_id)
+                        ->whereIn('status', ['pending', 'aggregated'])
+                        ->whereBetween('created_at', [$rangeStart, $rangeEnd])
+                        ->update(['status' => 'aggregated']);
+                }
             });
         }
 
         Log::info('GenerateMonthlyPartnerEarningsJob: done', [
             'month' => $monthKey,
-            'partners_settled' => $rows->count(),
+            'mode' => $mode,
+            'partners_aggregated' => $rows->count(),
         ]);
     }
 }
