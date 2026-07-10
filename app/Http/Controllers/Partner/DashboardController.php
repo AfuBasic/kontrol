@@ -34,11 +34,19 @@ class DashboardController extends Controller
             ->startOfMonth();
 
         if ($partner) {
-            $totalEarned = (int) $partner->earnings()->sum('total_amount');
+            $totalEarned = (int) $partner->earnings()->whereNotNull('settled_at')->sum('total_amount');
 
-            $pendingCommissions = (int) $partner->commissionableRevenues()
-                ->where('status', 'pending')
+            $pendingCommissions = (int) $partner->earnings()
+                ->whereNull('settled_at')
+                ->sum('total_amount');
+
+            $unsettledRevenueCommission = (int) $partner->commissionableRevenues()
+                ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount');
+
+            if ($pendingCommissions === 0 && $unsettledRevenueCommission > 0) {
+                $pendingCommissions = $unsettledRevenueCommission;
+            }
 
             $currentMonthStart = CarbonImmutable::now()->startOfMonth();
             $currentMonthEarnings = (int) $partner->earnings()
@@ -48,7 +56,7 @@ class DashboardController extends Controller
             // Pending commissions this calendar month also count as "current period"
             if ($currentMonthEarnings === 0) {
                 $currentMonthEarnings = (int) $partner->commissionableRevenues()
-                    ->where('status', 'pending')
+                    ->whereIn('status', ['pending', 'aggregated'])
                     ->where('created_at', '>=', $currentMonthStart)
                     ->sum('commission_amount');
             }
