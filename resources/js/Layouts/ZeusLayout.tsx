@@ -16,6 +16,7 @@ import {
     ShieldExclamationIcon,
     BanknotesIcon,
     TicketIcon,
+    ScaleIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -42,6 +43,7 @@ const baseNavItems: NavItem[] = [
     { name: 'Estates', href: '/zeus/estates', icon: BuildingOfficeIcon },
     { name: 'Applications', href: '/zeus/applications', icon: InboxStackIcon },
     { name: 'Partners', href: '/zeus/partners', icon: UserGroupIcon },
+    { name: 'Settlements', href: '/zeus/settlements', icon: ScaleIcon },
     { name: 'Notifications', href: '/zeus/notifications', icon: BellIcon },
     { name: 'Revenue', href: '/zeus/revenue', icon: ChartBarIcon },
     { name: 'Money Flow', href: '/zeus/money-flow', icon: ArrowPathRoundedSquareIcon },
