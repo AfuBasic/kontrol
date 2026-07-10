@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use App\Models\Partner;
 use App\Models\PartnerEarning;
 use Carbon\CarbonImmutable;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,12 +27,18 @@ class PartnerEarningsController extends Controller
                 'revenue_amount' => $earning->revenue_amount,
                 'settled_at' => $earning->settled_at?->toDateTimeString(),
                 'is_settled' => $earning->isSettled(),
+                'is_pending' => $earning->isPendingSettlement() && ! $earning->isAccruing(),
+                'is_accruing' => $earning->isAccruing(),
+                'status' => $earning->statusKey(),
+                'status_label' => $earning->statusLabel(),
+                'payment_reference_masked' => $earning->maskedPaymentReference(),
             ]);
 
         $summary = [
-            'total_earned' => $partner->earnings()->sum('total_amount'),
-            'pending_commissions' => $partner->commissionableRevenues()
-                ->where('status', 'pending')
+            'total_earned' => (int) $partner->earnings()->whereNotNull('settled_at')->sum('total_amount'),
+            'pending_commissions' => (int) $partner->earnings()->whereNull('settled_at')->sum('total_amount'),
+            'pending_revenues' => (int) $partner->commissionableRevenues()
+                ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount'),
             'next_settlement_date' => CarbonImmutable::now()->addMonthNoOverflow()->startOfMonth()->format('Y-m-d'),
         ];
@@ -51,23 +54,5 @@ class PartnerEarningsController extends Controller
             'earnings' => $earnings,
             'summary' => $summary,
         ]);
-    }
-
-    /**
-     * Manually trigger settlement for a specific month.
-     */
-    public function settle(Request $request, Partner $partner): RedirectResponse
-    {
-        $request->validate([
-            'month' => ['required', 'date_format:Y-m-d'],
-        ]);
-
-        $month = CarbonImmutable::parse($request->month)->startOfMonth();
-
-        GenerateMonthlyPartnerEarningsJob::dispatch($month);
-
-        return redirect()
-            ->route('zeus.partners.earnings.index', $partner)
-            ->with('success', "Settlement job queued for {$month->format('F Y')}.");
     }
 }

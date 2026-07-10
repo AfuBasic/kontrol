@@ -15,6 +15,7 @@ use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\RiskCenterController;
 use App\Http\Controllers\Zeus\SettingsController;
+use App\Http\Controllers\Zeus\SettlementsController;
 use App\Http\Controllers\Zeus\SubscriptionController;
 use App\Http\Controllers\Zeus\TransactionController;
 use App\Http\Middleware\Zeus\EnsureZeusAuthenticated;
@@ -71,9 +72,14 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
             ->middleware('throttle:3,1')
             ->name('partners.members.resend-invite');
 
-        // Partner earnings
+        // Partner earnings (read-only per partner; payment lives under Settlements)
         Route::get('/partners/{partner}/earnings', [PartnerEarningsController::class, 'index'])->name('partners.earnings.index');
-        Route::post('/partners/{partner}/earnings/settle', [PartnerEarningsController::class, 'settle'])->name('partners.earnings.settle');
+
+        // Settlements inbox
+        Route::get('/settlements', [SettlementsController::class, 'index'])->name('settlements.index');
+        Route::post('/settlements/{earning}/pay', [SettlementsController::class, 'pay'])->name('settlements.pay');
+        Route::post('/settlements/bulk-pay', [SettlementsController::class, 'payBulk'])->name('settlements.bulk-pay');
+        Route::post('/earnings/snapshot', [SettlementsController::class, 'snapshot'])->name('earnings.snapshot');
 
         // Estate management
         Route::resource('estates', EstateController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);

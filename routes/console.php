@@ -30,5 +30,6 @@ Schedule::job(new SendCollectionRemindersJob)->dailyAt('08:00');
 // Generate public sitemap daily at 3:00 AM
 Schedule::command('sitemap:generate')->dailyAt('03:00');
 
-// Partner commission settlement – runs on the 1st of each month at 00:30
-Schedule::job(new GenerateMonthlyPartnerEarningsJob)->monthlyOn(1, '00:30');
+// Partner commission close – previous month lock on the 1st at 00:30 (does not mark paid)
+Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartnerEarningsJob::MODE_CLOSE))
+    ->monthlyOn(1, '00:30');
