@@ -74,15 +74,30 @@ class EarningsController extends Controller
                 'total_amount' => $earning->total_amount,
                 'revenue_amount' => $earning->revenue_amount,
                 'settled_at' => $earning->settled_at?->toDateTimeString(),
+                'settled_at_human' => $earning->settled_at?->format('M j, Y'),
                 'is_settled' => $earning->isSettled(),
+                'is_pending' => $earning->isPendingSettlement() && ! $earning->isAccruing(),
+                'is_accruing' => $earning->isAccruing(),
+                'status' => $earning->statusKey(),
+                'status_label' => $earning->statusLabel(),
+                'payment_reference_masked' => $earning->maskedPaymentReference(),
             ]);
 
-        $pendingCommissions = (int) $partner->commissionableRevenues()
-            ->where('status', 'pending')
+        $pendingCommissions = (int) $partner->earnings()
+            ->whereNull('settled_at')
+            ->sum('total_amount');
+
+        $unsettledRevenueCommission = (int) $partner->commissionableRevenues()
+            ->whereIn('status', ['pending', 'aggregated'])
             ->sum('commission_amount');
 
+        // Prefer snapshotted unsettled earnings; fall back to live revenues if no earning rows yet.
+        if ($pendingCommissions === 0 && $unsettledRevenueCommission > 0) {
+            $pendingCommissions = $unsettledRevenueCommission;
+        }
+
         $eligiblePaymentCount = (int) $partner->commissionableRevenues()
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'aggregated'])
             ->count();
 
         $currentMonthStart = CarbonImmutable::now()->startOfMonth();
@@ -94,7 +109,7 @@ class EarningsController extends Controller
 
         if ($currentMonthEarnings === 0) {
             $currentMonthEarnings = (int) $partner->commissionableRevenues()
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'aggregated'])
                 ->where('created_at', '>=', $currentMonthStart)
                 ->sum('commission_amount');
         }
@@ -133,6 +148,9 @@ class EarningsController extends Controller
                 'amount' => $earning->total_amount,
                 'settled_at' => $earning->settled_at?->format('M j, Y'),
                 'is_settled' => $earning->isSettled(),
+                'status' => $earning->statusKey(),
+                'status_label' => $earning->statusLabel(),
+                'payment_reference_masked' => $earning->maskedPaymentReference(),
             ])
             ->values()
             ->all();
@@ -146,7 +164,7 @@ class EarningsController extends Controller
         return Inertia::render('Partner/Earnings', [
             'earnings' => $earnings,
             'summary' => [
-                'total_earned' => (int) $partner->earnings()->sum('total_amount'),
+                'total_earned' => (int) $partner->earnings()->whereNotNull('settled_at')->sum('total_amount'),
                 'pending_commissions' => $pendingCommissions,
                 'current_month_earnings' => $currentMonthEarnings,
                 'previous_month_earnings' => $previousMonthEarnings,
@@ -199,7 +217,7 @@ class EarningsController extends Controller
                 DB::raw('SUM(revenue_amount) as revenue_amount'),
                 DB::raw('SUM(commission_amount) as commission_amount'),
                 DB::raw('COUNT(*) as payment_count'),
-                DB::raw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count"),
+                DB::raw("SUM(CASE WHEN status IN ('pending', 'aggregated') THEN 1 ELSE 0 END) as pending_count"),
             ])
             ->groupBy('estate_id')
             ->orderByDesc('commission_amount')

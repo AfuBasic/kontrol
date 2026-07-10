@@ -20,7 +20,13 @@ interface Earning {
     total_amount: number;
     revenue_amount: number;
     settled_at: string | null;
+    settled_at_human?: string | null;
     is_settled: boolean;
+    is_pending?: boolean;
+    is_accruing?: boolean;
+    status?: 'accruing' | 'pending' | 'paid';
+    status_label?: string;
+    payment_reference_masked?: string | null;
 }
 
 interface Summary {
@@ -394,6 +400,141 @@ export default function PartnerEarnings({
                             </div>
                         </div>
                     </motion.div>
+                </section>
+
+                {/* ═══════════════════════════════════════════
+                    3. PAYOUT HISTORY — monthly earning rows
+                    ═══════════════════════════════════════════ */}
+                <section>
+                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
+                        Payout history
+                    </h2>
+
+                    {earnings.data.length === 0 ? (
+                        <div className="flex max-h-[180px] items-center gap-4 rounded-2xl bg-stone-50/80 px-5 py-5 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-400 shadow-sm dark:bg-white/10">
+                                <CalendarDaysIcon className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[13px] font-semibold text-stone-800 dark:text-white">
+                                    No monthly payouts yet
+                                </p>
+                                <p className="mt-0.5 text-[12px] text-stone-500">
+                                    Periods appear after commissions are aggregated.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06]">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-[13px]">
+                                    <thead>
+                                        <tr className="border-b border-stone-100 text-left text-[10px] font-semibold tracking-wide text-stone-400 uppercase dark:border-white/[0.05]">
+                                            <th className="px-4 py-2.5 font-semibold sm:px-5">Period</th>
+                                            <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">
+                                                Revenue
+                                            </th>
+                                            <th className="px-4 py-2.5 text-right font-semibold">Commission</th>
+                                            <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {earnings.data.map((row, i) => {
+                                            const status = row.status ?? (row.is_settled ? 'paid' : 'pending');
+                                            const label =
+                                                row.status_label ??
+                                                (status === 'paid'
+                                                    ? 'Paid'
+                                                    : status === 'accruing'
+                                                      ? 'Accruing'
+                                                      : 'Pending Settlement');
+
+                                            return (
+                                                <motion.tr
+                                                    key={row.id}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ delay: 0.03 * i }}
+                                                    className="border-b border-stone-50 transition last:border-0 hover:bg-stone-50/60 dark:border-white/[0.04] dark:hover:bg-white/[0.02]"
+                                                >
+                                                    <td className="px-4 py-3.5 sm:px-5">
+                                                        <p className="font-semibold text-stone-900 dark:text-white">
+                                                            {row.month_label}
+                                                        </p>
+                                                        {row.is_settled && (
+                                                            <p className="mt-0.5 text-[11px] text-stone-400">
+                                                                {row.settled_at_human ??
+                                                                    (row.settled_at
+                                                                        ? new Date(row.settled_at).toLocaleDateString(
+                                                                              'en-NG',
+                                                                              { dateStyle: 'medium' },
+                                                                          )
+                                                                        : null)}
+                                                                {row.payment_reference_masked
+                                                                    ? ` · Ref ${row.payment_reference_masked}`
+                                                                    : ''}
+                                                            </p>
+                                                        )}
+                                                    </td>
+                                                    <td className="hidden px-4 py-3.5 text-right tabular-nums text-stone-600 sm:table-cell dark:text-slate-300">
+                                                        {formatAmount(row.revenue_amount)}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                        {formatAmount(row.total_amount)}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right sm:px-5">
+                                                        {status === 'paid' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                                <CheckCircleIcon className="h-3.5 w-3.5" />
+                                                                Paid
+                                                            </span>
+                                                        ) : status === 'accruing' ? (
+                                                            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                                                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                                                                Accruing
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                                                                <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                                                                {label}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {(earnings.prev_page_url || earnings.next_page_url) && (
+                                <div className="flex items-center justify-between border-t border-stone-100 px-4 py-3 dark:border-white/[0.05]">
+                                    {earnings.prev_page_url ? (
+                                        <Link
+                                            href={earnings.prev_page_url}
+                                            className="text-[12px] font-semibold text-primary-600 dark:text-primary-400"
+                                        >
+                                            Previous
+                                        </Link>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    <span className="text-[11px] text-stone-400">
+                                        Page {earnings.current_page} of {earnings.last_page}
+                                    </span>
+                                    {earnings.next_page_url ? (
+                                        <Link
+                                            href={earnings.next_page_url}
+                                            className="text-[12px] font-semibold text-primary-600 dark:text-primary-400"
+                                        >
+                                            Next
+                                        </Link>
+                                    ) : (
+                                        <span />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
 
                 {/* ═══════════════════════════════════════════
