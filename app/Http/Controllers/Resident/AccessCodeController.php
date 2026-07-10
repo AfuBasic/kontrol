@@ -106,7 +106,7 @@ class AccessCodeController extends Controller
     {
         $user = auth()->user();
         $subscription = $user->residentSubscription;
-        if (!$subscription || !$subscription->isActive()) {
+        if (! $subscription || ! $subscription->isActive()) {
             return redirect()->back()->with('error', 'Active subscription required to generate access codes.');
         }
 
