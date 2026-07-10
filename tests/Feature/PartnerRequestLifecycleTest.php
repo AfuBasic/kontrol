@@ -85,8 +85,8 @@ it('approves partner applications and creates attributed estates', function () {
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.approve', $application))
-        ->assertRedirect(route('zeus.partner-requests.index'))
+    $this->post(route('zeus.applications.approve', $application))
+        ->assertRedirect(route('zeus.applications.index'))
         ->assertSessionHas('success');
 
     $application->refresh();
@@ -130,10 +130,10 @@ it('rejects partner applications with a reason', function () {
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.reject', $application), [
+    $this->post(route('zeus.applications.reject', $application), [
         'rejection_reason' => 'Insufficient documentation provided.',
     ])
-        ->assertRedirect(route('zeus.partner-requests.index'));
+        ->assertRedirect(route('zeus.applications.index'));
 
     assertDatabaseHas('estate_applications', [
         'id' => $application->id,
@@ -164,10 +164,10 @@ it('requests more information from partners', function () {
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->post(route('zeus.partner-requests.request-info', $application), [
+    $this->post(route('zeus.applications.request-info', $application), [
         'info_request_message' => 'Please share gate access details.',
     ])
-        ->assertRedirect(route('zeus.partner-requests.index'));
+        ->assertRedirect(route('zeus.applications.index'));
 
     assertDatabaseHas('estate_applications', [
         'id' => $application->id,

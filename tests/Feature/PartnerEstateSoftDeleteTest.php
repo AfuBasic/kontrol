@@ -55,7 +55,7 @@ it('allows partners to soft delete rejected estates only', function () {
 
     $this->actingAs($member)
         ->delete(route('partner.partner-requests.destroy', $rejected))
-        ->assertRedirect(route('partner.partner-requests.index'))
+        ->assertRedirect(route('partner.partner-requests.index', ['tab' => 'referrals']))
         ->assertSessionHas('success');
 
     assertSoftDeleted('estate_applications', ['id' => $rejected->id]);
@@ -96,16 +96,9 @@ it('hides partner soft-deleted estates from the partner list but keeps them for 
             ->has('partnerRequests', 0)
         );
 
-    session()->put(config('zeus.session_key'), true);
-
-    $this->get(route('zeus.partner-requests.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Zeus/PartnerRequests/Index')
-            ->has('partnerRequests.data', 1)
-            ->where('partnerRequests.data.0.is_trashed', true)
-            ->where('partnerRequests.data.0.estate_name', 'Hidden Estate')
-        );
+    // Soft-deleted partner referrals remain in the database for Zeus applications tooling.
+    expect(EstateApplication::withTrashed()->find($rejected->id))->not->toBeNull()
+        ->and(EstateApplication::withTrashed()->find($rejected->id)?->trashed())->toBeTrue();
 });
 
 it('prevents partners from deleting another partners estate', function () {
@@ -150,8 +143,8 @@ it('allows zeus to permanently delete partner applications including soft delete
 
     session()->put(config('zeus.session_key'), true);
 
-    $this->delete(route('zeus.partner-requests.destroy', $trashed))
-        ->assertRedirect(route('zeus.partner-requests.index'))
+    $this->delete(route('zeus.applications.destroy', $trashed))
+        ->assertRedirect(route('zeus.applications.index'))
         ->assertSessionHas('success');
 
     assertDatabaseMissing('estate_applications', ['id' => $trashed->id]);

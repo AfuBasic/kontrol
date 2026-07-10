@@ -11,7 +11,6 @@ use App\Http\Controllers\Zeus\MoneyFlowController;
 use App\Http\Controllers\Zeus\NotificationController;
 use App\Http\Controllers\Zeus\PartnerController;
 use App\Http\Controllers\Zeus\PartnerEarningsController;
-use App\Http\Controllers\Zeus\PartnerRequestController;
 use App\Http\Controllers\Zeus\PlanController;
 use App\Http\Controllers\Zeus\RevenueController;
 use App\Http\Controllers\Zeus\RiskCenterController;
@@ -82,15 +81,6 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
         Route::patch('/estates/{estate}/partner-assignment', [EstateController::class, 'updatePartnerAssignment'])->name('estates.partner-assignment.update');
 
-        // Partner requests
-        Route::get('/partner-requests', [PartnerRequestController::class, 'index'])->name('partner-requests.index');
-        Route::post('/partner-requests/{partnerRequest}/approve', [PartnerRequestController::class, 'approve'])->name('partner-requests.approve');
-        Route::post('/partner-requests/{partnerRequest}/reject', [PartnerRequestController::class, 'reject'])->name('partner-requests.reject');
-        Route::post('/partner-requests/{partnerRequest}/request-info', [PartnerRequestController::class, 'requestInfo'])->name('partner-requests.request-info');
-        Route::delete('/partner-requests/{partnerRequest}', [PartnerRequestController::class, 'destroy'])
-            ->withTrashed()
-            ->name('partner-requests.destroy');
-
         // Zeus notifications inbox
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
@@ -98,13 +88,17 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
-        // Application management
+        // Application management (includes partner-sourced estate applications)
         Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
         Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
         Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status.update');
         Route::post('/applications/{application}/notes', [ApplicationController::class, 'addNote'])->name('applications.notes.store');
         Route::post('/applications/{application}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');
         Route::post('/applications/{application}/reject', [ApplicationController::class, 'reject'])->name('applications.reject');
+        Route::post('/applications/{application}/request-info', [ApplicationController::class, 'requestInfo'])->name('applications.request-info');
         Route::post('/applications/{application}/contacted', [ApplicationController::class, 'markContacted'])->name('applications.contacted');
+        Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
+            ->withTrashed()
+            ->name('applications.destroy');
     });
 });

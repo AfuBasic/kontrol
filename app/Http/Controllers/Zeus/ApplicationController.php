@@ -117,22 +117,23 @@ class ApplicationController extends Controller
                 ->with('error', 'This application cannot be rejected from its current status.');
         }
 
-        $reason = $request->input('reason', 'Application does not meet our current criteria.');
+        $reason = $request->input(
+            'rejection_reason',
+            $request->input('reason', 'Application does not meet our current criteria.'),
+        );
 
         $application->update([
             'rejection_reason' => $reason,
         ]);
         $application->markAsRejected();
 
-        // Check if the application came through a partner
+        // Partner-sourced applications notify partner members; public applications email the applicant.
         if ($application->isPartnerSourced() && $application->partner) {
-            // Notify all members linked to this partner via the partner notification (email + in-app)
             $partnerMembers = $application->partner->members;
             foreach ($partnerMembers as $member) {
                 $member->notify(new EstateRequestRejectedNotification($application, $reason));
             }
         } else {
-            // Send standard rejection email to the public applicant email
             Mail::to($application->email)->send(new EstateApplicationRejectedMail($application, $reason));
         }
 
@@ -142,5 +143,72 @@ class ApplicationController extends Controller
         return redirect()
             ->route('zeus.applications.index')
             ->with('success', 'Application rejected and notification sent.');
+    }
+
+    public function requestInfo(EstateApplication $application, Request $request): RedirectResponse
+    {
+        if (! in_array($application->status, ['received', 'pending', 'under_review', 'info_requested'], true)) {
+            return redirect()
+                ->route('zeus.applications.index')
+                ->with('error', 'This application cannot request more information from its current status.');
+        }
+
+        $validated = $request->validate([
+            'info_request_message' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $application->update([
+            'status' => 'info_requested',
+            'info_request_message' => $validated['info_request_message'],
+            'reviewed_at' => now(),
+        ]);
+
+        ApplicationTimeline::create([
+            'estate_application_id' => $application->id,
+            'creator_name' => config('zeus.username') ?? 'Zeus Admin',
+            'event_type' => 'info_requested',
+            'description' => 'Additional information requested from applicant.',
+        ]);
+
+        Cache::forget('zeus.applications.metrics');
+        Cache::forget('zeus.applications.funnel');
+
+        return redirect()
+            ->route('zeus.applications.index')
+            ->with('success', 'Information requested from applicant.');
+    }
+
+    public function markContacted(EstateApplication $application): RedirectResponse
+    {
+        $application->markAsContacted();
+
+        ApplicationTimeline::create([
+            'estate_application_id' => $application->id,
+            'creator_name' => config('zeus.username') ?? 'Zeus Admin',
+            'event_type' => 'contacted',
+            'description' => 'Marked as contacted / under review.',
+        ]);
+
+        Cache::forget('zeus.applications.metrics');
+        Cache::forget('zeus.applications.funnel');
+
+        return redirect()
+            ->route('zeus.applications.index')
+            ->with('success', 'Application marked as contacted.');
+    }
+
+    /**
+     * Permanently delete an application (including partner soft-deletes).
+     */
+    public function destroy(EstateApplication $application): RedirectResponse
+    {
+        $application->forceDelete();
+
+        Cache::forget('zeus.applications.metrics');
+        Cache::forget('zeus.applications.funnel');
+
+        return redirect()
+            ->route('zeus.applications.index')
+            ->with('success', 'Application permanently deleted.');
     }
 }
