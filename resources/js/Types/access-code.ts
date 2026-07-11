@@ -23,6 +23,7 @@ export type AccessCode = {
     host_name?: string;
     notes?: string | null;
     uses_count?: number;
+    resident_address?: string | null;
 };
 
 export type DurationOption = {
