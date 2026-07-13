@@ -21,7 +21,8 @@ class PartnerAttributionService
     ): Estate {
         $commissionPlan = CommissionPlan::cloneFromPartner($partner);
         $startsAt = now()->startOfDay();
-        $endsAt = $startsAt->copy()->addMonths($commissionPlan->duration_months);
+        // Estate-level end date is open: commission length is per-resident post-trial tenure.
+        $endsAt = null;
 
         $estate->update([
             'partner_id' => $partner->id,

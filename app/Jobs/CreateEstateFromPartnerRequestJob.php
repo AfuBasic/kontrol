@@ -38,14 +38,14 @@ class CreateEstateFromPartnerRequestJob implements ShouldQueue
 
             $commissionPlan = CommissionPlan::cloneFromPartner($partner);
             $startsAt = now()->startOfDay();
-            $endsAt = $startsAt->copy()->addMonths($commissionPlan->duration_months);
 
             $estate->update([
                 'partner_id' => $partner->id,
                 'partner_source' => 'partner_request',
                 'commission_plan_id' => $commissionPlan->id,
                 'commission_starts_at' => $startsAt,
-                'commission_ends_at' => $endsAt,
+                // Per-resident post-trial tenure; no estate-level end clock.
+                'commission_ends_at' => null,
                 'partner_date' => $partnerRequest->created_at?->toDateString() ?? now()->toDateString(),
                 'activation_date' => now()->toDateString(),
                 'partner_status' => PartnerStatus::Activated,

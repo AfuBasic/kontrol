@@ -42,7 +42,8 @@ class UpdatePartnerAssignmentAction
                 $updateData = array_merge($updateData, [
                     'commission_plan_id' => $commissionPlan->id,
                     'commission_starts_at' => $startsAt,
-                    'commission_ends_at' => $startsAt->copy()->addMonths($commissionPlan->duration_months),
+                    // Length is enforced per resident post-trial; keep estate window open.
+                    'commission_ends_at' => null,
                     'partner_date' => $estate->partner_date ?? now()->toDateString(),
                     'partner_status' => $estate->partner_status ?? PartnerStatus::Approved,
                     'commission_status' => CommissionStatus::Active,

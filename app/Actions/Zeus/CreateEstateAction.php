@@ -87,9 +87,10 @@ class CreateEstateAction
                 $startsAt = isset($data['commission_starts_at'])
                     ? CarbonImmutable::parse($data['commission_starts_at'])
                     : now()->startOfDay();
+                // Prefer explicit Zeus override; otherwise leave open — tenure is per-resident post-trial.
                 $endsAt = isset($data['commission_ends_at'])
                     ? CarbonImmutable::parse($data['commission_ends_at'])
-                    : $startsAt->copy()->addMonths($commissionPlan->duration_months);
+                    : null;
 
                 $estate->update([
                     'partner_id' => $partner->id,

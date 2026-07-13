@@ -50,22 +50,8 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
             'mode' => $mode,
         ]);
 
-        // Expire commissions that fall outside the partner's commission length.
-        $pendingRevenues = CommissionableRevenue::query()
-            ->with('partner')
-            ->where('status', 'pending')
-            ->whereBetween('created_at', [$rangeStart, $rangeEnd])
-            ->get();
-
-        foreach ($pendingRevenues as $revenue) {
-            $partner = $revenue->partner;
-            if ($partner && $partner->commission_length !== null && $partner->created_at) {
-                $expirationDate = $partner->created_at->addMonths($partner->commission_length);
-                if ($revenue->created_at->greaterThan($expirationDate)) {
-                    $revenue->update(['status' => 'expired']);
-                }
-            }
-        }
+        // Eligibility (trial + per-resident tenure) is enforced at accrual time in CommissionService.
+        // This job only aggregates rows that already exist — it must not invent partner-age expiry.
 
         // Snapshot only sums pending (re-runnable). Close includes already-aggregated rows for the period.
         $statusFilter = $mode === self::MODE_SNAPSHOT
