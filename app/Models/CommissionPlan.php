@@ -47,6 +47,10 @@ class CommissionPlan extends Model
         return $this->hasMany(Estate::class);
     }
 
+    /**
+     * Snapshot partner commission terms onto a plan for an estate attribution.
+     * duration_months null means always eligible (after each resident's trial).
+     */
     public static function cloneFromPartner(Partner $partner): self
     {
         return self::create([
@@ -54,8 +58,13 @@ class CommissionPlan extends Model
             'commission_rate' => $partner->commission_rate,
             'commission_type' => $partner->commission_type,
             'source_partner_id' => $partner->id,
-            'duration_months' => 12,
+            'duration_months' => $partner->commission_length,
             'notes' => "Cloned from partner #{$partner->id} at ".now()->toDateTimeString(),
         ]);
+    }
+
+    public function isAlwaysEligible(): bool
+    {
+        return $this->duration_months === null;
     }
 }
