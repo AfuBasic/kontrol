@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Enums\EstateBoardPostAudience;
+use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
+use App\Models\Incident;
 use App\Services\Admin\EstateBoardService;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
@@ -51,9 +53,41 @@ class HomeController extends Controller
                 ]);
         }
 
+        $activeCodesCollection = $this->accessCodeService->getActiveCodes();
+        $now = now();
+        $activePassesCount = $activeCodesCollection->filter(function ($code) {
+            $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
+            $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
+
+            return ! $isFuture && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+        })->count();
+
+        $upcomingPassesCount = $activeCodesCollection->filter(function ($code) {
+            $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
+            $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
+
+            return $isFuture && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+        })->count();
+
+        $openIncidentsCount = Incident::query()
+            ->where('estate_id', $estate->id)
+            ->where(function ($q) use ($user) {
+                $q->where('reporter_id', $user->id)
+                    ->orWhere('assigned_to', $user->id);
+            })
+            ->whereIn('status', [
+                IncidentStatus::Pending,
+                IncidentStatus::Acknowledged,
+                IncidentStatus::Resolving,
+            ])
+            ->count();
+
+        $unpaidDuesCount = count($unpaidDues);
+        $totalUnpaidDuesAmount = collect($unpaidDues)->sum('amount_due') - collect($unpaidDues)->sum('amount_paid');
+
         return Inertia::render('Resident/Home', [
             'stats' => $this->accessCodeService->getHomeStats(),
-            'activeCodes' => $this->accessCodeService->getActiveCodes()->map(fn ($code) => [
+            'activeCodes' => $activeCodesCollection->map(fn ($code) => [
                 'id' => $code->id,
                 'code' => $code->code,
                 'type' => $code->type,
@@ -71,6 +105,11 @@ class HomeController extends Controller
             'latestAnnouncements' => $announcements->items(),
             'estateName' => $estate->name,
             'unpaidDues' => $unpaidDues,
+            'openIncidentsCount' => $openIncidentsCount,
+            'activePassesCount' => $activePassesCount,
+            'upcomingPassesCount' => $upcomingPassesCount,
+            'unpaidDuesCount' => $unpaidDuesCount,
+            'totalUnpaidDuesAmount' => $totalUnpaidDuesAmount,
         ]);
     }
 }
