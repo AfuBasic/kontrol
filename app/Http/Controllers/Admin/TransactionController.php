@@ -22,9 +22,9 @@ use App\Services\Ledger\TransactionOverviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use PdfStudio\Laravel\Facades\Pdf;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -248,12 +248,12 @@ class TransactionController extends Controller
         $detail = $this->overviewService->formatDetail($transaction);
         $estate = $this->estateContext->getEstate();
 
-        $pdf = Pdf::loadView('pdf.receipt', [
-            'transaction' => $detail,
-            'estate' => $estate,
-        ]);
-
-        return $pdf->download("receipt-{$transaction->reference_number}.pdf");
+        return Pdf::view('pdf.receipt')
+            ->data([
+                'transaction' => $detail,
+                'estate' => $estate,
+            ])
+            ->download("receipt-{$transaction->reference_number}.pdf");
     }
 
     private function authorizeTransaction(EstateTransaction $transaction): void
