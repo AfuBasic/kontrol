@@ -220,7 +220,21 @@ class DashboardService
             ->get()
             ->sum(fn ($a) => $a->amount_due - $a->amount_paid);
 
-        $failedPaymentsCount = EstateTransaction::where('estate_id', $estateId)
+        // Filter out property owner transactions
+        $transactionFilter = function ($q) use ($estateId) {
+            $q->where('estate_id', $estateId)
+                ->where(function ($query) use ($estateId) {
+                    $query->whereNull('collection_id')
+                        ->orWhereHas('collection', function ($sq) use ($estateId) {
+                            $sq->whereDoesntHave('creator.roles', function ($ssq) use ($estateId) {
+                                $ssq->where('name', 'property_owner')
+                                    ->where('model_has_roles.estate_id', $estateId);
+                            });
+                        });
+                });
+        };
+
+        $failedPaymentsCount = EstateTransaction::where($transactionFilter)
             ->where('status', TransactionStatus::Failed)
             ->count();
 
@@ -298,7 +312,7 @@ class DashboardService
         }
 
         // Recent Payments
-        $recentPayments = EstateTransaction::where('estate_id', $estateId)
+        $recentPayments = EstateTransaction::where($transactionFilter)
             ->where('status', TransactionStatus::Success)
             ->with(['user:id,name', 'collection'])
             ->latest('paid_at')
@@ -380,11 +394,20 @@ class DashboardService
         $estate = $this->estateContext->getEstate();
 
         return Activity::query()
-            ->where('properties->estate_id', $estate->id)
-            ->orWhere(function ($query) use ($estate) {
-                $query->whereHasMorph('subject', [EstateBoardPost::class], function ($q) use ($estate) {
-                    $q->where('estate_id', $estate->id);
-                });
+            ->where(function ($query) use ($estate) {
+                $query->where('properties->estate_id', $estate->id)
+                    ->orWhere(function ($q) use ($estate) {
+                        $q->whereHasMorph('subject', [EstateBoardPost::class], function ($sq) use ($estate) {
+                            $sq->where('estate_id', $estate->id);
+                        });
+                    });
+            })
+            ->where(function ($query) use ($estate) {
+                $query->whereNull('causer_id')
+                    ->orWhereDoesntHave('causer.roles', function ($q) use ($estate) {
+                        $q->where('name', 'property_owner')
+                            ->where('model_has_roles.estate_id', $estate->id);
+                    });
             })
             ->with('causer:id,ulid,name,email')
             ->latest()
