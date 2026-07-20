@@ -1,653 +1,544 @@
-import {
-    ArrowTrendingDownIcon,
-    ArrowTrendingUpIcon,
-    BuildingOffice2Icon,
-    ChatBubbleLeftRightIcon,
-    ClockIcon,
-    DocumentTextIcon,
-    MegaphoneIcon,
-    PlusIcon,
-    ShieldCheckIcon,
-    SparklesIcon,
-    UsersIcon,
-    ArrowRightIcon,
-    CheckCircleIcon,
-    BanknotesIcon,
-} from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Image as ImageIcon, Globe, Users, Shield, TrendingUp } from 'lucide-react';
+import { 
+    Users, Shield, Megaphone, FileText, Wallet, AlertTriangle, 
+    CheckCircle2, ChevronRight, Activity, Settings, UserPlus, 
+    PlusCircle, Landmark, BellRing, ArrowRight, Eye, ShieldCheck, Clock
+} from 'lucide-react';
+import { usePage } from '@inertiajs/react';
+import { useFeature } from '@/Hooks/useFeature';
+import type { SharedData } from '@/types';
 
+// Quick action routes
 import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import { create as createPost, index as postsIndex, show as showPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { create as createPost, index as postsIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import FeatureGate from '@/Components/FeatureGate';
-import { useFeature } from '@/Hooks/useFeature';
-import type { ChartDataPoint, DashboardStats, PostAudience, RecentActivity, RecentPost, TodayStats } from '@/types';
 
-type Props = {
-    stats: DashboardStats;
-    chartData: ChartDataPoint[];
-    recentActivity: RecentActivity[];
-    recentPosts: RecentPost[];
-    todayStats: TodayStats;
+type DetailedStats = {
+    estateHealth: {
+        name: string;
+        address: string | null;
+        status: 'normal' | 'attention' | 'critical';
+        statusLabel: string;
+        summary: string[];
+    };
+    needsAttention: {
+        type: string;
+        title: string;
+        desc: string;
+        severity: 'info' | 'warning' | 'danger';
+        actionUrl: string;
+    }[];
+    operationalSnapshot: {
+        residentsTotal: number;
+        residentsActive: number;
+        propertiesTotal: number;
+        visitorsToday: number;
+        securityOnDuty: number;
+        collectionsThisMonth: number;
+        outstandingDues: number;
+        openIncidents: number;
+        announcementsPublished: number;
+    };
+    financialOverview: {
+        collectionsThisMonth: number;
+        outstandingBalances: number;
+        collectionRate: number;
+        recentPayments: {
+            id: number;
+            user_name: string;
+            amount: number;
+            paid_at: string;
+            collection_name: string;
+        }[];
+    };
+    securityOperations: {
+        securityOnDuty: number;
+        visitorsExpected: number;
+        visitorsCheckedIn: number;
+        visitorsCheckedOut: number;
+        openIncidents: number;
+        emergencyAlerts: number;
+        recentGateActivity: {
+            id: number;
+            visitor_name: string;
+            resident_name: string;
+            type: 'checkin' | 'checkout';
+            time: string;
+            verifier_name: string;
+        }[];
+    };
 };
 
-function getAudienceIcon(audience: PostAudience) {
-    switch (audience) {
-        case 'residents':
-            return <Users className="h-3 w-3" />;
-        case 'security':
-            return <Shield className="h-3 w-3" />;
-        default:
-            return <Globe className="h-3 w-3" />;
-    }
-}
+type Props = {
+    detailedStats: DetailedStats;
+    recentActivity: {
+        id: number;
+        description: string;
+        causer: { name: string; email: string } | null;
+        subject_type: string;
+        created_at: string;
+    }[];
+    recentPosts: {
+        id: number;
+        hashid: string;
+        title: string;
+        body: string;
+        author: { name: string };
+        comments_count: number;
+        published_at: string;
+    }[];
+};
 
-function StatCard({
-    title,
-    value,
-    subValue,
-    trend,
-    icon: Icon,
-    href,
-    delay,
-}: {
-    title: string;
-    value: number;
-    subValue?: string;
-    trend?: number;
-    icon: React.ComponentType<{ className?: string }>;
-    href?: string;
-    delay: number;
-}) {
-    const content = (
-        <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-            whileHover={href ? { y: -4, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' } : undefined}
-            className={`group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-6 transition-all ${href ? 'cursor-pointer shadow-sm hover:border-[#1F6FDB]/30 hover:shadow-xl' : 'shadow-sm'}`}
-        >
-            {/* Subtle brand glow on hover */}
-            <motion.div
-                className="absolute inset-x-0 -top-px h-1 bg-linear-to-r from-transparent via-[#1F6FDB]/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
-                initial={false}
-            />
+export default function Dashboard({ detailedStats, recentActivity, recentPosts }: Props) {
+    const { estateHealth, needsAttention, operationalSnapshot, financialOverview, securityOperations } = detailedStats;
 
-            <div className="relative z-10 flex items-start justify-between">
-                <div className="flex-1">
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: delay + 0.2 }}
-                        className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase"
-                    >
-                        {title}
-                    </motion.p>
-                    <motion.p
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: delay + 0.3 }}
-                        className="mt-2 text-4xl font-black text-slate-900"
-                    >
-                        {value.toLocaleString()}
-                    </motion.p>
-                    {subValue && (
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: delay + 0.4 }}
-                            className="mt-1 text-xs font-semibold text-slate-500"
-                        >
-                            {subValue}
-                        </motion.p>
-                    )}
-                    {trend !== undefined && trend !== 0 && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: delay + 0.5 }}
-                            className="mt-3 flex items-center gap-1.5"
-                        >
-                            {trend > 0 ? (
-                                <ArrowTrendingUpIcon className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                                <ArrowTrendingDownIcon className="h-4 w-4 text-rose-500" />
-                            )}
-                            <span className={`text-[11px] font-black ${trend > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                {trend > 0 ? '+' : ''}
-                                {trend}%
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">vs last month</span>
-                        </motion.div>
-                    )}
-                </div>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 ring-1 ring-slate-200 group-hover:bg-[#F0F5FF] group-hover:text-[#1F6FDB] group-hover:ring-[#1F6FDB]/30"
-                >
-                    <Icon className="h-6 w-6" />
-                </motion.div>
-            </div>
-        </motion.div>
-    );
+    // Severity color helper
+    const getSeverityStyles = (severity: 'info' | 'warning' | 'danger') => {
+        switch (severity) {
+            case 'danger':
+                return 'bg-rose-50/50 border-rose-100 text-rose-800 hover:bg-rose-50';
+            case 'warning':
+                return 'bg-amber-50/50 border-amber-100 text-amber-800 hover:bg-amber-50';
+            default:
+                return 'bg-blue-50/30 border-blue-150/40 text-blue-800 hover:bg-blue-50/60';
+        }
+    };
 
-    return href ? <Link href={href}>{content}</Link> : content;
-}
+    // Health color helper
+    const getHealthBg = (status: 'normal' | 'attention' | 'critical') => {
+        switch (status) {
+            case 'critical':
+                return 'from-rose-900 to-slate-950';
+            case 'attention':
+                return 'from-amber-950 to-slate-950';
+            default:
+                return 'from-slate-900 to-indigo-950';
+        }
+    };
 
-function MiniChart({ data }: { data: ChartDataPoint[] }) {
-    const maxValue = Math.max(...data.map((d) => d.posts + d.comments), 1);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative overflow-hidden rounded-2xl border border-white/20 bg-linear-to-br from-slate-900 to-slate-800 p-8 shadow-xl"
-        >
-            {/* Decorative gradient orb */}
-            <motion.div
-                className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 4, repeat: Infinity }}
-            />
-
-            <div className="relative z-10 mb-8 flex items-start justify-between">
-                <div>
-                    <motion.h3
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-2xl font-black text-white"
-                    >
-                        Activity Overview
-                    </motion.h3>
-                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-slate-400">
-                        Posts and comments this week
-                    </motion.p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50" />
-                        <span className="text-sm font-medium text-slate-300">Posts</span>
-                    </motion.div>
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" />
-                        <span className="text-sm font-medium text-slate-300">Comments</span>
-                    </motion.div>
-                </div>
-            </div>
-
-            <div className="flex items-end justify-between gap-2" style={{ height: '160px' }}>
-                {data.map((point, idx) => {
-                    const postsHeight = (point.posts / maxValue) * 100;
-                    const commentsHeight = (point.comments / maxValue) * 100;
-
-                    return (
-                        <motion.div
-                            key={point.date}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 + idx * 0.05 }}
-                            className="flex flex-1 flex-col items-center gap-2.5"
-                        >
-                            <div
-                                className="relative flex w-full items-end justify-center gap-1 rounded-t-lg bg-white/5 p-2 backdrop-blur-sm"
-                                style={{ height: '120px' }}
-                            >
-                                {/* Posts bar */}
-                                <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${postsHeight}%` }}
-                                    transition={{ duration: 0.6, delay: 0.4 + idx * 0.06, ease: 'easeOut' }}
-                                    className="w-2.5 rounded-t-md bg-linear-to-t from-blue-500 to-blue-300 shadow-lg shadow-blue-500/50"
-                                    style={{ minHeight: point.posts > 0 ? '8px' : '0' }}
-                                    title={`Posts: ${point.posts}`}
-                                />
-                                {/* Comments bar */}
-                                <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${commentsHeight}%` }}
-                                    transition={{ duration: 0.6, delay: 0.45 + idx * 0.06, ease: 'easeOut' }}
-                                    className="w-2.5 rounded-t-md bg-linear-to-t from-emerald-500 to-emerald-300 shadow-lg shadow-emerald-500/50"
-                                    style={{ minHeight: point.comments > 0 ? '8px' : '0' }}
-                                    title={`Comments: ${point.comments}`}
-                                />
-                            </div>
-                            <motion.span
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.5 + idx * 0.05 }}
-                                className="text-xs font-bold text-slate-400"
-                            >
-                                {point.day}
-                            </motion.span>
-                            <motion.span
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.55 + idx * 0.05 }}
-                                className="text-[10px] font-semibold text-slate-500"
-                            >
-                                {point.posts + point.comments}
-                            </motion.span>
-                        </motion.div>
-                    );
-                })}
-            </div>
-        </motion.div>
-    );
-}
-
-function RecentActivityFeed({ activities }: { activities: RecentActivity[] }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="surface-card"
-        >
-            <div className="mb-4 flex items-center justify-between">
-                <div>
-                    <h3 className="text-base font-semibold text-gray-900">Recent Activity</h3>
-                    <p className="text-xs text-gray-500">Latest actions in your estate</p>
-                </div>
-                <ClockIcon className="h-5 w-5 text-gray-400" />
-            </div>
-
-            {activities.length > 0 ? (
-                <div className="divide-y divide-gray-100">
-                    {activities.map((activity, idx) => (
-                        <motion.div
-                            key={activity.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3, delay: 0.4 + idx * 0.05 }}
-                            className="native-list-item border-none px-0 py-3"
-                        >
-                            <div className="flex flex-1 flex-col gap-1">
-                                <p className="text-sm text-gray-900">
-                                    <span className="font-medium">{activity.causer?.name || 'System'}</span>{' '}
-                                    <span className="text-gray-600">{activity.description}</span>
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    {activity.subject_type && (
-                                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                                            {activity.subject_type}
-                                        </span>
-                                    )}
-                                    <span className="text-xs text-gray-500">{activity.created_at}</span>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                        <ClockIcon className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <p className="text-sm font-medium text-gray-900">No recent activity</p>
-                    <p className="mt-1 text-xs text-gray-500">Activity will appear here as things happen</p>
-                </div>
-            )}
-        </motion.div>
-    );
-}
-
-function RecentPostsFeed({ posts }: { posts: RecentPost[] }) {
-    // Extract text from HTML for preview
-    function extractTextFromHtml(html: string): string {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || '';
-    }
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35 }}
-            className="surface-card"
-        >
-            <div className="mb-4 flex items-center justify-between">
-                <div>
-                    <h3 className="text-base font-semibold text-gray-900">Recent Posts</h3>
-                    <p className="text-xs text-gray-500">Latest from the estate board</p>
-                </div>
-                <Link href={postsIndex.url()} className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-700">
-                    View all
-                </Link>
-            </div>
-
-            {posts.length > 0 ? (
-                <div className="divide-y divide-gray-100">
-                    {posts.map((post, idx) => (
-                        <motion.div
-                            key={post.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3, delay: 0.4 + idx * 0.05 }}
-                        >
-                            <Link href={showPost.url({ post: post.hashid as unknown as number })} className="native-list-item border-none px-0 py-3">
-                                <div className="flex-1">
-                                    {post.title ? (
-                                        <h4 className="font-medium text-gray-900">{post.title}</h4>
-                                    ) : (
-                                        <p className="line-clamp-2 text-sm text-gray-700">{extractTextFromHtml(post.body)}</p>
-                                    )}
-                                    {post.title && <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{extractTextFromHtml(post.body)}</p>}
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                                        <span className="text-xs text-gray-500">{post.author.name}</span>
-                                        <span className="h-0.5 w-0.5 rounded-full bg-gray-300" />
-                                        <span className="text-xs text-gray-500">{post.published_at}</span>
-                                    </div>
-                                </div>
-                                <div className="flex shrink-0 flex-col items-end gap-2">
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
-                                        {getAudienceIcon(post.audience)}
-                                    </span>
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                        <div className="flex items-center gap-0.5">
-                                            <MessageCircle className="h-3 w-3" />
-                                            <span>{post.comments_count}</span>
-                                        </div>
-                                        {post.has_media && (
-                                            <div className="flex items-center gap-0.5">
-                                                <ImageIcon className="h-3 w-3" />
-                                                <span>{post.media_count}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </Link>
-                        </motion.div>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                        <DocumentTextIcon className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <p className="text-sm font-medium text-gray-900">No posts yet</p>
-                    <p className="mt-1 text-xs text-gray-500">Create your first announcement</p>
-                    <Link
-                        href={createPost.url()}
-                        className="native-button mt-4 bg-[#1F6FDB] px-6 text-white shadow-lg ring-1 shadow-[#1F6FDB]/20 ring-[#1F6FDB]/50 transition-all hover:bg-[#0A3D91] active:scale-95"
-                    >
-                        <MegaphoneIcon className="h-5 w-5" />
-                        Create Post
-                    </Link>
-                </div>
-            )}
-        </motion.div>
-    );
-}
-
-function QuickActions() {
-    const actions = [
-        {
-            label: 'Create Post',
-            href: createPost.url(),
-            icon: MegaphoneIcon,
-            color: 'from-[#1F6FDB] to-[#0A3D91]',
-            shadow: 'shadow-[#1F6FDB]/30',
-            feature: 'estate-board',
-        },
-        {
-            label: 'Add Resident',
-            href: ResidentController.create.url(),
-            icon: UsersIcon,
-            color: 'from-slate-800 to-slate-900',
-            shadow: 'shadow-slate-200',
-            feature: 'resident-directory',
-        },
-        {
-            label: 'Add Security',
-            href: SecurityPersonnelController.create.url(),
-            icon: ShieldCheckIcon,
-            color: 'from-slate-700 to-slate-800',
-            shadow: 'shadow-slate-200',
-            feature: 'security-personnel-management',
-        },
-        {
-            label: 'Collections',
-            href: CollectionController.index.url(),
-            icon: BanknotesIcon,
-            color: 'from-emerald-600 to-emerald-800',
-            shadow: 'shadow-emerald-200',
-            feature: 'smart-billing-config',
-        },
-    ];
-
-    const visibleActions = actions.filter((a) => !a.feature || useFeature(a.feature));
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="grid gap-3 sm:flex sm:flex-wrap"
-        >
-            {visibleActions.map((action, idx) => (
-                <motion.div
-                    key={action.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 + idx * 0.08 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                >
-                    <Link
-                        href={action.href}
-                        className={`group relative overflow-hidden rounded-xl bg-linear-to-br ${action.color} px-5 py-3.5 text-sm font-bold text-white shadow-xl ${action.shadow} flex items-center justify-center gap-2 transition-all hover:shadow-2xl sm:flex-1`}
-                    >
-                        {/* Shine effect on hover */}
-                        <motion.div
-                            className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
-                            initial={{ x: '-100%' }}
-                            whileHover={{ x: '100%' }}
-                            transition={{ duration: 0.5 }}
-                        />
-                        <action.icon className="h-5 w-5" />
-                        <span>{action.label}</span>
-                    </Link>
-                </motion.div>
-            ))}
-        </motion.div>
-    );
-}
-
-function TodayHighlights({ stats }: { stats: TodayStats }) {
-    const hasActivity = stats.new_posts > 0 || stats.new_comments > 0 || stats.new_residents > 0;
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-8 shadow-sm"
-        >
-            {/* Decorative gradient orbs */}
-            <motion.div
-                className="absolute -top-20 -left-20 h-40 w-40 rounded-full bg-blue-100/50 blur-3xl"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            />
-            <motion.div
-                className="absolute -right-20 -bottom-20 h-40 w-40 rounded-full bg-indigo-100/30 blur-3xl"
-                animate={{ rotate: -360 }}
-                transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-            />
-
-            <div className="relative z-10 mb-8 flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 200 }}
-                        className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0F5FF]"
-                    >
-                        <SparklesIcon className="h-6 w-6 text-[#1F6FDB]" />
-                    </motion.div>
-                    <div>
-                        <motion.h3
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-2xl font-black text-slate-900"
-                        >
-                            Today's Highlights
-                        </motion.h3>
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase"
-                        >
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </motion.p>
-                    </div>
-                </div>
-            </div>
-
-            {hasActivity ? (
-                <motion.div className="grid grid-cols-3 gap-4">
-                    {[
-                        { label: 'New Posts', value: stats.new_posts, color: 'text-[#1F6FDB]' },
-                        { label: 'Comments', value: stats.new_comments, color: 'text-[#0A3D91]' },
-                        { label: 'Residents', value: stats.new_residents, color: 'text-slate-600' },
-                    ].map((stat, idx) => (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 + idx * 0.1 }}
-                            className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center"
-                        >
-                            <motion.p
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 200, delay: 0.5 + idx * 0.1 }}
-                                className={`text-3xl font-black ${stat.color}`}
-                            >
-                                {stat.value}
-                            </motion.p>
-                            <p className="mt-1 text-[10px] font-black tracking-tighter text-slate-400 uppercase">{stat.label}</p>
-                        </motion.div>
-                    ))}
-                </motion.div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="rounded-xl border border-dashed border-slate-200 p-6 text-center"
-                >
-                    <p className="text-sm font-medium text-slate-500">No activity yet today</p>
-                    <p className="mt-1 text-xs text-slate-400">Start by creating a post to get things going!</p>
-                </motion.div>
-            )}
-        </motion.div>
-    );
-}
-
-export default function Dashboard({ stats, chartData, recentActivity, recentPosts, todayStats }: Props) {
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title="Command Center" />
 
-            {/* Welcome Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="mb-12"
-            >
-                <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <motion.h1
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.1, type: 'spring', stiffness: 100 }}
-                            className="pt-4 text-4xl font-black text-slate-900 sm:text-5xl"
-                        >
-                            Welcome back!
-                        </motion.h1>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="mt-3 flex items-center gap-3"
-                        >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100">
-                                <BuildingOffice2Icon className="h-5 w-5 text-primary-600" />
-                            </div>
+            <div className="mx-auto max-w-6xl space-y-6 pb-24">
+
+                {/* SECTION 1 — ESTATE HEALTH (Hero Section) */}
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className={`relative overflow-hidden rounded-[24px] bg-gradient-to-br ${getHealthBg(estateHealth.status)} p-6 text-white shadow-lg`}
+                >
+                    <div className="pointer-events-none absolute -top-24 -right-24 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 -left-24 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                    <div className="relative z-10 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
-                                <p className="font-bold text-gray-900">{stats.estate.name}</p>
-                                {stats.estate.address && <p className="text-sm text-gray-500">{stats.estate.address}</p>}
+                                <span className="text-[10px] font-bold tracking-widest text-indigo-300 uppercase">Operational Command</span>
+                                <h1 className="text-xl font-bold tracking-tight mt-0.5">{estateHealth.name}</h1>
+                                {estateHealth.address && <p className="text-xs text-indigo-150/70 font-medium">{estateHealth.address}</p>}
                             </div>
-                        </motion.div>
+                            <div className="shrink-0">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold backdrop-blur-md">
+                                    {estateHealth.statusLabel}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-white/10 pt-3.5">
+                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">Daily Briefing Summary</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-xs font-medium text-indigo-100/80">
+                                {estateHealth.summary.map((sumText, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 shrink-0" />
+                                        <span className="truncate">{sumText}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <div className="sm:mt-0">
-                        <QuickActions />
+                </motion.div>
+
+                {/* SECTION 2 — NEEDS ATTENTION */}
+                <section className="space-y-2.5">
+                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Needs Attention</h3>
+                    {needsAttention.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {needsAttention.map((item, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={item.actionUrl}
+                                    className={`flex items-center justify-between gap-4 rounded-xl border p-4 transition-all active:scale-99 ${getSeverityStyles(item.severity)}`}
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
+                                        <p className="mt-0.5 text-[11px] font-medium text-slate-500 leading-normal">{item.desc}</p>
+                                    </div>
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/80 border border-slate-100 text-slate-700">
+                                        <ChevronRight className="h-4 w-4" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3.5 rounded-xl border border-emerald-100 bg-emerald-50/20 p-4">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                                <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-emerald-800">Everything looks good</h4>
+                                <p className="mt-0.5 text-[11px] font-medium text-emerald-600/90 leading-tight">
+                                    No operational issues require your attention today.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </section>
+
+                {/* SECTION 3 — OPERATIONAL SNAPSHOT */}
+                <section className="space-y-2.5">
+                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Operational Snapshot</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Residents</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.residentsTotal}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <Users className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Occupied Props</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.propertiesTotal}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <Landmark className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Visitors Today</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.visitorsToday}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <Clock className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Security Active</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.securityOnDuty}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <ShieldCheck className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Monthly Collections</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">₦{operationalSnapshot.collectionsThisMonth.toLocaleString()}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-650">
+                                <Wallet className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Outstanding Balances</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">₦{operationalSnapshot.outstandingDues.toLocaleString()}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-650">
+                                <AlertTriangle className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Open Incidents</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.openIncidents}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <Activity className="h-4 w-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white p-3 flex items-center justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                            <div className="min-w-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Board Posts</span>
+                                <span className="text-sm font-bold text-slate-800 mt-0.5 block">{operationalSnapshot.announcementsPublished}</span>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                <Megaphone className="h-4 w-4" />
+                            </div>
+                        </div>
+
                     </div>
+                </section>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {/* SECTION 4 — FINANCIAL OVERVIEW */}
+                    <section className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Financial Overview</h3>
+                            <Link href="/admin/collections" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-755 uppercase tracking-wide">
+                                Collections
+                            </Link>
+                        </div>
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)] space-y-4">
+                            <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-50 pb-3">
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Collected</span>
+                                    <span className="text-xs font-bold text-slate-800 block mt-0.5">₦{financialOverview.collectionsThisMonth.toLocaleString()}</span>
+                                </div>
+                                <div className="border-x border-slate-100">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Outstanding</span>
+                                    <span className="text-xs font-bold text-slate-800 block mt-0.5">₦{financialOverview.outstandingBalances.toLocaleString()}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Rate</span>
+                                    <span className="text-xs font-bold text-emerald-600 block mt-0.5">{financialOverview.collectionRate}%</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">Recent Payments</h4>
+                                {financialOverview.recentPayments.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {financialOverview.recentPayments.map((pmt) => (
+                                            <div key={pmt.id} className="flex items-center justify-between text-xs py-1 hover:bg-slate-50/50 rounded-lg px-1 transition-colors">
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-800 truncate">{pmt.user_name}</p>
+                                                    <p className="text-[10px] text-slate-400 truncate">{pmt.collection_name}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold text-emerald-600">₦{pmt.amount.toLocaleString()}</p>
+                                                    <p className="text-[10px] text-slate-450">{pmt.paid_at}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-[11px] font-medium text-slate-400 text-center py-2">No recent payments recorded.</p>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* SECTION 5 — SECURITY & OPERATIONS */}
+                    <section className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Security & Operations</h3>
+                            <Link href="/admin/visitors" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-755 uppercase tracking-wide">
+                                Visitor Logs
+                            </Link>
+                        </div>
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)] space-y-4">
+                            <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-50 pb-3 text-xs">
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Checked In</span>
+                                    <span className="font-bold text-slate-800 block mt-0.5">{securityOperations.visitorsCheckedIn}</span>
+                                </div>
+                                <div className="border-x border-slate-100">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Checked Out</span>
+                                    <span className="font-bold text-slate-800 block mt-0.5">{securityOperations.visitorsCheckedOut}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">SOS Alerts</span>
+                                    <span className={`font-bold block mt-0.5 ${securityOperations.emergencyAlerts > 0 ? 'text-rose-600 animate-pulse' : 'text-slate-800'}`}>
+                                        {securityOperations.emergencyAlerts}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">Recent Gate Activity</h4>
+                                {securityOperations.recentGateActivity.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {securityOperations.recentGateActivity.map((act) => (
+                                            <div key={act.id} className="flex items-center justify-between text-xs py-1 hover:bg-slate-50/50 rounded-lg px-1 transition-colors">
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-800 truncate">{act.visitor_name}</p>
+                                                    <p className="text-[10px] text-slate-400 truncate">Visiting {act.resident_name}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${act.type === 'checkin' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-650'}`}>
+                                                        {act.type === 'checkin' ? 'Checked In' : 'Checked Out'}
+                                                    </span>
+                                                    <p className="text-[9px] text-slate-450 mt-0.5">{act.time}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-[11px] font-medium text-slate-400 text-center py-2">No recent gate activity recorded.</p>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
                 </div>
-            </motion.div>
 
-            {/* Stats Grid */}
-            <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <FeatureGate feature="resident-directory">
-                    <StatCard
-                        title="Total Residents"
-                        value={stats.residents.total}
-                        subValue={`${stats.residents.active} active`}
-                        trend={stats.residents.trend}
-                        icon={UsersIcon}
-                        href={ResidentController.index.url()}
-                        delay={0}
-                    />
-                </FeatureGate>
-                <FeatureGate feature="security-personnel-management">
-                    <StatCard
-                        title="Security Personnel"
-                        value={stats.security.total}
-                        subValue={`${stats.security.active} on duty`}
-                        icon={ShieldCheckIcon}
-                        href={SecurityPersonnelController.index.url()}
-                        delay={0.05}
-                    />
-                </FeatureGate>
-                <FeatureGate feature="estate-board">
-                    <StatCard
-                        title="Board Posts"
-                        value={stats.posts.total}
-                        subValue={`${stats.posts.published} published, ${stats.posts.draft} drafts`}
-                        trend={stats.posts.trend}
-                        icon={DocumentTextIcon}
-                        href={postsIndex.url()}
-                        delay={0.1}
-                    />
-                </FeatureGate>
-                <StatCard title="Comments" value={stats.comments.total} subValue="Total engagement" icon={ChatBubbleLeftRightIcon} delay={0.15} />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* Main Content Grid - Single column on mobile */}
-            <div className="space-y-8">
-                <FeatureGate feature="estate-analytics-dashboard">
-                    <MiniChart data={chartData} />
-                </FeatureGate>
-                <FeatureGate feature="estate-analytics-dashboard">
-                    <TodayHighlights stats={todayStats} />
-                </FeatureGate>
-                <FeatureGate feature="activity-logs">
-                    <RecentActivityFeed activities={recentActivity} />
-                </FeatureGate>
-                <FeatureGate feature="estate-board">
-                    <RecentPostsFeed posts={recentPosts} />
-                </FeatureGate>
+                    {/* SECTION 6 — RECENT ESTATE ACTIVITY */}
+                    <section className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Estate Activity</h3>
+                        </div>
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)]">
+                            {recentActivity.length > 0 ? (
+                                <div className="space-y-3.5">
+                                    {recentActivity.slice(0, 5).map((activity, i) => (
+                                        <div key={activity.id} className="relative flex items-start gap-3 text-xs">
+                                            {i < Math.min(recentActivity.length, 5) - 1 && (
+                                                <div className="absolute top-6 bottom-[-14px] left-[9px] w-0.5 bg-slate-50" />
+                                            )}
+                                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-50 border border-slate-100/50">
+                                                <Activity className="h-3 w-3 text-slate-400" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-semibold text-slate-700 leading-normal">
+                                                    {activity.causer ? <span className="font-bold">{activity.causer.name}</span> : 'System'}{' '}
+                                                    <span className="text-slate-600 font-medium">{activity.description}</span>
+                                                </p>
+                                                <p className="mt-0.5 text-[9px] font-medium text-slate-400">
+                                                    {activity.created_at}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-400 text-center py-6">No recent operational activity recorded.</p>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* SECTION 7 — COMMUNITY UPDATES */}
+                    <section className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Updates</h3>
+                            <Link href="/admin/estate-board" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-755 uppercase tracking-wide">
+                                View All
+                            </Link>
+                        </div>
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)] space-y-3.5">
+                            {recentPosts.length > 0 ? (
+                                <div className="space-y-3">
+                                    {recentPosts.slice(0, 3).map((post) => (
+                                        <div key={post.id} className="flex items-start gap-3 text-xs pb-3 last:pb-0 border-b border-slate-50 last:border-0">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                                <Megaphone className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-semibold text-slate-800 hover:text-indigo-650 transition-colors truncate">
+                                                    {post.title}
+                                                </h4>
+                                                <p className="mt-0.5 text-[9px] font-medium text-slate-400">
+                                                    Published {post.published_at} by {post.author.name}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-400 text-center py-6">No announcements published yet.</p>
+                            )}
+                        </div>
+                    </section>
+
+                </div>
+
+                {/* SECTION 8 — QUICK ACTIONS */}
+                <section className="space-y-2.5">
+                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Quick Actions</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        
+                        {/* People */}
+                        <div className="rounded-2xl border border-slate-150/60 bg-white p-4 space-y-2.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">People</span>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    href={ResidentController.create.url()}
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <UserPlus className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>Add Resident</span>
+                                </Link>
+                                <Link
+                                    href={SecurityPersonnelController.create.url()}
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <Shield className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>Add Security Guard</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Operations */}
+                        <div className="rounded-2xl border border-slate-150/60 bg-white p-4 space-y-2.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Operations</span>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    href={createPost.url()}
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <Megaphone className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>Create Announcement</span>
+                                </Link>
+                                <Link
+                                    href="/admin/visitors"
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <PlusCircle className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>Register Visitor Log</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Finance */}
+                        <div className="rounded-2xl border border-slate-150/60 bg-white p-4 space-y-2.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Finance</span>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    href={CollectionController.index.url()}
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <Wallet className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>View Collections</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Administration */}
+                        <div className="rounded-2xl border border-slate-150/60 bg-white p-4 space-y-2.5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Administration</span>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    href="/admin/settings"
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors py-1"
+                                >
+                                    <Settings className="h-3.5 w-3.5 text-slate-400" />
+                                    <span>Estate Settings</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
             </div>
         </>
     );
