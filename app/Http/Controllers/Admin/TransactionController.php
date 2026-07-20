@@ -105,7 +105,11 @@ class TransactionController extends Controller
                 'user_agent' => $audit->transaction?->metadata['user_agent'] ?? $request->userAgent() ?? 'Chrome / Mac',
             ]);
 
+        $maxTransactionAmount = \App\Models\EstateTransaction::where('estate_id', $estate->id)->max('amount') ?? 100000;
+        $maxAmountNaira = (int) ceil($maxTransactionAmount / 100);
+
         return Inertia::render('Admin/Transactions/Index', [
+            'maxAmountLimit' => $maxAmountNaira,
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
             'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
             'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
