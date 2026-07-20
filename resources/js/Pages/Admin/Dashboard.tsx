@@ -72,7 +72,7 @@ type DetailedStats = {
 };
 
 type Props = {
-    detailedStats: DetailedStats;
+    detailedStats: any;
     recentActivity: {
         id: number;
         description: string;
@@ -122,7 +122,7 @@ export default function Dashboard({ detailedStats, recentActivity, recentPosts }
         <>
             <Head title="Command Center" />
 
-            <div className="mx-auto max-w-6xl space-y-6 pb-24">
+            <div className="space-y-6 pb-24 w-full">
 
                 {/* SECTION 1 — ESTATE HEALTH (Hero Section) */}
                 <motion.div
