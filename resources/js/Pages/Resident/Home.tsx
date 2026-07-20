@@ -1,7 +1,7 @@
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, Bell, Plus, CheckCircle2, Clock, Calendar, ArrowRight } from 'lucide-react';
+import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, Bell, Plus, CheckCircle2, Clock, Calendar, ArrowRight, Activity, PlusCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
