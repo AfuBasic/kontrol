@@ -30,6 +30,102 @@ class DashboardService
     ) {}
 
     /**
+     * Get overview statistics for the dashboard.
+     */
+    public function getOverviewStats(): array
+    {
+        $estate = $this->estateContext->getEstate();
+        $estateId = $estate->id;
+
+        // Optimized resident stats
+        $residentStats = User::query()
+            ->forEstate($estateId)
+            ->withRole('resident', $estateId)
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when suspended_at is null and email_verified_at is not null then 1 else 0 end) as active')
+            ->toBase()
+            ->first();
+
+        // Optimized security personnel stats
+        $securityStats = User::query()
+            ->forEstate($estateId)
+            ->withRole('security', $estateId)
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when suspended_at is null and email_verified_at is not null then 1 else 0 end) as active')
+            ->toBase()
+            ->first();
+
+        // Optimized posts stats
+        $postStats = EstateBoardPost::forEstate($estateId)
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when status = ? and published_at is not null then 1 else 0 end) as published', [EstateBoardPostStatus::Published->value])
+            ->selectRaw('sum(case when status = ? then 1 else 0 end) as draft', [EstateBoardPostStatus::Draft->value])
+            ->toBase()
+            ->first();
+
+        // Get comments count
+        $totalComments = EstateBoardComment::where('estate_id', $estateId)->count();
+
+        // Calculate trends (comparing to previous period)
+        $now = Carbon::now();
+        $thirtyDaysAgo = $now->copy()->subDays(30);
+        $sixtyDaysAgo = $now->copy()->subDays(60);
+
+        // Optimized resident trends
+        $residentTrends = User::query()
+            ->forEstate($estateId)
+            ->withRole('resident', $estateId)
+            ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as new_this_period', [$thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period', [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->toBase()
+            ->first();
+
+        $residentsTrend = $residentTrends->new_last_period > 0
+            ? round((($residentTrends->new_this_period - $residentTrends->new_last_period) / $residentTrends->new_last_period) * 100, 1)
+            : ($residentTrends->new_this_period > 0 ? 100 : 0);
+
+        // Optimized posts trends
+        $postsTrends = EstateBoardPost::forEstate($estateId)
+            ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as new_this_period', [$thirtyDaysAgo])
+            ->selectRaw('sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period', [$sixtyDaysAgo, $thirtyDaysAgo])
+            ->toBase()
+            ->first();
+
+        $postsTrend = $postsTrends->new_last_period > 0
+            ? round((($postsTrends->new_this_period - $postsTrends->new_last_period) / $postsTrends->new_last_period) * 100, 1)
+            : ($postsTrends->new_this_period > 0 ? 100 : 0);
+
+        return [
+            'residents' => [
+                'total' => $residentStats->total,
+                'active' => $residentStats->active ?? 0,
+                'trend' => $residentsTrend ?? 0,
+                'new_this_month' => $residentTrends->new_this_period ?? 0,
+            ],
+            'security' => [
+                'total' => $securityStats->total,
+                'active' => $securityStats->active ?? 0,
+            ],
+            'posts' => [
+                'total' => $postStats->total,
+                'published' => $postStats->published ?? 0,
+                'draft' => $postStats->draft ?? 0,
+                'trend' => $postsTrend ?? 0,
+                'new_this_month' => $postsTrends->new_this_period ?? 0,
+            ],
+            'comments' => [
+                'total' => $totalComments,
+            ],
+            'estate' => [
+                'id' => $estate->id,
+                'ulid' => $estate->ulid,
+                'name' => $estate->name,
+                'address' => $estate->address,
+            ],
+        ];
+    }
+
+    /**
      * Get detailed, operational dashboard statistics.
      */
     public function getDetailedDashboardStats(): array
