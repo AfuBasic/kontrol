@@ -145,7 +145,7 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                     >
-                        <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-3">
                             <SearchableSelect
                                 label="Resident"
                                 options={filterOptions.residents.map((r) => ({ value: r.id, label: r.name }))}
@@ -160,51 +160,48 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                                 onChange={(v) => update('collection_id', v)}
                                 placeholder="Select collection"
                             />
-                            <SearchableSelect
-                                label="Type"
-                                options={filterOptions.types.map((t) => ({ value: t.value, label: t.label }))}
-                                value={local.type}
-                                onChange={(v) => update('type', v)}
-                                placeholder="Select type"
-                            />
-                            <SearchableSelect
-                                label="Payment Method"
-                                options={filterOptions.payment_methods.map((m) => ({ value: m.value, label: m.label }))}
-                                value={local.payment_method}
-                                onChange={(v) => update('payment_method', v)}
-                                placeholder="Select method"
-                            />
                             <div>
                                 <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Coupon Code</label>
                                 <input value={local.coupon} onChange={(e) => update('coupon', e.target.value)} placeholder="e.g. WELCOME25" className={inputClass} />
                             </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Gateway Provider</label>
-                                <input value={local.provider} onChange={(e) => update('provider', e.target.value)} placeholder="e.g. paystack" className={inputClass} />
+                            <div className="sm:col-span-2 space-y-2">
+                                <label className="block text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                    Amount Range: ₦{Number(local.amount_min || 0).toLocaleString()} - ₦{Number(local.amount_max || 1000000).toLocaleString()}
+                                </label>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex justify-between text-[9px] text-slate-400 font-bold">
+                                            <span>Min Amount</span>
+                                            <span>₦{Number(local.amount_min || 0).toLocaleString()}</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="500000"
+                                            step="5000"
+                                            value={local.amount_min || 0}
+                                            onChange={(e) => update('amount_min', e.target.value)}
+                                            className="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex justify-between text-[9px] text-slate-400 font-bold">
+                                            <span>Max Amount</span>
+                                            <span>₦{Number(local.amount_max || 1000000).toLocaleString()}</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1000000"
+                                            step="10000"
+                                            value={local.amount_max || 1000000}
+                                            onChange={(e) => update('amount_max', e.target.value)}
+                                            className="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Min Amount (NGN)</label>
-                                <input type="number" value={local.amount_min} onChange={(e) => update('amount_min', e.target.value)} placeholder="e.g. 5000" className={inputClass} />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Max Amount (NGN)</label>
-                                <input type="number" value={local.amount_max} onChange={(e) => update('amount_max', e.target.value)} placeholder="e.g. 100000" className={inputClass} />
-                            </div>
-                            <SearchableSelect
-                                label="Created By"
-                                options={filterOptions.admins.map((a) => ({ value: a.id, label: a.name }))}
-                                value={local.created_by}
-                                onChange={(v) => update('created_by', v)}
-                                placeholder="Select admin"
-                            />
-                            <SearchableSelect
-                                label="Approved By"
-                                options={filterOptions.admins.map((a) => ({ value: a.id, label: a.name }))}
-                                value={local.approved_by}
-                                onChange={(v) => update('approved_by', v)}
-                                placeholder="Select admin"
-                            />
-                            <div className="flex items-end sm:col-span-2">
+                            <div className="flex items-end">
                                 <button
                                     type="button"
                                     onClick={reset}
