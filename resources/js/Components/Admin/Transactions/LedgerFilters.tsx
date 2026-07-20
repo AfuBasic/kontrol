@@ -36,9 +36,10 @@ interface Props {
         payment_methods: FilterOption[];
         admins: Admin[];
     };
+    maxAmountLimit?: number;
 }
 
-export default function LedgerFilters({ filters, filterOptions }: Props) {
+export default function LedgerFilters({ filters, filterOptions, maxAmountLimit = 1000000 }: Props) {
     const [showMore, setShowMore] = useState(
         Boolean(
             filters.resident_id ||
@@ -167,14 +168,14 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                             <div className="sm:col-span-2 space-y-2">
                                 <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
                                     <span>Max Amount Limit</span>
-                                    <span className="text-slate-800 font-extrabold text-xs">₦{Number(local.amount_max || 1000000).toLocaleString()}</span>
+                                    <span className="text-slate-800 font-extrabold text-xs">₦{Number(local.amount_max || maxAmountLimit).toLocaleString()}</span>
                                 </div>
                                 <input
                                     type="range"
                                     min="0"
-                                    max="1000000"
-                                    step="10000"
-                                    value={local.amount_max || 1000000}
+                                    max={maxAmountLimit}
+                                    step="5000"
+                                    value={local.amount_max || maxAmountLimit}
                                     onChange={(e) => {
                                         update('amount_max', e.target.value);
                                         update('amount_min', '0');

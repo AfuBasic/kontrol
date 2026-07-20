@@ -89,6 +89,7 @@ interface Props {
         last_page: number;
         total: number;
     };
+    maxAmountLimit: number;
     hasTransactions: boolean;
     recordableAssignments: RecordableAssignment[];
     transactions: {
@@ -130,6 +131,7 @@ export default function TransactionsIndex({
     filters,
     filterOptions,
     permissions,
+    maxAmountLimit,
 }: Props) {
     const [selectedUlid, setSelectedUlid] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
