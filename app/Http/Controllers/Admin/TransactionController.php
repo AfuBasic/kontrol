@@ -112,7 +112,7 @@ class TransactionController extends Controller
         return Inertia::render('Admin/Transactions/Index', [
             'maxAmountLimit' => $maxAmountNaira,
             'todaySummary' => Inertia::defer(fn () => $this->overviewService->todaySummary($estate)),
-            'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate)),
+            'activity' => Inertia::defer(fn () => $this->overviewService->timeline($estate, $filters)),
             'charts' => Inertia::defer(fn () => Gate::allows('transactions.reports')
                 ? $this->overviewService->charts($estate)
                 : null),
