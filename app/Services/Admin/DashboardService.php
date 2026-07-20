@@ -209,7 +209,7 @@ class DashboardService
 
         $collectionsThisMonth = CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereDate('updated_at', '>=', $startOfMonth)
-            ->sum('amount_paid');
+            ->sum('amount_paid') / 100;
 
         $totalAssigned = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_due');
         $totalPaid = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_paid');
@@ -218,7 +218,7 @@ class DashboardService
         $outstandingBalances = CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->get()
-            ->sum(fn ($a) => $a->amount_due - $a->amount_paid);
+            ->sum(fn ($a) => $a->amount_due - $a->amount_paid) / 100;
 
         // Filter out property owner transactions
         $transactionFilter = function ($q) use ($estateId) {
@@ -321,7 +321,7 @@ class DashboardService
             ->map(fn ($tx) => [
                 'id' => $tx->id,
                 'user_name' => $tx->user?->name ?? 'Resident',
-                'amount' => $tx->amount,
+                'amount' => $tx->amount / 100,
                 'paid_at' => $tx->paid_at?->diffForHumans() ?? $tx->created_at->diffForHumans(),
                 'collection_name' => $tx->collection?->name ?? $tx->description ?? 'Dues Payment',
             ]);
