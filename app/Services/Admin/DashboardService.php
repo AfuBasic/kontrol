@@ -6,6 +6,7 @@ use App\Enums\AccessCodeStatus;
 use App\Enums\EstateBoardPostStatus;
 use App\Enums\IncidentStatus;
 use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\CollectionAssignment;
@@ -220,9 +221,9 @@ class DashboardService
             ->get()
             ->sum(fn ($a) => $a->amount_due - $a->amount_paid) / 100;
 
-        // Filter out property owner transactions
         $transactionFilter = function ($q) use ($estateId) {
             $q->where('estate_id', $estateId)
+                ->where('type', '!=', TransactionType::SubscriptionPayment->value)
                 ->where(function ($query) use ($estateId) {
                     $query->whereNull('collection_id')
                         ->orWhereHas('collection', function ($sq) use ($estateId) {
