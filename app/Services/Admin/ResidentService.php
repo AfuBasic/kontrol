@@ -28,6 +28,7 @@ class ResidentService
                 $q->whereIn('name', ['resident', 'property_owner', 'household_member']);
             })
             ->with(['roles', 'profile.propertyOwner', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->withCount('householdMembers')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
