@@ -15,12 +15,13 @@ class DashboardController extends Controller
 
     public function __invoke(): Response
     {
+        $detailedStats = $this->dashboardService->getDetailedDashboardStats();
+
         return Inertia::render('Admin/Dashboard', [
-            'stats' => $this->dashboardService->getOverviewStats(),
-            'chartData' => $this->dashboardService->getActivityChartData(),
-            'recentActivity' => $this->dashboardService->getRecentActivity(),
-            'recentPosts' => $this->dashboardService->getRecentPosts(),
-            'todayStats' => $this->dashboardService->getTodayStats(),
+            'stats' => $this->dashboardService->getOverviewStats(), // Keep fallback compatibility
+            'detailedStats' => $detailedStats,
+            'recentActivity' => $this->dashboardService->getRecentActivity(10),
+            'recentPosts' => $this->dashboardService->getRecentPosts(3),
         ]);
     }
 }
