@@ -198,16 +198,24 @@ class DashboardService
             ->where('status', '!=', 'resolved')
             ->count();
 
-        // 3. Finance & Collections
-        $collectionsThisMonth = CollectionAssignment::where('estate_id', $estateId)
+        // 3. Finance & Collections (Excluding collections created by property owners)
+        $collectionFilter = function ($q) use ($estateId) {
+            $q->where('estate_id', $estateId)
+                ->whereDoesntHave('creator.roles', function ($sq) use ($estateId) {
+                    $sq->where('name', 'property_owner')
+                        ->where('model_has_roles.estate_id', $estateId);
+                });
+        };
+
+        $collectionsThisMonth = CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereDate('updated_at', '>=', $startOfMonth)
             ->sum('amount_paid');
 
-        $totalAssigned = CollectionAssignment::where('estate_id', $estateId)->sum('amount_due');
-        $totalPaid = CollectionAssignment::where('estate_id', $estateId)->sum('amount_paid');
+        $totalAssigned = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_due');
+        $totalPaid = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_paid');
         $collectionRate = $totalAssigned > 0 ? round(($totalPaid / $totalAssigned) * 100, 1) : 0;
 
-        $outstandingBalances = CollectionAssignment::where('estate_id', $estateId)
+        $outstandingBalances = CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->get()
             ->sum(fn ($a) => $a->amount_due - $a->amount_paid);
