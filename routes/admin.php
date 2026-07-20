@@ -83,6 +83,9 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         });
 
         Route::delete('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
+        Route::post('residents/bulk-suspend', [ResidentController::class, 'bulkSuspend'])->name('residents.bulk-suspend');
+        Route::post('residents/bulk-activate', [ResidentController::class, 'bulkActivate'])->name('residents.bulk-activate');
+        Route::post('residents/bulk-resend-invitation', [ResidentController::class, 'bulkResendInvitation'])->name('residents.bulk-resend-invitation');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::patch('residents/{resident}/mark-as-property-owner', [ResidentController::class, 'markAsPropertyOwner'])->name('residents.mark-as-property-owner');
         Route::post('residents/{resident}/resend-invitation', [ResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
