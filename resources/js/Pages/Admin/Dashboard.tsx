@@ -292,8 +292,8 @@ export default function Dashboard({ detailedStats, recentActivity, recentPosts }
                     <section className="space-y-2.5">
                         <div className="flex items-center justify-between px-1">
                             <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Financial Overview</h3>
-                            <Link href="/admin/collections" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-755 uppercase tracking-wide">
-                                Collections
+                            <Link href="/admin/transactions" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-755 uppercase tracking-wide">
+                                Transactions
                             </Link>
                         </div>
                         <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)] space-y-4">
