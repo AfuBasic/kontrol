@@ -23,9 +23,9 @@ return [
     */
     'drivers' => [
         'chromium' => [
-            'binary' => null,
-            'node_binary' => null,
-            'npm_binary' => null,
+            'binary' => env('PDF_STUDIO_CHROMIUM_BINARY'),
+            'node_binary' => env('PDF_STUDIO_NODE_BINARY'),
+            'npm_binary' => env('PDF_STUDIO_NPM_BINARY'),
             'timeout' => 60,
             'options' => [],
         ],
