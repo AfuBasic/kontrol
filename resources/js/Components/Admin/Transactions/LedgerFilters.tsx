@@ -73,6 +73,16 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
 
     const update = (key: string, value: string) => setLocal((prev) => ({ ...prev, [key]: value }));
 
+    const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Math.min(Number(e.target.value), Number(local.amount_max || maxAmountLimit) - 5000);
+        update('amount_min', String(val));
+    };
+
+    const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Math.max(Number(e.target.value), Number(local.amount_min || 0) + 5000);
+        update('amount_max', String(val));
+    };
+
     const apply = () => {
         router.get(TransactionController.index.url(), local, { preserveState: true, replace: true });
     };
@@ -167,21 +177,50 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                             </div>
                             <div className="sm:col-span-2 space-y-2">
                                 <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
-                                    <span>Max Amount Limit</span>
-                                    <span className="text-slate-800 font-extrabold text-xs">₦{Number(local.amount_max || maxAmountLimit).toLocaleString()}</span>
+                                    <span>Amount Range</span>
+                                    <span className="text-slate-800 font-extrabold text-xs">
+                                        ₦{Number(local.amount_min || 0).toLocaleString()} - ₦{Number(local.amount_max || maxAmountLimit).toLocaleString()}
+                                    </span>
                                 </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={maxAmountLimit}
-                                    step="5000"
-                                    value={local.amount_max || maxAmountLimit}
-                                    onChange={(e) => {
-                                        update('amount_max', e.target.value);
-                                        update('amount_min', '0');
-                                    }}
-                                    className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                                />
+                                <div className="relative w-full h-6 flex items-center">
+                                    {/* Base track */}
+                                    <div className="absolute left-0 right-0 h-1.5 bg-slate-200 rounded-lg"></div>
+
+                                    {/* Highlight active range */}
+                                    <div
+                                        className="absolute h-1.5 bg-indigo-600 rounded-lg"
+                                        style={{
+                                            left: `${(Number(local.amount_min || 0) / maxAmountLimit) * 100}%`,
+                                            right: `${100 - (Number(local.amount_max || maxAmountLimit) / maxAmountLimit) * 100}%`,
+                                        }}
+                                    ></div>
+
+                                    {/* Dual Thumb Inputs */}
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={maxAmountLimit}
+                                        step="5000"
+                                        value={local.amount_min || 0}
+                                        onChange={handleMinChange}
+                                        className="absolute w-full h-1.5 pointer-events-none appearance-none bg-transparent accent-indigo-600 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto cursor-pointer"
+                                        style={{
+                                            zIndex: Number(local.amount_min || 0) > maxAmountLimit / 2 ? 25 : 10,
+                                        }}
+                                    />
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={maxAmountLimit}
+                                        step="5000"
+                                        value={local.amount_max || maxAmountLimit}
+                                        onChange={handleMaxChange}
+                                        className="absolute w-full h-1.5 pointer-events-none appearance-none bg-transparent accent-indigo-600 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto cursor-pointer"
+                                        style={{
+                                            zIndex: Number(local.amount_min || 0) > maxAmountLimit / 2 ? 10 : 25,
+                                        }}
+                                    />
+                                </div>
                             </div>
                             <div className="flex items-end">
                                 <button
