@@ -106,7 +106,7 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
             {Object.entries(grouped).map(([groupTitle, items]) => {
                 // Collapsed by default after one week (if not explicitly toggled)
                 const isOlderThanWeek = groupTitle !== 'Today' && groupTitle !== 'Yesterday' && groupTitle !== 'This Week';
-                const isExpanded = expandedGroups[groupTitle] ?? !isOlderThanWeek;
+                const isExpanded = expandedGroups[groupTitle] ?? true;
 
                 return (
                     <div key={groupTitle} className="space-y-4">
