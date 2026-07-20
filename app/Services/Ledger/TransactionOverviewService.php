@@ -56,10 +56,10 @@ class TransactionOverviewService
     /**
      * @return SupportCollection<int, array<string, mixed>>
      */
-    public function timeline(Estate $estate, int $limit = 12): SupportCollection
+    public function timeline(Estate $estate, array $filters = [], int $limit = 12): SupportCollection
     {
-        return $this->baseQuery($estate)
-            ->with(['user:id,name,email', 'collection:id,name', 'creator:id,name'])
+        return $this->query($estate, $filters)
+            ->reorder()
             ->whereNot('status', TransactionStatus::Pending)
             ->orderByRaw('COALESCE(paid_at, failed_at, reversed_at, created_at) DESC')
             ->limit($limit)
