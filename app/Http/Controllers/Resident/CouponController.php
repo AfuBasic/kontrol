@@ -19,15 +19,8 @@ class CouponController extends Controller
         $user = auth()->user();
         $estate = $this->estateContext->getEstate();
 
-        $coupons = Coupon::where('status', 'active')
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->where(function ($q) use ($user, $estate) {
-                $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
-                    ->orWhere('estate_id', $estate->id)
-                    ->orWhere('user_id', $user->id);
-            })
+        $coupons = Coupon::query()
+            ->availableTo($user, $estate)
             ->get()
             ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
             ->map(fn ($coupon) => [
@@ -41,6 +34,7 @@ class CouponController extends Controller
                 'min_purchase' => $coupon->min_purchase,
                 'formatted_min_purchase' => $coupon->min_purchase ? '₦'.number_format($coupon->min_purchase / 100) : null,
                 'expires_at' => $coupon->expires_at?->toDateString(),
+                'starts_at' => $coupon->starts_at?->toDateString(),
                 'scope' => $coupon->estate_id ? 'estate' : ($coupon->user_id ? 'resident' : 'global'),
                 'personal_limit' => ($coupon->estate_id !== null || $coupon->user_id !== null) ? $coupon->usage_limit : $coupon->totalUsageLimit(),
                 'personal_uses' => ($coupon->estate_id !== null || $coupon->user_id !== null)

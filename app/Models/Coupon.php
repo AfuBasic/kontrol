@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -99,6 +100,61 @@ class Coupon extends Model
     }
 
     /**
+     * Determine if the coupon is scheduled to start in the future.
+     */
+    public function isScheduled(): bool
+    {
+        return $this->starts_at !== null && $this->starts_at->isFuture();
+    }
+
+    /**
+     * Determine if the coupon is currently inside its starts_at / expires_at window.
+     */
+    public function isWithinValidityPeriod(): bool
+    {
+        return ! $this->isExpired() && ! $this->isScheduled();
+    }
+
+    /**
+     * Scope a query to coupons whose validity window includes now.
+     *
+     * @param  Builder<Coupon>  $query
+     * @return Builder<Coupon>
+     */
+    public function scopeWithinValidityPeriod(Builder $query): Builder
+    {
+        $now = now();
+
+        return $query
+            ->where(function (Builder $q) use ($now): void {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', $now);
+            })
+            ->where(function (Builder $q) use ($now): void {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
+            });
+    }
+
+    /**
+     * Scope a query to active coupons currently available to a resident in an estate.
+     *
+     * Does not filter personal usage limits (those require per-user log counts).
+     *
+     * @param  Builder<Coupon>  $query
+     * @return Builder<Coupon>
+     */
+    public function scopeAvailableTo(Builder $query, User $user, Estate $estate): Builder
+    {
+        return $query
+            ->where('status', 'active')
+            ->withinValidityPeriod()
+            ->where(function (Builder $q) use ($user, $estate): void {
+                $q->where(fn (Builder $sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
+                    ->orWhere('estate_id', $estate->id)
+                    ->orWhere('user_id', $user->id);
+            });
+    }
+
+    /**
      * Determine if the coupon has reached its usage limit.
      */
     public function isLimitReached(?User $user = null): bool
@@ -143,19 +199,15 @@ class Coupon extends Model
     }
 
     /**
-     * Determine if the coupon is scheduled to start in the future.
-     */
-    public function isScheduled(): bool
-    {
-        return $this->starts_at !== null && $this->starts_at->isFuture();
-    }
-
-    /**
      * Determine if the coupon is valid for a given resident user in a specific estate.
      */
     public function isValidFor(User $user, Estate $estate): bool
     {
-        if ($this->isExpired()) {
+        if ($this->status !== 'active') {
+            return false;
+        }
+
+        if (! $this->isWithinValidityPeriod()) {
             return false;
         }
 

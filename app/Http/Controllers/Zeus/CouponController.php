@@ -50,13 +50,7 @@ class CouponController extends Controller
         if ($request->filled('status')) {
             $now = now();
             if ($request->status === 'active') {
-                $query->where('status', 'active')
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('expires_at')->orWhere('expires_at', '>', $now);
-                    })
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
-                    });
+                $query->where('status', 'active')->withinValidityPeriod();
             } elseif ($request->status === 'expired') {
                 $query->where('expires_at', '<=', $now);
             } elseif ($request->status === 'paused') {
@@ -92,12 +86,7 @@ class CouponController extends Controller
         $totalCoupons = Coupon::count();
         $now = now();
         $activeCoupons = Coupon::where('status', 'active')
-            ->where(function ($q) use ($now) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', $now);
-            })
-            ->where(function ($q) use ($now) {
-                $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
-            })
+            ->withinValidityPeriod()
             ->count();
 
         $totalRedemptions = (int) Coupon::sum('used_count');

@@ -130,9 +130,7 @@ class EstateController extends Controller
 
         $activeCoupons = Coupon::where('estate_id', $estate->id)
             ->where('status', 'active')
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
+            ->withinValidityPeriod()
             ->latest()
             ->get();
 

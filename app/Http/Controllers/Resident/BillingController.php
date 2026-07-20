@@ -70,15 +70,8 @@ class BillingController extends Controller
                 ];
             });
 
-        $bestCoupon = Coupon::where('status', 'active')
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->where(function ($q) use ($user, $estate) {
-                $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
-                    ->orWhere('estate_id', $estate->id)
-                    ->orWhere('user_id', $user->id);
-            })
+        $bestCoupon = Coupon::query()
+            ->availableTo($user, $estate)
             ->get()
             ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
             ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)

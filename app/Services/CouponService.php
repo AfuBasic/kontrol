@@ -6,8 +6,8 @@ use App\Models\Coupon;
 use App\Models\CouponLog;
 use App\Models\Estate;
 use App\Models\Invoice;
-use App\Models\User;
 use App\Models\Plan;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class CouponService
@@ -27,6 +27,20 @@ class CouponService
             return [
                 'status' => 'error',
                 'message' => 'Invalid coupon code.',
+            ];
+        }
+
+        if ($coupon->status !== 'active') {
+            return [
+                'status' => 'error',
+                'message' => 'This coupon is no longer active.',
+            ];
+        }
+
+        if ($coupon->isScheduled()) {
+            return [
+                'status' => 'error',
+                'message' => 'This coupon is not yet valid.',
             ];
         }
 

@@ -109,15 +109,8 @@ class HandleInertiaRequests extends Middleware
                     'property_owner_id' => $user->profile?->property_owner_id,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'has_active_coupons' => $estate ? (function () use ($user, $estate) {
-                        return Coupon::where('status', 'active')
-                            ->where(function ($q) {
-                                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-                            })
-                            ->where(function ($q) use ($user, $estate) {
-                                $q->where(fn ($sub) => $sub->whereNull('estate_id')->whereNull('user_id'))
-                                    ->orWhere('estate_id', $estate->id)
-                                    ->orWhere('user_id', $user->id);
-                            })
+                        return Coupon::query()
+                            ->availableTo($user, $estate)
                             ->get()
                             ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
                             ->isNotEmpty();

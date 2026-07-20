@@ -120,7 +120,7 @@ test('residents can validate a valid coupon code', function () {
         ]);
 });
 
-test('residents validation fails for expired or mismatched coupons', function () {
+test('residents validation fails for expired, scheduled, or mismatched coupons', function () {
     $estate = Estate::factory()->create();
     $otherEstate = Estate::factory()->create();
     $resident = User::factory()->create();
@@ -135,6 +135,7 @@ test('residents validation fails for expired or mismatched coupons', function ()
         'code' => 'EXPIRED',
         'type' => 'percentage',
         'value' => 10,
+        'status' => 'active',
         'expires_at' => now()->subDay(),
     ]);
 
@@ -147,11 +148,30 @@ test('residents validation fails for expired or mismatched coupons', function ()
     $response->assertStatus(422)
         ->assertJson(['status' => 'error', 'message' => 'This coupon has expired.']);
 
-    // 2. Mismatched Estate
+    // 2. Scheduled Coupon (not yet started)
+    Coupon::create([
+        'code' => 'SCHEDULED',
+        'type' => 'percentage',
+        'value' => 10,
+        'status' => 'active',
+        'starts_at' => now()->addDay(),
+    ]);
+
+    $response = $this->actingAs($resident)
+        ->post(route('resident.billing.coupon.validate'), [
+            'code' => 'SCHEDULED',
+            'plan_id' => $plan->id,
+        ]);
+
+    $response->assertStatus(422)
+        ->assertJson(['status' => 'error', 'message' => 'This coupon is not yet valid.']);
+
+    // 3. Mismatched Estate
     Coupon::create([
         'code' => 'OTHERESTATE',
         'type' => 'percentage',
         'value' => 10,
+        'status' => 'active',
         'estate_id' => $otherEstate->id,
     ]);
 
@@ -260,6 +280,7 @@ test('resident billing index page has autoAppliedCoupon and shares has_active_co
         'type' => 'percentage',
         'value' => 30,
         'scope' => 'estate',
+        'status' => 'active',
         'estate_id' => $estate->id,
     ]);
 
@@ -296,6 +317,7 @@ test('resident can access coupons index page and see their active coupons', func
         'type' => 'percentage',
         'value' => 20,
         'scope' => 'estate',
+        'status' => 'active',
         'estate_id' => $estate->id,
         'usage_limit' => 2,
     ]);
@@ -311,6 +333,124 @@ test('resident can access coupons index page and see their active coupons', func
         ->where('coupons.0.personal_limit', 2)
         ->where('coupons.0.personal_uses', 0)
     );
+});
+
+test('resident coupons menu and list only include coupons within their validity period', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => null,
+        'status' => 'past_due',
+    ]);
+
+    Coupon::create([
+        'campaign_name' => 'Live Now',
+        'code' => 'LIVE20',
+        'type' => 'percentage',
+        'value' => 20,
+        'status' => 'active',
+        'estate_id' => $estate->id,
+        'starts_at' => now()->subDay(),
+        'expires_at' => now()->addDays(7),
+    ]);
+
+    Coupon::create([
+        'campaign_name' => 'Starts Tomorrow',
+        'code' => 'FUTURE30',
+        'type' => 'percentage',
+        'value' => 30,
+        'status' => 'active',
+        'estate_id' => $estate->id,
+        'starts_at' => now()->addDay(),
+        'expires_at' => now()->addDays(14),
+    ]);
+
+    Coupon::create([
+        'campaign_name' => 'Already Ended',
+        'code' => 'ENDED10',
+        'type' => 'percentage',
+        'value' => 10,
+        'status' => 'active',
+        'estate_id' => $estate->id,
+        'starts_at' => now()->subDays(14),
+        'expires_at' => now()->subDay(),
+    ]);
+
+    // Coupons index should only list the in-window coupon
+    $this->actingAs($resident)
+        ->get(route('resident.coupons.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/Coupons/Index')
+            ->has('coupons', 1)
+            ->where('coupons.0.code', 'LIVE20')
+        );
+
+    // Menu flag + auto-apply should only reflect in-window coupons
+    $this->actingAs($resident)
+        ->get(route('resident.billing.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user.has_active_coupons', true)
+            ->where('autoAppliedCoupon.code', 'LIVE20')
+        );
+});
+
+test('resident coupons menu is hidden when only scheduled or expired coupons exist', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => null,
+        'status' => 'past_due',
+    ]);
+
+    Coupon::create([
+        'campaign_name' => 'Starts Tomorrow',
+        'code' => 'FUTUREONLY',
+        'type' => 'percentage',
+        'value' => 30,
+        'status' => 'active',
+        'estate_id' => $estate->id,
+        'starts_at' => now()->addDay(),
+    ]);
+
+    Coupon::create([
+        'campaign_name' => 'Already Ended',
+        'code' => 'EXPIREDONLY',
+        'type' => 'percentage',
+        'value' => 10,
+        'status' => 'active',
+        'estate_id' => $estate->id,
+        'expires_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($resident)
+        ->get(route('resident.billing.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user.has_active_coupons', false)
+            ->where('autoAppliedCoupon', null)
+        );
+
+    $this->actingAs($resident)
+        ->get(route('resident.coupons.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/Coupons/Index')
+            ->has('coupons', 0)
+        );
 });
 
 test('resident coupon validation returns 422 error for a deleted or non-existent coupon', function () {
