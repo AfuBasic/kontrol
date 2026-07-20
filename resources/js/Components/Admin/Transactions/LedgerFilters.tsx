@@ -165,41 +165,22 @@ export default function LedgerFilters({ filters, filterOptions }: Props) {
                                 <input value={local.coupon} onChange={(e) => update('coupon', e.target.value)} placeholder="e.g. WELCOME25" className={inputClass} />
                             </div>
                             <div className="sm:col-span-2 space-y-2">
-                                <label className="block text-[9px] font-black tracking-widest text-slate-400 uppercase">
-                                    Amount Range: ₦{Number(local.amount_min || 0).toLocaleString()} - ₦{Number(local.amount_max || 1000000).toLocaleString()}
-                                </label>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                                            <span>Min Amount</span>
-                                            <span>₦{Number(local.amount_min || 0).toLocaleString()}</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="500000"
-                                            step="5000"
-                                            value={local.amount_min || 0}
-                                            onChange={(e) => update('amount_min', e.target.value)}
-                                            className="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                                        />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                                            <span>Max Amount</span>
-                                            <span>₦{Number(local.amount_max || 1000000).toLocaleString()}</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="1000000"
-                                            step="10000"
-                                            value={local.amount_max || 1000000}
-                                            onChange={(e) => update('amount_max', e.target.value)}
-                                            className="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                                        />
-                                    </div>
+                                <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                    <span>Max Amount Limit</span>
+                                    <span className="text-slate-800 font-extrabold text-xs">₦{Number(local.amount_max || 1000000).toLocaleString()}</span>
                                 </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1000000"
+                                    step="10000"
+                                    value={local.amount_max || 1000000}
+                                    onChange={(e) => {
+                                        update('amount_max', e.target.value);
+                                        update('amount_min', '0');
+                                    }}
+                                    className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                                />
                             </div>
                             <div className="flex items-end">
                                 <button
