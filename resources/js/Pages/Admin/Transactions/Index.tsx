@@ -245,7 +245,7 @@ export default function TransactionsIndex({
                     <div className="space-y-6">
                         {/* Search & Collapse Filter Box */}
                         <div className="rounded-3xl border border-slate-100 bg-white p-5 ring-1 ring-slate-100/50">
-                            <LedgerFilters filters={filters} filterOptions={filterOptions as never} />
+                            <LedgerFilters filters={filters} filterOptions={filterOptions as never} maxAmountLimit={maxAmountLimit} />
                         </div>
 
                         {/* Premium Navigation Tabs */}
