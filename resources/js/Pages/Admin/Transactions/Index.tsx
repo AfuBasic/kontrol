@@ -248,11 +248,11 @@ export default function TransactionsIndex({
 
                         {/* Premium Navigation Tabs */}
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-1 bg-slate-100/75 p-1 rounded-xl w-fit">
+                            <div className="flex items-center gap-1 bg-slate-100/75 p-1 rounded-xl w-full sm:w-fit overflow-x-auto whitespace-nowrap scrollbar-none">
                                 <button
                                     onClick={() => setActiveTab('activity')}
                                     className={cn(
-                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all",
+                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
                                         activeTab === 'activity' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                                     )}
                                 >
@@ -261,7 +261,7 @@ export default function TransactionsIndex({
                                 <button
                                     onClick={() => setActiveTab('ledger')}
                                     className={cn(
-                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all",
+                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
                                         activeTab === 'ledger' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                                     )}
                                 >
@@ -271,7 +271,7 @@ export default function TransactionsIndex({
                                     <button
                                         onClick={() => setActiveTab('reports')}
                                         className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all",
+                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
                                             activeTab === 'reports' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                                         )}
                                     >
@@ -282,7 +282,7 @@ export default function TransactionsIndex({
                                     <button
                                         onClick={() => setActiveTab('audit')}
                                         className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all",
+                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
                                             activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                                         )}
                                     >
