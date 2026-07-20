@@ -1,6 +1,6 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, Calendar, Tag, Users, PlusCircle, CheckCircle2, XCircle, History as HistoryIcon, Activity, Plus } from 'lucide-react';
+import { Clock, Calendar, Tag, Users, PlusCircle, CheckCircle2, XCircle, History as HistoryIcon, Activity, Plus, Search, Filter } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
@@ -37,12 +37,12 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
 
-    // Search State for History
+    const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'history'>('active');
     const [searchQuery, setSearchQuery] = useState(filters?.search_history || '');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'used' | 'expired' | 'revoked'>('all');
     const [isLoading, setIsLoading] = useState(false);
     const [showCreateSheet, setShowCreateSheet] = useState(false);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-    const activitySectionRef = useRef<HTMLDivElement>(null);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -67,7 +67,6 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
         }, 300);
     };
 
-    // Update local state if URL filters change externally
     useEffect(() => {
         setSearchQuery(filters?.search_history || '');
     }, [filters?.search_history]);
@@ -97,42 +96,42 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
         });
     };
 
+    // Helper to resolve effective status
+    const getEffectiveStatus = (code: AccessCode) => {
+        const now = new Date();
+        const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
+        const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
+
+        let tempStatus = code.status;
+        if (code.status === 'scheduled' && !isFuture) {
+            tempStatus = 'active';
+        } else if (code.status === 'active' && isFuture) {
+            tempStatus = 'scheduled';
+        }
+
+        return tempStatus === 'active' && isExpired ? 'expired' : tempStatus;
+    };
+
     // Filter Active vs Scheduled Passes
     const now = new Date();
     const activePasses = activeCodes.filter((code) => {
         const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
-        return !isFuture;
+        const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
+        return !isFuture && !isExpired && code.status !== 'revoked' && code.status !== 'used';
     });
 
-    const scheduledPasses = activeCodes.filter((code) => {
+    const upcomingPasses = activeCodes.filter((code) => {
         const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
-        return isFuture;
+        const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
+        return isFuture && !isExpired && code.status !== 'revoked' && code.status !== 'used';
     });
 
-    // Helper to render activity icon
-    const getActivityIcon = (type: string) => {
-        switch (type) {
-            case 'created':
-                return <PlusCircle className="h-4.5 w-4.5 text-indigo-600" />;
-            case 'used':
-                return <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />;
-            case 'expired':
-                return <Clock className="h-4.5 w-4.5 text-amber-500" />;
-            case 'revoked':
-                return <XCircle className="h-4.5 w-4.5 text-rose-500" />;
-            default:
-                return <Activity className="h-4.5 w-4.5 text-slate-400" />;
-        }
-    };
-
-    // Helper to format activity message for timeline
-    const formatActivityMessage = (msg: string) => {
-        let text = msg;
-        if (text.includes('arrived')) {
-            text = text.replace('arrived', 'entered the estate');
-        }
-        return text;
-    };
+    // Frontend filtering for history passes by effective status
+    const filteredHistoryCodes = historyCodes.filter((code) => {
+        if (statusFilter === 'all') return true;
+        const effStatus = getEffectiveStatus(code);
+        return effStatus === statusFilter;
+    });
 
     // Group history entries by month
     const groupCodesByMonth = (codes: AccessCode[]) => {
@@ -148,246 +147,206 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
         return groups;
     };
 
-    const groupedHistory = groupCodesByMonth(historyCodes);
+    const groupedHistory = groupCodesByMonth(filteredHistoryCodes);
 
-    // Animation presets
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
-            transition: { staggerChildren: 0.05 },
+            transition: { staggerChildren: 0.04 },
         },
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 15 },
-        show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100, damping: 15 } },
+        hidden: { opacity: 0, y: 10 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 120, damping: 18 } },
     };
-
-    // Stats layout
-    const statsPills = [
-        { label: 'Active', value: visitorStats?.active_codes ?? 0, color: 'bg-emerald-50/60 border-emerald-100 text-emerald-700' },
-        { label: 'Expected Today', value: visitorStats?.expected_today ?? 0, color: 'bg-amber-50/60 border-amber-100 text-amber-700' },
-        { label: 'Arrived Today', value: visitorStats?.visitors_today ?? 0, color: 'bg-indigo-50/60 border-indigo-100 text-indigo-700' },
-        {
-            label: 'Events Today',
-            value: activeCodes.filter((c) => c.type === 'event').length,
-            color: 'bg-purple-50/60 border-purple-100 text-purple-700',
-        },
-    ];
 
     return (
         <>
             <Head title="Visitor Access" />
 
-            <div className="space-y-8 pb-32">
+            <div className="mx-auto max-w-3xl space-y-5 pb-24">
                 {/* 1. HEADER */}
                 <div className="flex flex-col">
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Visitor Access</h1>
-                    <p className="text-slate-450 mt-1 text-sm leading-normal font-bold">Manage everyone entering your estate in real-time.</p>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 px-1">Visitor Passes</h1>
                 </div>
 
                 {/* 2. VISITOR HUB HERO */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, type: 'spring' }}
-                    className="relative overflow-hidden rounded-[36px] bg-linear-to-br from-slate-900 to-indigo-950 p-6 text-white shadow-xl shadow-indigo-950/15 sm:p-8"
+                    transition={{ duration: 0.4, type: 'spring' }}
+                    className="relative overflow-hidden rounded-[24px] bg-linear-to-br from-slate-900 to-indigo-950 p-5.5 text-white shadow-md shadow-indigo-950/10"
                 >
-                    {/* Glowing aesthetic backdrops */}
-                    <div className="pointer-events-none absolute -top-24 -right-24 h-52 w-52 rounded-full bg-indigo-500/20 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-24 -left-24 h-52 w-52 rounded-full bg-indigo-500/15 blur-3xl" />
+                    <div className="pointer-events-none absolute -top-24 -right-24 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 -left-24 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
 
-                    <div className="relative z-10 space-y-6">
-                        <div className="max-w-md space-y-2">
-                            <span className="text-[10px] font-black tracking-widest text-indigo-300 uppercase">Visitor Command Center</span>
-                            <h2 className="text-2xl leading-tight font-black tracking-tight sm:text-3xl">Invite guests, workers, or events</h2>
-                            <p className="text-xs leading-relaxed font-bold text-indigo-100/70">
-                                Generate secure digital access codes for one-time guests, long-term workers, or whole event lists instantly.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setShowCreateSheet(true)}
-                                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-2xl bg-white px-5 text-xs font-black text-indigo-950 shadow-lg shadow-indigo-950/10 transition-all hover:bg-slate-50 active:scale-95"
-                            >
-                                <Plus className="h-4 w-4" strokeWidth={3} />
-                                Create Pass
-                            </button>
-                            <button
-                                onClick={() => activitySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 text-xs font-black text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95"
-                            >
-                                <Activity className="h-4 w-4" />
-                                View Activity
-                            </button>
-                        </div>
+                    <div className="relative z-10 max-w-md space-y-1.5">
+                        <span className="text-[9px] font-bold tracking-widest text-indigo-300 uppercase">Visitor Command Center</span>
+                        <h2 className="text-lg font-bold tracking-tight sm:text-xl">Invite guests, workers, or events</h2>
+                        <p className="text-[11px] font-medium leading-relaxed text-indigo-100/70">
+                            Generate secure digital access codes for one-time guests, long-term workers, or whole event lists instantly.
+                        </p>
                     </div>
                 </motion.div>
 
-                {/* 3. TODAY'S ACTIVITY PILLS */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Today's Activity</h3>
-                    </div>
-                    <div className="scrollbar-hide flex gap-2.5 overflow-x-auto pt-0.5 pb-2">
-                        {statsPills.map((stat, idx) => (
-                            <motion.div
-                                key={idx}
-                                whileTap={{ scale: 0.97 }}
-                                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-black shadow-[0_2px_12px_rgb(0,0,0,0.01)] ${stat.color}`}
-                            >
-                                <span>{stat.value}</span>
-                                <span className="font-bold opacity-75">{stat.label}</span>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
+                {/* 3. TABS (Segmented Control style - Native Mobile-ish) */}
+                <div className="bg-slate-100/80 p-0.5 rounded-xl flex relative">
+                    {(['active', 'upcoming', 'history'] as const).map((tab) => {
+                        const isActive = activeTab === tab;
+                        const count = 
+                            tab === 'active' 
+                                ? activePasses.length 
+                                : tab === 'upcoming' 
+                                ? upcomingPasses.length 
+                                : historyCodes.length;
 
-                {/* 4. QUICK ACTIONS BAR */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Quick Actions</h3>
-                    </div>
-                    <button
-                        onClick={() => setShowCreateSheet(true)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-[24px] bg-slate-900 py-4 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-98"
-                    >
-                        <PlusCircle className="h-5 w-5" />
-                        Create Access Pass
-                    </button>
-                </div>
-
-                {/* 5. RECENT VISITOR ACTIVITY (TIMELINE) */}
-                <div ref={activitySectionRef} className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h3>
-                    </div>
-                    {recentActivity && recentActivity.length > 0 ? (
-                        <div className="space-y-6 rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                            {recentActivity.slice(0, 4).map((activity, i) => (
-                                <div key={i} className="relative flex items-start gap-4">
-                                    {/* Timeline thread line */}
-                                    {i < Math.min(recentActivity.length, 4) - 1 && (
-                                        <div className="absolute top-9 bottom-[-24px] left-[18px] w-0.5 bg-slate-100" />
-                                    )}
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
-                                        {getActivityIcon(activity.type)}
-                                    </div>
-                                    <div className="min-w-0 flex-1 pt-1">
-                                        <p className="text-xs leading-normal font-extrabold text-slate-800">
-                                            {formatActivityMessage(activity.message)}
-                                        </p>
-                                        <p className="mt-1 text-[10px] font-bold text-slate-400">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="rounded-[28px] border border-slate-200/60 bg-white p-6 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                            <p className="text-xs font-bold text-slate-400">No recent visitor activity recorded.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* 6. ACTIVE VISITORS */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Active Passes</h3>
-                        {activePasses.length > 0 && (
-                            <span className="flex h-5 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 px-2.5 text-[10px] font-black text-emerald-600 uppercase">
-                                {activePasses.length} Authorized
-                            </span>
-                        )}
-                    </div>
-
-                    {activePasses.length > 0 ? (
-                        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {activePasses.map((code) => (
-                                <motion.div key={code.id} variants={itemVariants}>
-                                    <CodeCard code={code} showActions={code.status === 'active'} onRevoke={openRevokeModal} />
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[36px] border border-slate-200/80 bg-white px-8 py-14 text-center shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-                            <div className="text-indigo-650 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-100/50 bg-indigo-50">
-                                <Users className="h-8 w-8" />
-                            </div>
-                            <h3 className="text-lg font-black text-slate-900">Your estate is quiet today</h3>
-                            <p className="mt-2 max-w-xs text-xs leading-relaxed font-bold text-slate-400">
-                                No guests currently have access. Create a pass when you're expecting visitors.
-                            </p>
+                        return (
                             <button
-                                onClick={() => setShowCreateSheet(true)}
-                                className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-xs font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95"
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`relative flex-grow flex-1 py-2.5 text-xs font-semibold text-center transition-colors select-none cursor-pointer capitalize ${
+                                    isActive ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-700'
+                                }`}
                             >
-                                <PlusCircle className="h-4.5 w-4.5" />
-                                Create Pass
+                                <span className="relative z-10 flex items-center justify-center gap-1.5">
+                                    {tab}
+                                    <span className={`text-[10px] leading-none px-1.5 py-0.5 rounded-full font-medium ${
+                                        isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-500'
+                                    }`}>
+                                        {count}
+                                    </span>
+                                </span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="mobileSegmentedIndicator"
+                                        className="absolute inset-0 bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.03)]"
+                                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                                    />
+                                )}
                             </button>
-                        </div>
-                    )}
+                        );
+                    })}
                 </div>
 
-                {/* 7. UPCOMING VISITORS */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Upcoming Visitors</h3>
-                        {scheduledPasses.length > 0 && (
-                            <span className="flex h-5 items-center justify-center rounded-full border border-amber-100 bg-amber-50 px-2.5 text-[10px] font-black text-amber-600 uppercase">
-                                {scheduledPasses.length} Scheduled
-                            </span>
-                        )}
-                    </div>
-
-                    {scheduledPasses.length > 0 ? (
-                        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {scheduledPasses.map((code) => (
-                                <motion.div key={code.id} variants={itemVariants}>
-                                    <CodeCard code={code} showActions={false} onRevoke={openRevokeModal} />
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <div className="rounded-[28px] border border-slate-200/60 bg-white p-6 text-center shadow-[0_4px_20px_rgb(0,0,0,0.01)]">
-                            <p className="text-xs font-bold text-slate-400">No upcoming visitor passes scheduled.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* 8. VISITOR HISTORY (LOW HIERARCHY CHRONOLOGICAL ARCHIVE) */}
-                <div className="space-y-4 border-t border-slate-100 pt-4">
-                    <div className="flex items-center justify-between px-1">
-                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Visitor History Archive</h2>
-                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                            <HistoryIcon className="h-4 w-4" />
-                            Archive
-                        </span>
-                    </div>
-
-                    <div className="space-y-6 rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                        <SearchInput
-                            value={searchQuery}
-                            onChange={handleSearch}
-                            placeholder="Search history by visitor or code..."
-                            isLoading={isLoading}
-                        />
-
-                        <AnimatePresence mode="wait">
-                            {historyCodes.length > 0 ? (
+                {/* 4. CONTENT AREA */}
+                <AnimatePresence mode="wait">
+                    {activeTab === 'active' && (
+                        <motion.div
+                            key="active-tab"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-4"
+                        >
+                            {activePasses.length > 0 ? (
                                 <motion.div
-                                    key="history-list"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="space-y-8"
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="show"
+                                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                                 >
+                                    {activePasses.map((code) => (
+                                        <motion.div key={code.id} variants={itemVariants}>
+                                            <CodeCard code={code} showActions={code.status === 'active'} onRevoke={openRevokeModal} />
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+                                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
+                                        <Users className="h-5 w-5" />
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-slate-900">No Active Visitor Passes</h3>
+                                    <p className="mt-1 max-w-xs text-xs leading-normal text-slate-400">
+                                        Create a visitor pass for family, friends, deliveries, or service providers.
+                                    </p>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'upcoming' && (
+                        <motion.div
+                            key="upcoming-tab"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-4"
+                        >
+                            {upcomingPasses.length > 0 ? (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="show"
+                                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                                >
+                                    {upcomingPasses.map((code) => (
+                                        <motion.div key={code.id} variants={itemVariants}>
+                                            <CodeCard code={code} showActions={code.status === 'active'} onRevoke={openRevokeModal} />
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+                                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
+                                        <Calendar className="h-5 w-5" />
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-slate-900">No Upcoming Visitor Passes</h3>
+                                    <p className="mt-1 max-w-xs text-xs leading-normal text-slate-400">
+                                        Schedule a visitor pass for family, friends, deliveries, or service providers in the future.
+                                    </p>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'history' && (
+                        <motion.div
+                            key="history-tab"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-5"
+                        >
+                            {/* Search and Filters */}
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <div className="flex-1">
+                                    <SearchInput
+                                        value={searchQuery}
+                                        onChange={handleSearch}
+                                        placeholder="Search history by visitor or code..."
+                                        isLoading={isLoading}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                                    {(['all', 'used', 'expired', 'revoked'] as const).map((filter) => (
+                                        <button
+                                            key={filter}
+                                            onClick={() => setStatusFilter(filter)}
+                                            className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold border transition-all cursor-pointer whitespace-nowrap ${
+                                                statusFilter === filter
+                                                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {filter === 'all' ? 'All Status' : filter === 'used' ? 'Completed' : filter === 'revoked' ? 'Cancelled' : 'Expired'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Monthly Grouped History */}
+                            {filteredHistoryCodes.length > 0 ? (
+                                <div className="space-y-6">
                                     {Object.keys(groupedHistory).map((month) => (
-                                        <div key={month} className="space-y-4">
+                                        <div key={month} className="space-y-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-px flex-1 bg-slate-100" />
-                                                <span className="bg-white px-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-1">
                                                     {month}
                                                 </span>
                                                 <div className="h-px flex-1 bg-slate-100" />
@@ -399,36 +358,47 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                                             </div>
                                         </div>
                                     ))}
-                                </motion.div>
+                                </div>
                             ) : (
-                                <div className="py-8 text-center">
-                                    <p className="text-xs font-bold text-slate-400">
+                                <div className="py-12 text-center rounded-2xl border border-slate-100 bg-white">
+                                    <p className="text-xs font-medium text-slate-400">
                                         {searchQuery ? 'No matching history found.' : 'No older passes in your history.'}
                                     </p>
                                 </div>
                             )}
-                        </AnimatePresence>
-                    </div>
-                </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Floating Action Button (FAB) - Hidden on Mobile to avoid layout overlap with sticky bar */}
+            <div className="fixed bottom-6 right-6 z-40 hidden md:block">
+                <button
+                    onClick={() => setShowCreateSheet(true)}
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 transition-all active:scale-95 cursor-pointer"
+                    title="Create Pass"
+                >
+                    <Plus className="h-5 w-5" strokeWidth={2.5} />
+                </button>
             </div>
 
             {/* A. UNIFIED PASS CREATION DRAWER */}
             <MobileSheet isOpen={showCreateSheet} onClose={() => setShowCreateSheet(false)} title="What kind of access do you need?">
                 <div className="space-y-3 pb-8">
-                    <p className="mb-2 px-1 text-xs font-bold text-slate-400">Select a pass type to continue with invitation code generation.</p>
+                    <p className="mb-2 px-1 text-xs font-semibold text-slate-450">Select a pass type to continue with invitation code generation.</p>
 
                     {/* One-Time Pass */}
                     <Link
                         href="/resident/visitors/create?type=single_use"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-4 rounded-3xl border border-slate-100 bg-slate-50 p-5 transition-all duration-300 hover:border-indigo-200/60 hover:bg-slate-100 active:scale-99"
+                        className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
                     >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
-                            <Tag className="h-5 w-5" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
+                            <Tag className="h-4.5 w-4.5" />
                         </div>
                         <div>
-                            <h4 className="text-sm font-black tracking-tight text-slate-900">One-Time Pass</h4>
-                            <p className="mt-1 text-xs leading-normal font-bold text-slate-400">
+                            <h4 className="text-xs font-bold tracking-tight text-slate-900">One-Time Pass</h4>
+                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
                                 Perfect for a single visitor, delivery driver, or utility pickup. Valid for one entry.
                             </p>
                         </div>
@@ -439,14 +409,14 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                         <Link
                             href="/resident/visitors/create?type=long_lived"
                             onClick={() => setShowCreateSheet(false)}
-                            className="group flex items-start gap-4 rounded-3xl border border-slate-100 bg-slate-50 p-5 transition-all duration-300 hover:border-indigo-200/60 hover:bg-slate-100 active:scale-99"
+                            className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
                         >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
-                                <Calendar className="h-5 w-5" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
+                                <Calendar className="h-4.5 w-4.5" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black tracking-tight text-slate-900">Long-Term Pass</h4>
-                                <p className="mt-1 text-xs leading-normal font-bold text-slate-400">
+                                <h4 className="text-xs font-bold tracking-tight text-slate-900">Long-Term Pass</h4>
+                                <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
                                     For recurring visitors like family members, domestic staff, or contractors.
                                 </p>
                             </div>
@@ -457,14 +427,14 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                     <Link
                         href="/resident/visitors/create?type=event"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-4 rounded-3xl border border-slate-100 bg-slate-50 p-5 transition-all duration-300 hover:border-indigo-200/60 hover:bg-slate-100 active:scale-99"
+                        className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
                     >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
-                            <Users className="h-5 w-5" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
+                            <Users className="h-4.5 w-4.5" />
                         </div>
                         <div>
-                            <h4 className="text-sm font-black tracking-tight text-slate-900">Event Pass</h4>
-                            <p className="mt-1 text-xs leading-normal font-bold text-slate-400">
+                            <h4 className="text-xs font-bold tracking-tight text-slate-900">Event Pass</h4>
+                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
                                 Generate one access pass that can be shared with multiple guests. Perfect for events.
                             </p>
                         </div>

@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag } from 'lucide-react';
+import { Trash2, Clock, Calendar, Share2, Download, ExternalLink, Users, Tag, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import MobileSheet from '@/Components/MobileSheet';
 import resident from '@/routes/resident';
@@ -12,53 +12,46 @@ function getStatusInfo(status: string) {
         case 'active':
             return {
                 label: 'Active',
-                color: 'text-emerald-600 dark:text-emerald-400',
-                bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
-                accent: 'bg-emerald-500',
+                color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100/80',
             };
         case 'scheduled':
             return {
                 label: 'Scheduled',
-                color: 'text-amber-600 dark:text-amber-400',
-                bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20',
-                accent: 'bg-amber-500',
+                color: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-100/80',
             };
         case 'used':
             return {
                 label: 'Completed',
-                color: 'text-blue-600 dark:text-blue-400',
-                bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
-                accent: 'bg-blue-500',
+                color: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-100/80',
             };
         case 'expired':
             return {
                 label: 'Expired',
-                color: 'text-slate-500',
-                bg: 'bg-slate-50 dark:bg-slate-500/10 border-slate-100 dark:border-slate-500/20',
-                accent: 'bg-slate-400',
+                color: 'text-slate-600 bg-slate-50 border-slate-100',
             };
         case 'revoked':
             return {
                 label: 'Cancelled',
-                color: 'text-rose-600 dark:text-rose-400',
-                bg: 'bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20',
-                accent: 'bg-rose-500',
+                color: 'text-rose-755 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-100/80',
             };
         default:
-            return { label: status, color: 'text-slate-500', bg: 'bg-slate-50 border-slate-100', accent: 'bg-slate-400' };
+            return {
+                label: status,
+                color: 'text-slate-600 bg-slate-50 border-slate-100',
+            };
     }
 }
 
 function getPassTypeDetails(type: string) {
     switch (type) {
         case 'single_use':
-            return { label: 'One-Time', icon: Tag, bg: 'bg-emerald-50 text-emerald-600' };
+            return { label: 'One-Time', icon: Tag, bg: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' };
         case 'long_lived':
-            return { label: 'Long-Term', icon: Calendar, bg: 'bg-blue-50 text-blue-600' };
+            return { label: 'Long-Term', icon: Calendar, bg: 'bg-blue-50/50 text-blue-700 border-blue-100/50' };
         case 'event':
-            return { label: 'Event', icon: Users, bg: 'bg-purple-50 text-purple-600' };
+            return { label: 'Event', icon: Users, bg: 'bg-purple-50/50 text-purple-700 border-purple-100/50' };
         default:
-            return { label: 'Visitor', icon: Tag, bg: 'bg-slate-50 text-slate-600' };
+            return { label: 'Visitor', icon: Tag, bg: 'bg-slate-50/50 text-slate-700 border-slate-100/50' };
     }
 }
 
@@ -74,7 +67,6 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     const [sharing, setSharing] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
 
-    // Compute effective status based on timestamps
     const now = new Date();
     const isExpired = code.expires_at ? new Date(code.expires_at) < now : false;
     const isFuture = code.starts_at ? new Date(code.starts_at) > now : false;
@@ -148,15 +140,6 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         onRevoke?.(code);
     };
 
-    const getInitials = (name: string) => {
-        const parts = name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-            return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
-    };
-
-    // Format display date
     const formatFaintExpiry = () => {
         if (effectiveStatus === 'scheduled' && code.starts_at) {
             const date = new Date(code.starts_at);
@@ -198,100 +181,100 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
     return (
         <motion.div
             layoutId={`visitor-card-${code.id}`}
-            whileHover={{ y: -2 }}
+            whileHover={{ y: -1 }}
             onClick={() => router.visit(resident.visitors.show.url(code.id))}
-            className="group relative cursor-pointer overflow-hidden rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 active:bg-slate-50/50"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-100 bg-white p-4.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all duration-250 active:bg-slate-50"
         >
-            {/* Card Body */}
-            <div className="flex items-start gap-4">
-                {/* Avatar Bubble */}
-                <div className="relative shrink-0">
-                    <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${typeInfo.bg} relative text-sm font-black transition-all select-none group-hover:scale-105`}
-                    >
-                        {code.type === 'event' ? <typeInfo.icon className="h-5 w-5" /> : getInitials(code.visitor_name || 'Visitor')}
+            <div className="flex flex-col gap-3">
+                {/* Header Row: Name and Status Badge */}
+                <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900">
+                            {code.visitor_name || 'Visitor'}
+                        </h3>
+                        {code.purpose && (
+                            <p className="mt-0.5 truncate text-[11px] font-medium text-slate-400">
+                                {code.purpose}
+                            </p>
+                        )}
                     </div>
-                    {/* Status Indicator Dot */}
-                    <span
-                        className={`absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${status.accent}`}
-                    />
-                </div>
-
-                {/* Main Info */}
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                            <h3 className="truncate text-base leading-snug font-black tracking-tight text-slate-900">
-                                {code.visitor_name || 'Visitor'}
-                            </h3>
-                            {code.purpose && <p className="mt-0.5 truncate text-xs font-bold text-slate-400">{code.purpose}</p>}
-                        </div>
-
-                        {/* Options button */}
+                    
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${status.color}`}>
+                            {status.label}
+                        </span>
+                        
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowOptions(true);
                             }}
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
                         >
-                            <Clock className="h-4 w-4 rotate-90" />
+                            <Clock className="h-3.5 w-3.5 rotate-90" />
                         </button>
                     </div>
+                </div>
 
-                    {/* Badges and Validity Row */}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
-                            {typeInfo.label}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">{formatFaintExpiry()}</span>
+                {/* Info Row: Type, Expiry */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-50 pt-2.5">
+                    <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${typeInfo.bg}`}>
+                        {typeInfo.label}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-400">
+                        {formatFaintExpiry()}
+                    </span>
+                </div>
+
+                {/* Event Attendance (Progress Bar) */}
+                {code.type === 'event' && (
+                    <div className="space-y-1 rounded-lg border border-slate-100 bg-slate-50/50 p-2 text-[10px] text-slate-500">
+                        <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1 font-medium">
+                                <Users className="h-3 w-3 text-purple-550" />
+                                Attendance
+                            </span>
+                            <span className="font-semibold text-slate-700">
+                                {code.uses_count ?? 0} {code.guest_limit ? `/ ${code.guest_limit}` : ''} Admitted
+                            </span>
+                        </div>
+                        {code.guest_limit && (
+                            <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
+                                <div
+                                    className="bg-purple-600 h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Access Code Row - High Contrast and Prominent */}
+                <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-2.5">
+                    <div 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            copyCode();
+                        }}
+                        className={`flex flex-1 items-center justify-between rounded-xl px-3 py-2 transition-all ${
+                            copying 
+                                ? 'bg-emerald-500 text-white' 
+                                : 'bg-slate-900 text-white hover:bg-slate-800'
+                        }`}
+                    >
+                        <div className="flex flex-col">
+                            <span className={`text-[8px] font-semibold uppercase tracking-widest ${copying ? 'text-emerald-100' : 'text-slate-400'}`}>
+                                Access Code
+                            </span>
+                            <span className="font-mono text-sm font-bold tracking-widest">
+                                {code.code}
+                            </span>
+                        </div>
+                        <div className="shrink-0 p-1">
+                            {copying ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-80" />}
+                        </div>
                     </div>
 
-                    {/* Attendance Progress if Event */}
-                    {code.type === 'event' && (
-                        <div className="mt-3.5 space-y-1.5 rounded-2xl border border-slate-100/50 bg-slate-50/50 p-3">
-                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                <span className="flex items-center gap-1">
-                                    <Users className="h-3 w-3 text-purple-500" />
-                                    Attendance
-                                </span>
-                                <span className="font-extrabold text-slate-700">
-                                    {code.uses_count ?? 0} {code.guest_limit ? `/ ${code.guest_limit}` : ''} Admitted
-                                </span>
-                            </div>
-                            {code.guest_limit && (
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                                    <div
-                                        className="bg-purple-650 h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Footer - Access Code & Actions */}
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-50 pt-3.5">
-                {/* Copyable Access Code badge */}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        copyCode();
-                    }}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 font-mono text-xs font-bold transition-all active:scale-95 ${
-                        copying
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/10'
-                            : 'border border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                    }`}
-                >
-                    <span className="font-sans text-[10px] font-black tracking-widest text-slate-400 uppercase">Code:</span>
-                    <span className="font-black tracking-wider">{copying ? 'COPIED' : code.code}</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                    {/* Share button */}
                     {showActions && (effectiveStatus === 'active' || effectiveStatus === 'scheduled') && (
                         <button
                             onClick={(e) => {
@@ -299,10 +282,10 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 handleShare();
                             }}
                             disabled={sharing}
-                            className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                            className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-slate-700 transition-colors hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+                            title="Share Pass"
                         >
-                            <Share2 className="h-3.5 w-3.5" />
-                            <span>Share</span>
+                            <Share2 className="h-4 w-4" />
                         </button>
                     )}
                 </div>
@@ -319,8 +302,8 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                             <ExternalLink className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-slate-900">View Full Details</p>
-                            <p className="text-xs font-bold text-slate-400">Scan status, logs and settings</p>
+                            <p className="text-sm font-semibold text-slate-900">View Full Details</p>
+                            <p className="text-xs font-medium text-slate-400">Scan status, logs and settings</p>
                         </div>
                     </Link>
 
@@ -332,8 +315,8 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                             <Share2 className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-slate-900">Share Pass</p>
-                            <p className="text-xs font-bold text-slate-400">Send code and ticket instructions</p>
+                            <p className="text-sm font-semibold text-slate-900">Share Pass</p>
+                            <p className="text-xs font-medium text-slate-400">Send code and ticket instructions</p>
                         </div>
                     </button>
 
@@ -350,8 +333,8 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                 <Download className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-black text-slate-900">Download QR Code</p>
-                                <p className="text-xs font-bold text-slate-400">Save QR image to your phone</p>
+                                <p className="text-sm font-semibold text-slate-900">Download QR Code</p>
+                                <p className="text-xs font-medium text-slate-400">Save QR image to your phone</p>
                             </div>
                         </button>
                     )}
@@ -367,8 +350,8 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                                     <Trash2 className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-rose-600">Cancel Pass</p>
-                                    <p className="text-rose-450 text-xs font-bold">Revoke access immediately</p>
+                                    <p className="text-sm font-semibold text-rose-600">Cancel Pass</p>
+                                    <p className="text-rose-450 text-xs font-medium">Revoke access immediately</p>
                                 </div>
                             </button>
                         </>
