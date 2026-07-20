@@ -215,12 +215,12 @@ class TransactionOverviewService
             $query->where('approved_by', $filters['approved_by']);
         }
 
-        if (! empty($filters['amount_min'])) {
-            $query->where('amount', '>=', (int) $filters['amount_min']);
+        if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
+            $query->where('amount', '>=', (int) $filters['amount_min'] * 100);
         }
 
-        if (! empty($filters['amount_max'])) {
-            $query->where('amount', '<=', (int) $filters['amount_max']);
+        if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
+            $query->where('amount', '<=', (int) $filters['amount_max'] * 100);
         }
 
         if (! empty($filters['date_from'])) {
