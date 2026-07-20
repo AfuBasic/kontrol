@@ -74,8 +74,7 @@ export default function Home({
         return diffMs > 0 && diffMs < 2 * 60 * 60 * 1000;
     });
 
-    // Check if there are attention items
-    const attentionItems: { type: string; title: string; desc: string; href?: string; color: string }[] = [];
+    const attentionItems: any[] = [];
 
     if (hasPaymentCollection && unpaidDuesCount > 0) {
         attentionItems.push({
