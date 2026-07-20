@@ -37,7 +37,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.view');
 
-        $filters = $request->only(['search', 'status']);
+        $filters = $request->only(['search', 'status', 'role', 'property', 'sort']);
         $estate = $this->estateContext->getEstate();
 
         $residents = Inertia::defer(fn () => $this->residentService
@@ -53,24 +53,74 @@ class ResidentController extends Controller
                 'property_owner_name' => $user->profile?->propertyOwner?->name,
                 'property_id' => $user->profile?->property_id,
                 'property_name' => $user->profile?->property?->name,
-                'status' => $user->estates->first()?->pivot?->status ?? 'pending',
+                'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
                 'is_property_owner' => $user->roles->contains('name', 'property_owner'),
+                'role_label' => $user->roles->contains('name', 'property_owner')
+                    ? 'Property Owner'
+                    : ($user->profile?->property_owner_id ? 'Tenant' : 'Resident'),
+                'household_members_count' => $user->household_members_count ?? 0,
                 'suspended_at' => $user->suspended_at,
                 'email_verified_at' => $user->email_verified_at,
+                'last_active' => $user->updated_at?->diffForHumans() ?? 'Never',
                 'created_at' => $user->created_at->format('M d, Y'),
             ]));
 
-        $pendingCount = Inertia::defer(fn () => User::query()
+        // Section 1: Overview stats
+        $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'property_owner', 'household_member']))->count();
+        $activeResidents = User::query()->forEstate($estate->id)->active()->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
+        $pendingInvitations = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
+        $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->count();
+
+        $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
+        $occupiedProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereHas('residents')->count();
+        $occupancyRate = $totalProperties > 0 ? (int) round(($occupiedProperties / $totalProperties) * 100) : 0;
+
+        // Section 2: Insights
+        $insights = [];
+        if ($pendingInvitations > 0) {
+            $insights[] = "{$pendingInvitations} residents have not accepted their invitations.";
+        }
+        $vacantUnits = $totalProperties - $occupiedProperties;
+        if ($vacantUnits > 0) {
+            $insights[] = "{$vacantUnits} units are currently vacant.";
+        }
+        $joinedThisMonth = User::query()->forEstate($estate->id)->where('users.created_at', '>=', now()->startOfMonth())->count();
+        if ($joinedThisMonth > 0) {
+            $insights[] = "{$joinedThisMonth} residents joined this month.";
+        }
+        $profileIncomplete = User::query()
             ->forEstate($estate->id)
-            ->withRole('resident', $estate->id)
-            ->whereNotNull('email_verified_at')
-            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
-            ->count());
+            ->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
+            ->count();
+        if ($profileIncomplete > 0) {
+            $insights[] = "{$profileIncomplete} residents require profile completion.";
+        }
+
+        // Section 3: Invitation management link
+        $link = $estate->inviteLink;
+        $inviteLinkData = $link ? [
+            'token' => $link->token,
+            'url' => url("/join/{$link->token}"),
+            'is_active' => $link->is_active,
+            'usage_count' => $link->usage_count,
+            'max_usages' => $link->max_usages,
+            'requires_approval' => $link->requires_approval,
+            'expires_at' => $link->expires_at?->toDateTimeString(),
+            'is_expired' => $link->expires_at?->isPast() ?? false,
+        ] : null;
 
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
             'filters' => $filters,
-            'pendingCount' => $pendingCount,
+            'stats' => [
+                'total' => $totalResidents,
+                'active' => $activeResidents,
+                'pending' => $pendingInvitations,
+                'inactive' => $inactiveResidents,
+                'occupancy_rate' => $occupancyRate,
+            ],
+            'insights' => $insights,
+            'inviteLink' => $inviteLinkData,
         ]);
     }
 
@@ -322,5 +372,62 @@ class ResidentController extends Controller
         return redirect()
             ->route('admin.residents.index')
             ->with('success', "Successfully removed {$total} resident(s).");
+    }
+
+    public function bulkSuspend(Request $request, SuspendResidentAction $action): RedirectResponse
+    {
+        $this->authorize('residents.suspend');
+        $estate = $this->estateContext->getEstate();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+        ]);
+
+        $residents = User::query()->whereIn('id', $validated['ids'])->get();
+        foreach ($residents as $resident) {
+            if (! $resident->suspended_at) {
+                $action->execute($resident, $estate);
+            }
+        }
+
+        return back()->with('success', 'Selected resident(s) suspended successfully.');
+    }
+
+    public function bulkActivate(Request $request, SuspendResidentAction $action): RedirectResponse
+    {
+        $this->authorize('residents.suspend');
+        $estate = $this->estateContext->getEstate();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+        ]);
+
+        $residents = User::query()->whereIn('id', $validated['ids'])->get();
+        foreach ($residents as $resident) {
+            if ($resident->suspended_at) {
+                $action->execute($resident, $estate);
+            }
+        }
+
+        return back()->with('success', 'Selected resident(s) activated successfully.');
+    }
+
+    public function bulkResendInvitation(Request $request, ResendResidentInvitationAction $action): RedirectResponse
+    {
+        $this->authorize('residents.reset-password');
+        $estate = $this->estateContext->getEstate();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+        ]);
+
+        $residents = User::query()->whereIn('id', $validated['ids'])->get();
+        foreach ($residents as $resident) {
+            if (! $resident->password) {
+                $action->execute($resident, $estate);
+            }
+        }
+
+        return back()->with('success', 'Invitations resent successfully.');
     }
 }
