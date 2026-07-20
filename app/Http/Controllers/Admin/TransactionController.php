@@ -105,7 +105,7 @@ class TransactionController extends Controller
                 'user_agent' => $audit->transaction?->metadata['user_agent'] ?? $request->userAgent() ?? 'Chrome / Mac',
             ]);
 
-        $maxTransactionAmount = \App\Models\EstateTransaction::where('estate_id', $estate->id)->max('amount') ?? 100000;
+        $maxTransactionAmount = EstateTransaction::where('estate_id', $estate->id)->max('amount') ?? 100000;
         $maxAmountNaira = (int) ceil($maxTransactionAmount / 100);
 
         return Inertia::render('Admin/Transactions/Index', [
@@ -237,6 +237,22 @@ class TransactionController extends Controller
             'excel' => $this->exportService->toExcel($estate, $filters),
             default => $this->exportService->toCsv($estate, $filters),
         };
+    }
+
+    public function downloadReceipt(EstateTransaction $transaction): \Illuminate\Http\Response
+    {
+        $this->authorize('transactions.download_receipts');
+        $this->authorizeTransaction($transaction);
+
+        $detail = $this->overviewService->formatDetail($transaction);
+        $estate = $this->estateContext->getEstate();
+
+        $pdf = Pdf::loadView('pdf.receipt', [
+            'transaction' => $detail,
+            'estate' => $estate,
+        ]);
+
+        return $pdf->download("receipt-{$transaction->reference_number}.pdf");
     }
 
     private function authorizeTransaction(EstateTransaction $transaction): void
