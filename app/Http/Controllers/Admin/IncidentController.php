@@ -212,11 +212,25 @@ class IncidentController extends Controller
             ->values()
             ->toArray();
 
+        $activities = \Spatie\Activitylog\Models\Activity::query()
+            ->forSubject($incident)
+            ->with('causer:id,name')
+            ->latest()
+            ->get()
+            ->map(fn ($act) => [
+                'id' => $act->id,
+                'description' => $act->description,
+                'created_at' => $act->created_at->diffForHumans(),
+                'causer' => $act->causer ? ['name' => $act->causer->name] : null,
+            ])
+            ->toArray();
+
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
             'comments' => $comments,
             'admins' => $admins,
             'statuses' => $statuses,
+            'activities' => $activities,
         ]);
     }
 
