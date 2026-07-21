@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\IncidentCategory;
+use App\Enums\IncidentPriority;
 use App\Enums\IncidentStatus;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
@@ -30,6 +31,7 @@ class Incident extends Model
         'title',
         'body',
         'category',
+        'priority',
         'status',
         'assigned_to',
         'upvotes_count',
@@ -63,6 +65,7 @@ class Incident extends Model
         return [
             'status' => IncidentStatus::class,
             'category' => IncidentCategory::class,
+            'priority' => IncidentPriority::class,
             'acknowledged_at' => 'datetime',
             'resolving_at' => 'datetime',
             'solved_at' => 'datetime',
