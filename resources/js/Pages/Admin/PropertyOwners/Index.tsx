@@ -83,7 +83,7 @@ interface Props {
 }
 
 export default function Index({ propertyOwners, filters: initialFilters, stats: initialStats, insights: initialInsights, inviteLink }: Props) {
-    const filters = initialFilters || {};
+    const filters = !Array.isArray(initialFilters) ? (initialFilters || {}) : {};
     const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0, properties_owned: 0 };
     const insights = initialInsights || [];
 
