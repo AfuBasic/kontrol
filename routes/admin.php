@@ -217,6 +217,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     // Incidents management
     Route::prefix('incidents')->name('incidents.')->group(function () {
         Route::get('/', [IncidentController::class, 'index'])->name('index');
+        Route::get('/create', [IncidentController::class, 'create'])->name('create');
+        Route::post('/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
+        Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
+        Route::post('/', [IncidentController::class, 'store'])->name('store');
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
         Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->name('status.update');
