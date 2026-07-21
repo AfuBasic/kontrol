@@ -76,8 +76,16 @@ function RowActions({ transaction, onSelect, permissions }: { transaction: Trans
                         <button type="button" onClick={(e) => { e.stopPropagation(); onSelect(transaction); setOpen(false); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
                             <Eye className="h-3.5 w-3.5" /> View details
                         </button>
-                        {permissions.download_receipts && (
-                            <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                        {permissions.download_receipts && transaction.status !== 'pending' && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = `/admin/transactions/${transaction.ulid}/download`;
+                                    setOpen(false);
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            >
                                 <Download className="h-3.5 w-3.5" /> Receipt
                             </button>
                         )}

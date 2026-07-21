@@ -24,8 +24,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use PdfStudio\Laravel\Facades\Pdf;
 use Inertia\Response;
+use PdfStudio\Laravel\Facades\Pdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
@@ -244,6 +244,12 @@ class TransactionController extends Controller
     {
         $this->authorize('transactions.download_receipts');
         $this->authorizeTransaction($transaction);
+
+        abort_if(
+            $transaction->status === TransactionStatus::Pending,
+            403,
+            'Receipts cannot be downloaded for pending transactions.'
+        );
 
         $detail = $this->overviewService->formatDetail($transaction);
         $estate = $this->estateContext->getEstate();

@@ -250,7 +250,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         {/* Drawer Actions */}
                         <div className="border-t border-slate-200/50 bg-white px-6 py-4.5">
                             <div className="flex gap-2">
-                                {permissions.download_receipts && (
+                                {permissions.download_receipts && transaction?.status_label?.toLowerCase() !== 'pending' && (
                                     <button
                                         type="button"
                                         onClick={downloadPdf}

@@ -345,20 +345,14 @@ export default function Dashboard({ detailedStats, recentActivity, recentPosts }
                             </Link>
                         </div>
                         <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_5px_rgba(0,0,0,0.01)] space-y-4">
-                            <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-50 pb-3 text-xs">
+                            <div className="grid grid-cols-2 gap-2 text-center border-b border-slate-50 pb-3 text-xs">
                                 <div>
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Checked In</span>
                                     <span className="font-bold text-slate-800 block mt-0.5">{securityOperations.visitorsCheckedIn}</span>
                                 </div>
-                                <div className="border-x border-slate-100">
+                                <div className="border-l border-slate-100">
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Checked Out</span>
                                     <span className="font-bold text-slate-800 block mt-0.5">{securityOperations.visitorsCheckedOut}</span>
-                                </div>
-                                <div>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">SOS Alerts</span>
-                                    <span className={`font-bold block mt-0.5 ${securityOperations.emergencyAlerts > 0 ? 'text-rose-600 animate-pulse' : 'text-slate-800'}`}>
-                                        {securityOperations.emergencyAlerts}
-                                    </span>
                                 </div>
                             </div>
 
