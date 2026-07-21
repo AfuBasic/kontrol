@@ -27,6 +27,9 @@ type Log = {
     verified_at: string;
     verified_at_human: string;
     verifier_name: string;
+    checked_out_at: string | null;
+    checked_out_at_human: string | null;
+    checkout_verifier_name: string | null;
     vehicle: {
         make: string;
         model: string;
@@ -57,6 +60,7 @@ type Props = {
         host_id?: string | number;
     };
     hosts: Host[];
+    checkoutEnabled?: boolean;
 };
 
 const formatVisitorType = (type: string | null) => {
@@ -67,7 +71,7 @@ const formatVisitorType = (type: string | null) => {
         .join(' ');
 };
 
-export default function VisitorIndex({ logs, filters, hosts }: Props) {
+export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [date, setDate] = useState(filters.date || '');
     const [plate, setPlate] = useState(filters.vehicle_plate || '');
@@ -538,6 +542,18 @@ export default function VisitorIndex({ logs, filters, hosts }: Props) {
                                             <p className="text-[10px] font-black text-slate-400 uppercase">Security</p>
                                             <p className="text-xs font-bold text-slate-700">{selectedLog.verifier_name}</p>
                                         </div>
+                                        {checkoutEnabled && (
+                                            <>
+                                                <div className="flex justify-between border-t border-slate-100 pt-2.5">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase">Checkout Time</p>
+                                                    <p className="text-xs font-bold text-slate-700">{selectedLog.checked_out_at ?? 'Not checked out'}</p>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase">Checkout Security</p>
+                                                    <p className="text-xs font-bold text-slate-700">{selectedLog.checkout_verifier_name ?? 'N/A'}</p>
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="flex justify-between border-t border-slate-200 pt-3">
                                             <p className="text-[10px] font-black text-slate-400 uppercase">Purpose</p>
                                             <p className="text-xs font-black text-indigo-600">{selectedLog.purpose}</p>
@@ -662,6 +678,21 @@ export default function VisitorIndex({ logs, filters, hosts }: Props) {
                                             <p className="text-sm font-bold text-slate-900">{selectedLog.verifier_name}</p>
                                         </div>
                                     </div>
+                                    {checkoutEnabled && (
+                                        <>
+                                            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Time</p>
+                                                <p className="text-sm font-bold text-slate-900">{selectedLog.checked_out_at ?? 'Not checked out'}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Security</p>
+                                                <div className="flex items-center gap-2">
+                                                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                                                    <p className="text-sm font-bold text-slate-900">{selectedLog.checkout_verifier_name ?? 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-4">
                                         <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Purpose</p>
                                         <p className="text-sm font-black text-indigo-600">{selectedLog.purpose}</p>

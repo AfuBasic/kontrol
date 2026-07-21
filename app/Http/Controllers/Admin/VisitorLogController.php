@@ -27,7 +27,7 @@ class VisitorLogController extends Controller
 
         $logs = AccessLog::query()
             ->where('estate_id', $estate->id)
-            ->with(['accessCode.user.profile', 'verifier:id,name'])
+            ->with(['accessCode.user.profile', 'verifier:id,name', 'checkoutVerifier:id,name'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('accessCode', function ($sq) use ($search) {
@@ -72,6 +72,9 @@ class VisitorLogController extends Controller
                 'verified_at' => $log->verified_at->format('M j, Y g:i A'),
                 'verified_at_human' => $log->verified_at->diffForHumans(),
                 'verifier_name' => $log->verifier?->name ?? 'System',
+                'checked_out_at' => $log->checked_out_at?->format('M j, Y g:i A'),
+                'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
+                'checkout_verifier_name' => $log->checkoutVerifier?->name ?? 'System',
                 'vehicle' => $log->vehicle_make ? [
                     'make' => $log->vehicle_make,
                     'model' => $log->vehicle_model,
@@ -98,10 +101,13 @@ class VisitorLogController extends Controller
             ->orderBy('users.name')
             ->get();
 
+        $checkoutEnabled = (bool) ($estate->settings?->visitor_checkout_enabled ?? false);
+
         return Inertia::render('Admin/Visitors/Index', [
             'logs' => Inertia::scroll(fn () => $logs),
             'filters' => $filters,
             'hosts' => $hosts,
+            'checkoutEnabled' => $checkoutEnabled,
         ]);
     }
 }
