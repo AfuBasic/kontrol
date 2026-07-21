@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,13 +105,15 @@
         }
     </style>
 </head>
+
 <body>
     <div class="receipt-container">
         <div class="header">
             <div class="estate-name">{{ $estate->name }}</div>
             <div class="title">Transaction Receipt</div>
-            <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Ref: {{ $transaction['reference_number'] }}</div>
-            
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Ref: {{ $transaction['reference_number'] }}
+            </div>
+
             <div class="amount">
                 ₦{{ number_format($transaction['amount'] / 100, 2) }}
             </div>
@@ -134,7 +137,7 @@
             </tr>
             <tr>
                 <td class="label">Payment Type</td>
-                <td class="value">{{ $transaction['type_label'] }}</td>
+                <td class="value">{{ $transaction['type_label'] ?? 'Payment' }}</td>
             </tr>
             <tr>
                 <td class="label">Payment Method</td>
@@ -155,7 +158,7 @@
             <tr>
                 <td class="label">Date Cleared</td>
                 <td class="value">
-                    {{ $transaction['paid_at'] ? \Carbon\Carbon::parse($transaction['paid_at'])->format('M j, Y g:i A') : 'N/A' }}
+                    {{ !empty($transaction['paid_at']) ? \Carbon\Carbon::parse($transaction['paid_at'])->format('M j, Y g:i A') : 'N/A' }}
                 </td>
             </tr>
         </table>
@@ -165,4 +168,5 @@
         </div>
     </div>
 </body>
+
 </html>

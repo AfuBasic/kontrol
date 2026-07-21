@@ -11,7 +11,7 @@ return [
     | "wkhtmltopdf", "dompdf".
     |
     */
-    'default_driver' => env('PDF_STUDIO_DRIVER', 'chromium'),
+    'default_driver' => env('PDF_STUDIO_DRIVER', 'dompdf'),
 
     /*
     |--------------------------------------------------------------------------
@@ -27,7 +27,14 @@ return [
             'node_binary' => env('PDF_STUDIO_NODE_BINARY'),
             'npm_binary' => env('PDF_STUDIO_NPM_BINARY'),
             'timeout' => 60,
-            'options' => [],
+            'options' => [
+                'args' => [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                ],
+            ],
         ],
         'wkhtmltopdf' => [
             'binary' => '/usr/local/bin/wkhtmltopdf',
