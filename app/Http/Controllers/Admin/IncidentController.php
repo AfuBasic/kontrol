@@ -14,6 +14,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 use App\Actions\Incidents\CreateIncidentAction;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class IncidentController extends Controller
 {
@@ -263,6 +265,77 @@ class IncidentController extends Controller
 
         return redirect()->route('admin.incidents.show', $incident->hashid)
             ->with('success', 'Incident reported successfully.');
+    }
+
+    /**
+     * Check if a file with the given hash has already been uploaded.
+     */
+    public function checkDeduplication(Request $request): JsonResponse
+    {
+        $request->validate([
+            'hash' => ['required', 'string'],
+        ]);
+
+        $estateId = $this->estateContext->getEstateId();
+
+        $existing = Incident::where('estate_id', $estateId)
+            ->where('attachment_hash', $request->input('hash'))
+            ->whereNotNull('attachment_url')
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'exists' => true,
+                'url' => $existing->attachment_url,
+                'type' => $existing->attachment_type,
+            ]);
+        }
+
+        return response()->json([
+            'exists' => false,
+        ]);
+    }
+
+    /**
+     * Generate signed upload parameters for Cloudinary direct upload.
+     */
+    public function signedUploadParams(Request $request): JsonResponse
+    {
+        $request->validate([
+            'resource_type' => ['required', 'string', 'in:image,video'],
+        ]);
+
+        $estateId = $this->estateContext->getEstateId();
+        $folder = 'incidents/estate-'.$estateId;
+        $timestamp = time();
+
+        $params = [
+            'folder' => $folder,
+            'timestamp' => $timestamp,
+        ];
+
+        $cloudinaryUrl = env('CLOUDINARY_URL');
+        $parsed = parse_url($cloudinaryUrl);
+        $apiKey = $parsed['user'] ?? '';
+        $apiSecret = $parsed['pass'] ?? '';
+        $cloudName = $parsed['host'] ?? '';
+
+        // Generate signature: sort, concat, append secret, SHA-1
+        ksort($params);
+        $signString = '';
+        foreach ($params as $key => $value) {
+            $signString .= "$key=$value&";
+        }
+        $signString = rtrim($signString, '&').$apiSecret;
+        $signature = sha1($signString);
+
+        return response()->json([
+            'signature' => $signature,
+            'timestamp' => $timestamp,
+            'folder' => $folder,
+            'api_key' => $apiKey,
+            'cloud_name' => $cloudName,
+        ]);
     }
 
     /**
