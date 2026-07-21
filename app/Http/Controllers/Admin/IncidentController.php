@@ -13,11 +13,14 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Actions\Incidents\CreateIncidentAction;
+
 class IncidentController extends Controller
 {
     public function __construct(
         protected IncidentService $incidentService,
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected CreateIncidentAction $createIncidentAction
     ) {}
 
     /**
@@ -77,7 +80,7 @@ class IncidentController extends Controller
 
         $insights = [];
         if ($exceededSlaCount > 0) {
-            $insights[] = "{$exceededSlaCount} incident(s) have exceeded the SLA resolution target.";
+            $insights[] = "{$exceededSlaCount} incident(s) have exceeded the SLA target.";
         }
         if ($unassignedCount > 0) {
             $insights[] = "{$unassignedCount} reported issue(s) are currently unassigned.";
@@ -89,7 +92,30 @@ class IncidentController extends Controller
             $insights[] = "Average resolution time is currently at {$avgTime} hours.";
         }
 
-        // 3. Fetch active admins for assignments
+        // 3. Incident Source breakdown analytics
+        $totalIncidents = Incident::query()->forEstate($estateId)->count();
+        $sourceBreakdown = [];
+        if ($totalIncidents > 0) {
+            $sources = Incident::query()->forEstate($estateId)
+                ->select('source', DB::raw('count(*) as count'))
+                ->groupBy('source')
+                ->get();
+                
+            foreach ($sources as $s) {
+                $sourceLabel = $s->source instanceof \App\Enums\IncidentSource 
+                    ? $s->source->label() 
+                    : (is_string($s->source) ? ucwords(str_replace('_', ' ', $s->source)) : 'Unknown');
+                
+                $sourceBreakdown[] = [
+                    'source' => $s->source instanceof \App\Enums\IncidentSource ? $s->source->value : $s->source,
+                    'label' => $sourceLabel,
+                    'count' => $s->count,
+                    'percentage' => (int) round(($s->count / $totalIncidents) * 100),
+                ];
+            }
+        }
+
+        // 4. Fetch active admins for assignments
         $admins = User::forEstate($estateId)
             ->active()
             ->get()
@@ -104,7 +130,7 @@ class IncidentController extends Controller
             ->values()
             ->toArray();
 
-        // 4. Fetch recent activity timeline
+        // 5. Fetch recent activity timeline
         $recentActivity = \Spatie\Activitylog\Models\Activity::query()
             ->where(function ($query) use ($estateId) {
                 $query->where('properties->estate_id', $estateId)
@@ -140,6 +166,7 @@ class IncidentController extends Controller
                 'resolved_this_month' => $resolvedThisMonth,
                 'avg_resolution_time' => $avgTime,
                 'sla_compliance' => $slaCompliance,
+                'source_breakdown' => $sourceBreakdown,
             ],
             'insights' => $insights,
             'admins' => $admins,
@@ -189,6 +216,53 @@ class IncidentController extends Controller
             'admins' => $admins,
             'statuses' => $statuses,
         ]);
+    }
+
+    /**
+     * Show the form for creating a new incident.
+     */
+    public function create(): Response
+    {
+        $estate = $this->estateContext->getEstate();
+        $this->authorize('create', [Incident::class, $estate]);
+
+        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
+            'value' => $cat->value,
+            'label' => $cat->label(),
+        ])->toArray();
+
+        $admins = User::forEstate($estate->id)
+            ->active()
+            ->get()
+            ->filter(function ($u) use ($estate) {
+                setPermissionsTeamId($estate->id);
+                return $u->hasRole('admin');
+            })
+            ->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])
+            ->values()
+            ->toArray();
+
+        return Inertia::render('Admin/Incidents/Create', [
+            'categories' => $categories,
+            'admins' => $admins,
+        ]);
+    }
+
+    /**
+     * Store a newly created incident.
+     */
+    public function store(\App\Http\Requests\Incidents\StoreIncidentRequest $request): RedirectResponse
+    {
+        $estate = $this->estateContext->getEstate();
+        $this->authorize('create', [Incident::class, $estate]);
+
+        $incident = $this->createIncidentAction->execute($request->validated(), $estate);
+
+        return redirect()->route('admin.incidents.show', $incident->hashid)
+            ->with('success', 'Incident reported successfully.');
     }
 
     /**
