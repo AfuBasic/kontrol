@@ -232,7 +232,7 @@ export default function IncidentShow({ incident, comments, admins, statuses }: P
     const slaInfo = getSlaStatus();
 
     return (
-        <AdminLayout>
+        <>
             <Head title={`Incident Workspace: ${incident.title}`} />
 
             {/* Back bar */}
@@ -530,6 +530,6 @@ export default function IncidentShow({ incident, comments, admins, statuses }: P
                     </div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }
