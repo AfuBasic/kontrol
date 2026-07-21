@@ -1004,29 +1004,7 @@ export default function IncidentsIndex({
                     </div>
                 )}
 
-                {/* FOOTER SPLIT: RECENT ACTIVITY TIMELINE */}
-                {recentActivity.length > 0 && (
-                    <div className="border-t border-slate-100 pt-6">
-                        <div className="mb-4 flex items-center gap-2">
-                            <Activity className="h-4 w-4 text-slate-600" />
-                            <h3 className="text-xs font-black tracking-wider text-slate-900 uppercase">Recent Operations Feed</h3>
-                        </div>
 
-                        <div className="relative ml-2.5 space-y-4.5 border-l border-slate-100 pl-4.5">
-                            {recentActivity.slice(0, 5).map((log) => (
-                                <div key={log.id} className="relative flex flex-col gap-0.5">
-                                    <span className="absolute top-1 -left-[23px] h-2 w-2 rounded-full border border-white bg-slate-300 ring-2 ring-white" />
-                                    <span className="text-xs font-bold text-slate-800">{log.description}</span>
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                                        <span>By {log.causer_name}</span>
-                                        <span>•</span>
-                                        <span>{log.created_at}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </>
     );
