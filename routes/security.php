@@ -76,5 +76,8 @@ Route::middleware('role:security')->group(function (): void {
         Route::post('/', [IncidentController::class, 'store'])->name('store');
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
+
+        Route::post('/{incident}/comments', [App\Http\Controllers\Security\IncidentCommentController::class, 'store'])->name('comments.store');
+        Route::delete('/comments/{comment}', [App\Http\Controllers\Security\IncidentCommentController::class, 'destroy'])->name('comments.destroy');
     });
 });
