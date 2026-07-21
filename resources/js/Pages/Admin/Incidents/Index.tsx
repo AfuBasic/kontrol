@@ -3,7 +3,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, Activity, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
 
 type AdminUser = {
     id: number;
@@ -51,6 +50,8 @@ type Incident = {
         name: string;
         email: string;
     };
+    reporter_role: string;
+    source: string;
     assignee: {
         id: number;
         name: string;
@@ -76,6 +77,7 @@ type Props = {
         priority?: string;
         assignee_id?: string;
         sla_status?: string;
+        source?: string;
     };
     categories: Array<{ value: string; label: string }>;
     statuses: Array<{ value: string; label: string }>;
@@ -86,6 +88,12 @@ type Props = {
         resolved_this_month: number;
         avg_resolution_time: number;
         sla_compliance: number;
+        source_breakdown?: Array<{
+            source: string;
+            label: string;
+            count: number;
+            percentage: number;
+        }>;
     };
     insights: string[];
     admins: AdminUser[];
@@ -106,7 +114,7 @@ export default function IncidentsIndex({
     admins,
     recentActivity,
 }: Props) {
-    const filters = (initialFilters && !Array.isArray(initialFilters)) ? initialFilters : {};
+    const filters = initialFilters && !Array.isArray(initialFilters) ? initialFilters : {};
     const viewMode = filters.view || 'board';
 
     const [search, setSearch] = useState(filters.search || '');
@@ -115,6 +123,7 @@ export default function IncidentsIndex({
     const [priority, setPriority] = useState(filters.priority || '');
     const [assigneeId, setAssigneeId] = useState(filters.assignee_id || '');
     const [slaStatus, setSlaStatus] = useState(filters.sla_status || '');
+    const [source, setSource] = useState(filters.source || '');
     const [sort, setSort] = useState(filters.sort || 'newest');
 
     // Assignee dropdown state per incident card/row
@@ -134,6 +143,7 @@ export default function IncidentsIndex({
             priority: priority || undefined,
             assignee_id: assigneeId || undefined,
             sla_status: slaStatus || undefined,
+            source: source || undefined,
             sort: sort !== 'newest' ? sort : undefined,
             ...newParams,
         };
@@ -173,6 +183,7 @@ export default function IncidentsIndex({
         setPriority('');
         setAssigneeId('');
         setSlaStatus('');
+        setSource('');
         setSort('newest');
         router.get('/admin/incidents', { view: viewMode }, { preserveState: true, preserveScroll: true });
     };
@@ -358,7 +369,7 @@ export default function IncidentsIndex({
                     </div>
 
                     <Link
-                        href="/resident/incidents/create"
+                        href="/admin/incidents/create"
                         className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-black tracking-wide text-white uppercase shadow-sm transition hover:bg-slate-800 active:scale-95"
                     >
                         <Plus className="h-4 w-4" strokeWidth={3} />
@@ -413,6 +424,39 @@ export default function IncidentsIndex({
                         </div>
                     </div>
                 </div>
+
+                {/* SECTION 1.5 — INCIDENT SOURCE BREAKDOWN */}
+                {stats.source_breakdown && stats.source_breakdown.length > 0 && (
+                    <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
+                        <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">Operational Incident Origin (Sources)</h3>
+                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                            {stats.source_breakdown.map((src, idx) => {
+                                const colors = ['bg-indigo-600', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-rose-500'];
+                                return (
+                                    <div
+                                        key={src.source}
+                                        style={{ width: `${src.percentage}%` }}
+                                        className={`${colors[idx % colors.length]} h-full`}
+                                        title={`${src.label}: ${src.count} (${src.percentage}%)`}
+                                    />
+                                );
+                            })}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-4 text-[10px] font-bold">
+                            {stats.source_breakdown.map((src, idx) => {
+                                const dotColors = ['bg-indigo-600', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-rose-500'];
+                                return (
+                                    <div key={src.source} className="flex items-center gap-1.5">
+                                        <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx % dotColors.length]}`} />
+                                        <span className="text-slate-600">{src.label}</span>
+                                        <span className="text-slate-900 font-extrabold">{src.percentage}%</span>
+                                        <span className="text-slate-400 font-normal">({src.count})</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* SECTION 2 — NEEDS ATTENTION */}
                 {needsAttentionIncidents.length > 0 ? (
@@ -605,6 +649,23 @@ export default function IncidentsIndex({
                                 <option value="breached">SLA Breached</option>
                             </select>
 
+                            {/* Source */}
+                            <select
+                                value={source}
+                                onChange={(e) => {
+                                    setSource(e.target.value);
+                                    applyFilters({ source: e.target.value || undefined });
+                                }}
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Sources</option>
+                                <option value="resident_report">Resident Reports</option>
+                                <option value="security_report">Security Reports</option>
+                                <option value="estate_management">Estate Management</option>
+                                <option value="system_generated">System Generated</option>
+                                <option value="inspection">Inspection</option>
+                            </select>
+
                             {hasActiveFilters && (
                                 <button
                                     type="button"
@@ -671,9 +732,19 @@ export default function IncidentsIndex({
                                                         </Link>
 
                                                         {/* Reporter & Location */}
-                                                        <div className="mt-2 text-[10px] font-bold text-slate-400">
-                                                            <span>By {incident.reporter.name}</span>
-                                                            {incident.location && <span> @ {incident.location}</span>}
+                                                        <div className="mt-2 flex flex-col gap-0.5 text-[10px] font-bold text-slate-400">
+                                                            <span>
+                                                                By {incident.reporter.name}{' '}
+                                                                <span className="text-[9px] font-normal text-slate-500">
+                                                                    ({incident.reporter_role})
+                                                                </span>
+                                                            </span>
+                                                            <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500">
+                                                                <span className="rounded bg-slate-100 px-1 py-0.2 text-[8px] uppercase font-black text-slate-500">
+                                                                    {incident.source.replace('_', ' ')}
+                                                                </span>
+                                                                {incident.location && <span>@ {incident.location}</span>}
+                                                            </div>
                                                         </div>
 
                                                         {/* Engagement icons & Assignee */}
@@ -772,6 +843,9 @@ export default function IncidentsIndex({
                                                 Reporter
                                             </th>
                                             <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Source
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                 Location
                                             </th>
                                             <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
@@ -826,9 +900,16 @@ export default function IncidentsIndex({
                                                         <div className="text-xs font-semibold text-slate-800">
                                                             <span>{incident.reporter.name}</span>
                                                             <span className="block text-[9px] font-bold text-slate-400">
-                                                                {incident.reporter.email}
+                                                                {incident.reporter_role}
                                                             </span>
                                                         </div>
+                                                    </td>
+
+                                                    {/* Source */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                        <span className="rounded bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
+                                                            {incident.source.replace('_', ' ')}
+                                                        </span>
                                                     </td>
 
                                                     {/* Location */}
