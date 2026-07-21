@@ -63,6 +63,7 @@ interface Props {
         occupancy_rate: number;
     };
     insights: string[];
+    incompleteOwners?: { id: number; name: string }[];
     inviteLink: {
         token: string;
         url: string;
@@ -75,7 +76,7 @@ interface Props {
     } | null;
 }
 
-export default function Index({ propertyOwners, filters: initialFilters, stats, insights, inviteLink }: Props) {
+export default function Index({ propertyOwners, filters: initialFilters, stats, insights, incompleteOwners, inviteLink }: Props) {
     const filters = !Array.isArray(initialFilters) ? (initialFilters || {}) : {};
     const { can } = usePermission();
     
@@ -332,19 +333,43 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 </div>
 
                 {/* SECTION 2 — INSIGHTS PANEL */}
-                {insights.length > 0 && (
+                {((insights && insights.length > 0) || (incompleteOwners && incompleteOwners.length > 0)) && (
                     <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
                         <div className="mb-2.5 flex items-center gap-2">
                             <AlertCircle className="h-4 w-4 text-blue-600" />
                             <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
                         </div>
                         <ul className="space-y-2">
-                            {insights.map((insight, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                            {insights.map((insight, idx) => {
+                                if (insight.includes("no properties assigned")) return null;
+                                return (
+                                    <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                        <span>{insight}</span>
+                                    </li>
+                                );
+                            })}
+                            {incompleteOwners && incompleteOwners.length > 0 && (
+                                <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
                                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                    {insight}
+                                    <span>
+                                        {incompleteOwners.length} property owner{incompleteOwners.length > 1 ? 's' : ''} have no properties assigned to them:{' '}
+                                        <span className="inline-flex flex-wrap gap-x-1.5 gap-y-0.5">
+                                            {incompleteOwners.map((r, idx) => (
+                                                <span key={r.id} className="inline-flex items-center">
+                                                    <Link 
+                                                        href={`/admin/property-owners/${r.id}/edit`}
+                                                        className="font-bold text-blue-700 underline hover:text-blue-900"
+                                                    >
+                                                        {r.name}
+                                                    </Link>
+                                                    {idx < incompleteOwners.length - 1 && <span className="text-blue-950/80 mr-1">,</span>}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    </span>
                                 </li>
-                            ))}
+                            )}
                         </ul>
                     </div>
                 )}
