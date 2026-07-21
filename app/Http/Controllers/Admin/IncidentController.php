@@ -15,6 +15,7 @@ use App\Services\IncidentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
@@ -25,7 +26,8 @@ class IncidentController extends Controller
         protected IncidentService $incidentService,
         protected EstateContextService $estateContext,
         protected CreateIncidentAction $createIncidentAction
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of incidents for administration.
@@ -38,12 +40,12 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort', 'view', 'priority', 'assignee_id', 'reporter_id', 'sla_status']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
+        $categories = collect(IncidentCategory::cases())->map(fn($cat) => [
             'value' => $cat->value,
             'label' => $cat->label(),
         ])->toArray();
 
-        $statuses = collect(IncidentStatus::cases())->map(fn ($stat) => [
+        $statuses = collect(IncidentStatus::cases())->map(fn($stat) => [
             'value' => $stat->value,
             'label' => $stat->label(),
         ])->toArray();
@@ -62,8 +64,8 @@ class IncidentController extends Controller
             ->whereNotNull('solved_at')
             ->get();
 
-        $avgTime = $resolved->count() > 0 ? (int) round($resolved->avg(fn ($i) => $i->created_at->diffInHours($i->solved_at))) : 0;
-        $withinSla = $resolved->filter(fn ($i) => $i->created_at->diffInHours($i->solved_at) <= 24)->count();
+        $avgTime = $resolved->count() > 0 ? (int) round($resolved->avg(fn($i) => $i->created_at->diffInHours($i->solved_at))) : 0;
+        $withinSla = $resolved->filter(fn($i) => $i->created_at->diffInHours($i->solved_at) <= 24)->count();
         $slaCompliance = $resolved->count() > 0 ? (int) round(($withinSla / $resolved->count()) * 100) : 100;
 
         // 2. Generate operational insights
@@ -128,7 +130,7 @@ class IncidentController extends Controller
 
                 return $u->hasRole('admin');
             })
-            ->map(fn ($u) => [
+            ->map(fn($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
             ])
@@ -151,7 +153,7 @@ class IncidentController extends Controller
             ->latest()
             ->limit(10)
             ->get()
-            ->map(fn ($act) => [
+            ->map(fn($act) => [
                 'id' => $act->id,
                 'description' => $act->description,
                 'causer_name' => $act->causer?->name ?? 'System',
@@ -199,7 +201,7 @@ class IncidentController extends Controller
 
                 return $u->hasRole('admin');
             })
-            ->map(fn ($u) => [
+            ->map(fn($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
             ])
@@ -207,8 +209,8 @@ class IncidentController extends Controller
             ->toArray();
 
         $statuses = collect(IncidentStatus::cases())
-            ->filter(fn ($s) => $s !== IncidentStatus::Closed) // admins cannot close directly
-            ->map(fn ($stat) => [
+            ->filter(fn($s) => $s !== IncidentStatus::Closed) // admins cannot close directly
+            ->map(fn($stat) => [
                 'value' => $stat->value,
                 'label' => $stat->label(),
             ])
@@ -220,7 +222,7 @@ class IncidentController extends Controller
             ->with('causer:id,name')
             ->latest()
             ->get()
-            ->map(fn ($act) => [
+            ->map(fn($act) => [
                 'id' => $act->id,
                 'description' => $act->description,
                 'created_at' => $act->created_at->diffForHumans(),
@@ -229,7 +231,7 @@ class IncidentController extends Controller
             ->toArray();
 
         $categories = collect(IncidentCategory::cases())
-            ->map(fn ($c) => [
+            ->map(fn($c) => [
                 'value' => $c->value,
                 'label' => $c->label(),
             ])
@@ -254,7 +256,7 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
+        $categories = collect(IncidentCategory::cases())->map(fn($cat) => [
             'value' => $cat->value,
             'label' => $cat->label(),
         ])->toArray();
@@ -267,7 +269,7 @@ class IncidentController extends Controller
 
                 return $u->hasRole('admin');
             })
-            ->map(fn ($u) => [
+            ->map(fn($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
             ])
@@ -333,7 +335,7 @@ class IncidentController extends Controller
         ]);
 
         $estateId = $this->estateContext->getEstateId();
-        $folder = 'incidents/estate-'.$estateId;
+        $folder = 'incidents/estate-' . $estateId;
         $timestamp = time();
 
         $params = [
@@ -353,7 +355,7 @@ class IncidentController extends Controller
         foreach ($params as $key => $value) {
             $signString .= "$key=$value&";
         }
-        $signString = rtrim($signString, '&').$apiSecret;
+        $signString = rtrim($signString, '&') . $apiSecret;
         $signature = sha1($signString);
 
         return response()->json([
