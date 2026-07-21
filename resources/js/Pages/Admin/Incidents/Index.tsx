@@ -106,7 +106,7 @@ export default function IncidentsIndex({
     admins,
     recentActivity,
 }: Props) {
-    const filters = initialFilters || {};
+    const filters = (initialFilters && !Array.isArray(initialFilters)) ? initialFilters : {};
     const viewMode = filters.view || 'board';
 
     const [search, setSearch] = useState(filters.search || '');
