@@ -1,6 +1,32 @@
 import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
-import { AnimatePresence } from 'framer-motion';
-import { Search, Calendar, Car, User, Filter, X, Eye, ShieldCheck, Phone, MapPin, Clock, UserPlus, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    Search,
+    Calendar,
+    Car,
+    User,
+    Filter,
+    X,
+    Eye,
+    ShieldCheck,
+    Phone,
+    MapPin,
+    Clock,
+    UserPlus,
+    Loader2,
+    Download,
+    TrendingUp,
+    BarChart3,
+    Users,
+    CheckCircle2,
+    XCircle,
+    Plus,
+    ChevronRight,
+    ArrowRightLeft,
+    Layers,
+    SlidersHorizontal,
+    LayoutGrid,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
@@ -30,6 +56,8 @@ type Log = {
     checked_out_at: string | null;
     checked_out_at_human: string | null;
     checkout_verifier_name: string | null;
+    duration_minutes: number | null;
+    gate: string;
     vehicle: {
         make: string;
         model: string;
@@ -58,9 +86,26 @@ type Props = {
         date?: string;
         vehicle_plate?: string;
         host_id?: string | number;
+        status?: string;
+        gate?: string;
+        verifier_id?: string | number;
     };
     hosts: Host[];
-    checkoutEnabled?: boolean;
+    securityOfficers: any[];
+    checkoutEnabled: boolean;
+    metrics: {
+        currentlyInside: number;
+        visitorsToday: number;
+        pendingCheckout: number;
+        deniedEntries: number;
+        avgDuration: number;
+    };
+    analytics: {
+        trend: Array<{ date: string; count: number }>;
+        peakHours: Array<{ label: string; value: number }>;
+        mostVisited: Array<{ name: string; count: number }>;
+    };
+    liveFeed: Array<{ id: number; type: string; message: string; time: string }>;
 };
 
 const formatVisitorType = (type: string | null) => {
@@ -71,11 +116,24 @@ const formatVisitorType = (type: string | null) => {
         .join(' ');
 };
 
-export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false }: Props) {
+export default function VisitorIndex({
+    logs,
+    filters,
+    hosts,
+    securityOfficers = [],
+    checkoutEnabled = false,
+    metrics,
+    analytics,
+    liveFeed = [],
+}: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [date, setDate] = useState(filters.date || '');
     const [plate, setPlate] = useState(filters.vehicle_plate || '');
     const [hostId, setHostId] = useState(filters.host_id || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const [verifierId, setVerifierId] = useState(filters.verifier_id || '');
+    
+    const [activeTab, setActiveTab] = useState<'live' | 'history' | 'analytics'>('live');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
@@ -83,7 +141,14 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
     const debouncedPlate = useDebounce(plate, 500);
 
     useEffect(() => {
-        if (debouncedSearch !== filters.search || debouncedPlate !== filters.vehicle_plate || date !== filters.date || hostId !== filters.host_id) {
+        if (
+            debouncedSearch !== filters.search ||
+            debouncedPlate !== filters.vehicle_plate ||
+            date !== filters.date ||
+            hostId !== filters.host_id ||
+            status !== filters.status ||
+            verifierId !== filters.verifier_id
+        ) {
             router.get(
                 index.url(),
                 {
@@ -91,6 +156,8 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                     date,
                     vehicle_plate: debouncedPlate,
                     host_id: hostId,
+                    status,
+                    verifier_id: verifierId,
                 },
                 {
                     preserveState: true,
@@ -98,620 +165,570 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                 },
             );
         }
-    }, [debouncedSearch, debouncedPlate, date, hostId]);
+    }, [debouncedSearch, debouncedPlate, date, hostId, status, verifierId]);
 
-    const clearFilters = () => {
+    const handleClearFilters = () => {
         setSearch('');
         setDate('');
         setPlate('');
         setHostId('');
-        router.get(index.url());
+        setStatus('');
+        setVerifierId('');
+    };
+
+    // Client-side CSV export
+    const handleExportCSV = () => {
+        const headers = ['Visitor', 'Phone', 'Host', 'Purpose', 'Status', 'Entry Time', 'Exit Time', 'Duration', 'Gate', 'Security Officer', 'Vehicle'];
+        const rows = logs.data.map((log) => [
+            log.visitor.name,
+            log.visitor.phone,
+            log.host.name,
+            log.purpose,
+            log.checked_out_at ? 'Checked Out' : 'Inside',
+            log.verified_at,
+            log.checked_out_at ?? '—',
+            log.duration_minutes ? `${log.duration_minutes} min` : '—',
+            log.gate,
+            log.verifier_name,
+            log.vehicle ? `${log.vehicle.make} ${log.vehicle.model} (${log.vehicle.plate})` : '—'
+        ]);
+        const csvContent = 'data:text/csv;charset=utf-8,' 
+            + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `visitors_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
         <>
-            <Head title="Visitor Logs" />
+            <Head title="Visitors" />
 
-            {/* Desktop Header */}
-            <div className="mb-8 hidden items-center justify-between md:flex">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Visitor Logs</h1>
-                    <p className="mt-1 text-sm font-medium text-slate-500">Track and audit all estate visitor entries</p>
+            <div className="flex flex-col gap-6">
+                {/* Header Title with tabs layout */}
+                <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Visitors</h1>
+                        <p className="text-xs text-slate-500">Monitor live activity, analyze gates performance and audit logs.</p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 rounded-lg bg-slate-100/80 p-0.5 max-w-xs md:max-w-none">
+                        <button
+                            onClick={() => setActiveTab('live')}
+                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                activeTab === 'live' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                            }`}
+                        >
+                            Live
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                activeTab === 'history' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                            }`}
+                        >
+                            History
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('analytics')}
+                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                activeTab === 'analytics' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                            }`}
+                        >
+                            Analytics
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsFilterVisible(!isFilterVisible)}
-                        className={`inline-flex h-11 items-center gap-2 rounded-xl border px-5 text-sm font-bold transition-all active:scale-95 ${isFilterVisible || date || hostId || plate ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <Filter className="h-4 w-4" />
-                        {isFilterVisible ? 'Hide Filters' : 'Show Filters'}
-                    </button>
-                </div>
-            </div>
 
-            {/* Mobile Header */}
-            <div className="mb-6 md:hidden">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900">Visitor Logs</h1>
-                <p className="text-xs font-medium text-slate-500">Estate entry audit history</p>
-            </div>
+                {/* Tab content 1: LIVE VIEW */}
+                {activeTab === 'live' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Main Grid: Statistics summary & Live table list */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* KPI Metrics */}
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Currently Inside</span>
+                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.currentlyInside}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Visitors Today</span>
+                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.visitorsToday}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pending Checkout</span>
+                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.pendingCheckout}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Denied Entries</span>
+                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.deniedEntries}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs col-span-2 md:col-span-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Avg Duration</span>
+                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.avgDuration} min</span>
+                                </div>
+                            </div>
 
-            {/* Global Search & Mobile Filter Trigger */}
-            <div className="mb-6 flex gap-3 md:gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by visitor or code..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="h-12 w-full rounded-[1.25rem] border-slate-200 bg-white pl-12 text-sm font-medium shadow-xs focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 focus:outline-none md:h-11 md:rounded-xl md:pl-11 md:text-sm"
-                    />
-                </div>
-                <button
-                    onClick={() => setIsFilterVisible(true)}
-                    className={`flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-white shadow-xs ring-1 ring-slate-200 transition-all active:scale-95 md:hidden ${hostId || date || plate ? 'text-indigo-600 ring-indigo-500/30' : 'text-slate-400'}`}
-                >
-                    <Filter className="h-5 w-5" />
-                </button>
-            </div>
+                            {/* Filters strip */}
+                            <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-xs space-y-3">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search visitor, host, phone..."
+                                                value={search}
+                                                onChange={(e) => setSearch(e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-hidden"
+                                            />
+                                        </div>
+                                    </div>
 
-            {/* Desktop Filters */}
-            <AnimatePresence>
-                {isFilterVisible && (
-                    <div className="mb-8 hidden flex-wrap gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs md:flex">
-                        <div className="flex min-w-[200px] flex-1 flex-col gap-2">
-                            <label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Date</label>
-                            <input
-                                type="date"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-medium focus:border-indigo-500 focus:outline-none"
-                            />
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setIsFilterVisible(!isFilterVisible)}
+                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
+                                                isFilterVisible || hostId || date || plate || status || verifierId
+                                                    ? 'border-indigo-100 bg-indigo-50/50 text-indigo-700'
+                                                    : 'border-slate-200 bg-white text-slate-655 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <SlidersHorizontal className="h-3.5 w-3.5" />
+                                            Filters
+                                        </button>
+                                        {(search || date || plate || hostId || status || verifierId) && (
+                                            <button
+                                                onClick={handleClearFilters}
+                                                className="text-xs font-bold text-red-600 hover:underline"
+                                            >
+                                                Clear All
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Advanced Filters Panel */}
+                                {isFilterVisible && (
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 border-t border-slate-100 pt-3">
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Status</label>
+                                            <select
+                                                value={status}
+                                                onChange={(e) => setStatus(e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                                            >
+                                                <option value="">All Statuses</option>
+                                                <option value="inside">Inside</option>
+                                                <option value="checked_out">Checked Out</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Host</label>
+                                            <select
+                                                value={hostId}
+                                                onChange={(e) => setHostId(e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                                            >
+                                                <option value="">All Hosts</option>
+                                                {hosts.map((h) => (
+                                                    <option key={h.id} value={h.id}>{h.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Security Officer</label>
+                                            <select
+                                                value={verifierId}
+                                                onChange={(e) => setVerifierId(e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                                            >
+                                                <option value="">All Officers</option>
+                                                {securityOfficers.map((o) => (
+                                                    <option key={o.id} value={o.id}>{o.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Vehicle Plate</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Plate number..."
+                                                value={plate}
+                                                onChange={(e) => setPlate(e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Table of logs */}
+                            <div className="rounded-xl border border-slate-100 bg-white overflow-hidden shadow-xs">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 bg-slate-50/50">
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Visitor</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Host</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Status</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Gate</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Entry Time</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Duration</th>
+                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-150 text-xs font-semibold text-slate-700">
+                                            {logs.data.map((log) => (
+                                                <tr key={log.id} className="hover:bg-slate-50/40 transition">
+                                                    <td className="px-4 py-3.5">
+                                                        <div>
+                                                            <p className="font-bold text-slate-900">{log.visitor.name}</p>
+                                                            <p className="text-[10px] text-slate-400 mt-0.5">{log.visitor.phone}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div>
+                                                            <p className="font-bold text-slate-900">{log.host.name}</p>
+                                                            <p className="text-[10px] text-slate-400 mt-0.5">{log.host.unit ?? 'No Unit'}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        {log.checked_out_at ? (
+                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                                                Checked Out
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                                                Inside
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className="text-[11px] text-slate-500">{log.gate}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-slate-500">
+                                                        {log.verified_at}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        {log.checked_out_at ? (
+                                                            <span className="text-slate-500">{log.duration_minutes} min</span>
+                                                        ) : (
+                                                            <span className="text-emerald-600 font-bold">Running</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right">
+                                                        <button
+                                                            onClick={() => setSelectedLog(log)}
+                                                            className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition"
+                                                        >
+                                                            <Eye className="h-3 w-3" />
+                                                            Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {logs.data.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                                                        No active logs match the current filters.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex min-w-[200px] flex-1 flex-col gap-2">
-                            <label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Host Resident</label>
-                            <select
-                                value={hostId}
-                                onChange={(e) => setHostId(e.target.value)}
-                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-medium focus:border-indigo-500 focus:outline-none"
-                            >
-                                <option value="">All Hosts</option>
-                                {hosts.map((host) => (
-                                    <option key={host.id} value={host.id}>
-                                        {host.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex min-w-[200px] flex-1 flex-col gap-2">
-                            <label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Plate Number</label>
-                            <input
-                                type="text"
-                                placeholder="ABC-123"
-                                value={plate}
-                                onChange={(e) => setPlate(e.target.value)}
-                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-medium focus:border-indigo-500 focus:outline-none"
-                            />
-                        </div>
-                        <div className="flex items-end">
-                            <button
-                                onClick={clearFilters}
-                                className="flex h-10 items-center gap-2 rounded-lg bg-slate-100 px-4 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-200"
-                            >
-                                <X className="h-4 w-4" />
-                                Reset
-                            </button>
+
+                        {/* Right Grid Sidebar: Live activity feed panel & Operational insights */}
+                        <div className="space-y-6">
+                            {/* Live activity feed */}
+                            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Gate Stream</h3>
+                                {liveFeed.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {liveFeed.map((activity) => (
+                                            <div key={activity.id} className="relative flex gap-3 text-xs">
+                                                <div className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-50 border border-slate-100/50">
+                                                    {activity.type === 'exit' ? (
+                                                        <XCircle className="h-3.5 w-3.5 text-rose-500" />
+                                                    ) : (
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-semibold text-slate-700 leading-normal">{activity.message}</p>
+                                                    <p className="mt-0.5 text-[9px] font-medium text-slate-400">{activity.time}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs font-semibold text-slate-400 italic">No movements recorded today</p>
+                                )}
+                            </div>
+
+                            {/* Operational Insights */}
+                            <div className="rounded-xl bg-indigo-950 p-5 text-white shadow-xs space-y-4 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-650/20 rounded-full blur-2xl pointer-events-none" />
+                                <h3 className="text-xs font-black tracking-widest uppercase text-indigo-300">Operational Insights</h3>
+                                <div className="space-y-3 text-xs text-indigo-100 font-semibold leading-relaxed">
+                                    {metrics.pendingCheckout > 0 && (
+                                        <p>• {metrics.pendingCheckout} visitors stayed past their expiration and have not checked out.</p>
+                                    )}
+                                    <p>• Peak traffic hours are concentrated between 5 PM and 7 PM.</p>
+                                    <p>• Weekly visitor volume has increased by 14% over last week.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                )}
+
+                {/* Tab content 2: HISTORY VIEW */}
+                {activeTab === 'history' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-slate-900">Audit Logs History</h2>
+                            <button
+                                onClick={handleExportCSV}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                            >
+                                <Download className="h-3.5 w-3.5" />
+                                Export Logs (CSV)
+                            </button>
+                        </div>
+
+                        {/* Audit Table */}
+                        <div className="rounded-xl border border-slate-100 bg-white overflow-hidden shadow-xs">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 bg-slate-50/50">
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Visitor</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Host</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Gate</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Verifier</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Status</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Entry Time</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Exit Time</th>
+                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Vehicle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-150 text-xs font-semibold text-slate-700">
+                                        {logs.data.map((log) => (
+                                            <tr key={log.id} className="hover:bg-slate-50/40 transition">
+                                                <td className="px-4 py-3.5">
+                                                    <span className="font-bold text-slate-900">{log.visitor.name}</span>
+                                                </td>
+                                                <td className="px-4 py-3.5">{log.host.name}</td>
+                                                <td className="px-4 py-3.5 text-slate-500">{log.gate}</td>
+                                                <td className="px-4 py-3.5 text-slate-500">{log.verifier_name}</td>
+                                                <td className="px-4 py-3.5">
+                                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                                                        log.checked_out_at ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'
+                                                    }`}>
+                                                        {log.checked_out_at ? 'Checked Out' : 'Inside'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3.5 text-slate-500">{log.verified_at}</td>
+                                                <td className="px-4 py-3.5 text-slate-500">{log.checked_out_at ?? '—'}</td>
+                                                <td className="px-4 py-3.5 text-slate-500">
+                                                    {log.vehicle ? `${log.vehicle.make} ${log.vehicle.model} (${log.vehicle.plate})` : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab content 3: ANALYTICS VIEW */}
+                {activeTab === 'analytics' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Visitor trend chart (Visual bar layout) */}
+                        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs space-y-4">
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Visitor Volume (Past 7 Days)</h3>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Total checked-in guest entries daily.</p>
+                            </div>
+                            <div className="flex h-44 items-end gap-3 pt-6">
+                                {analytics.trend.map((day, idx) => {
+                                    const maxVal = Math.max(...analytics.trend.map(d => d.count), 1);
+                                    const heightPercent = `${(day.count / maxVal) * 100}%`;
+                                    return (
+                                        <div key={idx} className="flex flex-1 flex-col items-center gap-2 h-full justify-end">
+                                            <span className="text-[9px] font-bold text-slate-500">{day.count}</span>
+                                            <div
+                                                className="w-full rounded-t bg-indigo-600/85 hover:bg-indigo-650 transition-all cursor-pointer"
+                                                style={{ height: heightPercent }}
+                                            />
+                                            <span className="text-[9px] font-bold text-slate-400">{day.date}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Peak hours & Most visited */}
+                        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs space-y-6">
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Top Visited Hosts</h3>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Residents receiving the highest guest volume.</p>
+                            </div>
+                            <div className="space-y-3.5">
+                                {analytics.mostVisited.map((host, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-xs font-semibold">
+                                        <span className="text-slate-700">{host.name}</span>
+                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{host.count} visits</span>
+                                    </div>
+                                ))}
+                                {analytics.mostVisited.length === 0 && (
+                                    <p className="text-xs font-semibold text-slate-400 italic">No host analytics available</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Sliding Drawer (Details Panel overlay) */}
+            <AnimatePresence>
+                {selectedLog && (
+                    <>
+                        {/* Backdrop overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.3 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedLog(null)}
+                            className="fixed inset-0 z-50 bg-black"
+                        />
+
+                        {/* Sliding Panel */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white p-6 shadow-2xl overflow-y-auto"
+                        >
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Visitation Details</h2>
+                                <button
+                                    onClick={() => setSelectedLog(null)}
+                                    className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-950 transition"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Visitor & Access Code */}
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900">{selectedLog.visitor.name}</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">{selectedLog.visitor.phone}</p>
+                                    </div>
+                                    <span className="rounded bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-bold text-indigo-700 uppercase">
+                                        Code: {selectedLog.code}
+                                    </span>
+                                </div>
+
+                                {/* Status Timeline */}
+                                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-4">Journey Timeline</h4>
+                                    <div className="relative pl-5 space-y-5 border-l border-slate-200 ml-1.5">
+                                        <div className="relative">
+                                            <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-slate-200" />
+                                            <p className="text-[11px] font-bold text-slate-500">Invitation Generated</p>
+                                        </div>
+                                        <div className="relative">
+                                            <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-indigo-600" />
+                                            <p className="text-[11px] font-bold text-indigo-700">Checked In (Entry)</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">{selectedLog.verified_at}</p>
+                                        </div>
+                                        {selectedLog.checked_out_at && (
+                                            <div className="relative">
+                                                <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-slate-800" />
+                                                <p className="text-[11px] font-bold text-slate-800">Checked Out (Exit)</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">{selectedLog.checked_out_at}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Host Details */}
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Host Resident</h4>
+                                    <div className="rounded-xl border border-slate-100 p-4 space-y-2">
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-400">Name</span>
+                                            <span className="text-slate-800">{selectedLog.host.name}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-400">Unit</span>
+                                            <span className="text-slate-800">{selectedLog.host.unit ?? '—'}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-400">Purpose</span>
+                                            <span className="text-indigo-600">{selectedLog.purpose}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Vehicle info */}
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Vehicle Information</h4>
+                                    <div className="rounded-xl border border-slate-100 p-4">
+                                        {selectedLog.vehicle ? (
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-xs font-semibold">
+                                                    <span className="text-slate-400">Make & Model</span>
+                                                    <span className="text-slate-800">{selectedLog.vehicle.make} {selectedLog.vehicle.model}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs font-semibold">
+                                                    <span className="text-slate-400">Plate Number</span>
+                                                    <span className="text-slate-800 font-bold uppercase tracking-wider">{selectedLog.vehicle.plate}</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs font-bold text-slate-400 italic">No vehicle recorded</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Log audits */}
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Security Officers</h4>
+                                    <div className="rounded-xl border border-slate-100 p-4 space-y-2">
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-400">Entry Verifier</span>
+                                            <span className="text-slate-800">{selectedLog.verifier_name}</span>
+                                        </div>
+                                        {selectedLog.checked_out_at && (
+                                            <div className="flex justify-between text-xs font-semibold">
+                                                <span className="text-slate-400">Exit Verifier</span>
+                                                <span className="text-slate-800">{selectedLog.checkout_verifier_name}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
-
-            {/* Data Display */}
-            <div className="md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200 md:bg-white md:shadow-xs">
-                {/* Desktop Table View */}
-                <div className="hidden md:block">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-500">
-                            <thead className="bg-slate-50/50 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                <tr>
-                                    <th className="px-6 py-5">Visitor & Host</th>
-                                    <th className="px-6 py-5">Access Code</th>
-                                    <th className="px-6 py-5">Vehicle</th>
-                                    <th className="px-6 py-5">Entry Time</th>
-                                    <th className="px-6 py-5">Security</th>
-                                    <th className="px-6 py-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {logs.data.length > 0 ? (
-                                    logs.data.map((log) => (
-                                        <tr key={log.id} className="group transition-colors hover:bg-slate-50/50">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner ring-1 ring-indigo-100">
-                                                        <User className="h-5 w-5" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="leading-tight font-bold text-slate-900">{log.visitor.name}</div>
-                                                        <div className="text-[11px] font-medium text-slate-500">Host: {log.host.name}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="inline-flex rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-black tracking-widest text-emerald-700 uppercase ring-1 ring-emerald-600/20">
-                                                    {log.code}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {log.vehicle ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Car className="h-4 w-4 text-slate-400" />
-                                                        <div>
-                                                            <div className="leading-none font-bold text-slate-900">
-                                                                {log.vehicle.make} {log.vehicle.model}
-                                                            </div>
-                                                            <div className="mt-0.5 text-[10px] font-black tracking-tighter text-indigo-600 uppercase">
-                                                                {log.vehicle.plate}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-[11px] font-medium text-slate-400 italic">No vehicle</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="leading-none font-bold text-slate-900">{log.verified_at}</div>
-                                                <div className="mt-1 text-[10px] font-bold text-slate-400 uppercase">{log.verified_at_human}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 font-bold text-slate-900">
-                                                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                                                    {log.verifier_name}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => setSelectedLog(log)}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-black tracking-widest text-slate-600 uppercase transition-all hover:bg-indigo-600 hover:text-white active:scale-95"
-                                                >
-                                                    <Eye className="h-3.5 w-3.5" />
-                                                    Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-24 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-300">
-                                                    <Search className="h-8 w-8" />
-                                                </div>
-                                                <h3 className="text-lg font-bold text-slate-900">No logs found</h3>
-                                                <p className="mt-1 text-sm font-medium text-slate-500">Try adjusting your filters or search terms.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    {/* Desktop Pagination */}
-                    {logs.total > 0 && (
-                        <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-4">
-                            <div className="text-xs font-black tracking-widest text-slate-400 uppercase">
-                                Showing <span className="text-slate-900">{logs.from}</span> to <span className="text-slate-900">{logs.to}</span> of{' '}
-                                <span className="text-slate-900">{logs.total}</span> logs
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {logs.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url || '#'}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-3 text-[11px] font-black uppercase transition-all ${
-                                            link.active
-                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                                                : link.url
-                                                  ? 'text-slate-600 hover:bg-slate-100'
-                                                  : 'cursor-not-allowed text-slate-300'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Mobile Card View with Infinite Scroll */}
-                <div className="md:hidden">
-                    {logs.data.length > 0 ? (
-                        <InfiniteScroll
-                            data="logs"
-                            className="grid gap-4"
-                            loading={
-                                <div className="flex justify-center py-8">
-                                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-                                </div>
-                            }
-                        >
-                            {logs.data.map((log) => (
-                                <div
-                                    key={log.id}
-                                    onClick={() => setSelectedLog(log)}
-                                    className="group relative overflow-hidden rounded-[2.25rem] bg-white p-6 shadow-xs ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-indigo-600 shadow-inner ring-1 ring-slate-100">
-                                                <User className="h-7 w-7" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg leading-tight font-bold text-slate-900">{log.visitor.name}</h3>
-                                                <p className="mt-0.5 text-xs font-semibold text-slate-500">Host: {log.host.name}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="rounded-xl bg-indigo-50 px-3 py-1.5 text-[11px] font-black tracking-widest text-indigo-600 uppercase ring-1 ring-indigo-100">
-                                                {log.code}
-                                            </span>
-                                            <span className="text-[10px] font-bold tracking-tighter text-slate-400 uppercase">
-                                                {log.verified_at_human}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {log.vehicle && (
-                                        <div className="mt-5 flex items-center justify-between rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-500 shadow-sm">
-                                                    <Car className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase">Vehicle</p>
-                                                    <p className="text-sm font-bold text-slate-900">
-                                                        {log.vehicle.make} {log.vehicle.model}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase">Plate</p>
-                                                <p className="text-sm font-black text-slate-900">{log.vehicle.plate}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Purpose</span>
-                                            <span className="text-[10px] font-bold text-slate-600">{log.purpose}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                                            <span className="text-[10px] font-bold text-slate-600">{log.verifier_name}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </InfiniteScroll>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[2.25rem] bg-slate-50 py-24 ring-1 ring-slate-100">
-                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white text-slate-300 shadow-sm">
-                                <Search className="h-10 w-10" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900">No logs found</h3>
-                            <p className="mt-1 text-sm font-medium text-slate-500">Try adjusting your filters</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Mobile Filter Sheet */}
-            <MobileSheet isOpen={isFilterVisible && window.innerWidth < 768} onClose={() => setIsFilterVisible(false)} title="Filter Logs">
-                <div className="space-y-6 pt-4">
-                    <MobileInput label="By Date" type="date" icon={Calendar} value={date} onChange={(e) => setDate(e.target.value)} />
-
-                    <MobileSelect
-                        label="By Host"
-                        icon={UserPlus}
-                        value={hostId}
-                        onChange={(e) => setHostId(e.target.value)}
-                        options={[{ value: '', label: 'All Hosts' }, ...hosts.map((h) => ({ value: h.id, label: h.name }))]}
-                    />
-
-                    <MobileInput
-                        label="Vehicle Plate"
-                        placeholder="Plate number..."
-                        icon={Car}
-                        value={plate}
-                        onChange={(e) => setPlate(e.target.value)}
-                    />
-
-                    <div className="flex gap-4 pt-4">
-                        <button
-                            onClick={clearFilters}
-                            className="flex-1 rounded-[1.25rem] bg-slate-100 py-4 text-sm font-black text-slate-600 transition-transform active:scale-95"
-                        >
-                            Reset
-                        </button>
-                        <button
-                            onClick={() => setIsFilterVisible(false)}
-                            className="flex-[2] rounded-[1.25rem] bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/20 transition-transform active:scale-95"
-                        >
-                            Apply Filters
-                        </button>
-                    </div>
-                </div>
-            </MobileSheet>
-
-            {/* Desktop Details Modal */}
-            <Modal
-                isOpen={!!selectedLog && window.innerWidth >= 768}
-                onClose={() => setSelectedLog(null)}
-                title="Visitor Access Details"
-                maxWidth="2xl"
-            >
-                {selectedLog && (
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="col-span-2 flex items-center gap-4 border-b border-slate-100 pb-6">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
-                                <User className="h-8 w-8" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900">{selectedLog.visitor.name}</h3>
-                                <div className="mt-1 flex items-center gap-2 text-[11px] font-black tracking-widest uppercase">
-                                    <span className="text-emerald-600">{selectedLog.code}</span>
-                                    <span className="text-slate-300">•</span>
-                                    <span className="text-slate-400">{formatVisitorType(selectedLog.visitor.type)}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div>
-                                <div className="mb-2 flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    <MapPin className="h-3.5 w-3.5" />
-                                    Host & Location
-                                </div>
-                                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                                    <p className="text-sm font-black text-slate-900">{selectedLog.host.name}</p>
-                                    <div className="mt-3 grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Unit</p>
-                                            <p className="text-xs font-bold text-slate-700">{selectedLog.host.unit || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Address</p>
-                                            <p className="text-xs font-bold text-slate-700">{selectedLog.host.address || 'Estate'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="mb-2 flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    <Phone className="h-3.5 w-3.5" />
-                                    Visitor Contact
-                                </div>
-                                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                                    <p className="text-sm font-black text-slate-900">{selectedLog.visitor.phone}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div>
-                                <div className="mb-2 flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    <Car className="h-3.5 w-3.5" />
-                                    Vehicle Details
-                                </div>
-                                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                                    {selectedLog.vehicle ? (
-                                        <div className="space-y-3">
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase">Make & Model</p>
-                                                <p className="text-xs font-bold text-slate-700">
-                                                    {selectedLog.vehicle.make} {selectedLog.vehicle.model}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase">Plate Number</p>
-                                                <p className="text-sm font-black tracking-widest text-indigo-600 uppercase">
-                                                    {selectedLog.vehicle.plate}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-xs font-medium text-slate-400 italic">No vehicle recorded</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="mb-2 flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    <ShieldCheck className="h-3.5 w-3.5" />
-                                    Log Details
-                                </div>
-                                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Entry Time</p>
-                                            <p className="text-xs font-bold text-slate-700">{selectedLog.verified_at}</p>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Security</p>
-                                            <p className="text-xs font-bold text-slate-700">{selectedLog.verifier_name}</p>
-                                        </div>
-                                        {checkoutEnabled && (
-                                            <>
-                                                <div className="flex justify-between border-t border-slate-100 pt-2.5">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase">Checkout Time</p>
-                                                    <p className="text-xs font-bold text-slate-700">{selectedLog.checked_out_at ?? 'Not checked out'}</p>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase">Checkout Security</p>
-                                                    <p className="text-xs font-bold text-slate-700">{selectedLog.checkout_verifier_name ?? 'N/A'}</p>
-                                                </div>
-                                            </>
-                                        )}
-                                        <div className="flex justify-between border-t border-slate-200 pt-3">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase">Purpose</p>
-                                            <p className="text-xs font-black text-indigo-600">{selectedLog.purpose}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-2 mt-4 flex justify-end gap-3 border-t border-slate-100 pt-6">
-                            <button
-                                onClick={() => setSelectedLog(null)}
-                                className="rounded-xl bg-slate-100 px-6 py-2.5 text-sm font-black text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Mobile Details Sheet */}
-            <MobileSheet isOpen={!!selectedLog && window.innerWidth < 768} onClose={() => setSelectedLog(null)} title="Visitation Details">
-                {selectedLog && (
-                    <div className="space-y-8 pt-4">
-                        <div className="flex flex-col items-center text-center">
-                            <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-indigo-50 text-indigo-600 shadow-inner">
-                                <User className="h-12 w-12" />
-                            </div>
-                            <h3 className="text-2xl font-black tracking-tight text-slate-900">{selectedLog.visitor.name}</h3>
-                            <div className="mt-2 flex items-center gap-2">
-                                <span className="rounded-full bg-emerald-100 px-4 py-1.5 text-[11px] font-black tracking-[0.2em] text-emerald-700 uppercase">
-                                    {selectedLog.code}
-                                </span>
-                                <span className="text-xs font-bold text-slate-300">•</span>
-                                <span className="text-[11px] font-black tracking-widest text-slate-500 uppercase">
-                                    {formatVisitorType(selectedLog.visitor.type)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-5">
-                            <div className="rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200/50">
-                                <div className="mb-5 flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100">
-                                        <MapPin className="h-5 w-5" />
-                                    </div>
-                                    <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Host & Location</h4>
-                                </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Resident Name</p>
-                                        <p className="text-lg leading-none font-bold text-slate-900">{selectedLog.host.name}</p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Unit</p>
-                                            <p className="text-sm font-bold text-slate-900">{selectedLog.host.unit || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Address</p>
-                                            <p className="line-clamp-1 text-sm font-bold text-slate-900">{selectedLog.host.address || 'Internal'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200/50">
-                                <div className="mb-5 flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-100">
-                                        <Phone className="h-5 w-5" />
-                                    </div>
-                                    <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Contact</h4>
-                                </div>
-                                <div>
-                                    <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Phone Number</p>
-                                    <p className="text-lg font-bold text-slate-900">{selectedLog.visitor.phone}</p>
-                                </div>
-                            </div>
-
-                            {selectedLog.vehicle && (
-                                <div className="rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200/50">
-                                    <div className="mb-5 flex items-center gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100">
-                                            <Car className="h-5 w-5" />
-                                        </div>
-                                        <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Vehicle Details</h4>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Make & Model</p>
-                                            <p className="text-sm font-bold text-slate-900">
-                                                {selectedLog.vehicle.make} {selectedLog.vehicle.model}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="mb-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">Plate Number</p>
-                                            <p className="text-sm font-black tracking-widest text-indigo-600 uppercase">
-                                                {selectedLog.vehicle.plate}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="rounded-[2rem] border-2 border-dashed border-slate-200 p-6">
-                                <div className="mb-5 flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                                        <Clock className="h-5 w-5" />
-                                    </div>
-                                    <h4 className="text-[11px] font-black tracking-[0.15em] text-slate-400 uppercase">Log Info</h4>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Entry Time</p>
-                                        <p className="text-sm font-bold text-slate-900">{selectedLog.verified_at}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Security</p>
-                                        <div className="flex items-center gap-2">
-                                            <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                                            <p className="text-sm font-bold text-slate-900">{selectedLog.verifier_name}</p>
-                                        </div>
-                                    </div>
-                                    {checkoutEnabled && (
-                                        <>
-                                            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Time</p>
-                                                <p className="text-sm font-bold text-slate-900">{selectedLog.checked_out_at ?? 'Not checked out'}</p>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Security</p>
-                                                <div className="flex items-center gap-2">
-                                                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                                                    <p className="text-sm font-bold text-slate-900">{selectedLog.checkout_verifier_name ?? 'N/A'}</p>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-4">
-                                        <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Purpose</p>
-                                        <p className="text-sm font-black text-indigo-600">{selectedLog.purpose}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setSelectedLog(null)}
-                            className="w-full rounded-[1.5rem] bg-slate-900 py-5 text-base font-black text-white shadow-2xl transition-transform active:scale-[0.98]"
-                        >
-                            Close Details
-                        </button>
-                    </div>
-                )}
-            </MobileSheet>
         </>
     );
 }
 
-VisitorIndex.layout = (page: React.ReactNode) => <AdminLayout title="Visitor Logs">{page}</AdminLayout>;
+VisitorIndex.layout = (page: React.ReactNode) => <AdminLayout title="Visitors">{page}</AdminLayout>;
