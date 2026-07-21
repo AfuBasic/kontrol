@@ -1,12 +1,41 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Plus, Users, Clock, ArrowRight, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 interface Props {
     expectedToday: number;
     lastActivity?: string;
     onAction?: () => void;
     canGenerate?: boolean;
+}
+
+function CountUpNumber({ value }: { value: number }) {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        let start = 0;
+        const end = value;
+        if (start === end) {
+            setCount(end);
+            return;
+        }
+
+        const duration = 800; // 0.8 seconds
+        const incrementTime = Math.max(Math.floor(duration / (end || 1)), 20);
+
+        const timer = setInterval(() => {
+            start += 1;
+            setCount(start);
+            if (start >= end) {
+                clearInterval(timer);
+            }
+        }, incrementTime);
+
+        return () => clearInterval(timer);
+    }, [value]);
+
+    return <>{count}</>;
 }
 
 export default function CommandCenter({ expectedToday, lastActivity, onAction, canGenerate = true }: Props) {
@@ -84,9 +113,18 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction, c
                 </div>
 
                 <div className={`mb-10 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} items-stretch gap-4`}>
-                    <div className="flex flex-col justify-center rounded-[24px] bg-white/[0.03] p-5 ring-1 ring-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.06]">
-                        <p className="mb-1 text-[10px] font-bold tracking-wider text-white/30 uppercase">Expected Today</p>
-                        <p className="text-2xl font-black text-white">{expectedToday}</p>
+                    {/* Expected Today Card with gradient & glowing effect */}
+                    <div className="relative overflow-hidden flex flex-col justify-center rounded-[24px] bg-linear-to-br from-indigo-500/10 via-indigo-600/5 to-transparent p-5 ring-1 ring-indigo-500/20 backdrop-blur-md transition-all hover:ring-indigo-500/40">
+                        {/* Corner Glow */}
+                        <div className="absolute top-0 right-0 h-16 w-16 bg-indigo-500/25 rounded-full blur-xl pointer-events-none" />
+
+                        <p className="mb-1 text-[10px] font-black tracking-widest text-indigo-400/80 uppercase">Expected Today</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-white tracking-tight">
+                                <CountUpNumber value={expectedToday} />
+                            </span>
+                            <span className="text-xs font-bold text-indigo-300/60">visitors</span>
+                        </div>
                     </div>
 
                     {canGenerate && (

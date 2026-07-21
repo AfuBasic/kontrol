@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 import type { EstateBoardPost } from '@/types';
+import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
 
 type UnpaidDue = {
@@ -172,6 +173,14 @@ export default function Home({
                     </Link>
                 </div>
 
+                {/* HERO COMMAND CENTER */}
+                <CommandCenter
+                    expectedToday={stats?.expectedToday ?? 0}
+                    lastActivity={recentActivity[0]?.message}
+                    onAction={() => router.visit('/resident/visitors/create')}
+                    canGenerate={hasAccessCodeGen}
+                />
+
                 {/* SECTION 1: ATTENTION CENTER */}
                 <section className="space-y-2">
                     <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Attention Center</h3>
@@ -285,18 +294,6 @@ export default function Home({
                     </div>
                 </section>
 
-                {/* SECTION 3: PRIMARY ACTION */}
-                {hasAccessCodeGen && (
-                    <section className="space-y-2">
-                        <button
-                            onClick={() => router.visit('/resident/visitors/create')}
-                            className="w-full bg-slate-900 text-white rounded-2xl py-3.5 px-4.5 flex items-center justify-between hover:bg-slate-800 transition-all font-semibold text-xs tracking-wider uppercase cursor-pointer active:scale-99 shadow-[0_2px_10px_rgba(15,23,42,0.15)]"
-                        >
-                            <span>Generate Visitor Pass</span>
-                            <Plus className="h-4 w-4" strokeWidth={3} />
-                        </button>
-                    </section>
-                )}
 
                 {/* SECTION 4: ESTATE UPDATES */}
                 {hasEstateBoard && latestAnnouncements && latestAnnouncements.length > 0 && (
