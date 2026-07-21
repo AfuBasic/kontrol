@@ -1,31 +1,23 @@
-import { 
-    MagnifyingGlassIcon, 
-    FunnelIcon, 
-    XMarkIcon, 
-    PlusIcon, 
-    ArrowRightIcon, 
-    ChevronDownIcon, 
-    EllipsisVerticalIcon
-} from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, ArrowRightIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { 
-    Mail, 
-    Trash2, 
-    MapPin, 
-    Loader2, 
-    Check, 
-    Users, 
-    Percent, 
-    ShieldCheck, 
-    UserMinus, 
-    Send, 
-    Copy, 
-    AlertCircle, 
+import {
+    Mail,
+    Trash2,
+    MapPin,
+    Loader2,
+    Check,
+    Users,
+    Percent,
+    ShieldCheck,
+    UserMinus,
+    Send,
+    Copy,
+    AlertCircle,
     Calendar,
     Pencil,
     Clock,
-    X
+    X,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
@@ -90,21 +82,30 @@ type Props = {
     } | null;
 };
 
-export default function Residents({ residents, filters: initialFilters, stats: initialStats, insights: initialInsights, inviteLink }: Props) {
-    const filters = !Array.isArray(initialFilters) ? (initialFilters || {}) : {};
+export default function Residents({
+    residents: initialResidents,
+    filters: initialFilters,
+    stats: initialStats,
+    insights: initialInsights,
+    inviteLink,
+}: Props) {
+    const residents = initialResidents || { data: [], current_page: 1, last_page: 1, total: 0, links: [], next_page_url: null };
+    const hasResidents = residents.data.length > 0;
+    const isLoading = initialResidents === undefined;
+
+    const filters = !Array.isArray(initialFilters) ? initialFilters || {} : {};
     const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0, occupancy_rate: 0 };
     const insights = initialInsights || [];
 
     const { can } = usePermission();
-    const hasResidents = residents && residents.data && residents.data.length > 0;
-    
+
     // States
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [role, setRole] = useState(filters.role || '');
     const [property, setProperty] = useState(filters.property || '');
     const [sort, setSort] = useState(filters.sort || '');
-    
+
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -115,16 +116,23 @@ export default function Residents({ residents, filters: initialFilters, stats: i
     const debouncedSearch = useDebounce(search, 300);
 
     // Apply filters
-    const applyFilters = useCallback((updatedFilters: Record<string, string>) => {
-        router.get(index.url(), {
-            search,
-            status,
-            role,
-            property,
-            sort,
-            ...updatedFilters
-        }, { preserveState: true, preserveScroll: true, replace: true });
-    }, [search, status, role, property, sort]);
+    const applyFilters = useCallback(
+        (updatedFilters: Record<string, string>) => {
+            router.get(
+                index.url(),
+                {
+                    search,
+                    status,
+                    role,
+                    property,
+                    sort,
+                    ...updatedFilters,
+                },
+                { preserveState: true, preserveScroll: true, replace: true },
+            );
+        },
+        [search, status, role, property, sort],
+    );
 
     // Handle search debounce
     useEffect(() => {
@@ -138,7 +146,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
         if (key === 'role') setRole(value);
         if (key === 'property') setProperty(value);
         if (key === 'sort') setSort(value);
-        
+
         applyFilters({ [key]: value });
     };
 
@@ -167,12 +175,12 @@ export default function Residents({ residents, filters: initialFilters, stats: i
         if (selectedIds.length === residents.data.length) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(residents.data.map(r => r.id));
+            setSelectedIds(residents.data.map((r) => r.id));
         }
     };
 
     const toggleSelect = (id: number) => {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
     };
 
     // Bulk action triggers
@@ -185,35 +193,47 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                 setSelectedIds([]);
                 setShowDeleteConfirm(false);
             },
-            onFinish: () => setIsDeleting(false)
+            onFinish: () => setIsDeleting(false),
         });
     };
 
     const handleBulkSuspend = () => {
         if (selectedIds.length === 0) return;
         setIsBulkActionRunning(true);
-        router.post('/admin/residents/bulk-suspend', { ids: selectedIds }, {
-            onSuccess: () => setSelectedIds([]),
-            onFinish: () => setIsBulkActionRunning(false)
-        });
+        router.post(
+            '/admin/residents/bulk-suspend',
+            { ids: selectedIds },
+            {
+                onSuccess: () => setSelectedIds([]),
+                onFinish: () => setIsBulkActionRunning(false),
+            },
+        );
     };
 
     const handleBulkActivate = () => {
         if (selectedIds.length === 0) return;
         setIsBulkActionRunning(true);
-        router.post('/admin/residents/bulk-activate', { ids: selectedIds }, {
-            onSuccess: () => setSelectedIds([]),
-            onFinish: () => setIsBulkActionRunning(false)
-        });
+        router.post(
+            '/admin/residents/bulk-activate',
+            { ids: selectedIds },
+            {
+                onSuccess: () => setSelectedIds([]),
+                onFinish: () => setIsBulkActionRunning(false),
+            },
+        );
     };
 
     const handleBulkResend = () => {
         if (selectedIds.length === 0) return;
         setIsBulkActionRunning(true);
-        router.post('/admin/residents/bulk-resend-invitation', { ids: selectedIds }, {
-            onSuccess: () => setSelectedIds([]),
-            onFinish: () => setIsBulkActionRunning(false)
-        });
+        router.post(
+            '/admin/residents/bulk-resend-invitation',
+            { ids: selectedIds },
+            {
+                onSuccess: () => setSelectedIds([]),
+                onFinish: () => setIsBulkActionRunning(false),
+            },
+        );
     };
 
     // Toggle invite link
@@ -246,7 +266,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Residents Workspace" />
 
             {/* Top Workspace Header */}
@@ -266,49 +286,47 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 items-start">
-                
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-4">
                 {/* Left Workspace Column (75%) */}
-                <div className="lg:col-span-3 space-y-6">
-                    
+                <div className="space-y-6 lg:col-span-3">
                     {/* SECTION 1 — RESIDENT OVERVIEW STRIP */}
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Residents</span>
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Residents</span>
                             <div className="mt-2 flex items-baseline gap-2">
-                                <Users className="h-4 w-4 text-blue-500 shrink-0" />
+                                <Users className="h-4 w-4 shrink-0 text-blue-500" />
                                 <span className="text-2xl font-black text-slate-900">{stats.total}</span>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active</span>
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Active</span>
                             <div className="mt-2 flex items-baseline gap-2">
-                                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
                                 <span className="text-2xl font-black text-slate-900">{stats.active}</span>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pending</span>
                             <div className="mt-2 flex items-baseline gap-2">
-                                <Send className="h-4 w-4 text-amber-500 shrink-0" />
+                                <Send className="h-4 w-4 shrink-0 text-amber-500" />
                                 <span className="text-2xl font-black text-slate-900">{stats.pending}</span>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Suspended</span>
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Suspended</span>
                             <div className="mt-2 flex items-baseline gap-2">
-                                <UserMinus className="h-4 w-4 text-rose-500 shrink-0" />
+                                <UserMinus className="h-4 w-4 shrink-0 text-rose-500" />
                                 <span className="text-2xl font-black text-slate-900">{stats.inactive}</span>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 col-span-2 sm:col-span-1 flex flex-col justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Occupancy</span>
+                        <div className="col-span-2 flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 sm:col-span-1">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Occupancy</span>
                             <div className="mt-2 flex items-baseline gap-2">
-                                <Percent className="h-4 w-4 text-indigo-500 shrink-0" />
+                                <Percent className="h-4 w-4 shrink-0 text-indigo-500" />
                                 <span className="text-2xl font-black text-slate-900">{stats.occupancy_rate}%</span>
                             </div>
                         </div>
@@ -317,14 +335,14 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                     {/* SECTION 2 — OPERATIONAL INSIGHTS */}
                     {insights.length > 0 && (
                         <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
-                            <div className="flex items-center gap-2 mb-2.5">
+                            <div className="mb-2.5 flex items-center gap-2">
                                 <AlertCircle className="h-4 w-4 text-blue-600" />
                                 <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
                             </div>
                             <ul className="space-y-2">
                                 {insights.map((insight, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-xs text-blue-950 font-semibold">
-                                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600 shrink-0" />
+                                    <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
                                         {insight}
                                     </li>
                                 ))}
@@ -337,13 +355,13 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                         <div className="flex flex-col gap-3">
                             {/* Search Input */}
                             <div className="relative w-full">
-                                <MagnifyingGlassIcon className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400 pointer-events-none" />
+                                <MagnifyingGlassIcon className="pointer-events-none absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
                                 <input
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search residents by name, email, phone, or unit..."
-                                    className="w-full rounded-xl border-slate-200 pl-11 pr-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
                                 />
                             </div>
 
@@ -353,7 +371,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     <select
                                         value={status}
                                         onChange={(e) => handleFilterChange('status', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                                     >
                                         <option value="">All Statuses</option>
                                         <option value="active">Active</option>
@@ -367,7 +385,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     <select
                                         value={role}
                                         onChange={(e) => handleFilterChange('role', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                                     >
                                         <option value="">All Roles</option>
                                         <option value="resident">Resident</option>
@@ -380,7 +398,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     <select
                                         value={property}
                                         onChange={(e) => handleFilterChange('property', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                                     >
                                         <option value="">All Properties</option>
                                         <option value="assigned">Assigned Unit</option>
@@ -392,7 +410,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     <select
                                         value={sort}
                                         onChange={(e) => handleFilterChange('sort', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                                     >
                                         <option value="">Sort By</option>
                                         <option value="name">Name</option>
@@ -406,7 +424,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     <button
                                         onClick={clearFilters}
                                         disabled={!hasActiveFilters}
-                                        className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-[11px] font-black tracking-wider text-slate-600 uppercase shadow-xs transition hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black tracking-wider text-slate-600 uppercase shadow-xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         <X className="h-3.5 w-3.5" />
                                         Reset
@@ -417,11 +435,25 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                     </div>
 
                     {/* SECTION 4 — TABLE REDESIGN */}
-                    <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
-                        {hasResidents ? (
+                    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                        {isLoading ? (
+                            <div className="animate-pulse space-y-4 p-6">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center space-x-4 border-b border-slate-50 py-3.5">
+                                        <div className="h-9 w-9 shrink-0 rounded-xl bg-slate-100" />
+                                        <div className="min-w-0 flex-1 space-y-2 py-1">
+                                            <div className="bg-slate-150 h-3 w-1/4 rounded" />
+                                            <div className="h-2 w-1/2 rounded bg-slate-100" />
+                                        </div>
+                                        <div className="h-3 w-12 rounded bg-slate-100" />
+                                        <div className="h-3 w-16 rounded bg-slate-100" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : hasResidents ? (
                             <div className="overflow-x-auto">
                                 <table className="w-full table-auto border-collapse">
-                                    <thead className="bg-slate-50/70 border-b border-slate-100">
+                                    <thead className="border-b border-slate-100 bg-slate-50/70">
                                         <tr>
                                             {can('residents.delete') && (
                                                 <th className="w-10 px-4 py-3.5 text-center">
@@ -429,16 +461,28 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                         type="checkbox"
                                                         checked={selectedIds.length === residents.data.length && residents.data.length > 0}
                                                         onChange={toggleSelectAll}
-                                                        className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
+                                                        className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
                                                     />
                                                 </th>
                                             )}
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Resident</th>
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Contact</th>
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Unit</th>
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Household</th>
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Joined & Active</th>
-                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Status</th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Resident
+                                            </th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Contact
+                                            </th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Unit
+                                            </th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Household
+                                            </th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Joined & Active
+                                            </th>
+                                            <th className="text-slate-450 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Status
+                                            </th>
                                             <th className="w-20 px-4 py-3.5 text-right"></th>
                                         </tr>
                                     </thead>
@@ -446,14 +490,19 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                         {residents.data.map((resident, idx) => {
                                             const isSelected = selectedIds.includes(resident.id);
                                             const initial = resident.name ? resident.name.charAt(0).toUpperCase() : 'R';
-                                            
+
                                             // Soft premium colors for avatars
-                                            const bgColors = ['bg-blue-50 text-blue-700', 'bg-indigo-50 text-indigo-700', 'bg-purple-50 text-purple-700', 'bg-emerald-50 text-emerald-700'];
+                                            const bgColors = [
+                                                'bg-blue-50 text-blue-700',
+                                                'bg-indigo-50 text-indigo-700',
+                                                'bg-purple-50 text-purple-700',
+                                                'bg-emerald-50 text-emerald-700',
+                                            ];
                                             const avatarColor = bgColors[idx % bgColors.length];
 
                                             return (
-                                                <tr 
-                                                    key={resident.ulid} 
+                                                <tr
+                                                    key={resident.ulid}
                                                     className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
                                                 >
                                                     {can('residents.delete') && (
@@ -462,32 +511,38 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                                 type="checkbox"
                                                                 checked={isSelected}
                                                                 onChange={() => toggleSelect(resident.id)}
-                                                                className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
+                                                                className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
                                                             />
                                                         </td>
                                                     )}
-                                                    
+
                                                     {/* Avatar & Name */}
                                                     <td className="px-4 py-3.5">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${avatarColor}`}>
+                                                            <div
+                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
+                                                            >
                                                                 {initial}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                                    <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">{resident.name}</span>
-                                                                    <span className={`inline-flex rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${
-                                                                        resident.role_label === 'Property Owner' 
-                                                                            ? 'bg-indigo-50 text-indigo-700' 
-                                                                            : resident.role_label === 'Tenant' 
-                                                                                ? 'bg-purple-50 text-purple-700' 
-                                                                                : 'bg-blue-50 text-blue-700'
-                                                                    }`}>
+                                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                                    <span className="max-w-[130px] truncate text-xs font-bold text-slate-900">
+                                                                        {resident.name}
+                                                                    </span>
+                                                                    <span
+                                                                        className={`inline-flex rounded-md px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${
+                                                                            resident.role_label === 'Property Owner'
+                                                                                ? 'bg-indigo-50 text-indigo-700'
+                                                                                : resident.role_label === 'Tenant'
+                                                                                  ? 'bg-purple-50 text-purple-700'
+                                                                                  : 'bg-blue-50 text-blue-700'
+                                                                        }`}
+                                                                    >
                                                                         {resident.role_label}
                                                                     </span>
                                                                 </div>
                                                                 {resident.property_owner_name && (
-                                                                    <p className="text-[10px] text-slate-400 font-semibold truncate mt-0.5">
+                                                                    <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">
                                                                         Owner: {resident.property_owner_name}
                                                                     </p>
                                                                 )}
@@ -498,8 +553,10 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                     {/* Contact */}
                                                     <td className="px-4 py-3.5">
                                                         <div className="text-xs font-semibold text-slate-800">
-                                                            <span className="block truncate max-w-[150px]">{resident.email}</span>
-                                                            <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{resident.phone || '—'}</span>
+                                                            <span className="block max-w-[150px] truncate">{resident.email}</span>
+                                                            <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
+                                                                {resident.phone || '—'}
+                                                            </span>
                                                         </div>
                                                     </td>
 
@@ -511,7 +568,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                                 {resident.unit_number}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-xs text-slate-350 font-bold">Unassigned</span>
+                                                            <span className="text-slate-350 text-xs font-bold">Unassigned</span>
                                                         )}
                                                     </td>
 
@@ -529,13 +586,13 @@ export default function Residents({ residents, filters: initialFilters, stats: i
 
                                                     {/* Dates */}
                                                     <td className="px-4 py-3.5">
-                                                        <div className="text-xs font-semibold text-slate-850">
+                                                        <div className="text-slate-850 text-xs font-semibold">
                                                             <div className="flex items-center gap-1">
                                                                 <Calendar className="h-3 w-3 text-slate-400" />
                                                                 <span>{resident.created_at}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold mt-0.5">
-                                                                <Clock className="h-3 w-3 text-slate-350" />
+                                                            <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                                                <Clock className="text-slate-350 h-3 w-3" />
                                                                 <span>Active {resident.last_active}</span>
                                                             </div>
                                                         </div>
@@ -543,34 +600,40 @@ export default function Residents({ residents, filters: initialFilters, stats: i
 
                                                     {/* Status Badge */}
                                                     <td className="px-4 py-3.5">
-                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                                                            resident.status === 'inactive'
-                                                                ? 'bg-rose-50 text-rose-700'
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                                resident.status === 'inactive'
+                                                                    ? 'bg-rose-50 text-rose-700'
+                                                                    : resident.status === 'accepted'
+                                                                      ? 'bg-emerald-50 text-emerald-700'
+                                                                      : 'bg-amber-50 text-amber-700'
+                                                            }`}
+                                                        >
+                                                            {resident.status === 'inactive'
+                                                                ? 'Suspended'
                                                                 : resident.status === 'accepted'
-                                                                    ? 'bg-emerald-50 text-emerald-700'
-                                                                    : 'bg-amber-50 text-amber-700'
-                                                        }`}>
-                                                            {resident.status === 'inactive' ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                                  ? 'Active'
+                                                                  : 'Pending'}
                                                         </span>
                                                     </td>
 
                                                     {/* Actions */}
-                                                    <td className="px-4 py-3.5 text-right relative">
+                                                    <td className="relative px-4 py-3.5 text-right">
                                                         <div className="flex items-center justify-end gap-1">
                                                             {/* Direct Edit */}
                                                             <Link
                                                                 href={`/admin/residents/${resident.id}/edit`}
-                                                                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                                 title="Edit Profile"
                                                             >
                                                                 <Pencil className="h-3.5 w-3.5" />
                                                             </Link>
-                                                            
+
                                                             {/* Direct Resend Invitation if Pending */}
                                                             {resident.status === 'pending' && (
                                                                 <button
                                                                     onClick={() => handleResendInvitation(resident.id)}
-                                                                    className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                                     title="Resend Invitation"
                                                                 >
                                                                     <Send className="h-3.5 w-3.5" />
@@ -581,7 +644,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                             {!resident.unit_number && (
                                                                 <Link
                                                                     href={`/admin/residents/${resident.id}/edit`}
-                                                                    className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                                     title="Assign Unit"
                                                                 >
                                                                     <MapPin className="h-3.5 w-3.5" />
@@ -591,7 +654,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                             {/* Overflow menu */}
                                                             <button
                                                                 onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
-                                                                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                             >
                                                                 <EllipsisVerticalIcon className="h-4 w-4" />
                                                             </button>
@@ -600,13 +663,13 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                             {menuOpenId === resident.id && (
                                                                 <>
                                                                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                                                    <div className="absolute right-4 top-11 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 shadow-lg ring-1 ring-slate-150/50 text-left">
+                                                                    <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
                                                                         <button
                                                                             onClick={() => {
                                                                                 handleToggleSuspend(resident.id);
                                                                                 setMenuOpenId(null);
                                                                             }}
-                                                                            className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
                                                                             <UserMinus className="h-3.5 w-3.5 text-slate-400" />
                                                                             {resident.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
@@ -617,7 +680,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                                                     handleMarkAsPropertyOwner(resident.id);
                                                                                     setMenuOpenId(null);
                                                                                 }}
-                                                                                className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                             >
                                                                                 <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
                                                                                 Make Property Owner
@@ -628,7 +691,7 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                                                                 handleDeleteResident(resident.id);
                                                                                 setMenuOpenId(null);
                                                                             }}
-                                                                            className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-50 mt-1 pt-2"
+                                                                            className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                                                                         >
                                                                             <Trash2 className="h-3.5 w-3.5" />
                                                                             Delete Resident
@@ -646,20 +709,20 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                             </div>
                         ) : (
                             /* Redesigned Empty State */
-                            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
                                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 shadow-inner">
                                     <Users className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">No residents found</h3>
+                                <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">No residents found</h3>
                                 <p className="mt-1 max-w-xs text-xs font-semibold text-slate-400">
-                                    {hasActiveFilters 
-                                        ? 'No records match your selected criteria. Try resetting or adjusting your search term.' 
+                                    {hasActiveFilters
+                                        ? 'No records match your selected criteria. Try resetting or adjusting your search term.'
                                         : 'Invite your first resident to build your community and enable seamless access control.'}
                                 </p>
                                 {!hasActiveFilters && can('residents.create') && (
                                     <Link
                                         href={index.url() + '/create'}
-                                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+                                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
                                     >
                                         <PlusIcon className="h-4 w-4" strokeWidth={3} />
                                         Invite Resident
@@ -673,7 +736,8 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                     {residents.last_page > 1 && (
                         <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
                             <p className="text-xs font-bold text-slate-500">
-                                Showing <span className="text-slate-950">{residents.data.length}</span> of <span className="text-slate-950">{residents.total}</span> residents
+                                Showing <span className="text-slate-950">{residents.data.length}</span> of{' '}
+                                <span className="text-slate-950">{residents.total}</span> residents
                             </p>
                             <div className="flex gap-1.5">
                                 {residents.links.map((link, idx) => (
@@ -686,8 +750,8 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                             link.active
                                                 ? 'bg-slate-950 text-white shadow-sm'
                                                 : link.url
-                                                    ? 'bg-white text-slate-655 border border-slate-200 hover:bg-slate-50'
-                                                    : 'cursor-not-allowed text-slate-300 border border-slate-100 opacity-50'
+                                                  ? 'text-slate-655 border border-slate-200 bg-white hover:bg-slate-50'
+                                                  : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
@@ -699,26 +763,25 @@ export default function Residents({ residents, filters: initialFilters, stats: i
 
                 {/* Right Sidebar Column (25%) */}
                 <div className="space-y-6">
-                    
                     {/* INVITATION LINK MANAGEMENT */}
                     {inviteLink && (
                         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
-                            <h3 className="text-xs font-black tracking-widest text-slate-450 uppercase mb-3.5">Community Invitations</h3>
-                            
+                            <h3 className="text-slate-450 mb-3.5 text-xs font-black tracking-widest uppercase">Community Invitations</h3>
+
                             <div className="space-y-4">
                                 {/* Token link preview */}
-                                <div className="rounded-xl border border-slate-150/70 bg-slate-50/50 p-3 flex flex-col gap-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Public Invite URL</span>
+                                <div className="border-slate-150/70 flex flex-col gap-2 rounded-xl border bg-slate-50/50 p-3">
+                                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Public Invite URL</span>
                                     <div className="flex items-center justify-between gap-2">
                                         <input
                                             type="text"
                                             readOnly
                                             value={inviteLink.url}
-                                            className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 focus:ring-0 truncate"
+                                            className="w-full truncate border-0 bg-transparent p-0 text-xs font-semibold text-slate-800 focus:ring-0"
                                         />
                                         <button
                                             onClick={copyToClipboard}
-                                            className="p-1.5 text-slate-455 hover:text-slate-800 hover:bg-slate-150/50 rounded-lg shrink-0 transition"
+                                            className="text-slate-455 hover:bg-slate-150/50 shrink-0 rounded-lg p-1.5 transition hover:text-slate-800"
                                             title="Copy Link"
                                         >
                                             {copied ? <Check className="h-4.5 w-4.5 text-emerald-600" /> : <Copy className="h-4.5 w-4.5" />}
@@ -729,34 +792,30 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                 {/* invitation stats */}
                                 <div className="grid grid-cols-2 gap-2 text-center">
                                     <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-2.5">
-                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Usages</span>
-                                        <span className="block text-base font-black text-slate-900 mt-1">
-                                            {inviteLink.usage_count}
-                                        </span>
+                                        <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Usages</span>
+                                        <span className="mt-1 block text-base font-black text-slate-900">{inviteLink.usage_count}</span>
                                     </div>
                                     <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-2.5">
-                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Limit</span>
-                                        <span className="block text-base font-black text-slate-900 mt-1">
-                                            {inviteLink.max_usages || '∞'}
-                                        </span>
+                                        <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">Limit</span>
+                                        <span className="mt-1 block text-base font-black text-slate-900">{inviteLink.max_usages || '∞'}</span>
                                     </div>
                                 </div>
 
                                 {/* Active toggle / actions */}
-                                <div className="border-t border-slate-50 pt-4.5 space-y-2">
+                                <div className="space-y-2 border-t border-slate-50 pt-4.5">
                                     <button
                                         onClick={toggleInviteLink}
-                                        className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wider uppercase border shadow-xs transition ${
-                                            inviteLink.is_active 
-                                                ? 'bg-white text-rose-600 border-rose-250 hover:bg-rose-50/50' 
-                                                : 'bg-emerald-600 text-white border-transparent hover:bg-emerald-700'
+                                        className={`w-full rounded-xl border py-2.5 text-xs font-black tracking-wider uppercase shadow-xs transition ${
+                                            inviteLink.is_active
+                                                ? 'border-rose-250 bg-white text-rose-600 hover:bg-rose-50/50'
+                                                : 'border-transparent bg-emerald-600 text-white hover:bg-emerald-700'
                                         }`}
                                     >
                                         {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
                                     </button>
                                     <button
                                         onClick={regenerateInviteLink}
-                                        className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-black tracking-wider uppercase transition"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-black tracking-wider text-slate-700 uppercase transition hover:bg-slate-100"
                                     >
                                         Regenerate Token
                                     </button>
@@ -774,10 +833,10 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                 className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4.5 shadow-xs"
                             >
                                 <div className="flex gap-3">
-                                    <Mail className="h-5 w-5 text-amber-600 shrink-0" />
+                                    <Mail className="h-5 w-5 shrink-0 text-amber-600" />
                                     <div>
                                         <h4 className="text-xs font-black tracking-wider text-amber-900 uppercase">Approvals Required</h4>
-                                        <p className="text-[11px] font-semibold text-amber-700 leading-relaxed mt-1">
+                                        <p className="mt-1 text-[11px] leading-relaxed font-semibold text-amber-700">
                                             {stats.pending} users signed up and are waiting for authorization to join the estate.
                                         </p>
                                         <Link
@@ -802,48 +861,46 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                         initial={{ opacity: 0, y: 100 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 100 }}
-                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
+                        className="fixed bottom-6 left-1/2 z-40 w-full max-w-2xl -translate-x-1/2 px-4"
                     >
-                        <div className="rounded-2xl border border-slate-900/10 bg-slate-950/95 backdrop-blur-md px-6 py-4.5 shadow-xl flex items-center justify-between gap-4">
+                        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-900/10 bg-slate-950/95 px-6 py-4.5 shadow-xl backdrop-blur-md">
                             <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                                <span className="text-xs font-black tracking-wider uppercase text-white">
-                                    {selectedIds.length} Selected
-                                </span>
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                                <span className="text-xs font-black tracking-wider text-white uppercase">{selectedIds.length} Selected</span>
                             </div>
-                            
-                            <div className="flex items-center gap-2 flex-wrap">
+
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={handleBulkResend}
                                     disabled={isBulkActionRunning}
-                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                    className="rounded-xl bg-slate-800 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-slate-700 disabled:opacity-40"
                                 >
                                     Resend Invites
                                 </button>
                                 <button
                                     onClick={handleBulkActivate}
                                     disabled={isBulkActionRunning}
-                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                    className="rounded-xl bg-slate-800 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-slate-700 disabled:opacity-40"
                                 >
                                     Activate
                                 </button>
                                 <button
                                     onClick={handleBulkSuspend}
                                     disabled={isBulkActionRunning}
-                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                    className="rounded-xl bg-slate-800 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-slate-700 disabled:opacity-40"
                                 >
                                     Suspend
                                 </button>
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
                                     disabled={isBulkActionRunning}
-                                    className="px-3.5 py-2 rounded-xl bg-red-650 hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                    className="bg-red-650 hover:bg-red-750 rounded-xl px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition disabled:opacity-40"
                                 >
                                     Delete
                                 </button>
                                 <button
                                     onClick={() => setSelectedIds([])}
-                                    className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
+                                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
                                 >
                                     <X className="h-4.5 w-4.5" />
                                 </button>
@@ -872,16 +929,17 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600 shadow-inner">
                                 <Trash2 className="h-6 w-6" />
                             </div>
-                            <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">Confirm Bulk Removal</h3>
-                            <p className="mt-2 text-xs font-semibold text-slate-500 leading-relaxed">
-                                You are about to permanently remove {selectedIds.length} resident(s). This will detach them from the estate records. This action is irreversible.
+                            <h3 className="text-base font-black tracking-wide text-slate-900 uppercase">Confirm Bulk Removal</h3>
+                            <p className="mt-2 text-xs leading-relaxed font-semibold text-slate-500">
+                                You are about to permanently remove {selectedIds.length} resident(s). This will detach them from the estate records.
+                                This action is irreversible.
                             </p>
                             <div className="mt-6 flex justify-end gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(false)}
                                     disabled={isDeleting}
-                                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-650 hover:bg-slate-100 disabled:opacity-50"
+                                    className="text-slate-650 rounded-xl px-4 py-2.5 text-xs font-bold hover:bg-slate-100 disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
@@ -889,19 +947,15 @@ export default function Residents({ residents, filters: initialFilters, stats: i
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-red-655 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="bg-red-655 inline-flex items-center gap-2 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
-                                    {isDeleting ? (
-                                        <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                                    ) : (
-                                        'Yes, Delete Selected'
-                                    )}
+                                    {isDeleting ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Yes, Delete Selected'}
                                 </button>
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

@@ -230,7 +230,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats: 
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Property Owners Workspace" />
 
             {/* Top Workspace Header */}
@@ -844,6 +844,6 @@ export default function Index({ propertyOwners, filters: initialFilters, stats: 
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }
