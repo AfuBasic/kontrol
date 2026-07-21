@@ -124,6 +124,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
         assigned_to: incident.assignee?.id || '',
         priority: typeof incident.priority === 'object' ? incident.priority.value : incident.priority,
         category: typeof incident.category === 'object' ? incident.category.value : incident.category,
+        is_private: incident.is_private,
     });
 
     const handleUpdateField = (key: string, value: any) => {
@@ -524,6 +525,19 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                                 className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                             >
                                 {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </select>
+                        </div>
+
+                        {/* Visibility (is_private) update */}
+                        <div>
+                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Visibility</label>
+                            <select
+                                value={data.is_private ? 'true' : 'false'}
+                                onChange={(e) => handleUpdateField('is_private', e.target.value === 'true')}
+                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="true">Internal (Private)</option>
+                                <option value="false">Public (Visible to Estate)</option>
                             </select>
                         </div>
                     </div>

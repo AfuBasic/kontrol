@@ -84,6 +84,16 @@ class UpdateIncidentStatusAction
                 }
             }
 
+            // 5. Handle is_private toggle if provided
+            if (array_key_exists('is_private', $data)) {
+                $isPrivate = (bool) $data['is_private'];
+                if ($incident->is_private !== $isPrivate) {
+                    $incident->is_private = $isPrivate;
+                    $visibility = $isPrivate ? 'private' : 'public';
+                    $loggedActions[] = "updated incident visibility to: {$visibility}";
+                }
+            }
+
             $incident->save();
 
             // Log activity for updates

@@ -23,6 +23,7 @@ class UpdateIncidentStatusRequest extends FormRequest
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
             'priority' => ['nullable', Rule::in(['critical', 'high', 'medium', 'low'])],
             'category' => ['nullable', 'string'],
+            'is_private' => ['nullable', 'boolean'],
         ];
     }
 
