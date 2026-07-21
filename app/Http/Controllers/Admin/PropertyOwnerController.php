@@ -117,11 +117,15 @@ class PropertyOwnerController extends Controller
         if ($pendingOwners > 0) {
             $insights[] = "{$pendingOwners} property owners have not accepted their invitations.";
         }
-        $ownersWithNoProperties = User::query()
+        $ownersNoPropertiesList = User::query()
             ->forEstate($estate->id)
             ->withRole('property_owner', $estate->id)
             ->whereDoesntHave('properties', fn ($q) => $q->where('estate_id', $estate->id))
-            ->count();
+            ->get(['users.id', 'users.name'])
+            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
+            ->toArray();
+
+        $ownersWithNoProperties = count($ownersNoPropertiesList);
         if ($ownersWithNoProperties > 0) {
             $insights[] = "{$ownersWithNoProperties} property owners have no properties assigned to them.";
         }
@@ -154,6 +158,7 @@ class PropertyOwnerController extends Controller
                 'properties_owned' => $totalPropertiesOwned,
             ],
             'insights' => $insights,
+            'incompleteOwners' => $ownersNoPropertiesList,
             'inviteLink' => $inviteLinkData,
         ]);
     }
