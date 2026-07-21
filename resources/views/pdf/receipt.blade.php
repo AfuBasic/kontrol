@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #1e293b;
             background: white;
             padding: 40px;
@@ -115,7 +115,7 @@
             </div>
 
             <div class="amount">
-                ₦{{ number_format($transaction['amount'] / 100, 2) }}
+                &#8358;{{ number_format(($transaction['amount'] ?? 0) / 100, 2) }}
             </div>
             <div class="status">
                 {{ $transaction['status_label'] ?? 'Successful' }}
