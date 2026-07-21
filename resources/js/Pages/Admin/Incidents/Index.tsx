@@ -1,31 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    AlertTriangle, 
-    CheckCircle2, 
-    Clock, 
-    Eye, 
-    MessageSquare, 
-    Search, 
-    ThumbsUp, 
-    Wrench, 
-    Filter, 
-    Plus,
-    X,
-    Grid,
-    List,
-    User,
-    UserPlus,
-    Calendar,
-    Paperclip,
-    TrendingUp,
-    CheckCircle,
-    Activity,
-    Shield,
-    SlidersHorizontal,
-    MoreHorizontal
-} from 'lucide-react';
+import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, Activity, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -40,18 +16,24 @@ type Incident = {
     hashid: string;
     title: string;
     body: string;
-    category: {
-        value: string;
-        label: string;
-    } | string;
-    priority: {
-        value: string;
-        label: string;
-    } | string;
-    status: {
-        value: string;
-        label: string;
-    } | string;
+    category:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
+    priority:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
+    status:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
     location: string | null;
     is_private: boolean;
     created_at: string;
@@ -76,13 +58,15 @@ type Incident = {
 };
 
 type Props = {
-    incidents: {
-        data: Incident[];
-        links?: Array<{ url: string | null; label: string; active: boolean }>;
-        current_page?: number;
-        last_page?: number;
-        total?: number;
-    } | Incident[];
+    incidents:
+        | {
+              data: Incident[];
+              links?: Array<{ url: string | null; label: string; active: boolean }>;
+              current_page?: number;
+              last_page?: number;
+              total?: number;
+          }
+        | Incident[];
     filters: {
         category?: string;
         status?: string;
@@ -113,15 +97,14 @@ type Props = {
     }>;
 };
 
-export default function IncidentsIndex({ 
-    incidents: rawIncidents, 
-    filters: initialFilters, 
-    categories, 
+export default function IncidentsIndex({
+    incidents: rawIncidents,
+    filters: initialFilters,
+    categories,
     statuses,
     stats,
-    insights,
     admins,
-    recentActivity
+    recentActivity,
 }: Props) {
     const filters = initialFilters || {};
     const viewMode = filters.view || 'board';
@@ -133,13 +116,13 @@ export default function IncidentsIndex({
     const [assigneeId, setAssigneeId] = useState(filters.assignee_id || '');
     const [slaStatus, setSlaStatus] = useState(filters.sla_status || '');
     const [sort, setSort] = useState(filters.sort || 'newest');
-    
+
     // Assignee dropdown state per incident card/row
     const [activeAssigneeDropdown, setActiveAssigneeDropdown] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Get flat incidents list
-    const incidentsList = Array.isArray(rawIncidents) ? rawIncidents : (rawIncidents.data || []);
+    const incidentsList = Array.isArray(rawIncidents) ? rawIncidents : rawIncidents.data || [];
 
     // Filter logic update
     const applyFilters = (newParams: Record<string, string | undefined>) => {
@@ -163,7 +146,7 @@ export default function IncidentsIndex({
         router.get('/admin/incidents', params, {
             preserveState: true,
             preserveScroll: true,
-            replace: true
+            replace: true,
         });
     };
 
@@ -196,33 +179,44 @@ export default function IncidentsIndex({
 
     // Inline assignee update
     const handleAssign = (incidentId: number, incidentHash: string, adminId: number | null) => {
-        router.put(`/admin/incidents/${incidentHash}/status`, {
-            assigned_to: adminId,
-            status: 'acknowledged' // auto acknowledge on assign if pending
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setActiveAssigneeDropdown(null);
-            }
-        });
+        router.put(
+            `/admin/incidents/${incidentHash}/status`,
+            {
+                assigned_to: adminId,
+                status: 'acknowledged', // auto acknowledge on assign if pending
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setActiveAssigneeDropdown(null);
+                },
+            },
+        );
     };
 
     // Inline status transitions
     const handleStatusTransition = (incidentHash: string, nextStatus: string) => {
-        router.put(`/admin/incidents/${incidentHash}/status`, {
-            status: nextStatus
-        }, { preserveScroll: true });
+        router.put(
+            `/admin/incidents/${incidentHash}/status`,
+            {
+                status: nextStatus,
+            },
+            { preserveScroll: true },
+        );
     };
 
     // SLA helper calculations
     const getSlaStatus = (incident: Incident) => {
         const created = new Date(incident.created_at).getTime();
-        const resolved = incident.solved_at ? new Date(incident.solved_at).getTime() : 
-                         incident.closed_at ? new Date(incident.closed_at).getTime() : null;
-        
+        const resolved = incident.solved_at
+            ? new Date(incident.solved_at).getTime()
+            : incident.closed_at
+              ? new Date(incident.closed_at).getTime()
+              : null;
+
         const nowTime = new Date().getTime();
         const durationLimit = 24 * 60 * 60 * 1000; // 24 hours in ms
-        const warningLimit = 16 * 60 * 60 * 1000;  // 16 hours in ms
+        const warningLimit = 16 * 60 * 60 * 1000; // 16 hours in ms
 
         if (resolved) {
             const timeTaken = resolved - created;
@@ -231,7 +225,7 @@ export default function IncidentsIndex({
                 label: breached ? 'SLA Breached' : 'SLA Met',
                 style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
                 indicator: breached ? '🔴' : '🟢',
-                breached
+                breached,
             };
         }
 
@@ -241,14 +235,14 @@ export default function IncidentsIndex({
                 label: 'SLA Breached',
                 style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
                 indicator: '🔴',
-                breached: true
+                breached: true,
             };
         } else if (elapsed > warningLimit) {
             return {
                 label: 'SLA Warning',
                 style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
                 indicator: '🟠',
-                breached: false
+                breached: false,
             };
         } else {
             const remainingHours = Math.round((durationLimit - elapsed) / (1000 * 60 * 60));
@@ -256,7 +250,7 @@ export default function IncidentsIndex({
                 label: `${remainingHours}h remaining`,
                 style: 'bg-slate-50 text-slate-700 border-slate-200',
                 indicator: '🟢',
-                breached: false
+                breached: false,
             };
         }
     };
@@ -296,29 +290,33 @@ export default function IncidentsIndex({
     };
 
     // 1. Needs Attention Triage
-    const needsAttentionIncidents = incidentsList.filter(incident => {
+    const needsAttentionIncidents = incidentsList.filter((incident) => {
         const priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
         const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
         const isCritical = priorityVal === 'critical' || priorityVal === 'high';
-        
+
         // SLA breach warning helper
         const created = new Date(incident.created_at).getTime();
-        const isApproachingSla = !incident.solved_at && !incident.closed_at && (new Date().getTime() - created > 16 * 60 * 60 * 1000);
+        const isApproachingSla = !incident.solved_at && !incident.closed_at && new Date().getTime() - created > 16 * 60 * 60 * 1000;
 
-        return (
-            (isCritical && statusVal === 'pending') || 
-            (statusVal === 'pending' && !incident.assignee) ||
-            isApproachingSla
-        );
+        return (isCritical && statusVal === 'pending') || (statusVal === 'pending' && !incident.assignee) || isApproachingSla;
     });
 
     // 2. Kanban Board Columns Mapping
     const boardColumns = [
         { id: 'pending', title: 'Open', count: stats.open },
-        { id: 'acknowledged', title: 'Assigned', count: incidentsList.filter(i => (typeof i.status === 'object' ? i.status.value : i.status) === 'acknowledged').length },
+        {
+            id: 'acknowledged',
+            title: 'Assigned',
+            count: incidentsList.filter((i) => (typeof i.status === 'object' ? i.status.value : i.status) === 'acknowledged').length,
+        },
         { id: 'resolving', title: 'In Progress', count: stats.in_progress },
         { id: 'solved', title: 'Waiting for Resident', count: stats.waiting_review },
-        { id: 'closed', title: 'Closed', count: incidentsList.filter(i => (typeof i.status === 'object' ? i.status.value : i.status) === 'closed').length },
+        {
+            id: 'closed',
+            title: 'Closed',
+            count: incidentsList.filter((i) => (typeof i.status === 'object' ? i.status.value : i.status) === 'closed').length,
+        },
     ];
 
     const hasActiveFilters = Boolean(search || category || status || priority || assigneeId || slaStatus);
@@ -331,18 +329,18 @@ export default function IncidentsIndex({
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-slate-900">Incident Workspace</h1>
-                    <p className="text-xs font-semibold text-slate-500">Track estate operational health, resolve safety reports, and manage SLA deadlines.</p>
+                    <p className="text-xs font-semibold text-slate-500">
+                        Track estate operational health, resolve safety reports, and manage SLA deadlines.
+                    </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     {/* View Switcher */}
                     <div className="inline-flex rounded-xl bg-slate-100 p-1">
                         <button
                             onClick={() => applyFilters({ view: 'board' })}
                             className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                                viewMode === 'board' 
-                                    ? 'bg-white text-slate-950 shadow-xs' 
-                                    : 'text-slate-500 hover:text-slate-800'
+                                viewMode === 'board' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                             <Grid className="h-3.5 w-3.5" />
@@ -351,9 +349,7 @@ export default function IncidentsIndex({
                         <button
                             onClick={() => applyFilters({ view: 'table' })}
                             className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                                viewMode === 'table' 
-                                    ? 'bg-white text-slate-950 shadow-xs' 
-                                    : 'text-slate-500 hover:text-slate-800'
+                                viewMode === 'table' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                             <List className="h-3.5 w-3.5" />
@@ -363,7 +359,7 @@ export default function IncidentsIndex({
 
                     <Link
                         href="/resident/incidents/create"
-                        className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-black tracking-wide text-white uppercase shadow-sm hover:bg-slate-800 active:scale-95 transition"
+                        className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-black tracking-wide text-white uppercase shadow-sm transition hover:bg-slate-800 active:scale-95"
                     >
                         <Plus className="h-4 w-4" strokeWidth={3} />
                         Report Incident
@@ -422,7 +418,7 @@ export default function IncidentsIndex({
                 {needsAttentionIncidents.length > 0 ? (
                     <div className="rounded-2xl border border-red-100 bg-linear-to-br from-red-50/40 to-orange-50/20 p-4.5 shadow-xs">
                         <div className="mb-3 flex items-center gap-2">
-                            <AlertTriangle className="h-4.5 w-4.5 text-red-600 animate-bounce" />
+                            <AlertTriangle className="h-4.5 w-4.5 animate-bounce text-red-600" />
                             <h3 className="text-xs font-black tracking-wider text-red-900 uppercase">Needs Immediate Attention</h3>
                         </div>
                         <div className="space-y-2.5">
@@ -430,17 +426,20 @@ export default function IncidentsIndex({
                                 const priorityInfo = getPriorityStyles(incident.priority);
                                 const slaInfo = getSlaStatus(incident);
                                 return (
-                                    <div key={incident.id} className="flex flex-col gap-2.5 rounded-xl border border-red-100/70 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                                    <div
+                                        key={incident.id}
+                                        className="flex flex-col gap-2.5 rounded-xl border border-red-100/70 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between"
+                                    >
                                         <div className="flex items-start gap-3">
                                             <span className="mt-1 text-sm">{slaInfo.indicator}</span>
                                             <div>
-                                                <Link 
+                                                <Link
                                                     href={`/admin/incidents/${incident.hashid}`}
                                                     className="text-xs font-black text-slate-900 hover:text-indigo-600"
                                                 >
                                                     {incident.title}
                                                 </Link>
-                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-455">
+                                                <div className="text-slate-455 mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold">
                                                     <span className={`rounded-full px-1.5 py-0.5 text-[8px] uppercase ${priorityInfo.bg}`}>
                                                         {priorityInfo.text}
                                                     </span>
@@ -462,20 +461,18 @@ export default function IncidentsIndex({
                                             <span className={`rounded-xl border px-2 py-1 text-[9px] font-black uppercase ${slaInfo.style}`}>
                                                 {slaInfo.label}
                                             </span>
-                                            
+
                                             {/* Quick Assign Action */}
                                             {!incident.assignee ? (
                                                 <button
                                                     onClick={() => setActiveAssigneeDropdown(incident.id)}
-                                                    className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white hover:bg-slate-800 transition"
+                                                    className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-slate-800"
                                                 >
                                                     <UserPlus className="h-3 w-3" />
                                                     Assign
                                                 </button>
                                             ) : (
-                                                <span className="text-[10px] font-bold text-slate-500">
-                                                    Assigned to {incident.assignee.name}
-                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-500">Assigned to {incident.assignee.name}</span>
                                             )}
                                         </div>
                                     </div>
@@ -507,13 +504,13 @@ export default function IncidentsIndex({
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search incidents by title, reporter name, location..."
-                                    className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:outline-hidden focus:ring-slate-800"
+                                    className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
                                 />
                             </div>
-                            
+
                             <button
                                 type="submit"
-                                className="rounded-xl bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 transition"
+                                className="rounded-xl bg-slate-900 px-6 py-3 text-xs font-black tracking-wider text-white uppercase transition hover:bg-slate-800"
                             >
                                 Search
                             </button>
@@ -521,7 +518,7 @@ export default function IncidentsIndex({
 
                         {/* Inline Dropdown Filters */}
                         <div className="flex flex-wrap items-center gap-2 border-t border-slate-50 pt-3">
-                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">
+                            <div className="mr-2 flex items-center gap-1 text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 <SlidersHorizontal className="h-3 w-3" />
                                 Filters
                             </div>
@@ -533,10 +530,14 @@ export default function IncidentsIndex({
                                     setStatus(e.target.value);
                                     applyFilters({ status: e.target.value || undefined });
                                 }}
-                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">All Statuses</option>
-                                {statuses.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                {statuses.map((s) => (
+                                    <option key={s.value} value={s.value}>
+                                        {s.label}
+                                    </option>
+                                ))}
                             </select>
 
                             {/* Priority */}
@@ -546,7 +547,7 @@ export default function IncidentsIndex({
                                     setPriority(e.target.value);
                                     applyFilters({ priority: e.target.value || undefined });
                                 }}
-                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">All Priorities</option>
                                 <option value="critical">Critical</option>
@@ -562,10 +563,14 @@ export default function IncidentsIndex({
                                     setCategory(e.target.value);
                                     applyFilters({ category: e.target.value || undefined });
                                 }}
-                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">All Categories</option>
-                                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                {categories.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                        {c.label}
+                                    </option>
+                                ))}
                             </select>
 
                             {/* Assignee */}
@@ -575,10 +580,14 @@ export default function IncidentsIndex({
                                     setAssigneeId(e.target.value);
                                     applyFilters({ assignee_id: e.target.value || undefined });
                                 }}
-                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">All Assignees</option>
-                                {admins.map(adm => <option key={adm.id} value={adm.id}>{adm.name}</option>)}
+                                {admins.map((adm) => (
+                                    <option key={adm.id} value={adm.id}>
+                                        {adm.name}
+                                    </option>
+                                ))}
                             </select>
 
                             {/* SLA Status */}
@@ -588,7 +597,7 @@ export default function IncidentsIndex({
                                     setSlaStatus(e.target.value);
                                     applyFilters({ sla_status: e.target.value || undefined });
                                 }}
-                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">All SLA Statuses</option>
                                 <option value="compliant">SLA Compliant</option>
@@ -600,7 +609,7 @@ export default function IncidentsIndex({
                                 <button
                                     type="button"
                                     onClick={handleClearFilters}
-                                    className="ml-auto inline-flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-150 px-3 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100"
+                                    className="border-slate-150 ml-auto inline-flex items-center gap-1 rounded-xl border bg-slate-50 px-3 py-1.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100"
                                 >
                                     <X className="h-3 w-3" />
                                     Clear Filters
@@ -614,17 +623,17 @@ export default function IncidentsIndex({
                 {incidentsList.length > 0 ? (
                     viewMode === 'board' ? (
                         /* KANBAN BOARD VIEW */
-                        <div className="grid grid-cols-1 gap-4 overflow-x-auto pb-4 sm:grid-cols-5 min-w-[900px]">
+                        <div className="grid min-w-[900px] grid-cols-1 gap-4 overflow-x-auto pb-4 sm:grid-cols-5">
                             {boardColumns.map((col) => {
-                                const colIncidents = incidentsList.filter(incident => {
+                                const colIncidents = incidentsList.filter((incident) => {
                                     const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
                                     return statusVal === col.id;
                                 });
 
                                 return (
-                                    <div key={col.id} className="flex flex-col rounded-2xl bg-slate-50/70 p-3 min-h-[450px]">
+                                    <div key={col.id} className="flex min-h-[450px] flex-col rounded-2xl bg-slate-50/70 p-3">
                                         <div className="mb-3 flex items-center justify-between px-1">
-                                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">{col.title}</h3>
+                                            <h3 className="text-xs font-black tracking-wider text-slate-700 uppercase">{col.title}</h3>
                                             <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black text-slate-600">
                                                 {colIncidents.length}
                                             </span>
@@ -639,11 +648,13 @@ export default function IncidentsIndex({
                                                     <motion.div
                                                         layout
                                                         key={incident.id}
-                                                        className="group relative rounded-xl border border-slate-150 bg-white p-3.5 shadow-xs hover:border-slate-300 transition-all"
+                                                        className="group border-slate-150 relative rounded-xl border bg-white p-3.5 shadow-xs transition-all hover:border-slate-300"
                                                     >
                                                         {/* Priority & SLA */}
                                                         <div className="mb-2 flex items-center justify-between gap-2">
-                                                            <span className={`rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${priorityInfo.bg}`}>
+                                                            <span
+                                                                className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
+                                                            >
                                                                 {priorityInfo.text}
                                                             </span>
                                                             <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
@@ -652,9 +663,9 @@ export default function IncidentsIndex({
                                                         </div>
 
                                                         {/* Title */}
-                                                        <Link 
+                                                        <Link
                                                             href={`/admin/incidents/${incident.hashid}`}
-                                                            className="block text-xs font-bold leading-snug text-slate-900 group-hover:text-indigo-600 transition"
+                                                            className="block text-xs leading-snug font-bold text-slate-900 transition group-hover:text-indigo-600"
                                                         >
                                                             {incident.title}
                                                         </Link>
@@ -681,7 +692,11 @@ export default function IncidentsIndex({
                                                             {/* Assignee inline select */}
                                                             <div className="relative">
                                                                 <button
-                                                                    onClick={() => setActiveAssigneeDropdown(activeAssigneeDropdown === incident.id ? null : incident.id)}
+                                                                    onClick={() =>
+                                                                        setActiveAssigneeDropdown(
+                                                                            activeAssigneeDropdown === incident.id ? null : incident.id,
+                                                                        )
+                                                                    }
                                                                     className="flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
                                                                 >
                                                                     <User className="h-2.5 w-2.5" />
@@ -693,23 +708,27 @@ export default function IncidentsIndex({
                                                                 {/* Assignee Popover */}
                                                                 <AnimatePresence>
                                                                     {activeAssigneeDropdown === incident.id && (
-                                                                        <div 
+                                                                        <div
                                                                             ref={dropdownRef}
-                                                                            className="absolute right-0 bottom-full z-30 mb-1 w-44 rounded-xl border border-slate-150 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
+                                                                            className="border-slate-150 absolute right-0 bottom-full z-30 mb-1 w-44 rounded-xl border bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
                                                                         >
-                                                                            <p className="px-2 py-1.5 text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50">Assign Guard/Staff</p>
+                                                                            <p className="border-b border-slate-50 px-2 py-1.5 text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                                                                Assign Guard/Staff
+                                                                            </p>
                                                                             <div className="max-h-36 overflow-y-auto py-1">
                                                                                 <button
                                                                                     onClick={() => handleAssign(incident.id, incident.hashid, null)}
-                                                                                    className="w-full px-2 py-1 text-left text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-lg"
+                                                                                    className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                                                                 >
                                                                                     Unassigned
                                                                                 </button>
-                                                                                {admins.map(adm => (
+                                                                                {admins.map((adm) => (
                                                                                     <button
                                                                                         key={adm.id}
-                                                                                        onClick={() => handleAssign(incident.id, incident.hashid, adm.id)}
-                                                                                        className="w-full px-2 py-1 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg"
+                                                                                        onClick={() =>
+                                                                                            handleAssign(incident.id, incident.hashid, adm.id)
+                                                                                        }
+                                                                                        className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                                                                                     >
                                                                                         {adm.name}
                                                                                     </button>
@@ -735,19 +754,35 @@ export default function IncidentsIndex({
                         </div>
                     ) : (
                         /* REDESIGNED SPREADSHEET TABLE VIEW */
-                        <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
-                            <div className="overflow-x-auto min-h-[280px]">
+                        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                            <div className="min-h-[280px] overflow-x-auto">
                                 <table className="w-full table-auto border-collapse">
-                                    <thead className="bg-slate-50/70 border-b border-slate-100">
+                                    <thead className="border-b border-slate-100 bg-slate-50/70">
                                         <tr>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Incident</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Priority</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Category</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Reporter</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Location</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Assignee</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Status</th>
-                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Age</th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Incident
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Priority
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Category
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Reporter
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Location
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Assignee
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Status
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Age
+                                            </th>
                                             <th className="w-10 px-6 py-3.5"></th>
                                         </tr>
                                     </thead>
@@ -761,7 +796,7 @@ export default function IncidentsIndex({
                                                 <tr key={incident.id} className="transition hover:bg-slate-50/40">
                                                     {/* Incident title */}
                                                     <td className="px-6 py-3.5">
-                                                        <Link 
+                                                        <Link
                                                             href={`/admin/incidents/${incident.hashid}`}
                                                             className="block max-w-[220px] truncate text-xs font-bold text-slate-900 hover:text-indigo-600"
                                                         >
@@ -774,13 +809,15 @@ export default function IncidentsIndex({
 
                                                     {/* Priority */}
                                                     <td className="px-6 py-3.5 whitespace-nowrap">
-                                                        <span className={`inline-flex rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${priorityInfo.bg}`}>
+                                                        <span
+                                                            className={`inline-flex rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
+                                                        >
                                                             {priorityInfo.text}
                                                         </span>
                                                     </td>
 
                                                     {/* Category */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-semibold text-slate-600">
+                                                    <td className="px-6 py-3.5 text-xs font-semibold whitespace-nowrap text-slate-600">
                                                         {categoryLabel.replace('_', ' ')}
                                                     </td>
 
@@ -788,36 +825,42 @@ export default function IncidentsIndex({
                                                     <td className="px-6 py-3.5 whitespace-nowrap">
                                                         <div className="text-xs font-semibold text-slate-800">
                                                             <span>{incident.reporter.name}</span>
-                                                            <span className="block text-[9px] font-bold text-slate-400">{incident.reporter.email}</span>
+                                                            <span className="block text-[9px] font-bold text-slate-400">
+                                                                {incident.reporter.email}
+                                                            </span>
                                                         </div>
                                                     </td>
 
                                                     {/* Location */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         {incident.location || '—'}
                                                     </td>
 
                                                     {/* Assignee */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-700">
-                                                        {incident.assignee ? incident.assignee.name : (
-                                                            <span className="text-slate-400 font-semibold italic">Unassigned</span>
+                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-700">
+                                                        {incident.assignee ? (
+                                                            incident.assignee.name
+                                                        ) : (
+                                                            <span className="font-semibold text-slate-400 italic">Unassigned</span>
                                                         )}
                                                     </td>
 
                                                     {/* Status */}
                                                     <td className="px-6 py-3.5 whitespace-nowrap">
-                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusInfo.color}`}>
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${statusInfo.color}`}
+                                                        >
                                                             {statusInfo.label}
                                                         </span>
                                                     </td>
 
                                                     {/* Age */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         {formatDistanceToNow(new Date(incident.created_at))}
                                                     </td>
 
                                                     {/* Quick View Link */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-right text-sm">
+                                                    <td className="px-6 py-3.5 text-right text-sm whitespace-nowrap">
                                                         <Link
                                                             href={`/admin/incidents/${incident.hashid}`}
                                                             className="text-slate-400 hover:text-slate-800"
@@ -835,15 +878,16 @@ export default function IncidentsIndex({
                     )
                 ) : (
                     /* REDESIGNED EMPTY STATE */
-                    <div className="rounded-2xl border border-slate-100 bg-white p-12 shadow-xs text-center">
-                        <AlertTriangle className="mx-auto h-8 w-8 text-slate-400 mb-3" />
-                        <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">No active incidents</h3>
-                        <p className="mt-1 max-w-xs mx-auto text-xs font-semibold text-slate-400">
-                            Your estate currently has no active community incidents recorded. Residents can report maintenance requests, plumbing issues, or security concerns directly.
+                    <div className="rounded-2xl border border-slate-100 bg-white p-12 text-center shadow-xs">
+                        <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+                        <h3 className="text-sm font-black tracking-wider text-slate-900 uppercase">No active incidents</h3>
+                        <p className="mx-auto mt-1 max-w-xs text-xs font-semibold text-slate-400">
+                            Your estate currently has no active community incidents recorded. Residents can report maintenance requests, plumbing
+                            issues, or security concerns directly.
                         </p>
                         <Link
                             href="/resident/incidents/create"
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
                         >
                             <Plus className="h-4 w-4" />
                             Report Incident
@@ -854,8 +898,9 @@ export default function IncidentsIndex({
                 {/* PAGINATION */}
                 {!Array.isArray(rawIncidents) && rawIncidents.last_page && rawIncidents.last_page > 1 && (
                     <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
-                        <p className="text-xs font-bold text-slate-505">
-                            Showing <span className="text-slate-950">{rawIncidents.data.length}</span> of <span className="text-slate-950">{rawIncidents.total}</span> reported incidents
+                        <p className="text-slate-505 text-xs font-bold">
+                            Showing <span className="text-slate-950">{rawIncidents.data.length}</span> of{' '}
+                            <span className="text-slate-950">{rawIncidents.total}</span> reported incidents
                         </p>
                         <div className="flex gap-1.5">
                             {rawIncidents.links?.map((link, idx) => (
@@ -868,8 +913,8 @@ export default function IncidentsIndex({
                                         link.active
                                             ? 'bg-slate-950 text-white shadow-sm'
                                             : link.url
-                                                ? 'bg-white text-slate-655 border border-slate-205 hover:bg-slate-50'
-                                                : 'cursor-not-allowed text-slate-300 border border-slate-100 opacity-50'
+                                              ? 'text-slate-655 border-slate-205 border bg-white hover:bg-slate-50'
+                                              : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50'
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
@@ -885,11 +930,11 @@ export default function IncidentsIndex({
                             <Activity className="h-4 w-4 text-slate-600" />
                             <h3 className="text-xs font-black tracking-wider text-slate-900 uppercase">Recent Operations Feed</h3>
                         </div>
-                        
-                        <div className="relative border-l border-slate-100 pl-4.5 ml-2.5 space-y-4.5">
+
+                        <div className="relative ml-2.5 space-y-4.5 border-l border-slate-100 pl-4.5">
                             {recentActivity.slice(0, 5).map((log) => (
                                 <div key={log.id} className="relative flex flex-col gap-0.5">
-                                    <span className="absolute -left-[23px] top-1 h-2 w-2 rounded-full border border-white bg-slate-300 ring-2 ring-white" />
+                                    <span className="absolute top-1 -left-[23px] h-2 w-2 rounded-full border border-white bg-slate-300 ring-2 ring-white" />
                                     <span className="text-xs font-bold text-slate-800">{log.description}</span>
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
                                         <span>By {log.causer_name}</span>
