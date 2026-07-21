@@ -70,6 +70,8 @@ type Props = {
         pendingCheckout: number;
         deniedEntries: number;
         avgDuration: number;
+        expectedToday: number;
+        totalChecked: number;
     };
     analytics: {
         trend: Array<{ date: string; count: number }>;
@@ -233,42 +235,25 @@ export default function VisitorIndex({
                         {/* Main Grid: Statistics summary & Live table list */}
                         <div className="space-y-6 lg:col-span-2">
                             {/* KPI Metrics */}
-                            <div className={`grid gap-3.5 ${checkoutEnabled ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-3'}`}>
-                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                        {checkoutEnabled ? 'Currently Inside' : 'Checked In'}
-                                    </span>
-                                    <span className="mt-1 block text-xl font-black text-slate-900">
-                                        {checkoutEnabled ? metrics.currentlyInside : metrics.visitorsToday}
-                                    </span>
-                                </div>
+                            <div className={`grid gap-3.5 ${checkoutEnabled ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
                                 {checkoutEnabled && (
                                     <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Visitors Today</span>
-                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.visitorsToday}</span>
-                                    </div>
-                                )}
-                                {checkoutEnabled && (
-                                    <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Pending Checkout</span>
-                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.pendingCheckout}</span>
-                                    </div>
-                                )}
-                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Denied Entries</span>
-                                    <span className="mt-1 block text-xl font-black text-slate-900">{metrics.deniedEntries}</span>
-                                </div>
-                                {checkoutEnabled ? (
-                                    <div className="col-span-2 rounded-xl border border-slate-100 bg-white p-4 shadow-xs md:col-span-1">
-                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Avg Duration</span>
-                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.avgDuration} min</span>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Checked</span>
+                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Currently In</span>
                                         <span className="mt-1 block text-xl font-black text-slate-900">{metrics.currentlyInside}</span>
                                     </div>
                                 )}
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Checked Today</span>
+                                    <span className="mt-1 block text-xl font-black text-slate-900">{metrics.visitorsToday}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Expected Today</span>
+                                    <span className="mt-1 block text-xl font-black text-slate-900">{metrics.expectedToday}</span>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Checked</span>
+                                    <span className="mt-1 block text-xl font-black text-slate-900">{metrics.totalChecked}</span>
+                                </div>
                             </div>
 
                             {/* Filters strip */}

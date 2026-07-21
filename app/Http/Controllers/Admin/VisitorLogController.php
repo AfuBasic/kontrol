@@ -126,6 +126,16 @@ class VisitorLogController extends Controller
             ->pluck('duration');
         $avgDuration = $durations->count() > 0 ? round($durations->average()) : 0;
 
+        $expectedToday = AccessCode::where('estate_id', $estate->id)
+            ->whereIn('status', ['active', 'scheduled'])
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhereDate('expires_at', '>=', Carbon::today());
+            })
+            ->count();
+
+        $totalChecked = AccessLog::where('estate_id', $estate->id)->count();
+
         // Trend (7 Days)
         $trend = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -142,7 +152,7 @@ class VisitorLogController extends Controller
             ->groupBy('hour')
             ->orderBy('hour')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'label' => sprintf('%02d:00', $item->hour),
                 'value' => $item->count,
             ])
@@ -168,7 +178,7 @@ class VisitorLogController extends Controller
             ->orderByDesc('visits_count')
             ->limit(5)
             ->get(['id', 'name'])
-            ->map(fn ($u) => [
+            ->map(fn($u) => [
                 'name' => $u->name,
                 'count' => $u->visits_count,
             ])
@@ -189,7 +199,7 @@ class VisitorLogController extends Controller
                 return [
                     'id' => $log->id,
                     'type' => $type,
-                    'message' => $type === 'exit'
+                    'message' => $type === 'exit' 
                         ? "{$visitor} checked out of the estate"
                         : "{$visitor} arrived to visit {$host}",
                     'time' => $time->diffForHumans(),
@@ -240,6 +250,8 @@ class VisitorLogController extends Controller
                 'pendingCheckout' => $pendingCheckout,
                 'deniedEntries' => $deniedEntries,
                 'avgDuration' => $avgDuration,
+                'expectedToday' => $expectedToday,
+                'totalChecked' => $totalChecked,
             ],
             'analytics' => [
                 'trend' => $trend,
