@@ -5,18 +5,14 @@ import {
     PlusIcon, 
     ArrowRightIcon, 
     ChevronDownIcon, 
-    ChevronRightIcon,
     EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
-    LinkIcon, 
     Mail, 
     Trash2, 
     MapPin, 
-    Phone, 
-    User, 
     Loader2, 
     Check, 
     Users, 
@@ -28,14 +24,10 @@ import {
     AlertCircle, 
     Calendar,
     Pencil,
-    ShieldAlert,
-    ExternalLink,
     Clock,
-    X,
-    Eye
+    X
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
+import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { useDebounce } from '@/Hooks/useDebounce';
@@ -98,7 +90,11 @@ type Props = {
     } | null;
 };
 
-export default function Residents({ residents, filters, stats, insights, inviteLink }: Props) {
+export default function Residents({ residents, filters: initialFilters, stats: initialStats, insights: initialInsights, inviteLink }: Props) {
+    const filters = initialFilters || {};
+    const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0, occupancy_rate: 0 };
+    const insights = initialInsights || [];
+
     const { can } = usePermission();
     const hasResidents = residents && residents.data && residents.data.length > 0;
     

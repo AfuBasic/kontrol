@@ -4,22 +4,17 @@ import {
     FunnelIcon, 
     XMarkIcon, 
     ChevronDownIcon, 
-    ChevronRightIcon,
     EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
-    LinkIcon, 
     Mail, 
     Trash2, 
     MapPin, 
-    Phone, 
-    User, 
     Loader2, 
     Check, 
     Building, 
-    Percent, 
     ShieldCheck, 
     UserMinus, 
     Send, 
@@ -27,16 +22,11 @@ import {
     AlertCircle, 
     Calendar,
     Pencil,
-    ShieldAlert,
-    ExternalLink,
-    Clock,
     X,
-    Users,
-    KeyRound
+    Users
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { index, create, properties, residents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
-import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
+import { useState, useEffect, useCallback } from 'react';
+import { properties, residents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -92,7 +82,11 @@ interface Props {
     } | null;
 }
 
-export default function Index({ propertyOwners, filters, stats, insights, inviteLink }: Props) {
+export default function Index({ propertyOwners, filters: initialFilters, stats: initialStats, insights: initialInsights, inviteLink }: Props) {
+    const filters = initialFilters || {};
+    const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0, properties_owned: 0 };
+    const insights = initialInsights || [];
+
     const { can } = usePermission();
     const hasOwners = propertyOwners && propertyOwners.data && propertyOwners.data.length > 0;
     
