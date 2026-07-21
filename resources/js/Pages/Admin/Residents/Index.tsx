@@ -649,12 +649,12 @@ export default function Residents({
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                                                             resident.status === 'inactive'
                                                                 ? 'bg-rose-50 text-rose-700'
-                                                                : resident.status === 'active'
+                                                                : (resident.status === 'active' || resident.status === 'accepted')
                                                                   ? 'bg-emerald-50 text-emerald-700'
                                                                   : 'bg-amber-50 text-amber-700'
                                                         }`}
                                                     >
-                                                        {resident.status}
+                                                        {(resident.status === 'active' || resident.status === 'accepted') ? 'active' : resident.status}
                                                     </span>
                                                 </td>
 
