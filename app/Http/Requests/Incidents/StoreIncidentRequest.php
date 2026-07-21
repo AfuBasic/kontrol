@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Incidents;
 
 use App\Enums\IncidentCategory;
+use App\Enums\IncidentPriority;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,6 +20,7 @@ class StoreIncidentRequest extends FormRequest
             'title' => ['required', 'string', 'min:5', 'max:150'],
             'body' => ['required', 'string', 'min:20', 'max:5000'],
             'category' => ['required', Rule::enum(IncidentCategory::class)],
+            'priority' => ['nullable', Rule::enum(IncidentPriority::class)],
             'attachment_url' => ['nullable', 'string', 'url'],
             'attachment_type' => ['nullable', 'string', 'in:image,video'],
             'attachment_hash' => ['nullable', 'string'],

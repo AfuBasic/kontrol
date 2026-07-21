@@ -32,6 +32,7 @@ class CreateIncidentAction
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'category' => $data['category'],
+                'priority' => $data['priority'] ?? 'medium',
                 'status' => IncidentStatus::Pending,
                 'attachment_url' => $data['attachment_url'] ?? null,
                 'attachment_type' => $data['attachment_type'] ?? null,
