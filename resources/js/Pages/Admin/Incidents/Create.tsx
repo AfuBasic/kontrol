@@ -322,32 +322,6 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                             </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="mt-8 flex justify-end gap-3 border-t border-slate-50 pt-5">
-                            <Link
-                                href="/admin/incidents"
-                                className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-slate-200 transition"
-                            >
-                                Cancel
-                            </Link>
-                            <button
-                                type="submit"
-                                disabled={processing || uploadingMedia}
-                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
-                            >
-                                {processing || uploadingMedia ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Reporting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send className="h-3 w-3" />
-                                        File Report
-                                    </>
-                                )}
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -433,6 +407,33 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                             </li>
                         </ul>
                     </div>
+                </div>
+
+                {/* BOTTOM ACTIONS BAR */}
+                <div className="lg:col-span-3 mt-6 flex justify-end gap-3 border-t border-slate-200/60 pt-5 w-full">
+                    <Link
+                        href="/admin/incidents"
+                        className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-655 hover:bg-slate-205 transition"
+                    >
+                        Cancel
+                    </Link>
+                    <button
+                        type="submit"
+                        disabled={processing || uploadingMedia}
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
+                    >
+                        {processing || uploadingMedia ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Reporting...
+                            </>
+                        ) : (
+                            <>
+                                <Send className="h-3 w-3" />
+                                File Report
+                            </>
+                        )}
+                    </button>
                 </div>
             </form>
         </>
