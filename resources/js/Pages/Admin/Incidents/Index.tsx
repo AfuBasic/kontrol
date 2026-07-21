@@ -1,442 +1,907 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, Clock, Eye, MessageSquare, Search, ThumbsUp, Wrench, Filter } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    AlertTriangle, 
+    CheckCircle2, 
+    Clock, 
+    Eye, 
+    MessageSquare, 
+    Search, 
+    ThumbsUp, 
+    Wrench, 
+    Filter, 
+    Plus,
+    X,
+    Grid,
+    List,
+    User,
+    UserPlus,
+    Calendar,
+    Paperclip,
+    TrendingUp,
+    CheckCircle,
+    Activity,
+    Shield,
+    SlidersHorizontal,
+    MoreHorizontal
+} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import AdminLayout from '@/Layouts/AdminLayout';
 
-import MobileSheet from '@/Components/MobileSheet';
-import Modal from '@/Components/Modal';
-import type { Incident, IncidentCategory, IncidentStatus, PaginatedData } from '@/types';
+type AdminUser = {
+    id: number;
+    name: string;
+};
+
+type Incident = {
+    id: number;
+    ulid: string;
+    hashid: string;
+    title: string;
+    body: string;
+    category: {
+        value: string;
+        label: string;
+    } | string;
+    priority: {
+        value: string;
+        label: string;
+    } | string;
+    status: {
+        value: string;
+        label: string;
+    } | string;
+    location: string | null;
+    is_private: boolean;
+    created_at: string;
+    updated_at: string;
+    acknowledged_at: string | null;
+    resolving_at: string | null;
+    solved_at: string | null;
+    closed_at: string | null;
+    upvotes_count: number;
+    comments_count: number;
+    attachment_url: string | null;
+    attachment_type: string | null;
+    reporter: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    assignee: {
+        id: number;
+        name: string;
+    } | null;
+};
 
 type Props = {
-    incidents: PaginatedData<Incident>;
+    incidents: {
+        data: Incident[];
+        links?: Array<{ url: string | null; label: string; active: boolean }>;
+        current_page?: number;
+        last_page?: number;
+        total?: number;
+    } | Incident[];
     filters: {
         category?: string;
         status?: string;
-        tab?: string;
         search?: string;
         sort?: string;
+        view?: 'board' | 'table';
+        priority?: string;
+        assignee_id?: string;
+        sla_status?: string;
     };
     categories: Array<{ value: string; label: string }>;
     statuses: Array<{ value: string; label: string }>;
+    stats: {
+        open: number;
+        in_progress: number;
+        waiting_review: number;
+        resolved_this_month: number;
+        avg_resolution_time: number;
+        sla_compliance: number;
+    };
+    insights: string[];
+    admins: AdminUser[];
+    recentActivity: Array<{
+        id: number;
+        description: string;
+        causer_name: string;
+        created_at: string;
+    }>;
 };
 
-const getStatusStyles = (status: IncidentStatus) => {
-    switch (status) {
-        case 'pending':
-            return {
-                bg: 'bg-amber-50',
-                text: 'text-amber-700',
-                border: 'border-amber-200/50',
-                icon: <Clock className="h-3 w-3" />,
-                label: 'Pending',
-            };
-        case 'acknowledged':
-            return {
-                bg: 'bg-blue-50',
-                text: 'text-blue-700',
-                border: 'border-blue-200/50',
-                icon: <Eye className="h-3 w-3" />,
-                label: 'Acknowledged',
-            };
-        case 'resolving':
-            return {
-                bg: 'bg-indigo-50',
-                text: 'text-indigo-700',
-                border: 'border-indigo-200/50',
-                icon: <Wrench className="h-3 w-3" />,
-                label: 'Resolving',
-            };
-        case 'solved':
-            return {
-                bg: 'bg-emerald-50',
-                text: 'text-emerald-700',
-                border: 'border-emerald-200/50',
-                icon: <CheckCircle2 className="h-3 w-3" />,
-                label: 'Solved',
-            };
-        case 'closed':
-            return {
-                bg: 'bg-slate-100',
-                text: 'text-slate-600',
-                border: 'border-slate-200',
-                icon: <CheckCircle2 className="h-3 w-3" />,
-                label: 'Closed',
-            };
-        default:
-            return {
-                bg: 'bg-slate-50',
-                text: 'text-slate-600',
-                border: 'border-slate-200',
-                icon: <Clock className="h-3 w-3" />,
-                label: 'Unknown',
-            };
-    }
-};
+export default function IncidentsIndex({ 
+    incidents: rawIncidents, 
+    filters: initialFilters, 
+    categories, 
+    statuses,
+    stats,
+    insights,
+    admins,
+    recentActivity
+}: Props) {
+    const filters = initialFilters || {};
+    const viewMode = filters.view || 'board';
 
-export default function Index({ incidents, filters, categories, statuses }: Props) {
-    const [search, setSearch] = useState(typeof filters?.search === 'string' ? filters.search : '');
-    const [category, setCategory] = useState(typeof filters?.category === 'string' ? filters.category : '');
-    const [status, setStatus] = useState(typeof filters?.status === 'string' ? filters.status : '');
-    const [sort, setSort] = useState((typeof filters?.sort === 'string' ? filters.sort : '') || 'newest');
-    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(true);
+    const [search, setSearch] = useState(filters.search || '');
+    const [category, setCategory] = useState(filters.category || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const [priority, setPriority] = useState(filters.priority || '');
+    const [assigneeId, setAssigneeId] = useState(filters.assignee_id || '');
+    const [slaStatus, setSlaStatus] = useState(filters.sla_status || '');
+    const [sort, setSort] = useState(filters.sort || 'newest');
+    
+    // Assignee dropdown state per incident card/row
+    const [activeAssigneeDropdown, setActiveAssigneeDropdown] = useState<number | null>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // Get flat incidents list
+    const incidentsList = Array.isArray(rawIncidents) ? rawIncidents : (rawIncidents.data || []);
 
+    // Filter logic update
     const applyFilters = (newParams: Record<string, string | undefined>) => {
         const params: Record<string, string | undefined> = {
+            view: viewMode,
             search: search || undefined,
             category: category || undefined,
             status: status || undefined,
+            priority: priority || undefined,
+            assignee_id: assigneeId || undefined,
+            sla_status: slaStatus || undefined,
             sort: sort !== 'newest' ? sort : undefined,
             ...newParams,
         };
 
-        // remove undefined values
+        // Clean parameters
         Object.keys(params).forEach((key) => {
-            if (params[key] === undefined) {
-                delete params[key];
-            }
+            if (params[key] === undefined) delete params[key];
         });
 
         router.get('/admin/incidents', params, {
             preserveState: true,
             preserveScroll: true,
+            replace: true
         });
     };
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setActiveAssigneeDropdown(null);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         applyFilters({ search });
     };
 
-    const handleCategoryChange = (val: string) => {
-        setCategory(val);
-        applyFilters({ category: val || undefined });
+    const handleClearFilters = () => {
+        setSearch('');
+        setCategory('');
+        setStatus('');
+        setPriority('');
+        setAssigneeId('');
+        setSlaStatus('');
+        setSort('newest');
+        router.get('/admin/incidents', { view: viewMode }, { preserveState: true, preserveScroll: true });
     };
 
-    const handleStatusChange = (val: string) => {
-        setStatus(val);
-        applyFilters({ status: val || undefined });
+    // Inline assignee update
+    const handleAssign = (incidentId: number, incidentHash: string, adminId: number | null) => {
+        router.put(`/admin/incidents/${incidentHash}/status`, {
+            assigned_to: adminId,
+            status: 'acknowledged' // auto acknowledge on assign if pending
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setActiveAssigneeDropdown(null);
+            }
+        });
     };
 
-    const handleSortChange = (sortId: string) => {
-        setSort(sortId);
-        applyFilters({ sort: sortId || undefined });
+    // Inline status transitions
+    const handleStatusTransition = (incidentHash: string, nextStatus: string) => {
+        router.put(`/admin/incidents/${incidentHash}/status`, {
+            status: nextStatus
+        }, { preserveScroll: true });
     };
 
-    const filterFormContent = (
-        <div className="space-y-6 pt-4">
-            {/* Sort Options */}
-            <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Sort By</label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setSort('newest')}
-                        className={`rounded-xl py-3 text-sm font-bold ring-1 transition-all ${
-                            sort === 'newest'
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
-                                : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                        }`}
-                    >
-                        Newest
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setSort('popular')}
-                        className={`rounded-xl py-3 text-sm font-bold ring-1 transition-all ${
-                            sort === 'popular'
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
-                                : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                        }`}
-                    >
-                        Popular
-                    </button>
-                </div>
-            </div>
+    // SLA helper calculations
+    const getSlaStatus = (incident: Incident) => {
+        const created = new Date(incident.created_at).getTime();
+        const resolved = incident.solved_at ? new Date(incident.solved_at).getTime() : 
+                         incident.closed_at ? new Date(incident.closed_at).getTime() : null;
+        
+        const nowTime = new Date().getTime();
+        const durationLimit = 24 * 60 * 60 * 1000; // 24 hours in ms
+        const warningLimit = 16 * 60 * 60 * 1000;  // 16 hours in ms
 
-            {/* Status Options */}
-            <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Status</label>
-                <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1">
-                    <button
-                        type="button"
-                        onClick={() => setStatus('')}
-                        className={`rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
-                            !status ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                        }`}
-                    >
-                        All Statuses
-                    </button>
-                    {statuses.map((s) => (
-                        <button
-                            key={s.value}
-                            type="button"
-                            onClick={() => setStatus(s.value)}
-                            className={`truncate rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
-                                status === s.value
-                                    ? 'bg-indigo-600 text-white ring-indigo-600'
-                                    : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                            }`}
-                        >
-                            {s.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+        if (resolved) {
+            const timeTaken = resolved - created;
+            const breached = timeTaken > durationLimit;
+            return {
+                label: breached ? 'SLA Breached' : 'SLA Met',
+                style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
+                indicator: breached ? '🔴' : '🟢',
+                breached
+            };
+        }
 
-            {/* Category Options */}
-            <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Category</label>
-                <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1">
-                    <button
-                        type="button"
-                        onClick={() => setCategory('')}
-                        className={`rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
-                            !category ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                        }`}
-                    >
-                        All Categories
-                    </button>
-                    {categories.map((c) => (
-                        <button
-                            key={c.value}
-                            type="button"
-                            onClick={() => setCategory(c.value)}
-                            className={`truncate rounded-xl px-4 py-3 text-left text-xs font-bold ring-1 transition-all ${
-                                category === c.value
-                                    ? 'bg-indigo-600 text-white ring-indigo-600'
-                                    : 'bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100'
-                            }`}
-                        >
-                            {c.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+        const elapsed = nowTime - created;
+        if (elapsed > durationLimit) {
+            return {
+                label: 'SLA Breached',
+                style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
+                indicator: '🔴',
+                breached: true
+            };
+        } else if (elapsed > warningLimit) {
+            return {
+                label: 'SLA Warning',
+                style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
+                indicator: '🟠',
+                breached: false
+            };
+        } else {
+            const remainingHours = Math.round((durationLimit - elapsed) / (1000 * 60 * 60));
+            return {
+                label: `${remainingHours}h remaining`,
+                style: 'bg-slate-50 text-slate-700 border-slate-200',
+                indicator: '🟢',
+                breached: false
+            };
+        }
+    };
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 border-t border-slate-100 pt-4">
-                <button
-                    type="button"
-                    onClick={() => {
-                        setSearch('');
-                        setCategory('');
-                        setStatus('');
-                        setSort('newest');
-                        applyFilters({
-                            search: undefined,
-                            category: undefined,
-                            status: undefined,
-                            sort: undefined,
-                        });
-                        setIsFilterSheetOpen(false);
-                    }}
-                    className="flex-1 rounded-2xl bg-slate-100 py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 active:scale-95"
-                >
-                    Reset All
-                </button>
-                <button
-                    type="button"
-                    onClick={() => {
-                        applyFilters({
-                            category: category || undefined,
-                            status: status || undefined,
-                            sort: sort !== 'newest' ? sort : undefined,
-                        });
-                        setIsFilterSheetOpen(false);
-                    }}
-                    className="flex-[2] rounded-2xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95"
-                >
-                    Apply Filters
-                </button>
-            </div>
-        </div>
-    );
+    // Get Priority styles
+    const getPriorityStyles = (priorityVal: any) => {
+        const value = typeof priorityVal === 'object' ? priorityVal.value : priorityVal;
+        switch (value) {
+            case 'critical':
+                return { bg: 'bg-rose-600 text-white', text: 'Critical', colorClass: 'text-rose-600' };
+            case 'high':
+                return { bg: 'bg-orange-500 text-white', text: 'High', colorClass: 'text-orange-500' };
+            case 'medium':
+                return { bg: 'bg-blue-500 text-white', text: 'Medium', colorClass: 'text-blue-500' };
+            default:
+                return { bg: 'bg-slate-400 text-white', text: 'Low', colorClass: 'text-slate-400' };
+        }
+    };
+
+    // Get Status styles
+    const getStatusStyles = (statusVal: any) => {
+        const value = typeof statusVal === 'object' ? statusVal.value : statusVal;
+        switch (value) {
+            case 'pending':
+                return { label: 'Open', color: 'bg-amber-50 text-amber-700 border-amber-200/50' };
+            case 'acknowledged':
+                return { label: 'Assigned', color: 'bg-blue-50 text-blue-700 border-blue-200/50' };
+            case 'resolving':
+                return { label: 'In Progress', color: 'bg-indigo-50 text-indigo-700 border-indigo-200/50' };
+            case 'solved':
+                return { label: 'Waiting for Review', color: 'bg-emerald-50 text-emerald-700 border-emerald-200/50' };
+            case 'closed':
+                return { label: 'Closed', color: 'bg-slate-100 text-slate-600 border-slate-200' };
+            default:
+                return { label: 'Unknown', color: 'bg-slate-50 text-slate-500 border-slate-200' };
+        }
+    };
+
+    // 1. Needs Attention Triage
+    const needsAttentionIncidents = incidentsList.filter(incident => {
+        const priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
+        const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
+        const isCritical = priorityVal === 'critical' || priorityVal === 'high';
+        
+        // SLA breach warning helper
+        const created = new Date(incident.created_at).getTime();
+        const isApproachingSla = !incident.solved_at && !incident.closed_at && (new Date().getTime() - created > 16 * 60 * 60 * 1000);
+
+        return (
+            (isCritical && statusVal === 'pending') || 
+            (statusVal === 'pending' && !incident.assignee) ||
+            isApproachingSla
+        );
+    });
+
+    // 2. Kanban Board Columns Mapping
+    const boardColumns = [
+        { id: 'pending', title: 'Open', count: stats.open },
+        { id: 'acknowledged', title: 'Assigned', count: incidentsList.filter(i => (typeof i.status === 'object' ? i.status.value : i.status) === 'acknowledged').length },
+        { id: 'resolving', title: 'In Progress', count: stats.in_progress },
+        { id: 'solved', title: 'Waiting for Resident', count: stats.waiting_review },
+        { id: 'closed', title: 'Closed', count: incidentsList.filter(i => (typeof i.status === 'object' ? i.status.value : i.status) === 'closed').length },
+    ];
+
+    const hasActiveFilters = Boolean(search || category || status || priority || assigneeId || slaStatus);
 
     return (
-        <>
-            <Head title="Manage Incidents" />
+        <AdminLayout>
+            <Head title="Incident Management Workspace" />
 
-            {/* Header */}
-            <div className="mb-6 px-1">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900">Community Incidents</h1>
-                <p className="mt-1 text-sm text-slate-500">Track, assign, and update resolution progress for estate incidents.</p>
-            </div>
+            {/* Title & Quick Actions */}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Incident Workspace</h1>
+                    <p className="text-xs font-semibold text-slate-500">Track estate operational health, resolve safety reports, and manage SLA deadlines.</p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    {/* View Switcher */}
+                    <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                        <button
+                            onClick={() => applyFilters({ view: 'board' })}
+                            className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                viewMode === 'board' 
+                                    ? 'bg-white text-slate-950 shadow-xs' 
+                                    : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                        >
+                            <Grid className="h-3.5 w-3.5" />
+                            Board
+                        </button>
+                        <button
+                            onClick={() => applyFilters({ view: 'table' })}
+                            className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                viewMode === 'table' 
+                                    ? 'bg-white text-slate-950 shadow-xs' 
+                                    : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                        >
+                            <List className="h-3.5 w-3.5" />
+                            Table
+                        </button>
+                    </div>
 
-            {/* Filters Bar */}
-            <div className="mb-6">
-                <div className="flex gap-3">
-                    <form onSubmit={handleSearchSubmit} className="relative flex-1">
-                        <input
-                            type="text"
-                            placeholder="Search incidents..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-11 text-sm ring-indigo-100 outline-hidden transition-all focus:border-indigo-500 focus:ring-4"
-                        />
-                        <Search className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
-                    </form>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsFilterSheetOpen(true)}
-                        className={`flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold ring-1 ring-slate-200/80 transition-all active:scale-95 ${
-                            category || status || sort !== 'newest'
-                                ? 'bg-indigo-50/20 text-indigo-600 ring-indigo-500/30'
-                                : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                    <Link
+                        href="/resident/incidents/create"
+                        className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-black tracking-wide text-white uppercase shadow-sm hover:bg-slate-800 active:scale-95 transition"
                     >
-                        <Filter className="h-4.5 w-4.5" />
-                        <span className="hidden sm:inline">Filters</span>
-                        {(category || status || sort !== 'newest') && (
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white">
-                                {[category && 1, status && 1, sort !== 'newest' && 1].filter(Boolean).length}
-                            </span>
-                        )}
-                    </button>
+                        <Plus className="h-4 w-4" strokeWidth={3} />
+                        Report Incident
+                    </Link>
                 </div>
             </div>
 
-            {/* Filter Sheet / Modal */}
-            {isMobile ? (
-                <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents">
-                    {filterFormContent}
-                </MobileSheet>
-            ) : (
-                <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents" maxWidth="md">
-                    {filterFormContent}
-                </Modal>
-            )}
-
-            {/* Incidents Table / List */}
-            {incidents.data.length > 0 ? (
-                <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left">
-                            <thead>
-                                <tr className="border-b border-slate-50 bg-slate-50/50 text-xs font-black tracking-wider text-slate-400 uppercase">
-                                    <th className="px-6 py-4">Incident</th>
-                                    <th className="px-6 py-4">Reporter</th>
-                                    <th className="px-6 py-4">Category</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Assignee</th>
-                                    <th className="px-6 py-4 text-right">Engagement</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {incidents.data.map((incident, idx) => {
-                                    const statusInfo = getStatusStyles(incident.status);
-
-                                    return (
-                                        <tr key={incident.id} className="group transition-colors hover:bg-slate-50/30">
-                                            <td className="px-6 py-4">
-                                                <Link href={`/admin/incidents/${incident.hashid}`} className="block">
-                                                    <span className="block font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
-                                                        {incident.title}
-                                                    </span>
-                                                    <span className="mt-1 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                        Reported {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
-                                                    </span>
-                                                </Link>
-                                            </td>
-                                            <td className="px-6 py-4 text-xs font-medium text-slate-500">{incident.reporter.name}</td>
-                                            <td className="px-6 py-4 text-xs text-slate-500">
-                                                <span className="inline-flex rounded-full bg-slate-50 px-2 py-0.5 font-medium">
-                                                    {incident.category.replace('_', ' ')}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
-                                                >
-                                                    {statusInfo.icon}
-                                                    {statusInfo.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-xs text-slate-500">
-                                                {incident.assignee ? (
-                                                    <span className="font-semibold text-slate-700">{incident.assignee.name}</span>
-                                                ) : (
-                                                    <span className="text-slate-300 italic">Unassigned</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="inline-flex items-center gap-3 text-slate-400">
-                                                    <span className="inline-flex items-center gap-1 text-xs">
-                                                        <ThumbsUp className="h-3.5 w-3.5" />
-                                                        {incident.upvotes_count}
-                                                    </span>
-                                                    <span className="inline-flex items-center gap-1 text-xs">
-                                                        <MessageSquare className="h-3.5 w-3.5" />
-                                                        {incident.comments_count}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+            <div className="space-y-6">
+                {/* SECTION 1 — INCIDENT HEALTH STATS */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Open</span>
+                        <div className="mt-1 flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-slate-900">{stats.open}</span>
+                        </div>
                     </div>
 
-                    {/* Pagination Links */}
-                    {incidents.links && incidents.links.length > 3 && (
-                        <div className="flex justify-center border-t border-slate-50 p-4">
-                            <div className="flex flex-wrap gap-1">
-                                {incidents.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url || '#'}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        disabled={!link.url}
-                                        className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                                            link.active
-                                                ? 'bg-indigo-600 text-white'
-                                                : link.url
-                                                  ? 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                                  : 'cursor-not-allowed bg-slate-50 text-slate-300'
-                                        }`}
-                                    />
-                                ))}
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">In Progress</span>
+                        <div className="mt-1 flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-slate-900">{stats.in_progress}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Awaiting Review</span>
+                        <div className="mt-1 flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-slate-900">{stats.waiting_review}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Resolved This Month</span>
+                        <div className="mt-1 flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-slate-900">{stats.resolved_this_month}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Avg. Resolution</span>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                            <span className="text-2xl font-black text-slate-900">{stats.avg_resolution_time}</span>
+                            <span className="text-xs font-bold text-slate-400">hours</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">SLA Compliance</span>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                            <span className="text-2xl font-black text-slate-900">{stats.sla_compliance}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SECTION 2 — NEEDS ATTENTION */}
+                {needsAttentionIncidents.length > 0 ? (
+                    <div className="rounded-2xl border border-red-100 bg-linear-to-br from-red-50/40 to-orange-50/20 p-4.5 shadow-xs">
+                        <div className="mb-3 flex items-center gap-2">
+                            <AlertTriangle className="h-4.5 w-4.5 text-red-600 animate-bounce" />
+                            <h3 className="text-xs font-black tracking-wider text-red-900 uppercase">Needs Immediate Attention</h3>
+                        </div>
+                        <div className="space-y-2.5">
+                            {needsAttentionIncidents.slice(0, 3).map((incident) => {
+                                const priorityInfo = getPriorityStyles(incident.priority);
+                                const slaInfo = getSlaStatus(incident);
+                                return (
+                                    <div key={incident.id} className="flex flex-col gap-2.5 rounded-xl border border-red-100/70 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-start gap-3">
+                                            <span className="mt-1 text-sm">{slaInfo.indicator}</span>
+                                            <div>
+                                                <Link 
+                                                    href={`/admin/incidents/${incident.hashid}`}
+                                                    className="text-xs font-black text-slate-900 hover:text-indigo-600"
+                                                >
+                                                    {incident.title}
+                                                </Link>
+                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-455">
+                                                    <span className={`rounded-full px-1.5 py-0.5 text-[8px] uppercase ${priorityInfo.bg}`}>
+                                                        {priorityInfo.text}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>Reported by {incident.reporter.name}</span>
+                                                    <span>•</span>
+                                                    <span>{formatDistanceToNow(new Date(incident.created_at))} ago</span>
+                                                    {incident.location && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span>{incident.location}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 self-end sm:self-center">
+                                            <span className={`rounded-xl border px-2 py-1 text-[9px] font-black uppercase ${slaInfo.style}`}>
+                                                {slaInfo.label}
+                                            </span>
+                                            
+                                            {/* Quick Assign Action */}
+                                            {!incident.assignee ? (
+                                                <button
+                                                    onClick={() => setActiveAssigneeDropdown(incident.id)}
+                                                    className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white hover:bg-slate-800 transition"
+                                                >
+                                                    <UserPlus className="h-3 w-3" />
+                                                    Assign
+                                                </button>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-slate-500">
+                                                    Assigned to {incident.assignee.name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/20 p-4.5 shadow-xs">
+                        <div className="flex items-center gap-2.5">
+                            <span className="text-base">🟢</span>
+                            <div>
+                                <h3 className="text-xs font-black tracking-wider text-emerald-900 uppercase">Excellent</h3>
+                                <p className="text-[11px] font-semibold text-emerald-800/80">No incidents currently require immediate attention.</p>
                             </div>
                         </div>
-                    )}
-                </div>
-            ) : (
-                /* Empty state matching system default */
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="mb-4 rounded-full bg-slate-100 p-4 ring-8 ring-slate-50">
-                        <AlertTriangle className="h-8 w-8 text-slate-400" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">No Incidents Found</h3>
-                    <p className="mt-1 max-w-sm text-sm text-slate-500">
-                        {search || category || status
-                            ? 'Try adjusting or clearing your search and filters to find what you are looking for.'
-                            : 'There are currently no reported incidents in this estate.'}
-                    </p>
-                    {(search || category || status) && (
-                        <button
-                            onClick={() => {
-                                setSearch('');
-                                setCategory('');
-                                setStatus('');
-                                applyFilters({ search: undefined, category: undefined, status: undefined });
-                            }}
-                            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-                        >
-                            Clear Filters
-                        </button>
-                    )}
+                )}
+
+                {/* DYNAMIC SEARCH & COMPACT FILTERS */}
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                    <form onSubmit={handleSearchSubmit} className="flex flex-col gap-3.5">
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                            {/* Search bar */}
+                            <div className="relative flex-1">
+                                <Search className="pointer-events-none absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search incidents by title, reporter name, location..."
+                                    className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:outline-hidden focus:ring-slate-800"
+                                />
+                            </div>
+                            
+                            <button
+                                type="submit"
+                                className="rounded-xl bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 transition"
+                            >
+                                Search
+                            </button>
+                        </div>
+
+                        {/* Inline Dropdown Filters */}
+                        <div className="flex flex-wrap items-center gap-2 border-t border-slate-50 pt-3">
+                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2">
+                                <SlidersHorizontal className="h-3 w-3" />
+                                Filters
+                            </div>
+
+                            {/* Status */}
+                            <select
+                                value={status}
+                                onChange={(e) => {
+                                    setStatus(e.target.value);
+                                    applyFilters({ status: e.target.value || undefined });
+                                }}
+                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Statuses</option>
+                                {statuses.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+
+                            {/* Priority */}
+                            <select
+                                value={priority}
+                                onChange={(e) => {
+                                    setPriority(e.target.value);
+                                    applyFilters({ priority: e.target.value || undefined });
+                                }}
+                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Priorities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+
+                            {/* Category */}
+                            <select
+                                value={category}
+                                onChange={(e) => {
+                                    setCategory(e.target.value);
+                                    applyFilters({ category: e.target.value || undefined });
+                                }}
+                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </select>
+
+                            {/* Assignee */}
+                            <select
+                                value={assigneeId}
+                                onChange={(e) => {
+                                    setAssigneeId(e.target.value);
+                                    applyFilters({ assignee_id: e.target.value || undefined });
+                                }}
+                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Assignees</option>
+                                {admins.map(adm => <option key={adm.id} value={adm.id}>{adm.name}</option>)}
+                            </select>
+
+                            {/* SLA Status */}
+                            <select
+                                value={slaStatus}
+                                onChange={(e) => {
+                                    setSlaStatus(e.target.value);
+                                    applyFilters({ sla_status: e.target.value || undefined });
+                                }}
+                                className="rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold text-slate-655 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All SLA Statuses</option>
+                                <option value="compliant">SLA Compliant</option>
+                                <option value="warning">SLA Warning</option>
+                                <option value="breached">SLA Breached</option>
+                            </select>
+
+                            {hasActiveFilters && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="ml-auto inline-flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-150 px-3 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100"
+                                >
+                                    <X className="h-3 w-3" />
+                                    Clear Filters
+                                </button>
+                            )}
+                        </div>
+                    </form>
                 </div>
-            )}
-        </>
+
+                {/* BOARD OR TABLE VIEW */}
+                {incidentsList.length > 0 ? (
+                    viewMode === 'board' ? (
+                        /* KANBAN BOARD VIEW */
+                        <div className="grid grid-cols-1 gap-4 overflow-x-auto pb-4 sm:grid-cols-5 min-w-[900px]">
+                            {boardColumns.map((col) => {
+                                const colIncidents = incidentsList.filter(incident => {
+                                    const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
+                                    return statusVal === col.id;
+                                });
+
+                                return (
+                                    <div key={col.id} className="flex flex-col rounded-2xl bg-slate-50/70 p-3 min-h-[450px]">
+                                        <div className="mb-3 flex items-center justify-between px-1">
+                                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">{col.title}</h3>
+                                            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black text-slate-600">
+                                                {colIncidents.length}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-col gap-2.5">
+                                            {colIncidents.map((incident) => {
+                                                const priorityInfo = getPriorityStyles(incident.priority);
+                                                const slaInfo = getSlaStatus(incident);
+
+                                                return (
+                                                    <motion.div
+                                                        layout
+                                                        key={incident.id}
+                                                        className="group relative rounded-xl border border-slate-150 bg-white p-3.5 shadow-xs hover:border-slate-300 transition-all"
+                                                    >
+                                                        {/* Priority & SLA */}
+                                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                                            <span className={`rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${priorityInfo.bg}`}>
+                                                                {priorityInfo.text}
+                                                            </span>
+                                                            <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
+                                                                {slaInfo.label}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Title */}
+                                                        <Link 
+                                                            href={`/admin/incidents/${incident.hashid}`}
+                                                            className="block text-xs font-bold leading-snug text-slate-900 group-hover:text-indigo-600 transition"
+                                                        >
+                                                            {incident.title}
+                                                        </Link>
+
+                                                        {/* Reporter & Location */}
+                                                        <div className="mt-2 text-[10px] font-bold text-slate-400">
+                                                            <span>By {incident.reporter.name}</span>
+                                                            {incident.location && <span> @ {incident.location}</span>}
+                                                        </div>
+
+                                                        {/* Engagement icons & Assignee */}
+                                                        <div className="mt-3.5 flex items-center justify-between border-t border-slate-50 pt-2.5">
+                                                            <div className="flex items-center gap-2 text-slate-400">
+                                                                <div className="flex items-center gap-0.5">
+                                                                    <MessageSquare className="h-3 w-3" />
+                                                                    <span className="text-[9px] font-bold">{incident.comments_count}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-0.5">
+                                                                    <ThumbsUp className="h-3 w-3" />
+                                                                    <span className="text-[9px] font-bold">{incident.upvotes_count}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Assignee inline select */}
+                                                            <div className="relative">
+                                                                <button
+                                                                    onClick={() => setActiveAssigneeDropdown(activeAssigneeDropdown === incident.id ? null : incident.id)}
+                                                                    className="flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
+                                                                >
+                                                                    <User className="h-2.5 w-2.5" />
+                                                                    <span className="max-w-[70px] truncate">
+                                                                        {incident.assignee ? incident.assignee.name : 'Assign'}
+                                                                    </span>
+                                                                </button>
+
+                                                                {/* Assignee Popover */}
+                                                                <AnimatePresence>
+                                                                    {activeAssigneeDropdown === incident.id && (
+                                                                        <div 
+                                                                            ref={dropdownRef}
+                                                                            className="absolute right-0 bottom-full z-30 mb-1 w-44 rounded-xl border border-slate-150 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
+                                                                        >
+                                                                            <p className="px-2 py-1.5 text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50">Assign Guard/Staff</p>
+                                                                            <div className="max-h-36 overflow-y-auto py-1">
+                                                                                <button
+                                                                                    onClick={() => handleAssign(incident.id, incident.hashid, null)}
+                                                                                    className="w-full px-2 py-1 text-left text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-lg"
+                                                                                >
+                                                                                    Unassigned
+                                                                                </button>
+                                                                                {admins.map(adm => (
+                                                                                    <button
+                                                                                        key={adm.id}
+                                                                                        onClick={() => handleAssign(incident.id, incident.hashid, adm.id)}
+                                                                                        className="w-full px-2 py-1 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg"
+                                                                                    >
+                                                                                        {adm.name}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                            {colIncidents.length === 0 && (
+                                                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-8 text-center">
+                                                    <span className="text-[10px] font-bold text-slate-400">Column Empty</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        /* REDESIGNED SPREADSHEET TABLE VIEW */
+                        <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
+                            <div className="overflow-x-auto min-h-[280px]">
+                                <table className="w-full table-auto border-collapse">
+                                    <thead className="bg-slate-50/70 border-b border-slate-100">
+                                        <tr>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Incident</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Priority</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Category</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Reporter</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Location</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Assignee</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Status</th>
+                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Age</th>
+                                            <th className="w-10 px-6 py-3.5"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {incidentsList.map((incident) => {
+                                            const priorityInfo = getPriorityStyles(incident.priority);
+                                            const statusInfo = getStatusStyles(incident.status);
+                                            const categoryLabel = typeof incident.category === 'object' ? incident.category.label : incident.category;
+
+                                            return (
+                                                <tr key={incident.id} className="transition hover:bg-slate-50/40">
+                                                    {/* Incident title */}
+                                                    <td className="px-6 py-3.5">
+                                                        <Link 
+                                                            href={`/admin/incidents/${incident.hashid}`}
+                                                            className="block max-w-[220px] truncate text-xs font-bold text-slate-900 hover:text-indigo-600"
+                                                        >
+                                                            {incident.title}
+                                                        </Link>
+                                                        <span className="mt-0.5 block max-w-[220px] truncate text-[10px] font-semibold text-slate-400">
+                                                            {incident.body}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Priority */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                        <span className={`inline-flex rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${priorityInfo.bg}`}>
+                                                            {priorityInfo.text}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Category */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-semibold text-slate-600">
+                                                        {categoryLabel.replace('_', ' ')}
+                                                    </td>
+
+                                                    {/* Reporter */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                        <div className="text-xs font-semibold text-slate-800">
+                                                            <span>{incident.reporter.name}</span>
+                                                            <span className="block text-[9px] font-bold text-slate-400">{incident.reporter.email}</span>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Location */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                        {incident.location || '—'}
+                                                    </td>
+
+                                                    {/* Assignee */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-700">
+                                                        {incident.assignee ? incident.assignee.name : (
+                                                            <span className="text-slate-400 font-semibold italic">Unassigned</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Status */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusInfo.color}`}>
+                                                            {statusInfo.label}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Age */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                        {formatDistanceToNow(new Date(incident.created_at))}
+                                                    </td>
+
+                                                    {/* Quick View Link */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap text-right text-sm">
+                                                        <Link
+                                                            href={`/admin/incidents/${incident.hashid}`}
+                                                            className="text-slate-400 hover:text-slate-800"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )
+                ) : (
+                    /* REDESIGNED EMPTY STATE */
+                    <div className="rounded-2xl border border-slate-100 bg-white p-12 shadow-xs text-center">
+                        <AlertTriangle className="mx-auto h-8 w-8 text-slate-400 mb-3" />
+                        <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">No active incidents</h3>
+                        <p className="mt-1 max-w-xs mx-auto text-xs font-semibold text-slate-400">
+                            Your estate currently has no active community incidents recorded. Residents can report maintenance requests, plumbing issues, or security concerns directly.
+                        </p>
+                        <Link
+                            href="/resident/incidents/create"
+                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Report Incident
+                        </Link>
+                    </div>
+                )}
+
+                {/* PAGINATION */}
+                {!Array.isArray(rawIncidents) && rawIncidents.last_page && rawIncidents.last_page > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
+                        <p className="text-xs font-bold text-slate-505">
+                            Showing <span className="text-slate-950">{rawIncidents.data.length}</span> of <span className="text-slate-950">{rawIncidents.total}</span> reported incidents
+                        </p>
+                        <div className="flex gap-1.5">
+                            {rawIncidents.links?.map((link, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={link.url || '#'}
+                                    preserveScroll
+                                    preserveState
+                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                        link.active
+                                            ? 'bg-slate-950 text-white shadow-sm'
+                                            : link.url
+                                                ? 'bg-white text-slate-655 border border-slate-205 hover:bg-slate-50'
+                                                : 'cursor-not-allowed text-slate-300 border border-slate-100 opacity-50'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* FOOTER SPLIT: RECENT ACTIVITY TIMELINE */}
+                {recentActivity.length > 0 && (
+                    <div className="border-t border-slate-100 pt-6">
+                        <div className="mb-4 flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-slate-600" />
+                            <h3 className="text-xs font-black tracking-wider text-slate-900 uppercase">Recent Operations Feed</h3>
+                        </div>
+                        
+                        <div className="relative border-l border-slate-100 pl-4.5 ml-2.5 space-y-4.5">
+                            {recentActivity.slice(0, 5).map((log) => (
+                                <div key={log.id} className="relative flex flex-col gap-0.5">
+                                    <span className="absolute -left-[23px] top-1 h-2 w-2 rounded-full border border-white bg-slate-300 ring-2 ring-white" />
+                                    <span className="text-xs font-bold text-slate-800">{log.description}</span>
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                                        <span>By {log.causer_name}</span>
+                                        <span>•</span>
+                                        <span>{log.created_at}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </AdminLayout>
     );
 }
