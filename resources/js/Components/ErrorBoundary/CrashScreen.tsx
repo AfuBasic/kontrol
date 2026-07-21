@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, RefreshCcw, Home, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, RefreshCcw, Home, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 
 export default function CrashScreen({ error, resetError }: Props) {
     const [showDetails, setShowDetails] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const handleReload = () => {
         window.location.reload();
@@ -16,6 +17,14 @@ export default function CrashScreen({ error, resetError }: Props) {
 
     const handleHome = () => {
         window.location.href = '/';
+    };
+
+    const handleCopy = () => {
+        if (!error) return;
+        const text = `${error.name}: ${error.message}\n\nStack Trace:\n${error.stack}`;
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
@@ -67,7 +76,7 @@ export default function CrashScreen({ error, resetError }: Props) {
                         </button>
                         <button
                             onClick={handleHome}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-[0.98]"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-slate-650 ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-[0.98]"
                         >
                             <Home className="h-4 w-4" />
                             Dashboard
@@ -80,7 +89,7 @@ export default function CrashScreen({ error, resetError }: Props) {
                     <div className="border-t border-slate-50 bg-slate-50/50 px-8 py-4">
                         <button
                             onClick={() => setShowDetails(!showDetails)}
-                            className="flex w-full items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase transition-colors hover:text-slate-600"
+                            className="flex w-full items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase transition-colors hover:text-slate-655"
                         >
                             Technical Details
                             {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -88,11 +97,20 @@ export default function CrashScreen({ error, resetError }: Props) {
 
                         {showDetails && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mt-4 overflow-hidden">
-                                <div className="max-h-40 overflow-y-auto rounded-xl bg-slate-900 p-4 font-mono text-[10px] leading-relaxed text-rose-300/80 shadow-inner">
-                                    <p className="mb-2 font-bold text-rose-400">
-                                        {error.name}: {error.message}
-                                    </p>
-                                    <p className="whitespace-pre-wrap opacity-60">{error.stack}</p>
+                                <div className="relative group">
+                                    <button
+                                        onClick={handleCopy}
+                                        className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 px-2.5 py-1.5 text-[10px] font-bold text-slate-300 hover:text-white transition-all backdrop-blur-xs"
+                                    >
+                                        {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                        {copied ? 'Copied' : 'Copy Error'}
+                                    </button>
+                                    <div className="max-h-40 overflow-y-auto rounded-xl bg-slate-900 p-4 pr-24 font-mono text-[10px] leading-relaxed text-rose-300/80 shadow-inner">
+                                        <p className="mb-2 font-bold text-rose-400">
+                                            {error.name}: {error.message}
+                                        </p>
+                                        <p className="whitespace-pre-wrap opacity-60">{error.stack}</p>
+                                    </div>
                                 </div>
                                 <p className="mt-3 text-center text-[10px] text-slate-400 italic">
                                     Report ID: {Math.random().toString(36).substring(7).toUpperCase()}
