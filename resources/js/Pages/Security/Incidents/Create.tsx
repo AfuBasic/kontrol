@@ -168,7 +168,7 @@ export default function Create({ categories }: Props) {
     };
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Report Incident — Security Workspace" />
 
             <div className="flex flex-col gap-5">
@@ -361,6 +361,6 @@ export default function Create({ categories }: Props) {
                     </form>
                 </div>
             </div>
-        </SecurityLayout>
+        </>
     );
 }

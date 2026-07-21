@@ -264,7 +264,7 @@ export default function Index({ incidents, filters, categories }: Props) {
     );
 
     return (
-        <SecurityLayout>
+        <>
             <Head title="Security Incident Workspace" />
 
             <div className="flex flex-col gap-5">
@@ -336,7 +336,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                                     {categoryLabel}
                                                 </span>
                                                 <span
-                                                    className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8px] font-black uppercase ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                                                    className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8px] font-black uppercase text-slate-500 ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
                                                 >
                                                     {statusStyle.icon}
                                                     {statusStyle.label}
@@ -391,7 +391,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                     {filterFormContent}
                 </MobileSheet>
             ) : (
-                <Modal show={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} maxWidth="md">
+                <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} maxWidth="md">
                     <div className="p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">Filter Incidents</h3>
@@ -403,6 +403,6 @@ export default function Index({ incidents, filters, categories }: Props) {
                     </div>
                 </Modal>
             )}
-        </SecurityLayout>
+        </>
     );
 }

@@ -74,7 +74,7 @@ export default function Show({ incident, comments }: Props) {
     const categoryLabel = typeof incident.category === 'object' ? incident.category.label : incident.category;
 
     return (
-        <SecurityLayout>
+        <>
             <Head title={`Incident Details — ${incident.title}`} />
 
             <div className="flex flex-col gap-5">
@@ -194,7 +194,7 @@ export default function Show({ incident, comments }: Props) {
 
             {/* Image Lightbox */}
             {incident.attachment_url && incident.attachment_type !== 'video' && (
-                <Modal show={isLightboxOpen} onClose={() => setIsLightboxOpen(false)} maxWidth="2xl">
+                <Modal isOpen={isLightboxOpen} onClose={() => setIsLightboxOpen(false)} maxWidth="2xl">
                     <div className="relative p-2 bg-slate-950 flex flex-col items-center">
                         <button
                             onClick={() => setIsLightboxOpen(false)}
@@ -206,6 +206,6 @@ export default function Show({ incident, comments }: Props) {
                     </div>
                 </Modal>
             )}
-        </SecurityLayout>
+        </>
     );
 }
