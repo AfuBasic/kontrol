@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - {{ $transaction['reference_number'] }}</title>
@@ -10,10 +11,11 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'DejaVu Sans', sans-serif;
         }
 
         body {
-            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', sans-serif;
             color: #1e293b;
             background: white;
             padding: 40px;
@@ -115,7 +117,7 @@
             </div>
 
             <div class="amount">
-                &#8358;{{ number_format(($transaction['amount'] ?? 0) / 100, 2) }}
+                <span style="font-family: 'DejaVu Sans', sans-serif;">&#8358;</span>{{ number_format(($transaction['amount'] ?? 0) / 100, 2) }}
             </div>
             <div class="status">
                 {{ $transaction['status_label'] ?? 'Successful' }}
