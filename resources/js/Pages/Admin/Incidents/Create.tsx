@@ -187,142 +187,179 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                 </Link>
             </div>
 
-            <div className="max-w-2xl rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                <div className="mb-6">
-                    <h1 className="text-xl font-black tracking-tight text-slate-900">Report Incident</h1>
-                    <p className="text-xs font-semibold text-slate-400">File a new community incident report, track resolving status, and assign it to estate security guards or staff.</p>
+            {customError && (
+                <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-red-100 bg-red-50/50 p-4 text-xs font-semibold text-red-700">
+                    <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                    <span>{customError}</span>
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* LEFT TWO COLUMNS: Form Fields */}
+                <div className="space-y-6 lg:col-span-2">
+                    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
+                        <div className="mb-6 border-b border-slate-50 pb-4">
+                            <h1 className="text-xl font-black tracking-tight text-slate-900">Create Incident Report</h1>
+                            <p className="text-xs font-semibold text-slate-400">File a new community incident report, track resolving status, and assign it to estate security guards or staff.</p>
+                        </div>
+
+                        <div className="space-y-5">
+                            {/* Title */}
+                            <div>
+                                <label htmlFor="title" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    Incident Title
+                                </label>
+                                <input
+                                    id="title"
+                                    type="text"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="e.g. Broken water main, Main entrance guard house intrusion"
+                                    className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    required
+                                />
+                                {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label htmlFor="body" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    Description / Context
+                                </label>
+                                <textarea
+                                    id="body"
+                                    value={data.body}
+                                    onChange={(e) => setData('body', e.target.value)}
+                                    placeholder="Provide full description of the operational issue, safety threat, or maintenance request..."
+                                    rows={6}
+                                    className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    required
+                                />
+                                {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                {/* Category */}
+                                <div>
+                                    <label htmlFor="category" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                        Category
+                                    </label>
+                                    <select
+                                        id="category"
+                                        value={data.category}
+                                        onChange={(e) => setData('category', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        required
+                                    >
+                                        <option value="">Select Category</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.value} value={cat.value}>
+                                                {cat.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.category && <span className="mt-1 block text-xs font-medium text-red-600">{errors.category}</span>}
+                                </div>
+
+                                {/* Priority */}
+                                <div>
+                                    <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                        Priority
+                                    </label>
+                                    <select
+                                        id="priority"
+                                        value={data.priority}
+                                        onChange={(e) => setData('priority', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        required
+                                    >
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                    {errors.priority && <span className="mt-1 block text-xs font-medium text-red-600">{errors.priority}</span>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                {/* Location */}
+                                <div>
+                                    <label htmlFor="location" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                        Property / Location
+                                    </label>
+                                    <input
+                                        id="location"
+                                        type="text"
+                                        value={data.location}
+                                        onChange={(e) => setData('location', e.target.value)}
+                                        placeholder="e.g. Block A, Unit 12, Main Gate"
+                                        className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    />
+                                    {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
+                                </div>
+
+                                {/* Assignee */}
+                                <div>
+                                    <label htmlFor="assigned_to" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                        Assign To (Optional)
+                                    </label>
+                                    <select
+                                        id="assigned_to"
+                                        value={data.assigned_to}
+                                        onChange={(e) => setData('assigned_to', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {admins.map((adm) => (
+                                            <option key={adm.id} value={adm.id}>
+                                                {adm.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-8 flex justify-end gap-3 border-t border-slate-50 pt-5">
+                            <Link
+                                href="/admin/incidents"
+                                className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-slate-200 transition"
+                            >
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={processing || uploadingMedia}
+                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
+                            >
+                                {processing || uploadingMedia ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Reporting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="h-3 w-3" />
+                                        File Report
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                {customError && (
-                    <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-red-100 bg-red-50/50 p-4 text-xs font-semibold text-red-700">
-                        <AlertCircle className="h-4.5 w-4.5 shrink-0" />
-                        <span>{customError}</span>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Title */}
-                    <div>
-                        <label htmlFor="title" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                            Incident Title
-                        </label>
-                        <input
-                            id="title"
-                            type="text"
-                            value={data.title}
-                            onChange={(e) => setData('title', e.target.value)}
-                            placeholder="e.g. Broken water main, Main entrance guard house intrusion"
-                            className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
-                            required
-                        />
-                        {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label htmlFor="body" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                            Description / Context
-                        </label>
-                        <textarea
-                            id="body"
-                            value={data.body}
-                            onChange={(e) => setData('body', e.target.value)}
-                            placeholder="Provide full description of the operational issue, safety threat, or maintenance request..."
-                            rows={5}
-                            className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
-                            required
-                        />
-                        {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {/* Category */}
+                {/* RIGHT COLUMN: Sidebar Metadata & Uploads */}
+                <div className="space-y-6">
+                    {/* Attachment Upload Card */}
+                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-4">
                         <div>
-                            <label htmlFor="category" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                Category
-                            </label>
-                            <select
-                                id="category"
-                                value={data.category}
-                                onChange={(e) => setData('category', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                                required
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map((cat) => (
-                                    <option key={cat.value} value={cat.value}>
-                                        {cat.label}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.category && <span className="mt-1 block text-xs font-medium text-red-600">{errors.category}</span>}
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Evidence / Attachments</h3>
+                            <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Attach photo or video evidence to justify the resolution priority.</p>
                         </div>
-
-                        {/* Priority */}
-                        <div>
-                            <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                Priority
-                            </label>
-                            <select
-                                id="priority"
-                                value={data.priority}
-                                onChange={(e) => setData('priority', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                                required
-                            >
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="critical">Critical</option>
-                            </select>
-                            {errors.priority && <span className="mt-1 block text-xs font-medium text-red-600">{errors.priority}</span>}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {/* Location */}
-                        <div>
-                            <label htmlFor="location" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                Property / Location
-                            </label>
-                            <input
-                                id="location"
-                                type="text"
-                                value={data.location}
-                                onChange={(e) => setData('location', e.target.value)}
-                                placeholder="e.g. Block A, Unit 12, Main Gate"
-                                className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
-                            />
-                            {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
-                        </div>
-
-                        {/* Assignee */}
-                        <div>
-                            <label htmlFor="assigned_to" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                Assign To (Optional)
-                            </label>
-                            <select
-                                id="assigned_to"
-                                value={data.assigned_to}
-                                onChange={(e) => setData('assigned_to', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">Unassigned</option>
-                                {admins.map((adm) => (
-                                    <option key={adm.id} value={adm.id}>
-                                        {adm.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
-                        </div>
-                    </div>
-
-                    {/* Attachment upload */}
-                    <div>
-                        <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                            Evidence Attachment (Image or Video)
-                        </label>
+                        
                         <div className="flex flex-col gap-4">
                             <input
                                 type="file"
@@ -334,14 +371,14 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-6 text-center hover:border-slate-800 transition"
+                                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center hover:border-slate-800 hover:bg-slate-50/50 transition"
                             >
                                 <Paperclip className="h-4 w-4 text-slate-400" />
                                 <span className="text-xs font-bold text-slate-500">Choose file...</span>
                             </button>
 
                             {attachmentPreview && (
-                                <div className="relative max-w-xs overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1">
+                                <div className="relative max-w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1">
                                     {attachmentType === 'image' ? (
                                         <img src={attachmentPreview} alt="Upload preview" className="max-h-48 w-full rounded-lg object-cover" />
                                     ) : (
@@ -359,50 +396,45 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                         </div>
                     </div>
 
-                    {/* Visibility Settings */}
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-900">Internal Only</label>
-                                <span className="text-[10px] font-semibold text-slate-400">Keep this report hidden from residents, making it visible only to estate administrators.</span>
+                    {/* Visibility Settings Card */}
+                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-3">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Privacy & Visibility</h3>
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-900">Internal Only</label>
+                                    <span className="text-[10px] font-semibold text-slate-400 mt-1 block leading-normal">Keep this report hidden from residents, making it visible only to estate administrators and security staff.</span>
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    checked={data.is_private}
+                                    onChange={(e) => setData('is_private', e.target.checked)}
+                                    className="h-4.5 w-4.5 rounded-sm border-slate-350 text-slate-950 focus:ring-slate-950 mt-0.5"
+                                />
                             </div>
-                            <input
-                                type="checkbox"
-                                checked={data.is_private}
-                                onChange={(e) => setData('is_private', e.target.checked)}
-                                className="h-4.5 w-4.5 rounded-sm border-slate-300 text-slate-950 focus:ring-slate-950"
-                            />
                         </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 border-t border-slate-50 pt-5">
-                        <Link
-                            href="/admin/incidents"
-                            className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-slate-200 transition"
-                        >
-                            Cancel
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={processing || uploadingMedia}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
-                        >
-                            {processing || uploadingMedia ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Reporting...
-                                </>
-                            ) : (
-                                <>
-                                    <Send className="h-3 w-3" />
-                                    File Report
-                                </>
-                            )}
-                        </button>
+                    {/* Operational Guidelines Card */}
+                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-5 shadow-xs">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-indigo-900">Operational Guidelines</h3>
+                        <ul className="mt-3 space-y-2 text-[10.5px] font-semibold text-slate-655 leading-relaxed">
+                            <li className="flex items-start gap-1.5">
+                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span>High and Critical priority issues automatically trigger SLA tracking timers (24 hours standard).</span>
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span>Internal Only incidents are completely hidden from the resident-facing home screen feed.</span>
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span>Assigned staff will receive automatic mobile notifications to report on-site.</span>
+                            </li>
+                        </ul>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </>
     );
 }
