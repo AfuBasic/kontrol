@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\AssignResidentsToPropertyOwnerAction;
+use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
+use App\Actions\Admin\ResendResidentInvitationAction;
+use App\Actions\Admin\SuspendResidentAction;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\User;
@@ -15,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class PropertyOwnerController extends Controller
 {
@@ -442,25 +446,26 @@ class PropertyOwnerController extends Controller
     public function makeResident(User $propertyOwner): RedirectResponse
     {
         $this->authorize('property_owners.edit');
-        
+
         $estate = $this->estateContext->getEstate();
-        
-        $residentRole = \Spatie\Permission\Models\Role::where('name', 'resident')
+
+        $residentRole = Role::where('name', 'resident')
             ->where('guard_name', 'web')
             ->whereNull('estate_id')
             ->firstOrFail();
 
         setPermissionsTeamId($estate->id);
-        
-        if (!$propertyOwner->hasRole($residentRole)) {
+
+        if (! $propertyOwner->hasRole($residentRole)) {
             $propertyOwner->assignRole($residentRole);
+
             return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
         }
 
         return back()->with('info', 'Property Owner is already a Resident.');
     }
 
-    public function bulkDelete(Request $request, \App\Actions\Admin\BulkDeleteResidentsAction $action): RedirectResponse
+    public function bulkDelete(Request $request, BulkDeleteResidentsAction $action): RedirectResponse
     {
         $this->authorize('property_owners.delete');
         $estate = $this->estateContext->getEstate();
@@ -477,7 +482,7 @@ class PropertyOwnerController extends Controller
             ->with('success', "Successfully removed {$total} property owner(s).");
     }
 
-    public function bulkSuspend(Request $request, \App\Actions\Admin\SuspendResidentAction $action): RedirectResponse
+    public function bulkSuspend(Request $request, SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -496,7 +501,7 @@ class PropertyOwnerController extends Controller
         return back()->with('success', 'Selected property owner(s) suspended successfully.');
     }
 
-    public function bulkActivate(Request $request, \App\Actions\Admin\SuspendResidentAction $action): RedirectResponse
+    public function bulkActivate(Request $request, SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -515,7 +520,7 @@ class PropertyOwnerController extends Controller
         return back()->with('success', 'Selected property owner(s) activated successfully.');
     }
 
-    public function bulkResendInvitation(Request $request, \App\Actions\Admin\ResendResidentInvitationAction $action): RedirectResponse
+    public function bulkResendInvitation(Request $request, ResendResidentInvitationAction $action): RedirectResponse
     {
         $this->authorize('property_owners.reset-password');
         $estate = $this->estateContext->getEstate();
