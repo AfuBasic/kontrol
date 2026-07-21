@@ -322,7 +322,7 @@ export default function IncidentsIndex({
     const hasActiveFilters = Boolean(search || category || status || priority || assigneeId || slaStatus);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Incident Management Workspace" />
 
             {/* Title & Quick Actions */}
@@ -947,6 +947,6 @@ export default function IncidentsIndex({
                     </div>
                 )}
             </div>
-        </AdminLayout>
+        </>
     );
 }
