@@ -25,7 +25,10 @@ class ResidentService
         return User::query()
             ->forEstate($estate->id)
             ->whereHas('roles', function ($q) {
-                $q->whereIn('name', ['resident', 'property_owner', 'household_member']);
+                $q->whereIn('name', ['resident', 'household_member']);
+            })
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'property_owner');
             })
             ->with(['roles', 'profile.propertyOwner', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->withCount('householdMembers')

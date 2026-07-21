@@ -66,10 +66,10 @@ class ResidentController extends Controller
             ]));
 
         // Section 1: Overview stats
-        $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'property_owner', 'household_member']))->count();
-        $activeResidents = User::query()->forEstate($estate->id)->active()->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingInvitations = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->count();
+        $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
+        $activeResidents = User::query()->forEstate($estate->id)->active()->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
+        $pendingInvitations = User::query()->forEstate($estate->id)->whereNull('password')->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
+        $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
 
         $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
         $occupiedProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereHas('residents')->count();
@@ -88,10 +88,18 @@ class ResidentController extends Controller
         if ($joinedThisMonth > 0) {
             $insights[] = "{$joinedThisMonth} residents joined this month.";
         }
-        $profileIncomplete = User::query()
+        $incompleteResidents = User::query()
             ->forEstate($estate->id)
-            ->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
-            ->count();
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->where(function ($query) {
+                $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
+                    ->orWhereDoesntHave('profile');
+            })
+            ->get(['users.id', 'users.name'])
+            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
+            ->toArray();
+
+        $profileIncomplete = count($incompleteResidents);
         if ($profileIncomplete > 0) {
             $insights[] = "{$profileIncomplete} residents require profile completion.";
         }
@@ -120,6 +128,7 @@ class ResidentController extends Controller
                 'occupancy_rate' => $occupancyRate,
             ],
             'insights' => $insights,
+            'incompleteResidents' => $incompleteResidents,
             'inviteLink' => $inviteLinkData,
         ]);
     }
