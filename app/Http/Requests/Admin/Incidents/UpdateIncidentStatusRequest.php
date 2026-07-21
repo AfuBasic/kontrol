@@ -19,8 +19,10 @@ class UpdateIncidentStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::in(['pending', 'acknowledged', 'resolving', 'solved'])],
+            'status' => ['nullable', Rule::in(['pending', 'acknowledged', 'resolving', 'solved', 'closed'])],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
+            'priority' => ['nullable', Rule::in(['critical', 'high', 'medium', 'low'])],
+            'category' => ['nullable', 'string'],
         ];
     }
 
