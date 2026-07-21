@@ -51,6 +51,11 @@ class IncidentService
             $query->where('assigned_to', $filters['assignee_id']);
         }
 
+        // Filter by source
+        if (! empty($filters['source'])) {
+            $query->where('source', $filters['source']);
+        }
+
         // Filter by reporter
         if (! empty($filters['reporter_id'])) {
             $query->where('reporter_id', $filters['reporter_id']);
@@ -98,7 +103,7 @@ class IncidentService
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('body', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%")
-                    ->orWhereHas('reporter', function ($sub) use ($search) {
+                    ->orWhereHasMorph('reporter', [\App\Models\User::class], function ($sub) use ($search) {
                         $sub->where('name', 'like', "%{$search}%");
                     });
             });

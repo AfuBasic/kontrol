@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
+use App\Enums\IncidentSource;
+
 class CreateIncidentAction
 {
     public function __construct(
@@ -19,21 +21,42 @@ class CreateIncidentAction
     ) {}
 
     /**
-     * @param  array{title: string, body: string, category: string, attachment_url?: string|null, attachment_type?: string|null, attachment_hash?: string|null}  $data
+     * @param  array{title: string, body: string, category: string, attachment_url?: string|null, attachment_type?: string|null, attachment_hash?: string|null, priority?: string, assigned_to?: int|string|null, source?: string, reporter_id?: int, reporter_type?: string}  $data
      */
     public function execute(array $data, Estate $estate): Incident
     {
         return DB::transaction(function () use ($data, $estate) {
             $user = Auth::user();
 
+            // Resolve reporter polymorphically
+            $reporterId = $data['reporter_id'] ?? $user->id;
+            $reporterType = $data['reporter_type'] ?? get_class($user);
+
+            // Resolve incident source based on actor role/type if not explicitly set
+            if (isset($data['source'])) {
+                $source = $data['source'];
+            } else {
+                setPermissionsTeamId($estate->id);
+                if ($user->hasRole('admin')) {
+                    $source = IncidentSource::EstateManagement;
+                } elseif ($user->hasRole('security')) {
+                    $source = IncidentSource::SecurityReport;
+                } else {
+                    $source = IncidentSource::ResidentReport;
+                }
+            }
+
             $incident = new Incident([
                 'estate_id' => $estate->id,
-                'reporter_id' => $user->id,
+                'reporter_id' => $reporterId,
+                'reporter_type' => $reporterType,
+                'source' => $source,
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'category' => $data['category'],
                 'priority' => $data['priority'] ?? 'medium',
                 'status' => IncidentStatus::Pending,
+                'assigned_to' => $data['assigned_to'] ?? null,
                 'attachment_url' => $data['attachment_url'] ?? null,
                 'attachment_type' => $data['attachment_type'] ?? null,
                 'attachment_hash' => $data['attachment_hash'] ?? null,

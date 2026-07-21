@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\IncidentCategory;
 use App\Enums\IncidentPriority;
+use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -28,6 +30,8 @@ class Incident extends Model
     protected $fillable = [
         'estate_id',
         'reporter_id',
+        'reporter_type',
+        'source',
         'title',
         'body',
         'category',
@@ -47,7 +51,7 @@ class Incident extends Model
         'is_private',
     ];
 
-    protected $appends = ['hashid'];
+    protected $appends = ['hashid', 'reporter_role'];
 
     /**
      * Get the hashid connection name for this model.
@@ -66,6 +70,7 @@ class Incident extends Model
             'status' => IncidentStatus::class,
             'category' => IncidentCategory::class,
             'priority' => IncidentPriority::class,
+            'source' => IncidentSource::class,
             'acknowledged_at' => 'datetime',
             'resolving_at' => 'datetime',
             'solved_at' => 'datetime',
@@ -83,11 +88,11 @@ class Incident extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return MorphTo
      */
-    public function reporter(): BelongsTo
+    public function reporter(): MorphTo
     {
-        return $this->belongsTo(User::class, 'reporter_id');
+        return $this->morphTo();
     }
 
     /**
@@ -119,9 +124,31 @@ class Incident extends Model
         return $this->upvotes()->where('user_id', $user->id)->exists();
     }
 
+    public function getReporterRoleAttribute(): string
+    {
+        $reporter = $this->reporter;
+        if (! $reporter) {
+            return 'System';
+        }
+        if ($reporter instanceof User) {
+            setPermissionsTeamId($this->estate_id);
+            if ($reporter->hasRole('admin')) {
+                return 'Estate Administrator';
+            }
+            if ($reporter->hasRole('security')) {
+                return 'Security Personnel';
+            }
+            if ($reporter->hasRole('property_owner')) {
+                return 'Property Owner';
+            }
+            return 'Resident';
+        }
+        return class_basename($reporter);
+    }
+
     public function isReporter(User $user): bool
     {
-        return $this->reporter_id === $user->id;
+        return $this->reporter_id === $user->id && $this->reporter_type === get_class($user);
     }
 
     public function scopeForEstate(Builder $query, int $estateId): Builder

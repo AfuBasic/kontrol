@@ -26,6 +26,8 @@ class StoreIncidentRequest extends FormRequest
             'attachment_hash' => ['nullable', 'string'],
             'location' => ['nullable', 'string', 'max:255'],
             'is_private' => ['boolean'],
+            'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
+            'tags' => ['nullable', 'array'],
         ];
     }
 
