@@ -869,7 +869,7 @@ export default function Residents({
                                         className={`w-full rounded-xl border py-2.5 text-xs font-black tracking-wider uppercase shadow-xs transition ${
                                             inviteLink.is_active
                                                 ? 'border-rose-250 bg-white text-rose-600 hover:bg-rose-50/50'
-                                                : 'bg-emerald-650 border-transparent text-white hover:bg-emerald-700'
+                                                : 'bg-emerald-600 border-transparent text-white hover:bg-emerald-700'
                                         }`}
                                     >
                                         {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
