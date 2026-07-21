@@ -333,7 +333,7 @@ export default function Residents({
 
             <div className="space-y-6">
                 {/* SECTION 1 — RESIDENT OVERVIEW STRIP */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Community</span>
                         <div className="mt-2 flex items-baseline gap-2">
@@ -363,14 +363,6 @@ export default function Residents({
                         <div className="mt-2 flex items-baseline gap-2">
                             <UserMinus className="h-4 w-4 shrink-0 text-rose-500" />
                             <span className="text-2xl font-black text-slate-900">{stats.inactive}</span>
-                        </div>
-                    </div>
-
-                    <div className="col-span-2 flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 sm:col-span-1">
-                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Occupancy Health</span>
-                        <div className="mt-2 flex items-baseline gap-2">
-                            <Percent className="h-4 w-4 shrink-0 text-indigo-500" />
-                            <span className="text-2xl font-black text-slate-900">{stats.occupancy_rate}%</span>
                         </div>
                     </div>
                 </div>
