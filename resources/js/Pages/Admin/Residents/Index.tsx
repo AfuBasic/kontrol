@@ -508,7 +508,7 @@ export default function Residents({
                             ))}
                         </div>
                     ) : hasResidents ? (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto min-h-[280px]">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="border-b border-slate-100 bg-slate-50/70">
                                     <tr>
