@@ -109,6 +109,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
                 Route::delete('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'destroy'])->name('property-owners.invite-link.destroy');
             });
 
+            Route::delete('property-owners/bulk-delete', [PropertyOwnerController::class, 'bulkDelete'])->name('property-owners.bulk-delete');
+            Route::post('property-owners/bulk-suspend', [PropertyOwnerController::class, 'bulkSuspend'])->name('property-owners.bulk-suspend');
+            Route::post('property-owners/bulk-activate', [PropertyOwnerController::class, 'bulkActivate'])->name('property-owners.bulk-activate');
+            Route::post('property-owners/bulk-resend-invitation', [PropertyOwnerController::class, 'bulkResendInvitation'])->name('property-owners.bulk-resend-invitation');
             Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
             Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
             Route::get('property-owners/{propertyOwner}/available-residents', [PropertyOwnerController::class, 'availableResidents'])->name('property-owners.available-residents');
