@@ -524,11 +524,11 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                                                         owner.status === 'inactive'
                                                             ? 'bg-rose-50 text-rose-700'
-                                                            : owner.status === 'accepted'
+                                                            : (owner.status === 'accepted' || owner.status === 'active')
                                                                 ? 'bg-emerald-50 text-emerald-700'
                                                                 : 'bg-amber-50 text-amber-700'
                                                     }`}>
-                                                        {owner.status === 'accepted' ? 'active' : owner.status}
+                                                        {(owner.status === 'accepted' || owner.status === 'active') ? 'active' : owner.status}
                                                     </span>
                                                 </td>
 
