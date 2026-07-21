@@ -410,7 +410,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                                 onChange={(e) => setCommentText(e.target.value)}
                                 placeholder="Add update notes, comments, or resolution summaries..."
                                 rows={3}
-                                className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                             />
                             
                             <div className="mt-3 flex justify-end">
