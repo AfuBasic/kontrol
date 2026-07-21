@@ -208,7 +208,7 @@ export default function Create({ categories }: Props) {
                                 value={data.title}
                                 onChange={(e) => setData('title', e.target.value)}
                                 placeholder="e.g. Suspicious vehicle near gate house"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
                                 required
                             />
                             {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
@@ -225,7 +225,7 @@ export default function Create({ categories }: Props) {
                                 onChange={(e) => setData('body', e.target.value)}
                                 placeholder="Describe the safety threat, property damage, or operational breakdown..."
                                 rows={5}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
                                 required
                             />
                             {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
@@ -241,7 +241,7 @@ export default function Create({ categories }: Props) {
                                     id="category"
                                     value={data.category}
                                     onChange={(e) => setData('category', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
                                     required
                                 >
                                     <option value="">Select Category</option>
@@ -263,7 +263,7 @@ export default function Create({ categories }: Props) {
                                     id="priority"
                                     value={data.priority}
                                     onChange={(e) => setData('priority', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
                                     required
                                 >
                                     <option value="low">Low</option>
@@ -286,7 +286,7 @@ export default function Create({ categories }: Props) {
                                 value={data.location}
                                 onChange={(e) => setData('location', e.target.value)}
                                 placeholder="e.g. Block C, Visitor Car Park"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
                             />
                             {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                         </div>
