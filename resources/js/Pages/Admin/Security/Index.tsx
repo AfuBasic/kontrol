@@ -1,7 +1,16 @@
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { 
+    Trash2, 
+    Users, 
+    ShieldCheck, 
+    UserMinus, 
+    AlertCircle, 
+    Clock, 
+    X,
+    Loader2
+} from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SecurityActions from '@/Components/Admin/SecurityActions';
@@ -16,7 +25,7 @@ type SecurityPerson = {
     email: string;
     phone: string | null;
     badge_number: string | null;
-    status: 'pending' | 'accepted';
+    status: 'pending' | 'accepted' | 'inactive';
     suspended_at: string | null;
     created_at: string;
 };
@@ -36,10 +45,21 @@ type Props = {
         search?: string;
         status?: string;
     };
+    stats: {
+        total: number;
+        active: number;
+        pending: number;
+        inactive: number;
+    };
+    insights: string[];
 };
 
-export default function SecurityPersonnel({ security, filters }: Props) {
+export default function SecurityPersonnel({ security, filters: initialFilters, stats: initialStats, insights: initialInsights }: Props) {
     const { can } = usePermission();
+    const filters = !Array.isArray(initialFilters) ? (initialFilters || {}) : {};
+    const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0 };
+    const insights = initialInsights || [];
+
     const hasSecurity = security.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -48,74 +68,49 @@ export default function SecurityPersonnel({ security, filters }: Props) {
     const [isDeleting, setIsDeleting] = useState(false);
     const debouncedSearch = useDebounce(search, 300);
 
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [allSecurity, setAllSecurity] = useState(security.data);
+    // Apply filters
+    const applyFilters = useCallback((updatedFilters: Record<string, string>) => {
+        router.get(index.url(), {
+            search,
+            status,
+            ...updatedFilters
+        }, { preserveState: true, preserveScroll: true, replace: true });
+    }, [search, status]);
 
-    // Update security data when search/status changes
-    useEffect(() => {
-        setAllSecurity(security.data);
-    }, [security.data]);
-
-    // Handle Infinite Scroll / Load More
-    const loadMore = () => {
-        if (security.current_page < security.last_page && !isLoadingMore) {
-            setIsLoadingMore(true);
-            router.get(
-                index.url(),
-                {
-                    search: debouncedSearch,
-                    status: status,
-                    page: security.current_page + 1,
-                },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    only: ['security'],
-                    onFinish: () => {
-                        setIsLoadingMore(false);
-                        setAllSecurity((prev) => [...prev, ...security.data]);
-                    },
-                },
-            );
-        }
-    };
-
-    // Debounce search
+    // Handle search debounce
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, replace: true });
+            applyFilters({ search: debouncedSearch });
         }
-    }, [debouncedSearch, filters.search, status]);
+    }, [debouncedSearch]);
 
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
-        setStatus(newStatus);
-        router.get(index.url(), { search, status: newStatus }, { preserveState: true, replace: true });
+    const handleFilterChange = (key: string, value: string) => {
+        if (key === 'status') setStatus(value);
+        applyFilters({ [key]: value });
     };
 
-    const clearFilters = useCallback(() => {
+    const clearFilters = () => {
         setSearch('');
         setStatus('');
-        router.get(index.url(), {}, { preserveState: true, replace: true });
-    }, []);
+        router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
+    };
 
     const hasActiveFilters = Boolean(search || status);
 
-    const toggleSelectAll = useCallback(() => {
+    const toggleSelectAll = () => {
         if (selectedIds.length === security.data.length) {
             setSelectedIds([]);
         } else {
             setSelectedIds(security.data.map((s) => s.id));
         }
-    }, [selectedIds.length, security.data]);
+    };
 
-    const toggleSelect = useCallback((id: number) => {
+    const toggleSelect = (id: number) => {
         setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-    }, []);
+    };
 
-    const handleBulkDelete = useCallback(() => {
+    const handleBulkDelete = () => {
         if (selectedIds.length === 0) return;
-
         setIsDeleting(true);
         router.delete(bulkDelete.url(), {
             data: { ids: selectedIds },
@@ -125,374 +120,340 @@ export default function SecurityPersonnel({ security, filters }: Props) {
             },
             onFinish: () => setIsDeleting(false),
         });
-    }, [selectedIds]);
-
-    const isAllSelected = security.data.length > 0 && selectedIds.length === security.data.length;
-    const isSomeSelected = selectedIds.length > 0 && selectedIds.length < security.data.length;
+    };
 
     return (
         <>
             <Head title="Security Personnel" />
 
-            {/* Page Header */}
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Top Workspace Header */}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Security Personnel</h1>
-                    <p className="mt-1 text-gray-500">Manage security staff for your estate.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Security Workspace</h1>
+                    <p className="text-xs font-semibold text-slate-500">Monitor guard status, manage badge allocations, and gate privileges.</p>
                 </div>
                 {can('security.create') && (
                     <Link
                         href={index.url() + '/create'}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                     >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Security
+                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                        Add Security Staff
                     </Link>
                 )}
             </div>
 
-            {/* Filters */}
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-                <div className="relative flex-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                    </div>
-                    <input
-                        type="text"
-                        name="search"
-                        id="search"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="Search by name or email..."
-                    />
-                </div>
-                <div className="w-full sm:w-48">
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <FunnelIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+            <div className="space-y-6">
+                {/* SECTION 1 — STATS STRIP */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Personnel</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                            <Users className="h-4 w-4 shrink-0 text-blue-500" />
+                            <span className="text-2xl font-black text-slate-900">{stats.total}</span>
                         </div>
-                        <select
-                            value={status}
-                            onChange={handleStatusChange}
-                            className="block w-full appearance-none rounded-lg border border-gray-300 bg-white py-2.5 pr-8 pl-10 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        >
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="pending">Pending</option>
-                            <option value="suspended">Suspended</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Active Guards</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                            <span className="text-2xl font-black text-slate-900">{stats.active}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pending Access</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                            <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+                            <span className="text-2xl font-black text-slate-900">{stats.pending}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Suspended Guards</span>
+                        <div className="mt-2 flex items-baseline gap-2">
+                            <UserMinus className="h-4 w-4 shrink-0 text-rose-500" />
+                            <span className="text-2xl font-black text-slate-900">{stats.inactive}</span>
                         </div>
                     </div>
                 </div>
-                {hasActiveFilters && (
-                    <button
-                        type="button"
-                        onClick={clearFilters}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-                    >
-                        <XMarkIcon className="h-4 w-4" />
-                        Clear
-                    </button>
+
+                {/* SECTION 2 — INSIGHTS PANEL */}
+                {insights.length > 0 && (
+                    <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
+                        <div className="mb-2.5 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-blue-600" />
+                            <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
+                        </div>
+                        <ul className="space-y-2">
+                            {insights.map((insight, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                    {insight}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* SECTION 3 — SEARCH & FILTERS */}
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        {/* Search Input */}
+                        <div className="relative flex-1">
+                            <MagnifyingGlassIcon className="pointer-events-none absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search security personnel by name or email..."
+                                className="w-full rounded-xl border-slate-200 py-3 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:outline-hidden focus:ring-slate-800"
+                            />
+                        </div>
+
+                        {/* Status dropdown */}
+                        <div className="flex gap-2 sm:w-80">
+                            <select
+                                value={status}
+                                onChange={(e) => handleFilterChange('status', e.target.value)}
+                                className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+
+                            <button
+                                onClick={clearFilters}
+                                disabled={!hasActiveFilters}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 px-4 text-[11px] font-black uppercase tracking-wider text-slate-600 shadow-xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SECTION 4 — TABLE */}
+                <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
+                    {hasSecurity ? (
+                        <div className="overflow-x-auto min-h-[280px]">
+                            <table className="w-full table-auto border-collapse">
+                                <thead className="bg-slate-50/70 border-b border-slate-100">
+                                    <tr>
+                                        {can('security.delete') && (
+                                            <th className="w-10 px-4 py-3.5 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.length === security.data.length && security.data.length > 0}
+                                                    onChange={toggleSelectAll}
+                                                    className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
+                                                />
+                                            </th>
+                                        )}
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Guards</th>
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Contact</th>
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Badge #</th>
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Status</th>
+                                        <th className="w-20 px-6 py-3.5 text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {security.data.map((person, idx) => {
+                                        const isSelected = selectedIds.includes(person.id);
+                                        const initial = person.name ? person.name.charAt(0).toUpperCase() : 'S';
+                                        
+                                        // Soft premium colors for avatars
+                                        const bgColors = ['bg-blue-50 text-blue-700', 'bg-indigo-50 text-indigo-700', 'bg-purple-50 text-purple-700', 'bg-emerald-50 text-emerald-700'];
+                                        const avatarColor = bgColors[idx % bgColors.length];
+
+                                        return (
+                                            <tr 
+                                                key={person.id} 
+                                                className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
+                                            >
+                                                {can('security.delete') && (
+                                                    <td className="px-4 py-3.5 text-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleSelect(person.id)}
+                                                            className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
+                                                        />
+                                                    </td>
+                                                )}
+                                                
+                                                {/* Avatar & Name */}
+                                                <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${avatarColor}`}>
+                                                            {initial}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <span className="block truncate max-w-[150px] text-xs font-bold text-slate-900">{person.name}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Contact */}
+                                                <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <div className="text-xs font-semibold text-slate-800">
+                                                        <span className="block truncate max-w-[180px]">{person.email}</span>
+                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{person.phone || '—'}</span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Badge */}
+                                                <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <span className="inline-flex rounded-full bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700">
+                                                        {person.badge_number || '—'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Status Badge */}
+                                                <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                                                        person.suspended_at
+                                                            ? 'bg-rose-50 text-rose-700'
+                                                            : (person.status === 'accepted' || person.status === 'active')
+                                                                ? 'bg-emerald-50 text-emerald-700'
+                                                                : 'bg-amber-50 text-amber-700'
+                                                    }`}>
+                                                        {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : person.status}
+                                                    </span>
+                                                </td>
+
+                                                {/* Actions */}
+                                                <td className="relative px-6 py-3.5 text-right whitespace-nowrap">
+                                                    <SecurityActions security={person} />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        /* Redesigned Empty State */
+                        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 shadow-inner">
+                                <Users className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">No personnel found</h3>
+                            <p className="mt-1 max-w-xs text-xs font-semibold text-slate-400">
+                                {hasActiveFilters 
+                                    ? 'No records match your selected criteria. Try resetting or adjusting your search term.' 
+                                    : 'Get started by inviting your first security guard to join the estate personnel list.'}
+                            </p>
+                            {!hasActiveFilters && can('security.create') && (
+                                <Link
+                                    href={index.url() + '/create'}
+                                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+                                >
+                                    <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                    Add Security Staff
+                                </Link>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Pagination */}
+                {security.last_page > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
+                        <p className="text-xs font-bold text-slate-505">
+                            Showing <span className="text-slate-950">{security.data.length}</span> of <span className="text-slate-950">{security.total}</span> staff members
+                        </p>
+                        <div className="flex gap-1.5">
+                            {security.links.map((link, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={link.url || '#'}
+                                    preserveScroll
+                                    preserveState
+                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                        link.active
+                                            ? 'bg-slate-950 text-white shadow-sm'
+                                            : link.url
+                                                ? 'bg-white text-slate-655 border border-slate-205 hover:bg-slate-50'
+                                                : 'cursor-not-allowed text-slate-300 border border-slate-100 opacity-50'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 )}
             </div>
 
-            {/* Bulk Actions Bar */}
+            {/* FLOATING BULK ACTIONS TOOLBAR */}
             <AnimatePresence>
-                {selectedIds.length > 0 && can('security.delete') && (
+                {selectedIds.length > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: 100 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="mb-4 flex items-center justify-between rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
+                        exit={{ opacity: 0, y: 100 }}
+                        className="fixed bottom-6 left-1/2 z-40 w-full max-w-2xl -translate-x-1/2 px-4"
                     >
-                        <span className="text-sm font-medium text-primary-800">{selectedIds.length} personnel selected</span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedIds([])}
-                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                            >
-                                Clear
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Selected
-                            </button>
+                        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-900/10 bg-slate-950/95 px-6 py-4.5 shadow-xl backdrop-blur-md">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                                <span className="text-xs font-black tracking-wider uppercase text-white">
+                                    {selectedIds.length} Selected
+                                </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="rounded-xl bg-red-650 px-4.5 py-2 text-[11px] font-black uppercase tracking-wider text-white transition hover:bg-red-700"
+                                >
+                                    Delete Selected
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds([])}
+                                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                                >
+                                    <X className="h-4.5 w-4.5" />
+                                </button>
+                            </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Content Container */}
-            <div className="space-y-4">
-                {hasSecurity ? (
-                    <>
-                        <div className="hidden overflow-visible rounded-xl border border-gray-200 bg-white lg:block">
-                            <div className="overflow-visible">
-                                <table className="min-w-full divide-y divide-gray-200 overflow-visible">
-                                    <thead className="overflow-visible bg-gray-50">
-                                        <tr className="overflow-visible">
-                                            {can('security.delete') && (
-                                                <th className="w-12 overflow-visible px-4 py-3 text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isAllSelected}
-                                                        ref={(el) => {
-                                                            if (el) el.indeterminate = isSomeSelected;
-                                                        }}
-                                                        onChange={toggleSelectAll}
-                                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                    />
-                                                </th>
-                                            )}
-                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                                Personnel
-                                            </th>
-                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                                Badge #
-                                            </th>
-                                            <th className="overflow-visible px-6 py-3 text-left text-xs font-bold tracking-wider text-gray-500 uppercase">
-                                                Status
-                                            </th>
-                                            <th className="relative overflow-visible px-6 py-3">
-                                                <span className="sr-only">Actions</span>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200 overflow-visible bg-white">
-                                        {allSecurity.map((person) => (
-                                            <tr
-                                                key={person.id}
-                                                className={`overflow-visible transition-colors hover:bg-gray-50/50 ${selectedIds.includes(person.id) ? 'bg-primary-50/50' : ''}`}
-                                            >
-                                                {can('security.delete') && (
-                                                    <td className="w-12 overflow-visible px-4 py-4 text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedIds.includes(person.id)}
-                                                            onChange={() => toggleSelect(person.id)}
-                                                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                        />
-                                                    </td>
-                                                )}
-                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-400">
-                                                            {person.name.charAt(0)}
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            <div className="text-sm font-semibold text-gray-900">{person.name}</div>
-                                                            <div className="text-xs text-gray-500">{person.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-600">{person.badge_number || '—'}</div>
-                                                </td>
-                                                <td className="overflow-visible px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${
-                                                            person.suspended_at
-                                                                ? 'bg-red-50 text-red-700 ring-red-600/20'
-                                                                : person.status === 'accepted'
-                                                                  ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
-                                                                  : 'bg-amber-50 text-amber-700 ring-amber-600/20'
-                                                        }`}
-                                                    >
-                                                        {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="overflow-visible px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                                                    <SecurityActions security={person} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Mobile Card View */}
-                        <div className="space-y-3 lg:hidden">
-                            {allSecurity.map((person) => (
-                                <motion.div
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    key={person.id}
-                                    className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-xl font-black text-slate-400">
-                                                {person.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <h3 className="leading-tight font-black text-slate-900">{person.name}</h3>
-                                                <p className="text-sm font-medium text-slate-500">{person.email}</p>
-                                                <div className="mt-1 flex gap-2">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-black tracking-wider uppercase ${
-                                                            person.suspended_at
-                                                                ? 'bg-rose-100 text-rose-700'
-                                                                : person.status === 'accepted'
-                                                                  ? 'bg-emerald-100 text-emerald-700'
-                                                                  : 'bg-amber-100 text-amber-700'
-                                                        }`}
-                                                    >
-                                                        {person.suspended_at ? 'Suspended' : person.status === 'accepted' ? 'Active' : 'Pending'}
-                                                    </span>
-                                                    {person.badge_number && (
-                                                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-wider text-slate-600 uppercase">
-                                                            #{person.badge_number}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <SecurityActions security={person} />
-                                    </div>
-
-                                    <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-50 pt-4">
-                                        <div className="rounded-2xl bg-slate-50/50 p-3">
-                                            <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Phone</p>
-                                            <p className="truncate text-sm font-bold text-slate-700">{person.phone || '—'}</p>
-                                        </div>
-                                        <div className="rounded-2xl bg-slate-50/50 p-3">
-                                            <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Joined</p>
-                                            <p className="text-sm font-bold text-slate-700">{person.created_at}</p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        {/* Load More Trigger */}
-                        {security.current_page < security.last_page && (
-                            <div className="mt-8 flex justify-center pb-12">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={loadMore}
-                                    disabled={isLoadingMore}
-                                    className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 font-black text-white shadow-xl transition-all hover:bg-slate-800 disabled:opacity-50"
-                                >
-                                    {isLoadingMore ? (
-                                        <>
-                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                                            <span>Loading...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ArrowPathIcon className="h-5 w-5" />
-                                            <span>Show more personnel</span>
-                                        </>
-                                    )}
-                                </motion.button>
-                            </div>
-                        )}
-
-                        {/* Desktop Table View fallback pagination (hidden on mobile if load more exists) */}
-                        {security.last_page > 1 && (
-                            <div className="hidden items-center justify-between border-t border-gray-100 px-6 py-4 lg:flex">
-                                <div className="text-sm font-medium text-gray-500">
-                                    Showing <span className="font-bold text-slate-900">{security.data.length}</span> of{' '}
-                                    <span className="font-bold text-slate-900">{security.total}</span> personnel
-                                </div>
-                                <div className="flex gap-1">
-                                    {security.links.map((link, idx) => (
-                                        <Link
-                                            key={idx}
-                                            href={link.url || '#'}
-                                            preserveScroll
-                                            className={`rounded-xl px-3.5 py-2 text-sm font-bold transition-all ${
-                                                link.active
-                                                    ? 'bg-slate-900 text-white shadow-lg'
-                                                    : link.url
-                                                      ? 'text-slate-600 hover:bg-slate-100'
-                                                      : 'cursor-not-allowed text-slate-300'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    /* Empty State */
-                    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 text-center">
-                        <div className="mb-4 rounded-full bg-gray-100 p-4">
-                            <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-                                />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900">No security personnel found</h3>
-                        <p className="mt-1 max-w-sm text-sm text-gray-500">
-                            {search || status
-                                ? 'Try adjusting your search or filters to find what you are looking for.'
-                                : "Get started by adding your first security personnel. They'll receive an invitation email to set up their account."}
-                        </p>
-                        {!(search || status) && can('security.create') && (
-                            <Link
-                                href={index.url() + '/create'}
-                                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                            >
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                Add Security
-                            </Link>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Delete Confirmation Modal */}
+            {/* Bulk Delete Confirm Modal */}
             <AnimatePresence>
                 {showDeleteConfirm && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                        onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
                     >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+                            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                                <Trash2 className="h-6 w-6 text-red-600" />
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600 shadow-inner">
+                                <Trash2 className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900">Delete {selectedIds.length} Security Personnel?</h3>
-                            <p className="mt-2 text-sm text-gray-500">
-                                This action cannot be undone. The selected security personnel will be permanently removed from this estate.
+                            <h3 className="text-base font-black tracking-wide text-slate-900 uppercase">Confirm Bulk Removal</h3>
+                            <p className="mt-2 text-xs leading-relaxed font-semibold text-slate-505">
+                                You are about to permanently remove {selectedIds.length} staff member(s). This will delete their credentials and records. This action is irreversible.
                             </p>
-                            <div className="mt-6 flex justify-end gap-3">
+                            <div className="mt-6 flex justify-end gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(false)}
                                     disabled={isDeleting}
-                                    className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-655 hover:bg-slate-100 disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
@@ -500,15 +461,12 @@ export default function SecurityPersonnel({ security, filters }: Props) {
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-red-655 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? (
-                                        <>
-                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                            Deleting...
-                                        </>
+                                        <Loader2 className="h-4.5 w-4.5 animate-spin" />
                                     ) : (
-                                        'Delete'
+                                        'Yes, Delete Selected'
                                     )}
                                 </button>
                             </div>
