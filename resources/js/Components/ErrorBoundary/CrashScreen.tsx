@@ -102,7 +102,7 @@ export default function CrashScreen({ error, resetError }: Props) {
                         </button>
                         <button
                             onClick={handleHome}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-slate-650 ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-[0.98]"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-[0.98]"
                         >
                             <Home className="h-4 w-4" />
                             Dashboard
@@ -115,7 +115,7 @@ export default function CrashScreen({ error, resetError }: Props) {
                     <div className="border-t border-slate-50 bg-slate-50/50 px-8 py-4">
                         <button
                             onClick={() => setShowDetails(!showDetails)}
-                            className="flex w-full items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase transition-colors hover:text-slate-655"
+                            className="flex w-full items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase transition-colors hover:text-slate-600"
                         >
                             Technical Details
                             {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
