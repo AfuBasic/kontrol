@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle } from 'lucide-react';
+import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
@@ -59,6 +59,7 @@ const formatCurrency = (amountKobo: number) =>
 export default function TransactionDrawer({ transactionUlid, open, onClose, permissions }: Props) {
     const [transaction, setTransaction] = useState<TransactionDetail | null>(null);
     const [loading, setLoading] = useState(false);
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         if (!open || !transactionUlid) {
@@ -74,9 +75,27 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
 
     if (!open) return null;
 
-    const downloadPdf = () => {
-        if (!transaction) return;
-        window.location.href = `/admin/transactions/${transaction.ulid}/download`;
+    const downloadPdf = async () => {
+        if (!transaction || downloading) return;
+        setDownloading(true);
+        try {
+            const response = await axios.get(`/admin/transactions/${transaction.ulid}/download`, {
+                responseType: 'blob',
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `receipt-${transaction.reference_number}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to download PDF receipt', error);
+        } finally {
+            setDownloading(false);
+        }
     };
 
     return (
@@ -254,9 +273,18 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                     <button
                                         type="button"
                                         onClick={downloadPdf}
-                                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black tracking-wider uppercase text-slate-700 hover:bg-slate-50 active:scale-98 transition w-full"
+                                        disabled={downloading}
+                                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black tracking-wider uppercase text-slate-700 hover:bg-slate-50 active:scale-98 transition w-full disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
-                                        <Download className="h-3.5 w-3.5" /> Download PDF
+                                        {downloading ? (
+                                            <>
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" /> Downloading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download className="h-3.5 w-3.5" /> Download PDF
+                                            </>
+                                        )}
                                     </button>
                                 )}
                             </div>

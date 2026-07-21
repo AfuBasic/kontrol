@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Download, Eye, MoreHorizontal } from 'lucide-react';
+import axios from 'axios';
+import { ChevronLeft, ChevronRight, Download, Eye, MoreHorizontal, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 
@@ -39,33 +40,49 @@ interface Props {
     permissions: Permissions;
 }
 
-const formatCurrency = (amountKobo: number, direction?: string) => {
-    const formatted = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(amountKobo / 100);
-    return direction === 'debit' ? `−${formatted}` : formatted;
-};
-
-function StatusBadge({ status, label }: { status: string; label: string }) {
-    const classes = {
-        success: 'bg-emerald-50 text-emerald-700',
-        pending: 'bg-amber-50 text-amber-700',
-        failed: 'bg-rose-50 text-rose-700',
-        reversed: 'bg-violet-50 text-violet-700',
-        cancelled: 'bg-slate-100 text-slate-600',
-        partial: 'bg-blue-50 text-blue-700',
-    }[status] || 'bg-slate-100 text-slate-600';
-
-    return <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase ${classes}`}>{label}</span>;
-}
-
-function RowActions({ transaction, onSelect, permissions }: { transaction: Transaction; onSelect: (t: Transaction) => void; permissions: Permissions }) {
+function RowActions({
+    transaction,
+    onSelect,
+    permissions,
+}: {
+    transaction: Transaction;
+    onSelect: (t: Transaction) => void;
+    permissions: Permissions;
+}) {
     const [open, setOpen] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+
+    const handleDownload = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (downloading) return;
+        setDownloading(true);
+        try {
+            const response = await axios.get(`/admin/transactions/${transaction.ulid}/download`, {
+                responseType: 'blob',
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `receipt-${transaction.reference_number}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            setOpen(false);
+        } catch (error) {
+            console.error('Failed to download receipt PDF', error);
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     return (
-        <div className="relative">
+        <div className="relative inline-block text-left">
             <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-                className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
             >
                 <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -73,20 +90,33 @@ function RowActions({ transaction, onSelect, permissions }: { transaction: Trans
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
                     <div className="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); onSelect(transaction); setOpen(false); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelect(transaction);
+                                setOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        >
                             <Eye className="h-3.5 w-3.5" /> View details
                         </button>
                         {permissions.download_receipts && transaction.status !== 'pending' && (
                             <button
                                 type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = `/admin/transactions/${transaction.ulid}/download`;
-                                    setOpen(false);
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                                onClick={handleDownload}
+                                disabled={downloading}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                             >
-                                <Download className="h-3.5 w-3.5" /> Receipt
+                                {downloading ? (
+                                    <>
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" /> Downloading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download className="h-3.5 w-3.5" /> Receipt
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>
@@ -98,7 +128,7 @@ function RowActions({ transaction, onSelect, permissions }: { transaction: Trans
 
 export default function TransactionsTable({ transactions, onSelect, permissions }: Props) {
     return (
-        <div className="overflow-hidden rounded-xl bg-white">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
             <div className="border-b border-slate-100 px-5 py-3">
                 <p className="text-sm font-semibold text-slate-900 font-black">All Transactions</p>
                 <p className="text-xs text-slate-400 font-bold">{transactions.total.toLocaleString()} records</p>
