@@ -158,19 +158,6 @@ export default function Home({
                             <span className="text-[10px] font-medium text-slate-400">Household member of {parentResidentName}</span>
                         )}
                     </div>
-                    
-                    <Link
-                        href="/resident/notifications"
-                        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-slate-950 transition-colors"
-                    >
-                        <Bell className="h-4 w-4" />
-                        {auth?.user?.unread_notifications_count && auth.user.unread_notifications_count > 0 ? (
-                            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-650"></span>
-                            </span>
-                        ) : null}
-                    </Link>
                 </div>
 
                 {/* HERO COMMAND CENTER */}
