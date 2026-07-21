@@ -310,8 +310,8 @@ class TransactionOverviewService
             ]),
             'assignment' => $transaction->assignment ? [
                 'id' => $transaction->assignment->id,
-                'amount_due' => $transaction->assignment->amount_due,
-                'amount_paid' => $transaction->assignment->amount_paid,
+                'amount_due' => (int) round($transaction->assignment->amount_due * 100),
+                'amount_paid' => (int) round($transaction->assignment->amount_paid * 100),
                 'status' => $transaction->assignment->status,
             ] : null,
             'invoice' => $transaction->invoice ? [
