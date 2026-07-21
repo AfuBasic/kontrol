@@ -26,7 +26,7 @@ import {
     Users
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { properties, residents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { properties, residents, create } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
