@@ -140,21 +140,44 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         onRevoke?.(code);
     };
 
-    const formatFaintExpiry = () => {
-        if (effectiveStatus === 'scheduled' && code.starts_at) {
-            const date = new Date(code.starts_at);
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const formatDateLabel = (dateString: string | null, prefix: string) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
 
-            if (date.toDateString() === today.toDateString()) {
-                return `Starts today at ${timeStr.toLowerCase()}`;
-            }
-            if (date.toDateString() === tomorrow.toDateString()) {
-                return `Starts tomorrow at ${timeStr.toLowerCase()}`;
-            }
-            return `Starts ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at ${timeStr.toLowerCase()}`;
+        const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+
+        if (date.toDateString() === today.toDateString()) {
+            return `${prefix} ${timeStr} today`;
+        }
+        if (date.toDateString() === tomorrow.toDateString()) {
+            return `${prefix} ${timeStr} tomorrow`;
+        }
+        if (date.toDateString() === yesterday.toDateString()) {
+            return `${prefix} ${timeStr} yesterday`;
+        }
+        return `${prefix} ${timeStr} on ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    };
+
+    const formatFaintExpiry = () => {
+        if (effectiveStatus === 'used') {
+            return formatDateLabel(code.used_at || code.expires_at, 'Used at');
+        }
+
+        if (effectiveStatus === 'expired') {
+            return formatDateLabel(code.expires_at, 'Expired at');
+        }
+
+        if (effectiveStatus === 'revoked') {
+            return formatDateLabel(code.revoked_at || code.expires_at, 'Cancelled at');
+        }
+
+        if (effectiveStatus === 'scheduled' && code.starts_at) {
+            return formatDateLabel(code.starts_at, 'Starts at');
         }
 
         if (code.type === 'long_lived') {
@@ -163,19 +186,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
         }
 
         if (!code.expires_at) return 'Valid indefinitely';
-        const date = new Date(code.expires_at);
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-        if (date.toDateString() === today.toDateString()) {
-            return `Valid until ${timeStr.toLowerCase()} today`;
-        }
-        if (date.toDateString() === tomorrow.toDateString()) {
-            return `Valid until ${timeStr.toLowerCase()} tomorrow`;
-        }
-        return `Valid until ${timeStr.toLowerCase()} on ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        return formatDateLabel(code.expires_at, 'Valid until');
     };
 
     return (
