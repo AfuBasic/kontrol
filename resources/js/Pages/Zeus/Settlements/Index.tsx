@@ -579,8 +579,8 @@ export default function SettlementsIndex({ earnings, summary, filters, statusOpt
                             placeholder="Optional context for audit trail"
                         />
                     </div>
-                    {payForm.errors.earning && (
-                        <p className="text-xs text-rose-500">{payForm.errors.earning}</p>
+                    {(payForm.errors as any).earning && (
+                        <p className="text-xs text-rose-500">{(payForm.errors as any).earning}</p>
                     )}
                 </div>
             </ConfirmationModal>
