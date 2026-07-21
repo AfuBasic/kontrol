@@ -5,10 +5,11 @@ use App\Http\Controllers\Security\EstateBoardCommentController;
 use App\Http\Controllers\Security\EstateBoardController;
 use App\Http\Controllers\Security\HistoryController;
 use App\Http\Controllers\Security\HomeController;
+use App\Http\Controllers\Security\IncidentCommentController;
+use App\Http\Controllers\Security\IncidentController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
 use App\Http\Controllers\Security\VerifyController;
-use App\Http\Controllers\Security\IncidentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -77,7 +78,7 @@ Route::middleware('role:security')->group(function (): void {
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
 
-        Route::post('/{incident}/comments', [App\Http\Controllers\Security\IncidentCommentController::class, 'store'])->name('comments.store');
-        Route::delete('/comments/{comment}', [App\Http\Controllers\Security\IncidentCommentController::class, 'destroy'])->name('comments.destroy');
+        Route::post('/{incident}/comments', [IncidentCommentController::class, 'store'])->name('comments.store');
+        Route::delete('/comments/{comment}', [IncidentCommentController::class, 'destroy'])->name('comments.destroy');
     });
 });

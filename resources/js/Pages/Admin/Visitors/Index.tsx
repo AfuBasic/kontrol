@@ -1,37 +1,8 @@
 import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Search,
-    Calendar,
-    Car,
-    User,
-    Filter,
-    X,
-    Eye,
-    ShieldCheck,
-    Phone,
-    MapPin,
-    Clock,
-    UserPlus,
-    Loader2,
-    Download,
-    TrendingUp,
-    BarChart3,
-    Users,
-    CheckCircle2,
-    XCircle,
-    Plus,
-    ChevronRight,
-    ArrowRightLeft,
-    Layers,
-    SlidersHorizontal,
-    LayoutGrid,
-} from 'lucide-react';
+import { Search, X, Eye, Download, CheckCircle2, XCircle, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
-import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
-import MobileSheet from '@/Components/MobileSheet';
-import Modal from '@/Components/Modal';
 import { useDebounce } from '@/Hooks/useDebounce';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -132,7 +103,7 @@ export default function VisitorIndex({
     const [hostId, setHostId] = useState(filters.host_id || '');
     const [status, setStatus] = useState(filters.status || '');
     const [verifierId, setVerifierId] = useState(filters.verifier_id || '');
-    
+
     const [activeTab, setActiveTab] = useState<'live' | 'history' | 'analytics'>('live');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
@@ -178,7 +149,19 @@ export default function VisitorIndex({
 
     // Client-side CSV export
     const handleExportCSV = () => {
-        const headers = ['Visitor', 'Phone', 'Host', 'Purpose', 'Status', 'Entry Time', 'Exit Time', 'Duration', 'Gate', 'Security Officer', 'Vehicle'];
+        const headers = [
+            'Visitor',
+            'Phone',
+            'Host',
+            'Purpose',
+            'Status',
+            'Entry Time',
+            'Exit Time',
+            'Duration',
+            'Gate',
+            'Security Officer',
+            'Vehicle',
+        ];
         const rows = logs.data.map((log) => [
             log.visitor.name,
             log.visitor.phone,
@@ -190,10 +173,11 @@ export default function VisitorIndex({
             log.duration_minutes ? `${log.duration_minutes} min` : '—',
             log.gate,
             log.verifier_name,
-            log.vehicle ? `${log.vehicle.make} ${log.vehicle.model} (${log.vehicle.plate})` : '—'
+            log.vehicle ? `${log.vehicle.make} ${log.vehicle.model} (${log.vehicle.plate})` : '—',
         ]);
-        const csvContent = 'data:text/csv;charset=utf-8,' 
-            + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
+        const csvContent =
+            'data:text/csv;charset=utf-8,' +
+            [headers.join(','), ...rows.map((e) => e.map((val) => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
@@ -215,7 +199,7 @@ export default function VisitorIndex({
                         <p className="text-xs text-slate-500">Monitor live activity, analyze gates performance and audit logs.</p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 rounded-lg bg-slate-100/80 p-0.5 max-w-xs md:max-w-none">
+                    <div className="flex max-w-xs items-center gap-1.5 rounded-lg bg-slate-100/80 p-0.5 md:max-w-none">
                         <button
                             onClick={() => setActiveTab('live')}
                             className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
@@ -245,37 +229,52 @@ export default function VisitorIndex({
 
                 {/* Tab content 1: LIVE VIEW */}
                 {activeTab === 'live' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* Main Grid: Statistics summary & Live table list */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="space-y-6 lg:col-span-2">
                             {/* KPI Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+                            <div className={`grid gap-3.5 ${checkoutEnabled ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-3'}`}>
                                 <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Currently Inside</span>
-                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.currentlyInside}</span>
+                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                        {checkoutEnabled ? 'Currently Inside' : 'Checked In'}
+                                    </span>
+                                    <span className="mt-1 block text-xl font-black text-slate-900">
+                                        {checkoutEnabled ? metrics.currentlyInside : metrics.visitorsToday}
+                                    </span>
                                 </div>
+                                {checkoutEnabled && (
+                                    <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Visitors Today</span>
+                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.visitorsToday}</span>
+                                    </div>
+                                )}
+                                {checkoutEnabled && (
+                                    <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Pending Checkout</span>
+                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.pendingCheckout}</span>
+                                    </div>
+                                )}
                                 <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Visitors Today</span>
-                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.visitorsToday}</span>
+                                    <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Denied Entries</span>
+                                    <span className="mt-1 block text-xl font-black text-slate-900">{metrics.deniedEntries}</span>
                                 </div>
-                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pending Checkout</span>
-                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.pendingCheckout}</span>
-                                </div>
-                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Denied Entries</span>
-                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.deniedEntries}</span>
-                                </div>
-                                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs col-span-2 md:col-span-1">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Avg Duration</span>
-                                    <span className="text-xl font-black text-slate-900 mt-1 block">{metrics.avgDuration} min</span>
-                                </div>
+                                {checkoutEnabled ? (
+                                    <div className="col-span-2 rounded-xl border border-slate-100 bg-white p-4 shadow-xs md:col-span-1">
+                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Avg Duration</span>
+                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.avgDuration} min</span>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+                                        <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Checked</span>
+                                        <span className="mt-1 block text-xl font-black text-slate-900">{metrics.currentlyInside}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Filters strip */}
-                            <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-xs space-y-3">
+                            <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-3 shadow-xs">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                                    <div className="flex min-w-[240px] flex-1 items-center gap-2">
                                         <div className="relative flex-1">
                                             <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                                             <input
@@ -283,7 +282,7 @@ export default function VisitorIndex({
                                                 placeholder="Search visitor, host, phone..."
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
-                                                className="w-full rounded-lg border border-slate-200 pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-hidden"
+                                                className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-9 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-hidden"
                                             />
                                         </div>
                                     </div>
@@ -294,17 +293,14 @@ export default function VisitorIndex({
                                             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
                                                 isFilterVisible || hostId || date || plate || status || verifierId
                                                     ? 'border-indigo-100 bg-indigo-50/50 text-indigo-700'
-                                                    : 'border-slate-200 bg-white text-slate-655 hover:bg-slate-50'
+                                                    : 'text-slate-655 border-slate-200 bg-white hover:bg-slate-50'
                                             }`}
                                         >
                                             <SlidersHorizontal className="h-3.5 w-3.5" />
                                             Filters
                                         </button>
                                         {(search || date || plate || hostId || status || verifierId) && (
-                                            <button
-                                                onClick={handleClearFilters}
-                                                className="text-xs font-bold text-red-600 hover:underline"
-                                            >
+                                            <button onClick={handleClearFilters} className="text-xs font-bold text-red-600 hover:underline">
                                                 Clear All
                                             </button>
                                         )}
@@ -313,9 +309,9 @@ export default function VisitorIndex({
 
                                 {/* Advanced Filters Panel */}
                                 {isFilterVisible && (
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 border-t border-slate-100 pt-3">
+                                    <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-3 md:grid-cols-4">
                                         <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Status</label>
+                                            <label className="mb-1 block text-[9px] font-bold tracking-wider text-slate-400 uppercase">Status</label>
                                             <select
                                                 value={status}
                                                 onChange={(e) => setStatus(e.target.value)}
@@ -328,7 +324,7 @@ export default function VisitorIndex({
                                         </div>
 
                                         <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Host</label>
+                                            <label className="mb-1 block text-[9px] font-bold tracking-wider text-slate-400 uppercase">Host</label>
                                             <select
                                                 value={hostId}
                                                 onChange={(e) => setHostId(e.target.value)}
@@ -336,13 +332,17 @@ export default function VisitorIndex({
                                             >
                                                 <option value="">All Hosts</option>
                                                 {hosts.map((h) => (
-                                                    <option key={h.id} value={h.id}>{h.name}</option>
+                                                    <option key={h.id} value={h.id}>
+                                                        {h.name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Security Officer</label>
+                                            <label className="mb-1 block text-[9px] font-bold tracking-wider text-slate-400 uppercase">
+                                                Security Officer
+                                            </label>
                                             <select
                                                 value={verifierId}
                                                 onChange={(e) => setVerifierId(e.target.value)}
@@ -350,13 +350,17 @@ export default function VisitorIndex({
                                             >
                                                 <option value="">All Officers</option>
                                                 {securityOfficers.map((o) => (
-                                                    <option key={o.id} value={o.id}>{o.name}</option>
+                                                    <option key={o.id} value={o.id}>
+                                                        {o.name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Vehicle Plate</label>
+                                            <label className="mb-1 block text-[9px] font-bold tracking-wider text-slate-400 uppercase">
+                                                Vehicle Plate
+                                            </label>
                                             <input
                                                 type="text"
                                                 placeholder="Plate number..."
@@ -370,33 +374,37 @@ export default function VisitorIndex({
                             </div>
 
                             {/* Table of logs */}
-                            <div className="rounded-xl border border-slate-100 bg-white overflow-hidden shadow-xs">
+                            <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full border-collapse text-left">
                                         <thead>
                                             <tr className="border-b border-slate-100 bg-slate-50/50">
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Visitor</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Host</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Status</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Gate</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Entry Time</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Duration</th>
-                                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450 text-right">Actions</th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Visitor</th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Host</th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Status</th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Gate</th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">
+                                                    Entry Time
+                                                </th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Duration</th>
+                                                <th className="text-slate-450 px-4 py-3 text-right text-[10px] font-bold tracking-wider uppercase">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-150 text-xs font-semibold text-slate-700">
+                                        <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                                             {logs.data.map((log) => (
-                                                <tr key={log.id} className="hover:bg-slate-50/40 transition">
+                                                <tr key={log.id} className="transition hover:bg-slate-50/40">
                                                     <td className="px-4 py-3.5">
                                                         <div>
                                                             <p className="font-bold text-slate-900">{log.visitor.name}</p>
-                                                            <p className="text-[10px] text-slate-400 mt-0.5">{log.visitor.phone}</p>
+                                                            <p className="mt-0.5 text-[10px] text-slate-400">{log.visitor.phone}</p>
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3.5">
                                                         <div>
                                                             <p className="font-bold text-slate-900">{log.host.name}</p>
-                                                            <p className="text-[10px] text-slate-400 mt-0.5">{log.host.unit ?? 'No Unit'}</p>
+                                                            <p className="mt-0.5 text-[10px] text-slate-400">{log.host.unit ?? 'No Unit'}</p>
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3.5">
@@ -413,20 +421,18 @@ export default function VisitorIndex({
                                                     <td className="px-4 py-3.5">
                                                         <span className="text-[11px] text-slate-500">{log.gate}</span>
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-slate-500">
-                                                        {log.verified_at}
-                                                    </td>
+                                                    <td className="px-4 py-3.5 text-slate-500">{log.verified_at}</td>
                                                     <td className="px-4 py-3.5">
                                                         {log.checked_out_at ? (
                                                             <span className="text-slate-500">{log.duration_minutes} min</span>
                                                         ) : (
-                                                            <span className="text-emerald-600 font-bold">Running</span>
+                                                            <span className="font-bold text-emerald-600">Running</span>
                                                         )}
                                                     </td>
                                                     <td className="px-4 py-3.5 text-right">
                                                         <button
                                                             onClick={() => setSelectedLog(log)}
-                                                            className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition"
+                                                            className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-slate-200"
                                                         >
                                                             <Eye className="h-3 w-3" />
                                                             Details
@@ -451,12 +457,12 @@ export default function VisitorIndex({
                         <div className="space-y-6">
                             {/* Live activity feed */}
                             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Gate Stream</h3>
+                                <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-900 uppercase">Gate Stream</h3>
                                 {liveFeed.length > 0 ? (
                                     <div className="space-y-4">
                                         {liveFeed.map((activity) => (
                                             <div key={activity.id} className="relative flex gap-3 text-xs">
-                                                <div className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-50 border border-slate-100/50">
+                                                <div className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-slate-100/50 bg-slate-50">
                                                     {activity.type === 'exit' ? (
                                                         <XCircle className="h-3.5 w-3.5 text-rose-500" />
                                                     ) : (
@@ -464,7 +470,7 @@ export default function VisitorIndex({
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="font-semibold text-slate-700 leading-normal">{activity.message}</p>
+                                                    <p className="leading-normal font-semibold text-slate-700">{activity.message}</p>
                                                     <p className="mt-0.5 text-[9px] font-medium text-slate-400">{activity.time}</p>
                                                 </div>
                                             </div>
@@ -476,10 +482,10 @@ export default function VisitorIndex({
                             </div>
 
                             {/* Operational Insights */}
-                            <div className="rounded-xl bg-indigo-950 p-5 text-white shadow-xs space-y-4 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-650/20 rounded-full blur-2xl pointer-events-none" />
-                                <h3 className="text-xs font-black tracking-widest uppercase text-indigo-300">Operational Insights</h3>
-                                <div className="space-y-3 text-xs text-indigo-100 font-semibold leading-relaxed">
+                            <div className="relative space-y-4 overflow-hidden rounded-xl bg-indigo-950 p-5 text-white shadow-xs">
+                                <div className="bg-indigo-650/20 pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full blur-2xl" />
+                                <h3 className="text-xs font-black tracking-widest text-indigo-300 uppercase">Operational Insights</h3>
+                                <div className="space-y-3 text-xs leading-relaxed font-semibold text-indigo-100">
                                     {metrics.pendingCheckout > 0 && (
                                         <p>• {metrics.pendingCheckout} visitors stayed past their expiration and have not checked out.</p>
                                     )}
@@ -498,7 +504,7 @@ export default function VisitorIndex({
                             <h2 className="text-sm font-bold text-slate-900">Audit Logs History</h2>
                             <button
                                 onClick={handleExportCSV}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
                             >
                                 <Download className="h-3.5 w-3.5" />
                                 Export Logs (CSV)
@@ -506,24 +512,24 @@ export default function VisitorIndex({
                         </div>
 
                         {/* Audit Table */}
-                        <div className="rounded-xl border border-slate-100 bg-white overflow-hidden shadow-xs">
+                        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full border-collapse text-left">
                                     <thead>
                                         <tr className="border-b border-slate-100 bg-slate-50/50">
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Visitor</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Host</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Gate</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Verifier</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Status</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Entry Time</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Exit Time</th>
-                                            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-450">Vehicle</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Visitor</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Host</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Gate</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Verifier</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Status</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Entry Time</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Exit Time</th>
+                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Vehicle</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-150 text-xs font-semibold text-slate-700">
+                                    <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                                         {logs.data.map((log) => (
-                                            <tr key={log.id} className="hover:bg-slate-50/40 transition">
+                                            <tr key={log.id} className="transition hover:bg-slate-50/40">
                                                 <td className="px-4 py-3.5">
                                                     <span className="font-bold text-slate-900">{log.visitor.name}</span>
                                                 </td>
@@ -531,9 +537,11 @@ export default function VisitorIndex({
                                                 <td className="px-4 py-3.5 text-slate-500">{log.gate}</td>
                                                 <td className="px-4 py-3.5 text-slate-500">{log.verifier_name}</td>
                                                 <td className="px-4 py-3.5">
-                                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                                                        log.checked_out_at ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'
-                                                    }`}>
+                                                    <span
+                                                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                                                            log.checked_out_at ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'
+                                                        }`}
+                                                    >
                                                         {log.checked_out_at ? 'Checked Out' : 'Inside'}
                                                     </span>
                                                 </td>
@@ -553,22 +561,22 @@ export default function VisitorIndex({
 
                 {/* Tab content 3: ANALYTICS VIEW */}
                 {activeTab === 'analytics' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         {/* Visitor trend chart (Visual bar layout) */}
-                        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs space-y-4">
+                        <div className="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
                             <div>
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Visitor Volume (Past 7 Days)</h3>
-                                <p className="text-[10px] text-slate-400 mt-0.5">Total checked-in guest entries daily.</p>
+                                <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">Visitor Volume (Past 7 Days)</h3>
+                                <p className="mt-0.5 text-[10px] text-slate-400">Total checked-in guest entries daily.</p>
                             </div>
                             <div className="flex h-44 items-end gap-3 pt-6">
                                 {analytics.trend.map((day, idx) => {
-                                    const maxVal = Math.max(...analytics.trend.map(d => d.count), 1);
+                                    const maxVal = Math.max(...analytics.trend.map((d) => d.count), 1);
                                     const heightPercent = `${(day.count / maxVal) * 100}%`;
                                     return (
-                                        <div key={idx} className="flex flex-1 flex-col items-center gap-2 h-full justify-end">
+                                        <div key={idx} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
                                             <span className="text-[9px] font-bold text-slate-500">{day.count}</span>
                                             <div
-                                                className="w-full rounded-t bg-indigo-600/85 hover:bg-indigo-650 transition-all cursor-pointer"
+                                                className="hover:bg-indigo-650 w-full cursor-pointer rounded-t bg-indigo-600/85 transition-all"
                                                 style={{ height: heightPercent }}
                                             />
                                             <span className="text-[9px] font-bold text-slate-400">{day.date}</span>
@@ -579,16 +587,18 @@ export default function VisitorIndex({
                         </div>
 
                         {/* Peak hours & Most visited */}
-                        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs space-y-6">
+                        <div className="space-y-6 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
                             <div>
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Top Visited Hosts</h3>
-                                <p className="text-[10px] text-slate-400 mt-0.5">Residents receiving the highest guest volume.</p>
+                                <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">Top Visited Hosts</h3>
+                                <p className="mt-0.5 text-[10px] text-slate-400">Residents receiving the highest guest volume.</p>
                             </div>
                             <div className="space-y-3.5">
                                 {analytics.mostVisited.map((host, idx) => (
                                     <div key={idx} className="flex items-center justify-between text-xs font-semibold">
                                         <span className="text-slate-700">{host.name}</span>
-                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{host.count} visits</span>
+                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">
+                                            {host.count} visits
+                                        </span>
                                     </div>
                                 ))}
                                 {analytics.mostVisited.length === 0 && (
@@ -619,13 +629,13 @@ export default function VisitorIndex({
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white p-6 shadow-2xl overflow-y-auto"
+                            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl"
                         >
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Visitation Details</h2>
+                            <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+                                <h2 className="text-sm font-black tracking-wider text-slate-900 uppercase">Visitation Details</h2>
                                 <button
                                     onClick={() => setSelectedLog(null)}
-                                    className="rounded-full bg-slate-100 p-2 text-slate-400 hover:text-slate-950 transition"
+                                    className="rounded-full bg-slate-100 p-2 text-slate-400 transition hover:text-slate-950"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -636,31 +646,31 @@ export default function VisitorIndex({
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <h3 className="text-lg font-bold text-slate-900">{selectedLog.visitor.name}</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">{selectedLog.visitor.phone}</p>
+                                        <p className="mt-0.5 text-xs text-slate-500">{selectedLog.visitor.phone}</p>
                                     </div>
-                                    <span className="rounded bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-bold text-indigo-700 uppercase">
+                                    <span className="rounded border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 uppercase">
                                         Code: {selectedLog.code}
                                     </span>
                                 </div>
 
                                 {/* Status Timeline */}
                                 <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-4">Journey Timeline</h4>
-                                    <div className="relative pl-5 space-y-5 border-l border-slate-200 ml-1.5">
+                                    <h4 className="mb-4 text-[10px] font-black tracking-wider text-slate-400 uppercase">Journey Timeline</h4>
+                                    <div className="relative ml-1.5 space-y-5 border-l border-slate-200 pl-5">
                                         <div className="relative">
-                                            <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-slate-200" />
+                                            <span className="absolute top-0.5 -left-[25px] flex h-3 w-3 items-center justify-center rounded-full bg-slate-200" />
                                             <p className="text-[11px] font-bold text-slate-500">Invitation Generated</p>
                                         </div>
                                         <div className="relative">
-                                            <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-indigo-600" />
+                                            <span className="absolute top-0.5 -left-[25px] flex h-3 w-3 items-center justify-center rounded-full bg-indigo-600" />
                                             <p className="text-[11px] font-bold text-indigo-700">Checked In (Entry)</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">{selectedLog.verified_at}</p>
+                                            <p className="mt-0.5 text-[10px] text-slate-400">{selectedLog.verified_at}</p>
                                         </div>
                                         {selectedLog.checked_out_at && (
                                             <div className="relative">
-                                                <span className="absolute -left-[25px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-slate-800" />
+                                                <span className="absolute top-0.5 -left-[25px] flex h-3 w-3 items-center justify-center rounded-full bg-slate-800" />
                                                 <p className="text-[11px] font-bold text-slate-800">Checked Out (Exit)</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">{selectedLog.checked_out_at}</p>
+                                                <p className="mt-0.5 text-[10px] text-slate-400">{selectedLog.checked_out_at}</p>
                                             </div>
                                         )}
                                     </div>
@@ -668,8 +678,8 @@ export default function VisitorIndex({
 
                                 {/* Host Details */}
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Host Resident</h4>
-                                    <div className="rounded-xl border border-slate-100 p-4 space-y-2">
+                                    <h4 className="mb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">Host Resident</h4>
+                                    <div className="space-y-2 rounded-xl border border-slate-100 p-4">
                                         <div className="flex justify-between text-xs font-semibold">
                                             <span className="text-slate-400">Name</span>
                                             <span className="text-slate-800">{selectedLog.host.name}</span>
@@ -687,17 +697,21 @@ export default function VisitorIndex({
 
                                 {/* Vehicle info */}
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Vehicle Information</h4>
+                                    <h4 className="mb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">Vehicle Information</h4>
                                     <div className="rounded-xl border border-slate-100 p-4">
                                         {selectedLog.vehicle ? (
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-xs font-semibold">
                                                     <span className="text-slate-400">Make & Model</span>
-                                                    <span className="text-slate-800">{selectedLog.vehicle.make} {selectedLog.vehicle.model}</span>
+                                                    <span className="text-slate-800">
+                                                        {selectedLog.vehicle.make} {selectedLog.vehicle.model}
+                                                    </span>
                                                 </div>
                                                 <div className="flex justify-between text-xs font-semibold">
                                                     <span className="text-slate-400">Plate Number</span>
-                                                    <span className="text-slate-800 font-bold uppercase tracking-wider">{selectedLog.vehicle.plate}</span>
+                                                    <span className="font-bold tracking-wider text-slate-800 uppercase">
+                                                        {selectedLog.vehicle.plate}
+                                                    </span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -708,8 +722,8 @@ export default function VisitorIndex({
 
                                 {/* Log audits */}
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Security Officers</h4>
-                                    <div className="rounded-xl border border-slate-100 p-4 space-y-2">
+                                    <h4 className="mb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">Security Officers</h4>
+                                    <div className="space-y-2 rounded-xl border border-slate-100 p-4">
                                         <div className="flex justify-between text-xs font-semibold">
                                             <span className="text-slate-400">Entry Verifier</span>
                                             <span className="text-slate-800">{selectedLog.verifier_name}</span>

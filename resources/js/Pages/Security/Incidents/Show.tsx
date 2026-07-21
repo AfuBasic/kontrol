@@ -1,6 +1,5 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Clock, Eye, Lock, MapPin, MessageSquare, MessageSquareMore, Send, Trash2, Wrench, X, ZoomIn } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -210,7 +209,7 @@ export default function Show({ incident, comments }: Props) {
                             <MessageSquareMore className="h-4.5 w-4.5 text-indigo-500" />
                             Comments & Updates
                         </h3>
-                        <span className="text-slate-500 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black uppercase">
+                        <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase">
                             {incident.comments_count} Updates
                         </span>
                     </div>
@@ -243,7 +242,7 @@ export default function Show({ incident, comments }: Props) {
                                                     </button>
                                                 )}
                                             </div>
-                                            <p className="text-slate-600 text-xs leading-relaxed font-semibold">{comment.body}</p>
+                                            <p className="text-xs leading-relaxed font-semibold text-slate-600">{comment.body}</p>
                                             <div className="mt-2 flex justify-end">
                                                 <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                     {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
