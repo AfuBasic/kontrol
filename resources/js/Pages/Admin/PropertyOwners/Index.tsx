@@ -446,7 +446,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 {/* SECTION 4 — TABLE */}
                 <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
                     {propertyOwners.data.length > 0 ? (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto min-h-[280px]">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="bg-slate-50/70 border-b border-slate-100">
                                     <tr>
