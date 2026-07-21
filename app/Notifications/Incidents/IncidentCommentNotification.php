@@ -59,7 +59,9 @@ class IncidentCommentNotification extends Notification implements ShouldQueue
         $commenterName = $this->comment->author?->name ?? 'A user';
         $actionUrl = $notifiable->hasRole('admin')
             ? '/admin/incidents/'.$this->incident->hashid
-            : '/resident/incidents/'.$this->incident->hashid;
+            : ($notifiable->hasRole('security')
+                ? '/security/incidents/'.$this->incident->hashid
+                : '/resident/incidents/'.$this->incident->hashid);
 
         return [
             'title' => 'New Comment on Incident',
@@ -150,7 +152,9 @@ class IncidentCommentNotification extends Notification implements ShouldQueue
         $commenterName = $this->comment->author?->name ?? 'A user';
         $actionUrl = $notifiable->hasRole('admin')
             ? '/admin/incidents/'.$this->incident->hashid
-            : '/resident/incidents/'.$this->incident->hashid;
+            : ($notifiable->hasRole('security')
+                ? '/security/incidents/'.$this->incident->hashid
+                : '/resident/incidents/'.$this->incident->hashid);
 
         $text = "💬 <b>New Comment on Incident</b>\n\n"
             ."📌 Incident: <b>{$this->incident->title}</b>\n"
