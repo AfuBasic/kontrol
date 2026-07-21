@@ -308,16 +308,23 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
             return true;
         }
 
-        // For startsWith matching, ensure no other nav item has a more specific match
-        const hasStartsWithMatch = item.matchPaths.some((path) => currentPath.startsWith(path + '/'));
-        if (!hasStartsWithMatch) {
+        // Find if the item has any starts-with matches
+        const matchedPath = item.matchPaths.find((path) => currentPath.startsWith(path + '/'));
+        if (!matchedPath) {
             return false;
         }
 
-        // Check if another item has a more specific match (longer path)
+        // Check if another item has a longer (more specific) prefix match
         const otherItemsMatch = navItems
             .filter((other) => other !== item)
-            .some((other) => other.matchPaths.some((otherPath) => currentPath === otherPath || currentPath.startsWith(otherPath + '/')));
+            .some((other) =>
+                other.matchPaths.some((otherPath) => {
+                    return (
+                        otherPath.length > matchedPath.length &&
+                        (currentPath === otherPath || currentPath.startsWith(otherPath + '/'))
+                    );
+                })
+            );
 
         return !otherItemsMatch;
     };
