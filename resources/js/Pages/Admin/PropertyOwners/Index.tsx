@@ -771,7 +771,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                         className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wider uppercase border shadow-xs transition ${
                                             inviteLink.is_active 
                                                 ? 'bg-white text-rose-600 border-rose-250 hover:bg-rose-50/50' 
-                                                : 'bg-emerald-650 text-white border-transparent hover:bg-emerald-700'
+                                                : 'bg-emerald-600 text-white border-transparent hover:bg-emerald-700'
                                         }`}
                                     >
                                         {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
