@@ -709,7 +709,7 @@ export default function IncidentsIndex({
                                                     <motion.div
                                                         layout
                                                         key={incident.id}
-                                                        className="group border-slate-150 relative rounded-xl border bg-white p-3.5 shadow-xs transition-all hover:border-slate-300"
+                                                        className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
                                                     >
                                                         {/* Priority & SLA */}
                                                         <div className="mb-2 flex items-center justify-between gap-2">
