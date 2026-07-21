@@ -483,6 +483,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasMany<AccessCode, $this>
+     */
+    public function accessCodes(): HasMany
+    {
+        return $this->hasMany(AccessCode::class);
+    }
+
+    /**
      * Check if the user has verified their email.
      */
     public function isVerified(): bool
