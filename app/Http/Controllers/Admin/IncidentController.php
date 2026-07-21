@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Incidents\CreateIncidentAction;
 use App\Enums\IncidentCategory;
+use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Incidents\StoreIncidentRequest;
 use App\Models\Incident;
 use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\IncidentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-
-use App\Actions\Incidents\CreateIncidentAction;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 
 class IncidentController extends Controller
 {
@@ -102,14 +104,14 @@ class IncidentController extends Controller
                 ->select('source', DB::raw('count(*) as count'))
                 ->groupBy('source')
                 ->get();
-                
+
             foreach ($sources as $s) {
-                $sourceLabel = $s->source instanceof \App\Enums\IncidentSource 
-                    ? $s->source->label() 
+                $sourceLabel = $s->source instanceof IncidentSource
+                    ? $s->source->label()
                     : (is_string($s->source) ? ucwords(str_replace('_', ' ', $s->source)) : 'Unknown');
-                
+
                 $sourceBreakdown[] = [
-                    'source' => $s->source instanceof \App\Enums\IncidentSource ? $s->source->value : $s->source,
+                    'source' => $s->source instanceof IncidentSource ? $s->source->value : $s->source,
                     'label' => $sourceLabel,
                     'count' => $s->count,
                     'percentage' => (int) round(($s->count / $totalIncidents) * 100),
@@ -123,6 +125,7 @@ class IncidentController extends Controller
             ->get()
             ->filter(function ($u) use ($estateId) {
                 setPermissionsTeamId($estateId);
+
                 return $u->hasRole('admin');
             })
             ->map(fn ($u) => [
@@ -133,15 +136,15 @@ class IncidentController extends Controller
             ->toArray();
 
         // 5. Fetch recent activity timeline
-        $recentActivity = \Spatie\Activitylog\Models\Activity::query()
+        $recentActivity = Activity::query()
             ->where(function ($query) use ($estateId) {
                 $query->where('properties->estate_id', $estateId)
-                    ->orWhereHasMorph('subject', [\App\Models\Incident::class], function ($sq) use ($estateId) {
+                    ->orWhereHasMorph('subject', [Incident::class], function ($sq) use ($estateId) {
                         $sq->where('estate_id', $estateId);
                     });
             })
             ->where(function ($q) {
-                $q->where('subject_type', \App\Models\Incident::class)
+                $q->where('subject_type', Incident::class)
                     ->orWhere('description', 'like', '%incident%');
             })
             ->with('causer:id,ulid,name,email')
@@ -212,7 +215,7 @@ class IncidentController extends Controller
             ->values()
             ->toArray();
 
-        $activities = \Spatie\Activitylog\Models\Activity::query()
+        $activities = Activity::query()
             ->forSubject($incident)
             ->with('causer:id,name')
             ->latest()
@@ -225,11 +228,20 @@ class IncidentController extends Controller
             ])
             ->toArray();
 
+        $categories = collect(IncidentCategory::cases())
+            ->map(fn ($c) => [
+                'value' => $c->value,
+                'label' => $c->label(),
+            ])
+            ->values()
+            ->toArray();
+
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
             'comments' => $comments,
             'admins' => $admins,
             'statuses' => $statuses,
+            'categories' => $categories,
             'activities' => $activities,
         ]);
     }
@@ -252,6 +264,7 @@ class IncidentController extends Controller
             ->get()
             ->filter(function ($u) use ($estate) {
                 setPermissionsTeamId($estate->id);
+
                 return $u->hasRole('admin');
             })
             ->map(fn ($u) => [
@@ -270,7 +283,7 @@ class IncidentController extends Controller
     /**
      * Store a newly created incident.
      */
-    public function store(\App\Http\Requests\Incidents\StoreIncidentRequest $request): RedirectResponse
+    public function store(StoreIncidentRequest $request): RedirectResponse
     {
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);

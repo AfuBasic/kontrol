@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import Modal from '@/Components/Modal';
-import AdminLayout from '@/Layouts/AdminLayout';
 
 type AdminUser = {
     id: number;
@@ -81,6 +80,8 @@ type Incident = {
         name: string;
         email: string;
     };
+    reporter_role: string;
+    source: string;
     assignee: {
         id: number;
         name: string;
@@ -93,6 +94,13 @@ type Incident = {
     }>;
 };
 
+type ActivityEvent = {
+    id: number;
+    description: string;
+    created_at: string;
+    causer: { name: string } | null;
+};
+
 type Props = {
     incident: Incident;
     comments: {
@@ -100,9 +108,11 @@ type Props = {
     };
     admins: AdminUser[];
     statuses: Array<{ value: string; label: string }>;
+    categories: Array<{ value: string; label: string }>;
+    activities: ActivityEvent[];
 };
 
-export default function IncidentShow({ incident, comments, admins, statuses }: Props) {
+export default function IncidentShow({ incident, comments, admins, statuses, categories, activities }: Props) {
     const [commentText, setCommentText] = useState('');
     const [replyToId, setReplyToId] = useState<number | null>(null);
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -414,6 +424,34 @@ export default function IncidentShow({ incident, comments, admins, statuses }: P
                             </div>
                         </form>
                     </div>
+
+                    {/* ACTIVITY TIMELINE */}
+                    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
+                        <h3 className="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-50 pb-3">
+                            <Clock className="h-4.5 w-4.5 text-slate-400" />
+                            Activity Timeline ({activities.length})
+                        </h3>
+
+                        {activities.length === 0 ? (
+                            <p className="text-center text-[11px] font-semibold text-slate-400 py-4">No activity recorded yet.</p>
+                        ) : (
+                            <ol className="relative space-y-4 border-l border-slate-100 pl-5">
+                                {activities.map((event) => (
+                                    <li key={event.id} className="relative">
+                                        <span className="absolute -left-[22px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                        </span>
+                                        <p className="text-[11px] font-semibold text-slate-700 leading-snug">{event.description}</p>
+                                        <div className="mt-0.5 flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                            {event.causer && <span>{event.causer.name}</span>}
+                                            {event.causer && <span>·</span>}
+                                            <span>{event.created_at}</span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
+                    </div>
                 </div>
 
                 {/* RIGHT COLUMN: Attributes Panel & SLA Status */}
@@ -493,13 +531,26 @@ export default function IncidentShow({ incident, comments, admins, statuses }: P
                     {/* Reporter details */}
                     <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-3.5">
                         <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-2">Reporter Details</h3>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 border-b border-slate-50 pb-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-xs text-slate-500">
                                 {incident.reporter.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                                 <span className="block truncate text-xs font-bold text-slate-900">{incident.reporter.name}</span>
                                 <span className="block truncate text-[10px] font-bold text-slate-400">{incident.reporter.email}</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                            <div>
+                                <span className="block font-black text-slate-400 uppercase">Reporter Type</span>
+                                <span className="text-xs font-bold text-slate-700">{incident.reporter_role}</span>
+                            </div>
+                            <div>
+                                <span className="block font-black text-slate-400 uppercase">Incident Source</span>
+                                <span className="rounded bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase inline-block mt-0.5">
+                                    {incident.source.replace('_', ' ')}
+                                </span>
                             </div>
                         </div>
                     </div>
