@@ -30,7 +30,7 @@ class IncidentPolicy
             ->where('estates.id', $incident->estate_id)
             ->exists();
 
-        if (! $hasEstateAccess) {
+        if (!$hasEstateAccess) {
             return false;
         }
 
@@ -53,17 +53,16 @@ class IncidentPolicy
             ->where('estates.id', $estate->id)
             ->exists();
 
-        if (! $hasEstateAccess) {
+        if (!$hasEstateAccess) {
             return false;
         }
 
         setPermissionsTeamId($estate->id);
 
-        // Residents and Property Owners can report incidents.
-        // Household members and Admins cannot.
-        return ($user->hasRole('resident') || $user->hasRole('property_owner'))
-            && ! $user->hasRole('admin')
-            && ! $user->hasRole('household_member');
+        // Residents, Property Owners, Security, and Admins can report incidents.
+        // Household members cannot.
+        return ($user->hasRole('resident') || $user->hasRole('property_owner') || $user->hasRole('security') || $user->hasRole('admin'))
+            && !$user->hasRole('household_member');
     }
 
     /**
@@ -76,7 +75,7 @@ class IncidentPolicy
             ->where('estates.id', $incident->estate_id)
             ->exists();
 
-        if (! $hasEstateAccess) {
+        if (!$hasEstateAccess) {
             return false;
         }
 
@@ -107,7 +106,7 @@ class IncidentPolicy
             ->where('estates.id', $incident->estate_id)
             ->exists();
 
-        if (! $hasEstateAccess) {
+        if (!$hasEstateAccess) {
             return false;
         }
 
@@ -115,8 +114,8 @@ class IncidentPolicy
 
         // Only Residents and Property Owners can upvote incidents.
         return ($user->hasRole('resident') || $user->hasRole('property_owner'))
-            && ! $user->hasRole('admin')
-            && ! $user->hasRole('household_member');
+            && !$user->hasRole('admin')
+            && !$user->hasRole('household_member');
     }
 
     /**
